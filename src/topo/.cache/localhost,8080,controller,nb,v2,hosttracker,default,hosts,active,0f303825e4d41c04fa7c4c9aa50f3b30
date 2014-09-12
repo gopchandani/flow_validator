@@ -1,0 +1,11 @@
+status: 200
+content-location: http://localhost:8080/controller/nb/v2/hosttracker/default/hosts/active
+set-cookie: JSESSIONIDSSO=C8F4C829380641E191D6C661CEE41D02;
+ Path=/, JSESSIONID=924C454732678567F5A8FED8AE86EFA0; Path=/
+expires: Wed, 31 Dec 1969 16:00:00 PST
+server: Apache-Coyote/1.1
+cache-control: private
+date: Thu, 11 Sep 2014 22:26:05 GMT
+content-type: application/json
+
+{"hostConfig":[{"dataLayerAddress":"66:d1:26:df:4f:80","nodeType":"OF","nodeId":"00:00:52:a2:e0:69:f9:46","nodeConnectorType":"OF","nodeConnectorId":"1","vlan":"0","staticHost":false,"networkAddress":"10.0.0.1"},{"dataLayerAddress":"fa:96:ab:0c:36:25","nodeType":"OF","nodeId":"00:00:00:00:00:00:00:01","nodeConnectorType":"OF","nodeConnectorId":"4","vlan":"0","staticHost":false,"networkAddress":"10.0.0.4"}]}
