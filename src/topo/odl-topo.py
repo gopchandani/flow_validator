@@ -19,10 +19,22 @@ resp, content = h.request(baseUrl + 'switchmanager/' + containerName + 'nodes/',
 nodeProperties = json.loads(content)
 odlNodes = nodeProperties['nodeProperties']
 
-# Get all the actie hosts
+# Get all the active hosts
 resp, content = h.request(baseUrl + 'hosttracker/' + containerName + 'hosts/active', "GET")
 hostProperties = json.loads(content)
 hosts = hostProperties["hostConfig"]
+
+# Get all the flow statistics
+resp, content = h.request(baseUrl + 'statistics/' + containerName + 'flow', "GET")
+flowStatistics = json.loads(content)
+flowStatistics = flowStatistics["flowStatistics"]
+for fs in flowStatistics:
+    import pprint
+    pprint.pprint(fs["node"])
+    for flow in fs["flowStatistic"]:
+        pprint.pprint(flow["flow"]["match"])
+        pprint.pprint(flow["flow"]["actions"])
+        pprint.pprint(flow["flow"]["priority"])
 
 # Initialize the graph
 graph = nx.Graph()
