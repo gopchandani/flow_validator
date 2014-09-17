@@ -17,10 +17,12 @@ class FlowTable():
         self.node_id = switch_flows["node"]["id"]
         self.node_type = switch_flows["node"]["type"]
         self.flow_list = []
-        #
+
         # print self.node_id
         # print self.node_type
 
         for f in switch_flows["flowStatistic"]:
             self.flow_list.append(Flow(f))
 
+    def passes_flow(self, src, dst, next_top):
+        return True
