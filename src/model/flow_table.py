@@ -7,6 +7,10 @@ class Flow():
         self.match = flow["flow"]["match"]
         self.actions = flow["flow"]["actions"]
 
+    def passes_flow(self, src, dst, src_port, dst_port):
+        pass
+
+
 class FlowTable():
     def __init__(self, switch_flows):
         self.node_id = switch_flows["node"]["id"]
@@ -16,7 +20,9 @@ class FlowTable():
         for f in switch_flows["flowStatistic"]:
             self.flow_list.append(Flow(f))
 
-    def passes_flow(self, src, dst, next_node_id):
-        print "Checking passage:", self.node_id, "->", next_node_id
+    def passes_flow(self, src, dst, src_port, dst_port):
+
+        for flow in self.flow_list:
+            print flow
 
         return True

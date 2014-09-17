@@ -30,8 +30,10 @@ class BackupPaths:
         for i in range(1, len(node_path) - 2):
             node_flow_table = self.graph.node[node_path[i]]["flow_table"]
 
+            src_port, dst_port = self.graph[node_path[i]][node_path[i + 1]]['edge_ports']
+
             #  Will this switch pass traffic along
-            is_reachable = node_flow_table.passes_flow(src, dst, node_path[i + 1])
+            is_reachable = node_flow_table.passes_flow(src, dst, src_port, dst_port)
 
             #  If flow fails to pass, just return, otherwise keep going to the next hop
             if not is_reachable:
