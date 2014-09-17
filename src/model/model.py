@@ -5,12 +5,18 @@ import json
 import httplib2
 import networkx as nx
 
+from flow_table import FlowTable
 
-class ODL_Model():
+
+class Model():
     def __init__(self):
 
         # Initialize the self.graph
         self.graph = nx.Graph()
+
+        # Initialize lists of host and switch ids
+        self.host_ids = []
+        self.switch_ids = []
 
         #  Load up everything
         self._load_model()
@@ -36,22 +42,17 @@ class ODL_Model():
         hostProperties = json.loads(content)
         hosts = hostProperties["hostConfig"]
 
-        # Get all the flow statistics
+        # Get all the flow statistics and construct rules from them
         resp, content = h.request(baseUrl + 'statistics/' + containerName + 'flow', "GET")
         flowStatistics = json.loads(content)
         flowStatistics = flowStatistics["flowStatistics"]
         for fs in flowStatistics:
-            import pprint
-
-            pprint.pprint(fs["node"])
-            for flow in fs["flowStatistic"]:
-                pprint.pprint(flow["flow"]["match"])
-                pprint.pprint(flow["flow"]["actions"])
-                pprint.pprint(flow["flow"]["priority"])
+            flow_table = FlowTable(fs)
 
         # Put switches in the graph
         for node in odlNodes:
-            self.graph.add_node(node['node']['id'])
+            self.switch_ids.append(node['node']['id'])
+            self.graph.add_node(node['node']['id'], type="switch")
 
         #  Put all the edges between switches
         for edge in odlEdges:
@@ -60,9 +61,16 @@ class ODL_Model():
 
         #  Put hosts in the graph and the relevant edges
         for host in hosts:
-            self.graph.add_node(host['networkAddress'])
+            self.graph.add_node(host['networkAddress'], type="host")
+            self.host_ids.append(host['networkAddress'])
             e = (host['networkAddress'], host['nodeId'])
             self.graph.add_edge(*e)
 
     def get_node_graph(self):
         return self.graph
+
+    def get_host_ids(self):
+        return self.host_ids
+
+    def get_switch_ids(self):
+        return self.switch_ids
