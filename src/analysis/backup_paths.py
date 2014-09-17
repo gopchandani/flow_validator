@@ -1,9 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-import json
-
 import networkx as nx
-from networkx.readwrite import json_graph
 
 from model.model import Model
 
@@ -28,10 +25,4 @@ for src_host_id in host_ids:
             print p
 
             for node in p:
-                print p
-
-
-# write json formatted data to use in visualization
-d = json_graph.node_link_data(graph)
-json.dump(d, open('topo.json', 'w'))
-print('Wrote node-link JSON data')
+                print "node id", node, "graph node", graph.node[node]

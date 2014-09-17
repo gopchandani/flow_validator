@@ -42,17 +42,20 @@ class Model():
         hostProperties = json.loads(content)
         hosts = hostProperties["hostConfig"]
 
-        # Get all the flow statistics and construct rules from them
+        # Get all the flow statistics and construct Flow Tables from them
         resp, content = h.request(baseUrl + 'statistics/' + containerName + 'flow', "GET")
         flowStatistics = json.loads(content)
         flowStatistics = flowStatistics["flowStatistics"]
+
+        flow_table_dict = {}
         for fs in flowStatistics:
             flow_table = FlowTable(fs)
+            flow_table_dict[fs["node"]["id"]] = flow_table
 
         # Put switches in the graph
         for node in odlNodes:
             self.switch_ids.append(node['node']['id'])
-            self.graph.add_node(node['node']['id'], type="switch")
+            self.graph.add_node(node['node']['id'], type="switch", flow_table=flow_table_dict[node["node"]["id"]])
 
         #  Put all the edges between switches
         for edge in odlEdges:
