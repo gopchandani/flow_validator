@@ -59,9 +59,13 @@ class Model():
 
         #  Put all the edges between switches
         for edge in odlEdges:
-            edgePorts = (edge['edge']['tailNodeConnector']['id'], edge['edge']['headNodeConnector']['id'])
+            edgePorts = {edge['edge']['tailNodeConnector']['node']['id']: edge['edge']['tailNodeConnector']['id'],
+                         edge['edge']['headNodeConnector']['node']['id']: edge['edge']['headNodeConnector']['id']}
+
+            print edgePorts
+
             e = (edge['edge']['tailNodeConnector']['node']['id'], edge['edge']['headNodeConnector']['node']['id'])
-            self.graph.add_edge(*e, edge_ports=edgePorts)
+            self.graph.add_edge(*e, edge_ports_dict=edgePorts)
 
         #  Put hosts in the graph and the relevant edges
         for host in hosts:

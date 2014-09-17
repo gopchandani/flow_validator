@@ -9,7 +9,7 @@ class Flow():
         self.match = flow["flow"]["match"]
         self.actions = flow["flow"]["actions"]
 
-    def does_it_match(self, src, dst, src_port, dst_port):
+    def does_it_match(self, arriving_port, src, dst):
         ret_val = True
         src_ip = IPAddress(src)
         dst_ip = IPAddress(dst)
@@ -31,21 +31,22 @@ class Flow():
 
         return ret_val
 
-    def does_it_forward(self, src, dst, src_port, dst_port):
+    def does_it_forward(self, departure_port):
         ret_val = False
 
         for action in self.actions:
-            if action['type'] == 'OUTPUT' and action['port']['id'] == dst_port:
+            print action
+            print departure_port
+            if action['type'] == 'OUTPUT' and action['port']['id'] == departure_port:
                 ret_val = True
                 break
 
         return ret_val
 
-    def passes_flow(self, src, dst, src_port, dst_port):
+    def passes_flow(self, arriving_port, src, dst, departure_port):
         ret_val = False
-
-        if self.does_it_match(src, dst, src_port, dst_port):
-            if self.does_it_forward(src, dst, src_port, dst_port):
+        if self.does_it_match(arriving_port, src, dst):
+            if self.does_it_forward(departure_port):
                 ret_val = True
                 print "Found a rule that will forward this."
 
@@ -61,12 +62,12 @@ class FlowTable():
         for f in switch_flows["flowStatistic"]:
             self.flow_list.append(Flow(f))
 
-    def passes_flow(self, src, dst, src_port, dst_port):
+    def passes_flow(self, arriving_port, src, dst, departure_port):
 
-        ret_val = True
+        ret_val = False
 
         for flow in self.flow_list:
-            ret_val = flow.passes_flow(src, dst, src_port, dst_port)
+            ret_val = flow.passes_flow(arriving_port, src, dst, departure_port)
 
             # As soon as an admitting rule is found, stop looking further
             if ret_val:
