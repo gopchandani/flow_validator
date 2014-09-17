@@ -28,7 +28,6 @@ class BackupPaths:
         #  Assume that there are no host firewalls filtering anything inbound/outbound
         #  The loop below goes from first switch to the second-last switch
         for i in range(1, len(node_path) - 2):
-            print node_path[i]
             node_flow_table = self.graph.node[node_path[i]]["flow_table"]
 
             #  Will this switch pass traffic along
@@ -51,13 +50,26 @@ class BackupPaths:
         print "Checking for backup paths between all possible host pairs..."
         for src_host_id in self.host_ids:
             for dst_host_id in self.host_ids:
+
+                # Ignore paths with same src/dst
+                if src_host_id == dst_host_id:
+                    continue
+
                 print 'Paths from', src_host_id, 'to', dst_host_id
+                total_paths = 0
 
                 asp = nx.all_simple_paths(self.graph, source=src_host_id, target=dst_host_id)
                 for p in asp:
                     print "Topological Path:", p
                     is_reachable_flow = self.check_flow_reachability(src_host_id, dst_host_id, p)
                     print "is_reachable_flow:", is_reachable_flow
+                    if is_reachable_flow:
+                        total_paths += 1
+
+                if total_paths < 2:
+                    print "Backup paths don't exist.", "total_paths:", total_paths
+                else:
+                    print "Backup paths do exist.", "total_paths:", total_paths
 
 
 def main():
