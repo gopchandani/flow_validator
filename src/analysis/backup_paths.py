@@ -17,27 +17,25 @@ class BackupPaths:
         # The task of this loop is to examine whether there is a rule,
         #  in the switches along the path, that would admit the path
         #  and pass it to the next switch
-
-
-        #  Ignore paths that loop
-        if src == dst:
-            return True
+        # Assume that there are no host firewalls filtering anything inbound/outbound
+        #  The loop below goes from first switch to the second-last switch
 
         is_reachable = False
 
-        #  Assume that there are no host firewalls filtering anything inbound/outbound
-        #  The loop below goes from first switch to the second-last switch
         for i in range(1, len(node_path) - 2):
-            node_flow_table = self.graph.node[node_path[i]]["flow_table"]
 
+            node_flow_table = self.graph.node[node_path[i]]["flow_table"]
             src_port, dst_port = self.graph[node_path[i]][node_path[i + 1]]['edge_ports']
+
+            print "Checking from node:", node_path[i], "at port:", src_port, \
+                "to node:", node_path[i + 1], "at port:", dst_port
 
             #  Will this switch pass traffic along
             is_reachable = node_flow_table.passes_flow(src, dst, src_port, dst_port)
 
-            #  If flow fails to pass, just return, otherwise keep going to the next hop
+            # If flow fails to pass, just break, otherwise keep going to the next hop
             if not is_reachable:
-                return is_reachable
+                break
 
         #  This would always return True
         return is_reachable
@@ -56,7 +54,7 @@ class BackupPaths:
                 # Ignore paths with same src/dst
                 if src_host_id == dst_host_id:
                     continue
-
+                print "----"
                 print 'Paths from', src_host_id, 'to', dst_host_id
                 total_paths = 0
 

@@ -1,5 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
+from netaddr import IPNetwork
+from netaddr import IPAddress
 
 class Flow():
     def __init__(self, flow):
@@ -7,8 +9,47 @@ class Flow():
         self.match = flow["flow"]["match"]
         self.actions = flow["flow"]["actions"]
 
+    def does_it_match(self, src, dst, src_port, dst_port):
+        ret_val = True
+        src_ip = IPAddress(src)
+        dst_ip = IPAddress(dst)
+
+        # Match on every field
+        for match_field in self.match['matchField']:
+
+            if match_field['type'] == 'NW_DST':
+                nw_dst = IPNetwork(match_field['value'] + '/' + match_field['mask'])
+                ret_val = dst_ip in nw_dst
+                if not ret_val:
+                    break
+
+            elif match_field['type'] == 'NW_SRC':
+                nw_src = IPNetwork(match_field['value'] + '/' + match_field['mask'])
+                ret_val = src_ip in nw_src
+                if not ret_val:
+                    break
+
+        return ret_val
+
+    def does_it_forward(self, src, dst, src_port, dst_port):
+        ret_val = False
+
+        for action in self.actions:
+            if action['type'] == 'OUTPUT' and action['port']['id'] == dst_port:
+                ret_val = True
+                break
+
+        return ret_val
+
     def passes_flow(self, src, dst, src_port, dst_port):
-        pass
+        ret_val = False
+
+        if self.does_it_match(src, dst, src_port, dst_port):
+            if self.does_it_forward(src, dst, src_port, dst_port):
+                ret_val = True
+                print "Found a rule that will forward this."
+
+        return ret_val
 
 
 class FlowTable():
@@ -22,7 +63,13 @@ class FlowTable():
 
     def passes_flow(self, src, dst, src_port, dst_port):
 
-        for flow in self.flow_list:
-            print flow
+        ret_val = True
 
-        return True
+        for flow in self.flow_list:
+            ret_val = flow.passes_flow(src, dst, src_port, dst_port)
+
+            # As soon as an admitting rule is found, stop looking further
+            if ret_val:
+                break
+
+        return ret_val
