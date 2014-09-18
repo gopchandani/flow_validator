@@ -3,6 +3,7 @@ __author__ = 'Rakesh Kumar'
 from netaddr import IPNetwork
 from netaddr import IPAddress
 
+
 class Flow():
     def __init__(self, flow):
         self.priority = flow["flow"]["priority"]
@@ -35,8 +36,6 @@ class Flow():
         ret_val = False
 
         for action in self.actions:
-            print action
-            print departure_port
             if action['type'] == 'OUTPUT' and action['port']['id'] == departure_port:
                 ret_val = True
                 break
