@@ -62,8 +62,6 @@ class Model():
             edgePorts = {edge['edge']['tailNodeConnector']['node']['id']: edge['edge']['tailNodeConnector']['id'],
                          edge['edge']['headNodeConnector']['node']['id']: edge['edge']['headNodeConnector']['id']}
 
-            print edgePorts
-
             e = (edge['edge']['tailNodeConnector']['node']['id'], edge['edge']['headNodeConnector']['node']['id'])
             self.graph.add_edge(*e, edge_ports_dict=edgePorts)
 
@@ -72,7 +70,10 @@ class Model():
             self.graph.add_node(host['networkAddress'], type="host")
             self.host_ids.append(host['networkAddress'])
             e = (host['networkAddress'], host['nodeId'])
-            self.graph.add_edge(*e)
+
+            # It is unknown which host port the wire between switch and host is connected on
+            edgePorts = {host['networkAddress']: None, host['nodeId']: host['nodeConnectorId']}
+            self.graph.add_edge(*e, edge_ports_dict=edgePorts)
 
     def get_node_graph(self):
         return self.graph

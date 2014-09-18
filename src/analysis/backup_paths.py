@@ -22,12 +22,14 @@ class BackupPaths:
 
         is_reachable = False
 
+        edge_ports_dict = self.graph[node_path[0]][node_path[1]]['edge_ports_dict']
+        arriving_port = edge_ports_dict[node_path[1]]
+
         for i in range(1, len(node_path) - 2):
 
             node_flow_table = self.graph.node[node_path[i]]["flow_table"]
             edge_ports_dict = self.graph[node_path[i]][node_path[i + 1]]['edge_ports_dict']
             departure_port = edge_ports_dict[node_path[i]]
-            arriving_port = edge_ports_dict[node_path[i + 1]]
 
             print "Checking from node:", node_path[i], "at port:", departure_port, \
                 "to node:", node_path[i + 1], "at port:", arriving_port
@@ -35,11 +37,14 @@ class BackupPaths:
             #  Will this switch pass traffic along
             is_reachable = node_flow_table.passes_flow(arriving_port, src, dst, departure_port)
 
+
             # If flow fails to pass, just break, otherwise keep going to the next hop
             if not is_reachable:
                 break
 
-        #  This would always return True
+            # If flow arrived on the next hop, keep track of which port it arrived on
+            arriving_port = edge_ports_dict[node_path[i + 1]]
+
         return is_reachable
 
 
