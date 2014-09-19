@@ -1,10 +1,10 @@
-from mininet.net import Mininet
+__author__ = 'Rakesh Kumar'
+
 from mininet.topo import Topo
 
+
 class BackupTopo(Topo):
-    
     def __init__(self):
-        
         Topo.__init__(self)
 
         host1 = self.addHost("h1")
@@ -17,8 +17,8 @@ class BackupTopo(Topo):
         l11 = self.addSwitch("l11")
         l20 = self.addSwitch("l20")
         l21 = self.addSwitch("l21")
-    
-        #  Hosts/Leafs to switches
+
+        # Hosts/Leafs to switches
         self.addLink(host1, l20)
         self.addLink(host2, l20)
         self.addLink(host3, l21)
@@ -34,5 +34,5 @@ class BackupTopo(Topo):
         self.addLink(l11, l0)
         self.addLink(l10, l0)
 
-        
-topos = {"backuptopo" : ( lambda: BackupTopo() )}
+
+topos = {"backuptopo": ( lambda: BackupTopo() )}

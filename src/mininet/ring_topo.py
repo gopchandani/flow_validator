@@ -1,4 +1,5 @@
-from mininet.net import Mininet
+__author__ = 'Rakesh Kumar'
+
 from mininet.topo import Topo
 
 class RingTopo(Topo):
@@ -23,10 +24,12 @@ class RingTopo(Topo):
         #  Add links between switches
         if num_switches > 1:
             for i in range(num_switches - 1):
+                print switches[i], type(switches[i])
                 self.addLink(switches[i], switches[i+1])
 
             #  Form a ring only when there are more than two switches
             if num_switches > 2:
                 self.addLink(switches[0], switches[-1])
 
-topos = {"ringtopo" : ( lambda: RingTopo() )}
+
+topos = {"ringtopo": (lambda: RingTopo())}
