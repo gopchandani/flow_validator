@@ -58,11 +58,12 @@ class FlowTable():
         self.node_type = switch_flows["node"]["type"]
         self.flow_list = []
 
+        print switch_flows
+
         for f in switch_flows["flowStatistic"]:
             self.flow_list.append(Flow(f))
 
     def passes_flow(self, arriving_port, src, dst, departure_port):
-
         ret_val = False
 
         for flow in self.flow_list:
