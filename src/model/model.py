@@ -25,9 +25,6 @@ class Model():
 
 
     def _load_model(self):
-        #http://localhost:8181/restconf/operational/opendaylight-inventory:nodes
-        #http://localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1
-
         baseUrl = 'http://localhost:8181/restconf/'
         h = httplib2.Http(".cache")
         h.add_credentials('admin', 'admin')
@@ -60,10 +57,12 @@ class Model():
 
                 #  If the node connector points to a host
                 if "address-tracker:addresses" in node_connector:
+
                     host_id =  node_connector["address-tracker:addresses"][0]["ip"]
                     switch_port = node_connector["flow-node-inventory:port-number"]
 
                     self.graph.add_node(host_id, type="host")
+
                     self.host_ids.append(host_id)
 
                     e = (host_id, switch_id)
@@ -80,13 +79,27 @@ class Model():
         resp, content = h.request(baseUrl + remaining_url, "GET")
         topology = json.loads(content)
         topology_links = topology["network-topology"]["topology"][0]["link"]
+        topology_nodes = topology["network-topology"]["topology"][0]["node"]
+
+        #print topology_nodes
 
         for link in topology_links:
+
             node1 = link["source"]["source-node"]
             node2 = link["destination"]["dest-node"]
 
             node1_port = link["source"]["source-tp"].split(":")[2]
             node2_port = link["destination"]["dest-tp"].split(":")[2]
+
+            if node1.startswith("host"):
+                for node in topology_nodes:
+                    if node["node-id"] == node1:
+                        node1 = node["host-tracker-service:addresses"][0]["ip"]
+
+            if node2.startswith("host"):
+                for node in topology_nodes:
+                    if node["node-id"] == node2:
+                        node2 = node["host-tracker-service:addresses"][0]["ip"]
 
             edge_port_dict = {node1: node1_port, node2: node2_port}
             e = (node1, node2)
@@ -95,6 +108,7 @@ class Model():
         #print len(topology_links)
         #print self.graph.number_of_nodes()
         #print self.graph.number_of_edges()
+        #print self.graph.nodes()
 
     def get_node_graph(self):
         return self.graph
