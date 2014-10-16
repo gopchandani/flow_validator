@@ -23,6 +23,7 @@ class Model():
         #  Load up everything
         self._load_model()
 
+
     def _load_model(self):
         #http://localhost:8181/restconf/operational/opendaylight-inventory:nodes
         #http://localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1
@@ -41,9 +42,6 @@ class Model():
         #  Go through each node and grab the switches and the corresponding hosts associated with the switch
         for node in nodes["nodes"]["node"]:
 
-            #pprint.pprint(node)
-            #print node.keys()
-
             switch_id = node["id"]
             switch_flow_tables = []
 
@@ -59,6 +57,7 @@ class Model():
 
             for node_connector in node["node-connector"]:
 
+                #  If the node connector points to a host
                 if "address-tracker:addresses" in node_connector:
                     host_id =  node_connector["address-tracker:addresses"][0]["ip"]
                     switch_port = node_connector["flow-node-inventory:port-number"]
@@ -74,6 +73,19 @@ class Model():
 
 
         #TODO: Put all the edges between switches
+
+        # Go through the topology API
+        remaining_url = 'operational/network-topology:network-topology'
+        resp, content = h.request(baseUrl + remaining_url, "GET")
+        topology = json.loads(content)
+        topology_nodes = topology["network-topology"]["topology"][0]["node"]
+
+        for node in topology_nodes:
+            pprint.pprint(node)
+
+
+        print self.graph.number_of_nodes()
+        print self.graph.number_of_edges()
 
         sys.exit(0)
 
