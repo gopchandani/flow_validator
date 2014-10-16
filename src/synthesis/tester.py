@@ -11,34 +11,41 @@ header = {'Content-Type':'application/xml', 'Accept':'application/xml'}
 class Tester:
 # link = get_link[node_id-1][node_id-2] info
 # link.node_id_1 link.node_id_1	
-	def __init__(self):
-		self.flow_id = 10	
-		self.model = Model()
-		self.graph = self.model.get_node_graph()
-		self.host_ids = self.model.get_host_ids()
-		self.switch_ids = self.model.get_switch_ids()
+    def __init__(self):
+        self.flow_id = 10
+        self.model = Model()
+        self.graph = self.model.get_node_graph()
+        self.host_ids = self.model.get_host_ids()
+        self.switch_ids = self.model.get_switch_ids()
 
-	def test(self):
-		
-		# returns link where link is {node_id1:port_on_node_id1,node_id2:port_on_node_id2}		
-		# print self.graph.number_of_nodes()
-		# print self.graph.number_of_edges()
-				
-		print self.switch_ids
-		print self.host_ids
-		print self.graph.nodes()
-		paths = nx.all_simple_paths(self.graph,source=self.host_ids[0], target=self.host_ids[1])
-		for path in paths:
-			link = self.graph[self.host_ids[0]][path[1]]
-			print link['edge_ports_dict'][path[1]]
-			print path
-		print link
-		return 
-	
-	# returns the path between h1 and h2 
+    def test(self):
+
+        # returns link where link is {node_id1:port_on_node_id1,node_id2:port_on_node_id2}
+        # print self.graph.number_of_nodes()
+        # print self.graph.number_of_edges()
+
+        print self.switch_ids
+        print self.host_ids
+
+        src = self.host_ids[0]
+        dst = self.host_ids[1]
+
+        print src, dst
+
+        paths = nx.all_simple_paths(self.graph, source=src, target=dst)
+        for path in paths:
+            link = self.graph[src][path[1]]
+            print "The whole path:", path
+            print "First Link:", link
+            print "Port on first link's switch:", link["edge_ports_dict"][path[1]]
+
+
+
+
+# returns the path between h1 and h2
 def main():
-	t = Tester()
-	t.test()
+    t = Tester()
+    t.test()
 
 if __name__ == "__main__":
-	main()
+    main()
