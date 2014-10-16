@@ -13,35 +13,49 @@ class Flow():
         self.match = flow["match"]
         self.actions = flow["instructions"]["instruction"][0]["apply-actions"]["action"]
 
+        print "Added Flow -- Priority:", self.priority, "Match:", self.match, "Actions:", self.actions
+
     def does_it_match(self, arriving_port, src, dst):
-        ret_val = True
+        ret_val = False
         src_ip = IPAddress(src)
         dst_ip = IPAddress(dst)
 
         # Match on every field
-        for match_field in self.match['matchField']:
+        for match_field in self.match:
 
-            if match_field['type'] == 'NW_DST':
-                nw_dst = IPNetwork(match_field['value'] + '/' + match_field['mask'])
+            if match_field == 'ipv4-destination':
+                nw_dst = IPNetwork(self.match[match_field])
                 ret_val = dst_ip in nw_dst
                 if not ret_val:
                     break
 
-            elif match_field['type'] == 'NW_SRC':
-                nw_src = IPNetwork(match_field['value'] + '/' + match_field['mask'])
+            elif match_field == 'ipv4-source':
+                nw_src = IPNetwork(self.match[match_field])
                 ret_val = src_ip in nw_src
                 if not ret_val:
                     break
+
+            elif match_field == 'ethernet-match':
+                #TODO
+                ret_val = True
+
+            elif match_field == 'in-port':
+                #TODO
+                ret_val = True
 
         return ret_val
 
     def does_it_forward(self, departure_port):
         ret_val = False
 
+        # Requiring that a single action matches
+        # TODO: Confirm with Ahmad the story of multiple actions here.
+
         for action in self.actions:
-            if action['type'] == 'OUTPUT' and action['port']['id'] == departure_port:
-                ret_val = True
-                break
+            if "output-action" in action:
+                if action["output-action"]["output-node-connector"] == departure_port:
+                    ret_val = True
+                    break
 
         return ret_val
 
