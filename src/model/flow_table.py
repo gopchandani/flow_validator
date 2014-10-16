@@ -41,7 +41,8 @@ class Flow():
 
             elif match_field == 'in-port':
                 #TODO
-                ret_val = True
+                if self.match[match_field] != arriving_port:
+                    ret_val = False
 
         return ret_val
 
