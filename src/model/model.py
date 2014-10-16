@@ -45,7 +45,7 @@ class Model():
             switch_id = node["id"]
             switch_flow_tables = []
 
-            # Parse out the flow tables
+            # Parse out the flow tables in the switch
             for flow_table in node["flow-node-inventory:table"]:
                 #  Only capture those flow_tables that have actual rules in them
                 if "flow" in flow_table:
@@ -55,6 +55,7 @@ class Model():
             self.switch_ids.append(switch_id)
             self.graph.add_node(switch_id, type="switch", flow_tables= switch_flow_tables)
 
+            #  For all things that are connected to this switch...
             for node_connector in node["node-connector"]:
 
                 #  If the node connector points to a host
@@ -78,63 +79,22 @@ class Model():
         remaining_url = 'operational/network-topology:network-topology'
         resp, content = h.request(baseUrl + remaining_url, "GET")
         topology = json.loads(content)
-        topology_nodes = topology["network-topology"]["topology"][0]["node"]
+        topology_links = topology["network-topology"]["topology"][0]["link"]
 
-        for node in topology_nodes:
-            pprint.pprint(node)
+        for link in topology_links:
+            node1 = link["source"]["source-node"]
+            node2 = link["destination"]["dest-node"]
 
+            node1_port = link["source"]["source-tp"].split(":")[2]
+            node2_port = link["destination"]["dest-tp"].split(":")[2]
 
-        print self.graph.number_of_nodes()
-        print self.graph.number_of_edges()
+            edge_port_dict = {node1: node1_port, node2: node2_port}
+            e = (node1, node2)
+            self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
 
-        sys.exit(0)
-
-
-
-
-
-        # Get all the edges/links
-        resp, content = h.request(baseUrl + 'topology/' + containerName, "GET")
-        edgeProperties = json.loads(content)
-        odlEdges = edgeProperties['edgeProperties']
-
-        # Get all the active hosts
-        resp, content = h.request(baseUrl + 'hosttracker/' + containerName + 'hosts/active', "GET")
-        hostProperties = json.loads(content)
-        hosts = hostProperties["hostConfig"]
-
-        # Get all the flow statistics and construct Flow Tables from them
-        resp, content = h.request(baseUrl + 'statistics/' + containerName + 'flow', "GET")
-        flowStatistics = json.loads(content)
-        flowStatistics = flowStatistics["flowStatistics"]
-
-        flow_table_dict = {}
-        for fs in flowStatistics:
-            flow_table = FlowTable(fs)
-            flow_table_dict[fs["node"]["id"]] = flow_table
-
-        # Put switches in the graph
-        for node in odlNodes:
-            self.switch_ids.append(node['node']['id'])
-            self.graph.add_node(node['node']['id'], type="switch", flow_table=flow_table_dict[node["node"]["id"]])
-
-        #  Put all the edges between switches
-        for edge in odlEdges:
-            edgePorts = {edge['edge']['tailNodeConnector']['node']['id']: edge['edge']['tailNodeConnector']['id'],
-                         edge['edge']['headNodeConnector']['node']['id']: edge['edge']['headNodeConnector']['id']}
-
-            e = (edge['edge']['tailNodeConnector']['node']['id'], edge['edge']['headNodeConnector']['node']['id'])
-            self.graph.add_edge(*e, edge_ports_dict=edgePorts)
-
-        #  Put hosts in the graph and the relevant edges
-        for host in hosts:
-            self.graph.add_node(host['networkAddress'], type="host")
-            self.host_ids.append(host['networkAddress'])
-            e = (host['networkAddress'], host['nodeId'])
-
-            # It is unknown which host port the wire between switch and host is connected on
-            edgePorts = {host['networkAddress']: None, host['nodeId']: host['nodeConnectorId']}
-            self.graph.add_edge(*e, edge_ports_dict=edgePorts)
+        #print len(topology_links)
+        #print self.graph.number_of_nodes()
+        #print self.graph.number_of_edges()
 
     def get_node_graph(self):
         return self.graph
