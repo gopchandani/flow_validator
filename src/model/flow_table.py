@@ -1,14 +1,17 @@
 __author__ = 'Rakesh Kumar'
 
+
+import pprint
+
 from netaddr import IPNetwork
 from netaddr import IPAddress
 
 
 class Flow():
     def __init__(self, flow):
-        self.priority = flow["flow"]["priority"]
-        self.match = flow["flow"]["match"]
-        self.actions = flow["flow"]["actions"]
+        self.priority = flow["priority"]
+        self.match = flow["match"]
+        self.actions = flow["instructions"]["instruction"][0]["apply-actions"]["action"]
 
     def does_it_match(self, arriving_port, src, dst):
         ret_val = True
@@ -53,14 +56,12 @@ class Flow():
 
 
 class FlowTable():
-    def __init__(self, switch_flows):
-        self.node_id = switch_flows["node"]["id"]
-        self.node_type = switch_flows["node"]["type"]
+    def __init__(self, table_id, flow_list):
+
+        self.table_id = table_id
         self.flow_list = []
 
-        print switch_flows
-
-        for f in switch_flows["flowStatistic"]:
+        for f in flow_list:
             self.flow_list.append(Flow(f))
 
     def passes_flow(self, arriving_port, src, dst, departure_port):
