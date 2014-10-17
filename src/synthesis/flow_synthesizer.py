@@ -3,6 +3,7 @@ from create_xml import create_group, create_flow_rule_group, create_simple_flow_
 from create_url import create_group_url, create_flow_url
 from model.model import Model
 import networkx as nx
+import time
 
 class Flow_Synthesizer:
 
@@ -50,9 +51,12 @@ class Flow_Synthesizer:
 		link = self.get_link(dst, node_id)
 		print 'switch_port:', link[node_id]
 
-		# create_simple_flow_rule(id_flow=str(self.flow_id), id_table=self.table_id, out_port="1", src_ip='10.0.0.3', dst_ip='10.0.0.2', priority="102", 
-	# filename="simple.xml")
-	
+		create_simple_flow_rule(id_flow=str(self.flow_id), id_table=self.table_id, out_port=link[node_id], src_ip=src, dst_ip=dst, priority=self.priority, filename="simple.xml")
+		url = create_flow_url(node_id=node_id, table_id=self.table_id, flow_id=str(self.flow_id))
+		r = requests.put(url, data=open('simple.xml', 'rb'), auth=('admin', 'admin'), headers=self.header)		
+		print(r.text)		
+		self.flow_id+=1
+
 	# create rule that install group at node_id and actions are node_id->node_to_connect1,node_to_connect2 
 	def install_group_and_flow(self, src, dst, node_id, node_to_connect1, node_to_connect2):		
 		link1 = self.get_link(node_id, node_to_connect1)
@@ -64,6 +68,26 @@ class Flow_Synthesizer:
 		print 'node_id:', node_id
 		print 'action_port1:', action_port1
 		print 'action_port2:', action_port2
+		
+		create_group(id_group=str(self.group_id), action1=action_port1 , action2=action_port2, filename='group.xml')
+		group_url = create_group_url(node_id=node_id, group_id=str(self.group_id))
+
+		create_flow_rule_group(id_flow=str(self.flow_id), id_table=self.table_id, id_group=str(self.group_id), src_ip=src, dst_ip=dst, priority=self.priority, filename="groupflow.xml")
+		flow_group_url = create_flow_url(node_id=node_id, table_id=self.table_id, flow_id=str(self.flow_id))
+
+		self.flow_id+=1
+		self.group_id+=1
+
+		r1 = requests.put(group_url, data=open('group.xml', 'rb'), auth=('admin', 'admin'), headers=self.header)				
+		print r1.text
+		print r1.status_code
+		print r1.content
+		time.sleep(0.10)
+		r2 = requests.put(flow_group_url, data=open('groupflow.xml', 'rb'), auth=('admin', 'admin'), headers=self.header)		
+		print r2.text
+		print r2.status_code
+		print r2.content
+
 
 	def install_handle_failure_down_path(self, src, dst, node_reciever, node_sender, node_send_to):
 		link1 = self.get_link(node_reciever, node_sender)
@@ -77,15 +101,29 @@ class Flow_Synthesizer:
 		print 'node_sender:', node_sender
 		print 'node_send_to:', node_send_to
 
+		create_flow_with_inport(id_flow=str(self.flow_id), id_table=self.table_id, out_port=out_port, src_ip=src, dst_ip=dst, inport=in_port, priority=self.priority_down_link_break, filename='flow_inport_src_dst_match.xml')
+		flow_url = create_flow_url(node_id=node_reciever, table_id=self.table_id, flow_id=str(self.flow_id))
+		self.flow_id+=1
+		
+		r = requests.put(flow_url, data=open('flow_inport_src_dst_match.xml', 'rb'), auth=('admin', 'admin'), headers=self.header)				
+		print r.text
+
 	def install_path(self, src, dst):
 		
 		paths = self.get_path(src, dst)
 
 		# get host-node link and install flow
-		# first node in both paths 
+		# first node in both paths 		
 		len_path1 = len(paths[0])
 		len_path2 = len(paths[1])
-						
+		
+		if (len_path1 > len_path2):
+			tmp = paths[0]
+			paths[0] = paths[1]
+			paths[1] = tmp
+			len_path1 = len(paths[0])
+			len_path2 = len(paths[1])
+
 		# istall this on the destination switch
 		self.install_simple_flow(src=src, dst=dst, node_id=paths[0][len_path1 - 1])
 
@@ -122,7 +160,7 @@ class Flow_Synthesizer:
 def main():
     f = Flow_Synthesizer()
     f.install_path('10.0.0.1', '10.0.0.3')
-
+    f.install_path('10.0.0.3', '10.0.0.1')
 if __name__ == "__main__":
     main()
 

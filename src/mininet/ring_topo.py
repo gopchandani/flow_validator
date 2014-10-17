@@ -8,7 +8,7 @@ class RingTopo(Topo):
         
         Topo.__init__(self)
         
-        num_switches = 4
+        num_switches = 3
         num_hosts_per_switch = 1
         switches = []
 

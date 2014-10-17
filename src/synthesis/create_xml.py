@@ -234,10 +234,10 @@ def create_flow_with_inport(id_flow, id_table, out_port, src_ip, dst_ip, inport,
 	order_action = ET.SubElement(action, "order")
 	order_action.text = "0"
 
-	group_action = ET.SubElement(action, "group-action")
+	output_action = ET.SubElement(action, "output-action")
 
-	group_id = ET.SubElement(group_action, "group-id")
-	group_id.text = id_group
+	output_node_connector = ET.SubElement(output_action, "output-node-connector")
+	output_node_connector.text = out_port
 
 	match = ET.SubElement(root, 'match')
 
