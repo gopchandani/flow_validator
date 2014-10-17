@@ -13,7 +13,7 @@ class Flow():
         self.match = flow["match"]
         self.actions = flow["instructions"]["instruction"][0]["apply-actions"]["action"]
 
-        #print "Added Flow -- Priority:", self.priority, "Match:", self.match, "Actions:", self.actions
+        print "Added Flow -- Priority:", self.priority, "Match:", self.match, "Actions:", self.actions
 
     def does_it_match(self, arriving_port, src, dst):
         ret_val = False
@@ -35,14 +35,8 @@ class Flow():
                 if not ret_val:
                     break
 
-            elif match_field == 'ethernet-match':
-                #TODO
-                ret_val = True
-
             elif match_field == 'in-port':
-                #TODO
-                if self.match[match_field] != arriving_port:
-                    ret_val = False
+                ret_val = (self.match[match_field] == arriving_port)
 
         return ret_val
 
