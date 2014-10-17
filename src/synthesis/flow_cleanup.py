@@ -43,11 +43,7 @@ class Flow_Cleanup:
                                         urllib.quote(str(flow_id).encode("utf8")) + "/"
 
                         resp, content = h.request(baseUrl + remaining_url, "GET")
-                        print resp
-
-
-
-
+                        print resp["status"], resp, content
 
 def main():
     f = Flow_Cleanup()
