@@ -42,13 +42,17 @@ class BackupPaths:
                 #  Will this switch pass traffic along
                 is_reachable = node_flow_table.passes_flow(arriving_port, src, dst, departure_port)
 
-
-                # If flow fails to pass, just break, otherwise keep going to the next hop
-                if not is_reachable:
+                # If flow table passes, just break, otherwise keep going to the next table
+                if is_reachable:
                     break
 
-                # If flow arrived on the next hop, keep track of which port it arrived on
-                arriving_port = edge_ports_dict[node_path[i + 1]]
+            # If none of the flow tables were able to pass, then break
+
+            if not is_reachable:
+                break
+
+            # If flow arrived on the next hop, keep track of which port it arrived on
+            arriving_port = edge_ports_dict[node_path[i + 1]]
 
         return is_reachable
 
