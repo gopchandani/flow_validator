@@ -14,10 +14,9 @@ class Flow_Cleanup:
         h.add_credentials('admin', 'admin')
 
         # Get all the nodes/switches from the inventory API
-        remaining_url = 'config/opendaylight-inventory:nodes'
+        remaining_url = 'operational/opendaylight-inventory:nodes'
         resp, content = h.request(baseUrl + remaining_url, "GET")
         nodes = json.loads(content)
-
 
         for node in nodes["nodes"]["node"]:
 
@@ -25,17 +24,27 @@ class Flow_Cleanup:
             switch_flow_tables = []
 
             for flow_table in node["flow-node-inventory:table"]:
-                print(flow_table)
+
                 flow_table_id = flow_table["id"]
 
-                remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node_id) + \
-                                "/flow-node-inventory:table/" + str(flow_table_id) +"/"
+                if "flow" not in flow_table:
+                    continue
 
-                resp, content = h.request(baseUrl + remaining_url, "DELETE")
+                for flow in flow_table["flow"]:
+                    print flow
 
-                print resp, content
-                #table = json.loads(content)
-                #pprint(table)
+                    if "id" in flow:
+                        flow_id = flow["id"]
+                        print flow_id
+
+                        remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node_id) + \
+                                        "/flow-node-inventory:table/" + str(flow_table_id) +"/" + "flow" + "/" + flow_id
+
+                        print baseUrl + remaining_url
+                        resp, content = h.request(baseUrl + remaining_url, "GET")
+                        print resp, content
+
+
 
 
 
