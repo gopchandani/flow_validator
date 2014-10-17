@@ -13,7 +13,7 @@ class Flow():
         self.match = flow["match"]
         self.actions = flow["instructions"]["instruction"][0]["apply-actions"]["action"]
 
-        print "Added Flow -- Priority:", self.priority, "Match:", self.match, "Actions:", self.actions
+        print "-- Added flow with priority:", self.priority, "match:", flow["match"], "actions: ", self.actions
 
     def does_it_match(self, arriving_port, src, dst):
         ret_val = False
