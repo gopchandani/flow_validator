@@ -1,14 +1,15 @@
 import requests 
 from create_xml import create_group, create_flow_rule_group, create_simple_flow_rule, create_flow_with_inport
 from create_url import create_group_url, create_flow_url
-
-
+from model.model import Model
+import networkx as nx
 
 class Flow_Synthesizer:
 
 # link = get_link[node_id-1][node_id-2] info
 # link.node_id_1 link.node_id_1
 	def __init__(self):
+		self.model() = Model()
 		self.flow_id = 10
 		self.group_id = 1
 		self.table_id = '0'
@@ -16,15 +17,21 @@ class Flow_Synthesizer:
 		self.priority_down_link_break = '102'
 		self.header = {'Content-Type':'application/xml', 'Accept':'application/xml'}
 
+		self.model = Model()
+		self.graph = self.model.get_node_graph()
+		self.host_ids = self.model.get_host_ids()
+		self.switch_ids = self.model.get_switch_ids()
+
 	def get_link(self, node_id1, node_id2):
 		# returns link where link is {node_id1:port_on_node_id1,node_id2:port_on_node_id2}		
 		
 		return link
 	
 	# returns the path between h1 and h2 
-	def get_path(self, h1, h2):
+	def get_path(self, src, dst):
 		# returns the paths. where paths {0:shortest_path_list, 1:backup_path_list}
-		return paths
+		
+		return nx.all_simple_paths(self.graph,source=src, target=dst)
 
 	
 	def install_simple_flow(self, h, node_id):
@@ -41,39 +48,40 @@ class Flow_Synthesizer:
 
 	def install_path(self, src, dst):
 		
-		paths = self.get_path(h1, h2)
+		paths = self.get_path(src, dst)
 
 		# get host-node link and install flow
 		# first node in both paths 
-		len_shortest_path = len(paths[0])
-		len_backup_path = len(paths[1])
-
+		len_path1 = len(paths[0])
+		len_path2 = len(paths[1])
+		
 		# host_node_link = get_link(src, paths[0][0])
 		
 		# installs rule at edge switch to forward packet to host
 		
 		# self.install_simple_flow(h=src, node_id=paths[0][0])
 		
-		self.install_simple_flow(h=dst, node_id=paths[0][len_shortest_path - 1])
+		self.install_simple_flow(h=dst, node_id=paths[0][len_path1 - 1])
 
 		#create group and install flow at edge node (node connected to h1)
 		self.install_group_and_flow(src=src, dst=dst, node_id=paths[0][0], node_to_connect1=paths[0][1],node_to_connect2=paths[1][1])
 
+
 		# add group and flow values on nodes on shortest path
-		for i in range(1,len_shortest_path):
+		for i in range(1,len_path1):
 			self.install_group_and_flow(src=src, dst=dst, node_id=paths[0][i], node_to_connect1=paths[0][i-1],node_to_connect2=paths[0][i+1])
 
-		for i in range(1, len_backup_path):
+		for i in range(1, len_path2):
 			self.install_group_and_flow(src=src, dst=dst, node_id=paths[1][i], node_to_connect1=paths[1][i-1],node_to_connect2=paths[1][i+1])
 
 		# rules added to handle returning traffic due to failure down the link.
-		if (len_shortest_path > 2): 
-			for i in range(0, len_shortest_path - 2):
+		if (len_path1 > 2): 
+			for i in range(0, len_path1 - 2):
 				# add higher priority rule to handle packets coming due to failure down the path
 				self.install_handle_failure_down_path(src=src, dst=dst, node_reciever=paths[0][i], node_sender=paths[0][i+1])
 
-		if (len_backup_path > 2):
-			for i in range(0, len_shortest_path - 2):
+		if (len_path2 > 2):
+			for i in range(0, len_path1 - 2):
 				# add higher priority rule to handle packets coming due to failure down the path
 				self.install_handle_failure_down_path(src=src, dst=dst, node_reciever=paths[1][i], node_sender=paths[1][i+1])
 		
