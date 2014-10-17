@@ -5,6 +5,7 @@ import json
 import sys
 import pprint
 import httplib2
+import urllib
 
 class Flow_Cleanup:
 
@@ -35,15 +36,14 @@ class Flow_Cleanup:
 
                     if "id" in flow:
                         flow_id = flow["id"]
-                        print flow_id
+                        print "flow_id:", flow_id, "flow_id component:", flow_id.split('-')[1]
 
                         remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node_id) + \
-                                        "/flow-node-inventory:table/" + str(flow_table_id) +"/" + "flow" + "/" + flow_id
+                                        "/flow-node-inventory:table/" + str(flow_table_id) +"/" + "flow" + "/" + \
+                                        urllib.quote(str(flow_id).encode("utf8")) + "/"
 
-                        print baseUrl + remaining_url
                         resp, content = h.request(baseUrl + remaining_url, "GET")
-                        print resp, content
-
+                        print resp
 
 
 
