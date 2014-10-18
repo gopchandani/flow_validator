@@ -28,6 +28,8 @@ class Flow_Cleanup:
 
                 flow_table_id = flow_table["id"]
 
+                #print "flow_table_id:", flow_table
+
                 if "flow" not in flow_table:
                     continue
 

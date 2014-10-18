@@ -51,7 +51,7 @@ class Model():
             # Add the switch node
             self.switch_ids.append(switch_id)
             self.graph.add_node(switch_id, type="switch", flow_tables= switch_flow_tables)
-            print "Added Switch Node:", switch_id
+            #print "Added Switch Node:", switch_id
 
             #  For all things that are connected to this switch...
             for node_connector in node["node-connector"]:
@@ -63,7 +63,7 @@ class Model():
                     switch_port = node_connector["flow-node-inventory:port-number"]
 
                     self.graph.add_node(host_id, type="host")
-                    print "Added Host Node:",  host_id
+                    #print "Added Host Node:",  host_id
 
                     self.host_ids.append(host_id)
 
@@ -73,7 +73,7 @@ class Model():
                     edgePorts = {host_id: None, switch_id: switch_port}
                     self.graph.add_edge(*e, edge_ports_dict=edgePorts)
 
-                    print "Added edge between host:", host_id, "switch:", switch_id
+                    #print "Added edge between host:", host_id, "switch:", switch_id
 
 
         # Go through the topology API
@@ -105,7 +105,7 @@ class Model():
             e = (node1, node2)
             self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
 
-            print "Added edge between switch:", node1, " and switch:", node2
+            #print "Added edge between switch:", node1, " and switch:", node2
 
         #print len(topology_links)
         #print self.graph.number_of_nodes()

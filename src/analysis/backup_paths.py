@@ -64,8 +64,6 @@ class BackupPaths:
         print "Switches in the graph:", self.switch_ids
         print "Number of nodes add in the graph:", self.graph.number_of_nodes()
 
-        sys.exit(0)
-
         print "Checking for backup paths between all possible host pairs..."
         for src_host_id in self.host_ids:
             for dst_host_id in self.host_ids:
