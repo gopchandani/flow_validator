@@ -159,8 +159,8 @@ class Flow_Synthesizer:
 
 def main():
     f = Flow_Synthesizer()
-    f.install_path('10.0.0.2', '10.0.0.3')
-    f.install_path('10.0.0.3', '10.0.0.2')
+    f.install_path('10.0.0.2', '10.0.0.4')
+    f.install_path('10.0.0.4', '10.0.0.2')
 if __name__ == "__main__":
     main()
 

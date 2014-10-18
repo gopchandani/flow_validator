@@ -53,7 +53,7 @@ class Flow_Cleanup:
                                         "/flow-node-inventory:table/" + str(flow_table_id) +"/" + "flow" + "/" + \
                                         urllib.quote(str(flow_id).encode("utf8")) + "/"
 
-                        resp, content = h.request(baseUrl + remaining_url, "GET")
+                        resp, content = h.request(baseUrl + remaining_url, "DELETE")
                         print resp["status"], resp, content
 
 
