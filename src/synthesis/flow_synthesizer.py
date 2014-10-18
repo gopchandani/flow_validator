@@ -10,7 +10,7 @@ class Flow_Synthesizer:
 # link = get_link[node_id-1][node_id-2] info
 # link.node_id_1 link.node_id_1
 	def __init__(self):
-		self.flow_id = 10
+		self.flow_id = 100
 		self.group_id = 1
 		self.table_id = '0'
 		self.priority = '101'
@@ -31,8 +31,7 @@ class Flow_Synthesizer:
 	
 	# returns the path between h1 and h2 
 	def get_path(self, src, dst):
-		# returns the paths with only switcehs
-		# NOT SORTEC ACCORDING TO SIZE!				
+		# returns the paths with only switcehs				
 		paths = []
 		path_gen = nx.all_simple_paths(self.graph,source=src, target=dst)
 		for path in path_gen:
@@ -149,7 +148,7 @@ class Flow_Synthesizer:
 					self.install_handle_failure_down_path(src=src, dst=dst, node_reciever=paths[0][i], node_sender=paths[0][i+1], node_send_to=paths[0][i-1])
 
 		if (len_path2 > 2):
-			for i in range(0, len_path1 - 2):
+			for i in range(0, len_path2 - 2):
 				# add higher priority rule to handle packets coming due to failure down the path
 				if (i==0):
 					self.install_handle_failure_down_path(src=src, dst=dst, node_reciever=paths[1][i], node_sender=paths[1][i+1], node_send_to=paths[0][1])
@@ -159,8 +158,13 @@ class Flow_Synthesizer:
 
 def main():
     f = Flow_Synthesizer()
-    f.install_path('10.0.0.2', '10.0.0.4')
-    f.install_path('10.0.0.4', '10.0.0.2')
+
+    f.install_path('10.0.0.1', '10.0.0.2')
+    f.install_path('10.0.0.2', '10.0.0.1')
+
+    print "Total flows installed:", (f.flow_id - 100)
+
+
 if __name__ == "__main__":
     main()
 

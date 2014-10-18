@@ -28,6 +28,8 @@ class Flow_Cleanup:
 
                 flow_table_id = flow_table["id"]
 
+                #print "flow_table_id:", flow_table
+
                 if "flow" not in flow_table:
                     continue
 
@@ -49,15 +51,18 @@ class Flow_Cleanup:
 
                         print "Config"
 
-                        remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node_id) + \
-                                        "/flow-node-inventory:table/" + str(flow_table_id) +"/" + "flow" + "/" + \
-                                        urllib.quote(str(flow_id).encode("utf8")) + "/"
+               #         remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node_id) + \
+               #                         "/flow-node-inventory:table/" + str(flow_table_id) +"/" + \
+               #                         "flow" + "/" + \
+               #                         urllib.quote(str(flow_id).encode("utf8")) + "/"
+
+                        remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node_id)# + \
+                                        #"/flow-node-inventory:table/" + str(flow_table_id) +"/" + \
+                                        #"flow" + "/" + \
+                                        #urllib.quote(str(flow_id).encode("utf8")) + "/"
 
                         resp, content = h.request(baseUrl + remaining_url, "DELETE")
                         print resp["status"], resp, content
-
-
-
 
 def main():
     f = Flow_Cleanup()
