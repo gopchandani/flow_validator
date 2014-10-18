@@ -42,8 +42,14 @@ class Model():
             switch_id = node["id"]
             switch_flow_tables = []
 
+            pprint.pprint(node.keys())
+
+            for group in node["flow-node-inventory:group"]:
+                print group
+
             # Parse out the flow tables in the switch
             for flow_table in node["flow-node-inventory:table"]:
+
                 #  Only capture those flow_tables that have actual rules in them
                 if "flow" in flow_table:
                     switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"]))

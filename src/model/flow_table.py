@@ -13,7 +13,7 @@ class Flow():
         self.match = flow["match"]
         self.actions = flow["instructions"]["instruction"][0]["apply-actions"]["action"]
 
-        print "-- Added flow with priority:", self.priority, "match:", flow["match"], "actions: ", self.actions
+        #print "-- Added flow with priority:", self.priority, "match:", flow["match"], "actions: ", self.actions
 
     def does_it_match(self, arriving_port, src, dst):
         ret_val = False
@@ -44,13 +44,15 @@ class Flow():
         ret_val = False
 
         # Requiring that a single action matches
-        # TODO: Confirm with Ahmad the story of multiple actions here.
 
         for action in self.actions:
             if "output-action" in action:
                 if action["output-action"]["output-node-connector"] == departure_port:
                     ret_val = True
                     break
+            #TODO: Handle group actions
+            if "group-action" in action:
+                pass
 
         return ret_val
 
