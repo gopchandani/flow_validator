@@ -51,9 +51,25 @@ class Flow():
                 if action["output-action"]["output-node-connector"] == departure_port:
                     ret_val = True
                     break
-            #TODO: Handle group actions
+
             if "group-action" in action:
-                pass
+
+                for bucket in self.group_list:
+
+                    # Check to see if there is a matching group_id of fast-failover type group is present...
+                    if bucket["group-type"] == "group-ff" and \
+                                    action["group-action"]["group-id"] == bucket["group-id"]:
+
+                        #  Check the bucket actions and see if any of them would do the trick
+                        for bucket_actions in bucket["buckets"]["bucket"]:
+                            for bucket_action in bucket_actions["action"]:
+                                if bucket_action["output-action"]["output-node-connector"] == departure_port:
+                                    ret_val = True
+                                    break
+
+                            #  No need to keep going
+                            if ret_val:
+                                break
 
         return ret_val
 
