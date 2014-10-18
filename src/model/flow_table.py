@@ -8,10 +8,11 @@ from netaddr import IPAddress
 
 
 class Flow():
-    def __init__(self, flow):
+    def __init__(self, flow, group_list):
         self.priority = flow["priority"]
         self.match = flow["match"]
         self.actions = flow["instructions"]["instruction"][0]["apply-actions"]["action"]
+        self.group_list = group_list
 
         #print "-- Added flow with priority:", self.priority, "match:", flow["match"], "actions: ", self.actions
 
@@ -67,13 +68,14 @@ class Flow():
 
 
 class FlowTable():
-    def __init__(self, table_id, flow_list):
+    def __init__(self, table_id, flow_list, group_list):
 
         self.table_id = table_id
         self.flow_list = []
+        self.group_list = group_list
 
         for f in flow_list:
-            self.flow_list.append(Flow(f))
+            self.flow_list.append(Flow(f, group_list))
 
     def passes_flow(self, arriving_port, src, dst, departure_port):
         ret_val = False

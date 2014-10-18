@@ -23,6 +23,22 @@ class Model():
         #  Load up everything
         self._load_model()
 
+    def _fetch_group_list(self, node_id):
+        group_list = None
+
+        baseUrl = 'http://localhost:8181/restconf/'
+        h = httplib2.Http(".cache")
+        h.add_credentials('admin', 'admin')
+
+        # Get all the nodes/switches from the inventory API
+        remaining_url = 'config/opendaylight-inventory:nodes/node/' + str(node_id)
+
+        resp, content = h.request(baseUrl + remaining_url, "GET")
+        node = json.loads(content)
+
+        group_list = node["node"][0]["flow-node-inventory:group"]
+
+        return group_list
 
     def _load_model(self):
         baseUrl = 'http://localhost:8181/restconf/'
@@ -35,24 +51,20 @@ class Model():
         resp, content = h.request(baseUrl + remaining_url, "GET")
         nodes = json.loads(content)
 
-
         #  Go through each node and grab the switches and the corresponding hosts associated with the switch
         for node in nodes["nodes"]["node"]:
 
             switch_id = node["id"]
             switch_flow_tables = []
 
-            pprint.pprint(node.keys())
-
-            for group in node["flow-node-inventory:group"]:
-                print group
+            group_list = self._fetch_group_list(switch_id)
 
             # Parse out the flow tables in the switch
             for flow_table in node["flow-node-inventory:table"]:
 
                 #  Only capture those flow_tables that have actual rules in them
                 if "flow" in flow_table:
-                    switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"]))
+                    switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"], group_list))
 
             # Add the switch node
             self.switch_ids.append(switch_id)
