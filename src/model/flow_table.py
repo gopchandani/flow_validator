@@ -78,7 +78,6 @@ class Flow():
         if self.does_it_match(arriving_port, src, dst):
             if self.does_it_forward(departure_port):
                 ret_val = True
-                print "Found a rule that will forward this."
 
         return ret_val
 
