@@ -1,7 +1,7 @@
 import xml.etree.cElementTree as ET
 
 # writes xml for group creation
-def create_group(id_group, action1, action2, filename):
+def create_group(id_group, action1, action2, watchport2, filename):
 	root = ET.Element('group')
 	root.set('xmlns', "urn:opendaylight:flow:inventory")
 	
@@ -25,12 +25,12 @@ def create_group(id_group, action1, action2, filename):
 	bucket_id.text = '1'
 	
 	watch_port = ET.SubElement(bucket, "watch_port")
-	watch_port.text = action1
 
+	watch_port.text = action1
+	
 	weight = ET.SubElement(bucket, 'weight')
 	weight.text = '20'
-	# 
-	
+		
 	bucket_two = ET.SubElement(buckets, 'bucket')
 	action_two = ET.SubElement(bucket_two, 'action')
 	order_two = ET.SubElement(action_two, 'order')
@@ -44,7 +44,10 @@ def create_group(id_group, action1, action2, filename):
 	bucket_id2.text = '2'
 	
 	watch_port2 = ET.SubElement(bucket_two, 'watch_port')
-	watch_port2.text = action2
+	
+	# pass watch_port2 as a parameter
+	watch_port2.text = watchport2
+	
 	weight2 = ET.SubElement(bucket_two, 'weight')
 	weight2.text = '20'
 	# 

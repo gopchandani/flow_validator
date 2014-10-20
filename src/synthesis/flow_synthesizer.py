@@ -57,18 +57,26 @@ class Flow_Synthesizer:
 		self.flow_id+=1
 
 	# create rule that install group at node_id and actions are node_id->node_to_connect1,node_to_connect2 
-	def install_group_and_flow(self, src, dst, node_id, node_to_connect1, node_to_connect2):		
+	def install_group_and_flow(self, src, dst, node_id, node_to_connect1, node_to_connect2, return_flag):		
 		link1 = self.get_link(node_id, node_to_connect1)
 		action_port1 = link1[node_id]
-		link2 = self.get_link(node_id,node_to_connect2)
-		action_port2 = link2[node_id]
 		
+		link2 = self.get_link(node_id, node_to_connect2)
+
+		if return_flag is True:
+			action_port2 = '4294967288'
+		else:	
+			action_port2 = link2[node_id]
+		
+		watch_port2 = link2[node_id]
+
 		print 'In install_group_and_flow '
 		print 'node_id:', node_id
 		print 'action_port1:', action_port1
 		print 'action_port2:', action_port2
+		print 'watch_port2:', watch_port2
 		
-		create_group(id_group=str(self.group_id), action1=action_port1 , action2=action_port2, filename='group.xml')
+		create_group(id_group=str(self.group_id), action1=action_port1 , action2=action_port2, watchport2=watch_port2, filename='group.xml')
 		group_url = create_group_url(node_id=node_id, group_id=str(self.group_id))
 
 		create_flow_rule_group(id_flow=str(self.flow_id), id_table=self.table_id, id_group=str(self.group_id), src_ip=src, dst_ip=dst, priority=self.priority, filename="groupflow.xml")
@@ -127,15 +135,16 @@ class Flow_Synthesizer:
 		self.install_simple_flow(src=src, dst=dst, node_id=paths[0][len_path1 - 1])
 
 		#create group and install flow at edge node (node connected to h1)
-		self.install_group_and_flow(src=src, dst=dst, node_id=paths[0][0], node_to_connect1=paths[0][1],node_to_connect2=paths[1][1])
+		self.install_group_and_flow(src=src, dst=dst, node_id=paths[0][0], node_to_connect1=paths[0][1],node_to_connect2=paths[1][1],return_flag=False)
 
 
 		# add group and flow values on nodes on first path
 		for i in range(1,len_path1-1):
-			self.install_group_and_flow(src=src, dst=dst, node_id=paths[0][i], node_to_connect1=paths[0][i+1],node_to_connect2=paths[0][i-1])
+			# node_to_connect2 needs to be changed to OFPP_IN_PORT = 4294967288, -1 used as a flag
+			self.install_group_and_flow(src=src, dst=dst, node_id=paths[0][i], node_to_connect1=paths[0][i+1],node_to_connect2=paths[0][i-1], return_flag =True)
 
 		for i in range(1, len_path2-1):
-			self.install_group_and_flow(src=src, dst=dst, node_id=paths[1][i], node_to_connect1=paths[1][i+1],node_to_connect2=paths[1][i-1])
+			self.install_group_and_flow(src=src, dst=dst, node_id=paths[1][i], node_to_connect1=paths[1][i+1],node_to_connect2=paths[1][i-1], return_flag=True)
 
 		# rules added to handle returning traffic due to failure down the link.
 		if (len_path1 > 2): 
@@ -159,8 +168,8 @@ class Flow_Synthesizer:
 def main():
     f = Flow_Synthesizer()
 
-    f.install_path('10.0.0.1', '10.0.0.2')
-    f.install_path('10.0.0.2', '10.0.0.1')
+    f.install_path('10.0.0.1', '10.0.0.3')
+    f.install_path('10.0.0.3', '10.0.0.1')
 
     print "Total flows installed:", (f.flow_id - 100)
 
