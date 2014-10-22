@@ -59,28 +59,36 @@ class BackupPaths:
 
         #  Go through the path, one edge at a time
 
-        for i in range(1, len(node_path) - 1):
+        for i in range(1, len(node_path) - 2):
+
+            edge_has_backup = False
 
             # Keep a copy of this handy
             edge_ports = self.graph[node_path[i]][node_path[i + 1]]['edge_ports_dict']
 
-            # Delete the edge and check for all possible flows, if one exists, say that there is a backup
-            # Add the edge back regardless
-
+            # Delete the edge
             self.graph.remove_edge(node_path[i], node_path[i + 1])
 
-            # Go through all simple paths
-            asp = nx.all_simple_paths(self.graph, source=src, target=dst)
+            # Go through all simple paths that result when the link breaks
+            #  If any of them passes the flow, then this edge has a backup
+
+            asp = nx.all_simple_paths(self.graph, source=node_path[i], target=dst)
             for p in asp:
                 print "Topological Backup Path Candidate:", p
-                has_backup = self.check_flow_reachability(src, dst, p)
+                edge_has_backup = self.check_flow_reachability(src, dst, p)
 
-                print "has_backup:", has_backup
-                if has_backup:
+                print "edge_has_backup:", edge_has_backup
+                if edge_has_backup:
                     break
+
 
             # Add the edge back and the data that goes along with it
             self.graph.add_edge(node_path[i], node_path[i + 1], edge_ports_dict=edge_ports)
+
+            has_backup = edge_has_backup
+
+            if not edge_has_backup:
+                break
 
         return has_backup
 
@@ -105,12 +113,12 @@ class BackupPaths:
                     print "--"
                     print "Topological Primary Path Candidate", p
                     is_reachable_flow = self.check_flow_reachability(src_host_id, dst_host_id, p)
-                    has_backup_flows = self.check_flow_backups(src_host_id, dst_host_id, p)
-
                     print "is_reachable_flow:", is_reachable_flow
-                    if is_reachable_flow and has_backup_flows:
 
-                        total_paths_with_backup += 1
+                    if is_reachable_flow:
+                        has_backup_flows = self.check_flow_backups(src_host_id, dst_host_id, p)
+                        if has_backup_flows:
+                            total_paths_with_backup += 1
 
                 print "--"
                 print "total_paths:", total_paths_with_backup

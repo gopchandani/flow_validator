@@ -35,9 +35,7 @@ class Model():
 
         resp, content = h.request(baseUrl + remaining_url, "GET")
 
-
         if resp["status"] == "200":
-            print resp["status"], resp, content
             node = json.loads(content)
             group_list = node["node"][0]["flow-node-inventory:group"]
         else:
