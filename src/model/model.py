@@ -71,7 +71,7 @@ class Model():
 
             # Add the switch node
             self.switch_ids.append(switch_id)
-            self.graph.add_node(switch_id, type="switch", flow_tables= switch_flow_tables)
+            self.graph.add_node(switch_id, node_type="switch", flow_tables= switch_flow_tables)
 
 
         # Go through the topology API
@@ -86,7 +86,7 @@ class Model():
             if node["node-id"].startswith("host"):
                 host_ip = node["host-tracker-service:addresses"][0]["ip"]
                 self.host_ids.append(host_ip)
-                self.graph.add_node(host_ip, type="host")
+                self.graph.add_node(host_ip, node_type="host")
 
         for link in topology_links:
 
