@@ -87,10 +87,6 @@ class BackupPaths:
 
     def analyze_all_node_pairs(self):
 
-        print "Hosts in the graph:", self.host_ids
-        print "Switches in the graph:", self.switch_ids
-        print "Number of nodes add in the graph:", self.graph.number_of_nodes()
-
         print "Checking for backup paths between all possible host pairs..."
         for src_host_id in self.host_ids:
             for dst_host_id in self.host_ids:
@@ -104,6 +100,7 @@ class BackupPaths:
                 total_paths_with_backup = 0
 
                 asp = nx.all_simple_paths(self.graph, source=src_host_id, target=dst_host_id)
+
                 for p in asp:
                     print "--"
                     print "Topological Primary Path Candidate", p

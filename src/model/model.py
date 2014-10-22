@@ -24,7 +24,7 @@ class Model():
         self._load_model()
 
     def _fetch_group_list(self, node_id):
-        group_list = None
+        group_list = []
 
         baseUrl = 'http://localhost:8181/restconf/'
         h = httplib2.Http(".cache")
@@ -33,10 +33,17 @@ class Model():
         # Get all the nodes/switches from the inventory API
         remaining_url = 'config/opendaylight-inventory:nodes/node/' + str(node_id)
 
-        resp, content = h.request(baseUrl + remaining_url, "GET")
-        node = json.loads(content)
+        print baseUrl+remaining_url
 
-        group_list = node["node"][0]["flow-node-inventory:group"]
+        resp, content = h.request(baseUrl + remaining_url, "GET")
+
+
+        if resp["status"] == "200":
+            print resp["status"], resp, content
+            node = json.loads(content)
+            group_list = node["node"][0]["flow-node-inventory:group"]
+        else:
+            print "Could not fetch any groups via the API, status:", resp["status"]
 
         return group_list
 
@@ -83,6 +90,7 @@ class Model():
                     self.graph.add_node(host_id, type="host")
                     #print "Added Host Node:",  host_id
 
+                    print "Adding to host_ids: ", host_id, "switch_id:", switch_id
                     self.host_ids.append(host_id)
 
                     e = (host_id, switch_id)
@@ -125,10 +133,10 @@ class Model():
 
             #print "Added edge between switch:", node1, " and switch:", node2
 
-        #print len(topology_links)
-        #print self.graph.number_of_nodes()
-        #print self.graph.number_of_edges()
-        #print self.graph.nodes()
+        print "Hosts in the graph:", self.host_ids
+        print "Switches in the graph:", self.switch_ids
+        print "Number of nodes in the graph:", self.graph.number_of_nodes()
+
 
     def get_node_graph(self):
         return self.graph
@@ -143,8 +151,6 @@ class Model():
 
 def main():
     m = Model()
-    m._load_model()
-
 
 if __name__ == "__main__":
     main()
