@@ -33,8 +33,6 @@ class Model():
         # Get all the nodes/switches from the inventory API
         remaining_url = 'config/opendaylight-inventory:nodes/node/' + str(node_id)
 
-        print baseUrl+remaining_url
-
         resp, content = h.request(baseUrl + remaining_url, "GET")
 
 
@@ -76,30 +74,6 @@ class Model():
             # Add the switch node
             self.switch_ids.append(switch_id)
             self.graph.add_node(switch_id, type="switch", flow_tables= switch_flow_tables)
-            #print "Added Switch Node:", switch_id
-
-            #  For all things that are connected to this switch...
-            for node_connector in node["node-connector"]:
-
-                #  If the node connector points to a host
-                if "address-tracker:addresses" in node_connector:
-
-                    host_id =  node_connector["address-tracker:addresses"][0]["ip"]
-                    switch_port = node_connector["flow-node-inventory:port-number"]
-
-                    self.graph.add_node(host_id, type="host")
-                    #print "Added Host Node:",  host_id
-
-                    print "Adding to host_ids: ", host_id, "switch_id:", switch_id
-                    self.host_ids.append(host_id)
-
-                    e = (host_id, switch_id)
-
-                    # It is unknown which host port the wire between switch and host is connected on
-                    edgePorts = {host_id: None, switch_id: switch_port}
-                    self.graph.add_edge(*e, edge_ports_dict=edgePorts)
-
-                    #print "Added edge between host:", host_id, "switch:", switch_id
 
 
         # Go through the topology API
@@ -108,6 +82,13 @@ class Model():
         topology = json.loads(content)
         topology_links = topology["network-topology"]["topology"][0]["link"]
         topology_nodes = topology["network-topology"]["topology"][0]["node"]
+
+        # Extract all hosts in the topology
+        for node in topology_nodes:
+            if node["node-id"].startswith("host"):
+                host_ip = node["host-tracker-service:addresses"][0]["ip"]
+                self.host_ids.append(host_ip)
+                self.graph.add_node(host_ip, type="host")
 
         for link in topology_links:
 
@@ -136,6 +117,7 @@ class Model():
         print "Hosts in the graph:", self.host_ids
         print "Switches in the graph:", self.switch_ids
         print "Number of nodes in the graph:", self.graph.number_of_nodes()
+        print "Number of edges in the graph:", self.graph.number_of_edges()
 
 
     def get_node_graph(self):
