@@ -22,6 +22,8 @@ class SynthesizeMod():
             if self.model.graph.node[n]["node_type"] == "switch":
                 print "We are in business here at n:", self.model.graph.node[n]["node_type"], n
 
+                port_list = self.model.graph.node[n]["port_list"]
+                print port_list
 
 
 def main():

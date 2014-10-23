@@ -71,15 +71,17 @@ class Model():
                     switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"], group_list))
 
 
-            port_list = []
+            switch_port_list = []
 
             # Parse out the information about all the ports in the switch
             for nc in node["node-connector"]:
-                port_list.append(Port(nc))
+                switch_port_list.append(Port(nc))
 
             # Add the switch node
             self.switch_ids.append(switch_id)
-            self.graph.add_node(switch_id, node_type="switch", flow_tables= switch_flow_tables)
+            self.graph.add_node(switch_id, node_type="switch",
+                                flow_tables= switch_flow_tables,
+                                port_list = switch_port_list)
 
 
         # Go through the topology API
