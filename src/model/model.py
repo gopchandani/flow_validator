@@ -8,6 +8,7 @@ import httplib2
 import networkx as nx
 
 from flow_table import FlowTable
+from port import Port
 
 
 class Model():
@@ -68,6 +69,13 @@ class Model():
                 #  Only capture those flow_tables that have actual rules in them
                 if "flow" in flow_table:
                     switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"], group_list))
+
+
+            port_list = []
+
+            # Parse out the information about all the ports in the switch
+            for nc in node["node-connector"]:
+                port_list.append(Port(nc))
 
             # Add the switch node
             self.switch_ids.append(switch_id)
