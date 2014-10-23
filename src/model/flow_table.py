@@ -41,7 +41,7 @@ class Flow():
 
         return ret_val
 
-    def does_it_forward(self, departure_port):
+    def does_it_forward(self, arriving_port, departure_port):
         ret_val = False
 
         # Requiring that a single action matches
@@ -67,6 +67,12 @@ class Flow():
                                     ret_val = True
                                     break
 
+                                #  If the output port is IN_PORT
+                                if bucket_action["output-action"]["output-node-connector"] == "4294967288" \
+                                        and arriving_port == departure_port:
+                                    ret_val = True
+                                    break
+
                             #  No need to keep going
                             if ret_val:
                                 break
@@ -76,7 +82,7 @@ class Flow():
     def passes_flow(self, arriving_port, src, dst, departure_port):
         ret_val = False
         if self.does_it_match(arriving_port, src, dst):
-            if self.does_it_forward(departure_port):
+            if self.does_it_forward(arriving_port, departure_port):
                 ret_val = True
 
         return ret_val
