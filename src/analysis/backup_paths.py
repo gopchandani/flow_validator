@@ -136,6 +136,25 @@ class BackupPaths:
 
         return has_backup
 
+    def has_primary_and_backup(self, src_host_id, dst_host_id):
+        has_primary_and_backup = False
+
+        #  First grab all topological paths between src/dst hosts
+        asp = nx.all_simple_paths(self.graph, source=src_host_id, target=dst_host_id)
+
+        for p in asp:
+            print "Topological Primary Path Candidate", p
+            is_reachable_flow = self.check_flow_reachability(src_host_id, dst_host_id, p)
+            print "is_reachable_flow:", is_reachable_flow
+
+            if is_reachable_flow:
+                has_primary_and_backup = self.check_flow_backups(src_host_id, dst_host_id, p)
+
+                # Keep going if this one did not have a backup
+                if has_primary_and_backup:
+                    break
+
+        return has_primary_and_backup
 
     def analyze_all_node_pairs(self):
 
@@ -147,25 +166,17 @@ class BackupPaths:
                 if src_host_id == dst_host_id:
                     continue
 
-                print "----------------------------------------------------"
-                print 'Paths from', src_host_id, 'to', dst_host_id
-                total_paths_with_backup = 0
+                print "--------------------------------------------------------------------------------------------------------"
+                print 'Checking primary and backup paths from', src_host_id, 'to', dst_host_id
+                print "--------------------------------------------------------------------------------------------------------"
 
-                asp = nx.all_simple_paths(self.graph, source=src_host_id, target=dst_host_id)
+                primary_and_backup_exists = self.has_primary_and_backup(src_host_id, dst_host_id)
 
-                for p in asp:
-                    print "--"
-                    print "Topological Primary Path Candidate", p
-                    is_reachable_flow = self.check_flow_reachability(src_host_id, dst_host_id, p)
-                    print "is_reachable_flow:", is_reachable_flow
-
-                    if is_reachable_flow:
-                        has_backup_flows = self.check_flow_backups(src_host_id, dst_host_id, p)
-                        if has_backup_flows:
-                            total_paths_with_backup += 1
-
-                print "--"
-                print "total_paths:", total_paths_with_backup
+                print "--------------------------------------------------------------------------------------------------------"
+                if primary_and_backup_exists:
+                    print "Result: Backup exists."
+                else:
+                    print "Result:Backup does not exist"
 
 
 def main():
