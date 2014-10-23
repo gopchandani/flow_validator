@@ -98,6 +98,8 @@ class FlowTable():
         for f in flow_list:
             self.flow_list.append(Flow(f, group_list))
 
+        print "Length of flow_list:", len(flow_list)
+
     def passes_flow(self, arriving_port, src, dst, departure_port):
         ret_val = False
 
