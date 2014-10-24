@@ -40,6 +40,9 @@ class SynthesizeMod():
         instructions = {"instruction":instruction}
         flow["instructions"] = instructions
 
+        #  Wrap it in inventory
+        flow = {"flow-node-inventory:flow": flow}
+
         return flow
 
     def _populate_switch(self, node_id):
