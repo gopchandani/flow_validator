@@ -38,7 +38,11 @@ class Model():
 
         if resp["status"] == "200":
             node = json.loads(content)
-            group_list = node["node"][0]["flow-node-inventory:group"]
+
+            if "flow-node-inventory:group" in node["node"][0]:
+                group_list = node["node"][0]["flow-node-inventory:group"]
+            else:
+                print "No groups configured in node:", node_id
         else:
             print "Could not fetch any groups via the API, status:", resp["status"]
 

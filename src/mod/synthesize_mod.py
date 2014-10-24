@@ -48,6 +48,13 @@ class SynthesizeMod():
 
         return flow
 
+    def _create_mod_group(self):
+
+        group = dict()
+
+
+        return group
+
     def _populate_switch(self, node_id):
 
         table_id = 0
