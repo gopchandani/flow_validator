@@ -28,10 +28,12 @@ class Flow_Cleanup:
 
                 flow_table_id = flow_table["id"]
 
-                #print "flow_table_id:", flow_table
 
                 if "flow" not in flow_table:
                     continue
+
+                print "flow_table_id:", flow_table["id"], "len(flow_table['flow''])", len(flow_table["flow"])
+
 
                 for flow in flow_table["flow"]:
                     print flow
@@ -48,21 +50,26 @@ class Flow_Cleanup:
 
                         resp, content = h.request(baseUrl + remaining_url, "GET")
                         print resp["status"], resp, content
+                        print content
 
-                        print "Config"
+                        flow_rule = json.loads(content)["flow-node-inventory:flow"][0]
+                        for key in flow_rule:
+                            print key, ":", flow_rule[key]
 
-                        remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node_id) + \
-                                        "/flow-node-inventory:table/" + str(flow_table_id) +"/" + \
-                                        "flow" + "/" + \
-                                        urllib.quote(str(flow_id).encode("utf8")) + "/"
-
-                        print baseUrl+remaining_url
-
-                        resp, content = h.request(baseUrl + remaining_url, "GET")
-                        print resp["status"], resp, content
-
-                        resp, content = h.request(baseUrl + remaining_url, "DELETE")
-                        print resp["status"], resp, content
+                        # print "Config"
+                        #
+                        # remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node_id) + \
+                        #                 "/flow-node-inventory:table/" + str(flow_table_id) +"/" + \
+                        #                 "flow" + "/" + \
+                        #                 urllib.quote(str(flow_id).encode("utf8")) + "/"
+                        #
+                        # print baseUrl+remaining_url
+                        #
+                        # resp, content = h.request(baseUrl + remaining_url, "GET")
+                        # print resp["status"], resp, content
+                        #
+                        # resp, content = h.request(baseUrl + remaining_url, "GET")
+                        # print resp["status"], resp, content
 
 def main():
     f = Flow_Cleanup()
