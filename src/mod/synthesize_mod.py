@@ -34,8 +34,8 @@ class SynthesizeMod():
 
         #Compile action
         output_action = {"output-node-connector": out_port}
-        action = {"output-actions": output_action}
-        apply_actions = {"action": action, "order": 0}
+        action = {"output-action": output_action, "order": 0}
+        apply_actions = {"action": action}
         instruction = {"apply-actions":apply_actions, "order": 0}
         instructions = {"instruction":instruction}
         flow["instructions"] = instructions
