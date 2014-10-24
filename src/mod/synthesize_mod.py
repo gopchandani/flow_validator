@@ -13,6 +13,9 @@ class SynthesizeMod():
     def __init__(self):
         self.model = Model()
 
+        self.h = httplib2.Http(".cache")
+        self.h.add_credentials('admin', 'admin')
+
     def _create_mpls_tag_apply_rule(self, flow_id, table_id, out_port):
 
         flow = dict()
@@ -47,10 +50,6 @@ class SynthesizeMod():
 
     def _populate_switch(self, node_id):
 
-
-        #port_list = self.model.graph.node[n]["port_list"]
-        #print port_list
-
         table_id = 0
         flow_id = 1
         out_port = 1
@@ -58,19 +57,9 @@ class SynthesizeMod():
         flow = self._create_mpls_tag_apply_rule(flow_id, table_id, out_port)
         url = url = create_flow_url(node_id, table_id, str(flow_id))
 
-        print flow
-        print url
-        print json.dumps(flow)
-
-        h = httplib2.Http(".cache")
-        h.add_credentials('admin', 'admin')
-        resp, content = h.request(url, "PUT",
-                                  headers={'Content-Type': 'application/json; charset=UTF-8'},
-                                  body=json.dumps(flow))
-
-        print resp, content
-
-        #r = requests.put(url, data=open('simple.xml', 'rb'), auth=('admin', 'admin'), headers=self.header)
+        resp, content = self.h.request(url, "PUT",
+                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                       body=json.dumps(flow))
 
 
     def trigger(self):
