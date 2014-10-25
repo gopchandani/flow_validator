@@ -48,10 +48,28 @@ class SynthesizeMod():
 
         return flow
 
-    def _create_mod_group(self):
+    def _create_mod_group(self, group_id, group_type):
 
         group = dict()
+        group["group-id"] = group_id
+        group["group-type"] = group_type
+        group["barrier"] = False
 
+        #  Bucket
+        actions = []
+
+        action1 = {"action": [{'order': 0, 'output-action': {'output-node-connector': '3'}}],
+                   "bucket-id": 1, "watch_port": 3, "weight": 20}
+        action2 = {"action": [{'order': 1, 'output-action': {'output-node-connector': '4294967288'}}],
+                   "bucket-id": 2, "watch_port": 1, "weight": 20}
+
+        actions.append(action1)
+        actions.append(action2)
+
+        bucket = {"bucket": actions}
+        group["buckets"] = bucket
+
+        group = {"flow-node-inventory:group": group}
 
         return group
 
@@ -62,11 +80,22 @@ class SynthesizeMod():
         out_port = 1
 
         flow = self._create_mpls_tag_apply_rule(flow_id, table_id, out_port)
-        url = url = create_flow_url(node_id, table_id, str(flow_id))
+        url = create_flow_url(node_id, table_id, str(flow_id))
 
         resp, content = self.h.request(url, "PUT",
                                        headers={'Content-Type': 'application/json; charset=UTF-8'},
                                        body=json.dumps(flow))
+
+        print "Flow installation:", resp
+
+        group_id = 7
+        group = self._create_mod_group(group_id, "group-ff")
+        url = create_group_url(node_id, group_id)
+        resp, content = self.h.request(url, "PUT",
+                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                       body=json.dumps(group))
+
+        print "Group installation:", resp, content
 
 
     def trigger(self):
