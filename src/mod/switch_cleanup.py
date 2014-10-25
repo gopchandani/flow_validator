@@ -53,6 +53,8 @@ class SwitchCleanup:
                 # resp, content = h.request(baseUrl + remaining_url, "GET")
                 # print resp["status"], resp, content
 
+    def cleanup_group_table(self, node_id, group_table):
+        pprint.pprint(group_table)
 
     def __init__(self):
         self.baseUrl = 'http://localhost:8181/restconf/'
@@ -60,7 +62,7 @@ class SwitchCleanup:
         self.h.add_credentials('admin', 'admin')
 
         # Get all the nodes/switches from the inventory API
-        remaining_url = 'operational/opendaylight-inventory:nodes'
+        remaining_url = 'config/opendaylight-inventory:nodes'
         resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
         nodes = json.loads(content)
 
@@ -69,8 +71,14 @@ class SwitchCleanup:
             node_id = node["id"]
             switch_flow_tables = []
 
-            for flow_table in node["flow-node-inventory:table"]:
-                self.cleanup_flow_table(node_id, flow_table)
+            # Flow Tables
+            #for flow_table in node["flow-node-inventory:table"]:
+            #    self.cleanup_flow_table(node_id, flow_table)
+
+            #  Groups
+
+            if "flow-node-inventory:group" in node:
+                self.cleanup_group_table(node_id, node["flow-node-inventory:group"])
 
 
 def main():
