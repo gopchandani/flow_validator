@@ -16,7 +16,7 @@ class SynthesizeMod():
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
-    def _create_mpls_tag_apply_rule(self, flow_id, table_id, out_port):
+    def _create_mpls_tag_apply_rule(self, flow_id, table_id, group_id):
 
         flow = dict()
 
@@ -36,8 +36,8 @@ class SynthesizeMod():
         flow["match"] = match
 
         #Compile action
-        output_action = {"output-node-connector": out_port}
-        action = {"output-action": output_action, "order": 0}
+        group_action = {"group-id": group_id}
+        action = {"group-action": group_action, "order": 0}
         apply_actions = {"action": action}
         instruction = {"apply-actions":apply_actions, "order": 0}
         instructions = {"instruction":instruction}
@@ -77,9 +77,9 @@ class SynthesizeMod():
 
         table_id = 0
         flow_id = 1
-        out_port = 1
+        group_id = 7
 
-        flow = self._create_mpls_tag_apply_rule(flow_id, table_id, out_port)
+        flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
         url = create_flow_url(node_id, table_id, str(flow_id))
 
         resp, content = self.h.request(url, "PUT",
@@ -88,7 +88,6 @@ class SynthesizeMod():
 
         print "Flow installation:", resp
 
-        group_id = 7
         group = self._create_mod_group(group_id, "group-ff")
         url = create_group_url(node_id, group_id)
         resp, content = self.h.request(url, "PUT",
