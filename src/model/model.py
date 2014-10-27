@@ -92,8 +92,14 @@ class Model():
         remaining_url = 'operational/network-topology:network-topology'
         resp, content = h.request(baseUrl + remaining_url, "GET")
         topology = json.loads(content)
-        topology_links = topology["network-topology"]["topology"][0]["link"]
-        topology_nodes = topology["network-topology"]["topology"][0]["node"]
+
+        topology_links = dict()
+        if "link" in topology["network-topology"]["topology"][0]:
+            topology_links = topology["network-topology"]["topology"][0]["link"]
+
+        topology_nodes = dict()
+        if "node" in topology["network-topology"]["topology"][0]:
+            topology_nodes = topology["network-topology"]["topology"][0]["node"]
 
         # Extract all hosts in the topology
         for node in topology_nodes:

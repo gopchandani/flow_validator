@@ -6,6 +6,7 @@ from synthesis.create_url import create_group_url, create_flow_url
 import httplib2
 import json
 import time
+import sys
 
 
 
@@ -59,8 +60,11 @@ class SynthesizeMod():
         #  Bucket
         actions = []
 
-        action1 = {"action": [{'order': 0, 'output-action': {'output-node-connector': '3'}}],
+        action1 = {"action": [{'order': 0, 'push-mpls-action': {'ethernet-type': '34887'}},
+                              {'order': 1, 'set-field': {'protocol-match-fields': {"mpls-label": "27"}}},
+                              {'order': 2, 'output-action': {'output-node-connector': '3'}}],
                    "bucket-id": 1, "watch_port": 3, "weight": 20}
+
         action2 = {"action": [{'order': 1, 'output-action': {'output-node-connector': '4294967288'}}],
                    "bucket-id": 2, "watch_port": 1, "weight": 20}
 
@@ -80,9 +84,10 @@ class SynthesizeMod():
         flow_id = 1
         group_id = 7
 
-
         group = self._create_mod_group(group_id, "group-ff")
         url = create_group_url(node_id, group_id)
+
+
         resp, content = self.h.request(url, "PUT",
                                        headers={'Content-Type': 'application/json; charset=UTF-8'},
                                        body=json.dumps(group))
@@ -92,14 +97,14 @@ class SynthesizeMod():
 
 
 
-        flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
-        url = create_flow_url(node_id, table_id, str(flow_id))
-
-        resp, content = self.h.request(url, "PUT",
-                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
-                                       body=json.dumps(flow))
-
-        print "Flow installation:", resp
+        # flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
+        # url = create_flow_url(node_id, table_id, str(flow_id))
+        #
+        # resp, content = self.h.request(url, "PUT",
+        #                                headers={'Content-Type': 'application/json; charset=UTF-8'},
+        #                                body=json.dumps(flow))
+        #
+        # print "Flow installation:", resp
 
 
     def trigger(self):

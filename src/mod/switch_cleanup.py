@@ -72,8 +72,8 @@ class SwitchCleanup:
             switch_flow_tables = []
 
             # Flow Tables
-            #for flow_table in node["flow-node-inventory:table"]:
-            #    self.cleanup_flow_table(node_id, flow_table)
+            for flow_table in node["flow-node-inventory:table"]:
+                self.cleanup_flow_table(node_id, flow_table)
 
             #  Groups
 
