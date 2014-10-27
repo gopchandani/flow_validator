@@ -5,6 +5,7 @@ from synthesis.create_url import create_group_url, create_flow_url
 
 import httplib2
 import json
+import time
 
 
 
@@ -79,14 +80,6 @@ class SynthesizeMod():
         flow_id = 1
         group_id = 7
 
-        flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
-        url = create_flow_url(node_id, table_id, str(flow_id))
-
-        resp, content = self.h.request(url, "PUT",
-                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
-                                       body=json.dumps(flow))
-
-        print "Flow installation:", resp
 
         group = self._create_mod_group(group_id, "group-ff")
         url = create_group_url(node_id, group_id)
@@ -95,6 +88,18 @@ class SynthesizeMod():
                                        body=json.dumps(group))
 
         print "Group installation:", resp, content
+
+
+
+
+        flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
+        url = create_flow_url(node_id, table_id, str(flow_id))
+
+        resp, content = self.h.request(url, "PUT",
+                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                       body=json.dumps(flow))
+
+        print "Flow installation:", resp
 
 
     def trigger(self):
