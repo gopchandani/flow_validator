@@ -78,6 +78,17 @@ class SynthesizeMod():
 
         return group
 
+    def _push_change(self, url, pushed_content):
+
+        resp, content = self.h.request(url, "PUT",
+                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                       body=json.dumps(pushed_content))
+
+        print "Pushed:", pushed_content
+        print resp, content
+        time.sleep(0.5)
+
+
     def _populate_switch(self, node_id):
 
         table_id = 0
@@ -86,25 +97,11 @@ class SynthesizeMod():
 
         group = self._create_mod_group(group_id, "group-ff")
         url = create_group_url(node_id, group_id)
-
-
-        resp, content = self.h.request(url, "PUT",
-                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
-                                       body=json.dumps(group))
-
-        print "Group installation:", resp, content
-
-
-
+        self._push_change(url, group)
 
         flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
         url = create_flow_url(node_id, table_id, str(flow_id))
-
-        resp, content = self.h.request(url, "PUT",
-                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
-                                       body=json.dumps(flow))
-
-        print "Flow installation:", resp
+        self._push_change(url, flow)
 
 
     def trigger(self):
