@@ -97,14 +97,14 @@ class SynthesizeMod():
 
 
 
-        # flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
-        # url = create_flow_url(node_id, table_id, str(flow_id))
-        #
-        # resp, content = self.h.request(url, "PUT",
-        #                                headers={'Content-Type': 'application/json; charset=UTF-8'},
-        #                                body=json.dumps(flow))
-        #
-        # print "Flow installation:", resp
+        flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
+        url = create_flow_url(node_id, table_id, str(flow_id))
+
+        resp, content = self.h.request(url, "PUT",
+                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                       body=json.dumps(flow))
+
+        print "Flow installation:", resp
 
 
     def trigger(self):
