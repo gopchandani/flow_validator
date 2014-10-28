@@ -146,6 +146,7 @@ class SynthesizeMod():
         self._push_change(url, flow)
 
 
+
     def trigger(self):
 
         #  First figure out what switches exist in the current topology
