@@ -14,7 +14,7 @@ class LineTopo(Topo):
 
         #  Add switches and hosts under them
         for i in range(num_switches):
-            curr_switch = self.addSwitch("s" + str(i))
+            curr_switch = self.addSwitch("s" + str(i+1))
             switches.append(curr_switch)
 
             for j in range(num_hosts_per_switch):
@@ -24,7 +24,6 @@ class LineTopo(Topo):
         #  Add links between switches
         if num_switches > 1:
             for i in range(num_switches - 1):
-                print switches[i], type(switches[i])
                 self.addLink(switches[i], switches[i+1])
 
 

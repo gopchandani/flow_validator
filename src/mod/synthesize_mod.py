@@ -95,7 +95,9 @@ class SynthesizeMod():
                    "bucket-id": 1, "watch_port": 3, "weight": 20}
 
 
-        action2 = {"action": [{'order': 1, 'output-action': {'output-node-connector':port}}],
+        action2 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
+                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}},
+                              {'order': 2, 'output-action': {'output-node-connector':port}}],
                    "bucket-id": 2, "watch_port": 1, "weight": 20}
 
         actions.append(action1)
@@ -114,38 +116,48 @@ class SynthesizeMod():
                                        headers={'Content-Type': 'application/json; charset=UTF-8'},
                                        body=json.dumps(pushed_content))
 
-        print "Pushed:", pushed_content
-        print resp, content
+        print "Pushed:", pushed_content[pushed_content.keys()[0]], resp["status"]
         time.sleep(0.5)
 
 
     def _populate_switch(self, node_id):
 
-        table_id = 0
-        flow_id = 1
-        group_id = 7
+        #  S1 tags plain IP packets (with no vlan tags) with a vlan tag 1234 and sends them to ALL
+        #  its neighbors, in this particular line case, there is just one guy called s2 that receives it
 
-        group = self._create_mod_group(group_id, "group-ff", "1234", self.OFPP_ALL)
-        url = create_group_url(node_id, group_id)
-        self._push_change(url, group)
+        if node_id == "openflow:1":
 
-        flow = self._create_ethernet_match_group_apply_rule(flow_id, table_id, group_id)
-        url = create_flow_url(node_id, table_id, str(flow_id))
-        self._push_change(url, flow)
+            table_id = 0
+            flow_id = 1
+            group_id = 7
 
+            group = self._create_mod_group(group_id, "group-ff", "1234", self.OFPP_ALL)
+            url = create_group_url(node_id, group_id)
+            self._push_change(url, group)
 
-        flow_id = 2
-        group_id = 8
-
-        group = self._create_mod_group(group_id, "group-ff", "1235", self.OFPP_IN)
-        url = create_group_url(node_id, group_id)
-        self._push_change(url, group)
-
-        flow = self._create_vlan_match_group_apply_rule(flow_id, table_id, group_id, "1234")
-        url = create_flow_url(node_id, table_id, str(flow_id))
-        self._push_change(url, flow)
+            flow = self._create_ethernet_match_group_apply_rule(flow_id, table_id, group_id)
+            url = create_flow_url(node_id, table_id, str(flow_id))
+            self._push_change(url, flow)
 
 
+        # Switch s2 just sends the traffic with vlan tag 1234 back to s1
+        if node_id == "openflow:2":
+
+            table_id = 0
+            flow_id = 2
+            group_id = 8
+
+            group = self._create_mod_group(group_id, "group-ff", "1235", self.OFPP_IN)
+            url = create_group_url(node_id, group_id)
+            self._push_change(url, group)
+
+            flow = self._create_vlan_match_group_apply_rule(flow_id, table_id, group_id, "1234")
+            url = create_flow_url(node_id, table_id, str(flow_id))
+            self._push_change(url, flow)
+
+        #  Switch s3 does not thing
+        if node_id == "openflow:3":
+            pass
 
     def trigger(self):
 
