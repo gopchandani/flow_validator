@@ -18,7 +18,7 @@ class SynthesizeMod():
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
-    def _create_mpls_tag_apply_rule(self, flow_id, table_id, group_id):
+    def _create_vlan_tag_apply_rule(self, flow_id, table_id, group_id):
 
         flow = dict()
 
@@ -60,25 +60,11 @@ class SynthesizeMod():
         #  Bucket
         actions = []
 
-
-        # action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100, "vlan-id": "1234"}},
-        #                       {'order': 2, 'output-action': {'output-node-connector': '4294967288'}}],
-        #            "bucket-id": 1, "watch_port": 3, "weight": 20}
-        #
-
         action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100, "vlan-id": "1234"}},
                               {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": "1234", "vlan-id-present":True}}}},
                               {'order': 2, 'output-action': {'output-node-connector': '4294967288'}}],
                    "bucket-id": 1, "watch_port": 3, "weight": 20}
 
-
-        # action1 = {"action": [{'order': 0, 'push-mpls-action': {'ethernet-type': 34887}},
-        #                        {'order': 1, 'set-field': {'protocol-match-fields': {"mpls-label": "27"}}},
-        #                        {'order': 2, 'output-action': {'output-node-connector': '4294967288'}}],
-        #            "bucket-id": 1, "watch_port": 3, "weight": 20}
-
-        #action1 = {"action": [{'order': 0, 'output-action': {'output-node-connector': '4294967288'}}],
-        #           "bucket-id": 1, "watch_port": 3, "weight": 20}
 
         action2 = {"action": [{'order': 1, 'output-action': {'output-node-connector': '4294967288'}}],
                    "bucket-id": 2, "watch_port": 1, "weight": 20}
@@ -114,7 +100,7 @@ class SynthesizeMod():
         url = create_group_url(node_id, group_id)
         self._push_change(url, group)
 
-        flow = self._create_mpls_tag_apply_rule(flow_id, table_id, group_id)
+        flow = self._create_vlan_tag_apply_rule(flow_id, table_id, group_id)
         url = create_flow_url(node_id, table_id, str(flow_id))
         self._push_change(url, flow)
 
