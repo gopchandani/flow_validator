@@ -13,8 +13,11 @@ import sys
 class SynthesizeMod():
 
     def __init__(self):
-        self.model = Model()
 
+        self.OFPP_ALL = 0xfffffffc
+        self.OFPP_IN = 0xfffffff8
+
+        self.model = Model()
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
@@ -76,7 +79,7 @@ class SynthesizeMod():
 
         return flow
 
-    def _create_mod_group(self, group_id, group_type, tag):
+    def _create_mod_group(self, group_id, group_type, tag, port):
 
         group = dict()
         group["group-id"] = group_id
@@ -88,11 +91,11 @@ class SynthesizeMod():
 
         action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
                               {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}},
-                              {'order': 2, 'output-action': {'output-node-connector': '4294967288'}}],
+                              {'order': 2, 'output-action': {'output-node-connector':port}}],
                    "bucket-id": 1, "watch_port": 3, "weight": 20}
 
 
-        action2 = {"action": [{'order': 1, 'output-action': {'output-node-connector': '4294967288'}}],
+        action2 = {"action": [{'order': 1, 'output-action': {'output-node-connector':port}}],
                    "bucket-id": 2, "watch_port": 1, "weight": 20}
 
         actions.append(action1)
@@ -122,7 +125,7 @@ class SynthesizeMod():
         flow_id = 1
         group_id = 7
 
-        group = self._create_mod_group(group_id, "group-ff", "1234")
+        group = self._create_mod_group(group_id, "group-ff", "1234", self.OFPP_ALL)
         url = create_group_url(node_id, group_id)
         self._push_change(url, group)
 
@@ -134,7 +137,7 @@ class SynthesizeMod():
         flow_id = 2
         group_id = 8
 
-        group = self._create_mod_group(group_id, "group-ff", "1235")
+        group = self._create_mod_group(group_id, "group-ff", "1235", self.OFPP_IN)
         url = create_group_url(node_id, group_id)
         self._push_change(url, group)
 

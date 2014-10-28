@@ -2,7 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 from mininet.topo import Topo
 
-class RingTopo(Topo):
+class LineTopo(Topo):
     
     def __init__(self):
         
@@ -27,9 +27,5 @@ class RingTopo(Topo):
                 print switches[i], type(switches[i])
                 self.addLink(switches[i], switches[i+1])
 
-            #  Form a ring only when there are more than two switches
-            if num_switches > 2:
-                self.addLink(switches[0], switches[-1])
 
-
-topos = {"ringtopo": (lambda: RingTopo())}
+topos = {"linetopo": (lambda: LineTopo())}
