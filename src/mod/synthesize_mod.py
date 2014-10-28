@@ -60,10 +60,25 @@ class SynthesizeMod():
         #  Bucket
         actions = []
 
-        action1 = {"action": [{'order': 0, 'push-mpls-action': {'ethernet-type': '34887'}},
-                              {'order': 1, 'set-field': {'protocol-match-fields': {"mpls-label": "27"}}},
-                              {'order': 2, 'output-action': {'output-node-connector': '3'}}],
+
+        # action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100, "vlan-id": "1234"}},
+        #                       {'order': 2, 'output-action': {'output-node-connector': '4294967288'}}],
+        #            "bucket-id": 1, "watch_port": 3, "weight": 20}
+        #
+
+        action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100, "vlan-id": "1234"}},
+                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": "1234", "vlan-id-present":True}}}},
+                              {'order': 2, 'output-action': {'output-node-connector': '4294967288'}}],
                    "bucket-id": 1, "watch_port": 3, "weight": 20}
+
+
+        # action1 = {"action": [{'order': 0, 'push-mpls-action': {'ethernet-type': 34887}},
+        #                        {'order': 1, 'set-field': {'protocol-match-fields': {"mpls-label": "27"}}},
+        #                        {'order': 2, 'output-action': {'output-node-connector': '4294967288'}}],
+        #            "bucket-id": 1, "watch_port": 3, "weight": 20}
+
+        #action1 = {"action": [{'order': 0, 'output-action': {'output-node-connector': '4294967288'}}],
+        #           "bucket-id": 1, "watch_port": 3, "weight": 20}
 
         action2 = {"action": [{'order': 1, 'output-action': {'output-node-connector': '4294967288'}}],
                    "bucket-id": 2, "watch_port": 1, "weight": 20}
