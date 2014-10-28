@@ -18,7 +18,7 @@ class SynthesizeMod():
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
-    def _create_vlan_tag_apply_rule(self, flow_id, table_id, group_id):
+    def _create_ethernet_match_group_apply_rule(self, flow_id, table_id, group_id):
 
         flow = dict()
 
@@ -34,6 +34,12 @@ class SynthesizeMod():
         #Compile match
         ethernet_type = {"type": str(0x0800)}
         ethernet_match = {"ethernet-type": ethernet_type}
+
+        vlan_id = dict()
+        vlan_id["vlan-id"] = 0
+        vlan_id["vlan-id-present"] = False
+        vlan_match = {"vlan-id": vlan_id}
+
         match = {"ethernet-match": ethernet_match}
         flow["match"] = match
 
@@ -50,7 +56,27 @@ class SynthesizeMod():
 
         return flow
 
-    def _create_mod_group(self, group_id, group_type):
+    def _create_vlan_match_group_apply_rule(self, flow_id, table_id, group_id, tag):
+
+        flow = dict()
+
+        #  Get a stock ethernet matching, group activating flow
+        flow = self._create_ethernet_match_group_apply_rule(flow_id, table_id, group_id)
+
+        #  Match on VLAN
+        vlan_id = dict()
+        vlan_id["vlan-id"] = tag
+        vlan_id["vlan-id-present"] = True
+
+        vlan_match = {"vlan-id": vlan_id}
+        print vlan_match
+
+        flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
+        flow["flow-node-inventory:flow"]["priority"] = 2
+
+        return flow
+
+    def _create_mod_group(self, group_id, group_type, tag):
 
         group = dict()
         group["group-id"] = group_id
@@ -60,8 +86,8 @@ class SynthesizeMod():
         #  Bucket
         actions = []
 
-        action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100, "vlan-id": "1234"}},
-                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": "1234", "vlan-id-present":True}}}},
+        action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
+                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}},
                               {'order': 2, 'output-action': {'output-node-connector': '4294967288'}}],
                    "bucket-id": 1, "watch_port": 3, "weight": 20}
 
@@ -96,11 +122,23 @@ class SynthesizeMod():
         flow_id = 1
         group_id = 7
 
-        group = self._create_mod_group(group_id, "group-ff")
+        group = self._create_mod_group(group_id, "group-ff", "1234")
         url = create_group_url(node_id, group_id)
         self._push_change(url, group)
 
-        flow = self._create_vlan_tag_apply_rule(flow_id, table_id, group_id)
+        flow = self._create_ethernet_match_group_apply_rule(flow_id, table_id, group_id)
+        url = create_flow_url(node_id, table_id, str(flow_id))
+        self._push_change(url, flow)
+
+
+        flow_id = 2
+        group_id = 8
+
+        group = self._create_mod_group(group_id, "group-ff", "1235")
+        url = create_group_url(node_id, group_id)
+        self._push_change(url, group)
+
+        flow = self._create_vlan_match_group_apply_rule(flow_id, table_id, group_id, "1234")
         url = create_flow_url(node_id, table_id, str(flow_id))
         self._push_change(url, flow)
 
