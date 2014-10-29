@@ -39,7 +39,7 @@ class SynthesizeMod():
         ethernet_match = {"ethernet-type": ethernet_type}
 
         vlan_id = dict()
-        vlan_id["vlan-id"] = 0
+        vlan_id["vlan-id"] = 0x0000
         vlan_id["vlan-id-present"] = False
         vlan_match = {"vlan-id": vlan_id}
 
@@ -75,7 +75,6 @@ class SynthesizeMod():
         print vlan_match
 
         flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
-        flow["flow-node-inventory:flow"]["priority"] = 2
 
         return flow
 
@@ -140,6 +139,17 @@ class SynthesizeMod():
             self._push_change(url, flow)
 
 
+            group_id = 8
+            flow_id = 2
+            group = self._create_mod_group(group_id, "group-ff", "1236", self.OFPP_ALL)
+            url = create_group_url(node_id, group_id)
+            self._push_change(url, group)
+
+            flow = self._create_vlan_match_group_apply_rule(flow_id, table_id, group_id, "1235")
+            url = create_flow_url(node_id, table_id, str(flow_id))
+            self._push_change(url, flow)
+
+
         # Switch s2 just sends the traffic with vlan tag 1234 back to s1
         if node_id == "openflow:2":
 
@@ -155,7 +165,7 @@ class SynthesizeMod():
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
-        #  Switch s3 does not thing
+        #  Switch s3 does not do nothing
         if node_id == "openflow:3":
             pass
 
