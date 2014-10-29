@@ -72,7 +72,6 @@ class SynthesizeMod():
         vlan_id["vlan-id-present"] = True
 
         vlan_match = {"vlan-id": vlan_id}
-        print vlan_match
 
         flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
 
@@ -115,7 +114,7 @@ class SynthesizeMod():
                                        headers={'Content-Type': 'application/json; charset=UTF-8'},
                                        body=json.dumps(pushed_content))
 
-        print "Pushed:", pushed_content[pushed_content.keys()[0]], resp["status"]
+        print "Pushed:", pushed_content.keys()[0], resp["status"]
         time.sleep(0.5)
 
 
@@ -135,17 +134,6 @@ class SynthesizeMod():
             self._push_change(url, group)
 
             flow = self._create_ethernet_match_group_apply_rule(flow_id, table_id, group_id)
-            url = create_flow_url(node_id, table_id, str(flow_id))
-            self._push_change(url, flow)
-
-
-            group_id = 8
-            flow_id = 2
-            group = self._create_mod_group(group_id, "group-ff", "1236", self.OFPP_ALL)
-            url = create_group_url(node_id, group_id)
-            self._push_change(url, group)
-
-            flow = self._create_vlan_match_group_apply_rule(flow_id, table_id, group_id, "1235")
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
