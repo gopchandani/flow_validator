@@ -107,20 +107,15 @@ class SynthesizeMod():
 
         return flow
 
-    # def _create_match_no_vlan_tag_instruct_group_next_table_rule(self, flow_id, table_id, group_id, next_table_id):
-    #
-    #     flow = self._create_match_no_vlan_tag_instruct_group_rule(flow_id, table_id, group_id)
-    #
-    #     #  Assert that table kicks in
-    #     group_action = {"group-id": group_id}
-    #     action = {"group-action": group_action, "order": 0}
-    #     apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
-    #
-    #     go_to_table_instruction = {"go-to-table" : {"table_id": next_table_id}, "order": 1}
-    #     flow["flow-node-inventory:flow"]["instructions"]["instruction"][""] = apply_action_instruction
-    #
-    #     return flow
-    #
+    def _create_match_no_vlan_tag_instruct_group_next_table_rule(self, flow_id, table_id, group_id, next_table_id):
+
+        flow = self._create_match_no_vlan_tag_instruct_group_rule(flow_id, table_id, group_id)
+
+        go_to_table_instruction = {"go-to-table" : {"table_id": next_table_id}, "order": 1}
+        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
+
+        return flow
+
 
 
     def _create_mod_group_with_outport(self, group_id, group_type, tag, port):
@@ -180,7 +175,7 @@ class SynthesizeMod():
             url = create_group_url(node_id, group_id)
             self._push_change(url, group)
 
-            flow = self._create_match_no_vlan_tag_instruct_group_rule(flow_id, table_id, group_id)
+            flow = self._create_match_no_vlan_tag_instruct_group_next_table_rule(flow_id, table_id, group_id, 1)
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
