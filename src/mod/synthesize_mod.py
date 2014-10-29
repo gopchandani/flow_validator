@@ -21,7 +21,7 @@ class SynthesizeMod():
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
-    def _create_no_vlan_tag_match_group_apply_rule(self, flow_id, table_id, group_id):
+    def _create_base_rule(self, flow_id, table_id):
 
         flow = dict()
 
@@ -34,49 +34,81 @@ class SynthesizeMod():
         flow["cookie"] = flow_id
         flow["cookie_mask"] = 255
 
-        #Compile match
-        ethernet_type = {"type": str(0x0800)}
-        ethernet_match = {"ethernet-type": ethernet_type}
-        match = {"ethernet-match": ethernet_match}
-        flow["match"] = match
+        #Empty match
+        flow["match"] = {}
 
-        vlan_id = dict()
-        vlan_id["vlan-id"] = str(0)
-        vlan_id["vlan-id-present"] = False
-        vlan_match = {"vlan-id": vlan_id}
-        flow["match"]["vlan-match"] = vlan_match
-
-
-        #Compile action
-        group_action = {"group-id": group_id}
-        action = {"group-action": group_action, "order": 0}
-        apply_actions = {"action": action}
-        instruction = {"apply-actions":apply_actions, "order": 0}
-        instructions = {"instruction":instruction}
-        flow["instructions"] = instructions
+        #Empty instructions
+        flow["instructions"] = {"instruction": {}}
 
         #  Wrap it in inventory
         flow = {"flow-node-inventory:flow": flow}
 
         return flow
 
-    def _create_vlan_match_group_apply_rule(self, flow_id, table_id, group_id, tag):
 
-        flow = dict()
+    def _create_match_no_vlan_tag_instruct_group_rule(self, flow_id, table_id, group_id):
 
-        #  Get a stock ethernet matching, group activating flow
-        flow = self._create_no_vlan_tag_match_group_apply_rule(flow_id, table_id, group_id)
+        flow = self._create_base_rule(flow_id, table_id)
 
-        #  Match on VLAN
+        #Compile match
+
+        #  Assert that matching packets are of ethertype IP
+        ethernet_type = {"type": str(0x0800)}
+        ethernet_match = {"ethernet-type": ethernet_type}
+        flow["flow-node-inventory:flow"]["match"]["ethernet-match"] = ethernet_match
+
+        #  Assert that matching packets have no VLAN tag on them
         vlan_id = dict()
-        vlan_id["vlan-id"] = tag
-        vlan_id["vlan-id-present"] = True
+        vlan_id["vlan-id"] = str(0)
+        vlan_id["vlan-id-present"] = False
         vlan_match = {"vlan-id": vlan_id}
+
         flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
+
+        #Compile instruction
+
+        #  Assert that group is executed upon match
+        group_action = {"group-id": group_id}
+        action = {"group-action": group_action, "order": 0}
+        apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
+
+        flow["flow-node-inventory:flow"]["instructions"]["instruction"] = apply_action_instruction
 
         return flow
 
-    def _create_mod_group(self, group_id, group_type, tag, port):
+
+    def _create_match_vlan_tag_instruct_group_rule(self, flow_id, table_id, group_id, match_tag):
+
+        flow = self._create_base_rule(flow_id, table_id)
+
+        #Compile match
+
+        #  Assert that matching packets are of ethertype IP
+        ethernet_type = {"type": str(0x0800)}
+        ethernet_match = {"ethernet-type": ethernet_type}
+        flow["flow-node-inventory:flow"]["match"]["ethernet-match"] = ethernet_match
+
+        #  Assert that matching packets have have specified VLAN tag on them
+        vlan_id = dict()
+        vlan_id["vlan-id"] = match_tag
+        vlan_id["vlan-id-present"] = True
+        vlan_match = {"vlan-id": vlan_id}
+
+        flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
+
+        #Compile instruction
+
+        #  Assert that group is executed upon match
+        group_action = {"group-id": group_id}
+        action = {"group-action": group_action, "order": 0}
+        apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
+
+        flow["flow-node-inventory:flow"]["instructions"]["instruction"] = apply_action_instruction
+
+        return flow
+
+
+    def _create_mod_group_with_outport(self, group_id, group_type, tag, port):
 
         group = dict()
         group["group-id"] = group_id
@@ -107,6 +139,7 @@ class SynthesizeMod():
 
         return group
 
+
     def _push_change(self, url, pushed_content):
 
         resp, content = self.h.request(url, "PUT",
@@ -115,22 +148,6 @@ class SynthesizeMod():
 
         print "Pushed:", pushed_content.keys()[0], resp["status"]
         time.sleep(0.5)
-
-    def _populate_switch_2(self, node_id):
-
-        if node_id == "openflow:1":
-
-            table_id = 0
-            flow_id = 1
-            group_id = 7
-
-            group = self._create_mod_group(group_id, "group-ff", "1234", self.OFPP_ALL)
-            url = create_group_url(node_id, group_id)
-            self._push_change(url, group)
-
-            flow = self._create_no_vlan_tag_match_group_apply_rule(flow_id, table_id, group_id)
-            url = create_flow_url(node_id, table_id, str(flow_id))
-            self._push_change(url, flow)
 
 
     def _populate_switch(self, node_id):
@@ -144,23 +161,24 @@ class SynthesizeMod():
             flow_id = 1
             group_id = 7
 
-            group = self._create_mod_group(group_id, "group-ff", "1234", self.OFPP_ALL)
+            group = self._create_mod_group_with_outport(group_id, "group-ff", "1234", self.OFPP_ALL)
             url = create_group_url(node_id, group_id)
             self._push_change(url, group)
 
-            flow = self._create_no_vlan_tag_match_group_apply_rule(flow_id, table_id, group_id)
+            flow = self._create_match_no_vlan_tag_instruct_group_rule(flow_id, table_id, group_id)
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
+            table_id = 0
             flow_id = 2
             group_id = 8
 
-            group = self._create_mod_group(group_id, "group-ff", "1236", self.OFPP_IN)
+            group = self._create_mod_group_with_outport(group_id, "group-ff", "1236", self.OFPP_IN)
             url = create_group_url(node_id, group_id)
             self._push_change(url, group)
 
 
-            flow = self._create_vlan_match_group_apply_rule(flow_id, table_id, group_id, "1235")
+            flow = self._create_match_vlan_tag_instruct_group_rule(flow_id, table_id, group_id, "1235")
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
@@ -172,11 +190,11 @@ class SynthesizeMod():
             flow_id = 2
             group_id = 8
 
-            group = self._create_mod_group(group_id, "group-ff", "1235", self.OFPP_IN)
+            group = self._create_mod_group_with_outport(group_id, "group-ff", "1235", self.OFPP_IN)
             url = create_group_url(node_id, group_id)
             self._push_change(url, group)
 
-            flow = self._create_vlan_match_group_apply_rule(flow_id, table_id, group_id, "1234")
+            flow = self._create_match_vlan_tag_instruct_group_rule(flow_id, table_id, group_id, "1234")
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
