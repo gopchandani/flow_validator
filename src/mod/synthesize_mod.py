@@ -117,12 +117,66 @@ class SynthesizeMod():
         return flow
 
 
-
-    def _create_mod_group_with_outport(self, group_id, group_type, tag, port):
+    def _create_mod_group_with_outport(self, group_id, out_port):
 
         group = dict()
         group["group-id"] = group_id
-        group["group-type"] = group_type
+        group["group-type"] = "group-ff"
+        group["barrier"] = False
+
+        #  Bucket
+        actions = []
+
+        action1 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
+                   "bucket-id": 1, "watch_port": 3, "weight": 20}
+
+        action2 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
+                   "bucket-id": 2, "watch_port": 1, "weight": 20}
+
+        actions.append(action1)
+        actions.append(action2)
+
+        bucket = {"bucket": actions}
+        group["buckets"] = bucket
+
+        group = {"flow-node-inventory:group": group}
+
+        return group
+
+    def _create_mod_group_with_vlan_tag_write(self, group_id, tag):
+
+        group = dict()
+        group["group-id"] = group_id
+        group["group-type"] = "group-ff"
+        group["barrier"] = False
+
+        #  Bucket
+        actions = []
+
+        action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
+                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}}],
+                   "bucket-id": 1, "watch_port": 3, "weight": 20}
+
+
+        action2 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
+                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}}],
+                   "bucket-id": 2, "watch_port": 1, "weight": 20}
+
+        actions.append(action1)
+        actions.append(action2)
+
+        bucket = {"bucket": actions}
+        group["buckets"] = bucket
+
+        group = {"flow-node-inventory:group": group}
+
+        return group
+
+    def _create_mod_group_with_outport_and_vlan_tag_write(self, group_id, tag, port):
+
+        group = dict()
+        group["group-id"] = group_id
+        group["group-type"] = "group-ff"
         group["barrier"] = False
 
         #  Bucket
@@ -167,28 +221,28 @@ class SynthesizeMod():
 
         if node_id == "openflow:1":
 
-            table_id = 0
-            flow_id = 1
+            #  Install the two groups for performing two separate functions
             group_id = 7
-
-            group = self._create_mod_group_with_outport(group_id, "group-ff", "1234", self.OFPP_ALL)
+            group = self._create_mod_group_with_vlan_tag_write(group_id, "1234")
             url = create_group_url(node_id, group_id)
             self._push_change(url, group)
 
-            flow = self._create_match_no_vlan_tag_instruct_group_next_table_rule(flow_id, table_id, group_id, 1)
+            group_id = 8
+            group = self._create_mod_group_with_outport(group_id, self.OFPP_ALL)
+            url = create_group_url(node_id, group_id)
+            self._push_change(url, group)
+
+
+            #  Install the rule that invokes next table AND Calls out for a group
+            table_id = 0
+            flow_id = 1
+            flow = self._create_match_no_vlan_tag_instruct_group_next_table_rule(flow_id, table_id, 7, 1)
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
-            table_id = 0
+            table_id = 1
             flow_id = 2
-            group_id = 8
-
-            group = self._create_mod_group_with_outport(group_id, "group-ff", "1236", self.OFPP_IN)
-            url = create_group_url(node_id, group_id)
-            self._push_change(url, group)
-
-
-            flow = self._create_match_vlan_tag_instruct_group_rule(flow_id, table_id, group_id, "1235")
+            flow = self._create_match_vlan_tag_instruct_group_rule(flow_id, table_id, 8, "1234")
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
@@ -197,10 +251,10 @@ class SynthesizeMod():
         if node_id == "openflow:2":
 
             table_id = 0
-            flow_id = 2
+            flow_id = 1
             group_id = 8
 
-            group = self._create_mod_group_with_outport(group_id, "group-ff", "1235", self.OFPP_IN)
+            group = self._create_mod_group_with_outport_and_vlan_tag_write(group_id, "1235", self.OFPP_IN)
             url = create_group_url(node_id, group_id)
             self._push_change(url, group)
 
