@@ -21,7 +21,7 @@ class SynthesizeMod():
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
-    def _create_ethernet_match_group_apply_rule(self, flow_id, table_id, group_id):
+    def _create_no_vlan_tag_match_group_apply_rule(self, flow_id, table_id, group_id):
 
         flow = dict()
 
@@ -37,14 +37,15 @@ class SynthesizeMod():
         #Compile match
         ethernet_type = {"type": str(0x0800)}
         ethernet_match = {"ethernet-type": ethernet_type}
-
-        vlan_id = dict()
-        vlan_id["vlan-id"] = 0x0000
-        vlan_id["vlan-id-present"] = False
-        vlan_match = {"vlan-id": vlan_id}
-
         match = {"ethernet-match": ethernet_match}
         flow["match"] = match
+
+        vlan_id = dict()
+        vlan_id["vlan-id"] = str(0)
+        vlan_id["vlan-id-present"] = False
+        vlan_match = {"vlan-id": vlan_id}
+        flow["match"]["vlan-match"] = vlan_match
+
 
         #Compile action
         group_action = {"group-id": group_id}
@@ -64,15 +65,13 @@ class SynthesizeMod():
         flow = dict()
 
         #  Get a stock ethernet matching, group activating flow
-        flow = self._create_ethernet_match_group_apply_rule(flow_id, table_id, group_id)
+        flow = self._create_no_vlan_tag_match_group_apply_rule(flow_id, table_id, group_id)
 
         #  Match on VLAN
         vlan_id = dict()
         vlan_id["vlan-id"] = tag
         vlan_id["vlan-id-present"] = True
-
         vlan_match = {"vlan-id": vlan_id}
-
         flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
 
         return flow
@@ -117,6 +116,22 @@ class SynthesizeMod():
         print "Pushed:", pushed_content.keys()[0], resp["status"]
         time.sleep(0.5)
 
+    def _populate_switch_2(self, node_id):
+
+        if node_id == "openflow:1":
+
+            table_id = 0
+            flow_id = 1
+            group_id = 7
+
+            group = self._create_mod_group(group_id, "group-ff", "1234", self.OFPP_ALL)
+            url = create_group_url(node_id, group_id)
+            self._push_change(url, group)
+
+            flow = self._create_no_vlan_tag_match_group_apply_rule(flow_id, table_id, group_id)
+            url = create_flow_url(node_id, table_id, str(flow_id))
+            self._push_change(url, flow)
+
 
     def _populate_switch(self, node_id):
 
@@ -133,7 +148,19 @@ class SynthesizeMod():
             url = create_group_url(node_id, group_id)
             self._push_change(url, group)
 
-            flow = self._create_ethernet_match_group_apply_rule(flow_id, table_id, group_id)
+            flow = self._create_no_vlan_tag_match_group_apply_rule(flow_id, table_id, group_id)
+            url = create_flow_url(node_id, table_id, str(flow_id))
+            self._push_change(url, flow)
+
+            flow_id = 2
+            group_id = 8
+
+            group = self._create_mod_group(group_id, "group-ff", "1236", self.OFPP_IN)
+            url = create_group_url(node_id, group_id)
+            self._push_change(url, group)
+
+
+            flow = self._create_vlan_match_group_apply_rule(flow_id, table_id, group_id, "1235")
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
