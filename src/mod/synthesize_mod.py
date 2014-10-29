@@ -38,7 +38,7 @@ class SynthesizeMod():
         flow["match"] = {}
 
         #Empty instructions
-        flow["instructions"] = {"instruction": {}}
+        flow["instructions"] = {"instruction": []}
 
         #  Wrap it in inventory
         flow = {"flow-node-inventory:flow": flow}
@@ -72,7 +72,7 @@ class SynthesizeMod():
         action = {"group-action": group_action, "order": 0}
         apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
 
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"] = apply_action_instruction
+        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_action_instruction)
 
         return flow
 
@@ -103,9 +103,24 @@ class SynthesizeMod():
         action = {"group-action": group_action, "order": 0}
         apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
 
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"] = apply_action_instruction
+        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_action_instruction)
 
         return flow
+
+    # def _create_match_no_vlan_tag_instruct_group_next_table_rule(self, flow_id, table_id, group_id, next_table_id):
+    #
+    #     flow = self._create_match_no_vlan_tag_instruct_group_rule(flow_id, table_id, group_id)
+    #
+    #     #  Assert that table kicks in
+    #     group_action = {"group-id": group_id}
+    #     action = {"group-action": group_action, "order": 0}
+    #     apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
+    #
+    #     go_to_table_instruction = {"go-to-table" : {"table_id": next_table_id}, "order": 1}
+    #     flow["flow-node-inventory:flow"]["instructions"]["instruction"][""] = apply_action_instruction
+    #
+    #     return flow
+    #
 
 
     def _create_mod_group_with_outport(self, group_id, group_type, tag, port):
