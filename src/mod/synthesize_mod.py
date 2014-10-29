@@ -107,9 +107,26 @@ class SynthesizeMod():
 
         return flow
 
-    def _create_match_no_vlan_tag_instruct_group_next_table_rule(self, flow_id, table_id, group_id, next_table_id):
+    def _create_match_no_vlan_tag_instruct_next_table_rule(self, flow_id, table_id, next_table_id):
 
-        flow = self._create_match_no_vlan_tag_instruct_group_rule(flow_id, table_id, group_id)
+        flow = self._create_base_rule(flow_id, table_id)
+
+        #Compile match
+
+        #  Assert that matching packets are of ethertype IP
+        ethernet_type = {"type": str(0x0800)}
+        ethernet_match = {"ethernet-type": ethernet_type}
+        flow["flow-node-inventory:flow"]["match"]["ethernet-match"] = ethernet_match
+
+        #  Assert that matching packets have no VLAN tag on them
+        vlan_id = dict()
+        vlan_id["vlan-id"] = str(0)
+        vlan_id["vlan-id-present"] = False
+        vlan_match = {"vlan-id": vlan_id}
+
+        flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
+
+        #Compile instruction
 
         go_to_table_instruction = {"go-to-table" : {"table_id": next_table_id}, "order": 1}
         flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
@@ -223,12 +240,7 @@ class SynthesizeMod():
 
             #  Install the two groups for performing two separate functions
             group_id = 7
-            group = self._create_mod_group_with_vlan_tag_write(group_id, "1234")
-            url = create_group_url(node_id, group_id)
-            self._push_change(url, group)
-
-            group_id = 8
-            group = self._create_mod_group_with_outport(group_id, self.OFPP_ALL)
+            group = self._create_mod_group_with_outport_and_vlan_tag_write(group_id, "1234", self.OFPP_ALL)
             url = create_group_url(node_id, group_id)
             self._push_change(url, group)
 
@@ -236,13 +248,13 @@ class SynthesizeMod():
             #  Install the rule that invokes next table AND Calls out for a group
             table_id = 0
             flow_id = 1
-            flow = self._create_match_no_vlan_tag_instruct_group_next_table_rule(flow_id, table_id, 7, 1)
+            flow = self._create_match_no_vlan_tag_instruct_next_table_rule(flow_id, table_id, 1)
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
             table_id = 1
             flow_id = 2
-            flow = self._create_match_vlan_tag_instruct_group_rule(flow_id, table_id, 8, "1234")
+            flow = self._create_match_no_vlan_tag_instruct_group_rule(flow_id, table_id, 7)
             url = create_flow_url(node_id, table_id, str(flow_id))
             self._push_change(url, flow)
 
