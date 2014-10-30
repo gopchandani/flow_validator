@@ -115,18 +115,93 @@ class SynthesizeDij():
         print "Pushed:", pushed_content.keys()[0], resp["status"]
         time.sleep(0.5)
 
-    def _push_switch_changes(self, s):
-        pass
+    def get_forwarding_intents_dict(self, sw):
 
-    def _compute_primary_forwarding_intents(self, p, s):
-        pass
+        forwarding_intents = None
+
+        if "forwarding_intents" in self.model.graph.node[sw]:
+            forwarding_intents = self.model.graph.node[sw]["forwarding_intents"]
+        else:
+            forwarding_intents = {}
+            self.model.graph.node[sw]["forwarding_intents"] = forwarding_intents
+
+        return forwarding_intents
+
+
+    def _compute_path_forwarding_intents(self, p, s, switch_arriving_port=None):
+
+        dst_host = p[len(p) -1]
+
+        edge_ports_dict = None
+        departure_port = None
+        arriving_port = None
+
+        # Sanity check -- Check that last node of the p is a host, no matter what
+        if self.model.graph.node[p[len(p) - 1]]["node_type"] != "host":
+            raise Exception("The last node in the p has to be a host.")
+
+        # Check whether the first node of path is a host or a switch.
+        if self.model.graph.node[p[0]]["node_type"] == "host":
+
+            #Traffic arrives from the host to first switch at switch's port
+            edge_ports_dict = self.model.graph[p[0]][p[1]]['edge_ports_dict']
+            arriving_port = edge_ports_dict[p[1]]
+
+            # Traffic leaves from the first switch's post
+            edge_ports_dict = self.model.graph[p[1]][p[2]]['edge_ports_dict']
+            departure_port = edge_ports_dict[p[1]]
+
+            p = p[1:]
+
+        elif self.model.graph.node[p[0]]["node_type"] == "switch":
+            if not switch_arriving_port:
+                raise Exception("switching_arriving_port needed.")
+
+            arriving_port = switch_arriving_port
+            edge_ports_dict = self.model.graph[p[0]][p[1]]['edge_ports_dict']
+            departure_port = edge_ports_dict[p[0]]
+
+        # This look always starts at a switch
+        for i in range(len(p) - 1):
+
+            #  Add the switch to set S
+            s.add(p[i])
+
+            #  Add the intent to the switch's node in the graph
+            forwarding_intents = self.get_forwarding_intents_dict(p[i])
+            forwarding_intent_dict = {"arriving_port": arriving_port, "departure_port": departure_port}
+
+            if dst_host in forwarding_intents:
+                forwarding_intents[dst_host].append(forwarding_intent_dict)
+            else:
+                forwarding_intents[dst_host] = [forwarding_intent_dict]
+
+            # Prepare for next switch along the path if there is a next switch along the path
+            if self.model.graph.node[p[i+1]]["node_type"] != "host":
+
+                # Traffic arrives from the host to first switch at switch's port
+                edge_ports_dict = self.model.graph[p[i]][p[i+1]]['edge_ports_dict']
+                arriving_port = edge_ports_dict[p[i+1]]
+
+                # Traffic leaves from the first switch's port
+                edge_ports_dict = self.model.graph[p[i+1]][p[i+2]]['edge_ports_dict']
+                departure_port = edge_ports_dict[p[i+1]]
+
+
 
     def _compute_backup_forwarding_intents(self, p, s):
         pass
 
+
+    def _push_switch_changes(self, s):
+        for sw in s:
+            print sw
+            print self.model.graph.node[sw]["forwarding_intents"]
+
+
     def synthesize_flow(self, src_host, dst_host):
 
-        # S represents the set of all switches that are 
+        # s represents the set of all switches that are
         # affected as a result of flow synthesis
 
         s = set()
@@ -134,10 +209,8 @@ class SynthesizeDij():
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
 
-        print p
-
         #  Compute all forwarding intents as a result of primary path
-        self._compute_primary_forwarding_intents(p, s)
+        self._compute_path_forwarding_intents(p, s)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
@@ -151,7 +224,7 @@ class SynthesizeDij():
 
 def main():
     sm = SynthesizeDij()
-    sm.synthesize_flow("10.0.0.1", "10.0.0.2")
+    sm.synthesize_flow("10.0.0.1", "10.0.0.3")
 
 
 if __name__ == "__main__":
