@@ -197,23 +197,23 @@ class SynthesizeMod():
         group["barrier"] = False
 
         #  Bucket
-        actions = []
+        bucket_list = []
 
-        action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
+        bucket1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
                               {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}},
                               {'order': 2, 'output-action': {'output-node-connector':port}}],
                    "bucket-id": 1, "watch_port": 3, "weight": 20}
 
 
-        action2 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
+        bucket2 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
                               {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}},
                               {'order': 2, 'output-action': {'output-node-connector':port}}],
                    "bucket-id": 2, "watch_port": 1, "weight": 20}
 
-        actions.append(action1)
-        actions.append(action2)
+        bucket_list.append(bucket1)
+        bucket_list.append(bucket2)
 
-        bucket = {"bucket": actions}
+        bucket = {"bucket": bucket_list}
         group["buckets"] = bucket
 
         group = {"flow-node-inventory:group": group}
