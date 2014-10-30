@@ -10,7 +10,6 @@ import sys
 import networkx as nx
 
 
-
 class SynthesizeDij():
 
     def __init__(self):
@@ -20,6 +19,7 @@ class SynthesizeDij():
 
         self.model = Model()
 
+        self.group_id_cntr = 0
 
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
@@ -80,26 +80,48 @@ class SynthesizeDij():
 
         return flow
 
-    def _create_group_with_multiple_action_buckets(self, group_id, out_port):
+    def _create_group_for_forwarding_intent(self, dst, forwarding_intents):
 
         group = dict()
-        group["group-id"] = group_id
-        group["group-type"] = "group-ff"
+
+        self.group_id_cntr = self.group_id_cntr + 1
+        group["group-id"] = self.group_id_cntr
+
         group["barrier"] = False
 
         #  Bucket
-        actions = []
+        bucket = None
 
-        action1 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
-                   "bucket-id": 1, "watch_port": 3, "weight": 20}
+        #  Need at least two of these to able to do a fast-failover style group
+        if len(forwarding_intents) >= 2:
+            group["group-type"] = "group-ff"
 
-        action2 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
-                   "bucket-id": 2, "watch_port": 1, "weight": 20}
+            bucket_candidate_1 = forwarding_intents[0]
+            bucket_candidate_2 = forwarding_intents[1]
 
-        actions.append(action1)
-        actions.append(action2)
+            bucket1 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
+                       "bucket-id": 1, "watch_port": 3, "weight": 20}
 
-        bucket = {"bucket": actions}
+            bucket2 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
+                       "bucket-id": 2, "watch_port": 1, "weight": 20}
+
+            bucket_list = [bucket1, bucket2]
+            bucket = {"bucket": bucket_list}
+
+        elif len(forwarding_intents) == 1:
+            group["group-type"] = "group-all"
+
+            bucket1 = {"action": [{'order': 0,
+                                   'output-action': {'output-node-connector':forwarding_intents[0]["destination_port"]}}],
+                       "bucket-id": 1, "watch_port": 3, "weight": 20}
+
+            bucket_list =[bucket1]
+            bucket = {"bucket": bucket_list}
+        else:
+             raise Exception("Need to have at least one forwarding intent")
+
+
+
         group["buckets"] = bucket
 
         group = {"flow-node-inventory:group": group}
@@ -187,16 +209,21 @@ class SynthesizeDij():
                 edge_ports_dict = self.model.graph[p[i+1]][p[i+2]]['edge_ports_dict']
                 departure_port = edge_ports_dict[p[i+1]]
 
-
-
     def _compute_backup_forwarding_intents(self, p, s):
         pass
 
-
     def _push_switch_changes(self, s):
+
         for sw in s:
             print sw
             print self.model.graph.node[sw]["forwarding_intents"]
+
+            for dst in self.model.graph.node[sw]["forwarding_intents"]:
+                #rule = self._create_rule_for_forwarding_intent()
+
+                group = self._create_group_for_forwarding_intent(dst, self.model.graph.node[sw]["forwarding_intents"][dst])
+                url = create_group_url(sw, group["flow-node-inventory:group"]["group-id"])
+                self._push_change(url, group)
 
 
     def synthesize_flow(self, src_host, dst_host):
