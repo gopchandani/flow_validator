@@ -3,12 +3,15 @@ __author__ = 'Rakesh Kumar'
 from model.model import Model
 from synthesis.create_url import create_group_url, create_flow_url
 
+from collections import defaultdict
+
 import httplib2
 import json
 import time
 import sys
 import pprint
 import networkx as nx
+
 
 
 class SynthesizeDij():
@@ -148,7 +151,7 @@ class SynthesizeDij():
         if "forwarding_intents" in self.model.graph.node[sw]:
             forwarding_intents = self.model.graph.node[sw]["forwarding_intents"]
         else:
-            forwarding_intents = {}
+            forwarding_intents = dict()
             self.model.graph.node[sw]["forwarding_intents"] = forwarding_intents
 
         return forwarding_intents
@@ -194,14 +197,13 @@ class SynthesizeDij():
 
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
-            forwarding_intent_dict = {"path_type": path_type,
-                                      "arriving_port": arriving_port,
-                                      "departure_port": departure_port}
+            forwarding_intent_tup = (path_type, arriving_port, departure_port)
 
             if dst_host in forwarding_intents:
-                forwarding_intents[dst_host].append(forwarding_intent_dict)
+                forwarding_intents[dst_host][forwarding_intent_tup] += 1
             else:
-                forwarding_intents[dst_host] = [forwarding_intent_dict]
+                forwarding_intents[dst_host] = defaultdict(int)
+                forwarding_intents[dst_host][forwarding_intent_tup] = 1
 
             # Prepare for next switch along the path if there is a next switch along the path
             if self.model.graph.node[p[i+1]]["node_type"] != "host":
@@ -277,7 +279,7 @@ def main():
     sm.synthesize_flow("10.0.0.1", "10.0.0.4")
     sm.synthesize_flow("10.0.0.4", "10.0.0.1")
     sm.dump_forwarding_intents()
-    sm.push_switch_changes()
+    #sm.push_switch_changes()
 
 
 if __name__ == "__main__":
