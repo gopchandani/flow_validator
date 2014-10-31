@@ -8,13 +8,13 @@ class RingTopo(Topo):
         
         Topo.__init__(self)
         
-        num_switches = 3
+        num_switches = 5
         num_hosts_per_switch = 1
         switches = []
 
         #  Add switches and hosts under them
         for i in range(num_switches):
-            curr_switch = self.addSwitch("s" + str(i))
+            curr_switch = self.addSwitch("s" + str(i+1))
             switches.append(curr_switch)
 
             for j in range(num_hosts_per_switch):
@@ -24,7 +24,6 @@ class RingTopo(Topo):
         #  Add links between switches
         if num_switches > 1:
             for i in range(num_switches - 1):
-                print switches[i], type(switches[i])
                 self.addLink(switches[i], switches[i+1])
 
             #  Form a ring only when there are more than two switches
