@@ -97,25 +97,21 @@ class SynthesizeDij():
         if len(forwarding_intents) == 2:
             group["group-type"] = "group-ff"
             bucket_list = []
-
-            for i in range(len(forwarding_intents)):
-                this_intent = forwarding_intents[i]
-                other_intent = forwarding_intents[(i+1) % len(forwarding_intents)]
-                this_bucket = None
-
+            for this_intent in forwarding_intents:
+                bucket_id = None
                 if this_intent["path_type"] == "primary":
-                    this_bucket = {"action":
-                                        [{'order': 0,
-                                          'output-action': {'output-node-connector':this_intent["departure_port"]}}],
-                                    "bucket-id": 1, "watch_port": this_intent["departure_port"], "weight": 20}
-
+                    bucket_id = 0
                 if this_intent["path_type"] == "backup":
-                    this_bucket = {"action":
-                                        [{'order': 1,
-                                          'output-action': {'output-node-connector':this_intent["departure_port"]}}],
-                                    "bucket-id": 2, "watch_port": this_intent["departure_port"], "weight": 20}
+                    bucket_id = 1
 
-                bucket_list.append(this_bucket)
+                bucket = {
+                    "action":[{'order': 0,
+                               'output-action': {'output-node-connector':this_intent["departure_port"]}}],
+                    "bucket-id": bucket_id,
+                    "watch_port": this_intent["departure_port"],
+                    "weight": 20}
+
+                bucket_list.append(bucket)
 
             bucket = {"bucket": bucket_list}
 
