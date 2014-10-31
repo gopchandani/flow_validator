@@ -247,7 +247,6 @@ class SynthesizeDij():
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
-        print src_host, "-->", dst_host, "Primary Path:", p
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_forwarding_intents(p, "primary")
@@ -269,7 +268,6 @@ class SynthesizeDij():
             # Find the shortest path that results when the link breaks
             # and compute forwarding intents for that
             bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
-            print src_host, "-->", dst_host, "Backup Path:", bp
 
             self._compute_path_forwarding_intents(bp, "backup", arriving_port)
 
@@ -282,7 +280,7 @@ def main():
     sm = SynthesizeDij()
     sm.synthesize_flow("10.0.0.1", "10.0.0.3")
     sm.synthesize_flow("10.0.0.3", "10.0.0.1")
-    sm.dump_forwarding_intents()
+    #sm.dump_forwarding_intents()
 
     sm.push_switch_changes()
 
