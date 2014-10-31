@@ -7,6 +7,7 @@ import httplib2
 import json
 import time
 import sys
+import pprint
 import networkx as nx
 
 
@@ -125,7 +126,7 @@ class SynthesizeDij():
             bucket_list =[bucket1]
             bucket = {"bucket": bucket_list}
         else:
-             raise Exception("Need to have at either one or two forwarding intents")
+             raise Exception("Need to have either one or two forwarding intents")
 
         group["buckets"] = bucket
         group = {"flow-node-inventory:group": group}
@@ -215,13 +216,10 @@ class SynthesizeDij():
                 edge_ports_dict = self.model.graph[p[i+1]][p[i+2]]['edge_ports_dict']
                 departure_port = edge_ports_dict[p[i+1]]
 
-    def _compute_backup_forwarding_intents(self, p):
-        pass
-
     def dump_forwarding_intents(self):
         for sw in self.s:
             print sw
-            print self.model.graph.node[sw]["forwarding_intents"]
+            pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
 
     def push_switch_changes(self):
 
@@ -247,6 +245,7 @@ class SynthesizeDij():
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
+        print p
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_forwarding_intents(p, "primary")
@@ -280,9 +279,9 @@ def main():
     sm = SynthesizeDij()
     sm.synthesize_flow("10.0.0.1", "10.0.0.3")
     sm.synthesize_flow("10.0.0.3", "10.0.0.1")
-    #sm.dump_forwarding_intents()
+    sm.dump_forwarding_intents()
 
-    sm.push_switch_changes()
+    #sm.push_switch_changes()
 
 
 if __name__ == "__main__":
