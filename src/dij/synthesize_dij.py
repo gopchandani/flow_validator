@@ -94,19 +94,29 @@ class SynthesizeDij():
         bucket = None
 
         #  Need at least two of these to able to do a fast-failover style group
-        if len(forwarding_intents) >= 2:
+        if len(forwarding_intents) == 2:
             group["group-type"] = "group-ff"
+            bucket_list = []
 
-            bucket_candidate_1 = forwarding_intents[0]
-            bucket_candidate_2 = forwarding_intents[1]
+            for i in range(len(forwarding_intents)):
+                this_intent = forwarding_intents[i]
+                other_intent = forwarding_intents[(i+1) % len(forwarding_intents)]
+                this_bucket = None
 
-            bucket1 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
-                       "bucket-id": 1, "watch_port": 3, "weight": 20}
+                if this_intent["path_type"] == "primary":
+                    this_bucket = {"action":
+                                        [{'order': 0,
+                                          'output-action': {'output-node-connector':this_intent["departure_port"]}}],
+                                    "bucket-id": 1, "watch_port": other_intent["departure_port"], "weight": 20}
 
-            bucket2 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
-                       "bucket-id": 2, "watch_port": 1, "weight": 20}
+                if this_intent["path_type"] == "backup":
+                    this_bucket = {"action":
+                                        [{'order': 1,
+                                          'output-action': {'output-node-connector':this_intent["departure_port"]}}],
+                                    "bucket-id": 2, "watch_port": other_intent["departure_port"], "weight": 20}
 
-            bucket_list = [bucket1, bucket2]
+                bucket_list.append(this_bucket)
+
             bucket = {"bucket": bucket_list}
 
         elif len(forwarding_intents) == 1:
@@ -119,10 +129,9 @@ class SynthesizeDij():
             bucket_list =[bucket1]
             bucket = {"bucket": bucket_list}
         else:
-             raise Exception("Need to have at least one forwarding intent")
+             raise Exception("Need to have at either one or two forwarding intents")
 
         group["buckets"] = bucket
-
         group = {"flow-node-inventory:group": group}
 
         return group
@@ -149,7 +158,7 @@ class SynthesizeDij():
         return forwarding_intents
 
 
-    def _compute_path_forwarding_intents(self, p, switch_arriving_port=None):
+    def _compute_path_forwarding_intents(self, p, path_type, switch_arriving_port=None):
 
         dst_host = p[len(p) -1]
 
@@ -168,7 +177,7 @@ class SynthesizeDij():
             edge_ports_dict = self.model.graph[p[0]][p[1]]['edge_ports_dict']
             arriving_port = edge_ports_dict[p[1]]
 
-            # Traffic leaves from the first switch's post
+            # Traffic leaves from the first switch's port
             edge_ports_dict = self.model.graph[p[1]][p[2]]['edge_ports_dict']
             departure_port = edge_ports_dict[p[1]]
 
@@ -190,7 +199,9 @@ class SynthesizeDij():
 
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
-            forwarding_intent_dict = {"arriving_port": arriving_port, "departure_port": departure_port}
+            forwarding_intent_dict = {"path_type": path_type,
+                                      "arriving_port": arriving_port,
+                                      "departure_port": departure_port}
 
             if dst_host in forwarding_intents:
                 forwarding_intents[dst_host].append(forwarding_intent_dict)
@@ -211,11 +222,14 @@ class SynthesizeDij():
     def _compute_backup_forwarding_intents(self, p):
         pass
 
-    def push_switch_changes(self):
-
+    def dump_forwarding_intents(self):
         for sw in self.s:
             print sw
             print self.model.graph.node[sw]["forwarding_intents"]
+
+    def push_switch_changes(self):
+
+        for sw in self.s:
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
 
@@ -239,17 +253,40 @@ class SynthesizeDij():
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_forwarding_intents(p)
+        self._compute_path_forwarding_intents(p, "primary")
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
+        edge_ports = self.model.graph[p[0]][p[1]]['edge_ports_dict']
+        arriving_port = edge_ports[p[1]]
+
+        #  Go through the path, one edge at a time
+        for i in range(1, len(p) - 2):
+
+            # Keep a copy of this handy
+            edge_ports = self.model.graph[p[i]][p[i + 1]]['edge_ports_dict']
+
+            # Delete the edge
+            self.model.graph.remove_edge(p[i], p[i + 1])
+
+            # Find the shortest path that results when the link breaks
+            # and compute forwarding intents for that
+            bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
+            self._compute_path_forwarding_intents(bp, "backup", arriving_port)
+
+            # Add the edge back and the data that goes along with it
+            self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports)
+            arriving_port = edge_ports[p[i+1]]
+
 
 def main():
     sm = SynthesizeDij()
     sm.synthesize_flow("10.0.0.1", "10.0.0.3")
     sm.synthesize_flow("10.0.0.3", "10.0.0.1")
+    sm.dump_forwarding_intents()
 
     sm.push_switch_changes()
+
 
 if __name__ == "__main__":
     main()
