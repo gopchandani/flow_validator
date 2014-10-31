@@ -277,8 +277,8 @@ class SynthesizeDij():
 
 def main():
     sm = SynthesizeDij()
-    sm.synthesize_flow("10.0.0.1", "10.0.0.3")
-    sm.synthesize_flow("10.0.0.3", "10.0.0.1")
+    sm.synthesize_flow("10.0.0.1", "10.0.0.4")
+    sm.synthesize_flow("10.0.0.4", "10.0.0.1")
     sm.dump_forwarding_intents()
 
     #sm.push_switch_changes()
