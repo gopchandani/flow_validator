@@ -20,6 +20,11 @@ class SynthesizeDij():
         self.model = Model()
 
         self.group_id_cntr = 0
+        self.flow_id_cntr = 0
+
+        # s represents the set of all switches that are
+        # affected as a result of flow synthesis
+        self.s = set()
 
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
@@ -32,7 +37,7 @@ class SynthesizeDij():
 
         flow["flags"] = ""
         flow["table_id"] = table_id
-        flow["id"] = str(flow_id)
+        flow["id"] = flow_id
         flow["priority"] = 1
         flow["idle-timeout"] = 0
         flow["hard-timeout"] = 0
@@ -50,9 +55,10 @@ class SynthesizeDij():
 
         return flow
 
-    def _create_match_per_destination_instruct_group_rule(self, flow_id, table_id, group_id):
+    def _create_match_per_destination_instruct_group_rule(self, group_id, dst):
 
-        flow = self._create_base_rule(flow_id, table_id)
+        self.flow_id_cntr +=  1
+        flow = self._create_base_rule(str(self.flow_id_cntr), 0)
 
         #Compile match
 
@@ -61,13 +67,8 @@ class SynthesizeDij():
         ethernet_match = {"ethernet-type": ethernet_type}
         flow["flow-node-inventory:flow"]["match"]["ethernet-match"] = ethernet_match
 
-        #  Assert that matching packets have no VLAN tag on them
-        vlan_id = dict()
-        vlan_id["vlan-id"] = str(0)
-        vlan_id["vlan-id-present"] = False
-        vlan_match = {"vlan-id": vlan_id}
-
-        flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
+        #  Assert that the destination should be dst
+        flow["flow-node-inventory:flow"]["match"]["ipv4-destination"] = dst
 
         #Compile instruction
 
@@ -84,8 +85,8 @@ class SynthesizeDij():
 
         group = dict()
 
-        self.group_id_cntr = self.group_id_cntr + 1
-        group["group-id"] = self.group_id_cntr
+        self.group_id_cntr += 1
+        group["group-id"] = str(self.group_id_cntr)
 
         group["barrier"] = False
 
@@ -112,15 +113,13 @@ class SynthesizeDij():
             group["group-type"] = "group-all"
 
             bucket1 = {"action": [{'order': 0,
-                                   'output-action': {'output-node-connector':forwarding_intents[0]["destination_port"]}}],
-                       "bucket-id": 1, "watch_port": 3, "weight": 20}
+                                   'output-action': {'output-node-connector':forwarding_intents[0]["departure_port"]}}],
+                       "bucket-id": 1}
 
             bucket_list =[bucket1]
             bucket = {"bucket": bucket_list}
         else:
              raise Exception("Need to have at least one forwarding intent")
-
-
 
         group["buckets"] = bucket
 
@@ -150,7 +149,7 @@ class SynthesizeDij():
         return forwarding_intents
 
 
-    def _compute_path_forwarding_intents(self, p, s, switch_arriving_port=None):
+    def _compute_path_forwarding_intents(self, p, switch_arriving_port=None):
 
         dst_host = p[len(p) -1]
 
@@ -187,7 +186,7 @@ class SynthesizeDij():
         for i in range(len(p) - 1):
 
             #  Add the switch to set S
-            s.add(p[i])
+            self.s.add(p[i])
 
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
@@ -209,50 +208,48 @@ class SynthesizeDij():
                 edge_ports_dict = self.model.graph[p[i+1]][p[i+2]]['edge_ports_dict']
                 departure_port = edge_ports_dict[p[i+1]]
 
-    def _compute_backup_forwarding_intents(self, p, s):
+    def _compute_backup_forwarding_intents(self, p):
         pass
 
-    def _push_switch_changes(self, s):
+    def push_switch_changes(self):
 
-        for sw in s:
+        for sw in self.s:
             print sw
             print self.model.graph.node[sw]["forwarding_intents"]
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
-                #rule = self._create_rule_for_forwarding_intent()
 
-                group = self._create_group_for_forwarding_intent(dst, self.model.graph.node[sw]["forwarding_intents"][dst])
-                url = create_group_url(sw, group["flow-node-inventory:group"]["group-id"])
+                # Push the group
+                group = self._create_group_for_forwarding_intent(dst,
+                                                                 self.model.graph.node[sw]["forwarding_intents"][dst])
+                group_id = group["flow-node-inventory:group"]["group-id"]
+                url = create_group_url(sw, group_id)
                 self._push_change(url, group)
 
+                # Push the rule that refers to the group
+                flow = self._create_match_per_destination_instruct_group_rule(group_id, dst)
+                flow_id = flow["flow-node-inventory:flow"]["id"]
+                table_id = flow["flow-node-inventory:flow"]["table_id"]
+                url = create_flow_url(sw, table_id, flow_id)
+                self._push_change(url, flow)
 
     def synthesize_flow(self, src_host, dst_host):
-
-        # s represents the set of all switches that are
-        # affected as a result of flow synthesis
-
-        s = set()
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_forwarding_intents(p, s)
+        self._compute_path_forwarding_intents(p)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
 
-
-        #  For each switch in s, accumulate desired action buckets
-        #  into a single group per destination and push the group and
-        #  a single flow entry that matches anything destined for that group
-        self._push_switch_changes(s)
-
-
 def main():
     sm = SynthesizeDij()
     sm.synthesize_flow("10.0.0.1", "10.0.0.3")
+    sm.synthesize_flow("10.0.0.3", "10.0.0.1")
 
+    sm.push_switch_changes()
 
 if __name__ == "__main__":
     main()
