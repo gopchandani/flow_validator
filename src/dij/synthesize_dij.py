@@ -32,14 +32,14 @@ class SynthesizeDij():
 
 
 
-    def _create_base_rule(self, flow_id, table_id):
+    def _create_base_rule(self, flow_id, table_id, priority):
 
         flow = dict()
 
         flow["flags"] = ""
         flow["table_id"] = table_id
         flow["id"] = flow_id
-        flow["priority"] = 1
+        flow["priority"] = priority
         flow["idle-timeout"] = 0
         flow["hard-timeout"] = 0
         flow["cookie"] = flow_id
@@ -56,10 +56,10 @@ class SynthesizeDij():
 
         return flow
 
-    def _create_match_per_destination_instruct_group_rule(self, group_id, dst):
+    def _create_match_per_destination_instruct_group_rule(self, group_id, dst, priority):
 
         self.flow_id_cntr +=  1
-        flow = self._create_base_rule(str(self.flow_id_cntr), 0)
+        flow = self._create_base_rule(str(self.flow_id_cntr), 0, priority)
 
         #Compile match
 
@@ -88,7 +88,6 @@ class SynthesizeDij():
 
         self.group_id_cntr += 1
         group["group-id"] = str(self.group_id_cntr)
-
         group["barrier"] = False
 
         #  Bucket
@@ -154,7 +153,6 @@ class SynthesizeDij():
 
         return forwarding_intents
 
-
     def _compute_path_forwarding_intents(self, p, path_type, switch_arriving_port=None):
 
         dst_host = p[len(p) -1]
@@ -218,7 +216,7 @@ class SynthesizeDij():
 
     def dump_forwarding_intents(self):
         for sw in self.s:
-            print sw
+            print "---", sw, "---"
             pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
 
     def push_switch_changes(self):
@@ -235,7 +233,7 @@ class SynthesizeDij():
                 self._push_change(url, group)
 
                 # Push the rule that refers to the group
-                flow = self._create_match_per_destination_instruct_group_rule(group_id, dst)
+                flow = self._create_match_per_destination_instruct_group_rule(group_id, dst, 1)
                 flow_id = flow["flow-node-inventory:flow"]["id"]
                 table_id = flow["flow-node-inventory:flow"]["table_id"]
                 url = create_flow_url(sw, table_id, flow_id)
@@ -245,7 +243,6 @@ class SynthesizeDij():
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
-        print p
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_forwarding_intents(p, "primary")
@@ -280,8 +277,7 @@ def main():
     sm.synthesize_flow("10.0.0.1", "10.0.0.4")
     sm.synthesize_flow("10.0.0.4", "10.0.0.1")
     sm.dump_forwarding_intents()
-
-    #sm.push_switch_changes()
+    sm.push_switch_changes()
 
 
 if __name__ == "__main__":
