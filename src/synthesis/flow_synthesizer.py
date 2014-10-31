@@ -170,8 +170,8 @@ class Flow_Synthesizer:
 def main():
     f = Flow_Synthesizer()
 
-    f.install_path('10.0.0.1', '10.0.0.2')
-    f.install_path('10.0.0.2', '10.0.0.1')
+    f.install_path('10.0.0.1', '10.0.0.3')
+    f.install_path('10.0.0.3', '10.0.0.1')
 
     print "Total flows installed:", (f.flow_id - 100)
 

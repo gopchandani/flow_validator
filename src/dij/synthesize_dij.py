@@ -107,13 +107,13 @@ class SynthesizeDij():
                     this_bucket = {"action":
                                         [{'order': 0,
                                           'output-action': {'output-node-connector':this_intent["departure_port"]}}],
-                                    "bucket-id": 1, "watch_port": other_intent["departure_port"], "weight": 20}
+                                    "bucket-id": 1, "watch_port": this_intent["departure_port"], "weight": 20}
 
                 if this_intent["path_type"] == "backup":
                     this_bucket = {"action":
                                         [{'order': 1,
                                           'output-action': {'output-node-connector':this_intent["departure_port"]}}],
-                                    "bucket-id": 2, "watch_port": other_intent["departure_port"], "weight": 20}
+                                    "bucket-id": 2, "watch_port": this_intent["departure_port"], "weight": 20}
 
                 bucket_list.append(this_bucket)
 
@@ -251,6 +251,7 @@ class SynthesizeDij():
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
+        print src_host, "-->", dst_host, "Primary Path:", p
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_forwarding_intents(p, "primary")
@@ -272,6 +273,8 @@ class SynthesizeDij():
             # Find the shortest path that results when the link breaks
             # and compute forwarding intents for that
             bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
+            print src_host, "-->", dst_host, "Backup Path:", bp
+
             self._compute_path_forwarding_intents(bp, "backup", arriving_port)
 
             # Add the edge back and the data that goes along with it
