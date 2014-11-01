@@ -18,7 +18,7 @@ class RingTopo(Topo):
             switches.append(curr_switch)
 
             for j in range(num_hosts_per_switch):
-                curr_switch_host = self.addHost("h" + str(i) + str(j))
+                curr_switch_host = self.addHost("h" + str(i+1) + str(j+1))
                 self.addLink(curr_switch, curr_switch_host)
 
         #  Add links between switches

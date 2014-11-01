@@ -256,7 +256,7 @@ class SynthesizeDij():
             if intent[1] == primary_exit_port:
 
                 # Add a new intent with modified key
-                addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
+                addition_list.append((("reverse", intent[1], self.OFPP_IN), dst_intents[intent]))
                 deletion_list.append(intent)
 
         for intent_key, intent_val in addition_list:
@@ -286,13 +286,13 @@ class SynthesizeDij():
                 reverse_intent = self._get_intent(dst_intents, "reverse")
 
                 if primary_intent and backup_intent:
-                    
+
                     # Push the group
                     group = self._create_fast_failover_group(primary_intent, backup_intent)
                     group_id = group["flow-node-inventory:group"]["group-id"]
                     url = create_group_url(sw, group_id)
                     self._push_change(url, group)
-    
+
                     # Push the rule that refers to the group
                     src_port = None
 
@@ -310,7 +310,7 @@ class SynthesizeDij():
                     url = create_flow_url(sw, table_id, flow_id)
                     self._push_change(url, flow)
 
-                elif backup_intent:
+                if not primary_intent and backup_intent:
 
                     # Push the group
                     group = self._create_select_all_group([backup_intent])
@@ -325,7 +325,7 @@ class SynthesizeDij():
                     url = create_flow_url(sw, table_id, flow_id)
                     self._push_change(url, flow)
 
-                elif reverse_intent:
+                if reverse_intent:
 
                     # Push the group
                     group = self._create_select_all_group([reverse_intent])
@@ -345,6 +345,7 @@ class SynthesizeDij():
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
+        print p
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_forwarding_intents(p, "primary")
