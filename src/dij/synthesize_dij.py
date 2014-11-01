@@ -12,8 +12,6 @@ import sys
 import pprint
 import networkx as nx
 
-
-
 class SynthesizeDij():
 
     def __init__(self):
@@ -197,13 +195,13 @@ class SynthesizeDij():
 
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
-            forwarding_intent_tup = (path_type, arriving_port, departure_port)
+            forwarding_intent = (path_type, arriving_port, departure_port)
 
             if dst_host in forwarding_intents:
-                forwarding_intents[dst_host][forwarding_intent_tup] += 1
+                forwarding_intents[dst_host][forwarding_intent] += 1
             else:
                 forwarding_intents[dst_host] = defaultdict(int)
-                forwarding_intents[dst_host][forwarding_intent_tup] = 1
+                forwarding_intents[dst_host][forwarding_intent] = 1
 
             # Prepare for next switch along the path if there is a next switch along the path
             if self.model.graph.node[p[i+1]]["node_type"] != "host":
@@ -221,11 +219,41 @@ class SynthesizeDij():
             print "---", sw, "---"
             pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
 
+    def _identify_reverse_intent(self, dst_intents):
+
+        primary_exit_port = None
+        for intent in dst_intents:
+            if intent[0] == "primary":
+                primary_exit_port = intent[2]
+                break
+
+        # Only back ups here, nothing to do
+        if not primary_exit_port:
+            return
+
+        addition_list = []
+        deletion_list = []
+        for intent in dst_intents:
+            if intent[1] == primary_exit_port:
+
+                # Add a new intent with modified key
+                addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
+                deletion_list.append(intent)
+
+        for intent_key, intent_val in addition_list:
+            dst_intents[intent_key] = intent_val
+
+        for intent in deletion_list:
+            del dst_intents[intent]
+
+
     def push_switch_changes(self):
 
         for sw in self.s:
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
+                self._identify_reverse_intent(self.model.graph.node[sw]["forwarding_intents"][dst])
+                continue
 
                 # Push the group
                 group = self._create_group_for_forwarding_intent(dst,
@@ -279,7 +307,9 @@ def main():
     sm.synthesize_flow("10.0.0.1", "10.0.0.4")
     sm.synthesize_flow("10.0.0.4", "10.0.0.1")
     sm.dump_forwarding_intents()
-    #sm.push_switch_changes()
+    sm.push_switch_changes()
+    sm.dump_forwarding_intents()
+
 
 
 if __name__ == "__main__":
