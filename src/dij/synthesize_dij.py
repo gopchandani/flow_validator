@@ -238,7 +238,7 @@ class SynthesizeDij():
             print "---", sw, "---"
             pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
 
-    def _identify_reverse_intent(self, dst_intents):
+    def _identify_reverse_and_balking_intents(self, dst_intents):
 
         primary_exit_port = None
         for intent in dst_intents:
@@ -250,14 +250,29 @@ class SynthesizeDij():
         if not primary_exit_port:
             return None
 
+
+
         addition_list = []
         deletion_list = []
         for intent in dst_intents:
+
+            if intent[0] == "primary":
+                continue
+
+            #  If this intent is at a reverse flow carrier switch
             if intent[1] == primary_exit_port:
 
                 # Add a new intent with modified key
                 addition_list.append((("reverse", intent[1], self.OFPP_IN), dst_intents[intent]))
                 deletion_list.append(intent)
+
+            # If it is a blatant reversal on the very switch where reversal begins
+            if intent[1] == intent[2]:
+
+                # Add a new intent with modified key
+                addition_list.append((("balking", intent[1], self.OFPP_IN), dst_intents[intent]))
+                deletion_list.append(intent)
+
 
         for intent_key, intent_val in addition_list:
             dst_intents[intent_key] = intent_val
@@ -279,11 +294,12 @@ class SynthesizeDij():
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
-                self._identify_reverse_intent(dst_intents)
+                self._identify_reverse_and_balking_intents(dst_intents)
 
                 primary_intent = self._get_intent(dst_intents, "primary")
                 backup_intent = self._get_intent(dst_intents, "backup")
                 reverse_intent = self._get_intent(dst_intents, "reverse")
+                balking_intent = self._get_intent(dst_intents, "balking")
 
                 if primary_intent and backup_intent:
 
@@ -309,6 +325,32 @@ class SynthesizeDij():
                     table_id = flow["flow-node-inventory:flow"]["table_id"]
                     url = create_flow_url(sw, table_id, flow_id)
                     self._push_change(url, flow)
+
+                if primary_intent and balking_intent:
+
+                    # Push the group
+                    group = self._create_fast_failover_group(primary_intent, balking_intent)
+                    group_id = group["flow-node-inventory:group"]["group-id"]
+                    url = create_group_url(sw, group_id)
+                    self._push_change(url, group)
+
+                    # Push the rule that refers to the group
+                    src_port = None
+
+                    #Sanity check
+                    if primary_intent[1] != balking_intent[1]:
+                        #  This can only happen if the host is directly connected to the switch, so check that.
+                        if not self.model.graph.has_edge(dst, sw):
+                            raise Exception("Primary and Backup intents' src port mismatch")
+                    else:
+                        src_port = primary_intent[1]
+
+                    flow = self._create_match_per_src_port_destination_instruct_group_rule(group_id, src_port, dst, 1)
+                    flow_id = flow["flow-node-inventory:flow"]["id"]
+                    table_id = flow["flow-node-inventory:flow"]["table_id"]
+                    url = create_flow_url(sw, table_id, flow_id)
+                    self._push_change(url, flow)
+
 
                 if not primary_intent and backup_intent:
 
