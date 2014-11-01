@@ -240,14 +240,14 @@ class SynthesizeDij():
 
     def _identify_reverse_and_balking_intents(self, dst_intents):
 
-        primary_exit_port = None
+        primary_src_port = None
         for intent in dst_intents:
             if intent[0] == "primary":
-                primary_exit_port = intent[2]
+                primary_src_port = intent[1]
                 break
 
         # Only back ups here, nothing to do
-        if not primary_exit_port:
+        if not primary_src_port:
             return None
 
 
@@ -260,7 +260,7 @@ class SynthesizeDij():
                 continue
 
             #  If this intent is at a reverse flow carrier switch
-            if intent[1] == primary_exit_port:
+            if intent[2] == primary_src_port:
 
                 # Add a new intent with modified key
                 addition_list.append((("reverse", intent[1], self.OFPP_IN), dst_intents[intent]))
@@ -291,6 +291,9 @@ class SynthesizeDij():
     def push_switch_changes(self):
 
         for sw in self.s:
+
+            if sw == "openflow:1":
+                print "here"
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
