@@ -19,9 +19,11 @@ class Port():
         self.mac_address = nc["flow-node-inventory:hardware-address"]
 
         self.faces = None
+        self.facing_node_id = None
 
         if nc["flow-node-inventory:port-number"] == "LOCAL":
             self.faces = "internal"
+            self.facing_node_id = self.id
 
         self.state = None
 
@@ -37,4 +39,5 @@ class Port():
                " Port Number: " + str(self.port_number) + \
                " MAC Address: " + str(self.mac_address) + \
                " Faces: " + str(self.faces) + \
+               " Facing Node Id: " + str(self.facing_node_id) + \
                " State:" + str(self.state)

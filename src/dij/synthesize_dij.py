@@ -417,7 +417,6 @@ class SynthesizeDij():
                     url = create_flow_url(sw, table_id, flow_id)
                     self._push_change(url, flow)
 
-
     def synthesize_flow(self, src_host, dst_host):
 
         #  First find the shortest path between src and dst.
@@ -450,7 +449,6 @@ class SynthesizeDij():
             # Add the edge back and the data that goes along with it
             self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports)
             arriving_port = edge_ports[p[i+1]]
-
 
 def main():
     sm = SynthesizeDij()

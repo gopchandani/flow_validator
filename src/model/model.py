@@ -143,13 +143,17 @@ class Model():
             node1 = self.graph.node[node1_id]
             node2 = self.graph.node[node2_id]
 
-
             if node1_type == "switch" and not node1["ports"][node1_port].faces:
                 node1["ports"][node1_port].faces = node2_type
+
+            if node1_type == "switch" and not node1["ports"][node1_port].facing_node_id:
+                node1["ports"][node1_port].facing_node_id = node2_id
 
             if node2_type == "switch" and not node2["ports"][node2_port].faces:
                 node2["ports"][node2_port].faces = node1_type
 
+            if node2_type == "switch" and not node2["ports"][node2_port].facing_node_id:
+                node2["ports"][node2_port].facing_node_id = node1_id
 
 
         print "Hosts in the graph:", self.host_ids
