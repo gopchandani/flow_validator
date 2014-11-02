@@ -101,7 +101,7 @@ class SynthesizeDij():
 
         return group
 
-    def _create_fast_failover_group(self, primary_intent, backup_intent):
+    def _create_fast_failover_group(self, primary_intent, failover_intent):
 
         group = self._create_base_group()
         bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
@@ -114,15 +114,15 @@ class SynthesizeDij():
             "watch_port": primary_intent[2],
             "weight": 20}
 
-        bucket_backup = {
+        bucket_failover = {
             "action":[{'order': 0,
-                       'output-action': {'output-node-connector': backup_intent[2]}}],
+                       'output-action': {'output-node-connector': failover_intent[2]}}],
             "bucket-id": 1,
-            "watch_port": backup_intent[2],
+            "watch_port": failover_intent[2],
             "weight": 20}
 
         bucket_list.append(bucket_primary)
-        bucket_list.append(bucket_backup)
+        bucket_list.append(bucket_failover)
 
         return group
 
@@ -331,17 +331,17 @@ class SynthesizeDij():
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
                 primary_intent = self._get_intent(dst_intents, "primary")
-                backup_intent = self._get_intent(dst_intents, "backup")
+                failover_intent = self._get_intent(dst_intents, "failover")
                 reverse_intent = self._get_intent(dst_intents, "reverse")
                 balking_intent = self._get_intent(dst_intents, "balking")
 
-                if primary_intent and backup_intent:
+                if primary_intent and failover_intent:
 
                     #  See if both want same destination
-                    if primary_intent[2] != backup_intent[2]:
+                    if primary_intent[2] != failover_intent[2]:
 
                         # Push the group
-                        group = self._create_fast_failover_group(primary_intent, backup_intent)
+                        group = self._create_fast_failover_group(primary_intent, failover_intent)
                         group_id = group["flow-node-inventory:group"]["group-id"]
                         url = create_group_url(sw, group_id)
                         self._push_change(url, group)
@@ -356,10 +356,10 @@ class SynthesizeDij():
                     src_port = None
 
                     #Sanity check
-                    if primary_intent[1] != backup_intent[1]:
+                    if primary_intent[1] != failover_intent[1]:
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         if not self.model.graph.has_edge(dst, sw):
-                            raise Exception("Primary and Backup intents' src port mismatch")
+                            raise Exception("Primary and failover intents' src port mismatch")
                     else:
                         src_port = primary_intent[1]
 
@@ -384,7 +384,7 @@ class SynthesizeDij():
                     if primary_intent[1] != balking_intent[1]:
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         if not self.model.graph.has_edge(dst, sw):
-                            raise Exception("Primary and Backup intents' src port mismatch")
+                            raise Exception("Primary and failover intents' src port mismatch")
                     else:
                         src_port = primary_intent[1]
 
@@ -395,16 +395,16 @@ class SynthesizeDij():
                     self._push_change(url, flow)
 
 
-                if not primary_intent and backup_intent:
+                if not primary_intent and failover_intent:
 
                     # Push the group
-                    group = self._create_select_all_group([backup_intent])
+                    group = self._create_select_all_group([failover_intent])
                     group_id = group["flow-node-inventory:group"]["group-id"]
                     url = create_group_url(sw, group_id)
                     self._push_change(url, group)
 
                     flow = self._create_match_per_src_port_destination_instruct_group_rule(group_id,
-                                                                                           backup_intent[1], dst, 1)
+                                                                                           failover_intent[1], dst, 1)
                     flow_id = flow["flow-node-inventory:flow"]["id"]
                     table_id = flow["flow-node-inventory:flow"]["table_id"]
                     url = create_flow_url(sw, table_id, flow_id)
@@ -452,7 +452,7 @@ class SynthesizeDij():
             # and compute forwarding intents for that
             bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
 
-            self._compute_path_forwarding_intents(bp, "backup", arriving_port)
+            self._compute_path_forwarding_intents(bp, "failover", arriving_port)
 
             # Add the edge back and the data that goes along with it
             self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports)
@@ -468,7 +468,7 @@ def main():
     sm._identify_reverse_and_balking_intents()
     sm.dump_forwarding_intents()
 
-    sm.push_switch_changes()
+    #sm.push_switch_changes()
 
 
 if __name__ == "__main__":
