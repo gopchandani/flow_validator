@@ -19,15 +19,12 @@ class Port():
         self.mac_address = nc["flow-node-inventory:hardware-address"]
 
         self.faces = None
+
         if nc["flow-node-inventory:port-number"] == "LOCAL":
             self.faces = "internal"
 
-        # elif "address-tracker:addresses" in nc:
-        #     self.faces = "host"
-        # else:
-        #     self.faces = "switch"
-
         self.state = None
+
         if nc["flow-node-inventory:state"]["link-down"]:
             self.state = "down"
         else:

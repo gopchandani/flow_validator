@@ -108,25 +108,48 @@ class Model():
 
         for link in topology_links:
 
-            node1 = link["source"]["source-node"]
-            node2 = link["destination"]["dest-node"]
+            node1_id = link["source"]["source-node"]
+            node2_id = link["destination"]["dest-node"]
+
+            node1_type = None
+            node2_type = None
 
             node1_port = link["source"]["source-tp"].split(":")[2]
             node2_port = link["destination"]["dest-tp"].split(":")[2]
 
-            if node1.startswith("host"):
+            if node1_id.startswith("host"):
+                node1_type = "host"
                 for node in topology_nodes:
-                    if node["node-id"] == node1:
-                        node1 = node["host-tracker-service:addresses"][0]["ip"]
+                    if node["node-id"] == node1_id:
+                        node1_id = node["host-tracker-service:addresses"][0]["ip"]
+            else:
+                node1_type = "switch"
 
-            if node2.startswith("host"):
+
+            if node2_id.startswith("host"):
+                node2_type = "host"
                 for node in topology_nodes:
-                    if node["node-id"] == node2:
+                    if node["node-id"] == node2_id:
                         node2 = node["host-tracker-service:addresses"][0]["ip"]
+            else:
+                node2_type = "switch"
 
-            edge_port_dict = {node1: node1_port, node2: node2_port}
-            e = (node1, node2)
+            edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
+            e = (node1_id, node2_id)
             self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
+
+
+            #  Set Node1 and Node2's ports' facing values while you are at.
+            node1 = self.graph.node[node1_id]
+            node2 = self.graph.node[node2_id]
+
+
+            if node1_type == "switch" and not node1["ports"][node1_port].faces:
+                node1["ports"][node1_port].faces = node2_type
+
+            if node2_type == "switch" and not node2["ports"][node2_port].faces:
+                node2["ports"][node2_port].faces = node1_type
+
 
 
         print "Hosts in the graph:", self.host_ids
