@@ -74,18 +74,16 @@ class Model():
                 if "flow" in flow_table:
                     switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"], group_list))
 
-
-            switch_port_list = []
-
+            switch_port_dict = {}
             # Parse out the information about all the ports in the switch
             for nc in node["node-connector"]:
-                switch_port_list.append(Port(nc))
+                switch_port_dict[nc["flow-node-inventory:port-number"]] = Port(nc)
 
             # Add the switch node
             self.switch_ids.append(switch_id)
             self.graph.add_node(switch_id, node_type="switch",
                                 flow_tables= switch_flow_tables,
-                                port_list = switch_port_list)
+                                ports = switch_port_dict)
 
 
         # Go through the topology API
@@ -130,7 +128,6 @@ class Model():
             e = (node1, node2)
             self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
 
-            #print "Added edge between switch:", node1, " and switch:", node2
 
         print "Hosts in the graph:", self.host_ids
         print "Switches in the graph:", self.switch_ids

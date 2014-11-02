@@ -15,18 +15,29 @@ class Port():
     def __init__(self, nc):
 
         self.id = nc["id"]
+        self.port_number = nc["flow-node-inventory:port-number"]
         self.mac_address = nc["flow-node-inventory:hardware-address"]
 
         self.faces = None
         if nc["flow-node-inventory:port-number"] == "LOCAL":
             self.faces = "internal"
-        elif "address-tracker:addresses" in nc:
-            self.faces = "host"
-        else:
-            self.faces = "switch"
+
+        # elif "address-tracker:addresses" in nc:
+        #     self.faces = "host"
+        # else:
+        #     self.faces = "switch"
 
         self.state = None
         if nc["flow-node-inventory:state"]["link-down"]:
             self.state = "down"
         else:
             self.state = "up"
+
+    def __str__(self):
+
+        return "Port -- " + \
+               " Id: " + str(self.id) + \
+               " Port Number: " + str(self.port_number) + \
+               " MAC Address: " + str(self.mac_address) + \
+               " Faces: " + str(self.faces) + \
+               " State:" + str(self.state)

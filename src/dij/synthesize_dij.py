@@ -235,7 +235,12 @@ class SynthesizeDij():
 
     def dump_forwarding_intents(self):
         for sw in self.s:
+
             print "---", sw, "---"
+
+            for port in self.model.graph.node[sw]["ports"]:
+                print self.model.graph.node[sw]["ports"][port]
+
             pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
 
     def _get_intent(self, dst_intents, intent_type):
@@ -290,6 +295,12 @@ class SynthesizeDij():
             #  To handle the cases when the intent falls under multiple categories
             if intent in dst_intents:
                 del dst_intents[intent]
+
+    def push_intent_single(self):
+        pass
+
+    def push_intent_pair (self):
+        pass
 
     def push_switch_changes(self):
 
@@ -435,7 +446,7 @@ def main():
     sm.synthesize_flow("10.0.0.1", "10.0.0.4")
     sm.synthesize_flow("10.0.0.4", "10.0.0.1")
     sm.dump_forwarding_intents()
-    sm.push_switch_changes()
+    #sm.push_switch_changes()
 
 
 
