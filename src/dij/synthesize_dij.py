@@ -257,9 +257,6 @@ class SynthesizeDij():
             # A balking intent happens on the switch where reversal begins,
             # it is characterized by the fact that the traffic exits the same port where it came from
             if intent[1] == intent[2]:
-
-                print "here3"
-
                 # Add a new intent with modified key
                 addition_list.append((("balking", intent[1], self.OFPP_IN), dst_intents[intent]))
                 deletion_list.append(intent)
@@ -274,9 +271,6 @@ class SynthesizeDij():
 
             #  1. at the source switch, with intent's source port equal to destination port of the primary intent
             if intent[1] == primary_intent[2]:
-
-                print "here1"
-
                 # Add a new intent with modified key
                 addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
                 deletion_list.append(intent)
@@ -284,13 +278,9 @@ class SynthesizeDij():
             #  2. At the intermediate switch (not where reversal begins),
             # with intent's destination port equal to source port of primary intent
             if intent[2] == primary_intent[1]:
-
-                print "here2"
-
                 # Add a new intent with modified key
                 addition_list.append((("reverse", intent[1], self.OFPP_IN), dst_intents[intent]))
                 deletion_list.append(intent)
-
 
         for intent_key, intent_val in addition_list:
             dst_intents[intent_key] = intent_val
@@ -317,11 +307,20 @@ class SynthesizeDij():
 
                 if primary_intent and backup_intent:
 
-                    # Push the group
-                    group = self._create_fast_failover_group(primary_intent, backup_intent)
-                    group_id = group["flow-node-inventory:group"]["group-id"]
-                    url = create_group_url(sw, group_id)
-                    self._push_change(url, group)
+                    #  See if both want same destination
+                    if primary_intent[2] != backup_intent[2]:
+
+                        # Push the group
+                        group = self._create_fast_failover_group(primary_intent, backup_intent)
+                        group_id = group["flow-node-inventory:group"]["group-id"]
+                        url = create_group_url(sw, group_id)
+                        self._push_change(url, group)
+                    else:
+                        # Push the group
+                        group = self._create_select_all_group([primary_intent])
+                        group_id = group["flow-node-inventory:group"]["group-id"]
+                        url = create_group_url(sw, group_id)
+                        self._push_change(url, group)
 
                     # Push the rule that refers to the group
                     src_port = None
