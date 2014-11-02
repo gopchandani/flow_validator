@@ -238,48 +238,6 @@ class SynthesizeDij():
             print "---", sw, "---"
             pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
 
-    def _identify_reverse_and_balking_intents(self, dst_intents):
-
-        primary_src_port = None
-        for intent in dst_intents:
-            if intent[0] == "primary":
-                primary_src_port = intent[1]
-                break
-
-        # Only back ups here, nothing to do
-        if not primary_src_port:
-            return None
-
-
-
-        addition_list = []
-        deletion_list = []
-        for intent in dst_intents:
-
-            if intent[0] == "primary":
-                continue
-
-            #  If this intent is at a reverse flow carrier switch
-            if intent[2] == primary_src_port:
-
-                # Add a new intent with modified key
-                addition_list.append((("reverse", intent[1], self.OFPP_IN), dst_intents[intent]))
-                deletion_list.append(intent)
-
-            # If it is a blatant reversal on the very switch where reversal begins
-            if intent[1] == intent[2]:
-
-                # Add a new intent with modified key
-                addition_list.append((("balking", intent[1], self.OFPP_IN), dst_intents[intent]))
-                deletion_list.append(intent)
-
-
-        for intent_key, intent_val in addition_list:
-            dst_intents[intent_key] = intent_val
-
-        for intent in deletion_list:
-            del dst_intents[intent]
-
     def _get_intent(self, dst_intents, intent_type):
         return_intent = None
         for intent in dst_intents:
@@ -288,18 +246,71 @@ class SynthesizeDij():
                 break
         return return_intent
 
+    def _identify_reverse_and_balking_intents(self, dst_intents, primary_intent):
+
+
+        addition_list = []
+        deletion_list = []
+
+        for intent in dst_intents:
+
+            # A balking intent happens on the switch where reversal begins,
+            # it is characterized by the fact that the traffic exits the same port where it came from
+            if intent[1] == intent[2]:
+
+                print "here3"
+
+                # Add a new intent with modified key
+                addition_list.append((("balking", intent[1], self.OFPP_IN), dst_intents[intent]))
+                deletion_list.append(intent)
+
+            if not primary_intent:
+                continue
+
+            #  If this intent is at a reverse flow carrier switch
+
+            #  There are two ways to identify reverse intents
+            #  Both cases need a separate rule at a higher priority handling it
+
+            #  1. at the source switch, with intent's source port equal to destination port of the primary intent
+            if intent[1] == primary_intent[2]:
+
+                print "here1"
+
+                # Add a new intent with modified key
+                addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
+                deletion_list.append(intent)
+
+            #  2. At the intermediate switch (not where reversal begins),
+            # with intent's destination port equal to source port of primary intent
+            if intent[2] == primary_intent[1]:
+
+                print "here2"
+
+                # Add a new intent with modified key
+                addition_list.append((("reverse", intent[1], self.OFPP_IN), dst_intents[intent]))
+                deletion_list.append(intent)
+
+
+        for intent_key, intent_val in addition_list:
+            dst_intents[intent_key] = intent_val
+
+        for intent in deletion_list:
+
+            #  To handle the cases when the intent falls under multiple categories
+            if intent in dst_intents:
+                del dst_intents[intent]
+
     def push_switch_changes(self):
 
         for sw in self.s:
 
-            if sw == "openflow:1":
-                print "here"
-
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
-                self._identify_reverse_and_balking_intents(dst_intents)
 
                 primary_intent = self._get_intent(dst_intents, "primary")
+                self._identify_reverse_and_balking_intents(dst_intents, primary_intent)
+
                 backup_intent = self._get_intent(dst_intents, "backup")
                 reverse_intent = self._get_intent(dst_intents, "reverse")
                 balking_intent = self._get_intent(dst_intents, "balking")
