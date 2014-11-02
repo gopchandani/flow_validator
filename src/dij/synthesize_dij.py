@@ -175,7 +175,8 @@ class SynthesizeDij():
 
     def _compute_path_forwarding_intents(self, p, path_type, switch_arriving_port=None):
 
-        dst_host = p[len(p) -1]
+        src_node = p[0]
+        dst_node = p[len(p) -1]
 
         edge_ports_dict = None
         departure_port = None
@@ -214,13 +215,13 @@ class SynthesizeDij():
 
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
-            forwarding_intent = (path_type, arriving_port, departure_port)
+            forwarding_intent = (path_type, arriving_port, departure_port, src_node)
 
-            if dst_host in forwarding_intents:
-                forwarding_intents[dst_host][forwarding_intent] += 1
+            if dst_node in forwarding_intents:
+                forwarding_intents[dst_node][forwarding_intent] += 1
             else:
-                forwarding_intents[dst_host] = defaultdict(int)
-                forwarding_intents[dst_host][forwarding_intent] = 1
+                forwarding_intents[dst_node] = defaultdict(int)
+                forwarding_intents[dst_node][forwarding_intent] = 1
 
             # Prepare for next switch along the path if there is a next switch along the path
             if self.model.graph.node[p[i+1]]["node_type"] != "host":
@@ -278,6 +279,7 @@ class SynthesizeDij():
                     #  Both cases need a separate rule at a higher priority handling it
 
                     #  1. at the source switch, with intent's source port equal to destination port of the primary intent
+                    #  TODO: Add to the condition below that it is in fact a source switch (feels a little ugly)
                     if intent[1] == primary_intent[2]:
                         # Add a new intent with modified key
                         addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
@@ -456,10 +458,12 @@ def main():
     sm.synthesize_flow("10.0.0.1", "10.0.0.4")
     sm.synthesize_flow("10.0.0.4", "10.0.0.1")
 
+    sm.dump_forwarding_intents()
     sm._identify_reverse_and_balking_intents()
     sm.dump_forwarding_intents()
 
     #sm.push_switch_changes()
+
 
 
 
