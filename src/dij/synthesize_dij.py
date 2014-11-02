@@ -353,13 +353,13 @@ class SynthesizeDij():
                     else:
                         src_port = primary_intent[1]
 
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
                         group["flow-node-inventory:group"]["group-id"], src_port, dst, 1)
 
 
                 if primary_intent and balking_intent:
 
-                    group = self._push_fast_failover_group(primary_intent, balking_intent)
+                    group = self._push_fast_failover_group(sw, primary_intent, balking_intent)
 
                     src_port = None
                     #Sanity check
@@ -370,19 +370,19 @@ class SynthesizeDij():
                     else:
                         src_port = primary_intent[1]
 
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
                         group["flow-node-inventory:group"]["group-id"], src_port, dst, 1)
 
                 if not primary_intent and failover_intent:
 
-                    group = self._push_select_all_group([failover_intent])
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(
+                    group = self._push_select_all_group(sw, [failover_intent])
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
                         group["flow-node-inventory:group"]["group-id"], failover_intent[1], dst, 1)
 
                 if reverse_intent:
 
-                    group = self._push_select_all_group([reverse_intent])
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(
+                    group = self._push_select_all_group(sw, [reverse_intent])
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
                         group["flow-node-inventory:group"]["group-id"], reverse_intent[1], dst, 2)
 
     def synthesize_flow(self, src_host, dst_host):
