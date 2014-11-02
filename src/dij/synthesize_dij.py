@@ -215,7 +215,7 @@ class SynthesizeDij():
 
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
-            forwarding_intent = (path_type, arriving_port, departure_port, src_node)
+            forwarding_intent = (path_type, arriving_port, departure_port)
 
             if dst_node in forwarding_intents:
                 forwarding_intents[dst_node][forwarding_intent] += 1
@@ -255,6 +255,7 @@ class SynthesizeDij():
     def _identify_reverse_and_balking_intents(self):
 
         for sw in self.s:
+
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
                 primary_intent = self._get_intent(dst_intents, "primary")
@@ -263,13 +264,19 @@ class SynthesizeDij():
 
                 for intent in dst_intents:
 
+                    #  Nothing needs to be done for primary intent
+                    if intent == primary_intent:
+                        continue
+
                     # A balking intent happens on the switch where reversal begins,
                     # it is characterized by the fact that the traffic exits the same port where it came from
                     if intent[1] == intent[2]:
                         # Add a new intent with modified key
                         addition_list.append((("balking", intent[1], self.OFPP_IN), dst_intents[intent]))
                         deletion_list.append(intent)
+                        continue
 
+                    #  Processing from this point onwards require presence of a primary intent
                     if not primary_intent:
                         continue
 
@@ -279,7 +286,6 @@ class SynthesizeDij():
                     #  Both cases need a separate rule at a higher priority handling it
 
                     #  1. at the source switch, with intent's source port equal to destination port of the primary intent
-                    #  TODO: Add to the condition below that it is in fact a source switch (feels a little ugly)
                     if intent[1] == primary_intent[2]:
                         # Add a new intent with modified key
                         addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
@@ -462,9 +468,7 @@ def main():
     sm._identify_reverse_and_balking_intents()
     sm.dump_forwarding_intents()
 
-    #sm.push_switch_changes()
-
-
+    sm.push_switch_changes()
 
 
 if __name__ == "__main__":
