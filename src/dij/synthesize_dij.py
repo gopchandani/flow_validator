@@ -31,9 +31,34 @@ class SynthesizeDij():
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
+    def _push_change(self, url, pushed_content):
 
+        resp, content = self.h.request(url, "PUT",
+                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                       body=json.dumps(pushed_content))
 
-    def _create_base_rule(self, table_id, priority):
+        if resp["status"] == "200":
+            print "Pushed Successfully:", pushed_content.keys()[0], resp["status"]
+        else:
+            print "Problem Pushing:", pushed_content.keys()[0], "resp:", resp, "content:", content
+            pprint.pprint(pushed_content)
+
+        time.sleep(0.5)
+
+    def _push_flow(self, sw, flow):
+        
+        flow_id = flow["flow-node-inventory:flow"]["id"]
+        table_id = flow["flow-node-inventory:flow"]["table_id"]
+        url = create_flow_url(sw, table_id, flow_id)
+        self._push_change(url, flow)
+
+    def _push_group(self, sw, group):
+        
+        group_id = group["flow-node-inventory:group"]["group-id"]
+        url = create_group_url(sw, group_id)
+        self._push_change(url, group)
+    
+    def _create_base_flow(self, table_id, priority):
 
         flow = dict()
 
@@ -57,10 +82,10 @@ class SynthesizeDij():
         flow = {"flow-node-inventory:flow": flow}
 
         return flow
+    
+    def _push_match_per_src_port_destination_instruct_group_flow(self, sw, group_id, src_port, dst, priority):
 
-    def _create_match_per_src_port_destination_instruct_group_rule(self, group_id, src_port, dst, priority):
-
-        flow = self._create_base_rule(0, priority)
+        flow = self._create_base_flow(0, priority)
 
         #Compile match
 
@@ -85,6 +110,8 @@ class SynthesizeDij():
 
         flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_action_instruction)
 
+        self._push_flow(sw, flow)
+        
         return flow
 
     def _create_base_group(self):
@@ -101,7 +128,7 @@ class SynthesizeDij():
 
         return group
 
-    def _create_fast_failover_group(self, primary_intent, failover_intent):
+    def _push_fast_failover_group(self, sw, primary_intent, failover_intent):
 
         group = self._create_base_group()
         bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
@@ -124,10 +151,12 @@ class SynthesizeDij():
         bucket_list.append(bucket_primary)
         bucket_list.append(bucket_failover)
 
+        self._push_group(sw, group)
+
         return group
 
 
-    def _create_select_all_group(self, intent_list):
+    def _push_select_all_group(self, sw, intent_list):
 
         group = self._create_base_group()
         bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
@@ -144,22 +173,10 @@ class SynthesizeDij():
         else:
             raise Exception("Need to have either one or two forwarding intents")
 
+        self._push_group(sw, group)
+
         return group
 
-
-    def _push_change(self, url, pushed_content):
-
-        resp, content = self.h.request(url, "PUT",
-                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
-                                       body=json.dumps(pushed_content))
-
-        if resp["status"] == "200":
-            print "Pushed Successfully:", pushed_content.keys()[0], resp["status"]
-        else:
-            print "Problem Pushing:", pushed_content.keys()[0], "resp:", resp, "content:", content
-            pprint.pprint(pushed_content)
-
-        time.sleep(0.5)
 
     def get_forwarding_intents_dict(self, sw):
 
@@ -307,23 +324,6 @@ class SynthesizeDij():
                     if intent in dst_intents:
                         del dst_intents[intent]
 
-    def push_intent_single(self):
-        pass
-
-    def push_intent_pair (self):
-        pass
-
-    def push_switch_changes(self):
-
-        for sw in self.s:
-
-            for dst in self.model.graph.node[sw]["forwarding_intents"]:
-                dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
-
-                primary_intent = self._get_intent(dst_intents, "primary")
-                self._identify_reverse_and_balking_intents(dst_intents, primary_intent)
-
-
     def push_switch_changes(self):
 
         for sw in self.s:
@@ -339,22 +339,12 @@ class SynthesizeDij():
 
                     #  See if both want same destination
                     if primary_intent[2] != failover_intent[2]:
-
-                        # Push the group
-                        group = self._create_fast_failover_group(primary_intent, failover_intent)
-                        group_id = group["flow-node-inventory:group"]["group-id"]
-                        url = create_group_url(sw, group_id)
-                        self._push_change(url, group)
+                        group = self._push_fast_failover_group(sw, primary_intent, failover_intent)
                     else:
-                        # Push the group
-                        group = self._create_select_all_group([primary_intent])
-                        group_id = group["flow-node-inventory:group"]["group-id"]
-                        url = create_group_url(sw, group_id)
-                        self._push_change(url, group)
+                        group = self._push_select_all_group(sw, [primary_intent])
 
                     # Push the rule that refers to the group
                     src_port = None
-
                     #Sanity check
                     if primary_intent[1] != failover_intent[1]:
                         #  This can only happen if the host is directly connected to the switch, so check that.
@@ -363,23 +353,15 @@ class SynthesizeDij():
                     else:
                         src_port = primary_intent[1]
 
-                    flow = self._create_match_per_src_port_destination_instruct_group_rule(group_id, src_port, dst, 1)
-                    flow_id = flow["flow-node-inventory:flow"]["id"]
-                    table_id = flow["flow-node-inventory:flow"]["table_id"]
-                    url = create_flow_url(sw, table_id, flow_id)
-                    self._push_change(url, flow)
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(
+                        group["flow-node-inventory:group"]["group-id"], src_port, dst, 1)
+
 
                 if primary_intent and balking_intent:
 
-                    # Push the group
-                    group = self._create_fast_failover_group(primary_intent, balking_intent)
-                    group_id = group["flow-node-inventory:group"]["group-id"]
-                    url = create_group_url(sw, group_id)
-                    self._push_change(url, group)
+                    group = self._push_fast_failover_group(primary_intent, balking_intent)
 
-                    # Push the rule that refers to the group
                     src_port = None
-
                     #Sanity check
                     if primary_intent[1] != balking_intent[1]:
                         #  This can only happen if the host is directly connected to the switch, so check that.
@@ -388,42 +370,20 @@ class SynthesizeDij():
                     else:
                         src_port = primary_intent[1]
 
-                    flow = self._create_match_per_src_port_destination_instruct_group_rule(group_id, src_port, dst, 1)
-                    flow_id = flow["flow-node-inventory:flow"]["id"]
-                    table_id = flow["flow-node-inventory:flow"]["table_id"]
-                    url = create_flow_url(sw, table_id, flow_id)
-                    self._push_change(url, flow)
-
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(
+                        group["flow-node-inventory:group"]["group-id"], src_port, dst, 1)
 
                 if not primary_intent and failover_intent:
 
-                    # Push the group
-                    group = self._create_select_all_group([failover_intent])
-                    group_id = group["flow-node-inventory:group"]["group-id"]
-                    url = create_group_url(sw, group_id)
-                    self._push_change(url, group)
-
-                    flow = self._create_match_per_src_port_destination_instruct_group_rule(group_id,
-                                                                                           failover_intent[1], dst, 1)
-                    flow_id = flow["flow-node-inventory:flow"]["id"]
-                    table_id = flow["flow-node-inventory:flow"]["table_id"]
-                    url = create_flow_url(sw, table_id, flow_id)
-                    self._push_change(url, flow)
+                    group = self._push_select_all_group([failover_intent])
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(
+                        group["flow-node-inventory:group"]["group-id"], failover_intent[1], dst, 1)
 
                 if reverse_intent:
 
-                    # Push the group
-                    group = self._create_select_all_group([reverse_intent])
-                    group_id = group["flow-node-inventory:group"]["group-id"]
-                    url = create_group_url(sw, group_id)
-                    self._push_change(url, group)
-
-                    flow = self._create_match_per_src_port_destination_instruct_group_rule(group_id,
-                                                                                           reverse_intent[1], dst, 2)
-                    flow_id = flow["flow-node-inventory:flow"]["id"]
-                    table_id = flow["flow-node-inventory:flow"]["table_id"]
-                    url = create_flow_url(sw, table_id, flow_id)
-                    self._push_change(url, flow)
+                    group = self._push_select_all_group([reverse_intent])
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(
+                        group["flow-node-inventory:group"]["group-id"], reverse_intent[1], dst, 2)
 
     def synthesize_flow(self, src_host, dst_host):
 
@@ -468,7 +428,7 @@ def main():
     sm._identify_reverse_and_balking_intents()
     sm.dump_forwarding_intents()
 
-    #sm.push_switch_changes()
+    sm.push_switch_changes()
 
 
 if __name__ == "__main__":
