@@ -16,6 +16,8 @@ class FatTree(Topo):
                                        + (-num_bottom_switches%num_middle_switches))/(num_middle_switches - 1)) + 1
         first_open_index = 0
 
+        switch_name_index = 1
+
         print "Maximum bottom switches per middle switch is " + str(max_bottoms_per_middle)
 
         top_switches = []
@@ -25,22 +27,26 @@ class FatTree(Topo):
         bottoms_attached_to_middles = [0] * num_middle_switches # max = bottoms_per_middle
 
         #  Add switches and hosts under them
-
-        for j in range(num_middle_switches):
-            curr_middle_switch = self.addSwitch("ms" + str(j+1))
-            middle_switches.append(curr_middle_switch)
-
         for k in range(num_bottom_switches):
-            curr_bottom_switch = self.addSwitch("bs" + str(k+1))
+            curr_bottom_switch = self.addSwitch("s" + str(switch_name_index))
             bottom_switches.append(curr_bottom_switch)
 
             for l in range(num_hosts_per_switch):
-                curr_switch_host = self.addHost("h" + str(k+1) + str(l+1))
+                curr_switch_host = self.addHost("h" + str(switch_name_index) + str(l+1))
                 self.addLink(curr_bottom_switch, curr_switch_host)
 
+            switch_name_index += 1
+
+        for j in range(num_middle_switches):
+            curr_middle_switch = self.addSwitch("s" + str(switch_name_index))
+            switch_name_index += 1
+            middle_switches.append(curr_middle_switch)
+
+
         for i in range(2):
-            curr_top_switch = self.addSwitch("ts" + str(i+1))
+            curr_top_switch = self.addSwitch("s" + str(switch_name_index))
             top_switches.append(curr_top_switch)
+            switch_name_index += 1
 
             for m in range(num_middle_switches):
                 self.addLink(top_switches[i], middle_switches[m])

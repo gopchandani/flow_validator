@@ -438,6 +438,7 @@ class SynthesizeDij():
             # Find the shortest path that results when the link breaks
             # and compute forwarding intents for that
             bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
+            print "--", bp
 
             self._compute_path_forwarding_intents(bp, "failover", arriving_port)
 
