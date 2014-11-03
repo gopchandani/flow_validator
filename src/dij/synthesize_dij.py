@@ -33,9 +33,14 @@ class SynthesizeDij():
 
     def _push_change(self, url, pushed_content):
 
+        time.sleep(0.5)
+
         resp, content = self.h.request(url, "PUT",
                                        headers={'Content-Type': 'application/json; charset=UTF-8'},
                                        body=json.dumps(pushed_content))
+
+        # resp = {"status": "200"}
+        # pprint.pprint(pushed_content)
 
         if resp["status"] == "200":
             print "Pushed Successfully:", pushed_content.keys()[0], resp["status"]
@@ -43,7 +48,6 @@ class SynthesizeDij():
             print "Problem Pushing:", pushed_content.keys()[0], "resp:", resp, "content:", content
             pprint.pprint(pushed_content)
 
-        time.sleep(0.5)
 
     def _push_flow(self, sw, flow):
         
@@ -128,24 +132,42 @@ class SynthesizeDij():
 
         return group
 
+    def _get_out_and_watch_port(self, intent):
+        out_port = None
+        watch_port = None
+
+        if intent[1] == intent[2]:
+            out_port = self.OFPP_IN
+            watch_port = intent[2]
+        else:
+            out_port = intent[2]
+            watch_port = intent[2]
+
+        return out_port, watch_port
+
+
     def _push_fast_failover_group(self, sw, primary_intent, failover_intent):
 
         group = self._create_base_group()
         bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
         group["flow-node-inventory:group"]["group-type"] = "group-ff"
 
+        out_port, watch_port = self._get_out_and_watch_port(primary_intent)
+
         bucket_primary = {
             "action":[{'order': 0,
-                       'output-action': {'output-node-connector': primary_intent[2]}}],
+                       'output-action': {'output-node-connector': out_port}}],
             "bucket-id": 0,
-            "watch_port": primary_intent[2],
+            "watch_port": watch_port,
             "weight": 20}
+
+        out_port, watch_port = self._get_out_and_watch_port(failover_intent)
 
         bucket_failover = {
             "action":[{'order': 0,
-                       'output-action': {'output-node-connector': failover_intent[2]}}],
+                       'output-action': {'output-node-connector': out_port}}],
             "bucket-id": 1,
-            "watch_port": failover_intent[2],
+            "watch_port": watch_port,
             "weight": 20}
 
         bucket_list.append(bucket_primary)
@@ -164,8 +186,11 @@ class SynthesizeDij():
 
         if intent_list:
             for intent in intent_list:
+
+                out_port, watch_port = self._get_out_and_watch_port(intent)
+
                 bucket = {"action": [{'order': 0,
-                                      'output-action': {'output-node-connector': intent[2]}}],
+                                      'output-action': {'output-node-connector': out_port}}],
                           "bucket-id": 1}
 
                 bucket_list.append(bucket)
@@ -289,7 +314,7 @@ class SynthesizeDij():
                     # it is characterized by the fact that the traffic exits the same port where it came from
                     if intent[1] == intent[2]:
                         # Add a new intent with modified key
-                        addition_list.append((("balking", intent[1], self.OFPP_IN), dst_intents[intent]))
+                        addition_list.append((("balking", intent[1], intent[2]), dst_intents[intent]))
                         deletion_list.append(intent)
                         continue
 
@@ -312,7 +337,7 @@ class SynthesizeDij():
                     # with intent's destination port equal to source port of primary intent
                     if intent[2] == primary_intent[1]:
                         # Add a new intent with modified key
-                        addition_list.append((("reverse", intent[1], self.OFPP_IN), dst_intents[intent]))
+                        addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
                         deletion_list.append(intent)
 
                 for intent_key, intent_val in addition_list:
@@ -327,6 +352,8 @@ class SynthesizeDij():
     def push_switch_changes(self):
 
         for sw in self.s:
+
+            print "-- Pushing at Switch:", sw
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
