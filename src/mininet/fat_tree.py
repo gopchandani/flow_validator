@@ -8,9 +8,9 @@ class FatTree(Topo):
 
         Topo.__init__(self)
 
-        num_bottom_switches = int(raw_input("Enter number of bottom switches:"))
-        num_hosts_per_switch = int(raw_input("Enter # of hosts/switch:"))
-        num_middle_switches = int(raw_input("Enter number of middle switches:"))
+        num_bottom_switches = 3#int(raw_input("Enter number of bottom switches:"))
+        num_hosts_per_switch = 1#int(raw_input("Enter # of hosts/switch:"))
+        num_middle_switches = 2#int(raw_input("Enter number of middle switches:"))
 
         max_bottoms_per_middle = 2 * ((num_bottom_switches
                                        + (-num_bottom_switches%num_middle_switches))/(num_middle_switches - 1)) + 1

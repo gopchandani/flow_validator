@@ -33,14 +33,14 @@ class SynthesizeDij():
 
     def _push_change(self, url, pushed_content):
 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
         resp, content = self.h.request(url, "PUT",
                                        headers={'Content-Type': 'application/json; charset=UTF-8'},
                                        body=json.dumps(pushed_content))
 
         # resp = {"status": "200"}
-        # pprint.pprint(pushed_content)
+        pprint.pprint(pushed_content)
 
         if resp["status"] == "200":
             print "Pushed Successfully:", pushed_content.keys()[0], resp["status"]
@@ -286,12 +286,14 @@ class SynthesizeDij():
 
             pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
 
-    def _get_intent(self, dst_intents, intent_type):
-        return_intent = None
+    def _get_intents(self, dst_intents, intent_type):
+
+        return_intent = []
+
         for intent in dst_intents:
             if intent[0] == intent_type:
-                return_intent = intent
-                break
+                return_intent.append(intent)
+
         return return_intent
 
     def _identify_reverse_and_balking_intents(self):
@@ -300,7 +302,13 @@ class SynthesizeDij():
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
-                primary_intent = self._get_intent(dst_intents, "primary")
+
+                # Assume that there is always one primary intent
+                primary_intent = None
+                primary_intents = self._get_intents(dst_intents, "primary")
+                if primary_intents:
+                    primary_intent = primary_intents[0]
+
                 addition_list = []
                 deletion_list = []
 
@@ -333,7 +341,7 @@ class SynthesizeDij():
                         addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
                         deletion_list.append(intent)
 
-                    #  2. At the intermediate switch (not where reversal begins),
+                    #  2. At any other switch
                     # with intent's destination port equal to source port of primary intent
                     if intent[2] == primary_intent[1]:
                         # Add a new intent with modified key
@@ -344,10 +352,7 @@ class SynthesizeDij():
                     dst_intents[intent_key] = intent_val
 
                 for intent in deletion_list:
-
-                    #  To handle the cases when the intent falls under multiple categories
-                    if intent in dst_intents:
-                        del dst_intents[intent]
+                    del dst_intents[intent]
 
     def push_switch_changes(self):
 
@@ -357,12 +362,35 @@ class SynthesizeDij():
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
-                primary_intent = self._get_intent(dst_intents, "primary")
-                failover_intent = self._get_intent(dst_intents, "failover")
-                reverse_intent = self._get_intent(dst_intents, "reverse")
-                balking_intent = self._get_intent(dst_intents, "balking")
 
-                if primary_intent and failover_intent:
+                primary_intent = None
+                primary_intents = self._get_intents(dst_intents, "primary")
+                if primary_intents:
+                    primary_intent = primary_intents[0]
+
+                reverse_intent = None
+                reverse_intents = self._get_intents(dst_intents, "reverse")
+                if reverse_intents:
+                    reverse_intent = reverse_intents[0]
+
+                balking_intent = None
+                balking_intents = self._get_intents(dst_intents, "balking")
+                if balking_intents:
+                    balking_intent = balking_intents[0]
+
+                failover_intent = None
+                failover_intents = self._get_intents(dst_intents, "failover")
+                if failover_intents:
+                    failover_intent = failover_intents[0]
+
+                #  Handle the case when the switch does not have to carry any failover traffic
+                if primary_intent and not failover_intent:
+
+                    group = self._push_select_all_group(sw, [primary_intent])
+                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
+                        group["flow-node-inventory:group"]["group-id"], primary_intent[1], dst, 1)
+
+                if primary_intent and failover_intents:
 
                     #  See if both want same destination
                     if primary_intent[2] != failover_intent[2]:
@@ -383,6 +411,18 @@ class SynthesizeDij():
                     flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
                         group["flow-node-inventory:group"]["group-id"], src_port, dst, 1)
 
+                    if len(failover_intents) > 1:
+                        raise Exception ("Hitting an unexpected case.")
+                        failover_intents = failover_intents[1:]
+
+                #  Handle the case when switch only participates in carrying the failover traffic in-transit
+                if not primary_intent and failover_intents:
+
+                    for failover_intent in failover_intents:
+
+                        group = self._push_select_all_group(sw, [failover_intent])
+                        flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
+                            group["flow-node-inventory:group"]["group-id"], failover_intent[1], dst, 1)
 
                 if primary_intent and balking_intent:
 
@@ -399,12 +439,6 @@ class SynthesizeDij():
 
                     flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
                         group["flow-node-inventory:group"]["group-id"], src_port, dst, 1)
-
-                if not primary_intent and failover_intent:
-
-                    group = self._push_select_all_group(sw, [failover_intent])
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], failover_intent[1], dst, 1)
 
                 if reverse_intent:
 
@@ -449,8 +483,8 @@ class SynthesizeDij():
 def main():
     sm = SynthesizeDij()
 
-    sm.synthesize_flow("10.0.0.1", "10.0.0.2")
-    sm.synthesize_flow("10.0.0.2", "10.0.0.1")
+    sm.synthesize_flow("10.0.0.1", "10.0.0.3")
+    sm.synthesize_flow("10.0.0.3", "10.0.0.1")
 
     sm.dump_forwarding_intents()
     sm._identify_reverse_and_balking_intents()
