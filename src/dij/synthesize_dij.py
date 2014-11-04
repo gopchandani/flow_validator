@@ -340,6 +340,7 @@ class SynthesizeDij():
                         # Add a new intent with modified key
                         addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
                         deletion_list.append(intent)
+                        continue
 
                     #  2. At any other switch
                     # with intent's destination port equal to source port of primary intent
