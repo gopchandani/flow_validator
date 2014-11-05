@@ -170,8 +170,6 @@ class Model():
         print "Switches in the graph:", self.switch_ids
         print "Number of nodes in the graph:", self.graph.number_of_nodes()
         print "Number of edges in the graph:", self.graph.number_of_edges()
-        print self.graph.nodes()
-
 
     def get_node_graph(self):
         return self.graph

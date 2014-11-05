@@ -145,9 +145,6 @@ class BackupPaths:
         for p in asp:
             print "Topological Primary Path Candidate", p
 
-            if p == [u'10.0.0.1', u'openflow:1', u'openflow:4', u'openflow:3', u'10.0.0.3']:
-                print "here"
-
             is_reachable_flow = self.check_flow_reachability(src_host_id, dst_host_id, p)
             print "is_reachable_flow:", is_reachable_flow
 

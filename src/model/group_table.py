@@ -115,9 +115,6 @@ class Group():
         for bucket_json in group_json["buckets"]["bucket"]:
             self.bucket_list.append(Bucket(sw, bucket_json))
 
-        pprint.pprint(group_json)
-
-
 
 class GroupTable():
 
