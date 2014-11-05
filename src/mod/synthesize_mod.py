@@ -1,7 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
 from model.model import Model
-from synthesis.create_url import create_group_url, create_flow_url
 
 import httplib2
 import json
