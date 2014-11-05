@@ -45,14 +45,8 @@ class Model():
             node = json.loads(content)
 
             if "flow-node-inventory:group" in node["node"][0]:
-
                 groups_json = node["node"][0]["flow-node-inventory:group"]
-                group_list = []
-
-                for group_json in groups_json:
-                    group_list.append(Group(group_json))
-
-                group_table = GroupTable(group_list)
+                group_table = GroupTable(groups_json)
 
             else:
                 print "No groups configured in node:", node_id
