@@ -38,27 +38,22 @@ class Action():
         ret_val = False
 
         #  Go through the groups that we have seen so far at this switch
-        for group in self.sw.group_list:
-            print group
-    
-            if group["group-type"] == "group-all" and action["group-action"]["group-id"] == group["group-id"]:
+        for group in self.sw.group_table.group_list:
+
+            if group.group_type == "group-all" and group.group_id == self.group_id:
     
                 #  Check the bucket actions and see if any of them would do the trick
-                for action_bucket in group["buckets"]["bucket"]:
-                    ret_val = self.does_action_bucket_forward(action_bucket, in_port, out_port)
-    
-                    #  No need to keep going
+                for action_bucket in group.bucket_list:
+                    ret_val = action_bucket.does_it_forward(in_port, out_port)
                     if ret_val:
                         break
     
             # Check to see if there is a matching group_id of fast-failover type group is present...
-            elif group["group-type"] == "group-ff" and action["group-action"]["group-id"] == group["group-id"]:
+            elif group.group_type == "group-ff" and group.group_id == self.group_id:
     
                 #  Check the bucket actions and see if any of them would do the trick
-                for action_bucket in group["buckets"]["bucket"]:
-                    ret_val = self.does_action_bucket_forward(action_bucket, in_port, out_port)
-    
-                    #  No need to keep going
+                for action_bucket in group.bucket_list:
+                    ret_val = action_bucket.does_it_forward(in_port, out_port)
                     if ret_val:
                         break
 
@@ -91,6 +86,17 @@ class Bucket():
 
         if "weight" in bucket_json:
             self.weight = bucket_json["weight"]
+
+    def does_it_forward(self, in_port, out_port):
+
+        ret_val = False
+
+        for action in self.action_list:
+            ret_val = action.does_it_forward(in_port, out_port)
+            if ret_val:
+                break
+
+        return ret_val
 
 class Group():
     def __init__(self, sw, group_json):

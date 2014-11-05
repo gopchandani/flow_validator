@@ -56,7 +56,7 @@ class BackupPaths:
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
 
-            node_flow_tables = self.graph.node[node_path[i]]["flow_tables"]
+            node_flow_tables = self.graph.node[node_path[i]]["sw"].flow_tables
 
             for node_flow_table in node_flow_tables:
 

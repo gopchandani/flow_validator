@@ -48,18 +48,6 @@ class Flow():
 
         return ret_val
 
-
-    def does_action_bucket_forward(self, action_bucket, in_port, out_port):
-        
-        ret_val = False
-        
-        for bucket_action in action_bucket["action"]:
-            ret_val = bucket_action.does_output_action_forward(bucket_action["output-action"], in_port, out_port)
-            if ret_val:
-                break
-
-        return ret_val
-
     def does_it_forward(self, in_port, out_port):
         ret_val = False
 
