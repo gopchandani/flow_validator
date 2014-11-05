@@ -6,11 +6,19 @@ import pprint
 from netaddr import IPNetwork
 from netaddr import IPAddress
 
+from group_table import Action
+
 
 class Flow():
     def __init__(self, flow, group_list):
         self.priority = flow["priority"]
         self.match = flow["match"]
+        self.actions = []
+        apply_actions_json = flow["instructions"]["instruction"][0]["apply-actions"]
+
+        for action_json in apply_actions_json["action"]:
+            self.actions.append(Action(action_json))
+
         self.actions = flow["instructions"]["instruction"][0]["apply-actions"]["action"]
         self.group_list = group_list
 

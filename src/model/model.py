@@ -8,6 +8,10 @@ import httplib2
 import networkx as nx
 
 from flow_table import FlowTable
+
+from group_table import GroupTable
+from group_table import Group
+
 from port import Port
 
 
@@ -24,8 +28,9 @@ class Model():
         #  Load up everything
         self._load_model()
 
-    def _fetch_group_list(self, node_id):
-        group_list = []
+    def _prepare_group_table(self, node_id):
+
+        group_table = None
 
         baseUrl = 'http://localhost:8181/restconf/'
         h = httplib2.Http(".cache")
@@ -40,13 +45,21 @@ class Model():
             node = json.loads(content)
 
             if "flow-node-inventory:group" in node["node"][0]:
-                group_list = node["node"][0]["flow-node-inventory:group"]
+
+                groups_json = node["node"][0]["flow-node-inventory:group"]
+                group_list = []
+
+                for group_json in groups_json:
+                    group_list.append(Group(group_json))
+
+                group_table = GroupTable(group_list)
+
             else:
                 print "No groups configured in node:", node_id
         else:
             print "Could not fetch any groups via the API, status:", resp["status"]
 
-        return group_list
+        return group_table
 
     def _load_model(self):
         baseUrl = 'http://localhost:8181/restconf/'
@@ -65,14 +78,14 @@ class Model():
             switch_id = node["id"]
             switch_flow_tables = []
 
-            group_list = self._fetch_group_list(switch_id)
+            group_table = self._prepare_group_table(switch_id)
 
             # Parse out the flow tables in the switch
             for flow_table in node["flow-node-inventory:table"]:
 
                 #  Only capture those flow_tables that have actual rules in them
                 if "flow" in flow_table:
-                    switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"], group_list))
+                    switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"], group_table))
 
             switch_port_dict = {}
             # Parse out the information about all the ports in the switch
