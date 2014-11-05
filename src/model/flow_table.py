@@ -41,6 +41,32 @@ class Flow():
 
         return ret_val
 
+    def does_output_action_forward(self, output_action, arriving_port, departure_port):
+
+        ret_val = False
+
+        if output_action["output-node-connector"] == departure_port:
+            ret_val = True
+        
+        elif output_action["output-node-connector"] == "4294967288" and arriving_port == departure_port:
+            ret_val = True
+        
+        elif output_action["output-node-connector"] == "4294967292":
+            ret_val = True
+
+        return ret_val
+
+    def does_action_bucket_forward(self, action_bucket, arriving_port, departure_port):
+        
+        ret_val = False
+        
+        for bucket_action in action_bucket["action"]:
+            ret_val = self.does_output_action_forward(bucket_action["output-action"], arriving_port, departure_port)
+            if ret_val:
+                break
+
+        return ret_val
+
     def does_it_forward(self, arriving_port, departure_port):
         ret_val = False
 
@@ -48,30 +74,31 @@ class Flow():
 
         for action in self.actions:
             if "output-action" in action:
-                if action["output-action"]["output-node-connector"] == departure_port:
-                    ret_val = True
+                ret_val = self.does_output_action_forward(action["output-action"], arriving_port, departure_port)
+                if ret_val:
                     break
 
             if "group-action" in action:
 
-                for bucket in self.group_list:
+                #  Go through the groups that we have seen so far at this switch
+                for group in self.group_list:
 
-                    # Check to see if there is a matching group_id of fast-failover type group is present...
-                    if bucket["group-type"] == "group-ff" and \
-                                    action["group-action"]["group-id"] == bucket["group-id"]:
+                    if group["group-type"] == "group-all" and action["group-action"]["group-id"] == group["group-id"]:
 
                         #  Check the bucket actions and see if any of them would do the trick
-                        for bucket_actions in bucket["buckets"]["bucket"]:
-                            for bucket_action in bucket_actions["action"]:
-                                if bucket_action["output-action"]["output-node-connector"] == departure_port:
-                                    ret_val = True
-                                    break
+                        for action_bucket in group["buckets"]["bucket"]:
+                            ret_val = self.does_action_bucket_forward(action_bucket, arriving_port, departure_port)
 
-                                #  If the output port is IN_PORT
-                                if bucket_action["output-action"]["output-node-connector"] == "4294967288" \
-                                        and arriving_port == departure_port:
-                                    ret_val = True
-                                    break
+                            #  No need to keep going
+                            if ret_val:
+                                break
+
+                    # Check to see if there is a matching group_id of fast-failover type group is present...
+                    elif group["group-type"] == "group-ff" and action["group-action"]["group-id"] == group["group-id"]:
+
+                        #  Check the bucket actions and see if any of them would do the trick
+                        for action_bucket in group["buckets"]["bucket"]:
+                            ret_val = self.does_action_bucket_forward(action_bucket, arriving_port, departure_port)
 
                             #  No need to keep going
                             if ret_val:
