@@ -281,8 +281,8 @@ class SynthesizeDij():
 
             print "---", sw, "---"
 
-            for port in self.model.graph.node[sw]["ports"]:
-                print self.model.graph.node[sw]["ports"][port]
+            for port in self.model.graph.node[sw]["sw"].ports:
+                print self.model.graph.node[sw]["sw"].ports[port]
 
             pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
 
