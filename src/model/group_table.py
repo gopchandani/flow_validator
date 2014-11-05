@@ -4,7 +4,9 @@ import pprint
 
 class Action():
 
-    def __init__(self, action_json):
+    def __init__(self, sw, action_json):
+
+        self.sw = sw
         self.order = action_json["order"]
         self.action_type = None
 
@@ -36,7 +38,8 @@ class Action():
         ret_val = False
 
         #  Go through the groups that we have seen so far at this switch
-        for group in self.group_table:
+        for group in self.sw.group_list:
+            print group
     
             if group["group-type"] == "group-all" and action["group-action"]["group-id"] == group["group-id"]:
     
@@ -73,10 +76,13 @@ class Action():
         return ret_val
 
 class Bucket():
-    def __init__(self, bucket_json):
+    def __init__(self, sw, bucket_json):
+
+        self.sw = sw
         self.action_list = []
+
         for action_json in bucket_json["action"]:
-            self.action_list.append(Action(action_json))
+            self.action_list.append(Action(sw, action_json))
 
         self.bucket_id = bucket_json["bucket-id"]
 
@@ -86,18 +92,17 @@ class Bucket():
         if "weight" in bucket_json:
             self.weight = bucket_json["weight"]
 
-
 class Group():
-    def __init__(self, group_json):
+    def __init__(self, sw, group_json):
 
+        self.sw = sw
         self.barrier = group_json["barrier"]
         self.group_id = group_json["group-id"]
         self.group_type = group_json["group-type"]
         self.bucket_list = []
 
         for bucket_json in group_json["buckets"]["bucket"]:
-            self.bucket_list.append(Bucket(bucket_json))
-
+            self.bucket_list.append(Bucket(sw, bucket_json))
 
         pprint.pprint(group_json)
 
@@ -105,12 +110,13 @@ class Group():
 
 class GroupTable():
 
-    def __init__(self, groups_json):
+    def __init__(self, sw, groups_json):
 
+        self.sw = sw
         self.group_list = []
 
         for group_json in groups_json:
-            self.group_list.append(Group(group_json))
+            self.group_list.append(Group(sw, group_json))
 
 
     def does_group_table_forward(self):

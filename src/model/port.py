@@ -12,8 +12,9 @@ class Port():
 
     """
 
-    def __init__(self, nc):
+    def __init__(self, sw, nc):
 
+        self.sw = sw
         self.id = nc["id"]
         self.port_number = nc["flow-node-inventory:port-number"]
         self.mac_address = nc["flow-node-inventory:hardware-address"]

@@ -10,16 +10,16 @@ from group_table import Action
 
 
 class Flow():
-    def __init__(self, flow, group_table):
+    def __init__(self, sw, flow):
+
+        self.sw = sw
         self.priority = flow["priority"]
         self.match = flow["match"]
         self.actions = []
         apply_actions_json = flow["instructions"]["instruction"][0]["apply-actions"]
 
         for action_json in apply_actions_json["action"]:
-            self.actions.append(Action(action_json))
-
-        self.group_table = group_table
+            self.actions.append(Action(sw, action_json))
 
         #print "-- Added flow with priority:", self.priority, "match:", flow["match"], "actions: ", self.actions
 
@@ -80,14 +80,14 @@ class Flow():
         return ret_val
 
 class FlowTable():
-    def __init__(self, table_id, flow_list, group_list):
+    def __init__(self, sw, table_id, flow_list):
 
+        self.sw = sw
         self.table_id = table_id
         self.flow_list = []
-        self.group_list = group_list
 
         for f in flow_list:
-            self.flow_list.append(Flow(f, group_list))
+            self.flow_list.append(Flow(sw, f))
 
     def passes_flow(self, in_port, src, dst, out_port):
         ret_val = False
