@@ -42,7 +42,7 @@ class Action():
 
             if group.group_type == "group-all" and group.group_id == self.group_id:
     
-                #  Check the bucket actions and see if any of them would do the trick
+                #  Check the bucket actions and see if any of them would do the trick in group-all case
                 for action_bucket in group.bucket_list:
                     ret_val = action_bucket.does_it_forward(in_port, out_port)
                     if ret_val:
@@ -52,10 +52,15 @@ class Action():
             elif group.group_type == "group-ff" and group.group_id == self.group_id:
     
                 #  Check the bucket actions and see if any of them would do the trick
+                #  along with the condition that the watch_port of the bucket has to be up
+
                 for action_bucket in group.bucket_list:
-                    ret_val = action_bucket.does_it_forward(in_port, out_port)
-                    if ret_val:
-                        break
+
+                    # Check if the port that the bucket watches is actually up
+                    if self.sw.ports[action_bucket.watch_port].state == "up":
+                        ret_val = action_bucket.does_it_forward(in_port, out_port)
+                        if ret_val:
+                            break
 
         return ret_val
 
@@ -82,10 +87,10 @@ class Bucket():
         self.bucket_id = bucket_json["bucket-id"]
 
         if "watch_port" in bucket_json:
-            self.watch_port = bucket_json["watch_port"]
+            self.watch_port = str(bucket_json["watch_port"])
 
         if "weight" in bucket_json:
-            self.weight = bucket_json["weight"]
+            self.weight = str(bucket_json["weight"])
 
     def does_it_forward(self, in_port, out_port):
 
