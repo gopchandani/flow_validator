@@ -56,9 +56,9 @@ class BackupPaths:
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
 
-            node_flow_tables = self.graph.node[node_path[i]]["sw"].flow_tables
+            for flow_table_id in self.graph.node[node_path[i]]["sw"].flow_tables:
 
-            for node_flow_table in node_flow_tables:
+                node_flow_table = self.graph.node[node_path[i]]["sw"].flow_tables[flow_table_id]
 
                 #  Will this switch pass traffic along
                 is_reachable = node_flow_table.passes_flow(arriving_port, src, dst, departure_port)
