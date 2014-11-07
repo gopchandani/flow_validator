@@ -12,7 +12,12 @@ class Switch():
         self.ports = None
 
 
-    def passes_flow(self, src_port, src, dst, dst_port):
+    def passes_flow(self, flow_match):
+
+        src_port = flow_match.src_port
+        dst_port = flow_match.dst_port
+        src = flow_match.src_ip_addr
+        dst = flow_match.dst_ip_addr
 
         is_reachable = False
 

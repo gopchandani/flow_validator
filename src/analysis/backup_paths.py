@@ -4,7 +4,7 @@ import networkx as nx
 import sys
 
 from model.model import Model
-
+from model.match import Match
 
 class BackupPaths:
     def __init__(self):
@@ -52,11 +52,17 @@ class BackupPaths:
             edge_ports_dict = self.graph[node_path[0]][node_path[1]]['edge_ports_dict']
             departure_port = edge_ports_dict[node_path[0]]
 
-
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
             switch = self.graph.node[node_path[i]]["sw"]
-            is_reachable = switch.passes_flow(arriving_port, src, dst, departure_port)
+
+            flow_match = Match()
+            flow_match.src_port = arriving_port
+            flow_match.dst_port = departure_port
+            flow_match.src_ip_addr = src
+            flow_match.dst_ip_addr = dst
+
+            is_reachable = switch.passes_flow(flow_match)
             if not is_reachable:
                 break
 
@@ -70,7 +76,6 @@ class BackupPaths:
                 # Traffic leaves from the first switch's port
                 edge_ports_dict = self.graph[node_path[i+1]][node_path[i+2]]['edge_ports_dict']
                 departure_port = edge_ports_dict[node_path[i+1]]
-
 
         return is_reachable
 
