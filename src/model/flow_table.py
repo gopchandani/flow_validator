@@ -13,7 +13,7 @@ class Flow():
     def __init__(self, sw, flow):
 
         self.sw = sw
-        self.priority = flow["priority"]
+        self.priority = int(flow["priority"])
         self.match = flow["match"]
         self.actions = []
         apply_actions_json = flow["instructions"]["instruction"][0]["apply-actions"]
@@ -72,15 +72,18 @@ class FlowTable():
 
         self.sw = sw
         self.table_id = table_id
-        self.flow_list = []
+        self.flows = []
 
         for f in flow_list:
-            self.flow_list.append(Flow(sw, f))
+            f = Flow(sw, f)
+            self.flows.append(f)
+
+        #  Sort the flows list by priority
+        self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
     def passes_flow(self, flow_match, out_port):
         ret_val = False
-
-        for flow in self.flow_list:
+        for flow in self.flows:
             ret_val = flow.passes_flow(flow_match, out_port)
 
             # As soon as an admitting rule is found, stop looking further

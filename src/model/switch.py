@@ -11,7 +11,6 @@ class Switch():
         self.group_table = None
         self.ports = None
 
-
     def passes_flow(self, flow_match, out_port):
 
         is_reachable = False
