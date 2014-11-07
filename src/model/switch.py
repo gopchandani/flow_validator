@@ -12,12 +12,7 @@ class Switch():
         self.ports = None
 
 
-    def passes_flow(self, flow_match):
-
-        src_port = flow_match.src_port
-        dst_port = flow_match.dst_port
-        src = flow_match.src_ip_addr
-        dst = flow_match.dst_ip_addr
+    def passes_flow(self, flow_match, out_port):
 
         is_reachable = False
 
@@ -26,7 +21,7 @@ class Switch():
             node_flow_table = self.flow_tables[flow_table_id]
 
             #  Will this flow_table do the trick?
-            is_reachable = node_flow_table.passes_flow(src_port, src, dst, dst_port)
+            is_reachable = node_flow_table.passes_flow(flow_match, out_port)
 
             # If flow table passes, just break, otherwise keep going to the next table
             if is_reachable:

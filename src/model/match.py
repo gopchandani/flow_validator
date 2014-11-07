@@ -9,6 +9,4 @@ class Match():
 
         self.src_ip_addr = None
         self.dst_ip_addr = None
-
-        self.src_port = None
-        self.dst_port = None
+        self.in_port = None

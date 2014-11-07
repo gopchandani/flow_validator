@@ -23,10 +23,10 @@ class Flow():
 
         #print "-- Added flow with priority:", self.priority, "match:", flow["match"], "actions: ", self.actions
 
-    def does_it_match(self, in_port, src, dst):
+    def does_it_match(self, flow_match):
         ret_val = False
-        src_ip = IPAddress(src)
-        dst_ip = IPAddress(dst)
+        src_ip = IPAddress(flow_match.src_ip_addr)
+        dst_ip = IPAddress(flow_match.dst_ip_addr)
 
         # Match on every field
         for match_field in self.match:
@@ -44,7 +44,7 @@ class Flow():
                     break
 
             elif match_field == 'in-port':
-                ret_val = (self.match[match_field] == in_port)
+                ret_val = (self.match[match_field] == flow_match.in_port)
 
         return ret_val
 
@@ -59,10 +59,10 @@ class Flow():
 
         return ret_val
 
-    def passes_flow(self, in_port, src, dst, out_port):
+    def passes_flow(self, flow_match, out_port):
         ret_val = False
-        if self.does_it_match(in_port, src, dst):
-            if self.does_it_forward(in_port, out_port):
+        if self.does_it_match(flow_match):
+            if self.does_it_forward(flow_match.in_port, out_port):
                 ret_val = True
 
         return ret_val
@@ -77,11 +77,11 @@ class FlowTable():
         for f in flow_list:
             self.flow_list.append(Flow(sw, f))
 
-    def passes_flow(self, in_port, src, dst, out_port):
+    def passes_flow(self, flow_match, out_port):
         ret_val = False
 
         for flow in self.flow_list:
-            ret_val = flow.passes_flow(in_port, src, dst, out_port)
+            ret_val = flow.passes_flow(flow_match, out_port)
 
             # As soon as an admitting rule is found, stop looking further
             if ret_val:
