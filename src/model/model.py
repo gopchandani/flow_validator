@@ -20,6 +20,11 @@ class Model():
         # Initialize the self.graph
         self.graph = nx.Graph()
 
+        # Initialize things to talk to controller
+        self.baseUrl = 'http://localhost:8181/restconf/'
+        self.h = httplib2.Http(".cache")
+        self.h.add_credentials('admin', 'admin')
+
         # Initialize lists of host and switch ids
         self.host_ids = []
         self.switch_ids = []
@@ -27,19 +32,16 @@ class Model():
         #  Load up everything
         self._load_model()
 
+
     def _prepare_group_table(self, sw):
 
         group_table = None
         node_id = sw.switch_id
 
-        baseUrl = 'http://localhost:8181/restconf/'
-        h = httplib2.Http(".cache")
-        h.add_credentials('admin', 'admin')
-
         # Get all the nodes/switches from the inventory API
         remaining_url = 'config/opendaylight-inventory:nodes/node/' + str(node_id)
 
-        resp, content = h.request(baseUrl + remaining_url, "GET")
+        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
 
         if resp["status"] == "200":
             node = json.loads(content)
@@ -55,15 +57,12 @@ class Model():
 
         return group_table
 
-    def _load_model(self):
-        baseUrl = 'http://localhost:8181/restconf/'
-        h = httplib2.Http(".cache")
-        h.add_credentials('admin', 'admin')
+    def _prepare_switch_nodes(self):
 
         # Get all the nodes/switches from the inventory API
         remaining_url = 'operational/opendaylight-inventory:nodes'
 
-        resp, content = h.request(baseUrl + remaining_url, "GET")
+        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
         nodes = json.loads(content)
 
         #  Go through each node and grab the switches and the corresponding hosts associated with the switch
@@ -96,9 +95,39 @@ class Model():
             sw.ports = switch_ports
 
 
+    def add_edge(self, node1_id, node1_port, node2_id, node2_port):
+
+        edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
+        e = (node1_id, node2_id)
+        self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
+
+        # Ensure that the ports are set up
+
+        if self.graph.node[node1_id]["node_type"] == "switch":
+            self.graph.node[node1_id]["sw"].ports[node1_port].state = "up"
+
+        if self.graph.node[node2_id]["node_type"] == "switch":
+            self.graph.node[node2_id]["sw"].ports[node2_port].state = "up"
+
+
+    def remove_edge(self, node1_id, node1_port, node2_id, node2_port):
+        self.graph.remove_edge(node1_id, node2_id)
+
+        if self.graph.node[node1_id]["node_type"] == "switch":
+            self.graph.node[node1_id]["sw"].ports[node1_port].state = "down"
+
+        if self.graph.node[node2_id]["node_type"] == "switch":
+            self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
+
+
+    def get_edge_port_dict(self, node1_id, node2_id):
+        return self.graph[node1_id][node2_id]['edge_ports_dict']
+
+    def _prepare_node_edges(self):
+
         # Go through the topology API
         remaining_url = 'operational/network-topology:network-topology'
-        resp, content = h.request(baseUrl + remaining_url, "GET")
+        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
         topology = json.loads(content)
 
         topology_links = dict()
@@ -143,9 +172,7 @@ class Model():
             else:
                 node2_type = "switch"
 
-            edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
-            e = (node1_id, node2_id)
-            self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
+            self.add_edge(node1_id, node1_port, node2_id, node2_port)
 
             if node1_type == "switch":
                 node1_ports = self.graph.node[node1_id]["sw"].ports
@@ -165,11 +192,25 @@ class Model():
                 if not node2_ports[node2_port].facing_node_id:
                     node2_ports[node2_port].facing_node_id = node1_id
 
+    def dump_model(self):
 
         print "Hosts in the graph:", self.host_ids
         print "Switches in the graph:", self.switch_ids
         print "Number of nodes in the graph:", self.graph.number_of_nodes()
         print "Number of edges in the graph:", self.graph.number_of_edges()
+
+        for sw in self.switch_ids:
+            print "---", sw, "---"
+            for port in self.graph.node[sw]["sw"].ports:
+                print self.graph.node[sw]["sw"].ports[port]
+
+    def _load_model(self):
+
+        self._prepare_switch_nodes()
+
+        self._prepare_node_edges()
+
+        self.dump_model()
 
     def get_node_graph(self):
         return self.graph
