@@ -1,6 +1,8 @@
 __author__ = 'Rakesh Kumar'
 
 from model.model import Model
+from model.match import Match
+
 from synthesis.synthesis_lib import SynthesisLib
 
 from collections import defaultdict
@@ -34,7 +36,7 @@ class SynthesizeDij():
 
         return forwarding_intents
 
-    def _compute_path_forwarding_intents(self, p, path_type, switch_arriving_port=None):
+    def _compute_path_forwarding_intents(self, p, path_type, switch_arriving_port=None, flow_match=None):
 
         src_node = p[0]
         dst_node = p[len(p) -1]
@@ -76,7 +78,7 @@ class SynthesizeDij():
 
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
-            forwarding_intent = (path_type, arriving_port, departure_port)
+            forwarding_intent = (path_type, arriving_port, departure_port, flow_match)
 
             if dst_node in forwarding_intents:
                 forwarding_intents[dst_node][forwarding_intent] += 1
@@ -141,7 +143,7 @@ class SynthesizeDij():
                     # it is characterized by the fact that the traffic exits the same port where it came from
                     if intent[1] == intent[2]:
                         # Add a new intent with modified key
-                        addition_list.append((("balking", intent[1], intent[2]), dst_intents[intent]))
+                        addition_list.append((("balking", intent[1], intent[2], intent[3]), dst_intents[intent]))
                         deletion_list.append(intent)
                         continue
 
@@ -157,7 +159,7 @@ class SynthesizeDij():
                     #  1. at the source switch, with intent's source port equal to destination port of the primary intent
                     if intent[1] == primary_intent[2]:
                         # Add a new intent with modified key
-                        addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
+                        addition_list.append((("reverse", intent[1], intent[2], intent[3]), dst_intents[intent]))
                         deletion_list.append(intent)
                         continue
 
@@ -165,7 +167,7 @@ class SynthesizeDij():
                     # with intent's destination port equal to source port of primary intent
                     if intent[2] == primary_intent[1]:
                         # Add a new intent with modified key
-                        addition_list.append((("reverse", intent[1], intent[2]), dst_intents[intent]))
+                        addition_list.append((("reverse", intent[1], intent[2], intent[3]), dst_intents[intent]))
                         deletion_list.append(intent)
 
                 for intent_key, intent_val in addition_list:
@@ -175,14 +177,14 @@ class SynthesizeDij():
                     del dst_intents[intent]
 
 
-    def synthesize_flow(self, src_host, dst_host):
+    def synthesize_flow(self, src_host, dst_host, flow_match = None):
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
         print p
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_forwarding_intents(p, "primary")
+        self._compute_path_forwarding_intents(p, "primary", flow_match=flow_match)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
@@ -216,12 +218,19 @@ class SynthesizeDij():
 def main():
     sm = SynthesizeDij()
 
-    sm.synthesize_flow("10.0.0.1", "10.0.0.3")
+    flow_match = Match()
+    # flow_match.in_port = in_port
+    # flow_match.src_ip_addr = src
+    # flow_match.dst_ip_addr = dst
+
+    flow_match.tcp_destination_port = 80
+    #  Installing the flow such that 10.0.0.3 is the HTTP server
+    sm.synthesize_flow("10.0.0.1", "10.0.0.3", flow_match=flow_match)
     sm.synthesize_flow("10.0.0.3", "10.0.0.1")
 
-    sm.dump_forwarding_intents()
+    #sm.dump_forwarding_intents()
     sm._identify_reverse_and_balking_intents()
-    sm.dump_forwarding_intents()
+    #sm.dump_forwarding_intents()
 
     sm.push_switch_changes()
 

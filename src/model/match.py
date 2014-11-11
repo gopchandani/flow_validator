@@ -10,3 +10,6 @@ class Match():
         self.src_ip_addr = None
         self.dst_ip_addr = None
         self.in_port = None
+
+        # Layer 4 Match
+        self.tcp_destination_port = None

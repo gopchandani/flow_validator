@@ -93,7 +93,10 @@ class SynthesisLib():
 
         return flow
 
-    def _push_match_per_src_port_destination_instruct_group_flow(self, sw, group_id, src_port, dst, priority):
+    def _push_match_per_in_port_destination_instruct_group_flow(self, sw, group_id, in_port, dst, priority, flow_match):
+
+        print type(flow_match)
+        print flow_match
 
         flow = self._create_base_flow(0, priority)
 
@@ -104,9 +107,17 @@ class SynthesisLib():
         ethernet_match = {"ethernet-type": ethernet_type}
         flow["flow-node-inventory:flow"]["match"]["ethernet-match"] = ethernet_match
 
-        #  If src_port is provided Assert in-port == src_port
-        if src_port:
-            flow["flow-node-inventory:flow"]["match"]["in-port"] = src_port
+        #  If in_port is provided Assert in-port == in_port
+        if in_port:
+            flow["flow-node-inventory:flow"]["match"]["in-port"] = in_port
+
+        if flow_match:
+            if flow_match.tcp_destination_port:
+                flow["flow-node-inventory:flow"]["match"]["tcp-destination-port"]= flow_match.tcp_destination_port
+
+                ip_match = {"ip-protocol": 6}
+                flow["flow-node-inventory:flow"]["match"]["ip-match"] = ip_match
+
 
         #  Assert that the destination should be dst
         flow["flow-node-inventory:flow"]["match"]["ipv4-destination"] = dst
@@ -249,8 +260,9 @@ class SynthesisLib():
                 if primary_intent and not failover_intent:
 
                     group = self._push_select_all_group(sw, [primary_intent])
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], primary_intent[1], dst, 1)
+                    flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
+                        group["flow-node-inventory:group"]["group-id"], primary_intent[1], dst, 1,
+                        primary_intent[3])
 
                 if primary_intent and failover_intents:
 
@@ -261,17 +273,18 @@ class SynthesisLib():
                         group = self._push_select_all_group(sw, [primary_intent])
 
                     # Push the rule that refers to the group
-                    src_port = None
+                    in_port = None
                     #Sanity check
                     if primary_intent[1] != failover_intent[1]:
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         if not self.model.graph.has_edge(dst, sw):
                             raise Exception("Primary and failover intents' src port mismatch")
                     else:
-                        src_port = primary_intent[1]
+                        in_port = primary_intent[1]
 
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], src_port, dst, 1)
+                    flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
+                        group["flow-node-inventory:group"]["group-id"], in_port, dst, 1,
+                        primary_intent[3])
 
                     if len(failover_intents) > 1:
                         raise Exception ("Hitting an unexpected case.")
@@ -283,27 +296,30 @@ class SynthesisLib():
                     for failover_intent in failover_intents:
 
                         group = self._push_select_all_group(sw, [failover_intent])
-                        flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
-                            group["flow-node-inventory:group"]["group-id"], failover_intent[1], dst, 1)
+                        flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
+                            group["flow-node-inventory:group"]["group-id"], failover_intent[1], dst, 1,
+                            failover_intent[3])
 
                 if primary_intent and balking_intent:
 
                     group = self._push_fast_failover_group(sw, primary_intent, balking_intent)
 
-                    src_port = None
+                    in_port = None
                     #Sanity check
                     if primary_intent[1] != balking_intent[1]:
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         if not self.model.graph.has_edge(dst, sw):
                             raise Exception("Primary and failover intents' src port mismatch")
                     else:
-                        src_port = primary_intent[1]
+                        in_port = primary_intent[1]
 
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], src_port, dst, 1)
+                    flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
+                        group["flow-node-inventory:group"]["group-id"], in_port, dst, 1,
+                        primary_intent[3])
 
                 if reverse_intent:
 
                     group = self._push_select_all_group(sw, [reverse_intent])
-                    flow = self._push_match_per_src_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], reverse_intent[1], dst, 2)
+                    flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
+                        group["flow-node-inventory:group"]["group-id"], reverse_intent[1], dst, 2,
+                        primary_intent[3])

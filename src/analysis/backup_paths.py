@@ -36,7 +36,6 @@ class BackupPaths:
 
             #Traffic arrives from the host to first switch at switch's port
 
-
             edge_ports_dict = self.model.get_edge_port_dict(node_path[0], node_path[1])
             in_port = edge_ports_dict[node_path[1]]
 
