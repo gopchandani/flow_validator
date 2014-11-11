@@ -39,7 +39,8 @@ class Action():
         ret_val = False
 
         #  Go through the groups that we have seen so far at this switch
-        for group in self.sw.group_table.group_list:
+        for group_id in self.sw.group_table.groups:
+            group = self.sw.group_table.groups[group_id]
 
             if group.group_type == "group-all" and group.group_id == self.group_id:
 

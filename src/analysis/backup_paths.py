@@ -21,7 +21,7 @@ class BackupPaths:
         # Assume that there are no host firewalls filtering anything inbound/outbound
         #  The loop below goes from first switch to the second-last switch
 
-        is_reachable = None
+        is_reachable = False
 
         edge_ports_dict = None
         out_port = None
@@ -61,16 +61,16 @@ class BackupPaths:
             flow_match.src_ip_addr = src
             flow_match.dst_ip_addr = dst
 
-            # is_reachable = switch.passes_flow(flow_match, out_port)
-            # if not is_reachable:
-            #     break
-
-            switch_out_ports = switch.get_out_ports(flow_match)
-            if out_port not in switch_out_ports:
-                is_reachable = False
+            is_reachable = switch.passes_flow(flow_match, out_port)
+            if not is_reachable:
                 break
-            else:
-                is_reachable = True
+
+            # switch_out_ports = switch.get_out_ports(flow_match)
+            # if out_port not in switch_out_ports:
+            #     is_reachable = False
+            #     break
+            # else:
+            #     is_reachable = True
 
 
             # Prepare for next switch along the path if there is a next switch along the path
