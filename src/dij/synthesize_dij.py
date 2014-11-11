@@ -51,11 +51,11 @@ class SynthesizeDij():
         if self.model.graph.node[p[0]]["node_type"] == "host":
 
             #Traffic arrives from the host to first switch at switch's port
-            edge_ports_dict = self.model.graph[p[0]][p[1]]['edge_ports_dict']
+            edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
             arriving_port = edge_ports_dict[p[1]]
 
             # Traffic leaves from the first switch's port
-            edge_ports_dict = self.model.graph[p[1]][p[2]]['edge_ports_dict']
+            edge_ports_dict = self.model.get_edge_port_dict(p[1], p[2])
             departure_port = edge_ports_dict[p[1]]
 
             p = p[1:]
@@ -65,7 +65,7 @@ class SynthesizeDij():
                 raise Exception("switching_arriving_port needed.")
 
             arriving_port = switch_arriving_port
-            edge_ports_dict = self.model.graph[p[0]][p[1]]['edge_ports_dict']
+            edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
             departure_port = edge_ports_dict[p[0]]
 
         # This look always starts at a switch
@@ -88,11 +88,11 @@ class SynthesizeDij():
             if self.model.graph.node[p[i+1]]["node_type"] != "host":
 
                 # Traffic arrives from the host to first switch at switch's port
-                edge_ports_dict = self.model.graph[p[i]][p[i+1]]['edge_ports_dict']
+                edge_ports_dict = self.model.get_edge_port_dict(p[i], p[i+1])
                 arriving_port = edge_ports_dict[p[i+1]]
 
                 # Traffic leaves from the first switch's port
-                edge_ports_dict = self.model.graph[p[i+1]][p[i+2]]['edge_ports_dict']
+                edge_ports_dict = self.model.get_edge_port_dict(p[i+1], p[i+2])
                 departure_port = edge_ports_dict[p[i+1]]
 
     def dump_forwarding_intents(self):
@@ -186,14 +186,15 @@ class SynthesizeDij():
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
-        edge_ports = self.model.graph[p[0]][p[1]]['edge_ports_dict']
-        arriving_port = edge_ports[p[1]]
+        edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
+
+        arriving_port = edge_ports_dict[p[1]]
 
         #  Go through the path, one edge at a time
         for i in range(1, len(p) - 2):
 
             # Keep a copy of this handy
-            edge_ports = self.model.graph[p[i]][p[i + 1]]['edge_ports_dict']
+            edge_ports_dict = self.model.get_edge_port_dict(p[i], p[i+1])
 
             # Delete the edge
             self.model.graph.remove_edge(p[i], p[i + 1])
@@ -206,8 +207,8 @@ class SynthesizeDij():
             self._compute_path_forwarding_intents(bp, "failover", arriving_port)
 
             # Add the edge back and the data that goes along with it
-            self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports)
-            arriving_port = edge_ports[p[i+1]]
+            self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
+            arriving_port = edge_ports_dict[p[i+1]]
 
     def push_switch_changes(self):
         self.synthesis_lib.trigger(self.s)
