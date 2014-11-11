@@ -8,13 +8,9 @@ import json
 
 from model.model import Model
 
-
 class SynthesisLib():
 
     def __init__(self, controller_host, controller_port, model=None):
-
-        self.OFPP_ALL = 0xfffffffc
-        self.OFPP_IN = 0xfffffff8
 
         if not model:
             self.model = Model()
@@ -147,7 +143,7 @@ class SynthesisLib():
         watch_port = None
 
         if intent[1] == intent[2]:
-            out_port = self.OFPP_IN
+            out_port = self.model.OFPP_IN
             watch_port = intent[2]
         else:
             out_port = intent[2]

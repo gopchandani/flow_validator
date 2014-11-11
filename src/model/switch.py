@@ -4,9 +4,10 @@ from action import ActionSet
 
 class Switch():
 
-    def __init__(self, sw_id):
+    def __init__(self, sw_id, model):
 
         self.switch_id = sw_id
+        self.model = model
         self.flow_tables = None
         self.group_table = None
         self.ports = None
@@ -43,4 +44,6 @@ class Switch():
             # TODO: Send match data and action set to the next table
 
 
-        return action_set.get_out_ports()
+        out_ports =  action_set.get_out_ports(flow_match.in_port)
+
+        return out_ports

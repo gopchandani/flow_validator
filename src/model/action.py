@@ -101,12 +101,14 @@ class ActionSet():
                 self.action_set[action.action_type].append(action)
 
 
-    def get_out_ports(self):
+    def get_out_ports(self, in_port):
         out_ports = []
 
         for action in self.action_set["output"]:
-            out_ports.append(action.out_port)
 
-        print out_ports
+            if self.sw.model.OFPP_IN == int(action.out_port):
+                out_ports.append(in_port)
+            else:
+                out_ports.append(action.out_port)
 
         return out_ports

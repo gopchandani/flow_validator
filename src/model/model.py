@@ -15,7 +15,11 @@ from port import Port
 
 
 class Model():
+
     def __init__(self):
+
+        self.OFPP_ALL = 0xfffffffc
+        self.OFPP_IN = 0xfffffff8
 
         # Initialize the self.graph
         self.graph = nx.Graph()
@@ -70,7 +74,7 @@ class Model():
 
             #  Add an instance for Switch in the graph
             switch_id = node["id"]
-            sw = Switch(switch_id)
+            sw = Switch(switch_id, self)
             self.graph.add_node(switch_id, node_type="switch", sw=sw)
             self.switch_ids.append(switch_id)
 

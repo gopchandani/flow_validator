@@ -95,7 +95,6 @@ class FlowTable():
         hpm_flow = None
 
         for flow in self.flows:
-            print flow.priority
             is_match = flow.does_it_match(flow_match)
             if is_match:
                 hpm_flow = flow
