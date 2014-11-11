@@ -1,6 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-
+from action import ActionSet
 
 class Switch():
 
@@ -16,7 +16,6 @@ class Switch():
         is_reachable = False
 
         for flow_table_id in self.flow_tables:
-
             node_flow_table = self.flow_tables[flow_table_id]
 
             #  Will this flow_table do the trick?
@@ -27,3 +26,21 @@ class Switch():
                 break
 
         return is_reachable
+
+    def get_out_ports(self, flow_match):
+
+        action_set = ActionSet(self)
+
+        # Go through each FlowTable
+        for flow_table_id in self.flow_tables:
+            flow_table = self.flow_tables[flow_table_id]
+
+            # Get highest priority matching flow entry
+            hpm = flow_table.get_highest_priority_matching_flow(flow_match)
+            if hpm:
+                action_set.add_actions(hpm.actions)
+
+            # TODO: Send match data and action set to the next table
+
+
+        return action_set.get_out_ports()

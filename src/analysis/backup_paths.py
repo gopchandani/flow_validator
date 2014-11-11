@@ -21,7 +21,7 @@ class BackupPaths:
         # Assume that there are no host firewalls filtering anything inbound/outbound
         #  The loop below goes from first switch to the second-last switch
 
-        is_reachable = False
+        is_reachable = None
 
         edge_ports_dict = None
         out_port = None
@@ -61,9 +61,17 @@ class BackupPaths:
             flow_match.src_ip_addr = src
             flow_match.dst_ip_addr = dst
 
-            is_reachable = switch.passes_flow(flow_match, out_port)
-            if not is_reachable:
+            # is_reachable = switch.passes_flow(flow_match, out_port)
+            # if not is_reachable:
+            #     break
+
+            switch_out_ports = switch.get_out_ports(flow_match)
+            if out_port not in switch_out_ports:
+                is_reachable = False
                 break
+            else:
+                is_reachable = True
+
 
             # Prepare for next switch along the path if there is a next switch along the path
             if self.graph.node[node_path[i+1]]["node_type"] != "host":
@@ -108,9 +116,9 @@ class BackupPaths:
             #  If any of them passes the flow, then this edge has a backup
 
             asp = nx.all_simple_paths(self.graph, source=node_path[i], target=dst)
-            for p in asp:
-                print "Topological Backup Path Candidate:", p
-                edge_has_backup = self.check_flow_reachability(src, dst, p, in_port)
+            for bp in asp:
+                print "Topological Backup Path Candidate:", bp
+                edge_has_backup = self.check_flow_reachability(src, dst, bp, in_port)
 
                 print "edge_has_backup:", edge_has_backup
                 if edge_has_backup:

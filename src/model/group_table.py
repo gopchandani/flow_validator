@@ -1,79 +1,8 @@
 __author__ = 'Rakesh Kumar'
 
+from action import Action
+
 import pprint
-
-class Action():
-
-    def __init__(self, sw, action_json):
-
-        self.sw = sw
-        self.order = action_json["order"]
-        self.action_type = None
-
-        if "output-action" in action_json:
-            self.action_type = "output"
-            self.out_port = action_json["output-action"]["output-node-connector"]
-
-        if "group-action" in action_json:
-            self.action_type = "group"
-            self.group_id = action_json["group-action"]["group-id"]
-
-    def does_output_action_forward(self, in_port, out_port):
-
-        ret_val = False
-
-        if self.out_port == out_port:
-            ret_val = True
-
-        elif self.out_port == "4294967288" and in_port == out_port:
-            ret_val = True
-
-        elif self.out_port == "4294967292":
-            ret_val = True
-
-        return ret_val
-
-    def does_group_action_forward(self, in_port, out_port):
-
-        ret_val = False
-
-        #  Go through the groups that we have seen so far at this switch
-        for group in self.sw.group_table.group_list:
-
-            if group.group_type == "group-all" and group.group_id == self.group_id:
-    
-                #  Check the bucket actions and see if any of them would do the trick in group-all case
-                for action_bucket in group.bucket_list:
-                    ret_val = action_bucket.does_it_forward(in_port, out_port)
-                    if ret_val:
-                        break
-    
-            # Check to see if there is a matching group_id of fast-failover type group is present...
-            elif group.group_type == "group-ff" and group.group_id == self.group_id:
-    
-                #  Check the bucket actions and see if any of them would do the trick
-                #  along with the condition that the watch_port of the bucket has to be up
-
-                for action_bucket in group.bucket_list:
-
-                    # Check if the port that the bucket watches is actually up
-                    if self.sw.ports[action_bucket.watch_port].state == "up":
-                        ret_val = action_bucket.does_it_forward(in_port, out_port)
-                        if ret_val:
-                            break
-
-        return ret_val
-
-    def does_it_forward(self, in_port, out_port):
-        ret_val = False
-
-        if self.action_type == "output":
-            ret_val = self.does_output_action_forward(in_port, out_port)
-
-        elif self.action_type == "group":
-            ret_val = self.does_group_action_forward(in_port, out_port)
-
-        return ret_val
 
 class Bucket():
     def __init__(self, sw, bucket_json):
@@ -83,6 +12,9 @@ class Bucket():
 
         for action_json in bucket_json["action"]:
             self.action_list.append(Action(sw, action_json))
+
+        #  Sort the action_list by order
+        self.action_list = sorted(self.action_list, key=lambda action: action.order)
 
         self.bucket_id = bucket_json["bucket-id"]
 
@@ -115,17 +47,38 @@ class Group():
         for bucket_json in group_json["buckets"]["bucket"]:
             self.bucket_list.append(Bucket(sw, bucket_json))
 
+        #  Sort the bucket_list by bucket-id
+        self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
+
+    def get_active_action_list(self):
+        active_action_list = []
+
+        # If it is a _all_ group, collect all buckets
+        if self.group_type == "group-all":
+
+            for action_bucket in self.bucket_list:
+                active_action_list.extend(action_bucket.action_list)
+
+
+        # If it is a fast-failover group, collect the bucket which is active
+        elif self.group_type == "group-ff":
+
+            for action_bucket in self.bucket_list:
+
+                # Check if the port that the bucket watches is actually up
+                if self.sw.ports[action_bucket.watch_port].state == "up":
+                    active_action_list.extend(action_bucket.action_list)
+                    break
+
+        return active_action_list
 
 class GroupTable():
 
     def __init__(self, sw, groups_json):
 
         self.sw = sw
-        self.group_list = []
+        self.groups = {}
 
         for group_json in groups_json:
-            self.group_list.append(Group(sw, group_json))
+            self.groups[group_json["group-id"]] = Group(sw, group_json)
 
-
-    def does_group_table_forward(self):
-        pass

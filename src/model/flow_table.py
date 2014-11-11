@@ -5,7 +5,6 @@ import pprint
 
 from netaddr import IPNetwork
 from netaddr import IPAddress
-
 from group_table import Action
 
 
@@ -16,8 +15,8 @@ class Flow():
         self.priority = int(flow["priority"])
         self.match = flow["match"]
         self.actions = []
-        apply_actions_json = flow["instructions"]["instruction"][0]["apply-actions"]
 
+        apply_actions_json = flow["instructions"]["instruction"][0]["apply-actions"]
         for action_json in apply_actions_json["action"]:
             self.actions.append(Action(sw, action_json))
 
@@ -34,17 +33,16 @@ class Flow():
             if match_field == 'ipv4-destination':
                 nw_dst = IPNetwork(self.match[match_field])
                 ret_val = dst_ip in nw_dst
-                if not ret_val:
-                    break
 
             elif match_field == 'ipv4-source':
                 nw_src = IPNetwork(self.match[match_field])
                 ret_val = src_ip in nw_src
-                if not ret_val:
-                    break
 
             elif match_field == 'in-port':
                 ret_val = (self.match[match_field] == flow_match.in_port)
+
+            if not ret_val:
+                break
 
         return ret_val
 
@@ -91,3 +89,16 @@ class FlowTable():
                 break
 
         return ret_val
+
+    def get_highest_priority_matching_flow(self, flow_match):
+
+        hpm_flow = None
+
+        for flow in self.flows:
+            print flow.priority
+            is_match = flow.does_it_match(flow_match)
+            if is_match:
+                hpm_flow = flow
+                break
+
+        return hpm_flow

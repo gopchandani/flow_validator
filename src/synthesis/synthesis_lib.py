@@ -220,7 +220,6 @@ class SynthesisLib():
 
         return return_intent
 
-
     def trigger(self, affected_switches):
 
         for sw in affected_switches:
