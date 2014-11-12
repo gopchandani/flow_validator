@@ -7,15 +7,27 @@ import pprint
 import httplib2
 import networkx as nx
 
+from switch import Switch
 from flow_table import FlowTable
+from group_table import GroupTable
+from group_table import Group
 from port import Port
 
 
 class Model():
+
     def __init__(self):
+
+        self.OFPP_ALL = 0xfffffffc
+        self.OFPP_IN = 0xfffffff8
 
         # Initialize the self.graph
         self.graph = nx.Graph()
+
+        # Initialize things to talk to controller
+        self.baseUrl = 'http://localhost:8181/restconf/'
+        self.h = httplib2.Http(".cache")
+        self.h.add_credentials('admin', 'admin')
 
         # Initialize lists of host and switch ids
         self.host_ids = []
@@ -24,71 +36,102 @@ class Model():
         #  Load up everything
         self._load_model()
 
-    def _fetch_group_list(self, node_id):
-        group_list = []
 
-        baseUrl = 'http://localhost:8181/restconf/'
-        h = httplib2.Http(".cache")
-        h.add_credentials('admin', 'admin')
+    def _prepare_group_table(self, sw):
+
+        group_table = None
+        node_id = sw.switch_id
 
         # Get all the nodes/switches from the inventory API
         remaining_url = 'config/opendaylight-inventory:nodes/node/' + str(node_id)
 
-        resp, content = h.request(baseUrl + remaining_url, "GET")
+        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
 
         if resp["status"] == "200":
             node = json.loads(content)
 
             if "flow-node-inventory:group" in node["node"][0]:
-                group_list = node["node"][0]["flow-node-inventory:group"]
+                groups_json = node["node"][0]["flow-node-inventory:group"]
+                group_table = GroupTable(sw, groups_json)
+
             else:
                 print "No groups configured in node:", node_id
         else:
             print "Could not fetch any groups via the API, status:", resp["status"]
 
-        return group_list
+        return group_table
 
-    def _load_model(self):
-        baseUrl = 'http://localhost:8181/restconf/'
-        h = httplib2.Http(".cache")
-        h.add_credentials('admin', 'admin')
+    def _prepare_switch_nodes(self):
 
         # Get all the nodes/switches from the inventory API
         remaining_url = 'operational/opendaylight-inventory:nodes'
 
-        resp, content = h.request(baseUrl + remaining_url, "GET")
+        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
         nodes = json.loads(content)
 
         #  Go through each node and grab the switches and the corresponding hosts associated with the switch
         for node in nodes["nodes"]["node"]:
 
+            #  Add an instance for Switch in the graph
             switch_id = node["id"]
-            switch_flow_tables = []
+            sw = Switch(switch_id, self)
+            self.graph.add_node(switch_id, node_type="switch", sw=sw)
+            self.switch_ids.append(switch_id)
 
-            group_list = self._fetch_group_list(switch_id)
-
-            # Parse out the flow tables in the switch
-            for flow_table in node["flow-node-inventory:table"]:
-
-                #  Only capture those flow_tables that have actual rules in them
-                if "flow" in flow_table:
-                    switch_flow_tables.append(FlowTable(flow_table["id"], flow_table["flow"], group_list))
-
-            switch_port_dict = {}
+            #  Get the ports
+            switch_ports = {}
             # Parse out the information about all the ports in the switch
             for nc in node["node-connector"]:
-                switch_port_dict[nc["flow-node-inventory:port-number"]] = Port(nc)
+                switch_ports[nc["flow-node-inventory:port-number"]] = Port(sw, nc)
 
-            # Add the switch node
-            self.switch_ids.append(switch_id)
-            self.graph.add_node(switch_id, node_type="switch",
-                                flow_tables= switch_flow_tables,
-                                ports = switch_port_dict)
+            #  Get all the flow tables
+            switch_flow_tables = {}
+            for flow_table in node["flow-node-inventory:table"]:
+                if "flow" in flow_table:
+                    switch_flow_tables[flow_table["id"]] = FlowTable(sw, flow_table["id"], flow_table["flow"])
 
+            #  Get the group table
+            switch_group_table = self._prepare_group_table(sw)
+
+            #  Set the values in the object instance
+            sw.flow_tables = switch_flow_tables
+            sw.group_table = switch_group_table
+            sw.ports = switch_ports
+
+
+    def add_edge(self, node1_id, node1_port, node2_id, node2_port):
+
+        edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
+        e = (node1_id, node2_id)
+        self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
+
+        # Ensure that the ports are set up
+
+        if self.graph.node[node1_id]["node_type"] == "switch":
+            self.graph.node[node1_id]["sw"].ports[node1_port].state = "up"
+
+        if self.graph.node[node2_id]["node_type"] == "switch":
+            self.graph.node[node2_id]["sw"].ports[node2_port].state = "up"
+
+
+    def remove_edge(self, node1_id, node1_port, node2_id, node2_port):
+        self.graph.remove_edge(node1_id, node2_id)
+
+        if self.graph.node[node1_id]["node_type"] == "switch":
+            self.graph.node[node1_id]["sw"].ports[node1_port].state = "down"
+
+        if self.graph.node[node2_id]["node_type"] == "switch":
+            self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
+
+
+    def get_edge_port_dict(self, node1_id, node2_id):
+        return self.graph[node1_id][node2_id]['edge_ports_dict']
+
+    def _prepare_node_edges(self):
 
         # Go through the topology API
         remaining_url = 'operational/network-topology:network-topology'
-        resp, content = h.request(baseUrl + remaining_url, "GET")
+        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
         topology = json.loads(content)
 
         topology_links = dict()
@@ -125,42 +168,53 @@ class Model():
             else:
                 node1_type = "switch"
 
-
             if node2_id.startswith("host"):
                 node2_type = "host"
                 for node in topology_nodes:
                     if node["node-id"] == node2_id:
-                        node2 = node["host-tracker-service:addresses"][0]["ip"]
+                        node2_id = node["host-tracker-service:addresses"][0]["ip"]
             else:
                 node2_type = "switch"
 
-            edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
-            e = (node1_id, node2_id)
-            self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
+            self.add_edge(node1_id, node1_port, node2_id, node2_port)
 
+            if node1_type == "switch":
+                node1_ports = self.graph.node[node1_id]["sw"].ports
 
-            #  Set Node1 and Node2's ports' facing values while you are at.
-            node1 = self.graph.node[node1_id]
-            node2 = self.graph.node[node2_id]
+                if not node1_ports[node1_port].faces:
+                    node1_ports[node1_port].faces = node2_type
 
-            if node1_type == "switch" and not node1["ports"][node1_port].faces:
-                node1["ports"][node1_port].faces = node2_type
+                if not node1_ports[node1_port].facing_node_id:
+                    node1_ports[node1_port].facing_node_id = node2_id
 
-            if node1_type == "switch" and not node1["ports"][node1_port].facing_node_id:
-                node1["ports"][node1_port].facing_node_id = node2_id
+            if node2_type == "switch":
+                node2_ports = self.graph.node[node2_id]["sw"].ports
 
-            if node2_type == "switch" and not node2["ports"][node2_port].faces:
-                node2["ports"][node2_port].faces = node1_type
+                if not node2_ports[node2_port].faces:
+                    node2_ports[node2_port].faces = node1_type
 
-            if node2_type == "switch" and not node2["ports"][node2_port].facing_node_id:
-                node2["ports"][node2_port].facing_node_id = node1_id
+                if not node2_ports[node2_port].facing_node_id:
+                    node2_ports[node2_port].facing_node_id = node1_id
 
+    def dump_model(self):
 
         print "Hosts in the graph:", self.host_ids
         print "Switches in the graph:", self.switch_ids
         print "Number of nodes in the graph:", self.graph.number_of_nodes()
         print "Number of edges in the graph:", self.graph.number_of_edges()
 
+        for sw in self.switch_ids:
+            print "---", sw, "---"
+            for port in self.graph.node[sw]["sw"].ports:
+                print self.graph.node[sw]["sw"].ports[port]
+
+    def _load_model(self):
+
+        self._prepare_switch_nodes()
+
+        self._prepare_node_edges()
+
+        self.dump_model()
 
     def get_node_graph(self):
         return self.graph

@@ -4,7 +4,7 @@ import networkx as nx
 import sys
 
 from model.model import Model
-
+from model.match import Match
 
 class BackupPaths:
     def __init__(self):
@@ -13,7 +13,7 @@ class BackupPaths:
         self.host_ids = self.model.get_host_ids()
         self.switch_ids = self.model.get_switch_ids()
 
-    def check_flow_reachability(self, src, dst, node_path, switch_arriving_port=None):
+    def check_flow_reachability(self, src, dst, node_path, switch_in_port=None):
 
         # The task of this loop is to examine whether there is a rule,
         #  in the switches along the path, that would admit the path
@@ -24,8 +24,8 @@ class BackupPaths:
         is_reachable = False
 
         edge_ports_dict = None
-        departure_port = None
-        arriving_port = None
+        out_port = None
+        in_port = None
 
         # Sanity check -- Check that last node of the node_path is a host, no matter what
         if self.graph.node[node_path[len(node_path) - 1]]["node_type"] != "host":
@@ -35,54 +35,55 @@ class BackupPaths:
         if self.graph.node[node_path[0]]["node_type"] == "host":
 
             #Traffic arrives from the host to first switch at switch's port
-            edge_ports_dict = self.graph[node_path[0]][node_path[1]]['edge_ports_dict']
-            arriving_port = edge_ports_dict[node_path[1]]
+
+
+            edge_ports_dict = self.model.get_edge_port_dict(node_path[0], node_path[1])
+            in_port = edge_ports_dict[node_path[1]]
 
             # Traffic leaves from the first switch's post
-            edge_ports_dict = self.graph[node_path[1]][node_path[2]]['edge_ports_dict']
-            departure_port = edge_ports_dict[node_path[1]]
+            edge_ports_dict = self.model.get_edge_port_dict(node_path[1], node_path[2])
+            out_port = edge_ports_dict[node_path[1]]
 
             node_path = node_path[1:]
 
         elif self.graph.node[node_path[0]]["node_type"] == "switch":
-            if not switch_arriving_port:
-                raise Exception("switching_arriving_port needed.")
+            if not switch_in_port:
+                raise Exception("switching_in_port needed.")
 
-            arriving_port = switch_arriving_port
-            edge_ports_dict = self.graph[node_path[0]][node_path[1]]['edge_ports_dict']
-            departure_port = edge_ports_dict[node_path[0]]
+            in_port = switch_in_port
+            edge_ports_dict = self.model.get_edge_port_dict(node_path[0], node_path[1])
+            out_port = edge_ports_dict[node_path[0]]
 
-
-        # This look always starts at a switch
+        # This loop always starts at a switch
         for i in range(len(node_path) - 1):
+            switch = self.graph.node[node_path[i]]["sw"]
 
-            node_flow_tables = self.graph.node[node_path[i]]["flow_tables"]
+            flow_match = Match()
+            flow_match.in_port = in_port
+            flow_match.src_ip_addr = src
+            flow_match.dst_ip_addr = dst
 
-            for node_flow_table in node_flow_tables:
+            # is_reachable = switch.passes_flow(flow_match, out_port)
+            # if not is_reachable:
+            #     break
 
-                #  Will this switch pass traffic along
-                is_reachable = node_flow_table.passes_flow(arriving_port, src, dst, departure_port)
-
-                # If flow table passes, just break, otherwise keep going to the next table
-                if is_reachable:
-                    break
-
-            # If none of the flow tables were able to pass, then break
-
-            if not is_reachable:
+            switch_out_ports = switch.get_out_ports(flow_match)
+            if out_port not in switch_out_ports:
+                is_reachable = False
                 break
+            else:
+                is_reachable = True
 
             # Prepare for next switch along the path if there is a next switch along the path
             if self.graph.node[node_path[i+1]]["node_type"] != "host":
 
                 # Traffic arrives from the host to first switch at switch's port
-                edge_ports_dict = self.graph[node_path[i]][node_path[i+1]]['edge_ports_dict']
-                arriving_port = edge_ports_dict[node_path[i+1]]
+                edge_ports_dict = self.model.get_edge_port_dict(node_path[i], node_path[i+1])
+                in_port = edge_ports_dict[node_path[i+1]]
 
                 # Traffic leaves from the first switch's port
-                edge_ports_dict = self.graph[node_path[i+1]][node_path[i+2]]['edge_ports_dict']
-                departure_port = edge_ports_dict[node_path[i+1]]
-
+                edge_ports_dict = self.model.get_edge_port_dict(node_path[i+1], node_path[i+2])
+                out_port = edge_ports_dict[node_path[i+1]]
 
         return is_reachable
 
@@ -97,8 +98,9 @@ class BackupPaths:
         if self.graph.node[node_path[len(node_path) - 1]]["node_type"] != "host":
             raise Exception("The last node in the node_path has to be a host.")
 
-        edge_ports = self.graph[node_path[0]][node_path[1]]['edge_ports_dict']
-        arriving_port = edge_ports[node_path[1]]
+        edge_ports_dict = self.model.get_edge_port_dict(node_path[0], node_path[1])
+
+        in_port = edge_ports_dict[node_path[1]]
 
         #  Go through the path, one edge at a time
 
@@ -107,27 +109,29 @@ class BackupPaths:
             edge_has_backup = False
 
             # Keep a copy of this handy
-            edge_ports = self.graph[node_path[i]][node_path[i + 1]]['edge_ports_dict']
+            edge_ports_dict = self.model.get_edge_port_dict(node_path[i], node_path[i+1])
 
             # Delete the edge
-            self.graph.remove_edge(node_path[i], node_path[i + 1])
+            self.model.remove_edge(node_path[i], edge_ports_dict[node_path[i]],
+                                   node_path[i+1], edge_ports_dict[node_path[i+1]])
 
             # Go through all simple paths that result when the link breaks
             #  If any of them passes the flow, then this edge has a backup
 
             asp = nx.all_simple_paths(self.graph, source=node_path[i], target=dst)
-            for p in asp:
-                print "Topological Backup Path Candidate:", p
-                edge_has_backup = self.check_flow_reachability(src, dst, p, arriving_port)
+            for bp in asp:
+                print "Topological Backup Path Candidate:", bp
+                edge_has_backup = self.check_flow_reachability(src, dst, bp, in_port)
 
                 print "edge_has_backup:", edge_has_backup
                 if edge_has_backup:
                     break
 
-
             # Add the edge back and the data that goes along with it
-            self.graph.add_edge(node_path[i], node_path[i + 1], edge_ports_dict=edge_ports)
-            arriving_port = edge_ports[node_path[i+1]]
+            self.model.add_edge(node_path[i], edge_ports_dict[node_path[i]],
+                                node_path[i+1], edge_ports_dict[node_path[i+1]])
+
+            in_port = edge_ports_dict[node_path[i+1]]
 
             has_backup = edge_has_backup
 
@@ -144,6 +148,7 @@ class BackupPaths:
 
         for p in asp:
             print "Topological Primary Path Candidate", p
+
             is_reachable_flow = self.check_flow_reachability(src_host_id, dst_host_id, p)
             print "is_reachable_flow:", is_reachable_flow
 

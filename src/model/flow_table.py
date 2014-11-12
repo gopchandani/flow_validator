@@ -5,21 +5,27 @@ import pprint
 
 from netaddr import IPNetwork
 from netaddr import IPAddress
+from group_table import Action
 
 
 class Flow():
-    def __init__(self, flow, group_list):
-        self.priority = flow["priority"]
+    def __init__(self, sw, flow):
+
+        self.sw = sw
+        self.priority = int(flow["priority"])
         self.match = flow["match"]
-        self.actions = flow["instructions"]["instruction"][0]["apply-actions"]["action"]
-        self.group_list = group_list
+        self.actions = []
+
+        apply_actions_json = flow["instructions"]["instruction"][0]["apply-actions"]
+        for action_json in apply_actions_json["action"]:
+            self.actions.append(Action(sw, action_json))
 
         #print "-- Added flow with priority:", self.priority, "match:", flow["match"], "actions: ", self.actions
 
-    def does_it_match(self, arriving_port, src, dst):
+    def does_it_match(self, flow_match):
         ret_val = False
-        src_ip = IPAddress(src)
-        dst_ip = IPAddress(dst)
+        src_ip = IPAddress(flow_match.src_ip_addr)
+        dst_ip = IPAddress(flow_match.dst_ip_addr)
 
         # Match on every field
         for match_field in self.match:
@@ -27,85 +33,71 @@ class Flow():
             if match_field == 'ipv4-destination':
                 nw_dst = IPNetwork(self.match[match_field])
                 ret_val = dst_ip in nw_dst
-                if not ret_val:
-                    break
 
             elif match_field == 'ipv4-source':
                 nw_src = IPNetwork(self.match[match_field])
                 ret_val = src_ip in nw_src
-                if not ret_val:
-                    break
 
             elif match_field == 'in-port':
-                ret_val = (self.match[match_field] == arriving_port)
+                ret_val = (self.match[match_field] == flow_match.in_port)
+
+            if not ret_val:
+                break
 
         return ret_val
 
-    def does_it_forward(self, arriving_port, departure_port):
+    def does_it_forward(self, in_port, out_port):
         ret_val = False
 
-        # Requiring that a single action matches
-
+        # Requiring that any single action has to forward it
         for action in self.actions:
-            if "output-action" in action:
-                if action["output-action"]["output-node-connector"] == departure_port:
-                    ret_val = True
-                    break
-
-            if "group-action" in action:
-
-                for bucket in self.group_list:
-
-                    # Check to see if there is a matching group_id of fast-failover type group is present...
-                    if bucket["group-type"] == "group-ff" and \
-                                    action["group-action"]["group-id"] == bucket["group-id"]:
-
-                        #  Check the bucket actions and see if any of them would do the trick
-                        for bucket_actions in bucket["buckets"]["bucket"]:
-                            for bucket_action in bucket_actions["action"]:
-                                if bucket_action["output-action"]["output-node-connector"] == departure_port:
-                                    ret_val = True
-                                    break
-
-                                #  If the output port is IN_PORT
-                                if bucket_action["output-action"]["output-node-connector"] == "4294967288" \
-                                        and arriving_port == departure_port:
-                                    ret_val = True
-                                    break
-
-                            #  No need to keep going
-                            if ret_val:
-                                break
+            if action.does_it_forward(in_port, out_port):
+                ret_val = True
+                break
 
         return ret_val
 
-    def passes_flow(self, arriving_port, src, dst, departure_port):
+    def passes_flow(self, flow_match, out_port):
         ret_val = False
-        if self.does_it_match(arriving_port, src, dst):
-            if self.does_it_forward(arriving_port, departure_port):
+        if self.does_it_match(flow_match):
+            if self.does_it_forward(flow_match.in_port, out_port):
                 ret_val = True
 
         return ret_val
 
-
 class FlowTable():
-    def __init__(self, table_id, flow_list, group_list):
+    def __init__(self, sw, table_id, flow_list):
 
+        self.sw = sw
         self.table_id = table_id
-        self.flow_list = []
-        self.group_list = group_list
+        self.flows = []
 
         for f in flow_list:
-            self.flow_list.append(Flow(f, group_list))
+            f = Flow(sw, f)
+            self.flows.append(f)
 
-    def passes_flow(self, arriving_port, src, dst, departure_port):
+        #  Sort the flows list by priority
+        self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
+
+    def passes_flow(self, flow_match, out_port):
         ret_val = False
-
-        for flow in self.flow_list:
-            ret_val = flow.passes_flow(arriving_port, src, dst, departure_port)
+        for flow in self.flows:
+            ret_val = flow.passes_flow(flow_match, out_port)
 
             # As soon as an admitting rule is found, stop looking further
             if ret_val:
                 break
 
         return ret_val
+
+    def get_highest_priority_matching_flow(self, flow_match):
+
+        hpm_flow = None
+
+        for flow in self.flows:
+            is_match = flow.does_it_match(flow_match)
+            if is_match:
+                hpm_flow = flow
+                break
+
+        return hpm_flow
