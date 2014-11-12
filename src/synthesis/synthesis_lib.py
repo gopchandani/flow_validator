@@ -98,7 +98,7 @@ class SynthesisLib():
         flow = self._create_base_flow(0, priority)
 
         #Compile match
-        flow["flow-node-inventory:flow"]["match"] = flow_match.populate_match(
+        flow["flow-node-inventory:flow"]["match"] = flow_match.generate_match_json(
             flow["flow-node-inventory:flow"]["match"])
 
         #Compile instruction

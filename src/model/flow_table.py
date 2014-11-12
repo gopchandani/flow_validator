@@ -6,45 +6,28 @@ import pprint
 from netaddr import IPNetwork
 from netaddr import IPAddress
 from group_table import Action
-
+from match import Match
 
 class Flow():
     def __init__(self, sw, flow):
 
         self.sw = sw
         self.priority = int(flow["priority"])
-        self.match = flow["match"]
+        self.match = Match(flow["match"])
         self.actions = []
 
         apply_actions_json = flow["instructions"]["instruction"][0]["apply-actions"]
         for action_json in apply_actions_json["action"]:
             self.actions.append(Action(sw, action_json))
 
-        #print "-- Added flow with priority:", self.priority, "match:", flow["match"], "actions: ", self.actions
-
     def does_it_match(self, flow_match):
-        ret_val = False
-        src_ip = IPAddress(flow_match.src_ip_addr)
-        dst_ip = IPAddress(flow_match.dst_ip_addr)
 
-        # Match on every field
-        for match_field in self.match:
+        # If the intersection exists.
+        if self.match.intersect(flow_match):
+            return True
+        else:
+            return False
 
-            if match_field == 'ipv4-destination':
-                nw_dst = IPNetwork(self.match[match_field])
-                ret_val = dst_ip in nw_dst
-
-            elif match_field == 'ipv4-source':
-                nw_src = IPNetwork(self.match[match_field])
-                ret_val = src_ip in nw_src
-
-            elif match_field == 'in-port':
-                ret_val = (self.match[match_field] == flow_match.in_port)
-
-            if not ret_val:
-                break
-
-        return ret_val
 
     def does_it_forward(self, in_port, out_port):
         ret_val = False

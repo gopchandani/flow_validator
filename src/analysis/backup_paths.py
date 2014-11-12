@@ -6,6 +6,8 @@ import sys
 from model.model import Model
 from model.match import Match
 
+from netaddr import IPNetwork
+
 class BackupPaths:
     def __init__(self):
         self.model = Model()
@@ -59,8 +61,8 @@ class BackupPaths:
 
             flow_match = Match()
             flow_match.in_port = in_port
-            flow_match.src_ip_addr = src
-            flow_match.dst_ip_addr = dst
+            flow_match.src_ip_addr = IPNetwork(src)
+            flow_match.dst_ip_addr = IPNetwork(dst)
 
             # is_reachable = switch.passes_flow(flow_match, out_port)
             # if not is_reachable:
