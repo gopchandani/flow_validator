@@ -95,9 +95,6 @@ class SynthesisLib():
 
     def _push_match_per_in_port_destination_instruct_group_flow(self, sw, group_id, in_port, dst, priority, flow_match):
 
-        print type(flow_match)
-        print flow_match
-
         flow = self._create_base_flow(0, priority)
 
         #Compile match
@@ -112,12 +109,8 @@ class SynthesisLib():
             flow["flow-node-inventory:flow"]["match"]["in-port"] = in_port
 
         if flow_match:
-            if flow_match.tcp_destination_port:
-                flow["flow-node-inventory:flow"]["match"]["tcp-destination-port"]= flow_match.tcp_destination_port
-
-                ip_match = {"ip-protocol": 6}
-                flow["flow-node-inventory:flow"]["match"]["ip-match"] = ip_match
-
+            flow["flow-node-inventory:flow"]["match"] = flow_match.populate_match(
+                flow["flow-node-inventory:flow"]["match"])
 
         #  Assert that the destination should be dst
         flow["flow-node-inventory:flow"]["match"]["ipv4-destination"] = dst
