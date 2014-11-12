@@ -36,7 +36,7 @@ class SynthesizeDij():
 
         return forwarding_intents
 
-    def _compute_path_forwarding_intents(self, p, path_type, switch_in_port=None, flow_match=None):
+    def _compute_path_forwarding_intents(self, p, path_type, flow_match, switch_in_port=None):
 
         src_node = p[0]
         dst_node = p[len(p) -1]
@@ -177,14 +177,14 @@ class SynthesizeDij():
                     del dst_intents[intent]
 
 
-    def synthesize_flow(self, src_host, dst_host, flow_match = None):
+    def synthesize_flow(self, src_host, dst_host, flow_match):
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
         print p
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_forwarding_intents(p, "primary", flow_match=flow_match)
+        self._compute_path_forwarding_intents(p, "primary", flow_match)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
@@ -206,7 +206,7 @@ class SynthesizeDij():
             bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
             print "--", bp
 
-            self._compute_path_forwarding_intents(bp, "failover", in_port)
+            self._compute_path_forwarding_intents(bp, "failover", flow_match, in_port)
 
             # Add the edge back and the data that goes along with it
             self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
@@ -218,12 +218,20 @@ class SynthesizeDij():
 def main():
     sm = SynthesizeDij()
 
+    #  Installing the flow such that 10.0.0.3 is the HTTP server
     flow_match = Match()
     flow_match.udp_destination_port = 80
+    flow_match.ethernet_type = str(0x0800)
+    flow_match.dst_ip_addr = "10.0.0.3"
 
-    #  Installing the flow such that 10.0.0.3 is the HTTP server
     sm.synthesize_flow("10.0.0.1", "10.0.0.3", flow_match=flow_match)
-    sm.synthesize_flow("10.0.0.3", "10.0.0.1")
+
+    # Installing a wildcard here
+    flow_match = Match()
+    flow_match.ethernet_type = str(0x0800)
+    flow_match.dst_ip_addr = "10.0.0.1"
+    sm.synthesize_flow("10.0.0.3", "10.0.0.1", flow_match)
+
 
     #sm.dump_forwarding_intents()
     sm._identify_reverse_and_balking_intents()
