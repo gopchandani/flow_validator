@@ -18,6 +18,7 @@ class Model():
 
     def __init__(self):
 
+        self.OFPP_CONTROLLER = 0xfffffffd
         self.OFPP_ALL = 0xfffffffc
         self.OFPP_IN = 0xfffffff8
 
