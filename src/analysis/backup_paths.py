@@ -63,6 +63,7 @@ class BackupPaths:
             flow_match.in_port = in_port
             flow_match.src_ip_addr = IPNetwork(src)
             flow_match.dst_ip_addr = IPNetwork(dst)
+            flow_match.ethernet_type = 0x0800
 
             # is_reachable = switch.passes_flow(flow_match, out_port)
             # if not is_reachable:

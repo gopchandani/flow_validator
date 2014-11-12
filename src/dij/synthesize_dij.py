@@ -221,14 +221,14 @@ def main():
     #  Installing the flow such that 10.0.0.3 is the HTTP server
     flow_match = Match()
     flow_match.udp_destination_port = 80
-    flow_match.ethernet_type = str(0x0800)
+    flow_match.ethernet_type = 0x0800
     flow_match.dst_ip_addr = "10.0.0.3"
 
     sm.synthesize_flow("10.0.0.1", "10.0.0.3", flow_match=flow_match)
 
     # Installing a wildcard here
     flow_match = Match()
-    flow_match.ethernet_type = str(0x0800)
+    flow_match.ethernet_type = 0x0800
     flow_match.dst_ip_addr = "10.0.0.1"
     sm.synthesize_flow("10.0.0.3", "10.0.0.1", flow_match)
 
