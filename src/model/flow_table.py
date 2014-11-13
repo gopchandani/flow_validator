@@ -76,6 +76,7 @@ class FlowTable():
     def get_highest_priority_matching_flow(self, flow_match):
 
         hpm_flow = None
+        intersection = None
 
         for flow in self.flows:
             intersection = flow.match.intersect(flow_match)
@@ -83,4 +84,4 @@ class FlowTable():
                 hpm_flow = flow
                 break
 
-        return hpm_flow
+        return hpm_flow, intersection

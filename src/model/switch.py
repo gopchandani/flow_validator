@@ -37,7 +37,7 @@ class Switch():
             flow_table = self.flow_tables[flow_table_id]
 
             # Get highest priority matching flow entry
-            hpm_flow = flow_table.get_highest_priority_matching_flow(flow_match)
+            hpm_flow, intersection = flow_table.get_highest_priority_matching_flow(flow_match)
             if hpm_flow:
                 action_set.add_actions(hpm_flow.actions)
 

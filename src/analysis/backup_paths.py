@@ -60,6 +60,7 @@ class BackupPaths:
             switch = self.graph.node[node_path[i]]["sw"]
 
             flow_match = Match()
+            #  This has to happen, because every switch has its own in_port
             flow_match.in_port = in_port
             flow_match.src_ip_addr = IPNetwork(src)
             flow_match.dst_ip_addr = IPNetwork(dst)

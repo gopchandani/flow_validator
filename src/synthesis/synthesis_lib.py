@@ -7,6 +7,8 @@ import httplib2
 import json
 
 from model.model import Model
+from model.match import Match
+
 
 class SynthesisLib():
 
@@ -93,9 +95,23 @@ class SynthesisLib():
 
         return flow
 
-    def _push_match_per_in_port_destination_instruct_group_flow(self, sw, group_id, priority, flow_match):
+    def _push_table_miss_goto_next_table_flow(self, sw, table_id):
 
-        flow = self._create_base_flow(0, priority)
+        # Create a lowest possible flow
+        flow = self._create_base_flow(table_id, 0)
+
+        #Compile instruction
+        #  Assert that packet be sent to table with this table_id + 1
+        go_to_table_instruction = {"go-to-table": {"table_id": table_id + 1}, "order": 0}
+
+        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
+
+        self._push_flow(sw, flow)
+
+
+    def _push_match_per_in_port_destination_instruct_group_flow(self, sw, table_id, group_id, priority, flow_match):
+
+        flow = self._create_base_flow(table_id, priority)
 
         #Compile match
         flow["flow-node-inventory:flow"]["match"] = flow_match.generate_match_json(
@@ -212,6 +228,13 @@ class SynthesisLib():
 
             print "-- Pushing at Switch:", sw
 
+            # Synthesis here uses Table 0 and Table 1
+            # Table 0 contains the reverse rules (they should be examined first)
+            # Table 1 contains the actual forwarding rules
+
+            # Push a table miss entry at Table 0
+            self._push_table_miss_goto_next_table_flow(sw, 0)
+
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
 
@@ -241,8 +264,8 @@ class SynthesisLib():
                     group = self._push_select_all_group(sw, [primary_intent])
 
                     primary_intent[3].in_port = primary_intent[1]
-                    flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
+                    flow = self._push_match_per_in_port_destination_instruct_group_flow(
+                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
 
                 if primary_intent and failover_intents:
 
@@ -263,8 +286,8 @@ class SynthesisLib():
                         in_port = primary_intent[1]
 
                     primary_intent[3].in_port = in_port
-                    flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
+                    flow = self._push_match_per_in_port_destination_instruct_group_flow(
+                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
 
                     if len(failover_intents) > 1:
                         raise Exception ("Hitting an unexpected case.")
@@ -277,8 +300,8 @@ class SynthesisLib():
 
                         group = self._push_select_all_group(sw, [failover_intent])
                         failover_intent[3].in_port = failover_intent[1]
-                        flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
-                            group["flow-node-inventory:group"]["group-id"], 1, failover_intent[3])
+                        flow = self._push_match_per_in_port_destination_instruct_group_flow(
+                            sw, 1, group["flow-node-inventory:group"]["group-id"], 1, failover_intent[3])
 
                 if primary_intent and balking_intent:
 
@@ -294,12 +317,12 @@ class SynthesisLib():
                         in_port = primary_intent[1]
 
                     primary_intent[3].in_port = in_port
-                    flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
+                    flow = self._push_match_per_in_port_destination_instruct_group_flow(
+                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
 
                 if reverse_intent:
 
                     group = self._push_select_all_group(sw, [reverse_intent])
                     primary_intent[3].in_port = reverse_intent[1]
-                    flow = self._push_match_per_in_port_destination_instruct_group_flow(sw,
-                        group["flow-node-inventory:group"]["group-id"], 2, primary_intent[3])
+                    flow = self._push_match_per_in_port_destination_instruct_group_flow(
+                        sw, 0, group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
