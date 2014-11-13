@@ -14,7 +14,9 @@ class Flow():
         self.sw = sw
         self.priority = int(flow["priority"])
         self.match = Match(flow["match"])
-        self.actions = []
+        self.apply_actions = []
+
+        self.go_to_table = None
 
         # Go through instructions
         for instruction_json in flow["instructions"]["instruction"]:
@@ -24,7 +26,10 @@ class Flow():
             if "apply-actions" in instruction_json:
                 apply_actions_json = instruction_json["apply-actions"]
                 for action_json in apply_actions_json["action"]:
-                    self.actions.append(Action(sw, action_json))
+                    self.apply_actions.append(Action(sw, action_json))
+
+            if "go-to-table" in instruction_json:
+                self.go_to_table = instruction_json["go-to-table"]["table_id"]
 
             # TODO: Handle go-to-table instruction
             # TODO: Handle meter instruction
@@ -45,7 +50,7 @@ class Flow():
         ret_val = False
 
         # Requiring that any single action has to forward it
-        for action in self.actions:
+        for action in self.apply_actions:
             if action.does_it_forward(in_port, out_port):
                 ret_val = True
                 break

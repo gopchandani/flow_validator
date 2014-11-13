@@ -45,15 +45,24 @@ class Switch():
             # Get the highest priority matching flow in this table
             hpm_flow = flow_table.get_highest_priority_matching_flow(flow_match)
 
-            # TODO: Go through the instructions in hpm_flow and accumulat any output actions
             if hpm_flow:
-                action_set.add_actions(hpm_flow.actions)
 
-                # TODO: See if the hpm_flow has any go-to-next table instructions, if so
+                # If there are any apply-actions that hpm_flow does, accumulate them
+                if hpm_flow.apply_actions:
+                    action_set.add_actions(hpm_flow.apply_actions)
+
+                # if the hpm_flow has any go-to-next table instructions then
                 # update table_id_to_check and has_table_to_check accordingly
-                table_id_to_check = None
-                has_table_to_check = False
+                if hpm_flow.go_to_table:
+                    table_id_to_check = hpm_flow.go_to_table
+                    has_table_to_check = table_id_to_check in self.flow_tables
 
+                    # Throw a tantrum if this check if False, switch is telling lies
+                    if not has_table_to_check:
+                        raise Exception("has_table_to_check should have been True")
+                else:
+                    has_table_to_check = False
+                    
                 # TODO: Send match data and action set to the next table
 
         out_ports = action_set.get_out_ports(flow_match.in_port)
