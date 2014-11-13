@@ -16,9 +16,21 @@ class Flow():
         self.match = Match(flow["match"])
         self.actions = []
 
-        apply_actions_json = flow["instructions"]["instruction"][0]["apply-actions"]
-        for action_json in apply_actions_json["action"]:
-            self.actions.append(Action(sw, action_json))
+        # Go through instructions
+        for instruction_json in flow["instructions"]["instruction"]:
+            print instruction_json
+
+            #  Handle the apply-action case for now
+            if "apply-actions" in instruction_json:
+                apply_actions_json = instruction_json["apply-actions"]
+                for action_json in apply_actions_json["action"]:
+                    self.actions.append(Action(sw, action_json))
+
+            # TODO: Handle go-to-table instruction
+            # TODO: Handle meter instruction
+            # TODO: Handle clear-actions case
+            # TODO: Handle write-actions case
+            # TODO: Write meta-data case
 
     def does_it_match(self, flow_match):
 
