@@ -122,9 +122,9 @@ class SynthesisLib():
         #  Assert that group is executed upon match
         group_action = {"group-id": group_id}
         action = {"group-action": group_action, "order": 0}
-        apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
+        write_actions_instruction = {"write-actions": {"action": action}, "order": 0}
 
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_action_instruction)
+        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
 
         self._push_flow(sw, flow)
 

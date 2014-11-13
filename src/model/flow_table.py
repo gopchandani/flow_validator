@@ -14,28 +14,26 @@ class Flow():
         self.sw = sw
         self.priority = int(flow["priority"])
         self.match = Match(flow["match"])
-        self.apply_actions = []
+        self.written_actions = []
 
         self.go_to_table = None
 
         # Go through instructions
         for instruction_json in flow["instructions"]["instruction"]:
-            print instruction_json
 
-            #  Handle the apply-action case for now
-            if "apply-actions" in instruction_json:
-                apply_actions_json = instruction_json["apply-actions"]
-                for action_json in apply_actions_json["action"]:
-                    self.apply_actions.append(Action(sw, action_json))
+            #  Handle the write-action case for now
+            if "write-actions" in instruction_json:
+                write_actions_json = instruction_json["write-actions"]
+                for action_json in write_actions_json["action"]:
+                    self.written_actions.append(Action(sw, action_json))
 
             if "go-to-table" in instruction_json:
                 self.go_to_table = instruction_json["go-to-table"]["table_id"]
 
-            # TODO: Handle go-to-table instruction
             # TODO: Handle meter instruction
             # TODO: Handle clear-actions case
-            # TODO: Handle write-actions case
             # TODO: Write meta-data case
+            # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
     def does_it_match(self, flow_match):
 
@@ -50,7 +48,7 @@ class Flow():
         ret_val = False
 
         # Requiring that any single action has to forward it
-        for action in self.apply_actions:
+        for action in self.written_actions:
             if action.does_it_forward(in_port, out_port):
                 ret_val = True
                 break

@@ -48,8 +48,8 @@ class Switch():
             if hpm_flow:
 
                 # If there are any apply-actions that hpm_flow does, accumulate them
-                if hpm_flow.apply_actions:
-                    action_set.add_actions(hpm_flow.apply_actions)
+                if hpm_flow.written_actions:
+                    action_set.add_actions(hpm_flow.written_actions)
 
                 # if the hpm_flow has any go-to-next table instructions then
                 # update table_id_to_check and has_table_to_check accordingly
@@ -62,7 +62,7 @@ class Switch():
                         raise Exception("has_table_to_check should have been True")
                 else:
                     has_table_to_check = False
-                    
+
                 # TODO: Send match data and action set to the next table
 
         out_ports = action_set.get_out_ports(flow_match.in_port)
