@@ -43,7 +43,7 @@ class Switch():
 
             # TODO: Send match data and action set to the next table
 
-        out_ports =  action_set.get_out_ports(flow_match.in_port)
+        out_ports = action_set.get_out_ports(flow_match.in_port)
 
         return out_ports
 

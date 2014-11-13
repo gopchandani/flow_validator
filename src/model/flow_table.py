@@ -78,8 +78,8 @@ class FlowTable():
         hpm_flow = None
 
         for flow in self.flows:
-            is_match = flow.does_it_match(flow_match)
-            if is_match:
+            intersection = flow.match.intersect(flow_match)
+            if intersection:
                 hpm_flow = flow
                 break
 

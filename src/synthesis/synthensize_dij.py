@@ -1,3 +1,4 @@
+
 __author__ = 'Rakesh Kumar'
 
 from model.model import Model
@@ -13,9 +14,6 @@ import networkx as nx
 class SynthesizeDij():
 
     def __init__(self):
-
-        self.OFPP_ALL = 0xfffffffc
-        self.OFPP_IN = 0xfffffff8
 
         self.model = Model()
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.model)

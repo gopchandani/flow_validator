@@ -65,37 +65,39 @@ class Match():
 
     def generate_match_json(self, match):
 
-        if self.in_port:
+        if self.in_port and self.in_port != "all":
             match["in-port"] = self.in_port
 
-        if self.ethernet_type:
+        if self.ethernet_type and self.ethernet_type != "all":
             ethernet_match = {"ethernet-type": {"type": self.ethernet_type}}
             match["ethernet-match"] = ethernet_match
 
-        if self.src_ip_addr:
+        if self.src_ip_addr and self.src_ip_addr != "all":
             match["ipv4-source"] = self.src_ip_addr
 
-        if self.dst_ip_addr:
+        if self.dst_ip_addr and self.dst_ip_addr != "all":
             match["ipv4-destination"] = self.dst_ip_addr
 
-        if self.tcp_destination_port or self.tcp_source_port:
+        if (self.tcp_destination_port and self.tcp_destination_port != "all") or \
+                (self.tcp_source_port and self.tcp_source_port != "all"):
             self.ip_protocol = 6
             match["ip-match"] = {"ip-protocol": self.ip_protocol}
 
-            if self.tcp_destination_port:
+            if self.tcp_destination_port and self.tcp_destination_port != "all":
                 match["tcp-destination-port"]= self.tcp_destination_port
 
-            if self.tcp_source_port:
+            if self.tcp_source_port and self.tcp_source_port != "all":
                 match["tcp-source-port"] = self.tcp_source_port
 
-        if self.udp_destination_port or self.udp_source_port:
+        if (self.udp_destination_port and self.udp_destination_port != "all") or \
+                (self.udp_source_port and self.udp_source_port != "all"):
             self.ip_protocol = 17
             match["ip-match"] = {"ip-protocol": self.ip_protocol}
 
-            if self.udp_destination_port:
+            if self.udp_destination_port and self.udp_destination_port != "all":
                 match["udp-destination-port"]= self.udp_destination_port
 
-            if self.udp_source_port:
+            if self.udp_source_port and self.udp_source_port != "all":
                 match["udp-source-port"] = self.udp_source_port
 
         return match
