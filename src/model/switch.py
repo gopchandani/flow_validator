@@ -31,17 +31,30 @@ class Switch():
     def get_out_ports(self, flow_match):
 
         action_set = ActionSet(self)
+        out_ports = []
 
-        # Go through each FlowTable
-        for flow_table_id in self.flow_tables:
-            flow_table = self.flow_tables[flow_table_id]
+        # Check if the switch has at least one table
+        table_id_to_check = 0
+        has_table_to_check = table_id_to_check in self.flow_tables
 
-            # Get highest priority matching flow entry
-            hpm_flow, intersection = flow_table.get_highest_priority_matching_flow(flow_match)
+        while has_table_to_check:
+
+            # Grab the table
+            flow_table = self.flow_tables[table_id_to_check]
+
+            # Get the highest priority matching flow in this table
+            hpm_flow = flow_table.get_highest_priority_matching_flow(flow_match)
+
+            # TODO: Go through the instructions in hpm_flow and accumulat any output actions
             if hpm_flow:
                 action_set.add_actions(hpm_flow.actions)
 
-            # TODO: Send match data and action set to the next table
+                # TODO: See if the hpm_flow has any go-to-next table instructions, if so
+                # update table_id_to_check and has_table_to_check accordingly
+                table_id_to_check = None
+                has_table_to_check = False
+
+                # TODO: Send match data and action set to the next table
 
         out_ports = action_set.get_out_ports(flow_match.in_port)
 

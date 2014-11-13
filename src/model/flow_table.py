@@ -96,4 +96,4 @@ class FlowTable():
                 hpm_flow = flow
                 break
 
-        return hpm_flow, intersection
+        return hpm_flow
