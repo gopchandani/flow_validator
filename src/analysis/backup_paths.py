@@ -6,6 +6,8 @@ import sys
 from model.model import Model
 from model.match import Match
 
+from netaddr import IPNetwork
+
 class BackupPaths:
     def __init__(self):
         self.model = Model()
@@ -36,7 +38,6 @@ class BackupPaths:
 
             #Traffic arrives from the host to first switch at switch's port
 
-
             edge_ports_dict = self.model.get_edge_port_dict(node_path[0], node_path[1])
             in_port = edge_ports_dict[node_path[1]]
 
@@ -60,8 +61,9 @@ class BackupPaths:
 
             flow_match = Match()
             flow_match.in_port = in_port
-            flow_match.src_ip_addr = src
-            flow_match.dst_ip_addr = dst
+            flow_match.src_ip_addr = IPNetwork(src)
+            flow_match.dst_ip_addr = IPNetwork(dst)
+            flow_match.ethernet_type = 0x0800
 
             # is_reachable = switch.passes_flow(flow_match, out_port)
             # if not is_reachable:

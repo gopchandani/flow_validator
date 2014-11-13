@@ -37,13 +37,15 @@ class Switch():
             flow_table = self.flow_tables[flow_table_id]
 
             # Get highest priority matching flow entry
-            hpm = flow_table.get_highest_priority_matching_flow(flow_match)
-            if hpm:
-                action_set.add_actions(hpm.actions)
+            hpm_flow = flow_table.get_highest_priority_matching_flow(flow_match)
+            if hpm_flow:
+                action_set.add_actions(hpm_flow.actions)
 
             # TODO: Send match data and action set to the next table
 
-
-        out_ports =  action_set.get_out_ports(flow_match.in_port)
+        out_ports = action_set.get_out_ports(flow_match.in_port)
 
         return out_ports
+
+    def get_out_port_match_flows(self, flow_match):
+        pass
