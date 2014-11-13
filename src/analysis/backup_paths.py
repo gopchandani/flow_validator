@@ -55,26 +55,26 @@ class BackupPaths:
             edge_ports_dict = self.model.get_edge_port_dict(node_path[0], node_path[1])
             out_port = edge_ports_dict[node_path[0]]
 
+
+        flow_match = Match()
+
+        flow_match.src_ip_addr = IPNetwork(src)
+        flow_match.dst_ip_addr = IPNetwork(dst)
+        flow_match.ethernet_type = 0x0800
+
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
             switch = self.graph.node[node_path[i]]["sw"]
 
-            flow_match = Match()
-            #  This has to happen, because every switch has its own in_port
+            #  This has to happen at every switch, because every switch has its own in_port
             flow_match.in_port = in_port
-            flow_match.src_ip_addr = IPNetwork(src)
-            flow_match.dst_ip_addr = IPNetwork(dst)
-            flow_match.ethernet_type = 0x0800
 
-            # is_reachable = switch.passes_flow(flow_match, out_port)
-            # if not is_reachable:
-            #     break
-
-            switch_out_ports = switch.get_out_ports(flow_match)
-            if out_port not in switch_out_ports:
+            switch_out_port_match = switch.transfer_function(flow_match)
+            if out_port not in switch_out_port_match:
                 is_reachable = False
                 break
             else:
+                flow_match = switch_out_port_match[out_port]
                 is_reachable = True
 
             # Prepare for next switch along the path if there is a next switch along the path

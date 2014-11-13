@@ -28,7 +28,7 @@ class Switch():
 
         return is_reachable
 
-    def get_out_ports(self, flow_match):
+    def transfer_function(self, flow_match):
 
         action_set = ActionSet(self)
         out_ports = []
@@ -43,13 +43,13 @@ class Switch():
             flow_table = self.flow_tables[table_id_to_check]
 
             # Get the highest priority matching flow in this table
-            hpm_flow = flow_table.get_highest_priority_matching_flow(flow_match)
+            hpm_flow, intersection = flow_table.get_highest_priority_matching_flow(flow_match)
 
             if hpm_flow:
 
                 # If there are any apply-actions that hpm_flow does, accumulate them
                 if hpm_flow.written_actions:
-                    action_set.add_actions(hpm_flow.written_actions)
+                    action_set.add_actions(hpm_flow.written_actions, intersection)
 
                 # if the hpm_flow has any go-to-next table instructions then
                 # update table_id_to_check and has_table_to_check accordingly
@@ -65,9 +65,6 @@ class Switch():
 
                 # TODO: Send match data and action set to the next table
 
-        out_ports = action_set.get_out_ports(flow_match.in_port)
+        out_port_match = action_set.get_out_port_matches(flow_match.in_port)
 
-        return out_ports
-
-    def get_out_port_match_flows(self, flow_match):
-        pass
+        return out_port_match

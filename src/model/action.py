@@ -8,6 +8,7 @@ class Action():
     def __init__(self, sw, action_json):
 
         self.sw = sw
+        self.matched_flow = None
         self.order = action_json["order"]
         self.action_type = None
 
@@ -93,26 +94,27 @@ class ActionSet():
 
         self.sw = sw
 
-    def add_actions(self, action_list):
+    def add_actions(self, action_list, intersection):
 
         for action in action_list:
 
             if action.action_type == "group":
                 if action.group_id in self.sw.group_table.groups:
                     group_active_action_list =  self.sw.group_table.groups[action.group_id].get_active_action_list()
-                    self.add_actions(group_active_action_list)
-            else:
+                    self.add_actions(group_active_action_list, intersection)
+            elif action.action_type == "output":
+                action.matched_flow = intersection
                 self.action_set[action.action_type].append(action)
 
 
-    def get_out_ports(self, in_port):
-        out_ports = []
+    def get_out_port_matches(self, in_port):
+        out_port_match = {}
 
         for action in self.action_set["output"]:
 
             if self.sw.model.OFPP_IN == int(action.out_port):
-                out_ports.append(in_port)
+                out_port_match[in_port] = action.matched_flow
             else:
-                out_ports.append(action.out_port)
+                out_port_match[action.out_port] = action.matched_flow
 
-        return out_ports
+        return out_port_match
