@@ -155,44 +155,28 @@ class Model():
 
         for link in topology_links:
 
-            node1_id = link["source"]["source-node"]
-            node2_id = link["destination"]["dest-node"]
-
-            node1_type = None
-            node2_type = None
-
             node1_port = link["source"]["source-tp"].split(":")[2]
             node2_port = link["destination"]["dest-tp"].split(":")[2]
 
-            if node1_id.startswith("host"):
-                node1_type = "host"
-            else:
-                node1_type = "switch"
+            self.add_edge(link["source"]["source-node"], node1_port, link["destination"]["dest-node"], node2_port)
 
-            if node2_id.startswith("host"):
-                node2_type = "host"
-            else:
-                node2_type = "switch"
-
-            self.add_edge(node1_id, node1_port, node2_id, node2_port)
-
-            if node1_type == "switch":
-                node1_ports = self.graph.node[node1_id]["sw"].ports
+            if  self.graph.node[link["source"]["source-node"]]["node_type"] == "switch":
+                node1_ports = self.graph.node[link["source"]["source-node"]]["sw"].ports
 
                 if not node1_ports[node1_port].faces:
-                    node1_ports[node1_port].faces = node2_type
+                    node1_ports[node1_port].faces = self.graph.node[link["destination"]["dest-node"]]["node_type"]
 
                 if not node1_ports[node1_port].facing_node_id:
-                    node1_ports[node1_port].facing_node_id = node2_id
+                    node1_ports[node1_port].facing_node_id = link["destination"]["dest-node"]
 
-            if node2_type == "switch":
-                node2_ports = self.graph.node[node2_id]["sw"].ports
+            if self.graph.node[link["destination"]["dest-node"]]["node_type"] == "switch":
+                node2_ports = self.graph.node[link["destination"]["dest-node"]]["sw"].ports
 
                 if not node2_ports[node2_port].faces:
-                    node2_ports[node2_port].faces = node1_type
+                    node2_ports[node2_port].faces =  self.graph.node[link["source"]["source-node"]]["node_type"]
 
                 if not node2_ports[node2_port].facing_node_id:
-                    node2_ports[node2_port].facing_node_id = node1_id
+                    node2_ports[node2_port].facing_node_id = link["source"]["source-node"]
 
     def dump_model(self):
 
