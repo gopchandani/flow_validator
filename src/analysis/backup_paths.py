@@ -15,7 +15,7 @@ class BackupPaths:
         self.host_ids = self.model.get_host_ids()
         self.switch_ids = self.model.get_switch_ids()
 
-    def check_flow_reachability(self, src, dst, node_path, switch_in_port=None):
+    def check_flow_reachability(self, src, dst, node_path, flow_match, switch_in_port=None):
 
         # The task of this loop is to examine whether there is a rule,
         #  in the switches along the path, that would admit the path
@@ -55,13 +55,6 @@ class BackupPaths:
             edge_ports_dict = self.model.get_edge_port_dict(node_path[0], node_path[1])
             out_port = edge_ports_dict[node_path[0]]
 
-
-        flow_match = Match()
-
-        flow_match.src_ip_addr = IPNetwork(src)
-        flow_match.dst_ip_addr = IPNetwork(dst)
-        flow_match.ethernet_type = 0x0800
-
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
             switch = self.graph.node[node_path[i]]["sw"]
@@ -90,7 +83,7 @@ class BackupPaths:
 
         return is_reachable
 
-    def check_flow_backups(self, src, dst, node_path):
+    def check_flow_backups(self, src, dst, node_path, flow_match):
         has_backup = False
 
         # Sanity check -- Check that first node of the node_path is a host, no matter what
@@ -124,7 +117,7 @@ class BackupPaths:
             asp = nx.all_simple_paths(self.graph, source=node_path[i], target=dst)
             for bp in asp:
                 print "Topological Backup Path Candidate:", bp
-                edge_has_backup = self.check_flow_reachability(src, dst, bp, in_port)
+                edge_has_backup = self.check_flow_reachability(src, dst, bp, flow_match, in_port)
 
                 print "edge_has_backup:", edge_has_backup
                 if edge_has_backup:
@@ -143,20 +136,20 @@ class BackupPaths:
 
         return has_backup
 
-    def has_primary_and_backup(self, src_host_id, dst_host_id):
+    def has_primary_and_backup(self, src, dst, flow_match):
         has_primary_and_backup = False
 
         #  First grab all topological paths between src/dst hosts
-        asp = nx.all_simple_paths(self.graph, source=src_host_id, target=dst_host_id)
+        asp = nx.all_simple_paths(self.graph, source=src, target=dst)
 
         for p in asp:
             print "Topological Primary Path Candidate", p
 
-            is_reachable_flow = self.check_flow_reachability(src_host_id, dst_host_id, p)
+            is_reachable_flow = self.check_flow_reachability(src, dst, p, flow_match)
             print "is_reachable_flow:", is_reachable_flow
 
             if is_reachable_flow:
-                has_primary_and_backup = self.check_flow_backups(src_host_id, dst_host_id, p)
+                has_primary_and_backup = self.check_flow_backups(src, dst, p, flow_match)
 
                 # Keep going if this one did not have a backup
                 if has_primary_and_backup:
@@ -167,18 +160,23 @@ class BackupPaths:
     def analyze_all_node_pairs(self):
 
         print "Checking for backup paths between all possible host pairs..."
-        for src_host_id in self.host_ids:
-            for dst_host_id in self.host_ids:
+        for src in self.host_ids:
+            for dst in self.host_ids:
 
                 # Ignore paths with same src/dst
-                if src_host_id == dst_host_id:
+                if src == dst:
                     continue
 
                 print "--------------------------------------------------------------------------------------------------------"
-                print 'Checking primary and backup paths from', src_host_id, 'to', dst_host_id
+                print 'Checking primary and backup paths from', src, 'to', dst
                 print "--------------------------------------------------------------------------------------------------------"
 
-                primary_and_backup_exists = self.has_primary_and_backup(src_host_id, dst_host_id)
+
+                flow_match = Match()
+                flow_match.src_ip_addr = IPNetwork(src)
+                flow_match.dst_ip_addr = IPNetwork(dst)
+                flow_match.ethernet_type = 0x0800
+                primary_and_backup_exists = self.has_primary_and_backup(src, dst, flow_match)
 
                 print "--------------------------------------------------------------------------------------------------------"
                 if primary_and_backup_exists:
