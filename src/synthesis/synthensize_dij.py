@@ -169,7 +169,6 @@ class SynthesizeDij():
                         intent.intent_type = "reverse"
                         continue
 
-
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         #  First find the shortest path between src and dst.

@@ -184,7 +184,6 @@ class BackupPaths:
                 else:
                     print "Result:Backup does not exist"
 
-
 def main():
     bp = BackupPaths()
     bp.analyze_all_node_pairs()

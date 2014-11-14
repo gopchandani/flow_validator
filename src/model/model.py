@@ -8,6 +8,7 @@ import httplib2
 import networkx as nx
 
 from switch import Switch
+from host import Host
 from flow_table import FlowTable
 from group_table import GroupTable
 from group_table import Group
@@ -148,7 +149,8 @@ class Model():
             if node["node-id"].startswith("host"):
                 host_ip = node["host-tracker-service:addresses"][0]["ip"]
                 self.host_ids.append(host_ip)
-                self.graph.add_node(host_ip, node_type="host")
+                h = Host(host_ip, self)
+                self.graph.add_node(host_ip, node_type="host", h=h)
 
         for link in topology_links:
 
