@@ -173,8 +173,8 @@ class BackupPaths:
 
 
                 flow_match = Match()
-                flow_match.src_ip_addr = IPNetwork(src)
-                flow_match.dst_ip_addr = IPNetwork(dst)
+                flow_match.src_ip_addr = IPNetwork(self.graph.node[src]["h"].ip_addr)
+                flow_match.dst_ip_addr = IPNetwork(self.graph.node[dst]["h"].ip_addr)
                 flow_match.ethernet_type = 0x0800
                 primary_and_backup_exists = self.has_primary_and_backup(src, dst, flow_match)
 

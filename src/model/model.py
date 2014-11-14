@@ -147,10 +147,11 @@ class Model():
         # Extract all hosts in the topology
         for node in topology_nodes:
             if node["node-id"].startswith("host"):
+                host_id = node["node-id"]
                 host_ip = node["host-tracker-service:addresses"][0]["ip"]
-                self.host_ids.append(host_ip)
-                h = Host(host_ip, self)
-                self.graph.add_node(host_ip, node_type="host", h=h)
+                self.host_ids.append(host_id)
+                h = Host(host_id, self, host_ip)
+                self.graph.add_node(host_id, node_type="host", h=h)
 
         for link in topology_links:
 
@@ -165,17 +166,11 @@ class Model():
 
             if node1_id.startswith("host"):
                 node1_type = "host"
-                for node in topology_nodes:
-                    if node["node-id"] == node1_id:
-                        node1_id = node["host-tracker-service:addresses"][0]["ip"]
             else:
                 node1_type = "switch"
 
             if node2_id.startswith("host"):
                 node2_type = "host"
-                for node in topology_nodes:
-                    if node["node-id"] == node2_id:
-                        node2_id = node["host-tracker-service:addresses"][0]["ip"]
             else:
                 node2_type = "switch"
 

@@ -3,7 +3,8 @@ __author__ = 'Rakesh Kumar'
 
 class Host():
 
-    def __init__(self, sw_id, model):
+    def __init__(self, host_id, model, ip_addr):
 
-        self.switch_id = sw_id
+        self.host_id = host_id
         self.model = model
+        self.ip_addr = ip_addr
