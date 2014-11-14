@@ -5,8 +5,10 @@ from model.model import Model
 from model.match import Match
 
 from synthesis.synthesis_lib import SynthesisLib
+from synthesis.intent import Intent
 
 from collections import defaultdict
+
 
 import pprint
 import networkx as nx
@@ -34,13 +36,13 @@ class SynthesizeDij():
 
         return forwarding_intents
 
-    def _compute_path_forwarding_intents(self, p, path_type, flow_match, switch_in_port=None):
+    def _compute_path_forwarding_intents(self, p, intent_type, flow_match, switch_in_port=None):
 
         src_node = p[0]
-        dst_node = p[len(p) -1]
+        dst = p[len(p) -1]
 
         edge_ports_dict = None
-        departure_port = None
+        out_port = None
         in_port = None
 
         # Sanity check -- Check that last node of the p is a host, no matter what
@@ -56,7 +58,7 @@ class SynthesizeDij():
 
             # Traffic leaves from the first switch's port
             edge_ports_dict = self.model.get_edge_port_dict(p[1], p[2])
-            departure_port = edge_ports_dict[p[1]]
+            out_port = edge_ports_dict[p[1]]
 
             p = p[1:]
 
@@ -66,7 +68,7 @@ class SynthesizeDij():
 
             in_port = switch_in_port
             edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
-            departure_port = edge_ports_dict[p[0]]
+            out_port = edge_ports_dict[p[0]]
 
         # This look always starts at a switch
         for i in range(len(p) - 1):
@@ -76,13 +78,14 @@ class SynthesizeDij():
 
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
-            forwarding_intent = (path_type, in_port, departure_port, flow_match)
+            forwarding_intent = Intent(intent_type, flow_match, in_port, out_port)
+            print p[i], forwarding_intent
 
-            if dst_node in forwarding_intents:
-                forwarding_intents[dst_node][forwarding_intent] += 1
+            if dst in forwarding_intents:
+                forwarding_intents[dst][forwarding_intent] += 1
             else:
-                forwarding_intents[dst_node] = defaultdict(int)
-                forwarding_intents[dst_node][forwarding_intent] = 1
+                forwarding_intents[dst] = defaultdict(int)
+                forwarding_intents[dst][forwarding_intent] = 1
 
             # Prepare for next switch along the path if there is a next switch along the path
             if self.model.graph.node[p[i+1]]["node_type"] != "host":
@@ -93,7 +96,7 @@ class SynthesizeDij():
 
                 # Traffic leaves from the first switch's port
                 edge_ports_dict = self.model.get_edge_port_dict(p[i+1], p[i+2])
-                departure_port = edge_ports_dict[p[i+1]]
+                out_port = edge_ports_dict[p[i+1]]
 
     def dump_forwarding_intents(self):
         for sw in self.s:
@@ -110,7 +113,7 @@ class SynthesizeDij():
         return_intent = []
 
         for intent in dst_intents:
-            if intent[0] == intent_type:
+            if intent.intent_type == intent_type:
                 return_intent.append(intent)
 
         return return_intent
@@ -118,8 +121,10 @@ class SynthesizeDij():
     def _identify_reverse_and_balking_intents(self):
 
         for sw in self.s:
+            print "--- sw ---", sw
 
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
+                print "--- dst ---", dst
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
 
                 # Assume that there is always one primary intent
@@ -128,10 +133,9 @@ class SynthesizeDij():
                 if primary_intents:
                     primary_intent = primary_intents[0]
 
-                addition_list = []
-                deletion_list = []
-
                 for intent in dst_intents:
+
+                    print intent
 
                     #  Nothing needs to be done for primary intent
                     if intent == primary_intent:
@@ -139,10 +143,10 @@ class SynthesizeDij():
 
                     # A balking intent happens on the switch where reversal begins,
                     # it is characterized by the fact that the traffic exits the same port where it came from
-                    if intent[1] == intent[2]:
+                    if intent.in_port == intent.out_port:
+
                         # Add a new intent with modified key
-                        addition_list.append((("balking", intent[1], intent[2], intent[3]), dst_intents[intent]))
-                        deletion_list.append(intent)
+                        intent.intent_type = "balking"
                         continue
 
                     #  Processing from this point onwards require presence of a primary intent
@@ -155,31 +159,22 @@ class SynthesizeDij():
                     #  Both cases need a separate rule at a higher priority handling it
 
                     #  1. at the source switch, with intent's source port equal to destination port of the primary intent
-                    if intent[1] == primary_intent[2]:
-                        # Add a new intent with modified key
-                        addition_list.append((("reverse", intent[1], intent[2], intent[3]), dst_intents[intent]))
-                        deletion_list.append(intent)
+                    if intent.in_port == primary_intent.out_port:
+                        intent.intent_type = "reverse"
                         continue
 
                     #  2. At any other switch
                     # with intent's destination port equal to source port of primary intent
-                    if intent[2] == primary_intent[1]:
-                        # Add a new intent with modified key
-                        addition_list.append((("reverse", intent[1], intent[2], intent[3]), dst_intents[intent]))
-                        deletion_list.append(intent)
-
-                for intent_key, intent_val in addition_list:
-                    dst_intents[intent_key] = intent_val
-
-                for intent in deletion_list:
-                    del dst_intents[intent]
+                    if intent.out_port == primary_intent.in_port:
+                        intent.intent_type = "reverse"
+                        continue
 
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
-        print p
+        print "Primary Path:", p
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_forwarding_intents(p, "primary", flow_match)
@@ -202,7 +197,7 @@ class SynthesizeDij():
             # Find the shortest path that results when the link breaks
             # and compute forwarding intents for that
             bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
-            print "--", bp
+            print "Backup Path", bp
 
             self._compute_path_forwarding_intents(bp, "failover", flow_match, in_port)
 

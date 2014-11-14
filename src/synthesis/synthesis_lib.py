@@ -148,12 +148,12 @@ class SynthesisLib():
         out_port = None
         watch_port = None
 
-        if intent[1] == intent[2]:
+        if intent.in_port == intent.out_port:
             out_port = self.model.OFPP_IN
-            watch_port = intent[2]
+            watch_port = intent.out_port
         else:
-            out_port = intent[2]
-            watch_port = intent[2]
+            out_port = intent.out_port
+            watch_port = intent.out_port
 
         return out_port, watch_port
 
@@ -217,7 +217,7 @@ class SynthesisLib():
         return_intent = []
 
         for intent in dst_intents:
-            if intent[0] == intent_type:
+            if intent.intent_type == intent_type:
                 return_intent.append(intent)
 
         return return_intent
@@ -263,14 +263,14 @@ class SynthesisLib():
 
                     group = self._push_select_all_group(sw, [primary_intent])
 
-                    primary_intent[3].in_port = primary_intent[1]
+                    primary_intent.flow_match.in_port = primary_intent.in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
+                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
 
                 if primary_intent and failover_intents:
 
                     #  See if both want same destination
-                    if primary_intent[2] != failover_intent[2]:
+                    if primary_intent.out_port != failover_intent.out_port:
                         group = self._push_fast_failover_group(sw, primary_intent, failover_intent)
                     else:
                         group = self._push_select_all_group(sw, [primary_intent])
@@ -278,16 +278,16 @@ class SynthesisLib():
                     # Push the rule that refers to the group
                     in_port = None
                     #Sanity check
-                    if primary_intent[1] != failover_intent[1]:
+                    if primary_intent.in_port != failover_intent.in_port:
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         if not self.model.graph.has_edge(dst, sw):
                             raise Exception("Primary and failover intents' src port mismatch")
                     else:
-                        in_port = primary_intent[1]
+                        in_port = primary_intent.in_port
 
-                    primary_intent[3].in_port = in_port
+                    primary_intent.flow_match.in_port = in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
+                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
 
                     if len(failover_intents) > 1:
                         raise Exception ("Hitting an unexpected case.")
@@ -299,9 +299,9 @@ class SynthesisLib():
                     for failover_intent in failover_intents:
 
                         group = self._push_select_all_group(sw, [failover_intent])
-                        failover_intent[3].in_port = failover_intent[1]
+                        failover_intent.flow_match.in_port = failover_intent.in_port
                         flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                            sw, 1, group["flow-node-inventory:group"]["group-id"], 1, failover_intent[3])
+                            sw, 1, group["flow-node-inventory:group"]["group-id"], 1, failover_intent.flow_match)
 
                 if primary_intent and balking_intent:
 
@@ -309,20 +309,20 @@ class SynthesisLib():
 
                     in_port = None
                     #Sanity check
-                    if primary_intent[1] != balking_intent[1]:
+                    if primary_intent.in_port != balking_intent.in_port:
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         if not self.model.graph.has_edge(dst, sw):
                             raise Exception("Primary and failover intents' src port mismatch")
                     else:
-                        in_port = primary_intent[1]
+                        in_port = primary_intent.in_port
 
-                    primary_intent[3].in_port = in_port
+                    primary_intent.flow_match.in_port = in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
+                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
 
                 if reverse_intent:
 
                     group = self._push_select_all_group(sw, [reverse_intent])
-                    primary_intent[3].in_port = reverse_intent[1]
+                    primary_intent.flow_match.in_port = reverse_intent.in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 0, group["flow-node-inventory:group"]["group-id"], 1, primary_intent[3])
+                        sw, 0, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
