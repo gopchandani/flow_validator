@@ -121,10 +121,7 @@ class SynthesizeDij():
     def _identify_reverse_and_balking_intents(self):
 
         for sw in self.s:
-            print "--- sw ---", sw
-
             for dst in self.model.graph.node[sw]["forwarding_intents"]:
-                print "--- dst ---", dst
                 dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
 
                 # Assume that there is always one primary intent
@@ -134,8 +131,6 @@ class SynthesizeDij():
                     primary_intent = primary_intents[0]
 
                 for intent in dst_intents:
-
-                    print intent
 
                     #  Nothing needs to be done for primary intent
                     if intent == primary_intent:
@@ -207,27 +202,36 @@ class SynthesizeDij():
     def push_switch_changes(self):
         self.synthesis_lib.trigger(self.s)
 
+    def synthesize_all_node_pairs(self):
+
+        print "Synthesizing backup paths between all possible host pairs..."
+        for src in self.model.get_host_ids():
+            for dst in self.model.get_host_ids():
+
+                # Ignore paths with same src/dst
+                if src == dst:
+                    continue
+
+                print "--------------------------------------------------------------------------------------------------------"
+                print 'Synthesizing primary and backup paths from', src, 'to', dst
+                print "--------------------------------------------------------------------------------------------------------"
+
+                flow_match = Match()
+                #flow_match.udp_destination_port = 80
+                flow_match.ethernet_type = 0x0800
+                flow_match.dst_ip_addr = self.model.graph.node[dst]["h"].ip_addr
+
+                self.synthesize_flow(src, dst, flow_match)
+
+                print "--------------------------------------------------------------------------------------------------------"
+
+
+        self._identify_reverse_and_balking_intents()
+        self.push_switch_changes()
+
 def main():
     sm = SynthesizeDij()
-
-    flow_match = Match()
-    #flow_match.udp_destination_port = 80
-    flow_match.ethernet_type = 0x0800
-    flow_match.dst_ip_addr = "10.0.0.3"
-    sm.synthesize_flow("10.0.0.1", "10.0.0.3", flow_match)
-
-    flow_match = Match()
-    flow_match.ethernet_type = 0x0800
-    flow_match.dst_ip_addr = "10.0.0.1"
-    sm.synthesize_flow("10.0.0.3", "10.0.0.1", flow_match)
-
-
-    #sm.dump_forwarding_intents()
-    sm._identify_reverse_and_balking_intents()
-    #sm.dump_forwarding_intents()
-
-    sm.push_switch_changes()
-
+    sm.synthesize_all_node_pairs()
 
 if __name__ == "__main__":
     main()

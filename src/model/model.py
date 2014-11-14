@@ -196,7 +196,7 @@ class Model():
 
         self._prepare_node_edges()
 
-        self.dump_model()
+        #self.dump_model()
 
     def get_node_graph(self):
         return self.graph

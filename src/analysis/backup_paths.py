@@ -11,9 +11,6 @@ from netaddr import IPNetwork
 class BackupPaths:
     def __init__(self):
         self.model = Model()
-        self.graph = self.model.get_node_graph()
-        self.host_ids = self.model.get_host_ids()
-        self.switch_ids = self.model.get_switch_ids()
 
     def check_flow_reachability(self, src, dst, node_path, flow_match, switch_in_port=None):
 
@@ -30,11 +27,11 @@ class BackupPaths:
         in_port = None
 
         # Sanity check -- Check that last node of the node_path is a host, no matter what
-        if self.graph.node[node_path[len(node_path) - 1]]["node_type"] != "host":
+        if self.model.graph.node[node_path[len(node_path) - 1]]["node_type"] != "host":
             raise Exception("The last node in the node_path has to be a host.")
 
         # Check whether the first node of path is a host or a switch.
-        if self.graph.node[node_path[0]]["node_type"] == "host":
+        if self.model.graph.node[node_path[0]]["node_type"] == "host":
 
             #Traffic arrives from the host to first switch at switch's port
 
@@ -47,7 +44,7 @@ class BackupPaths:
 
             node_path = node_path[1:]
 
-        elif self.graph.node[node_path[0]]["node_type"] == "switch":
+        elif self.model.graph.node[node_path[0]]["node_type"] == "switch":
             if not switch_in_port:
                 raise Exception("switching_in_port needed.")
 
@@ -57,7 +54,7 @@ class BackupPaths:
 
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
-            switch = self.graph.node[node_path[i]]["sw"]
+            switch = self.model.graph.node[node_path[i]]["sw"]
 
             #  This has to happen at every switch, because every switch has its own in_port
             flow_match.in_port = in_port
@@ -71,7 +68,7 @@ class BackupPaths:
                 is_reachable = True
 
             # Prepare for next switch along the path if there is a next switch along the path
-            if self.graph.node[node_path[i+1]]["node_type"] != "host":
+            if self.model.graph.node[node_path[i+1]]["node_type"] != "host":
 
                 # Traffic arrives from the host to first switch at switch's port
                 edge_ports_dict = self.model.get_edge_port_dict(node_path[i], node_path[i+1])
@@ -87,11 +84,11 @@ class BackupPaths:
         has_backup = False
 
         # Sanity check -- Check that first node of the node_path is a host, no matter what
-        if self.graph.node[node_path[0]]["node_type"] != "host":
+        if self.model.graph.node[node_path[0]]["node_type"] != "host":
             raise Exception("The first node in the node_path has to be a host.")
 
         # Sanity check -- Check that last node of the node_path is a host, no matter what
-        if self.graph.node[node_path[len(node_path) - 1]]["node_type"] != "host":
+        if self.model.graph.node[node_path[len(node_path) - 1]]["node_type"] != "host":
             raise Exception("The last node in the node_path has to be a host.")
 
         edge_ports_dict = self.model.get_edge_port_dict(node_path[0], node_path[1])
@@ -114,7 +111,7 @@ class BackupPaths:
             # Go through all simple paths that result when the link breaks
             #  If any of them passes the flow, then this edge has a backup
 
-            asp = nx.all_simple_paths(self.graph, source=node_path[i], target=dst)
+            asp = nx.all_simple_paths(self.model.graph, source=node_path[i], target=dst)
             for bp in asp:
                 print "Topological Backup Path Candidate:", bp
                 edge_has_backup = self.check_flow_reachability(src, dst, bp, flow_match, in_port)
@@ -140,7 +137,7 @@ class BackupPaths:
         has_primary_and_backup = False
 
         #  First grab all topological paths between src/dst hosts
-        asp = nx.all_simple_paths(self.graph, source=src, target=dst)
+        asp = nx.all_simple_paths(self.model.graph, source=src, target=dst)
 
         for p in asp:
             print "Topological Primary Path Candidate", p
@@ -160,8 +157,8 @@ class BackupPaths:
     def analyze_all_node_pairs(self):
 
         print "Checking for backup paths between all possible host pairs..."
-        for src in self.host_ids:
-            for dst in self.host_ids:
+        for src in self.model.get_host_ids():
+            for dst in self.model.get_host_ids():
 
                 # Ignore paths with same src/dst
                 if src == dst:
@@ -173,8 +170,8 @@ class BackupPaths:
 
 
                 flow_match = Match()
-                flow_match.src_ip_addr = IPNetwork(self.graph.node[src]["h"].ip_addr)
-                flow_match.dst_ip_addr = IPNetwork(self.graph.node[dst]["h"].ip_addr)
+                flow_match.src_ip_addr = IPNetwork(self.model.graph.node[src]["h"].ip_addr)
+                flow_match.dst_ip_addr = IPNetwork(self.model.graph.node[dst]["h"].ip_addr)
                 flow_match.ethernet_type = 0x0800
                 primary_and_backup_exists = self.has_primary_and_backup(src, dst, flow_match)
 

@@ -38,12 +38,14 @@ class SynthesisLib():
                                        body=json.dumps(pushed_content))
 
         # resp = {"status": "200"}
-        pprint.pprint(pushed_content)
+        #pprint.pprint(pushed_content)
 
         if resp["status"] == "200":
-            print "Pushed Successfully:", pushed_content.keys()[0], resp["status"]
+            print "Pushed Successfully:", pushed_content.keys()[0]
+            #print resp["status"]
         else:
-            print "Problem Pushing:", pushed_content.keys()[0], "resp:", resp, "content:", content
+            print "Problem Pushing:", pushed_content.keys()[0]
+            print "resp:", resp, "content:", content
             pprint.pprint(pushed_content)
 
 
