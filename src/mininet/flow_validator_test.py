@@ -31,7 +31,6 @@ class FlowValidatorTest():
         else:
             raise Exception("Invalid, unknown topology type: " % topo)
 
-
         self._start_test()
 
     def _start_test(self):
