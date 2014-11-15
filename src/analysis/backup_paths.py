@@ -164,10 +164,9 @@ class BackupPaths:
                 if src == dst:
                     continue
 
-                print "--------------------------------------------------------------------------------------------------------"
+                print "----------------------------------------------------------------------------------------------"
                 print 'Checking primary and backup paths from', src, 'to', dst
-                print "--------------------------------------------------------------------------------------------------------"
-
+                print "----------------------------------------------------------------------------------------------"
 
                 flow_match = Match()
                 flow_match.src_ip_addr = IPNetwork(self.model.graph.node[src]["h"].ip_addr)
@@ -175,7 +174,7 @@ class BackupPaths:
                 flow_match.ethernet_type = 0x0800
                 primary_and_backup_exists = self.has_primary_and_backup(src, dst, flow_match)
 
-                print "--------------------------------------------------------------------------------------------------------"
+                print "----------------------------------------------------------------------------------------------"
                 if primary_and_backup_exists:
                     print "Result: Backup exists."
                 else:
