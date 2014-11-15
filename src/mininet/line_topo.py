@@ -14,7 +14,7 @@ class LineTopo(Topo):
 
         #  Add switches and hosts under them
         for i in range(num_switches):
-            curr_switch = self.addSwitch("s" + str(i+1))
+            curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow13")
             switches.append(curr_switch)
 
             for j in range(num_hosts_per_switch):

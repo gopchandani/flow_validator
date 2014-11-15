@@ -1,9 +1,11 @@
 __author__ = 'Rakesh Kumar'
 
 import argparse
+import time
 
 from mininet.net import Mininet
 from mininet.node import RemoteController
+from mininet.node import OVSSwitch
 
 from fat_tree import FatTree
 from two_ring_topo import TwoRingTopo
@@ -34,12 +36,15 @@ class FlowValidatorTest():
 
     def _start_test(self):
 
-        self.net = Mininet(topo=self.topo)
-        self.net.addController( 'c0', controller=RemoteController, ip='127.0.0.1', port=6633)
-
+        #self.net = Mininet(topo=self.topo)
+        self.net = Mininet(topo=self.topo,
+                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=6633),
+                           switch=OVSSwitch)
 
         # Start
         self.net.start()
+
+        time.sleep(10)
 
         # End
         self.net.stop()

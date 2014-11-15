@@ -28,7 +28,7 @@ class FatTree(Topo):
 
         #  Add switches and hosts under them
         for k in range(num_bottom_switches):
-            curr_bottom_switch = self.addSwitch("s" + str(switch_name_index))
+            curr_bottom_switch = self.addSwitch("s" + str(switch_name_index), protocols="OpenFlow13")
             bottom_switches.append(curr_bottom_switch)
 
             for l in range(num_hosts_per_switch):
@@ -38,13 +38,13 @@ class FatTree(Topo):
             switch_name_index += 1
 
         for j in range(num_middle_switches):
-            curr_middle_switch = self.addSwitch("s" + str(switch_name_index))
+            curr_middle_switch = self.addSwitch("s" + str(switch_name_index), protocols="OpenFlow13")
             switch_name_index += 1
             middle_switches.append(curr_middle_switch)
 
 
         for i in range(2):
-            curr_top_switch = self.addSwitch("s" + str(switch_name_index))
+            curr_top_switch = self.addSwitch("s" + str(switch_name_index), protocols="OpenFlow13")
             top_switches.append(curr_top_switch)
             switch_name_index += 1
 
