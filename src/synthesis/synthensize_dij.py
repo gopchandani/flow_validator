@@ -79,7 +79,6 @@ class SynthesizeDij():
             #  Add the intent to the switch's node in the graph
             forwarding_intents = self.get_forwarding_intents_dict(p[i])
             forwarding_intent = Intent(intent_type, flow_match, in_port, out_port)
-            print p[i], forwarding_intent
 
             if dst in forwarding_intents:
                 forwarding_intents[dst][forwarding_intent] += 1

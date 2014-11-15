@@ -12,6 +12,8 @@ from two_ring_topo import TwoRingTopo
 from ring_topo import RingTopo
 from line_topo import LineTopo
 
+from synthesis.synthensize_dij import SynthesizeDij
+
 class FlowValidatorTest():
 
     def __init__(self, topo, num_switches, num_hosts_per_switch, verbose):
@@ -19,6 +21,7 @@ class FlowValidatorTest():
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         self.verbose = verbose
+        self.experiment_switches = ["s1", "s3"]
 
         if topo == "ring":
             self.topo = RingTopo(self.num_switches, self.num_hosts_per_switch)
@@ -33,6 +36,7 @@ class FlowValidatorTest():
 
         self._start_test()
 
+
     def _start_test(self):
 
         #self.net = Mininet(topo=self.topo)
@@ -43,10 +47,51 @@ class FlowValidatorTest():
         # Start
         self.net.start()
 
+        # Activate Hosts
+        self._ping_experiment_hosts()
+
+        time.sleep(30)
+
+        print "Synthesizing..."
+        # Synthesize rules in the switches
+        sm = SynthesizeDij()
+        sm.synthesize_all_node_pairs()
+        print "Synthesis Completed."
+        time.sleep(15)
+
+        # Try pinging
+        self._ping_experiment_hosts()
+
         time.sleep(10)
 
         # End
         self.net.stop()
+
+
+    # Generating for iterating through host-pairs
+    def _get_experiment_host_pair(self):
+
+
+        for src_switch in self.experiment_switches:
+            for dst_switch in self.experiment_switches:
+                if src_switch == dst_switch:
+                    continue
+
+                # Assume that at least one host per switch exists
+                src_host = "h" + src_switch[1:] + "1"
+                dst_host = "h" + dst_switch[1:] + "1"
+
+                yield (self.net.get(src_host), self.net.get(dst_host))
+
+    def _ping_experiment_hosts(self):
+
+        experiment_host_pairs = self._get_experiment_host_pair()
+        for (src_host, dst_host) in experiment_host_pairs:
+            print "Trying:", src_host, "->", dst_host
+            hosts = [src_host, dst_host]
+            ping_result = self.net.ping(hosts, 1)
+            print "Result:", ping_result
+
 
 def main():
 
