@@ -150,7 +150,6 @@ class SynthesizeDij():
                     #  If this intent is at a reverse flow carrier switch
 
                     #  There are two ways to identify reverse intents
-                    #  Both cases need a separate rule at a higher priority handling it
 
                     #  1. at the source switch, with intent's source port equal to destination port of the primary intent
                     if intent.in_port == primary_intent.out_port:

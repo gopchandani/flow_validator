@@ -207,6 +207,17 @@ class Model():
     def get_switch_ids(self):
         return self.switch_ids
 
+    def get_host_id_node_with_ip(self, req_ip):
+        host_node_id = None
+
+        for host_id in self.get_host_ids():
+
+            if self.graph.node[host_id]["h"].ip_addr == req_ip:
+                host_node_id = host_id
+                break
+
+        return host_node_id
+
 
 
 def main():
