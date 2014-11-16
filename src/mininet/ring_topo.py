@@ -4,7 +4,7 @@ from mininet.topo import Topo
 
 class RingTopo(Topo):
     
-    def __init__(self, num_switches, num_hosts_per_switch):
+    def __init__(self, num_switches=4, num_hosts_per_switch=1):
         
         Topo.__init__(self)
         

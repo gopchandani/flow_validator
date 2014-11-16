@@ -112,6 +112,7 @@ class FlowValidatorTest():
         # Start
         self.net.start()
 
+
         # Activate Hosts
         self._ping_experiment_hosts()
 
@@ -134,6 +135,9 @@ class FlowValidatorTest():
                 print "The ping results and the analysis output agrees"
             else:
                 print "The ping results and the analysis output disagrees."
+
+
+        time.sleep(300)
 
         # End
         self.net.stop()
@@ -189,7 +193,6 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
 
     args = parser.parse_args()
-
 
     fvt = FlowValidatorTest(topo=args.topo,
                             num_switches=args.num_switches,

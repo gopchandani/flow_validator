@@ -237,8 +237,10 @@ class SynthesisLib():
             # Push a table miss entry at Table 0
             self._push_table_miss_goto_next_table_flow(sw, 0)
 
-            for dst in self.model.graph.node[sw]["forwarding_intents"]:
-                dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
+            forwarding_intents = self.model.graph.node[sw]["sw"].forwarding_intents
+
+            for dst in forwarding_intents:
+                dst_intents = forwarding_intents[dst]
 
                 primary_intent = None
                 primary_intents = self._get_intents(dst_intents, "primary")

@@ -24,18 +24,6 @@ class SynthesizeDij():
         # affected as a result of flow synthesis
         self.s = set()
 
-    def get_forwarding_intents_dict(self, sw):
-
-        forwarding_intents = None
-
-        if "forwarding_intents" in self.model.graph.node[sw]:
-            forwarding_intents = self.model.graph.node[sw]["forwarding_intents"]
-        else:
-            forwarding_intents = dict()
-            self.model.graph.node[sw]["forwarding_intents"] = forwarding_intents
-
-        return forwarding_intents
-
     def _compute_path_forwarding_intents(self, p, intent_type, flow_match, switch_in_port=None):
 
         src_node = p[0]
@@ -76,8 +64,7 @@ class SynthesizeDij():
             #  Add the switch to set S
             self.s.add(p[i])
 
-            #  Add the intent to the switch's node in the graph
-            forwarding_intents = self.get_forwarding_intents_dict(p[i])
+            forwarding_intents = self.model.graph.node[p[i]]["sw"].forwarding_intents
             forwarding_intent = Intent(intent_type, flow_match, in_port, out_port)
 
             if dst in forwarding_intents:
@@ -120,8 +107,11 @@ class SynthesizeDij():
     def _identify_reverse_and_balking_intents(self):
 
         for sw in self.s:
-            for dst in self.model.graph.node[sw]["forwarding_intents"]:
-                dst_intents = self.model.graph.node[sw]["forwarding_intents"][dst]
+
+            forwarding_intents = self.model.graph.node[sw]["sw"].forwarding_intents
+
+            for dst in forwarding_intents:
+                dst_intents = forwarding_intents[dst]
 
                 # Assume that there is always one primary intent
                 primary_intent = None

@@ -1,6 +1,9 @@
 __author__ = 'Rakesh Kumar'
 
+from collections import defaultdict
+
 from action import ActionSet
+
 
 class Switch():
 
@@ -11,6 +14,8 @@ class Switch():
         self.flow_tables = None
         self.group_table = None
         self.ports = None
+
+        self.forwarding_intents = defaultdict(dict)
 
     def passes_flow(self, flow_match, out_port):
 
