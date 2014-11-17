@@ -10,6 +10,8 @@ class Match():
 
         # Ethernet (Layer - 2 Fields)
         self.ethernet_type = "all"
+        self.ethernet_source = "all"
+        self.ethernet_destination = "all"
 
         # IP Level (Layer - 3 Fields)
         self.src_ip_addr = "all"
@@ -40,6 +42,13 @@ class Match():
                 if "ethernet-type" in match_json[match_field]:
                     self.ethernet_type = match_json[match_field]["ethernet-type"]["type"]
 
+                if "ethernet-source" in match_json[match_field]:
+                    self.ethernet_source = match_json[match_field]["ethernet-source"]["address"]
+
+                if "ethernet-destination" in match_json[match_field]:
+                    self.ethernet_destination = match_json[match_field]["ethernet-destination"]["address"]
+
+
             elif match_field == 'ipv4-destination':
                 self.dst_ip_addr = IPNetwork(match_json[match_field])
 
@@ -68,9 +77,18 @@ class Match():
         if self.in_port and self.in_port != "all":
             match["in-port"] = self.in_port
 
+        ethernet_match = {}
+
         if self.ethernet_type and self.ethernet_type != "all":
-            ethernet_match = {"ethernet-type": {"type": self.ethernet_type}}
-            match["ethernet-match"] = ethernet_match
+            ethernet_match["ethernet-type"] = {"type": self.ethernet_type}
+
+        if self.ethernet_source and self.ethernet_source != "all":
+            ethernet_match["ethernet-source"] = {"address": self.ethernet_source}
+
+        if self.ethernet_destination and self.ethernet_destination != "all":
+            ethernet_match["ethernet-destination"] = {"address": self.ethernet_destination}
+
+        match["ethernet-match"] = ethernet_match
 
         if self.src_ip_addr and self.src_ip_addr != "all":
             match["ipv4-source"] = self.src_ip_addr
@@ -128,6 +146,25 @@ class Match():
             match_intersection.ethernet_type = in_match.ethernet_type
         else:
             match_intersection.ethernet_type = None
+
+        if self.ethernet_source == "all":
+            match_intersection.ethernet_source = in_match.ethernet_source
+        elif in_match.ethernet_source == "all":
+            match_intersection.ethernet_source = self.ethernet_source
+        elif self.ethernet_source == in_match.ethernet_source:
+            match_intersection.ethernet_source = in_match.ethernet_source
+        else:
+            match_intersection.ethernet_source = None
+
+        if self.ethernet_destination == "all":
+            match_intersection.ethernet_destination = in_match.ethernet_destination
+        elif in_match.ethernet_destination == "all":
+            match_intersection.ethernet_destination = self.ethernet_destination
+        elif self.ethernet_destination == in_match.ethernet_destination:
+            match_intersection.ethernet_destination = in_match.ethernet_destination
+        else:
+            match_intersection.ethernet_destination = None
+
 
         # TODO: Handle masks
 
@@ -196,6 +233,8 @@ class Match():
 
         if match_intersection.in_port and \
             match_intersection.ethernet_type and \
+            match_intersection.ethernet_source and \
+            match_intersection.ethernet_destination and \
             match_intersection.src_ip_addr and \
             match_intersection.dst_ip_addr and \
             match_intersection.ip_protocol and \

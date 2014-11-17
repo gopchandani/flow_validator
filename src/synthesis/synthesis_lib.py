@@ -38,7 +38,7 @@ class SynthesisLib():
                                        body=json.dumps(pushed_content))
 
         # resp = {"status": "200"}
-        #pprint.pprint(pushed_content)
+        pprint.pprint(pushed_content)
 
         if resp["status"] == "200":
             print "Pushed Successfully:", pushed_content.keys()[0]
@@ -257,8 +257,9 @@ class SynthesisLib():
             # Table 0 contains the reverse rules (they should be examined first)
             # Table 1 contains the actual forwarding rules
 
-            # Push a table miss entry at Table 0
+            # Push a table miss entries at Table 0, 1
             self._push_table_miss_goto_next_table_flow(sw, 0)
+            self._push_table_miss_goto_next_table_flow(sw, 1)
 
             forwarding_intents = self.model.graph.node[sw]["sw"].forwarding_intents
 
