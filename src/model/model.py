@@ -125,7 +125,6 @@ class Model():
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
 
-
     def get_edge_port_dict(self, node1_id, node2_id):
         return self.graph[node1_id][node2_id]['edge_ports_dict']
 
@@ -222,6 +221,28 @@ class Model():
                 break
 
         return host_node_id
+
+    def get_node_object(self, node_id):
+        node_obj = None
+
+        if self.graph.has_node(node_id):
+
+            graph_node = self.graph.node[node_id]
+            if graph_node["node_type"] == "switch":
+                node_obj = graph_node["sw"]
+
+            elif graph_node["node_type"] == "host":
+                node_obj = graph_node["h"]
+
+        return node_obj
+
+    def get_node_type(self, node_id):
+        node_type = None
+
+        if self.graph.has_node(node_id):
+            node_type = self.graph.node[node_id]["node_type"]
+
+        return node_type
 
 def main():
     m = Model()

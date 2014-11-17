@@ -24,72 +24,25 @@ class SynthesizeDij():
         # affected as a result of flow synthesis
         self.s = set()
 
-    def _compute_path_ip_forwarding_intents(self, dst_ip_addr, p, intent_type, flow_match, switch_in_port=None):
+    def _compute_path_ip_forwarding_intents(self, dst_ip_addr, p, intent_type, flow_match, switch_in_port):
 
-        edge_ports_dict = None
-        out_port = None
-        in_port = None
-
-        # Sanity check -- Check that last node of the p is a host, no matter what
-        if self.model.graph.node[p[len(p) - 1]]["node_type"] != "host":
-            raise Exception("The last node in the p has to be a host.")
-
-        # Check whether the first node of path is a host or a switch.
-        if self.model.graph.node[p[0]]["node_type"] == "host":
-
-            #Traffic arrives from the host to first switch at switch's port
-            edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
-            in_port = edge_ports_dict[p[1]]
-
-            # Traffic leaves from the first switch's port
-            edge_ports_dict = self.model.get_edge_port_dict(p[1], p[2])
-            out_port = edge_ports_dict[p[1]]
-
-            p = p[1:]
-
-        elif self.model.graph.node[p[0]]["node_type"] == "switch":
-            if not switch_in_port:
-                raise Exception("switching_in_port needed.")
-
-            in_port = switch_in_port
-            edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
-            out_port = edge_ports_dict[p[0]]
+        edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
+        switch_out_port = edge_ports_dict[p[0]]
 
         # This loop always starts at a switch
         for i in range(len(p) - 1):
 
-            #  Add the switch to set S
-            self.s.add(p[i])
+            forwarding_intent = Intent(intent_type, flow_match, switch_in_port, switch_out_port)
+            self._add_forwarding_intent(p[i], dst_ip_addr, forwarding_intent)
 
-            forwarding_intents = self.model.graph.node[p[i]]["sw"].forwarding_intents
-            forwarding_intent = Intent(intent_type, flow_match, in_port, out_port)
 
-            if dst_ip_addr in forwarding_intents:
-                forwarding_intents[dst_ip_addr][forwarding_intent] += 1
-            else:
-                forwarding_intents[dst_ip_addr] = defaultdict(int)
-                forwarding_intents[dst_ip_addr][forwarding_intent] = 1
-
-            
-            if self.model.graph.node[p[i+1]]["node_type"] != "host":
-
-                # Traffic arrives from the host to first switch at switch's port
+            # Prep for next switch
+            if i < len(p) - 2:
                 edge_ports_dict = self.model.get_edge_port_dict(p[i], p[i+1])
-                in_port = edge_ports_dict[p[i+1]]
+                switch_in_port = edge_ports_dict[p[i+1]]
 
-                # Traffic leaves from the first switch's port
                 edge_ports_dict = self.model.get_edge_port_dict(p[i+1], p[i+2])
-                out_port = edge_ports_dict[p[i+1]]
-
-    def dump_forwarding_intents(self):
-        for sw in self.s:
-
-            print "---", sw, "---"
-
-            for port in self.model.graph.node[sw]["sw"].ports:
-                print self.model.graph.node[sw]["sw"].ports[port]
-
-            pprint.pprint(self.model.graph.node[sw]["forwarding_intents"])
+                switch_out_port = edge_ports_dict[p[i+1]]
 
     def _get_intents(self, dst_intents, intent_type):
 
@@ -149,23 +102,47 @@ class SynthesizeDij():
                         intent.intent_type = "reverse"
                         continue
 
+    def _add_forwarding_intent(self, switch_id, key, forwarding_intent):
+
+        self.s.add(switch_id)
+        forwarding_intents = self.model.graph.node[switch_id]["sw"].forwarding_intents
+
+        if key in forwarding_intents:
+            forwarding_intents[key][forwarding_intent] += 1
+        else:
+            forwarding_intents[key] = defaultdict(int)
+            forwarding_intents[key][forwarding_intent] = 1
+
+
+    def _compute_destination_host_mac_forwarding_intents(self, dst_host, flow_match):
+
+        edge_ports_dict = self.model.get_edge_port_dict(dst_host.switch_id, dst_host.host_id)
+        switch_out_port = edge_ports_dict[dst_host.switch_id]
+
+        forwarding_intent = Intent("mac", flow_match, "all", switch_out_port)
+
+        self._add_forwarding_intent(dst_host.switch_id, dst_host.mac_addr, forwarding_intent)
+
+
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
+        self._compute_destination_host_mac_forwarding_intents(dst_host, flow_match)
+
+        edge_ports_dict = self.model.get_edge_port_dict(src_host.host_id, src_host.switch_id)
+        switch_in_port = edge_ports_dict[src_host.switch_id]
+
         #  First find the shortest path between src and dst.
-        p = nx.shortest_path(self.model.graph, source=src_host, target=dst_host)
+        p = nx.shortest_path(self.model.graph, source=src_host.switch_id, target=dst_host.switch_id)
         print "Primary Path:", p
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_ip_forwarding_intents(dst_host, p, "primary", flow_match)
+        self._compute_path_ip_forwarding_intents(dst_host.host_id, p, "primary", flow_match, switch_in_port)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
-        edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
-
-        in_port = edge_ports_dict[p[1]]
 
         #  Go through the path, one edge at a time
-        for i in range(1, len(p) - 2):
+        for i in range(len(p) - 1):
 
             # Keep a copy of this handy
             edge_ports_dict = self.model.get_edge_port_dict(p[i], p[i+1])
@@ -175,14 +152,15 @@ class SynthesizeDij():
 
             # Find the shortest path that results when the link breaks
             # and compute forwarding intents for that
-            bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
+            bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host.switch_id)
             print "Backup Path", bp
 
-            self._compute_path_ip_forwarding_intents(dst_host, bp, "failover", flow_match, in_port)
+            self._compute_path_ip_forwarding_intents(dst_host.host_id, bp, "failover", flow_match, switch_in_port)
 
             # Add the edge back and the data that goes along with it
             self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
-            in_port = edge_ports_dict[p[i+1]]
+            switch_in_port = edge_ports_dict[p[i+1]]
+
 
     def push_switch_changes(self):
         self.synthesis_lib.trigger(self.s)
@@ -206,7 +184,7 @@ class SynthesizeDij():
                 flow_match.ethernet_type = 0x0800
                 flow_match.dst_ip_addr = self.model.graph.node[dst]["h"].ip_addr
 
-                self.synthesize_flow(src, dst, flow_match)
+                self.synthesize_flow(self.model.get_node_object(src), self.model.get_node_object(dst), flow_match)
 
                 print "--------------------------------------------------------------------------------------------------------"
 

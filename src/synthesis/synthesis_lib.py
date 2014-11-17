@@ -224,6 +224,9 @@ class SynthesisLib():
 
         return return_intent
 
+    def _push_mac_intent_flow(self, mac_intent):
+        pass
+
     def trigger(self, affected_switches):
 
         for sw in affected_switches:
@@ -241,6 +244,15 @@ class SynthesisLib():
 
             for dst in forwarding_intents:
                 dst_intents = forwarding_intents[dst]
+
+                # Take care for mac intents for this destination if there are any
+                mac_intents = self._get_intents(dst_intents, "mac")
+                if mac_intents:
+
+                    if len(mac_intents) > 1:
+                        raise Exception("Odd that there are more than one mac intents for a single dst")
+                    else:
+                        self._push_mac_intent_flow(mac_intents[0])
 
                 primary_intent = None
                 primary_intents = self._get_intents(dst_intents, "primary")
