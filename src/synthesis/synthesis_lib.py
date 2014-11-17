@@ -224,8 +224,28 @@ class SynthesisLib():
 
         return return_intent
 
-    def _push_mac_intent_flow(self, mac_intent):
-        pass
+    def _push_mac_intent_flow(self, sw, mac_intent, table_id, priority):
+
+        #sw, flow_match
+
+        flow = self._create_base_flow(table_id, priority)
+
+        #Compile match
+        flow["flow-node-inventory:flow"]["match"] = mac_intent.flow_match.generate_match_json(
+            flow["flow-node-inventory:flow"]["match"])
+
+        #Compile instruction
+
+        #  Assert that group is executed upon match
+        output_action = {"output-node-connector": mac_intent.out_port}
+        action = {"output-action": output_action, "order": 0}
+        write_actions_instruction = {"write-actions": {"action": action}, "order": 0}
+
+        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+
+        self._push_flow(sw, flow)
+
+        return flow
 
     def trigger(self, affected_switches):
 
@@ -252,7 +272,7 @@ class SynthesisLib():
                     if len(mac_intents) > 1:
                         raise Exception("Odd that there are more than one mac intents for a single dst")
                     else:
-                        self._push_mac_intent_flow(mac_intents[0])
+                        self._push_mac_intent_flow(sw, mac_intents[0], 1, 1)
 
                 primary_intent = None
                 primary_intents = self._get_intents(dst_intents, "primary")
@@ -281,7 +301,7 @@ class SynthesisLib():
 
                     primary_intent.flow_match.in_port = primary_intent.in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
+                        sw, 2, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
 
                 if primary_intent and failover_intents:
 
@@ -303,7 +323,7 @@ class SynthesisLib():
 
                     primary_intent.flow_match.in_port = in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
+                        sw, 2, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
 
                     if len(failover_intents) > 1:
                         raise Exception ("Hitting an unexpected case.")
@@ -317,7 +337,7 @@ class SynthesisLib():
                         group = self._push_select_all_group(sw, [failover_intent])
                         failover_intent.flow_match.in_port = failover_intent.in_port
                         flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                            sw, 1, group["flow-node-inventory:group"]["group-id"], 1, failover_intent.flow_match)
+                            sw, 2, group["flow-node-inventory:group"]["group-id"], 1, failover_intent.flow_match)
 
                 if primary_intent and balking_intent:
 
@@ -334,7 +354,7 @@ class SynthesisLib():
 
                     primary_intent.flow_match.in_port = in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 1, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
+                        sw, 2, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
 
                 if reverse_intent:
 
