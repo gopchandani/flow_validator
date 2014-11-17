@@ -149,8 +149,13 @@ class Model():
             if node["node-id"].startswith("host"):
                 host_id = node["node-id"]
                 host_ip = node["host-tracker-service:addresses"][0]["ip"]
+                host_mac = node["host-tracker-service:addresses"][0]["mac"]
+
+                raw_host_switch_id = node["host-tracker-service:attachment-points"][0]["tp-id"].split(":")
+                host_switch_id = raw_host_switch_id[0] + ":" + raw_host_switch_id[1]
+
                 self.host_ids.append(host_id)
-                h = Host(host_id, self, host_ip)
+                h = Host(host_id, self, host_ip, host_mac, host_switch_id)
                 self.graph.add_node(host_id, node_type="host", h=h)
 
         for link in topology_links:
@@ -160,7 +165,7 @@ class Model():
 
             self.add_edge(link["source"]["source-node"], node1_port, link["destination"]["dest-node"], node2_port)
 
-            if  self.graph.node[link["source"]["source-node"]]["node_type"] == "switch":
+            if self.graph.node[link["source"]["source-node"]]["node_type"] == "switch":
                 node1_ports = self.graph.node[link["source"]["source-node"]]["sw"].ports
 
                 if not node1_ports[node1_port].faces:
@@ -173,7 +178,7 @@ class Model():
                 node2_ports = self.graph.node[link["destination"]["dest-node"]]["sw"].ports
 
                 if not node2_ports[node2_port].faces:
-                    node2_ports[node2_port].faces =  self.graph.node[link["source"]["source-node"]]["node_type"]
+                    node2_ports[node2_port].faces = self.graph.node[link["source"]["source-node"]]["node_type"]
 
                 if not node2_ports[node2_port].facing_node_id:
                     node2_ports[node2_port].facing_node_id = link["source"]["source-node"]
@@ -217,8 +222,6 @@ class Model():
                 break
 
         return host_node_id
-
-
 
 def main():
     m = Model()

@@ -24,10 +24,7 @@ class SynthesizeDij():
         # affected as a result of flow synthesis
         self.s = set()
 
-    def _compute_path_forwarding_intents(self, p, intent_type, flow_match, switch_in_port=None):
-
-        src_node = p[0]
-        dst = p[len(p) -1]
+    def _compute_path_ip_forwarding_intents(self, dst_ip_addr, p, intent_type, flow_match, switch_in_port=None):
 
         edge_ports_dict = None
         out_port = None
@@ -58,7 +55,7 @@ class SynthesizeDij():
             edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
             out_port = edge_ports_dict[p[0]]
 
-        # This look always starts at a switch
+        # This loop always starts at a switch
         for i in range(len(p) - 1):
 
             #  Add the switch to set S
@@ -67,13 +64,13 @@ class SynthesizeDij():
             forwarding_intents = self.model.graph.node[p[i]]["sw"].forwarding_intents
             forwarding_intent = Intent(intent_type, flow_match, in_port, out_port)
 
-            if dst in forwarding_intents:
-                forwarding_intents[dst][forwarding_intent] += 1
+            if dst_ip_addr in forwarding_intents:
+                forwarding_intents[dst_ip_addr][forwarding_intent] += 1
             else:
-                forwarding_intents[dst] = defaultdict(int)
-                forwarding_intents[dst][forwarding_intent] = 1
+                forwarding_intents[dst_ip_addr] = defaultdict(int)
+                forwarding_intents[dst_ip_addr][forwarding_intent] = 1
 
-            # Prepare for next switch along the path if there is a next switch along the path
+            
             if self.model.graph.node[p[i+1]]["node_type"] != "host":
 
                 # Traffic arrives from the host to first switch at switch's port
@@ -159,7 +156,7 @@ class SynthesizeDij():
         print "Primary Path:", p
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_forwarding_intents(p, "primary", flow_match)
+        self._compute_path_ip_forwarding_intents(dst_host, p, "primary", flow_match)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
@@ -181,7 +178,7 @@ class SynthesizeDij():
             bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host)
             print "Backup Path", bp
 
-            self._compute_path_forwarding_intents(bp, "failover", flow_match, in_port)
+            self._compute_path_ip_forwarding_intents(dst_host, bp, "failover", flow_match, in_port)
 
             # Add the edge back and the data that goes along with it
             self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
