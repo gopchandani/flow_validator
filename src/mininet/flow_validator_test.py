@@ -22,7 +22,7 @@ class FlowValidatorTest():
 
     def __init__(self, topo, num_switches, num_hosts_per_switch, verbose):
 
-        self.ping_interval = 1
+        self.ping_interval = 3
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         self.verbose = verbose
@@ -137,7 +137,7 @@ class FlowValidatorTest():
                 print "The ping results and the analysis output disagrees."
 
 
-        time.sleep(300)
+        time.sleep(60)
 
         # End
         self.net.stop()
