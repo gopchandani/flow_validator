@@ -126,7 +126,8 @@ class Match():
 
         if self.vlan_id != "all":
             vlan_match = {}
-            vlan_match["vlan-id"] = {"vlan-id": self.vlan_id, "vlan-id-present": True}
+            #vlan_match["vlan-id"] = {"vlan-id": self.vlan_id, "vlan-id-present": True}
+            vlan_match["vlan-id"] = {"vlan-id-present": True}
             match["vlan-match"] = vlan_match
 
         return match
