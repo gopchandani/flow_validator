@@ -73,6 +73,10 @@ class Match():
             elif match_field == "udp-source-port":
                 self.udp_source_port = match_json[match_field]
 
+            elif match_field == "vlan-match":
+                if "vlan-id" in match_json[match_field]:
+                    self.vlan_id = match_json[match_field]["vlan-id"]["vlan-id"]
+
 
     def generate_match_json(self, match):
 
@@ -120,6 +124,10 @@ class Match():
             if self.udp_source_port and self.udp_source_port != "all":
                 match["udp-source-port"] = self.udp_source_port
 
+        if self.vlan_id != "all":
+            vlan_match = {}
+            vlan_match["vlan-id"] = {"vlan-id": self.vlan_id, "vlan-id-present": True}
+            match["vlan-match"] = vlan_match
 
         return match
 
@@ -167,7 +175,6 @@ class Match():
             match_intersection.ethernet_destination = in_match.ethernet_destination
         else:
             match_intersection.ethernet_destination = None
-
 
         # TODO: Handle masks
 
@@ -233,6 +240,15 @@ class Match():
             match_intersection.udp_source_port = in_match.udp_source_port
         else:
             match_intersection.udp_source_port = None
+
+        if self.vlan_id == "all":
+            match_intersection.vlan_id = in_match.vlan_id
+        elif in_match.vlan_id == "all":
+            match_intersection.vlan_id = self.vlan_id
+        elif self.vlan_id == in_match.vlan_id:
+            match_intersection.vlan_id = in_match.vlan_id
+        else:
+            match_intersection.vlan_id = None
 
         if match_intersection.in_port and \
             match_intersection.ethernet_type and \

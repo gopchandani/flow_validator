@@ -280,12 +280,14 @@ class SynthesisLib():
                 flow["flow-node-inventory:flow"]["match"])
 
             #Compile instruction
-            push_vlan_action = {'ethernet-type': 0x8100, 'vlan-id': push_vlan_intent.flow_match.vlan_id}
-            set_vlan_id_action = {}
+            action1 = {'order': 0, 'push-vlan-action': {"ethernet-type": 0x8100,
+                                                        "vlan-id": push_vlan_intent.required_vlan_id}}
 
-            action1 = {'order': 0, 'push-vlan-action': push_vlan_action}
-            action2 = {'order': 1, 'set-field':
-                {'vlan-match': {"vlan-id": {"vlan-id": push_vlan_intent.flow_match.vlan_id, "vlan-id-present": True}}}}
+            set_vlan_id_action = {'vlan-match': {"vlan-id": {"vlan-id": push_vlan_intent.required_vlan_id,
+                                                             "vlan-id-present": True}}}
+
+            action2 = {'order': 1, 'set-field': set_vlan_id_action}
+
             action_list = [action1, action2]
             write_actions_instruction = {"write-actions": {"action": action_list}, "order": 0}
             flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
@@ -314,7 +316,7 @@ class SynthesisLib():
             go_to_table_instruction = {"go-to-table": {"table_id": self.vlan_rules_table_id + 1}, "order": 1}
             flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
 
-            #self._push_flow(sw, flow)
+            self._push_flow(sw, flow)
 
     def trigger(self, affected_switches):
 

@@ -10,6 +10,8 @@ class Intent():
         self.in_port = in_port
         self.out_port = out_port
 
+        self.required_vlan_id = None
+
         self.hash_value = hash(str(self.in_port) + str(self.out_port) + str(self.flow_match))
 
     def __hash__(self):

@@ -126,10 +126,7 @@ class SynthesizeDij():
 
         self._add_forwarding_intent(dst_host.switch_id, dst_host.mac_addr, forwarding_intent)
 
-    def _compute_push_pop_vlan_tag_intents(self, flow_match=None):
-
-        if not flow_match:
-            flow_match = Match()
+    def _compute_push_pop_vlan_tag_intents(self):
 
         for sw in self.s:
             sw_obj = self.model.get_node_object(sw)
@@ -141,15 +138,15 @@ class SynthesizeDij():
                     h_obj = self.model.get_node_object(sw_obj.ports[port].facing_node_id)
 
                     # Every packet that comes from a host needs to be attached with a vlan tag
-                    push_vlan_match = deepcopy(flow_match)
-                    push_vlan_match.vlan_id = sw_obj.synthesis_tag
+                    push_vlan_match = Match()
                     push_vlan_match.in_port =  sw_obj.ports[port].port_number
                     push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, sw_obj.ports[port].port_number, "all")
+                    push_vlan_tag_intent.required_vlan_id = sw_obj.synthesis_tag
 
                     self._add_forwarding_intent(sw, h_obj.mac_addr, push_vlan_tag_intent)
 
-                    # Every packet that is destined to a host needs to be stripped off of the vlan tag
-                    pop_vlan_match = deepcopy(flow_match)
+                    # Every packet that has a vlan-tag equalling this switch needs to be stripped off of the vlan tag
+                    pop_vlan_match = Match()
                     pop_vlan_match.vlan_id = sw_obj.synthesis_tag
                     pop_vlan_match.in_port = "all"
                     pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", sw_obj.ports[port].port_number)
@@ -197,8 +194,7 @@ class SynthesizeDij():
 
     def push_switch_changes(self):
 
-        #  Before it all goes to the switches, ensure that the packets get vlan tagged/un-tagged
-        # TODO: Pass a legit flow match here
+        # Ensure that the packets get vlan tagged/un-tagged
         self._compute_push_pop_vlan_tag_intents()
 
         self.synthesis_lib.trigger(self.s)
