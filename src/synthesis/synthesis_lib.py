@@ -29,6 +29,19 @@ class SynthesisLib():
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
+        # Table 0 contains the reverse rules (they should be examined first)
+        self.reverse_rules_table_id = 0
+
+        # Table 1 contains any rules that have to do with vlan tag push/pop
+        self.vlan_rules_table_id = 1
+
+        # Table 2 contains any rules associated with forwarding host traffic
+        self.mac_forwarding_table_id = 2
+
+        # Table 3 contains the actual forwarding rules
+        self.ip_forwarding_table_id = 3
+
+
     def _push_change(self, url, pushed_content):
 
         time.sleep(0.1)
@@ -255,15 +268,17 @@ class SynthesisLib():
             if len(mac_intents) > 1:
                 raise Exception("Odd that there are more than one mac intents for a single dst")
             else:
-                self._push_mac_intent_flow(sw, mac_intents[0], 1, 1)
+                self._push_mac_intent_flow(sw, mac_intents[0], self.mac_forwarding_table_id, 1)
 
     def push_vlan_push_pop_intents(self, sw, dst_intents):
 
         push_vlan_intents = self._get_intents(dst_intents, "push_vlan")
-        print push_vlan_intents
+        if push_vlan_intents:
+            print push_vlan_intents
 
         pop_vlan_intents = self._get_intents(dst_intents, "pop_vlan")
-        print pop_vlan_intents
+        if pop_vlan_intents:
+            print pop_vlan_intents
 
 
     def trigger(self, affected_switches):
@@ -271,14 +286,7 @@ class SynthesisLib():
         for sw in affected_switches:
 
             print "-- Pushing at Switch:", sw
-
-            # Synthesis here uses Table 0 and Table 1
-            # Table 0 contains the reverse rules (they should be examined first)
-            # Table 1 contains any rules that have to do with vlan tag push/pop
-            # Table 2 contains any rules associated with forwarding host traffic
-            # Table 3 contains the actual forwarding rules
-
-            # Push a table miss entries at Table 0, 1, 2
+            # Push table miss entries at Table 0, 1, 2
             self._push_table_miss_goto_next_table_flow(sw, 0)
             self._push_table_miss_goto_next_table_flow(sw, 1)
             self._push_table_miss_goto_next_table_flow(sw, 2)
@@ -321,7 +329,9 @@ class SynthesisLib():
 
                     primary_intent.flow_match.in_port = primary_intent.in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 2, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
+                        sw, self.ip_forwarding_table_id,
+                        group["flow-node-inventory:group"]["group-id"],
+                        1, primary_intent.flow_match)
 
                 if primary_intent and failover_intents:
 
@@ -343,7 +353,9 @@ class SynthesisLib():
 
                     primary_intent.flow_match.in_port = in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 2, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
+                        sw, self.ip_forwarding_table_id,
+                        group["flow-node-inventory:group"]["group-id"],
+                        1, primary_intent.flow_match)
 
                     if len(failover_intents) > 1:
                         raise Exception ("Hitting an unexpected case.")
@@ -357,7 +369,9 @@ class SynthesisLib():
                         group = self._push_select_all_group(sw, [failover_intent])
                         failover_intent.flow_match.in_port = failover_intent.in_port
                         flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                            sw, 2, group["flow-node-inventory:group"]["group-id"], 1, failover_intent.flow_match)
+                            sw, self.ip_forwarding_table_id,
+                            group["flow-node-inventory:group"]["group-id"],
+                            1, failover_intent.flow_match)
 
                 if primary_intent and balking_intent:
 
@@ -374,11 +388,15 @@ class SynthesisLib():
 
                     primary_intent.flow_match.in_port = in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 2, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
+                        sw, self.ip_forwarding_table_id,
+                        group["flow-node-inventory:group"]["group-id"],
+                        1, primary_intent.flow_match)
 
                 if reverse_intent:
 
                     group = self._push_select_all_group(sw, [reverse_intent])
                     primary_intent.flow_match.in_port = reverse_intent.in_port
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
-                        sw, 0, group["flow-node-inventory:group"]["group-id"], 1, primary_intent.flow_match)
+                        sw, self.reverse_rules_table_id,
+                        group["flow-node-inventory:group"]["group-id"],
+                        1, primary_intent.flow_match)
