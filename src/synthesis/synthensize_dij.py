@@ -37,7 +37,6 @@ class SynthesizeDij():
             forwarding_intent = Intent(intent_type, flow_match, switch_in_port, switch_out_port)
             self._add_forwarding_intent(p[i], dst_ip_addr, forwarding_intent)
 
-
             # Prep for next switch
             if i < len(p) - 2:
                 edge_ports_dict = self.model.get_edge_port_dict(p[i], p[i+1])

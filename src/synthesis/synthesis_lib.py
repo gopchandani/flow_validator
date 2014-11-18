@@ -293,7 +293,6 @@ class SynthesisLib():
 
             self._push_flow(sw, flow)
 
-
         pop_vlan_intents = self._get_intents(dst_intents, "pop_vlan")
         for pop_vlan_intent in pop_vlan_intents:
             flow = self._create_base_flow(self.vlan_rules_table_id, 1)
@@ -308,7 +307,7 @@ class SynthesisLib():
             write_actions_instruction = {"write-actions": {"action": action}, "order": 0}
             flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
 
-            self._push_flow(sw, flow)
+            #self._push_flow(sw, flow)
 
     def trigger(self, affected_switches):
 
