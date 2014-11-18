@@ -240,7 +240,6 @@ class SynthesisLib():
     def _push_mac_intent_flow(self, sw, mac_intent, table_id, priority):
 
         #sw, flow_match
-
         flow = self._create_base_flow(table_id, priority)
 
         #Compile match
@@ -273,13 +272,43 @@ class SynthesisLib():
     def push_vlan_push_pop_intents(self, sw, dst_intents):
 
         push_vlan_intents = self._get_intents(dst_intents, "push_vlan")
-        if push_vlan_intents:
-            print push_vlan_intents
+        for push_vlan_intent in push_vlan_intents:
+            flow = self._create_base_flow(self.vlan_rules_table_id, 1)
+
+            #Compile match
+            flow["flow-node-inventory:flow"]["match"] = push_vlan_intent.flow_match.generate_match_json(
+                flow["flow-node-inventory:flow"]["match"])
+
+            #Compile instruction
+            push_vlan_action = {'ethernet-type': 0x8100, 'vlan-id': push_vlan_intent.flow_match.vlan_id}
+            set_vlan_id_action = {}
+
+            action1 = {'order': 0, 'push-vlan-action': push_vlan_action}
+            action2 = {'order': 1, 'set-field':
+                {'vlan-match': {"vlan-id": {"vlan-id": push_vlan_intent.flow_match.vlan_id, "vlan-id-present": True}}}}
+            action_list = [action1, action2]
+            write_actions_instruction = {"write-actions": {"action": action_list}, "order": 0}
+
+            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+
+            self._push_flow(sw, flow)
+
 
         pop_vlan_intents = self._get_intents(dst_intents, "pop_vlan")
-        if pop_vlan_intents:
-            print pop_vlan_intents
+        for pop_vlan_intent in pop_vlan_intents:
+            flow = self._create_base_flow(self.vlan_rules_table_id, 1)
 
+            #Compile match
+            flow["flow-node-inventory:flow"]["match"] = pop_vlan_intent.flow_match.generate_match_json(
+                flow["flow-node-inventory:flow"]["match"])
+
+            #Compile instruction
+            pop_vlan_action = {}
+            action = {'order': 0, 'pop-vlan-action': pop_vlan_action}
+            write_actions_instruction = {"write-actions": {"action": action}, "order": 0}
+            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+
+            self._push_flow(sw, flow)
 
     def trigger(self, affected_switches):
 
