@@ -115,7 +115,6 @@ class SynthesizeDij():
             forwarding_intents[key] = defaultdict(int)
             forwarding_intents[key][forwarding_intent] = 1
 
-
     def _compute_destination_host_mac_forwarding_intents(self, dst_host, flow_match):
 
         edge_ports_dict = self.model.get_edge_port_dict(dst_host.switch_id, dst_host.host_id)
@@ -127,6 +126,17 @@ class SynthesizeDij():
         forwarding_intent = Intent("mac", flow_match_with_dst_mac, "all", switch_out_port)
 
         self._add_forwarding_intent(dst_host.switch_id, dst_host.mac_addr, forwarding_intent)
+
+    def _compute_push_pop_vlan_tag_intents(self):
+        # Every packet that comes from a host needs to be attached with a vlan tag
+        # Every packet that is destined to a host needs to be attached with a vlan tag
+
+        for sw in self.s:
+            print sw, self.model.get_node_object(sw).synthesis_tag
+
+            #forwarding_intent = Intent("push_vlan", flow_match_with_dst_mac, "all", switch_out_port)
+            #forwarding_intent = Intent("pop_vlan", flow_match_with_dst_mac, "all", switch_out_port)
+
 
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
@@ -168,6 +178,10 @@ class SynthesizeDij():
 
 
     def push_switch_changes(self):
+
+        #  Before it all goes to the switches, ensure that the packets get vlan tagged/un-tagged
+        self._compute_push_pop_vlan_tag_intents()
+
         self.synthesis_lib.trigger(self.s)
 
     def synthesize_all_node_pairs(self):

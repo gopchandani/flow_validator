@@ -7,6 +7,8 @@ from action import ActionSet
 
 class Switch():
 
+    synthesis_tag = 1
+
     def __init__(self, sw_id, model):
 
         self.switch_id = sw_id
@@ -15,7 +17,11 @@ class Switch():
         self.group_table = None
         self.ports = None
 
+        #Synthesis stuff
         self.forwarding_intents = defaultdict(dict)
+
+        self.synthesis_tag = Switch.synthesis_tag
+        Switch.synthesis_tag += 1
 
     def passes_flow(self, flow_match, out_port):
 
