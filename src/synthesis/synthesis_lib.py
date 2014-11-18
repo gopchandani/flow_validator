@@ -288,8 +288,11 @@ class SynthesisLib():
                 {'vlan-match': {"vlan-id": {"vlan-id": push_vlan_intent.flow_match.vlan_id, "vlan-id-present": True}}}}
             action_list = [action1, action2]
             write_actions_instruction = {"write-actions": {"action": action_list}, "order": 0}
-
             flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+
+            # Also, punt such packets to the next table
+            go_to_table_instruction = {"go-to-table": {"table_id": self.vlan_rules_table_id + 1}, "order": 1}
+            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
 
             self._push_flow(sw, flow)
 
@@ -306,6 +309,10 @@ class SynthesisLib():
             action = {'order': 0, 'pop-vlan-action': pop_vlan_action}
             write_actions_instruction = {"write-actions": {"action": action}, "order": 0}
             flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+
+            # Also, punt such packets to the next table
+            go_to_table_instruction = {"go-to-table": {"table_id": self.vlan_rules_table_id + 1}, "order": 1}
+            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
 
             #self._push_flow(sw, flow)
 
