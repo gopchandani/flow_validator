@@ -247,6 +247,25 @@ class SynthesisLib():
 
         return flow
 
+    def push_host_mac_intents(self, sw, dst_intents):
+
+        mac_intents = self._get_intents(dst_intents, "mac")
+        if mac_intents:
+
+            if len(mac_intents) > 1:
+                raise Exception("Odd that there are more than one mac intents for a single dst")
+            else:
+                self._push_mac_intent_flow(sw, mac_intents[0], 1, 1)
+
+    def push_vlan_push_pop_intents(self, sw, dst_intents):
+
+        push_vlan_intents = self._get_intents(dst_intents, "push_vlan")
+        print push_vlan_intents
+
+        pop_vlan_intents = self._get_intents(dst_intents, "pop_vlan")
+        print pop_vlan_intents
+
+
     def trigger(self, affected_switches):
 
         for sw in affected_switches:
@@ -255,25 +274,25 @@ class SynthesisLib():
 
             # Synthesis here uses Table 0 and Table 1
             # Table 0 contains the reverse rules (they should be examined first)
-            # Table 1 contains the actual forwarding rules
+            # Table 1 contains any rules that have to do with vlan tag push/pop
+            # Table 2 contains any rules associated with forwarding host traffic
+            # Table 3 contains the actual forwarding rules
 
-            # Push a table miss entries at Table 0, 1
+            # Push a table miss entries at Table 0, 1, 2
             self._push_table_miss_goto_next_table_flow(sw, 0)
             self._push_table_miss_goto_next_table_flow(sw, 1)
+            self._push_table_miss_goto_next_table_flow(sw, 2)
 
             forwarding_intents = self.model.graph.node[sw]["sw"].forwarding_intents
 
             for dst in forwarding_intents:
                 dst_intents = forwarding_intents[dst]
 
-                # Take care for mac intents for this destination if there are any
-                mac_intents = self._get_intents(dst_intents, "mac")
-                if mac_intents:
+                # Take care of mac intents for this destination
+                self.push_host_mac_intents(sw, dst_intents)
 
-                    if len(mac_intents) > 1:
-                        raise Exception("Odd that there are more than one mac intents for a single dst")
-                    else:
-                        self._push_mac_intent_flow(sw, mac_intents[0], 1, 1)
+                # Take care of vlan tag push/pop intents for this destination
+                self.push_vlan_push_pop_intents(sw, dst_intents)
 
                 primary_intent = None
                 primary_intents = self._get_intents(dst_intents, "primary")

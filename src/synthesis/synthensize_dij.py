@@ -138,17 +138,23 @@ class SynthesizeDij():
 
             for port in sw_obj.ports:
                 if sw_obj.ports[port].faces == "host":
-                    
+
+                    h_obj = self.model.get_node_object(sw_obj.ports[port].facing_node_id)
+
+
                     # Every packet that comes from a host needs to be attached with a vlan tag
                     push_vlan_match = deepcopy(flow_match)
                     push_vlan_match.vlan_id = sw_obj.synthesis_tag
                     push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, sw_obj.ports[port].port_number, "all")
+
+                    self._add_forwarding_intent(sw, h_obj.mac_addr, push_vlan_tag_intent)
 
                     # Every packet that is destined to a host needs to be stripped off of the vlan tag
                     pop_vlan_match = deepcopy(flow_match)
                     pop_vlan_match.vlan_id = sw_obj.synthesis_tag
                     pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", sw_obj.ports[port].port_number)
 
+                    self._add_forwarding_intent(sw, h_obj.mac_addr, pop_vlan_tag_intent)
 
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
