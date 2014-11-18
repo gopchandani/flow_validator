@@ -5,7 +5,7 @@ from math import ceil
 
 class FatTree(Topo):
 
-    def __init__(self, num_switches, num_hosts_per_switch):
+    def __init__(self, num_switches=3, num_hosts_per_switch=1):
 
         Topo.__init__(self)
 
