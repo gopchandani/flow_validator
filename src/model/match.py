@@ -28,6 +28,8 @@ class Match():
         self.udp_destination_port = "all"
         self.udp_source_port = "all"
 
+        self.vlan_id = "all"
+
         if match_json:
             self.populate_with_match_json(match_json)
 

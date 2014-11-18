@@ -127,15 +127,27 @@ class SynthesizeDij():
 
         self._add_forwarding_intent(dst_host.switch_id, dst_host.mac_addr, forwarding_intent)
 
-    def _compute_push_pop_vlan_tag_intents(self):
-        # Every packet that comes from a host needs to be attached with a vlan tag
-        # Every packet that is destined to a host needs to be attached with a vlan tag
+    def _compute_push_pop_vlan_tag_intents(self, flow_match=None):
+
+        if not flow_match:
+            flow_match = Match()
 
         for sw in self.s:
-            print sw, self.model.get_node_object(sw).synthesis_tag
+            sw_obj = self.model.get_node_object(sw)
+            print sw, sw_obj.synthesis_tag
 
-            #forwarding_intent = Intent("push_vlan", flow_match_with_dst_mac, "all", switch_out_port)
-            #forwarding_intent = Intent("pop_vlan", flow_match_with_dst_mac, "all", switch_out_port)
+            for port in sw_obj.ports:
+                if sw_obj.ports[port].faces == "host":
+                    
+                    # Every packet that comes from a host needs to be attached with a vlan tag
+                    push_vlan_match = deepcopy(flow_match)
+                    push_vlan_match.vlan_id = sw_obj.synthesis_tag
+                    push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, sw_obj.ports[port].port_number, "all")
+
+                    # Every packet that is destined to a host needs to be stripped off of the vlan tag
+                    pop_vlan_match = deepcopy(flow_match)
+                    pop_vlan_match.vlan_id = sw_obj.synthesis_tag
+                    pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", sw_obj.ports[port].port_number)
 
 
 
@@ -180,6 +192,7 @@ class SynthesizeDij():
     def push_switch_changes(self):
 
         #  Before it all goes to the switches, ensure that the packets get vlan tagged/un-tagged
+        # TODO: Pass a legit flow match here
         self._compute_push_pop_vlan_tag_intents()
 
         self.synthesis_lib.trigger(self.s)
