@@ -8,10 +8,12 @@ from synthesis.synthesis_lib import SynthesisLib
 from synthesis.intent import Intent
 
 from collections import defaultdict
+from copy import deepcopy
 
 
 import pprint
 import networkx as nx
+
 
 class SynthesizeDij():
 
@@ -119,8 +121,10 @@ class SynthesizeDij():
         edge_ports_dict = self.model.get_edge_port_dict(dst_host.switch_id, dst_host.host_id)
         switch_out_port = edge_ports_dict[dst_host.switch_id]
 
-        flow_match.ethernet_destination = dst_host.mac_addr
-        forwarding_intent = Intent("mac", flow_match, "all", switch_out_port)
+        flow_match_with_dst_mac = deepcopy(flow_match)
+        flow_match_with_dst_mac.ethernet_destination = dst_host.mac_addr
+
+        forwarding_intent = Intent("mac", flow_match_with_dst_mac, "all", switch_out_port)
 
         self._add_forwarding_intent(dst_host.switch_id, dst_host.mac_addr, forwarding_intent)
 
