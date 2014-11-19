@@ -42,7 +42,7 @@ class Switch():
 
         return is_reachable
 
-    def transfer_function(self, in_flow_match):
+    def transfer_function(self, in_port_match):
 
         action_set = ActionSet(self)
         out_ports = []
@@ -50,7 +50,7 @@ class Switch():
         # Check if the switch has at least one table
         table_id_to_check = 0
         has_table_to_check = table_id_to_check in self.flow_tables
-        next_table_matches_on = in_flow_match
+        next_table_matches_on = in_port_match
 
         while has_table_to_check:
 
@@ -80,10 +80,10 @@ class Switch():
 
                 # TODO: Send match data and action set to the next table
                 # TODO: Right now all tables are matching on the same arriving match
-                next_table_matches_on = in_flow_match
+                next_table_matches_on = in_port_match
 
 
 
-        out_port_match = action_set.get_out_port_matches(in_flow_match)
+        out_port_match = action_set.get_out_port_matches(in_port_match)
 
         return out_port_match
