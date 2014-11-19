@@ -1,16 +1,15 @@
 __author__ = 'Rakesh Kumar'
 
-from model.model import Model
-from model.match import Match
-
-from synthesis.synthesis_lib import SynthesisLib
-from synthesis.intent import Intent
-
 from collections import defaultdict
 from copy import deepcopy
 
-import pprint
 import networkx as nx
+
+from model.model import Model
+from model.match import Match
+from synthesis.synthesis_lib import SynthesisLib
+from model.intent import Intent
+
 
 class SynthesizeDij():
 
@@ -139,7 +138,7 @@ class SynthesizeDij():
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         # Avoiding adding a new intent for every departing flow for this switch,
-        # by adding the tag itself as the key
+        # by adding the tag as the key
         
         self._add_intent(h_obj.switch_id, required_tag, push_vlan_tag_intent)
 
@@ -149,10 +148,16 @@ class SynthesizeDij():
         pop_vlan_match.vlan_id = matching_tag
         pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all")
 
-        # Avoiding adding a new intent for every arriving flow for this host
-        #  at destination by using its mac_addr as key
-        
-        self._add_intent(h_obj.switch_id, h_obj.mac_addr, pop_vlan_tag_intent)
+
+        # Avoiding adding a new intent for every arriving flow for this switch
+        #  at destination by using the tag as the key
+
+        self._add_intent(h_obj.switch_id, matching_tag, pop_vlan_tag_intent)
+
+        # # Avoiding adding a new intent for every arriving flow for this host
+        # #  at destination by using its mac_addr as key
+        #
+        # self._add_intent(h_obj.switch_id, h_obj.mac_addr, pop_vlan_tag_intent)
 
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
