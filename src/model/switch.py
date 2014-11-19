@@ -50,6 +50,7 @@ class Switch():
         # Check if the switch has at least one table
         table_id_to_check = 0
         has_table_to_check = table_id_to_check in self.flow_tables
+        next_table_matches_on = flow_match
 
         while has_table_to_check:
 
@@ -57,11 +58,11 @@ class Switch():
             flow_table = self.flow_tables[table_id_to_check]
 
             # Get the highest priority matching flow in this table
-            hpm_flow, intersection = flow_table.get_highest_priority_matching_flow(flow_match)
+            hpm_flow, intersection = flow_table.get_highest_priority_matching_flow(next_table_matches_on)
 
             if hpm_flow:
 
-                # If there are any apply-actions that hpm_flow does, accumulate them
+                # If there are any written-actions that hpm_flow does, accumulate them
                 if hpm_flow.written_actions:
                     action_set.add_actions(hpm_flow.written_actions, intersection)
 
@@ -78,6 +79,10 @@ class Switch():
                     has_table_to_check = False
 
                 # TODO: Send match data and action set to the next table
+                # TODO: Right now all tables are matching on the same arriving match
+                next_table_matches_on = flow_match
+
+
 
         out_port_match = action_set.get_out_port_matches(flow_match.in_port)
 
