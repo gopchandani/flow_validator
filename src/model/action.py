@@ -1,6 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-
+from match import Match
 from collections import defaultdict
 
 class Action():
@@ -23,6 +23,17 @@ class Action():
         if "group-action" in action_json:
             self.action_type = "group"
             self.group_id = action_json["group-action"]["group-id"]
+
+        if "push-vlan-action" in action_json:
+            self.action_type = "push_vlan"
+            self.vlan_ethernet_type = action_json["push-vlan-action"]["ethernet-type"]
+
+        if "pop-vlan-action" in action_json:
+            self.action_type = "pop_vlan"
+
+        if "set-field" in action_json:
+            self.action_type = "set-field"
+            self.set_field_match = Match(action_json["set-field"])
 
     def does_output_action_forward(self, in_port, out_port):
 
@@ -102,7 +113,9 @@ class ActionSet():
                 if action.group_id in self.sw.group_table.groups:
                     group_active_action_list =  self.sw.group_table.groups[action.group_id].get_active_action_list()
                     self.add_actions(group_active_action_list, intersection)
-            elif action.action_type == "output":
+                else:
+                    raise Exception ("Odd that a group_id is not provided in a group action")
+            else:
                 action.matched_flow = intersection
                 self.action_set[action.action_type].append(action)
 

@@ -260,7 +260,8 @@ class Match():
             match_intersection.tcp_destination_port and \
             match_intersection.tcp_source_port and \
             match_intersection.udp_destination_port and \
-            match_intersection.udp_source_port:
+            match_intersection.udp_source_port and \
+            match_intersection.vlan_id:
 
             return match_intersection
         else:
