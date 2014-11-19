@@ -323,15 +323,16 @@ class SynthesisLib():
         for sw in affected_switches:
 
             print "-- Pushing at Switch:", sw
+
             # Push table miss entries at Table 0, 1, 2
             self._push_table_miss_goto_next_table_flow(sw, 0)
             self._push_table_miss_goto_next_table_flow(sw, 1)
             self._push_table_miss_goto_next_table_flow(sw, 2)
 
-            forwarding_intents = self.model.graph.node[sw]["sw"].intents
+            intents = self.model.graph.node[sw]["sw"].intents
 
-            for dst in forwarding_intents:
-                dst_intents = forwarding_intents[dst]
+            for dst in intents:
+                dst_intents = intents[dst]
 
                 # Take care of mac intents for this destination
                 self.push_host_mac_intents(sw, dst_intents)

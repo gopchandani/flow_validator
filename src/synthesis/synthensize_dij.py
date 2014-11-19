@@ -10,6 +10,7 @@ from model.match import Match
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 
+import pprint
 
 class SynthesizeDij():
 
@@ -78,6 +79,10 @@ class SynthesizeDij():
                     if intent == primary_intent:
                         continue
 
+                    # Nothing needs to be done for vlan intents either
+                    if intent.intent_type == "push_vlan" or intent.intent_type == "pop_vlan":
+                        continue
+
                     # A balking intent happens on the switch where reversal begins,
                     # it is characterized by the fact that the traffic exits the same port where it came from
                     if intent.in_port == intent.out_port:
@@ -116,6 +121,7 @@ class SynthesizeDij():
             intents[key] = defaultdict(int)
             intents[key][intent] = 1
 
+
     def _compute_destination_host_mac_intents(self, h_obj, flow_match):
 
         edge_ports_dict = self.model.get_edge_port_dict(h_obj.switch_id, h_obj.host_id)
@@ -148,16 +154,10 @@ class SynthesizeDij():
         pop_vlan_match.vlan_id = matching_tag
         pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all")
 
-
         # Avoiding adding a new intent for every arriving flow for this switch
         #  at destination by using the tag as the key
 
         self._add_intent(h_obj.switch_id, matching_tag, pop_vlan_tag_intent)
-
-        # # Avoiding adding a new intent for every arriving flow for this host
-        # #  at destination by using its mac_addr as key
-        #
-        # self._add_intent(h_obj.switch_id, h_obj.mac_addr, pop_vlan_tag_intent)
 
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
@@ -177,7 +177,7 @@ class SynthesizeDij():
         # Add a MAC based forwarding rule for the destination host at the last hop
         self._compute_destination_host_mac_intents(dst_host, flow_match)
         
-        # Untag packets if they belong to a host connected to the dst switch AND they match its tag
+        # Untag packets if they belong to a host connected to the dst switch AND then match its tag
         self._compute_pop_vlan_tag_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
 
 

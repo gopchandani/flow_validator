@@ -23,6 +23,9 @@ class Switch():
         self.synthesis_tag = Switch.synthesis_tag
         Switch.synthesis_tag += 1
 
+        self.synthesis_tag = int(self.switch_id.split(":")[1])
+
+
     def passes_flow(self, flow_match, out_port):
 
         is_reachable = False
