@@ -18,7 +18,7 @@ class Switch():
         self.ports = None
 
         #Synthesis stuff
-        self.forwarding_intents = defaultdict(dict)
+        self.intents = defaultdict(dict)
 
         self.synthesis_tag = Switch.synthesis_tag
         Switch.synthesis_tag += 1

@@ -150,11 +150,11 @@ class Model():
                 host_ip = node["host-tracker-service:addresses"][0]["ip"]
                 host_mac = node["host-tracker-service:addresses"][0]["mac"]
 
-                raw_host_switch_id = node["host-tracker-service:attachment-points"][0]["tp-id"].split(":")
-                host_switch_id = raw_host_switch_id[0] + ":" + raw_host_switch_id[1]
+                switch_attachment_point = node["host-tracker-service:attachment-points"][0]["tp-id"].split(":")
+                host_switch_id = switch_attachment_point[0] + ":" + switch_attachment_point[1]
 
                 self.host_ids.append(host_id)
-                h = Host(host_id, self, host_ip, host_mac, host_switch_id)
+                h = Host(host_id, self, host_ip, host_mac, host_switch_id, switch_attachment_point[2])
                 self.graph.add_node(host_id, node_type="host", h=h)
 
         for link in topology_links:
@@ -200,7 +200,7 @@ class Model():
 
         self._prepare_node_edges()
 
-        self.dump_model()
+#        self.dump_model()
 
     def get_node_graph(self):
         return self.graph

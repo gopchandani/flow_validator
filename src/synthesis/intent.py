@@ -1,6 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-
 class Intent():
 
     def __init__(self, intent_type, flow_match, in_port, out_port):

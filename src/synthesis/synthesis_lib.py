@@ -328,7 +328,7 @@ class SynthesisLib():
             self._push_table_miss_goto_next_table_flow(sw, 1)
             self._push_table_miss_goto_next_table_flow(sw, 2)
 
-            forwarding_intents = self.model.graph.node[sw]["sw"].forwarding_intents
+            forwarding_intents = self.model.graph.node[sw]["sw"].intents
 
             for dst in forwarding_intents:
                 dst_intents = forwarding_intents[dst]
