@@ -120,7 +120,9 @@ class ActionSet():
                 self.action_set[action.action_type].append(action)
 
 
-    def get_out_port_matches(self, in_port):
+    def get_out_port_matches(self, in_flow_match):
+        in_port = in_flow_match.in_port
+
         out_port_match = {}
 
         for action in self.action_set["output"]:
