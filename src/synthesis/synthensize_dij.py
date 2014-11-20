@@ -33,6 +33,7 @@ class SynthesizeDij():
         # This loop always starts at a switch
         for i in range(len(p) - 1):
 
+            flow_match.vlan_id = dst_switch_tag
             intent = Intent(intent_type, flow_match, in_port, out_port)
 
             # Using dst_switch_tag as key here to
@@ -129,7 +130,6 @@ class SynthesizeDij():
 
         host_mac_match = deepcopy(flow_match)
         host_mac_match.ethernet_destination = h_obj.mac_addr
-
         host_mac_intent = Intent("mac", host_mac_match, "all", out_port)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
@@ -163,7 +163,6 @@ class SynthesizeDij():
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         # Handy info
-        
         edge_ports_dict = self.model.get_edge_port_dict(src_host.host_id, src_host.switch_id)
         in_port = edge_ports_dict[src_host.switch_id]        
         dst_sw_obj = self.model.get_node_object(dst_host.switch_id)
@@ -172,14 +171,12 @@ class SynthesizeDij():
         # Tag packets leaving the source host with a vlan tag of the destination switch
         self._compute_push_vlan_tag_intents(src_host, flow_match, dst_sw_obj.synthesis_tag)    
 
-
         ## Things at destination
         # Add a MAC based forwarding rule for the destination host at the last hop
         self._compute_destination_host_mac_intents(dst_host, flow_match)
         
         # Untag packets if they belong to a host connected to the dst switch AND then match its tag
         self._compute_pop_vlan_tag_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
-
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host.switch_id, target=dst_host.switch_id)
@@ -232,7 +229,7 @@ class SynthesizeDij():
                 flow_match = Match()
                 #flow_match.udp_destination_port = 80
                 flow_match.ethernet_type = 0x0800
-                flow_match.dst_ip_addr = self.model.graph.node[dst]["h"].ip_addr
+                #flow_match.dst_ip_addr = self.model.graph.node[dst]["h"].ip_addr
 
                 self.synthesize_flow(self.model.get_node_object(src), self.model.get_node_object(dst), flow_match)
 
