@@ -119,6 +119,7 @@ class Match():
             elif match_field == "vlan-match":
                 if "vlan-id" in match_json[match_field]:
                     self.vlan_id = match_json[match_field]["vlan-id"]["vlan-id"]
+                    self.has_vlan_tag = True
 
     def generate_match_json(self, match):
 
@@ -283,14 +284,19 @@ class Match():
         else:
             match_intersection.udp_source_port = None
 
-        if self.vlan_id == "all":
-            match_intersection.vlan_id = in_match.vlan_id
-        elif in_match.vlan_id == "all":
-            match_intersection.vlan_id = self.vlan_id
-        elif self.vlan_id == in_match.vlan_id:
-            match_intersection.vlan_id = in_match.vlan_id
+        if self.has_vlan_tag == True:
+            if self.vlan_id == "all":
+                match_intersection.vlan_id = in_match.vlan_id
+            elif self.vlan_id == in_match.vlan_id:
+                match_intersection.vlan_id = in_match.vlan_id
+            else:
+                match_intersection.vlan_id = None
         else:
-            match_intersection.vlan_id = None
+            if in_match.vlan_id == "all":
+                match_intersection.vlan_id = "all"
+            else:
+                match_intersection.vlan_id = None
+
 
         if self.has_vlan_tag == "all":
             match_intersection.has_vlan_tag = in_match.has_vlan_tag

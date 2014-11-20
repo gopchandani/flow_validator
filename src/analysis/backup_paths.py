@@ -12,7 +12,7 @@ class BackupPaths:
     def __init__(self):
         self.model = Model()
 
-    def check_flow_reachability(self, src, dst, node_path, flow_match, switch_in_port=None):
+    def check_flow_reachability(self, src, dst, node_path, in_port_match, switch_in_port=None):
 
         # The task of this loop is to examine whether there is a rule,
         #  in the switches along the path, that would admit the path
@@ -55,16 +55,17 @@ class BackupPaths:
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
             switch = self.model.graph.node[node_path[i]]["sw"]
+            print "At Switch:", switch.switch_id
 
             #  This has to happen at every switch, because every switch has its own in_port
-            flow_match.in_port = in_port
+            in_port_match.in_port = in_port
 
-            switch_out_port_match = switch.transfer_function(flow_match)
+            switch_out_port_match = switch.transfer_function(in_port_match)
             if out_port not in switch_out_port_match:
                 is_reachable = False
                 break
             else:
-                flow_match = switch_out_port_match[out_port]
+                in_port_match = switch_out_port_match[out_port]
                 is_reachable = True
 
             # Prepare for next switch along the path if there is a next switch along the path
