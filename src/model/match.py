@@ -29,11 +29,54 @@ class Match():
         self.udp_source_port = "all"
 
         self.vlan_id = "all"
+        self.has_vlan_tag = "all"
 
         if match_json:
-            self.populate_with_match_json(match_json)
+            self.set_fields_with_match_json(match_json)
 
-    def populate_with_match_json(self, match_json):
+    def set_fields_with_match(self, in_match):
+
+        if in_match.in_port != "all":
+            self.in_port = in_match.in_port
+
+        if in_match.ethernet_type != "all":
+            self.ethernet_type = in_match.ethernet_type
+
+        if in_match.ethernet_source != "all":
+            self.ethernet_source = in_match.ethernet_source
+
+        if in_match.ethernet_destination != "all":
+            self.ethernet_destination = in_match.ethernet_destination
+
+        if in_match.src_ip_addr != "all":
+            self.src_ip_addr = in_match.src_ip_addr
+
+        if in_match.dst_ip_addr != "all":
+            self.dst_ip_addr = in_match.dst_ip_addr
+
+        if in_match.ip_protocol != "all":
+            self.ip_protocol = in_match.ip_protocol
+
+        if in_match.tcp_destination_port != "all":
+            self.tcp_destination_port = in_match.tcp_destination_port
+
+        if in_match.tcp_source_port != "all":
+            self.tcp_source_port = in_match.tcp_source_port
+
+        if in_match.udp_destination_port != "all":
+            self.udp_destination_port = in_match.udp_destination_port
+
+        if in_match.udp_source_port != "all":
+            self.udp_source_port = in_match.udp_source_port
+
+        if in_match.vlan_id != "all":
+            self.vlan_id = in_match.vlan_id
+
+        if in_match.has_vlan_tag != "all":
+            self.has_vlan_tag = in_match.has_vlan_tag
+
+
+    def set_fields_with_match_json(self, match_json):
 
         for match_field in match_json:
 
@@ -76,7 +119,6 @@ class Match():
             elif match_field == "vlan-match":
                 if "vlan-id" in match_json[match_field]:
                     self.vlan_id = match_json[match_field]["vlan-id"]["vlan-id"]
-
 
     def generate_match_json(self, match):
 
@@ -250,6 +292,15 @@ class Match():
         else:
             match_intersection.vlan_id = None
 
+        if self.has_vlan_tag == "all":
+            match_intersection.has_vlan_tag = in_match.has_vlan_tag
+        elif in_match.has_vlan_tag == "all":
+            match_intersection.has_vlan_tag = self.has_vlan_tag
+        elif self.has_vlan_tag == in_match.has_vlan_tag:
+            match_intersection.has_vlan_tag = in_match.has_vlan_tag
+        else:
+            match_intersection.has_vlan_tag = None
+
         if match_intersection.in_port and \
             match_intersection.ethernet_type and \
             match_intersection.ethernet_source and \
@@ -261,7 +312,8 @@ class Match():
             match_intersection.tcp_source_port and \
             match_intersection.udp_destination_port and \
             match_intersection.udp_source_port and \
-            match_intersection.vlan_id:
+            match_intersection.vlan_id and \
+            match_intersection.has_vlan_tag:
 
             return match_intersection
         else:

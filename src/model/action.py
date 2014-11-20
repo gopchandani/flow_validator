@@ -125,22 +125,24 @@ class ActionSet():
 
         out_port_match = {}
 
+        #  For each output action, there is a corresponding out_port_match entry
         for output_action in self.action_set["output"]:
 
+            output_match = output_action.matched_flow
+
+            # Go through the operations that are performed to the match before the packet is sent out
             if "pop_vlan" in self.action_set:
-                print "here"
+                output_match.has_vlan_tag= False
 
             if "push_vlan" in self.action_set:
-                print "here"
+                output_match.has_vlan_tag= True
 
             if "set_field" in self.action_set:
-                print "here"
-
-
+                output_match.set_fields_with_match(self.action_set["set_field"][0].set_field_match)
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
-                out_port_match[in_port] = output_action.matched_flow
+                out_port_match[in_port] = output_match
             else:
-                out_port_match[output_action.out_port] = output_action.matched_flow
+                out_port_match[output_action.out_port] = output_match
 
         return out_port_match
