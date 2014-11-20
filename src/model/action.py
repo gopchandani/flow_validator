@@ -32,7 +32,7 @@ class Action():
             self.action_type = "pop_vlan"
 
         if "set-field" in action_json:
-            self.action_type = "set-field"
+            self.action_type = "set_field"
             self.set_field_match = Match(action_json["set-field"])
 
     def does_output_action_forward(self, in_port, out_port):
@@ -125,11 +125,22 @@ class ActionSet():
 
         out_port_match = {}
 
-        for action in self.action_set["output"]:
+        for output_action in self.action_set["output"]:
 
-            if self.sw.model.OFPP_IN == int(action.out_port):
-                out_port_match[in_port] = action.matched_flow
+            if "pop_vlan" in self.action_set:
+                print "here"
+
+            if "push_vlan" in self.action_set:
+                print "here"
+
+            if "set_field" in self.action_set:
+                print "here"
+
+
+
+            if self.sw.model.OFPP_IN == int(output_action.out_port):
+                out_port_match[in_port] = output_action.matched_flow
             else:
-                out_port_match[action.out_port] = action.matched_flow
+                out_port_match[output_action.out_port] = output_action.matched_flow
 
         return out_port_match

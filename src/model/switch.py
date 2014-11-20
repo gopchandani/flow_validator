@@ -82,7 +82,8 @@ class Switch():
                 # TODO: Right now all tables are matching on the same arriving match
                 next_table_matches_on = in_port_match
 
-
+            else:
+                has_table_to_check = False
 
         out_port_match = action_set.get_out_port_matches(in_port_match)
 
