@@ -33,8 +33,13 @@ class SynthesizeDij():
         # This loop always starts at a switch
         for i in range(len(p) - 1):
 
-            flow_match.vlan_id = dst_switch_tag
-            intent = Intent(intent_type, flow_match, in_port, out_port)
+            fwd_flow_match = deepcopy(flow_match)
+
+            # All switches except the first one in the path must specify the vlan tag
+            if i != 0:
+                fwd_flow_match.vlan_id = dst_switch_tag
+
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
@@ -229,10 +234,8 @@ class SynthesizeDij():
                 flow_match = Match()
                 #flow_match.udp_destination_port = 80
                 flow_match.ethernet_type = 0x0800
-                #flow_match.dst_ip_addr = self.model.graph.node[dst]["h"].ip_addr
 
                 self.synthesize_flow(self.model.get_node_object(src), self.model.get_node_object(dst), flow_match)
-
                 print "--------------------------------------------------------------------------------------------------------"
 
 
