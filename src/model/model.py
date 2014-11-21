@@ -162,6 +162,8 @@ class Model():
             node1_port = link["source"]["source-tp"].split(":")[2]
             node2_port = link["destination"]["dest-tp"].split(":")[2]
 
+            print "link -- source-tp:",  link["source"]["source-tp"], "destination-tp:", link["destination"]["dest-tp"]
+
             self.add_edge(link["source"]["source-node"], node1_port, link["destination"]["dest-node"], node2_port)
 
             if self.graph.node[link["source"]["source-node"]]["node_type"] == "switch":

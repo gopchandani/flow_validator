@@ -284,19 +284,14 @@ class Match():
         else:
             match_intersection.udp_source_port = None
 
-        if self.has_vlan_tag == True:
-            if self.vlan_id == "all":
-                match_intersection.vlan_id = in_match.vlan_id
-            elif self.vlan_id == in_match.vlan_id:
-                match_intersection.vlan_id = in_match.vlan_id
-            else:
-                match_intersection.vlan_id = None
+        if self.vlan_id == "all":
+            match_intersection.vlan_id = in_match.vlan_id
+        elif in_match.vlan_id == "all":
+            match_intersection.vlan_id = self.vlan_id
+        elif self.vlan_id == in_match.vlan_id:
+            match_intersection.vlan_id = in_match.vlan_id
         else:
-            if in_match.vlan_id == "all":
-                match_intersection.vlan_id = "all"
-            else:
-                match_intersection.vlan_id = None
-
+            match_intersection.vlan_id = None
 
         if self.has_vlan_tag == "all":
             match_intersection.has_vlan_tag = in_match.has_vlan_tag
@@ -307,19 +302,19 @@ class Match():
         else:
             match_intersection.has_vlan_tag = None
 
-        if match_intersection.in_port and \
-            match_intersection.ethernet_type and \
-            match_intersection.ethernet_source and \
-            match_intersection.ethernet_destination and \
-            match_intersection.src_ip_addr and \
-            match_intersection.dst_ip_addr and \
-            match_intersection.ip_protocol and \
-            match_intersection.tcp_destination_port and \
-            match_intersection.tcp_source_port and \
-            match_intersection.udp_destination_port and \
-            match_intersection.udp_source_port and \
-            match_intersection.vlan_id and \
-            match_intersection.has_vlan_tag:
+        if match_intersection.in_port != None and \
+            match_intersection.ethernet_type != None and \
+            match_intersection.ethernet_source != None and \
+            match_intersection.ethernet_destination != None and \
+            match_intersection.src_ip_addr != None and \
+            match_intersection.dst_ip_addr != None and \
+            match_intersection.ip_protocol != None and \
+            match_intersection.tcp_destination_port != None and \
+            match_intersection.tcp_source_port != None and \
+            match_intersection.udp_destination_port != None and \
+            match_intersection.udp_source_port != None and \
+            match_intersection.vlan_id != None and \
+            match_intersection.has_vlan_tag != None:
 
             return match_intersection
         else:

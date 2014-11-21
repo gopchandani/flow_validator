@@ -55,7 +55,7 @@ class BackupPaths:
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
             switch = self.model.graph.node[node_path[i]]["sw"]
-            print "At Switch:", switch.switch_id
+            print "At Switch:", switch.switch_id, "in_port:", in_port
 
             #  This has to happen at every switch, because every switch has its own in_port
             in_port_match.in_port = in_port
@@ -170,11 +170,10 @@ class BackupPaths:
                 print "----------------------------------------------------------------------------------------------"
 
                 in_port_match = Match()
-                in_port_match.src_ip_addr = IPNetwork(self.model.graph.node[src]["h"].ip_addr)
-                in_port_match.dst_ip_addr = IPNetwork(self.model.graph.node[dst]["h"].ip_addr)
                 in_port_match.ethernet_type = 0x0800
                 in_port_match.ethernet_source = self.model.graph.node[src]["h"].mac_addr
                 in_port_match.ethernet_destination = self.model.graph.node[dst]["h"].mac_addr
+                in_port_match.has_vlan_tag = False
 
                 primary_and_backup_exists = self.has_primary_and_backup(src, dst, in_port_match)
 
