@@ -55,7 +55,6 @@ class BackupPaths:
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
             switch = self.model.graph.node[node_path[i]]["sw"]
-            print "At Switch:", switch.switch_id, "in_port:", in_port
 
             #  This has to happen at every switch, because every switch has its own in_port
             in_port_match.in_port = in_port

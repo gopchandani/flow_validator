@@ -201,21 +201,21 @@ class Match():
         else:
             match_intersection.ethernet_type = None
 
-        if self.ethernet_source == "all":
-            match_intersection.ethernet_source = in_match.ethernet_source
-        elif in_match.ethernet_source == "all":
-            match_intersection.ethernet_source = self.ethernet_source
-        elif self.ethernet_source == in_match.ethernet_source:
-            match_intersection.ethernet_source = in_match.ethernet_source
+        if self.ethernet_source.lower() == "all":
+            match_intersection.ethernet_source = in_match.ethernet_source.lower()
+        elif in_match.ethernet_source.lower() == "all":
+            match_intersection.ethernet_source = self.ethernet_source.lower()
+        elif self.ethernet_source.lower() == in_match.ethernet_source.lower():
+            match_intersection.ethernet_source = in_match.ethernet_source.lower()
         else:
             match_intersection.ethernet_source = None
 
-        if self.ethernet_destination == "all":
-            match_intersection.ethernet_destination = in_match.ethernet_destination
-        elif in_match.ethernet_destination == "all":
-            match_intersection.ethernet_destination = self.ethernet_destination
-        elif self.ethernet_destination == in_match.ethernet_destination:
-            match_intersection.ethernet_destination = in_match.ethernet_destination
+        if self.ethernet_destination.lower() == "all":
+            match_intersection.ethernet_destination = in_match.ethernet_destination.lower()
+        elif in_match.ethernet_destination.lower() == "all":
+            match_intersection.ethernet_destination = self.ethernet_destination.lower()
+        elif self.ethernet_destination.lower() == in_match.ethernet_destination.lower():
+            match_intersection.ethernet_destination = in_match.ethernet_destination.lower()
         else:
             match_intersection.ethernet_destination = None
 
