@@ -12,7 +12,7 @@ class BackupPaths:
     def __init__(self):
         self.model = Model()
 
-    def check_flow_reachability(self, src, dst, node_path, in_port_match, switch_in_port=None):
+    def check_flow_reachability(self, src, dst, node_path, path_type, in_port_match, switch_in_port=None):
 
         # The task of this loop is to examine whether there is a rule,
         #  in the switches along the path, that would admit the path
@@ -56,6 +56,16 @@ class BackupPaths:
         for i in range(len(node_path) - 1):
             switch = self.model.graph.node[node_path[i]]["sw"]
             print "At Switch:", switch.switch_id, "in_port:", in_port
+
+            # Capturing during run for primary, what header-space arrives at each node
+            if path_type == "primary":
+                switch.in_port_match = in_port_match
+
+            # When it comes time to look for backups, use the header-space saved earlier to kick up analysis
+            # at first node
+            elif path_type == "backup" and i == 0:
+                if switch.in_port_match:
+                    in_port_match = switch.in_port_match
 
             #  This has to happen at every switch, because every switch has its own in_port
             in_port_match.in_port = in_port
@@ -115,7 +125,7 @@ class BackupPaths:
             asp = nx.all_simple_paths(self.model.graph, source=node_path[i], target=dst)
             for bp in asp:
                 print "Topological Backup Path Candidate:", bp
-                edge_has_backup = self.check_flow_reachability(src, dst, bp, in_port_match, in_port)
+                edge_has_backup = self.check_flow_reachability(src, dst, bp, "backup", in_port_match, in_port)
 
                 print "edge_has_backup:", edge_has_backup
                 if edge_has_backup:
@@ -143,7 +153,7 @@ class BackupPaths:
         for p in asp:
             print "Topological Primary Path Candidate", p
 
-            is_reachable_flow = self.check_flow_reachability(src, dst, p, in_port_match)
+            is_reachable_flow = self.check_flow_reachability(src, dst, p, "primary", in_port_match)
             print "is_reachable_flow:", is_reachable_flow
 
             if is_reachable_flow:

@@ -25,6 +25,10 @@ class Switch():
 
         self.synthesis_tag = int(self.switch_id.split(":")[1])
 
+        #Analysis stuff
+        self.in_port_match = None
+
+
 
     def passes_flow(self, flow_match, out_port):
 
@@ -53,8 +57,6 @@ class Switch():
         next_table_matches_on = in_port_match
 
         while has_table_to_check:
-
-            print "At Table:", table_id_to_check
 
             # Grab the table
             flow_table = self.flow_tables[table_id_to_check]
