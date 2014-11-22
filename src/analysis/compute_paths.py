@@ -165,33 +165,51 @@ class ComputePaths:
 
         return has_primary_and_backup
 
+    def dfs(self, node_obj):
+
+        node_obj.discovered = True
+        print "At node:", node_obj.node_id
+
+#       for all edges from v to w in G.adjacentEdges(v) do
+#           if vertex w is not labeled as discovered then
+#               recursively call DFS(G,w)
+
+        for neighbor in self.model.graph.neighbors(node_obj.node_id):
+            neighbor_obj = self.model.get_node_object(neighbor)
+
+            # If haven't been to this neighbor before
+            if not neighbor_obj.discovered:
+
+                print "Try to goto neighbor:", neighbor
+                edge_port_dict = self.model.get_edge_port_dict(node_obj.node_id, neighbor)
+
+                # See if we can get to this neighbor from here with the match
+                out_port_match = node_obj.transfer_function(node_obj.in_port_match)
+                if edge_port_dict[neighbor] in out_port_match:
+                    print "Successfully on the other side, will call recursively"
+                    passing_match = out_port_match[edge_port_dict[neighbor]]
+                    neighbor_obj.in_port_match = passing_match
+                    self.dfs(neighbor_obj)
+                else:
+                    print "could not go to the otherside"
+
+
     def analyze_all_node_pairs(self):
 
-        print "Checking for backup paths between all possible host pairs..."
-        for src in self.model.get_host_ids():
-            for dst in self.model.get_host_ids():
+        # For each host, start a graph search at the switch it is connected to
+        for h_id in self.model.get_host_ids():
 
-                # Ignore paths with same src/dst
-                if src == dst:
-                    continue
+            print "Injecting wildcard at host:", h_id
 
-                print "----------------------------------------------------------------------------------------------"
-                print 'Checking primary and backup paths from', src, 'to', dst
-                print "----------------------------------------------------------------------------------------------"
+            h_obj = self.model.get_node_object(h_id)
 
-                in_port_match = Match()
-                in_port_match.ethernet_type = 0x0800
-                in_port_match.ethernet_source = self.model.graph.node[src]["h"].mac_addr
-                in_port_match.ethernet_destination = self.model.graph.node[dst]["h"].mac_addr
-                in_port_match.has_vlan_tag = False
+            # Construct a all wildcard match to be injected at each one of these switches
+            h_obj.in_port_match = Match()
+            h_obj.in_port_match.ethernet_type = 0x0800
+            h_obj.in_port_match.ethernet_source = h_obj.mac_addr
+            h_obj.in_port_match.has_vlan_tag = False
 
-                primary_and_backup_exists = self.has_primary_and_backup(src, dst, in_port_match)
-
-                print "----------------------------------------------------------------------------------------------"
-                if primary_and_backup_exists:
-                    print "Result: Backup exists."
-                else:
-                    print "Result:Backup does not exist"
+            self.dfs(h_obj)
 
 def main():
     bp = ComputePaths()

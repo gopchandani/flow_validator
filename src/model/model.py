@@ -3,7 +3,6 @@ __author__ = 'Rakesh Kumar'
 import json
 import sys
 import pprint
-
 import httplib2
 import networkx as nx
 
@@ -13,7 +12,6 @@ from flow_table import FlowTable
 from group_table import GroupTable
 from group_table import Group
 from port import Port
-
 
 class Model():
 
@@ -42,7 +40,7 @@ class Model():
     def _prepare_group_table(self, sw):
 
         group_table = None
-        node_id = sw.switch_id
+        node_id = sw.node_id
 
         # Get all the nodes/switches from the inventory API
         remaining_url = 'config/opendaylight-inventory:nodes/node/' + str(node_id)
@@ -152,17 +150,16 @@ class Model():
 
                 switch_attachment_point = node["host-tracker-service:attachment-points"][0]["tp-id"].split(":")
                 host_switch_id = switch_attachment_point[0] + ":" + switch_attachment_point[1]
+                host_switch_obj = self.get_node_object(host_switch_id)
 
                 self.host_ids.append(host_id)
-                h = Host(host_id, self, host_ip, host_mac, host_switch_id, switch_attachment_point[2])
+                h = Host(host_id, self, host_ip, host_mac, host_switch_id, host_switch_obj, switch_attachment_point[2])
                 self.graph.add_node(host_id, node_type="host", h=h)
 
         for link in topology_links:
 
             node1_port = link["source"]["source-tp"].split(":")[2]
             node2_port = link["destination"]["dest-tp"].split(":")[2]
-
-            print "link -- source-tp:",  link["source"]["source-tp"], "destination-tp:", link["destination"]["dest-tp"]
 
             self.add_edge(link["source"]["source-node"], node1_port, link["destination"]["dest-node"], node2_port)
 
@@ -202,7 +199,7 @@ class Model():
 
         self._prepare_node_edges()
 
-        self.dump_model()
+        #self.dump_model()
 
     def get_node_graph(self):
         return self.graph
