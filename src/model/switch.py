@@ -27,8 +27,6 @@ class Switch():
 
         #Analysis stuff
         self.in_port_match = None
-        self.visited = False
-
 
 
     def passes_flow(self, flow_match, out_port):
