@@ -27,7 +27,7 @@ class Switch():
 
         #Analysis stuff
         self.in_port_match = None
-        self.discovered = False
+        self.visited = False
 
 
 

@@ -243,6 +243,11 @@ class Model():
 
         return node_type
 
+    def reset_node_visited_flag(self):
+        for node_id in self.graph.nodes():
+            node_obj = self.get_node_object(node_id)
+            node_obj.visited = False
+
 def main():
     m = Model()
 

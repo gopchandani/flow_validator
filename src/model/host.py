@@ -16,7 +16,7 @@ class Host():
 
         #Analysis stuff
         self.in_port_match = None
-        self.discovered = False
+        self.visited = False
 
     def transfer_function(self, in_port_match):
         # Dont know the port on the host side, using 0
