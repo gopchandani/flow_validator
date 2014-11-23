@@ -170,10 +170,6 @@ class ComputePaths:
         node_obj.discovered = True
         print "At node:", node_obj.node_id
 
-#       for all edges from v to w in G.adjacentEdges(v) do
-#           if vertex w is not labeled as discovered then
-#               recursively call DFS(G,w)
-
         for neighbor in self.model.graph.neighbors(node_obj.node_id):
             neighbor_obj = self.model.get_node_object(neighbor)
 
@@ -197,19 +193,26 @@ class ComputePaths:
     def analyze_all_node_pairs(self):
 
         # For each host, start a graph search at the switch it is connected to
-        for h_id in self.model.get_host_ids():
+        for src_h_id in self.model.get_host_ids():
 
-            print "Injecting wildcard at host:", h_id
+            for dst_h_id in self.model.get_host_ids():
 
-            h_obj = self.model.get_node_object(h_id)
+                if src_h_id == dst_h_id:
+                    continue
 
-            # Construct a all wildcard match to be injected at each one of these switches
-            h_obj.in_port_match = Match()
-            h_obj.in_port_match.ethernet_type = 0x0800
-            h_obj.in_port_match.ethernet_source = h_obj.mac_addr
-            h_obj.in_port_match.has_vlan_tag = False
+                print "Injecting wildcard at host:", src_h_id
 
-            self.dfs(h_obj)
+                src_h_obj = self.model.get_node_object(src_h_id)
+                dst_h_obj = self.model.get_node_object(dst_h_id)
+
+                # Construct a all wildcard match to be injected at each one of these switches
+                src_h_obj.in_port_match = Match()
+                src_h_obj.in_port_match.ethernet_type = 0x0800
+                src_h_obj.in_port_match.ethernet_source = src_h_obj.mac_addr
+                src_h_obj.in_port_match.ethernet_destination = dst_h_obj.mac_addr
+                src_h_obj.in_port_match.has_vlan_tag = False
+
+                self.dfs(src_h_obj)
 
 def main():
     bp = ComputePaths()
