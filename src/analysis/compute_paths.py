@@ -22,9 +22,8 @@ class ComputePaths:
             # If haven't been to this neighbor before
             if neighbor_obj not in visited:
 
-                edge_port_dict = self.model.get_edge_port_dict(node_obj.node_id, neighbor)
-
                 # See if we can get to this neighbor from here with the match
+                edge_port_dict = self.model.get_edge_port_dict(node_obj.node_id, neighbor)
                 out_port_match = node_obj.transfer_function(node_obj.in_port_match)
                 if edge_port_dict[node_obj.node_id] in out_port_match:
 
@@ -36,6 +35,42 @@ class ComputePaths:
                         print "Arrived at the destination."
                     else:
                         self.dfs(neighbor_obj, destination_node_obj, visited)
+
+
+    def bfs(self, start_node_obj, destination_node_obj):
+
+        visited = set()
+        queue =[start_node_obj]
+
+        while queue:
+            node_obj = queue.pop(0)
+
+            if node_obj == destination_node_obj:
+                print "Arrived at the destination:", node_obj.node_id
+            else:
+                print "Exploring node:", node_obj.node_id
+
+            if node_obj not in visited:
+                visited.add(node_obj)
+
+                # Go through the neighbors of this node and see where else we can go
+                for neighbor in self.model.graph.neighbors(node_obj.node_id):
+                    neighbor_obj = self.model.get_node_object(neighbor)
+                    if neighbor_obj not in visited:
+
+                        # See if we can get to this neighbor from here with the match
+                        edge_port_dict = self.model.get_edge_port_dict(node_obj.node_id, neighbor)
+                        out_port_match = node_obj.transfer_function(node_obj.in_port_match)
+                        if edge_port_dict[node_obj.node_id] in out_port_match:
+
+                            # Account for what traffic will arrive at neighbor
+                            passing_match = out_port_match[edge_port_dict[node_obj.node_id]]
+                            passing_match.in_port = edge_port_dict[neighbor]
+                            neighbor_obj.in_port_match = passing_match
+
+                            # Add the neighbor to queue so it is visited
+                            queue.append(neighbor_obj)
+
 
 
     def analyze_all_node_pairs(self):
@@ -62,6 +97,8 @@ class ComputePaths:
 
                 print "--"
                 self.dfs(src_h_obj.switch_obj, dst_h_obj, set())
+
+                #self.bfs(src_h_obj.switch_obj, dst_h_obj)
 
 def main():
     bp = ComputePaths()
