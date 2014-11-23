@@ -36,7 +36,6 @@ class ComputePaths:
                     else:
                         self.dfs(neighbor_obj, destination_node_obj, visited)
 
-
     def bfs(self, start_node_obj, destination_node_obj):
 
         visited = set()
@@ -71,8 +70,6 @@ class ComputePaths:
                             # Add the neighbor to queue so it is visited
                             queue.append(neighbor_obj)
 
-
-
     def analyze_all_node_pairs(self):
 
         # For each host, start a graph search at the switch it is connected to
@@ -97,9 +94,6 @@ class ComputePaths:
 
                 print "--"
                 self.dfs(src_h_obj.switch_obj, dst_h_obj, set())
-
-                #self.bfs(src_h_obj.switch_obj, dst_h_obj)
-
 def main():
     bp = ComputePaths()
     bp.analyze_all_node_pairs()

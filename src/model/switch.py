@@ -7,8 +7,6 @@ from action import ActionSet
 
 class Switch():
 
-    synthesis_tag = 1
-
     def __init__(self, sw_id, model):
 
         self.node_id = sw_id
@@ -19,10 +17,6 @@ class Switch():
 
         #Synthesis stuff
         self.intents = defaultdict(dict)
-
-        self.synthesis_tag = Switch.synthesis_tag
-        Switch.synthesis_tag += 1
-
         self.synthesis_tag = int(self.node_id.split(":")[1])
 
         #Analysis stuff
