@@ -168,7 +168,6 @@ class ComputePaths:
     def dfs(self, node_obj):
 
         node_obj.discovered = True
-        print "At node:", node_obj.node_id
 
         for neighbor in self.model.graph.neighbors(node_obj.node_id):
             neighbor_obj = self.model.get_node_object(neighbor)
@@ -176,15 +175,19 @@ class ComputePaths:
             # If haven't been to this neighbor before
             if not neighbor_obj.discovered:
 
-                print "Try to goto neighbor:", neighbor
+                print "At node:", node_obj.node_id, "Try to goto neighbor:", neighbor
                 edge_port_dict = self.model.get_edge_port_dict(node_obj.node_id, neighbor)
 
                 # See if we can get to this neighbor from here with the match
                 out_port_match = node_obj.transfer_function(node_obj.in_port_match)
-                if edge_port_dict[neighbor] in out_port_match:
+                if edge_port_dict[node_obj.node_id] in out_port_match:
                     print "Successfully on the other side, will call recursively"
-                    passing_match = out_port_match[edge_port_dict[neighbor]]
+
+                    passing_match = out_port_match[edge_port_dict[node_obj.node_id]]
+                    passing_match.in_port = edge_port_dict[neighbor]
+
                     neighbor_obj.in_port_match = passing_match
+
                     self.dfs(neighbor_obj)
                 else:
                     print "could not go to the otherside"
@@ -197,22 +200,22 @@ class ComputePaths:
 
             for dst_h_id in self.model.get_host_ids():
 
-                if src_h_id == dst_h_id:
-                    continue
-
-                print "Injecting wildcard at host:", src_h_id
-
                 src_h_obj = self.model.get_node_object(src_h_id)
                 dst_h_obj = self.model.get_node_object(dst_h_id)
 
-                # Construct a all wildcard match to be injected at each one of these switches
-                src_h_obj.in_port_match = Match()
-                src_h_obj.in_port_match.ethernet_type = 0x0800
-                src_h_obj.in_port_match.ethernet_source = src_h_obj.mac_addr
-                src_h_obj.in_port_match.ethernet_destination = dst_h_obj.mac_addr
-                src_h_obj.in_port_match.has_vlan_tag = False
+                if src_h_id == dst_h_id:
+                    continue
 
-                self.dfs(src_h_obj)
+                print "Injecting wildcard at switch:", src_h_obj.switch_obj, "connected to host", src_h_id
+
+                src_h_obj.switch_obj.in_port_match = Match()
+                src_h_obj.switch_obj.in_port_match.ethernet_type = 0x0800
+                src_h_obj.switch_obj.in_port_match.ethernet_source = src_h_obj.mac_addr
+                src_h_obj.switch_obj.in_port_match.ethernet_destination = dst_h_obj.mac_addr
+                src_h_obj.switch_obj.in_port_match.has_vlan_tag = False
+                src_h_obj.switch_obj.in_port = src_h_obj.switch_port_attached
+
+                self.dfs(src_h_obj.switch_obj)
 
 def main():
     bp = ComputePaths()

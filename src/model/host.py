@@ -19,4 +19,5 @@ class Host():
         self.discovered = False
 
     def transfer_function(self, in_port_match):
-        return {self.switch_port_attached: in_port_match}
+        # Dont know the port on the host side, using 0
+        return {0: in_port_match}
