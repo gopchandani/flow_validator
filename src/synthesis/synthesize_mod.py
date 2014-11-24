@@ -34,10 +34,7 @@ class SynthesizeDij():
         for i in range(len(p) - 1):
 
             fwd_flow_match = deepcopy(flow_match)
-
-            # All intents except the first one in the primary path must specify the vlan tag
-            if not (i == 0 and intent_type == "primary"):
-                fwd_flow_match.vlan_id = dst_switch_tag
+            fwd_flow_match.vlan_id = dst_switch_tag
 
             intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
 

@@ -137,7 +137,7 @@ class SynthesisLib():
         #  Assert that group is executed upon match
         group_action = {"group-id": group_id}
         action = {"group-action": group_action, "order": 0}
-        write_actions_instruction = {"write-actions": {"action": action}, "order": 0}
+        write_actions_instruction = {"apply-actions": {"action": action}, "order": 0}
 
         flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
 
@@ -251,7 +251,7 @@ class SynthesisLib():
         #  Assert that group is executed upon match
         output_action = {"output-node-connector": mac_intent.out_port}
         action = {"output-action": output_action, "order": 0}
-        write_actions_instruction = {"write-actions": {"action": action}, "order": 0}
+        write_actions_instruction = {"apply-actions": {"action": action}, "order": 0}
 
         flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
 
@@ -289,7 +289,7 @@ class SynthesisLib():
             action2 = {'order': 1, 'set-field': set_vlan_id_action}
 
             action_list = [action1, action2]
-            write_actions_instruction = {"write-actions": {"action": action_list}, "order": 0}
+            write_actions_instruction = {"apply-actions": {"action": action_list}, "order": 0}
             flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
 
             # Also, punt such packets to the next table
@@ -309,7 +309,7 @@ class SynthesisLib():
             #Compile instruction
             pop_vlan_action = {}
             action = {'order': 0, 'pop-vlan-action': pop_vlan_action}
-            write_actions_instruction = {"write-actions": {"action": action}, "order": 0}
+            write_actions_instruction = {"apply-actions": {"action": action}, "order": 0}
             flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
 
             # Also, punt such packets to the next table
