@@ -1,299 +1,250 @@
 __author__ = 'Rakesh Kumar'
 
+from collections import defaultdict
+from copy import deepcopy
+
+import networkx as nx
+
 from model.model import Model
+from model.match import Match
+from synthesis.synthesis_lib import SynthesisLib
+from model.intent import Intent
 
-import httplib2
-import json
-import time
-import sys
+import pprint
 
-
-
-class SynthesizeMod():
+class SynthesizeDij():
 
     def __init__(self):
 
-        self.OFPP_ALL = 0xfffffffc
-        self.OFPP_IN = 0xfffffff8
-
         self.model = Model()
-        self.h = httplib2.Http(".cache")
-        self.h.add_credentials('admin', 'admin')
+        self.synthesis_lib = SynthesisLib("localhost", "8181", self.model)
 
-    def _create_base_rule(self, flow_id, table_id):
+        # s represents the set of all switches that are
+        # affected as a result of flow synthesis
+        self.s = set()
 
-        flow = dict()
+    def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
 
-        flow["flags"] = ""
-        flow["table_id"] = table_id
-        flow["id"] = str(flow_id)
-        flow["priority"] = 1
-        flow["idle-timeout"] = 0
-        flow["hard-timeout"] = 0
-        flow["cookie"] = flow_id
-        flow["cookie_mask"] = 255
+        edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
+        
+        in_port = first_in_port
+        out_port = edge_ports_dict[p[0]]
 
-        #Empty match
-        flow["match"] = {}
+        # This loop always starts at a switch
+        for i in range(len(p) - 1):
 
-        #Empty instructions
-        flow["instructions"] = {"instruction": []}
+            fwd_flow_match = deepcopy(flow_match)
 
-        #  Wrap it in inventory
-        flow = {"flow-node-inventory:flow": flow}
+            # All intents except the first one in the primary path must specify the vlan tag
+            if not (i == 0 and intent_type == "primary"):
+                fwd_flow_match.vlan_id = dst_switch_tag
 
-        return flow
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
 
+            # Using dst_switch_tag as key here to
+            # avoid adding multiple intents for the same destination
 
-    def _create_match_no_vlan_tag_instruct_group_rule(self, flow_id, table_id, group_id):
+            self._add_intent(p[i], dst_switch_tag, intent)
 
-        flow = self._create_base_rule(flow_id, table_id)
+            # Prep for next switch
+            if i < len(p) - 2:
+                edge_ports_dict = self.model.get_edge_port_dict(p[i], p[i+1])
+                in_port = edge_ports_dict[p[i+1]]
 
-        #Compile match
+                edge_ports_dict = self.model.get_edge_port_dict(p[i+1], p[i+2])
+                out_port = edge_ports_dict[p[i+1]]
 
-        #  Assert that matching packets are of ethertype IP
-        ethernet_type = {"type": str(0x0800)}
-        ethernet_match = {"ethernet-type": ethernet_type}
-        flow["flow-node-inventory:flow"]["match"]["ethernet-match"] = ethernet_match
+    def _get_intents(self, dst_intents, intent_type):
 
-        #  Assert that matching packets have no VLAN tag on them
-        vlan_id = dict()
-        vlan_id["vlan-id"] = str(0)
-        vlan_id["vlan-id-present"] = False
-        vlan_match = {"vlan-id": vlan_id}
+        return_intent = []
 
-        flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
+        for intent in dst_intents:
+            if intent.intent_type == intent_type:
+                return_intent.append(intent)
 
-        #Compile instruction
+        return return_intent
 
-        #  Assert that group is executed upon match
-        group_action = {"group-id": group_id}
-        action = {"group-action": group_action, "order": 0}
-        apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
+    def _identify_reverse_and_balking_intents(self):
 
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_action_instruction)
+        for sw in self.s:
 
-        return flow
+            intents = self.model.graph.node[sw]["sw"].intents
 
+            for dst in intents:
+                dst_intents = intents[dst]
 
-    def _create_match_vlan_tag_instruct_group_rule(self, flow_id, table_id, group_id, match_tag):
+                # Assume that there is always one primary intent
+                primary_intent = None
+                primary_intents = self._get_intents(dst_intents, "primary")
+                if primary_intents:
+                    primary_intent = primary_intents[0]
 
-        flow = self._create_base_rule(flow_id, table_id)
+                for intent in dst_intents:
 
-        #Compile match
+                    #  Nothing needs to be done for primary intent
+                    if intent == primary_intent:
+                        continue
 
-        #  Assert that matching packets are of ethertype IP
-        ethernet_type = {"type": str(0x0800)}
-        ethernet_match = {"ethernet-type": ethernet_type}
-        flow["flow-node-inventory:flow"]["match"]["ethernet-match"] = ethernet_match
+                    # Nothing needs to be done for vlan intents either
+                    if intent.intent_type == "push_vlan" or intent.intent_type == "pop_vlan":
+                        continue
 
-        #  Assert that matching packets have have specified VLAN tag on them
-        vlan_id = dict()
-        vlan_id["vlan-id"] = match_tag
-        vlan_id["vlan-id-present"] = True
-        vlan_match = {"vlan-id": vlan_id}
+                    # A balking intent happens on the switch where reversal begins,
+                    # it is characterized by the fact that the traffic exits the same port where it came from
+                    if intent.in_port == intent.out_port:
 
-        flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
+                        # Add a new intent with modified key
+                        intent.intent_type = "balking"
+                        continue
 
-        #Compile instruction
+                    #  Processing from this point onwards require presence of a primary intent
+                    if not primary_intent:
+                        continue
 
-        #  Assert that group is executed upon match
-        group_action = {"group-id": group_id}
-        action = {"group-action": group_action, "order": 0}
-        apply_action_instruction = {"apply-actions": {"action": action}, "order": 0}
+                    #  If this intent is at a reverse flow carrier switch
 
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_action_instruction)
+                    #  There are two ways to identify reverse intents
 
-        return flow
+                    #  1. at the source switch, with intent's source port equal to destination port of the primary intent
+                    if intent.in_port == primary_intent.out_port:
+                        intent.intent_type = "reverse"
+                        continue
 
-    def _create_match_no_vlan_tag_instruct_next_table_rule(self, flow_id, table_id, next_table_id):
+                    #  2. At any other switch
+                    # with intent's destination port equal to source port of primary intent
+                    if intent.out_port == primary_intent.in_port:
+                        intent.intent_type = "reverse"
+                        continue
 
-        flow = self._create_base_rule(flow_id, table_id)
+    def _add_intent(self, switch_id, key, intent):
 
-        #Compile match
+        self.s.add(switch_id)
+        intents = self.model.graph.node[switch_id]["sw"].intents
 
-        #  Assert that matching packets are of ethertype IP
-        ethernet_type = {"type": str(0x0800)}
-        ethernet_match = {"ethernet-type": ethernet_type}
-        flow["flow-node-inventory:flow"]["match"]["ethernet-match"] = ethernet_match
+        if key in intents:
+            intents[key][intent] += 1
+        else:
+            intents[key] = defaultdict(int)
+            intents[key][intent] = 1
 
-        #  Assert that matching packets have no VLAN tag on them
-        vlan_id = dict()
-        vlan_id["vlan-id"] = str(0)
-        vlan_id["vlan-id-present"] = False
-        vlan_match = {"vlan-id": vlan_id}
 
-        flow["flow-node-inventory:flow"]["match"]["vlan-match"] = vlan_match
+    def _compute_destination_host_mac_intents(self, h_obj, flow_match):
 
-        #Compile instruction
+        edge_ports_dict = self.model.get_edge_port_dict(h_obj.switch_id, h_obj.host_id)
+        out_port = edge_ports_dict[h_obj.switch_id]
 
-        go_to_table_instruction = {"go-to-table" : {"table_id": next_table_id}, "order": 1}
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
+        host_mac_match = deepcopy(flow_match)
+        host_mac_match.ethernet_destination = h_obj.mac_addr
+        host_mac_intent = Intent("mac", host_mac_match, "all", out_port)
 
-        return flow
+        # Avoiding addition of multiple mac forwarding intents for the same host 
+        # by using its mac address as the key
+        self._add_intent(h_obj.switch_id, h_obj.mac_addr, host_mac_intent)
 
+    def _compute_push_vlan_tag_intents(self, h_obj, flow_match, required_tag):
 
-    def _create_mod_group_with_outport(self, group_id, out_port):
+        push_vlan_match= deepcopy(flow_match)
+        push_vlan_match.in_port = h_obj.switch_port_attached
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all")
+        push_vlan_tag_intent.required_vlan_id = required_tag
 
-        group = dict()
-        group["group-id"] = group_id
-        group["group-type"] = "group-ff"
-        group["barrier"] = False
+        # Avoiding adding a new intent for every departing flow for this switch,
+        # by adding the tag as the key
+        
+        self._add_intent(h_obj.switch_id, required_tag, push_vlan_tag_intent)
 
-        #  Bucket
-        actions = []
+    def _compute_pop_vlan_tag_intents(self, h_obj, flow_match, matching_tag):
 
-        action1 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
-                   "bucket-id": 1, "watch_port": 3, "weight": 20}
+        pop_vlan_match = deepcopy(flow_match)
+        pop_vlan_match.vlan_id = matching_tag
+        pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all")
 
-        action2 = {"action": [{'order': 0, 'output-action': {'output-node-connector':out_port}}],
-                   "bucket-id": 2, "watch_port": 1, "weight": 20}
+        # Avoiding adding a new intent for every arriving flow for this switch
+        #  at destination by using the tag as the key
 
-        actions.append(action1)
-        actions.append(action2)
+        self._add_intent(h_obj.switch_id, matching_tag, pop_vlan_tag_intent)
 
-        bucket = {"bucket": actions}
-        group["buckets"] = bucket
 
-        group = {"flow-node-inventory:group": group}
+    def synthesize_flow(self, src_host, dst_host, flow_match):
 
-        return group
+        # Handy info
+        edge_ports_dict = self.model.get_edge_port_dict(src_host.host_id, src_host.switch_id)
+        in_port = edge_ports_dict[src_host.switch_id]        
+        dst_sw_obj = self.model.get_node_object(dst_host.switch_id)
+    
+        ## Things at source
+        # Tag packets leaving the source host with a vlan tag of the destination switch
+        self._compute_push_vlan_tag_intents(src_host, flow_match, dst_sw_obj.synthesis_tag)    
 
-    def _create_mod_group_with_vlan_tag_write(self, group_id, tag):
+        ## Things at destination
+        # Add a MAC based forwarding rule for the destination host at the last hop
+        self._compute_destination_host_mac_intents(dst_host, flow_match)
+        
+        # Untag packets if they belong to a host connected to the dst switch AND then match its tag
+        self._compute_pop_vlan_tag_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
 
-        group = dict()
-        group["group-id"] = group_id
-        group["group-type"] = "group-ff"
-        group["barrier"] = False
+        #  First find the shortest path between src and dst.
+        p = nx.shortest_path(self.model.graph, source=src_host.switch_id, target=dst_host.switch_id)
+        print "Primary Path:", p
 
-        #  Bucket
-        actions = []
+        #  Compute all forwarding intents as a result of primary path
+        self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
 
-        action1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
-                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}}],
-                   "bucket-id": 1, "watch_port": 3, "weight": 20}
+        #  Along the shortest path, break a link one-by-one
+        #  and accumulate desired action buckets in the resulting path
 
+        #  Go through the path, one edge at a time
+        for i in range(len(p) - 1):
 
-        action2 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
-                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}}],
-                   "bucket-id": 2, "watch_port": 1, "weight": 20}
+            # Keep a copy of this handy
+            edge_ports_dict = self.model.get_edge_port_dict(p[i], p[i+1])
 
-        actions.append(action1)
-        actions.append(action2)
+            # Delete the edge
+            self.model.graph.remove_edge(p[i], p[i + 1])
 
-        bucket = {"bucket": actions}
-        group["buckets"] = bucket
+            # Find the shortest path that results when the link breaks
+            # and compute forwarding intents for that
+            bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host.switch_id)
+            print "Backup Path", bp
 
-        group = {"flow-node-inventory:group": group}
+            self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
 
-        return group
+            # Add the edge back and the data that goes along with it
+            self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
+            in_port = edge_ports_dict[p[i+1]]
 
-    def _create_mod_group_with_outport_and_vlan_tag_write(self, group_id, tag, port):
+    def push_switch_changes(self):
 
-        group = dict()
-        group["group-id"] = group_id
-        group["group-type"] = "group-ff"
-        group["barrier"] = False
+        self.synthesis_lib.trigger(self.s)
 
-        #  Bucket
-        bucket_list = []
+    def synthesize_all_node_pairs(self):
 
-        bucket1 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
-                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}},
-                              {'order': 2, 'output-action': {'output-node-connector':port}}],
-                   "bucket-id": 1, "watch_port": 3, "weight": 20}
+        print "Synthesizing backup paths between all possible host pairs..."
+        for src in self.model.get_host_ids():
+            for dst in self.model.get_host_ids():
 
+                # Ignore paths with same src/dst
+                if src == dst:
+                    continue
 
-        bucket2 = {"action": [{'order': 0, 'push-vlan-action': {'ethernet-type': 0x8100}},
-                              {'order': 1, 'set-field': {'vlan-match': {"vlan-id": {"vlan-id": tag, "vlan-id-present":True}}}},
-                              {'order': 2, 'output-action': {'output-node-connector':port}}],
-                   "bucket-id": 2, "watch_port": 1, "weight": 20}
+                print "--------------------------------------------------------------------------------------------------------"
+                print 'Synthesizing primary and backup paths from', src, 'to', dst
+                print "--------------------------------------------------------------------------------------------------------"
 
-        bucket_list.append(bucket1)
-        bucket_list.append(bucket2)
+                flow_match = Match()
+                #flow_match.udp_destination_port = 80
+                flow_match.ethernet_type = 0x0800
 
-        bucket = {"bucket": bucket_list}
-        group["buckets"] = bucket
+                self.synthesize_flow(self.model.get_node_object(src), self.model.get_node_object(dst), flow_match)
+                print "--------------------------------------------------------------------------------------------------------"
 
-        group = {"flow-node-inventory:group": group}
 
-        return group
-
-
-    def _push_change(self, url, pushed_content):
-
-        resp, content = self.h.request(url, "PUT",
-                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
-                                       body=json.dumps(pushed_content))
-
-        print "Pushed:", pushed_content.keys()[0], resp["status"]
-        time.sleep(0.5)
-
-
-    def _populate_switch(self, node_id):
-
-        #  S1 tags plain IP packets (with no vlan tags) with a vlan tag 1234 and sends them to ALL
-        #  its neighbors, in this particular line case, there is just one guy called s2 that receives it
-
-        if node_id == "openflow:1":
-
-            #  Install the two groups for performing two separate functions
-            group_id = 7
-            group = self._create_mod_group_with_outport_and_vlan_tag_write(group_id, "1234", self.OFPP_ALL)
-            url = create_group_url(node_id, group_id)
-            self._push_change(url, group)
-
-
-            #  Install the rule that invokes next table AND Calls out for a group
-            table_id = 0
-            flow_id = 1
-            flow = self._create_match_no_vlan_tag_instruct_next_table_rule(flow_id, table_id, 1)
-            url = create_flow_url(node_id, table_id, str(flow_id))
-            self._push_change(url, flow)
-
-            table_id = 1
-            flow_id = 2
-            flow = self._create_match_no_vlan_tag_instruct_group_rule(flow_id, table_id, 7)
-            url = create_flow_url(node_id, table_id, str(flow_id))
-            self._push_change(url, flow)
-
-
-        # Switch s2 just sends the traffic with vlan tag 1234 back to s1
-        if node_id == "openflow:2":
-
-            table_id = 0
-            flow_id = 1
-            group_id = 8
-
-            group = self._create_mod_group_with_outport_and_vlan_tag_write(group_id, "1235", self.OFPP_IN)
-            url = create_group_url(node_id, group_id)
-            self._push_change(url, group)
-
-            flow = self._create_match_vlan_tag_instruct_group_rule(flow_id, table_id, group_id, "1234")
-            url = create_flow_url(node_id, table_id, str(flow_id))
-            self._push_change(url, flow)
-
-        #  Switch s3 does not do nothing
-        if node_id == "openflow:3":
-            pass
-
-    def trigger(self):
-
-        #  First figure out what switches exist in the current topology
-        #  Each switch needs the same thing (logically) inside it
-
-        for n in self.model.graph.nodes():
-
-            if self.model.graph.node[n]["node_type"] == "switch":
-                print "We are in business here at n:", self.model.graph.node[n]["node_type"], n
-                self._populate_switch(n)
-
-
+        self._identify_reverse_and_balking_intents()
+        self.push_switch_changes()
 
 def main():
-    sm = SynthesizeMod()
-
-    sm.trigger()
+    sm = SynthesizeDij()
+    sm.synthesize_all_node_pairs()
 
 if __name__ == "__main__":
     main()
