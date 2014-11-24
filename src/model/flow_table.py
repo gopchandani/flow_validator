@@ -15,17 +15,22 @@ class Flow():
         self.priority = int(flow["priority"])
         self.match = Match(flow["match"])
         self.written_actions = []
+        self.applied_actions = []
 
         self.go_to_table = None
 
         # Go through instructions
         for instruction_json in flow["instructions"]["instruction"]:
 
-            #  Handle the write-action case for now
             if "write-actions" in instruction_json:
                 write_actions_json = instruction_json["write-actions"]
                 for action_json in write_actions_json["action"]:
                     self.written_actions.append(Action(sw, action_json))
+
+            if "apply-actions" in instruction_json:
+                apply_actions_json = instruction_json["apply-actions"]
+                for action_json in apply_actions_json["action"]:
+                    self.applied_actions.append(Action(sw, action_json))
 
             if "go-to-table" in instruction_json:
                 self.go_to_table = instruction_json["go-to-table"]["table_id"]

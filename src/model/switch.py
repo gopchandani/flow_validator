@@ -48,7 +48,7 @@ class Switch():
 
     def transfer_function(self, in_port_match):
 
-        action_set = ActionSet(self)
+        written_action_set = ActionSet(self)
         out_ports = []
 
         # Check if the switch has at least one table
@@ -66,9 +66,19 @@ class Switch():
 
             if hpm_flow:
 
+                # See if there were any apply-action instructions, if so, compute the resulting match
+                # otherwise following along the same match to next table
+                if hpm_flow.applied_actions:
+                    table_applied_action_set = ActionSet(self)
+                    table_applied_action_set.add_actions(hpm_flow.applied_actions, intersection)
+                    table_applied_action_set.get_resulting_match(next_table_matches_on)
+                    next_table_matches_on = table_applied_action_set.get_resulting_match(next_table_matches_on)
+                else:
+                    next_table_matches_on = in_port_match
+
                 # If there are any written-actions that hpm_flow does, accumulate them
                 if hpm_flow.written_actions:
-                    action_set.add_actions(hpm_flow.written_actions, intersection)
+                    written_action_set.add_actions(hpm_flow.written_actions, intersection)
 
                 # if the hpm_flow has any go-to-next table instructions then
                 # update table_id_to_check and has_table_to_check accordingly
@@ -82,13 +92,11 @@ class Switch():
                 else:
                     has_table_to_check = False
 
-                # TODO: Send match data and action set to the next table
-                # TODO: Right now all tables are matching on the same arriving match
-                next_table_matches_on = in_port_match
+                # TODO: Handle the cases for other instructions, e.g. meta information
 
             else:
                 has_table_to_check = False
 
-        out_port_match = action_set.get_out_port_matches(in_port_match)
+        out_port_match = written_action_set.get_out_port_matches(in_port_match)
 
         return out_port_match

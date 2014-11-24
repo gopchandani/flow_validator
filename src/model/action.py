@@ -102,8 +102,8 @@ class ActionSet():
         # These actions may be tucked away inside a group too and the type might be group
 
         self.action_set = defaultdict(list)
-
         self.sw = sw
+
 
     def add_actions(self, action_list, intersection):
 
@@ -119,6 +119,22 @@ class ActionSet():
                 action.matched_flow = intersection
                 self.action_set[action.action_type].append(action)
 
+    def get_resulting_match(self, input_match):
+
+        output_match = input_match
+
+        # Go through the operations that are performed to the match before the packet is sent out
+        if "pop_vlan" in self.action_set:
+            output_match.has_vlan_tag= False
+
+        if "push_vlan" in self.action_set:
+            output_match.has_vlan_tag= True
+
+        if "set_field" in self.action_set:
+            output_match.set_fields_with_match(self.action_set["set_field"][0].set_field_match)
+
+        return output_match
+
 
     def get_out_port_matches(self, in_port_match):
         in_port = in_port_match.in_port
@@ -128,17 +144,7 @@ class ActionSet():
         #  For each output action, there is a corresponding out_port_match entry
         for output_action in self.action_set["output"]:
 
-            output_match = output_action.matched_flow
-
-            # Go through the operations that are performed to the match before the packet is sent out
-            if "pop_vlan" in self.action_set:
-                output_match.has_vlan_tag= False
-
-            if "push_vlan" in self.action_set:
-                output_match.has_vlan_tag= True
-
-            if "set_field" in self.action_set:
-                output_match.set_fields_with_match(self.action_set["set_field"][0].set_field_match)
+            output_match = self.get_resulting_match(output_action.matched_flow)
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
                 out_port_match[in_port] = output_match

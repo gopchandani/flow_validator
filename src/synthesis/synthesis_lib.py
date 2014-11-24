@@ -110,6 +110,16 @@ class SynthesisLib():
 
         return flow
 
+    def _populate_flow_action_instruction(self, flow, action_list, apply_immediately):
+
+        if apply_immediately:
+            apply_actions_instruction = {"apply-actions": {"action": action_list}, "order": 0}
+            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_actions_instruction)
+        else:
+            write_actions_instruction = {"write-actions": {"action": action_list}, "order": 0}
+            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+
+
     def _push_table_miss_goto_next_table_flow(self, sw, table_id):
 
         # Create a lowest possible flow
@@ -124,7 +134,8 @@ class SynthesisLib():
         self._push_flow(sw, flow)
 
 
-    def _push_match_per_in_port_destination_instruct_group_flow(self, sw, table_id, group_id, priority, flow_match):
+    def _push_match_per_in_port_destination_instruct_group_flow(self, sw, table_id, group_id, priority,
+                                                                flow_match, apply_immediately):
 
         flow = self._create_base_flow(table_id, priority)
 
@@ -136,11 +147,9 @@ class SynthesisLib():
 
         #  Assert that group is executed upon match
         group_action = {"group-id": group_id}
-        action = {"group-action": group_action, "order": 0}
-        write_actions_instruction = {"apply-actions": {"action": action}, "order": 0}
+        action_list = [{"group-action": group_action, "order": 0}]
 
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
-
+        self._populate_flow_action_instruction(flow, action_list, apply_immediately)
         self._push_flow(sw, flow)
 
         return flow
@@ -250,11 +259,9 @@ class SynthesisLib():
 
         #  Assert that group is executed upon match
         output_action = {"output-node-connector": mac_intent.out_port}
-        action = {"output-action": output_action, "order": 0}
-        write_actions_instruction = {"apply-actions": {"action": action}, "order": 0}
+        action_list = [{"output-action": output_action, "order": 0}]
 
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
-
+        self._populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
         self._push_flow(sw, flow)
 
         return flow
@@ -289,8 +296,8 @@ class SynthesisLib():
             action2 = {'order': 1, 'set-field': set_vlan_id_action}
 
             action_list = [action1, action2]
-            write_actions_instruction = {"apply-actions": {"action": action_list}, "order": 0}
-            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+
+            self._populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
             # Also, punt such packets to the next table
             go_to_table_instruction = {"go-to-table": {"table_id": self.vlan_rules_table_id + 1}, "order": 1}
@@ -308,9 +315,9 @@ class SynthesisLib():
 
             #Compile instruction
             pop_vlan_action = {}
-            action = {'order': 0, 'pop-vlan-action': pop_vlan_action}
-            write_actions_instruction = {"apply-actions": {"action": action}, "order": 0}
-            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+            action_list = [{'order': 0, 'pop-vlan-action': pop_vlan_action}]
+
+            self._populate_flow_action_instruction(flow, action_list, pop_vlan_intent.apply_immediately)
 
             # Also, punt such packets to the next table
             go_to_table_instruction = {"go-to-table": {"table_id": self.vlan_rules_table_id + 1}, "order": 1}
@@ -369,7 +376,7 @@ class SynthesisLib():
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],
-                        1, primary_intent.flow_match)
+                        1, primary_intent.flow_match, primary_intent.apply_immediately)
 
                 if primary_intent and failover_intents:
 
@@ -393,7 +400,7 @@ class SynthesisLib():
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],
-                        1, primary_intent.flow_match)
+                        1, primary_intent.flow_match, primary_intent.apply_immediately)
 
                     if len(failover_intents) > 1:
                         raise Exception ("Hitting an unexpected case.")
@@ -409,7 +416,7 @@ class SynthesisLib():
                         flow = self._push_match_per_in_port_destination_instruct_group_flow(
                             sw, self.ip_forwarding_table_id,
                             group["flow-node-inventory:group"]["group-id"],
-                            1, failover_intent.flow_match)
+                            1, failover_intent.flow_match, failover_intent.apply_immediately)
 
                 if primary_intent and balking_intent:
 
@@ -428,7 +435,7 @@ class SynthesisLib():
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],
-                        1, primary_intent.flow_match)
+                        1, primary_intent.flow_match, primary_intent.apply_immediately)
 
                 if reverse_intent:
 
@@ -436,4 +443,4 @@ class SynthesisLib():
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.reverse_rules_table_id,
                         group["flow-node-inventory:group"]["group-id"],
-                        1, reverse_intent.flow_match)
+                        1, reverse_intent.flow_match, reverse_intent.apply_immediately)
