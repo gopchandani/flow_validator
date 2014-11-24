@@ -130,7 +130,7 @@ class SynthesizeDij():
 
     def _compute_destination_host_mac_intents(self, h_obj, flow_match):
 
-        edge_ports_dict = self.model.get_edge_port_dict(h_obj.switch_id, h_obj.host_id)
+        edge_ports_dict = self.model.get_edge_port_dict(h_obj.switch_id, h_obj.node_id)
         out_port = edge_ports_dict[h_obj.switch_id]
 
         host_mac_match = deepcopy(flow_match)
@@ -168,7 +168,7 @@ class SynthesizeDij():
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         # Handy info
-        edge_ports_dict = self.model.get_edge_port_dict(src_host.host_id, src_host.switch_id)
+        edge_ports_dict = self.model.get_edge_port_dict(src_host.node_id, src_host.switch_id)
         in_port = edge_ports_dict[src_host.switch_id]        
         dst_sw_obj = self.model.get_node_object(dst_host.switch_id)
     

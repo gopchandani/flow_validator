@@ -15,7 +15,7 @@ class Port():
     def __init__(self, sw, nc):
 
         self.sw = sw
-        self.id = nc["id"]
+        self.port_id = nc["id"]
         self.port_number = nc["flow-node-inventory:port-number"]
         self.mac_address = nc["flow-node-inventory:hardware-address"]
 
@@ -24,7 +24,7 @@ class Port():
 
         if nc["flow-node-inventory:port-number"] == "LOCAL":
             self.faces = "internal"
-            self.facing_node_id = self.id
+            self.facing_node_id = self.port_id
 
         self.state = None
 
@@ -36,7 +36,7 @@ class Port():
     def __str__(self):
 
         return "Port -- " + \
-               " Id: " + str(self.id) + \
+               " Id: " + str(self.port_id) + \
                " Port Number: " + str(self.port_number) + \
                " MAC Address: " + str(self.mac_address) + \
                " Faces: " + str(self.faces) + \
