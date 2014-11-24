@@ -2,7 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 class Intent():
 
-    def __init__(self, intent_type, flow_match, in_port, out_port):
+    def __init__(self, intent_type, flow_match, in_port, out_port, apply_immediately=False):
 
         self.intent_type = intent_type
         self.flow_match = flow_match
@@ -12,7 +12,7 @@ class Intent():
         self.required_vlan_id = None
         self.hash_value = hash(str(self.in_port) + str(self.out_port) + str(self.flow_match))
 
-        self.apply_immediately = False
+        self.apply_immediately = apply_immediately
 
     def __hash__(self):
         return self.hash_value

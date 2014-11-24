@@ -36,7 +36,7 @@ class SynthesizeDij():
             fwd_flow_match = deepcopy(flow_match)
             fwd_flow_match.vlan_id = dst_switch_tag
 
-            intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port, True)
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
@@ -132,7 +132,7 @@ class SynthesizeDij():
 
         host_mac_match = deepcopy(flow_match)
         host_mac_match.ethernet_destination = h_obj.mac_addr
-        host_mac_intent = Intent("mac", host_mac_match, "all", out_port)
+        host_mac_intent = Intent("mac", host_mac_match, "all", out_port, True)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
         # by using its mac address as the key
@@ -142,7 +142,7 @@ class SynthesizeDij():
 
         push_vlan_match= deepcopy(flow_match)
         push_vlan_match.in_port = h_obj.switch_port_attached
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all")
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", True)
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         # Avoiding adding a new intent for every departing flow for this switch,
@@ -154,7 +154,7 @@ class SynthesizeDij():
 
         pop_vlan_match = deepcopy(flow_match)
         pop_vlan_match.vlan_id = matching_tag
-        pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all")
+        pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all", True)
 
         # Avoiding adding a new intent for every arriving flow for this switch
         #  at destination by using the tag as the key
