@@ -14,6 +14,8 @@ class Host():
         self.switch_obj = switch_obj
         self.switch_port_attached = switch_port_attached
 
+        self.switch_port = switch_obj.ports[self.switch_port_attached]
+
         #Analysis stuff
         self.in_port_match = None
 

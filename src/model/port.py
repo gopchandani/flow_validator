@@ -19,6 +19,12 @@ class Port():
         self.port_type = port_type
         self.port_id = None
 
+        # This dictionary is to hold a Match object per destination
+        self.destination_switch_match = {}
+        self.destination_host_match = {}
+
+
+
         # These apply specifically to physical ports
         self.mac_address = None
         self.port_number = None

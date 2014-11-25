@@ -32,7 +32,18 @@ class NetSwitch:
         return port_graph
 
     def perform_wildcard_analysis(self):
-        pass
+        for h in self.model.get_hosts():
+            print h
+
+            # Inject a wild-card (albeit with some realism) at the appropriate port and trigger analysis for the same
+            host_match = Match()
+            host_match.ethernet_type = 0x0800
+            host_match.ethernet_source = h.mac_addr
+            host_match.has_vlan_tag = False
+
+            h.switch_port.destination_host_match[h.node_id] = host_match
+
+
 
     #TODO: Methods for events
 
