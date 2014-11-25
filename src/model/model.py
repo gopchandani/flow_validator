@@ -207,8 +207,16 @@ class Model():
     def get_host_ids(self):
         return self.host_ids
 
+    def get_hosts(self):
+        for host_id in self.host_ids:
+            yield self.get_node_object(host_id)
+
     def get_switch_ids(self):
         return self.switch_ids
+
+    def get_switches(self):
+        for switch_id in self.switch_ids:
+            yield self.get_node_object(switch_id)
 
     def get_host_id_node_with_ip(self, req_ip):
         host_node_id = None

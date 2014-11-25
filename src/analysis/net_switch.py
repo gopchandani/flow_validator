@@ -8,10 +8,20 @@ from model.model import Model
 from model.match import Match
 from netaddr import IPNetwork
 
-class PortMap:
+class NetSwitch:
 
     def __init__(self, model):
         self.model = model
+        self.port_graph = self.init_port_graph()
+
+    def init_port_graph(self):
+        port_graph = nx.Graph()
+
+        # Iterate through switches and add the ports
+        for sw in self.model.get_switches():
+            print sw
+
+        return port_graph
 
     def perform_wildcard_analysis(self):
         pass
@@ -22,9 +32,8 @@ class PortMap:
 def main():
 
     m = Model()
-    pm = PortMap(m)
+    pm = NetSwitch(m)
     pm.perform_wildcard_analysis()
-    pm.add_switch()
 
 if __name__ == "__main__":
     main()
