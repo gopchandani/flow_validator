@@ -34,9 +34,18 @@ class NetSwitch:
     # This function populates the port graph with edges and match state
     def populate_port_graph(self, starting_port):
 
-        # See what ports on this switch can reach this port and with what match
-        for port in starting_port.sw.ports:
-            print port
+        # See what other ports on this switch can reach this port and with what match
+        for port in starting_port.sw.ports.values():
+
+            if port != starting_port:
+                input_match = starting_port.host_match
+                input_match.in_port = port.port_number
+
+                output_match = starting_port.sw.transfer_function(input_match)
+
+                print "From Port:", port
+                print "To Port:", starting_port
+                print "Passed Match:", output_match[starting_port.port_number]
 
     
         # TODO: Need to have a method for switch which would do this,
@@ -54,13 +63,14 @@ class NetSwitch:
     def perform_wildcard_analysis(self):
         for h in self.model.get_hosts():
 
-            # Inject a wild-card (albeit with some realism) at the appropriate port and trigger analysis for the same
+            # Inject a wild-card (albeit with some realism) at the appropriate port
+            # This here specifies the
             host_match = Match()
             host_match.ethernet_type = 0x0800
             host_match.ethernet_source = h.mac_addr
             host_match.has_vlan_tag = False
 
-            h.switch_port.destination_host_match[h.node_id] = host_match
+            h.switch_port.host_match = host_match
 
             self.populate_port_graph(h.switch_port)
             break

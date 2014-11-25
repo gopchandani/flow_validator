@@ -21,7 +21,8 @@ class Port():
 
         # This dictionary is to hold a Match object per destination
         self.destination_switch_match = {}
-        self.destination_host_match = {}
+
+        self.host_match = None
 
 
 

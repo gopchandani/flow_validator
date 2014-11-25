@@ -34,6 +34,21 @@ class Match():
         if match_json:
             self.set_fields_with_match_json(match_json)
 
+    def __str__(self):
+        return "in_port: " + str(self.in_port) + "," + \
+               "ethernet_type: " + str(self.ethernet_type) + "," + \
+               "ethernet_source: " + str(self.ethernet_source) + "," + \
+               "ethernet_destination: " + str(self.ethernet_destination) + "," + \
+               "src_ip_addr: " + str(self.src_ip_addr) + "," + \
+               "dst_ip_addr: " + str(self.dst_ip_addr) + "," + \
+               "ip_protocol: " + str(self.ip_protocol) + "," + \
+               "tcp_destination_port: " + str(self.tcp_destination_port) + "," + \
+               "tcp_source_port: " + str(self.tcp_source_port) + "," + \
+               "udp_destination_port: " + str(self.udp_destination_port) + "," + \
+               "udp_source_port: " + str(self.udp_source_port) + "," + \
+               "vlan_id: " + str(self.vlan_id) + "," + \
+               "has_vlan_tag: " + str(self.has_vlan_tag) + ","
+
     def set_fields_with_match(self, in_match):
 
         if in_match.in_port != "all":
