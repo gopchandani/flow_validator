@@ -31,9 +31,28 @@ class NetSwitch:
 
         return port_graph
 
+    # This function populates the port graph with edges and match state
+    def populate_port_graph(self, starting_port):
+
+        # See what ports on this switch can reach this port and with what match
+        for port in starting_port.sw.ports:
+            print port
+
+    
+        # TODO: Need to have a method for switch which would do this,
+        # Takes a destination port, and source port and computes precisely just that.
+    
+        # Go a level higher, i.e. Go to the ports that are physically 
+        # connected to ports in this switch from other switches and then compute the same from there.
+        # This sounds _eerily_ recursive. :)
+
+        # These other ports can not be things that we have already seen though
+
+        #This whole thing terminates at ports that are connected to other switches.
+        #This sounds eerily like the end case of recursion
+
     def perform_wildcard_analysis(self):
         for h in self.model.get_hosts():
-            print h
 
             # Inject a wild-card (albeit with some realism) at the appropriate port and trigger analysis for the same
             host_match = Match()
@@ -43,7 +62,8 @@ class NetSwitch:
 
             h.switch_port.destination_host_match[h.node_id] = host_match
 
-
+            self.populate_port_graph(h.switch_port)
+            break
 
     #TODO: Methods for events
 

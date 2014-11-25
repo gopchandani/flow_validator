@@ -82,7 +82,8 @@ class Model():
             switch_ports = {}
             # Parse out the information about all the ports in the switch
             for nc in node["node-connector"]:
-                switch_ports[nc["flow-node-inventory:port-number"]] = Port(sw, nc)
+                if nc["flow-node-inventory:port-number"] != "LOCAL":
+                    switch_ports[nc["flow-node-inventory:port-number"]] = Port(sw, nc)
 
             #  Get all the flow tables
             switch_flow_tables = {}
