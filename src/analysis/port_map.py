@@ -11,22 +11,13 @@ from netaddr import IPNetwork
 class PortMap:
 
     def __init__(self, model):
-        pass
-
-    def add_switch(self):
-        pass
-
-    def remove_switch(self):
-        pass
-
-    def add_edge(self):
-        pass
-
-    def remove_edge(self):
-        pass
+        self.model = model
 
     def perform_wildcard_analysis(self):
         pass
+
+    #TODO: Methods for events
+
 
 def main():
 
