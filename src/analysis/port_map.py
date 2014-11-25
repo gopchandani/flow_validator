@@ -10,15 +10,30 @@ from netaddr import IPNetwork
 
 class PortMap:
 
-    def __init__(self):
+    def __init__(self, model):
         pass
 
-    def trigger_wildcard_analysis(self):
+    def add_switch(self):
+        pass
+
+    def remove_switch(self):
+        pass
+
+    def add_edge(self):
+        pass
+
+    def remove_edge(self):
+        pass
+
+    def perform_wildcard_analysis(self):
         pass
 
 def main():
-    pm = PortMap()
+
+    m = Model()
+    pm = PortMap(m)
     pm.perform_wildcard_analysis()
+    pm.add_switch()
 
 if __name__ == "__main__":
     main()
