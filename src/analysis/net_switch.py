@@ -4,9 +4,12 @@ __author__ = 'Rakesh Kumar'
 import networkx as nx
 import sys
 
-from model.model import Model
-from model.match import Match
 from netaddr import IPNetwork
+
+from model.model import Model
+from model.port import Port
+from model.match import Match
+
 
 class NetSwitch:
 
@@ -19,7 +22,12 @@ class NetSwitch:
 
         # Iterate through switches and add the ports
         for sw in self.model.get_switches():
-            print sw
+            for port in sw.ports:
+                port_graph.add_node(sw.ports[port])
+
+            if len(sw.flow_tables) > 1:
+                for i in range(len(sw.flow_tables) - 1):
+                    port_graph.add_node(Port(sw, port_type="table"))
 
         return port_graph
 

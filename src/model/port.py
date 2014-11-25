@@ -11,24 +11,39 @@ class Port():
     the current state (up/down) of the port
 
     """
+    table_port_id_cntr = 0
 
-    def __init__(self, sw, nc):
+    def __init__(self, sw, node_connector_json=None, port_type="physical"):
 
         self.sw = sw
-        self.port_id = nc["id"]
-        self.port_number = nc["flow-node-inventory:port-number"]
-        self.mac_address = nc["flow-node-inventory:hardware-address"]
+        self.port_type = port_type
+        self.port_id = None
 
+        # These apply specifically to physical ports
+        self.mac_address = None
+        self.port_number = None
         self.faces = None
         self.facing_node_id = None
+        self.state = None
 
-        if nc["flow-node-inventory:port-number"] == "LOCAL":
+        if port_type == "physical" and node_connector_json:
+            self._populate_with_node_connector_json(node_connector_json)
+        elif port_type == "table":
+            self.port_id = self.sw.node_id + ":table" + str(Port.table_port_id_cntr)
+            Port.table_port_id_cntr += 1
+        else:
+            raise Exception("Invalid port type specified.")
+
+    def _populate_with_node_connector_json(self, node_connector_json):
+        self.port_id = node_connector_json["id"]
+        self.port_number = node_connector_json["flow-node-inventory:port-number"]
+        self.mac_address = node_connector_json["flow-node-inventory:hardware-address"]
+
+        if node_connector_json["flow-node-inventory:port-number"] == "LOCAL":
             self.faces = "internal"
             self.facing_node_id = self.port_id
 
-        self.state = None
-
-        if nc["flow-node-inventory:state"]["link-down"]:
+        if node_connector_json["flow-node-inventory:state"]["link-down"]:
             self.state = "down"
         else:
             self.state = "up"
