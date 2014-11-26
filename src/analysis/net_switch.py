@@ -40,14 +40,10 @@ class NetSwitch:
             if port != starting_port:
                 input_match = starting_port.host_match
                 input_match.in_port = port.port_number
-
                 output_match = starting_port.sw.transfer_function(input_match)
+                port.destination_switch_match[starting_port.port_id] = output_match[starting_port.port_number]
 
-                print "From Port:", port
-                print "To Port:", starting_port
-                print "Passed Match:", output_match[starting_port.port_number]
 
-    
         # TODO: Need to have a method for switch which would do this,
         # Takes a destination port, and source port and computes precisely just that.
     
