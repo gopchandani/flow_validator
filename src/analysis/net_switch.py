@@ -17,22 +17,53 @@ class NetSwitch:
         self.model = model
         self.port_graph = self.init_port_graph()
 
+    def _get_table_port_id(self, switch_id, table_number):
+        return switch_id + ":table" + str(table_number)
+
+    def _get_table_port(self, switch_id, table_number):
+        return self.port_graph.node[self._get_table_port_id(switch_id,table_number)]["p"]
+
     def init_port_graph(self):
         port_graph = nx.Graph()
 
         # Iterate through switches and add the ports
         for sw in self.model.get_switches():
             for port in sw.ports:
-                port_graph.add_node(sw.ports[port])
+                port_graph.add_node(sw.ports[port].port_id, p=sw.ports[port])
 
-            if len(sw.flow_tables) > 1:
-                for i in range(len(sw.flow_tables) - 1):
-                    port_graph.add_node(Port(sw, port_type="table"))
+            for i in range(len(sw.flow_tables)):
+                p = Port(sw, port_type="table", port_id=self._get_table_port_id(sw.node_id, i))
+                port_graph.add_node(p.port_id, p=p)
 
         return port_graph
 
     # This function populates the port graph with edges and match state
     def populate_port_graph(self, starting_port):
+
+        # Capture the action_list for ports before and after a table.
+        # The path from one external facing port to another goes through a sequence of action lists
+        # This breaks when the next action depends on changes that have already been made to the header
+        # aka apply-action
+
+        # See what actions across the tables does this match attract.
+        # Some of these actions would be a function of in_port and some won't be. But the match we should try
+        # should have in_port set to "all"
+
+        # That is to do this from the prior computation instead of doing transfer function over and it and over again
+
+        # The same nature of things also applies when we are traversing switch boundaries, except the action_list
+        # is empty
+
+
+        input_match = starting_port.host_match
+        input_match.in_port = "all"
+        for i in range(len(starting_port.sw.flow_tables)):
+
+            table_port = self._get_table_port(starting_port.sw.node_id, i)
+
+            print table_port.port_id
+            print starting_port.sw.flow_tables[i].table_id
+
 
         # See what other ports on this switch can reach this port and with what match
         for port in starting_port.sw.ports.values():

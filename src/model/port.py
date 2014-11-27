@@ -11,9 +11,8 @@ class Port():
     the current state (up/down) of the port
 
     """
-    table_port_id_cntr = 0
 
-    def __init__(self, sw, node_connector_json=None, port_type="physical"):
+    def __init__(self, sw, node_connector_json=None, port_type="physical", port_id=None):
 
         self.sw = sw
         self.port_type = port_type
@@ -22,9 +21,8 @@ class Port():
         # This dictionary is to hold a Match object per destination
         self.destination_switch_match = {}
 
+        # This is to hold the match that a host permits to be received
         self.host_match = None
-
-
 
         # These apply specifically to physical ports
         self.mac_address = None
@@ -36,8 +34,7 @@ class Port():
         if port_type == "physical" and node_connector_json:
             self._populate_with_node_connector_json(node_connector_json)
         elif port_type == "table":
-            self.port_id = self.sw.node_id + ":table" + str(Port.table_port_id_cntr)
-            Port.table_port_id_cntr += 1
+            self.port_id = port_id
         else:
             raise Exception("Invalid port type specified.")
 
