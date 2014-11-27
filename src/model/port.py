@@ -19,10 +19,8 @@ class Port():
         self.port_id = None
 
         # This dictionary is to hold a Match object per destination
-        self.destination_switch_match = {}
+        self.destination_match = {}
 
-        # This is to hold the match that a host permits to be received
-        self.host_match = None
 
         # These apply specifically to physical ports
         self.mac_address = None

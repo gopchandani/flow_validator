@@ -5,6 +5,7 @@ import networkx as nx
 import sys
 
 from netaddr import IPNetwork
+from copy import deepcopy
 
 from model.model import Model
 from model.port import Port
@@ -38,7 +39,7 @@ class NetSwitch:
         return port_graph
 
     # This function populates the port graph with edges and match state
-    def populate_port_graph(self, starting_port):
+    def populate_port_graph(self, port):
 
         # Capture the action_list for ports before and after a table.
         # The path from one external facing port to another goes through a sequence of action lists
@@ -55,24 +56,36 @@ class NetSwitch:
         # is empty
 
 
-        input_match = starting_port.host_match
-        input_match.in_port = "all"
-        for i in range(len(starting_port.sw.flow_tables)):
+        #Each switch port has entries for all the destination switches + hosts that are directly to it as destinations
 
-            table_port = self._get_table_port(starting_port.sw.node_id, i)
+        for destination in port.destination_match:
 
-            print table_port.port_id
-            print starting_port.sw.flow_tables[i].table_id
+            destination_match = deepcopy(port.destination_match[destination])
+
+            destination_match.in_port = "all"
+            for i in range(len(port.sw.flow_tables)):
+    
+                table_port = self._get_table_port(port.sw.node_id, i)    
+                print table_port.port_id
+                print port.sw.flow_tables[i].table_id
+
+                hpm_flow, intersection = port.sw.flow_tables[i].get_highest_priority_matching_flow(destination_match)
 
 
-        # See what other ports on this switch can reach this port and with what match
-        for port in starting_port.sw.ports.values():
+                #TODO: Need something on the lines of get_hpm_flow_actions_list
+                print hpm_flow.action_list
 
-            if port != starting_port:
-                input_match = starting_port.host_match
-                input_match.in_port = port.port_number
-                output_match = starting_port.sw.transfer_function(input_match)
-                port.destination_switch_match[starting_port.port_id] = output_match[starting_port.port_number]
+
+            #
+            # # See what other ports on this switch can reach this port and with what match
+            # for port in port.sw.ports.values():
+            #
+            #     if port != port:
+            #         destination_match = port.host_match
+            #         destination_match.in_port = port.port_number
+            #         output_match = port.sw.transfer_function(destination_match)
+            #         port.destination_match[port.port_id] = output_match[port.port_number]
+            #
 
 
         # TODO: Need to have a method for switch which would do this,
@@ -97,7 +110,7 @@ class NetSwitch:
             host_match.ethernet_source = h.mac_addr
             host_match.has_vlan_tag = False
 
-            h.switch_port.host_match = host_match
+            h.switch_port.destination_match[h.mac_addr] = host_match
 
             self.populate_port_graph(h.switch_port)
             break
