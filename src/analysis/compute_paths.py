@@ -94,9 +94,19 @@ class ComputePaths:
 
                 print "--"
                 self.dfs(src_h_obj.switch_obj, dst_h_obj, set())
+
+
+    def tf_driver(self):
+        for sw in self.model.get_switches():
+            print sw.node_id
+            sw.compute_transfer_function()
+
+
 def main():
     bp = ComputePaths()
-    bp.analyze_all_node_pairs()
+    #bp.analyze_all_node_pairs()
+
+    bp.tf_driver()
 
 
 if __name__ == "__main__":

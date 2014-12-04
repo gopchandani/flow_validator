@@ -3,6 +3,7 @@ __author__ = 'Rakesh Kumar'
 from collections import defaultdict
 
 from action import ActionSet
+from match import Match
 
 
 class Switch():
@@ -38,6 +39,23 @@ class Switch():
                 break
 
         return is_reachable
+
+    def compute_transfer_function(self):
+
+        # A dictionary of dictionaries
+        self.tf = {}
+        
+        # Apply a wild-card match at all input ports and see what comes out
+        # at the other end.
+        
+        for in_port in self.ports.values():
+            destination_match = Match()
+            destination_match.in_port = in_port.port_number
+            output_match = self.transfer_function(destination_match)
+            self.tf[in_port.port_number] = output_match
+
+        print self.tf
+
 
 
     def transfer_function(self, in_port_match):
