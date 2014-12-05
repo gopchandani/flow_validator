@@ -17,6 +17,8 @@ from line_topo import LineTopo
 from model.match import Match
 from synthesis.synthensize_dij import SynthesizeDij
 from analysis.backup_paths import BackupPaths
+#below added by shane to pass command to linux bash
+import os 
 
 class FlowValidatorTest():
 
@@ -116,14 +118,14 @@ class FlowValidatorTest():
         # Activate Hosts
         self._ping_experiment_hosts()
 
-        time.sleep(60)
+        time.sleep(60) #reduce?
 
         print "Synthesizing..."
         # Synthesize rules in the switches
         s = SynthesizeDij()
         s.synthesize_all_node_pairs()
         print "Synthesis Completed."
-        time.sleep(60)
+        time.sleep(60) #reduce?
 
 
         for (src, dst) in self._get_experiment_host_pair():
@@ -171,9 +173,13 @@ class FlowValidatorTest():
         else:
             return False
 
+def start_controller():
+    bashCommand = "sudo docker run -t -i -p=6633:6633 -p=8181:8181 odl /distribution-karaf-0.2.1-Helium-SR1/bin/karaf &"
+    os.system(bashCommand)    
 
 def main():
 
+    start_controller()
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-t", "--topo",
