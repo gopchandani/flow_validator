@@ -3,6 +3,7 @@ __author__ = 'Rakesh Kumar'
 from collections import defaultdict
 
 from action import ActionSet
+from match import Match
 
 
 class Switch():
@@ -39,6 +40,23 @@ class Switch():
 
         return is_reachable
 
+    def compute_transfer_function(self):
+
+        # A dictionary of dictionaries
+        self.tf = {}
+        
+        # Apply a wild-card match at all input ports and see what comes out
+        # at the other end.
+        
+        for in_port in self.ports.values():
+            destination_match = Match()
+            destination_match.in_port = in_port.port_number
+            output_match = self.transfer_function(destination_match)
+            self.tf[in_port.port_number] = output_match
+
+        print self.tf
+
+
 
     def transfer_function(self, in_port_match):
 
@@ -66,14 +84,13 @@ class Switch():
                     table_applied_action_set = ActionSet(self)
                     table_applied_action_set.add_actions(hpm_flow.applied_actions, intersection)
                     next_table_matches_on = table_applied_action_set.get_resulting_match(next_table_matches_on)
-
                     written_action_set.add_actions(hpm_flow.applied_actions, intersection)
-
                 else:
                     next_table_matches_on = in_port_match
 
                 # If there are any written-actions that hpm_flow does, accumulate them
                 if hpm_flow.written_actions:
+                    print "Found written actions."
                     written_action_set.add_actions(hpm_flow.written_actions, intersection)
 
                 # if the hpm_flow has any go-to-next table instructions then

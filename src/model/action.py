@@ -114,7 +114,7 @@ class ActionSet():
                     group_active_action_list =  self.sw.group_table.groups[action.group_id].get_active_action_list()
                     self.add_actions(group_active_action_list, intersection)
                 else:
-                    raise Exception ("Odd that a group_id is not provided in a group action")
+                    raise Exception("Odd that a group_id is not provided in a group action")
             else:
                 action.matched_flow = intersection
                 self.action_set[action.action_type].append(action)

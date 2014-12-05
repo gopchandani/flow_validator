@@ -72,13 +72,18 @@ class FlowValidatorTest():
         bp = BackupPaths()
 
         flow_match = Match()
+        flow_match.ethernet_source = bp.model.graph.node[bp.model.get_host_id_node_with_ip(src.IP())]["h"].mac_addr
+        flow_match.ethernet_destination = bp.model.graph.node[bp.model.get_host_id_node_with_ip(dst.IP())]["h"].mac_addr
         flow_match.src_ip_addr = IPNetwork(src.IP())
         flow_match.dst_ip_addr = IPNetwork(dst.IP())
         flow_match.ethernet_type = 0x0800
+        flow_match.has_vlan_tag = False
         has_bp_flow_1 = bp.has_primary_and_backup(bp.model.get_host_id_node_with_ip(src.IP()),
                                                   bp.model.get_host_id_node_with_ip(dst.IP()),
                                                   flow_match)
 
+        flow_match.ethernet_source = bp.model.graph.node[bp.model.get_host_id_node_with_ip(dst.IP())]["h"].mac_addr
+        flow_match.ethernet_destination = bp.model.graph.node[bp.model.get_host_id_node_with_ip(src.IP())]["h"].mac_addr
         flow_match.src_ip_addr = IPNetwork(dst.IP())
         flow_match.dst_ip_addr = IPNetwork(src.IP())
         has_bp_flow_2 = bp.has_primary_and_backup(bp.model.get_host_id_node_with_ip(dst.IP()),
