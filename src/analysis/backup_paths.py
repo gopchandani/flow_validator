@@ -55,7 +55,7 @@ class BackupPaths:
         # This loop always starts at a switch
         for i in range(len(node_path) - 1):
             switch = self.model.graph.node[node_path[i]]["sw"]
-            print "At Switch:", switch.switch_id, "in_port:", in_port
+            print "At Switch:", switch.node_id, "in_port:", in_port, "out_port:", out_port
 
             # Capturing during run for primary, what header-space arrives at each node
             if path_type == "primary":
@@ -71,6 +71,7 @@ class BackupPaths:
             in_port_match.in_port = in_port
 
             switch_out_port_match = switch.transfer_function(in_port_match)
+
             if out_port not in switch_out_port_match:
                 is_reachable = False
                 break

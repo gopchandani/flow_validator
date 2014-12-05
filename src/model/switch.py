@@ -84,14 +84,13 @@ class Switch():
                     table_applied_action_set = ActionSet(self)
                     table_applied_action_set.add_actions(hpm_flow.applied_actions, intersection)
                     next_table_matches_on = table_applied_action_set.get_resulting_match(next_table_matches_on)
-
                     written_action_set.add_actions(hpm_flow.applied_actions, intersection)
-
                 else:
                     next_table_matches_on = in_port_match
 
                 # If there are any written-actions that hpm_flow does, accumulate them
                 if hpm_flow.written_actions:
+                    print "Found written actions."
                     written_action_set.add_actions(hpm_flow.written_actions, intersection)
 
                 # if the hpm_flow has any go-to-next table instructions then
