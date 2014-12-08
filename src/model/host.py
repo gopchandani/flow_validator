@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+from match import Match
 
 class Host():
 
@@ -18,6 +19,7 @@ class Host():
 
         #Analysis stuff
         self.in_port_match = None
+
 
     def transfer_function(self, in_port_match):
         # Dont know the port on the host side, using 0
