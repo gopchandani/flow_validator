@@ -70,6 +70,48 @@ class ComputePaths:
                             # Add the neighbor to queue so it is visited
                             queue.append(neighbor_obj)
 
+    def check_switch_crossing(self, node_obj, neighbor_obj):
+
+        # See if we can get to this neighbor from here with the match
+        edge_port_dict = self.model.get_edge_port_dict(node_obj.node_id, neighbor_obj.node_id)
+        out_port_match = node_obj.transfer_function(node_obj.in_port_match)
+
+        if edge_port_dict[node_obj.node_id] in out_port_match:
+
+            # Account for what traffic will arrive at neighbor
+            passing_match = out_port_match[edge_port_dict[node_obj.node_id]]
+            passing_match.in_port = edge_port_dict[neighbor_obj.node_id]
+            neighbor_obj.in_port_match = passing_match
+
+            return True
+        else:
+
+            return False
+
+
+    def bfs_paths(self, start_node_obj, destination_node_obj):
+
+        queue = [(start_node_obj, [start_node_obj])]
+
+        while queue:
+            node_obj, path = queue.pop(0)
+
+            for neighbor in self.model.graph.neighbors(node_obj.node_id):
+                neighbor_obj = self.model.get_node_object(neighbor)
+
+                # Consider only nodes that are not in the path accumulated so far
+                if neighbor_obj not in path:
+
+                    # If arrived at the destination already, stop
+                    if neighbor_obj == destination_node_obj:
+                        yield path + [neighbor_obj]
+
+                    # Otherwise, where else can I go, add them to to the queue
+                    else:
+                        if self.check_switch_crossing(node_obj, neighbor_obj):
+                            queue.append((neighbor_obj, path + [neighbor_obj]))
+
+
     def analyze_all_node_pairs(self):
 
         # For each host, start a graph search at the switch it is connected to
@@ -93,7 +135,7 @@ class ComputePaths:
                 src_h_obj.switch_obj.in_port = src_h_obj.switch_port_attached
 
                 print "--"
-                self.dfs(src_h_obj.switch_obj, dst_h_obj, set())
+                print list(self.bfs_paths(src_h_obj.switch_obj, dst_h_obj))
 
 
     def tf_driver(self):
@@ -104,9 +146,9 @@ class ComputePaths:
 
 def main():
     bp = ComputePaths()
-    #bp.analyze_all_node_pairs()
+    bp.analyze_all_node_pairs()
 
-    bp.tf_driver()
+    #bp.tf_driver()
 
 
 if __name__ == "__main__":

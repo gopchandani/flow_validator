@@ -90,7 +90,6 @@ class Switch():
 
                 # If there are any written-actions that hpm_flow does, accumulate them
                 if hpm_flow.written_actions:
-                    print "Found written actions."
                     written_action_set.add_actions(hpm_flow.written_actions, intersection)
 
                 # if the hpm_flow has any go-to-next table instructions then
