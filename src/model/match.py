@@ -334,3 +334,6 @@ class Match():
             return match_intersection
         else:
             return None
+
+    def complement(self, in_match):
+        pass

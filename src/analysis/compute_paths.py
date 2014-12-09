@@ -19,7 +19,7 @@ class ComputePaths:
         edge_port_dict = self.model.get_edge_port_dict(neighbor_obj.node_id, node_obj.node_id)
 
         #Check to see if the required destination match can get from neighbor to node
-        out_port_match = neighbor_obj.transfer_function(node_obj.accepted_destination_match[destination])
+        out_port_match = neighbor_obj.transfer_function_2(node_obj.accepted_destination_match[destination])
 
         if edge_port_dict[neighbor_obj.node_id] in out_port_match:
 
@@ -80,7 +80,6 @@ class ComputePaths:
                 print "--"
                 print list(self.bfs_paths(src_h_obj.switch_obj, dst_h_obj.switch_obj, dst_h_id))
 
-
     def tf_driver(self):
         for sw in self.model.get_switches():
             print sw.node_id
@@ -89,10 +88,8 @@ class ComputePaths:
 
 def main():
     bp = ComputePaths()
-    #bp.analyze_all_node_pairs()
 
     bp.analyze_all_node_pairs()
-
     #bp.tf_driver()
 
 

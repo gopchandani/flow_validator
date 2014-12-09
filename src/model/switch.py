@@ -115,7 +115,6 @@ class Switch():
 
     def transfer_function_2(self, in_port_match):
 
-        written_action_set = ActionSet(self)
 
         for flow_table in self.flow_tables.values():
 
@@ -124,5 +123,5 @@ class Switch():
                 print matched_flow, intersection, complement
 
 
-        out_port_match = None
+        out_port_match = {}
         return out_port_match
