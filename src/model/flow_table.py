@@ -105,3 +105,14 @@ class FlowTable():
                 break
 
         return hpm_flow, intersection
+
+    def get_next_matching_flow(self, table_matches_on):
+
+        intersection = None
+        remaining_match = None
+
+        for flow in self.flows:
+            intersection = flow.match.intersect(table_matches_on)
+            if intersection:
+                remaining_match = table_matches_on.complement(flow.match)
+                yield flow, intersection, remaining_match

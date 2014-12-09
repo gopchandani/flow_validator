@@ -218,9 +218,9 @@ class ComputePaths:
 
 def main():
     bp = ComputePaths()
-    bp.analyze_all_node_pairs()
+    #bp.analyze_all_node_pairs()
 
-    #bp.analyze_all_node_pairs_reverse()
+    bp.analyze_all_node_pairs_reverse()
 
     #bp.tf_driver()
 

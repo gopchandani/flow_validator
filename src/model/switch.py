@@ -58,12 +58,9 @@ class Switch():
 
         print self.tf
 
-
-
     def transfer_function(self, in_port_match):
 
         written_action_set = ActionSet(self)
-        out_ports = []
 
         # Check if the switch has at least one table
         table_id_to_check = 0
@@ -113,4 +110,20 @@ class Switch():
 
         out_port_match = written_action_set.get_out_port_matches(in_port_match)
 
+        return out_port_match
+
+
+
+    def transfer_function_2(self, in_port_match):
+
+        written_action_set = ActionSet(self)
+
+        for flow_table in self.flow_tables.values():
+
+            # Get the highest priority matching flow in this table
+            for matched_flow, intersection, complement in flow_table.get_next_matching_flow(in_port_match):
+                print matched_flow, intersection, complement
+
+
+        out_port_match = None
         return out_port_match
