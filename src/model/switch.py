@@ -113,7 +113,6 @@ class Switch():
         return out_port_match
 
 
-
     def transfer_function_2(self, in_port_match):
 
         written_action_set = ActionSet(self)
