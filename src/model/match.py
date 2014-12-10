@@ -7,7 +7,7 @@ class MatchField(object):
     
     def __init__(self, name, val="all"):
         self.name = name
-        self.val = val
+        self.val = str(val)
         
     def __str__(self):
         return str(self.name) + ": " + str(self.val)
@@ -93,17 +93,17 @@ class Match():
         for match_field in match_json:
 
             if match_field == 'in-port':
-                self.match_fields["in_port"].val = match_json["match_field"]
+                self.match_fields["in_port"].val = str(match_json[match_field])
 
             elif match_field == "ethernet-match":
                 if "ethernet-type" in match_json[match_field]:
-                    self.match_fields["ethernet_type"].val = match_json[match_field]["ethernet-type"]["type"]
+                    self.match_fields["ethernet_type"].val = str(match_json[match_field]["ethernet-type"]["type"])
 
                 if "ethernet-source" in match_json[match_field]:
-                    self.match_fields["ethernet_source"].val = match_json[match_field]["ethernet-source"]["address"]
+                    self.match_fields["ethernet_source"].val = str(match_json[match_field]["ethernet-source"]["address"])
 
                 if "ethernet-destination" in match_json[match_field]:
-                    self.match_fields["ethernet_destination"].val = match_json[match_field]["ethernet-destination"]["address"]
+                    self.match_fields["ethernet_destination"].val = str(match_json[match_field]["ethernet-destination"]["address"])
 
             elif match_field == 'ipv4-destination':
                 self.match_fields["dst_ip_addr"].val = IPNetwork(match_json[match_field])
@@ -113,24 +113,24 @@ class Match():
 
             elif match_field == "ip-match":
                 if "ip-protocol" in match_json[match_field]:
-                    self.match_fields["ip_protocol"].val = match_json[match_field]["ip-protocol"]
+                    self.match_fields["ip_protocol"].val = str(match_json[match_field]["ip-protocol"])
                     
             elif match_field == "tcp-destination-port":
-                self.match_fields["tcp_destination_port"].val = match_json[match_field]
+                self.match_fields["tcp_destination_port"].val = str(match_json[match_field])
 
             elif match_field == "tcp-source-port":
-                self.match_fields["tcp_source_port"].val = match_json[match_field]
+                self.match_fields["tcp_source_port"].val = str(match_json[match_field])
 
             elif match_field == "udp-destination-port":
-                self.match_fields["udp_destination_port"].val = match_json[match_field]
+                self.match_fields["udp_destination_port"].val = str(match_json[match_field])
 
             elif match_field == "udp-source-port":
-                self.match_fields["udp_source_port"].val = match_json[match_field]
+                self.match_fields["udp_source_port"].val = str(match_json[match_field])
 
             elif match_field == "vlan-match":
                 if "vlan-id" in match_json[match_field]:
-                    self.match_fields["vlan_id"].val = match_json[match_field]["vlan-id"]["vlan-id"]
-                    self.match_fields["has_vlan_tag"].val = True
+                    self.match_fields["vlan_id"].val = str(match_json[match_field]["vlan-id"]["vlan-id"])
+                    self.match_fields["has_vlan_tag"].val = str(True)
 
     def generate_match_json(self, match):
 
