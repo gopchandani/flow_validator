@@ -118,9 +118,13 @@ class Switch():
 
         for flow_table in self.flow_tables.values():
 
+            print "At table:", flow_table.table_id
+
             # Get the highest priority matching flow in this table
             for matched_flow, intersection, complement in flow_table.get_next_matching_flow(in_port_match):
-                print matched_flow, intersection, complement
+                print "Matched Flow:", matched_flow.applied_actions, matched_flow.written_actions, matched_flow.go_to_table
+                print "Intersection:", intersection
+                print "Complement:", complement
 
 
         out_port_match = {}
