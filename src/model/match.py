@@ -1,6 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-from copy import deepcopy
 from netaddr import IPNetwork
 
 class MatchField(object):
@@ -84,9 +83,6 @@ class Match():
 
     def __str__(self):
         return ", ".join([str(field) for field in self.match_fields.values()])
-
-    def set_fields_with_match(self, in_match):
-        self.match_fields = deepcopy(in_match.match_fields)
 
     def set_fields_with_match_json(self, match_json):
 

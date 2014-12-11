@@ -33,7 +33,7 @@ class Action():
 
         if "set-field" in action_json:
             self.action_type = "set_field"
-            self.set_field_match = Match(action_json["set-field"])
+            self.set_field_match_json = action_json["set-field"]
 
     def does_output_action_forward(self, in_port, out_port):
 
@@ -125,19 +125,19 @@ class ActionSet():
 
         # Go through the operations that are performed to the match before the packet is sent out
         if "pop_vlan" in self.action_set:
-            output_match.has_vlan_tag= False
+            output_match.match_fields["has_vlan_tag"].val = str(False)
 
         if "push_vlan" in self.action_set:
-            output_match.has_vlan_tag= True
+            output_match.match_fields["has_vlan_tag"].val = str(True)
 
         if "set_field" in self.action_set:
-            output_match.set_fields_with_match(self.action_set["set_field"][0].set_field_match)
+            output_match.set_fields_with_match_json(self.action_set["set_field"][0].set_field_match_json)
 
         return output_match
 
 
     def get_out_port_matches(self, in_port_match):
-        in_port = in_port_match.in_port
+        in_port = in_port_match.match_fields["in_port"].val
 
         out_port_match = {}
 
