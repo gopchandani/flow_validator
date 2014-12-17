@@ -179,7 +179,7 @@ class FlowValidatorTest():
             return False
 
 def start_controller():
-    bashCommand = "sudo docker run -t -i -p=6633:6633 -p=8181:8181 odl /distribution-karaf-0.2.1-Helium-SR1/bin/karaf &"
+    bashCommand = "sudo docker run -t -i -p=6633:6633 -p=8181:8181 opendaylight /distribution-karaf-0.2.1-Helium-SR1/bin/karaf &"
     os.system(bashCommand)    
 
 def main():
