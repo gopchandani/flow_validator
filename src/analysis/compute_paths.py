@@ -18,7 +18,7 @@ class ComputePaths:
 
         edge_port_dict = self.model.get_edge_port_dict(neighbor_obj.node_id, node_obj.node_id)
 
-        #Check to see if the required destination match can get from neighbor to node
+        #Check to see if the requirped destination match can get from neighbor to node
         out_port_match = neighbor_obj.transfer_function_2(node_obj.accepted_destination_match[destination])
 
         if edge_port_dict[neighbor_obj.node_id] in out_port_match:
@@ -85,13 +85,9 @@ class ComputePaths:
             print sw.node_id
             sw.compute_transfer_function()
 
-
 def main():
     bp = ComputePaths()
-
     bp.analyze_all_node_pairs()
-    #bp.tf_driver()
-
 
 if __name__ == "__main__":
     main()
