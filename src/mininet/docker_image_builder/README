@@ -1,0 +1,18 @@
+Use make_image the first time to create the image of the controller container
+When the karaf application starts, enter the following commands:
+
+Start karaf:
+
+root@somenumber:/#  distribution-karaf-0.2.1-Helium-SR1/bin/karaf
+
+This one may take a few minutes:
+
+opendaylight-user@root> feature:install odl-nsf-all odl-restconf odl-l2switch-all odl-mdsal-apidocs odl-dlux-core
+
+after it finishes, exit with
+<CTRL>-p then <CTRL>-q  (may take a minute)
+
+You will only need to run this once. 
+
+Once this process completes you can open a container with karaf running anytime by using this command:
+sudo docker run -t -i -p=6633:6633 -p=8181:8181 opendaylight distribution-karaf-0.2.1-Helium-SR1/bin/karaf
