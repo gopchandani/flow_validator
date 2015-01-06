@@ -68,7 +68,7 @@ class BackupPaths:
                     in_port_match = switch.in_port_match
 
             #  This has to happen at every switch, because every switch has its own in_port
-            in_port_match.in_port = in_port
+            in_port_match.match_fields["in_port"].val = in_port
 
             switch_out_port_match = switch.transfer_function(in_port_match)
 
@@ -181,10 +181,10 @@ class BackupPaths:
                 print "----------------------------------------------------------------------------------------------"
 
                 in_port_match = Match()
-                in_port_match.ethernet_type = 0x0800
-                in_port_match.ethernet_source = self.model.graph.node[src]["h"].mac_addr
-                in_port_match.ethernet_destination = self.model.graph.node[dst]["h"].mac_addr
-                in_port_match.has_vlan_tag = False
+                in_port_match.match_fields["ethernet_type"].val = str(0x0800)
+                in_port_match.match_fields["ethernet_source"].val = str(self.model.graph.node[src]["h"].mac_addr)
+                in_port_match.match_fields["ethernet_destination"].val = str(self.model.graph.node[dst]["h"].mac_addr)
+                in_port_match.match_fields["has_vlan_tag"].val = str(False)
 
                 primary_and_backup_exists = self.has_primary_and_backup(src, dst, in_port_match)
 
