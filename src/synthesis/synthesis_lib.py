@@ -51,8 +51,8 @@ class SynthesisLib():
                                        headers={'Content-Type': 'application/json; charset=UTF-8'},
                                        body=json.dumps(pushed_content))
 
-        resp = {"status": "200"}
-        pprint.pprint(pushed_content)
+        #resp = {"status": "200"}
+        #pprint.pprint(pushed_content)
 
         if resp["status"] == "200":
             print "Pushed Successfully:", pushed_content.keys()[0]
