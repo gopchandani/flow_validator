@@ -9,6 +9,4 @@ ENV PATH $JAVA_HOME/bin:$PATH
 EXPOSE 6633
 RUN echo "Docker 2 Started"
 RUN wget https://www.dropbox.com/s/yfelsjzji2k0owo/karaf_config.tar.gz 
-RUN cp karaf_config.tar.gz /distribution-karaf-0.2.1-Helium-SR1/etc/opendaylight/karaf/karaf_config.tar.gz
-RUN tar -xzvf /distribution-karaf-0.2.1-Helium-SR1/etc/opendaylight/karaf/karaf_config.tar.gz
-RUN rm /distribution-karaf-0.2.1-Helium-SR1/etc/opendaylight/karaf/karaf_config.tar.gz
+RUN tar -xzvf karaf_config.tar.gz -C /distribution-karaf-0.2.1-Helium-SR1/etc/opendaylight/karaf/

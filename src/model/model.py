@@ -197,9 +197,7 @@ class Model():
     def _load_model(self):
 
         self._prepare_switch_nodes()
-
         self._prepare_node_edges()
-
         #self.dump_model()
 
     def get_node_graph(self):

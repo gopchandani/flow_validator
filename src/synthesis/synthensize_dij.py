@@ -7,6 +7,8 @@ import networkx as nx
 
 from model.model import Model
 from model.match import Match
+from model.match import OrdinalMatchField
+
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 
@@ -37,7 +39,7 @@ class SynthesizeDij():
 
             # All intents except the first one in the primary path must specify the vlan tag
             if not (i == 0 and intent_type == "primary"):
-                fwd_flow_match.vlan_id = dst_switch_tag
+                fwd_flow_match.match_fields["vlan_id"] = OrdinalMatchField("vlan_id", dst_switch_tag)
 
             intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
 
@@ -134,7 +136,7 @@ class SynthesizeDij():
         out_port = edge_ports_dict[h_obj.switch_id]
 
         host_mac_match = deepcopy(flow_match)
-        host_mac_match.ethernet_destination = h_obj.mac_addr
+        host_mac_match.match_fields["ethernet_destination"] = OrdinalMatchField("ethernet_destination", h_obj.mac_addr)
         host_mac_intent = Intent("mac", host_mac_match, "all", out_port)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
@@ -144,7 +146,7 @@ class SynthesizeDij():
     def _compute_push_vlan_tag_intents(self, h_obj, flow_match, required_tag):
 
         push_vlan_match= deepcopy(flow_match)
-        push_vlan_match.in_port = h_obj.switch_port_attached
+        push_vlan_match.match_fields["in_port"] = OrdinalMatchField("in_port", h_obj.switch_port_attached)
         push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all")
         push_vlan_tag_intent.required_vlan_id = required_tag
 
@@ -156,7 +158,7 @@ class SynthesizeDij():
     def _compute_pop_vlan_tag_intents(self, h_obj, flow_match, matching_tag):
 
         pop_vlan_match = deepcopy(flow_match)
-        pop_vlan_match.vlan_id = matching_tag
+        pop_vlan_match.match_fields["vlan_id"] = OrdinalMatchField("vlan_id", matching_tag)
         pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all")
 
         # Avoiding adding a new intent for every arriving flow for this switch
@@ -232,8 +234,8 @@ class SynthesizeDij():
                 print "--------------------------------------------------------------------------------------------------------"
 
                 flow_match = Match()
-                #flow_match.udp_destination_port = 80
-                flow_match.ethernet_type = 0x0800
+                #flow_match.match_fields["udp_destination_port"] = 80
+                flow_match.match_fields["ethernet_type"] = OrdinalMatchField("ethernet_type", 0x0800)
 
                 self.synthesize_flow(self.model.get_node_object(src), self.model.get_node_object(dst), flow_match)
                 print "--------------------------------------------------------------------------------------------------------"
