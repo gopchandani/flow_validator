@@ -30,7 +30,7 @@ class OrdinalMatchField(MatchField):
 
         return field_intersection
 
-    def complement(self):
+    def complement(self, in_field):
         pass
     
 class IPMatchField(MatchField):
@@ -52,7 +52,7 @@ class IPMatchField(MatchField):
 
         return field_intersection
     
-    def complement(self):
+    def complement(self, in_field):
         pass    
 
 class Match():
@@ -196,7 +196,18 @@ class Match():
 
 
     def complement(self, in_match):
-        pass
+
+        match_complement = Match()
+
+        for field in self.match_fields:
+            field_complement = self.match_fields[field].complement(in_match.match_fields[field])
+            if field_complement:
+                match_complement.match_fields[field] = field_complement
+            else:
+                return None
+
+        return match_complement
+
 
 def main():
     m1 = Match()
