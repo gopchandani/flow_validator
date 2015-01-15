@@ -8,7 +8,6 @@ import json
 
 from model.model import Model
 from model.match import Match
-from model.match import OrdinalMatchField
 
 
 class SynthesisLib():
@@ -373,8 +372,8 @@ class SynthesisLib():
 
                     group = self._push_select_all_group(sw, [primary_intent])
 
-                    primary_intent.flow_match.match_fields["in_port"] = OrdinalMatchField("in_port",
-                                                                                          primary_intent.in_port)
+                    primary_intent.flow_match.set_field("in_port", primary_intent.in_port)
+
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],
@@ -398,7 +397,7 @@ class SynthesisLib():
                     else:
                         in_port = primary_intent.in_port
 
-                    primary_intent.flow_match.match_fields["in_port"] = OrdinalMatchField("in_port", in_port)
+                    primary_intent.flow_match.set_field("in_port", in_port)
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],
@@ -414,8 +413,7 @@ class SynthesisLib():
                     for failover_intent in failover_intents:
 
                         group = self._push_select_all_group(sw, [failover_intent])
-                        failover_intent.flow_match.match_fields["in_port"] = OrdinalMatchField("in_port",
-                                                                                               failover_intent.in_port)
+                        failover_intent.flow_match.set_field("in_port",failover_intent.in_port)
                         flow = self._push_match_per_in_port_destination_instruct_group_flow(
                             sw, self.ip_forwarding_table_id,
                             group["flow-node-inventory:group"]["group-id"],
@@ -434,7 +432,7 @@ class SynthesisLib():
                     else:
                         in_port = primary_intent.in_port
 
-                    primary_intent.flow_match.match_fields["in_port"] = OrdinalMatchField("in_port", in_port)
+                    primary_intent.flow_match.set_field("in_port", in_port)
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],

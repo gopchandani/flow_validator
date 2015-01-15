@@ -7,9 +7,14 @@ class MatchField(object):
     def __init__(self, name, val="all"):
         self.name = name
         self.val = str(val)
-        
+        self.exception_set = set()
+
+    def set_value(self):
+        pass
+
     def __str__(self):
-        return str(self.name) + ": " + str(self.val)
+        return str(self.name) + ": " + str(self.val) + " exception_set:" + str(self.exception_set)
+
         
 class OrdinalMatchField(MatchField):
     
@@ -61,28 +66,34 @@ class Match():
         
         self.match_fields = {}
 
-        self.match_fields["in_port"] = OrdinalMatchField("in_port", "all")
-        self.match_fields["ethernet_type"] = OrdinalMatchField("ethernet_type", "all")
-        self.match_fields["ethernet_source"] = OrdinalMatchField("ethernet_source", "all")
-        self.match_fields["ethernet_destination"] = OrdinalMatchField("ethernet_destination", "all")
-        
-        self.match_fields["src_ip_addr"] = IPMatchField("src_ip_addr", "all")
-        self.match_fields["dst_ip_addr"] = IPMatchField("dst_ip_addr", "all")
-        self.match_fields["ip_protocol"] = OrdinalMatchField("ip_protocol", "all")
-        
-        self.match_fields["tcp_destination_port"] = OrdinalMatchField("tcp_destination_port", "all")
-        self.match_fields["tcp_source_port"] = OrdinalMatchField("tcp_source_port", "all")
-        self.match_fields["udp_destination_port"] = OrdinalMatchField("udp_destination_port", "all")
-        self.match_fields["udp_source_port"] = OrdinalMatchField("udp_source_port", "all")
-        
-        self.match_fields["vlan_id"] = OrdinalMatchField("vlan_id", "all")
-        self.match_fields["has_vlan_tag"] = OrdinalMatchField("has_vlan_tag", "all")
+        self.set_field("in_port", "all")
+        self.set_field("ethernet_type", "all")
+        self.set_field("ethernet_source", "all")
+        self.set_field("ethernet_destination", "all")
+        self.set_field("src_ip_addr", "all")
+        self.set_field("dst_ip_addr", "all")
+        self.set_field("ip_protocol", "all")
+        self.set_field("tcp_destination_port", "all")
+        self.set_field("tcp_source_port", "all")
+        self.set_field("udp_destination_port", "all")
+        self.set_field("udp_source_port", "all")
+        self.set_field("vlan_id", "all")
+        self.set_field("has_vlan_tag", "all")
 
         if match_json:
             self.set_fields_with_match_json(match_json)
 
     def __str__(self):
         return ", ".join([str(field) for field in self.match_fields.values()])
+
+    def set_field(self, name, val):
+        if name in ["src_ip_addr", "dst_ip_addr"]:
+            self.match_fields[name] = IPMatchField(name, val)
+        else:
+            self.match_fields[name] = OrdinalMatchField(name, val)
+
+    def get_field(self):
+        pass
 
     def set_fields_with_match_json(self, match_json):
 
