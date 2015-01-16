@@ -5,12 +5,16 @@ from netaddr import IPNetwork
 class MatchField(object):
     
     def __init__(self, name, val="all"):
+
         self.name = name
+        self.set_field_value(val)
+
+    def set_field_value(self, val):
         self.val = str(val)
         self.exception_set = set()
 
-    def set_field(self):
-        pass
+    def add_exception(self, val):
+        self.exception_set.add(val)
 
     def __str__(self):
         return str(self.name) + ": " + str(self.val) + " exception_set:" + str(self.exception_set)
