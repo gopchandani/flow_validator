@@ -9,7 +9,7 @@ class MatchField(object):
         self.val = str(val)
         self.exception_set = set()
 
-    def set_value(self):
+    def set_field(self):
         pass
 
     def __str__(self):
@@ -92,102 +92,100 @@ class Match():
         else:
             self.match_fields[name] = OrdinalMatchField(name, val)
 
-    def get_field(self):
-        pass
+    def get_field(self, name):
+        return self.match_fields[name].val
 
     def set_fields_with_match_json(self, match_json):
 
         for match_field in match_json:
 
             if match_field == 'in-port':
-                self.match_fields["in_port"].val = str(match_json[match_field])
+                self.set_field("in_port", str(match_json[match_field]))
 
             elif match_field == "ethernet-match":
                 if "ethernet-type" in match_json[match_field]:
-                    self.match_fields["ethernet_type"].val = str(match_json[match_field]["ethernet-type"]["type"])
+                    self.set_field("ethernet_type", str(match_json[match_field]["ethernet-type"]["type"]))
 
                 if "ethernet-source" in match_json[match_field]:
-                    self.match_fields["ethernet_source"].val = str(match_json[match_field]["ethernet-source"]["address"])
+                    self.set_field("ethernet_source", str(match_json[match_field]["ethernet-source"]["address"]))
 
                 if "ethernet-destination" in match_json[match_field]:
-                    self.match_fields["ethernet_destination"].val = str(match_json[match_field]["ethernet-destination"]["address"])
+                    self.set_field("ethernet_destination", str(match_json[match_field]["ethernet-destination"]["address"]))
 
             elif match_field == 'ipv4-destination':
-                self.match_fields["dst_ip_addr"].val = IPNetwork(match_json[match_field])
+                self.set_field("dst_ip_addr", IPNetwork(match_json[match_field]))
 
             elif match_field == 'ipv4-source':
-                self.match_fields["src_ip_addr"].val = IPNetwork(match_json[match_field])
+                self.set_field("src_ip_addr", IPNetwork(match_json[match_field]))
 
             elif match_field == "ip-match":
                 if "ip-protocol" in match_json[match_field]:
-                    self.match_fields["ip_protocol"].val = str(match_json[match_field]["ip-protocol"])
+                    self.set_field("ip_protocol", str(match_json[match_field]["ip-protocol"]))
                     
             elif match_field == "tcp-destination-port":
-                self.match_fields["tcp_destination_port"].val = str(match_json[match_field])
+                self.set_field("tcp_destination_port", str(match_json[match_field]))
 
             elif match_field == "tcp-source-port":
-                self.match_fields["tcp_source_port"].val = str(match_json[match_field])
+                self.set_field("tcp_source_port", str(match_json[match_field]))
 
             elif match_field == "udp-destination-port":
-                self.match_fields["udp_destination_port"].val = str(match_json[match_field])
+                self.set_field("udp_destination_port", str(match_json[match_field]))
 
             elif match_field == "udp-source-port":
-                self.match_fields["udp_source_port"].val = str(match_json[match_field])
+                self.set_field("udp_source_port", str(match_json[match_field]))
 
             elif match_field == "vlan-match":
                 if "vlan-id" in match_json[match_field]:
-                    self.match_fields["vlan_id"].val = str(match_json[match_field]["vlan-id"]["vlan-id"])
-                    self.match_fields["has_vlan_tag"].val = str(True)
+                    self.set_field("vlan_id", str(match_json[match_field]["vlan-id"]["vlan-id"]))
+                    self.set_field("has_vlan_tag", str(True))
 
     def generate_match_json(self, match):
 
-        if self.match_fields["in_port"].val and self.match_fields["in_port"].val != "all":
-            match["in-port"] = self.match_fields["in_port"].val
+        if self.get_field("in_port") != "all":
+            match["in-port"] = self.get_field("in_port")
 
         ethernet_match = {}
 
-        if self.match_fields["ethernet_type"].val and self.match_fields["ethernet_type"].val != "all":
-            ethernet_match["ethernet-type"] = {"type": self.match_fields["ethernet_type"].val}
+        if self.get_field("ethernet_type") != "all":
+            ethernet_match["ethernet-type"] = {"type": self.get_field("ethernet_type")}
 
-        if self.match_fields["ethernet_source"].val and self.match_fields["ethernet_source"].val != "all":
-            ethernet_match["ethernet-source"] = {"address": self.match_fields["ethernet_source"].val}
+        if self.get_field("ethernet_source") != "all":
+            ethernet_match["ethernet-source"] = {"address": self.get_field("ethernet_source")}
 
-        if self.match_fields["ethernet_destination"].val and self.match_fields["ethernet_destination"].val != "all":
-            ethernet_match["ethernet-destination"] = {"address": self.match_fields["ethernet_destination"].val}
+        if self.get_field("ethernet_destination") != "all":
+            ethernet_match["ethernet-destination"] = {"address": self.get_field("ethernet_destination")}
 
         match["ethernet-match"] = ethernet_match
 
-        if self.match_fields["src_ip_addr"].val and self.match_fields["src_ip_addr"].val != "all":
-            match["ipv4-source"] = self.match_fields["src_ip_addr"].val
+        if self.get_field("src_ip_addr") != "all":
+            match["ipv4-source"] = self.get_field("src_ip_addr")
 
-        if self.match_fields["dst_ip_addr"].val and self.match_fields["dst_ip_addr"].val != "all":
-            match["ipv4-destination"] = self.match_fields["dst_ip_addr"].val
+        if self.get_field("dst_ip_addr") != "all":
+            match["ipv4-destination"] = self.get_field("dst_ip_addr")
 
-        if (self.match_fields["tcp_destination_port"].val and self.match_fields["tcp_destination_port"].val != "all") or \
-                (self.match_fields["tcp_source_port"].val and self.match_fields["tcp_source_port"].val != "all"):
-            self.match_fields["ip_protocol"].val = 6
-            match["ip-match"] = {"ip-protocol": self.match_fields["ip_protocol"].val}
+        if self.get_field("tcp_destination_port") != "all" or self.get_field("tcp_source_port") != "all":
+            self.set_field("ip_protocol", 6)
+            match["ip-match"] = {"ip-protocol": self.get_field("ip_protocol")}
 
-            if self.match_fields["tcp_destination_port"].val and self.match_fields["tcp_destination_port"].val != "all":
-                match["tcp-destination-port"] = self.match_fields["tcp_destination_port"].val
+            if self.get_field("tcp_destination_port") != "all":
+                match["tcp-destination-port"] = self.get_field("tcp_destination_port")
 
-            if self.match_fields["tcp_source_port"].val and self.match_fields["tcp_source_port"].val != "all":
-                match["tcp-source-port"] = self.match_fields["tcp_source_port"].val
+            if self.get_field("tcp_source_port") != "all":
+                match["tcp-source-port"] = self.get_field("tcp_source_port")
 
-        if (self.match_fields["udp_destination_port"].val and self.match_fields["udp_destination_port"].val != "all") or \
-                (self.match_fields["udp_source_port"].val and self.match_fields["udp_source_port"].val != "all"):
-            self.match_fields["ip_protocol"].val = 17
-            match["ip-match"] = {"ip-protocol": self.match_fields["ip_protocol"].val}
+        if self.get_field("udp_destination_port") != "all" or self.get_field("udp_source_port") != "all":
+            self.set_field("ip_protocol", 17)
+            match["ip-match"] = {"ip-protocol": self.get_field("ip_protocol")}
 
-            if self.match_fields["udp_destination_port"].val and self.match_fields["udp_destination_port"].val != "all":
-                match["udp-destination-port"]= self.match_fields["udp_destination_port"].val
+            if self.get_field("udp_destination_port") != "all":
+                match["udp-destination-port"]= self.get_field("udp_destination_port")
 
-            if self.match_fields["udp_source_port"].val and self.match_fields["udp_source_port"].val != "all":
-                match["udp-source-port"] = self.match_fields["udp_source_port"].val
+            if self.get_field("udp_source_port") != "all":
+                match["udp-source-port"] = self.get_field("udp_source_port")
 
-        if self.match_fields["vlan_id"].val != "all":
+        if self.get_field("vlan_id") != "all":
             vlan_match = {}
-            vlan_match["vlan-id"] = {"vlan-id": self.match_fields["vlan_id"].val, "vlan-id-present": True}
+            vlan_match["vlan-id"] = {"vlan-id": self.get_field("vlan_id"), "vlan-id-present": True}
             match["vlan-match"] = vlan_match
 
         return match
