@@ -13,9 +13,6 @@ class MatchField(object):
         self.val = str(val)
         self.exception_set = set()
 
-    def add_exception(self, val):
-        self.exception_set.add(val)
-
     def __str__(self):
         return str(self.name) + ": " + str(self.val) + " exception_set:" + str(self.exception_set)
 
@@ -35,12 +32,33 @@ class OrdinalMatchField(MatchField):
         elif self.val.lower() == in_field.val.lower():
             field_intersection.val = in_field.val
         else:
-            return None
+            field_intersection.val = None
 
         return field_intersection
 
     def complement(self, in_field):
-        pass
+
+        # Fields can only be complemented with themselves
+        if self.name == in_field.name:
+
+            complement_val = None
+
+            # If I have everything with some exceptions
+            if self.val == "any" and self.exception_set:
+                pass
+
+            # If I have everything with no exceptions
+            elif self.val == "any":
+                pass
+
+            # If I have something which is not any
+            elif self.val:
+                pass
+
+            return OrdinalMatchField
+
+        else:
+            raise Exception("Cannot complement cross-fields")
     
 class IPMatchField(MatchField):
     
@@ -57,7 +75,7 @@ class IPMatchField(MatchField):
         elif in_field.val in self.val:
             field_intersection.val = in_field.val
         else:
-            return None
+            field_intersection.val = None
 
         return field_intersection
     
@@ -200,7 +218,8 @@ class Match():
 
         for field in self.match_fields:
             field_intersection = self.match_fields[field].intersect(in_match.match_fields[field])
-            if field_intersection:
+
+            if field_intersection.val:
                 match_intersection.match_fields[field] = field_intersection
             else:
                 return None
