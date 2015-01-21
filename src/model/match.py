@@ -99,7 +99,7 @@ class Match():
         for match_field in match_json:
 
             if match_field == 'in-port':
-                self.set_field("in_port", str(match_json[match_field]))
+                self.set_field("in_port", str(match_json[match_field]).split(":")[2])
 
             elif match_field == "ethernet-match":
                 if "ethernet-type" in match_json[match_field]:
@@ -199,6 +199,8 @@ class Match():
             if field_intersection.val:
                 match_intersection.match_fields[field] = field_intersection
             else:
+                # print "Mismatching Field:", field, "Rule Value:", self.match_fields[field].val, \
+                #     "Flow Value:", in_match.match_fields[field].val
                 return None
 
         return match_intersection

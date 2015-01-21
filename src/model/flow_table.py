@@ -82,17 +82,6 @@ class FlowTable():
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
-    def passes_flow(self, flow_match, out_port):
-        ret_val = False
-        for flow in self.flows:
-            ret_val = flow.passes_flow(flow_match, out_port)
-
-            # As soon as an admitting rule is found, stop looking further
-            if ret_val:
-                break
-
-        return ret_val
-
     def get_highest_priority_matching_flow(self, table_matches_on):
 
         hpm_flow = None
