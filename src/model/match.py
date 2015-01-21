@@ -9,6 +9,11 @@ class MatchField(object):
         self.name = name
         self.set_field_value(val)
 
+        if self.name in ["src_ip_addr", "dst_ip_addr"]:
+            self.is_ip_field = True
+        else:
+            self.is_ip_field = False
+
     def set_field_value(self, val):
         self.val = str(val)
         self.exception_set = set()
