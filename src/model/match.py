@@ -14,21 +14,23 @@ class MatchField(object):
         else:
             self.is_ip_field = False
 
-    def set_field_value(self, val):
-        self.val = str(val)
-        self.exception_set = set()
+    def intersect_ip_field(self, in_field):
+        field_intersection = MatchField(self.name, self.val)
 
-    def __str__(self):
-        return str(self.name) + ": " + str(self.val) + " exception_set:" + str(self.exception_set)
+        if self.val == "all":
+            field_intersection.val = in_field.val
+        elif in_field.val == "all":
+            field_intersection.val = self.val
+        elif in_field.val in self.val:
+            field_intersection.val = in_field.val
+        else:
+            field_intersection.val = None
 
-        
-class OrdinalMatchField(MatchField):
-    
-    def __init__(self, name, val="all"):
-        super(OrdinalMatchField, self).__init__(name, val)
-    
-    def intersect(self, in_field):
-        field_intersection = OrdinalMatchField(self.name, self.val)
+        return field_intersection
+
+    def intersect_ordinal_field(self, in_field):
+
+        field_intersection = MatchField(self.name, self.val)
 
         if self.val == "all":
             field_intersection.val = in_field.val
@@ -41,51 +43,18 @@ class OrdinalMatchField(MatchField):
 
         return field_intersection
 
-    def complement(self, in_field):
-
-        # Fields can only be complemented with themselves
-        if self.name == in_field.name:
-
-            complement_val = None
-
-            # If I have everything with some exceptions
-            if self.val == "any" and self.exception_set:
-                pass
-
-            # If I have everything with no exceptions
-            elif self.val == "any":
-                pass
-
-            # If I have something which is not any
-            elif self.val:
-                pass
-
-            return OrdinalMatchField
-
-        else:
-            raise Exception("Cannot complement cross-fields")
-    
-class IPMatchField(MatchField):
-    
-    def __init__(self, name, val="all"):
-        super(IPMatchField, self).__init__(name, val)
-    
     def intersect(self, in_field):
-        field_intersection = IPMatchField(self.name, self.val)
-
-        if self.val == "all":
-            field_intersection.val = in_field.val
-        elif in_field.val == "all":
-            field_intersection.val = self.val
-        elif in_field.val in self.val:
-            field_intersection.val = in_field.val
+        if self.is_ip_field:
+            return self.intersect_ip_field(in_field)
         else:
-            field_intersection.val = None
+            return self.intersect_ordinal_field(in_field)
 
-        return field_intersection
-    
-    def complement(self, in_field):
-        pass    
+    def set_field_value(self, val):
+        self.val = str(val)
+        self.exception_set = set()
+
+    def __str__(self):
+        return str(self.name) + ": " + str(self.val) + " exception_set:" + str(self.exception_set)
 
 class Match():
 
@@ -115,9 +84,9 @@ class Match():
 
     def set_field(self, name, val):
         if name in ["src_ip_addr", "dst_ip_addr"]:
-            self.match_fields[name] = IPMatchField(name, val)
+            self.match_fields[name] = MatchField(name, val)
         else:
-            self.match_fields[name] = OrdinalMatchField(name, val)
+            self.match_fields[name] = MatchField(name, val)
 
     def get_field(self, name):
         return self.match_fields[name].val
