@@ -49,6 +49,9 @@ class MatchField(object):
         else:
             return self.intersect_ordinal_field(in_field)
 
+    def complement(self, in_field):
+        pass
+
     def set_field_value(self, val):
         self.val = str(val)
         self.exception_set = set()
