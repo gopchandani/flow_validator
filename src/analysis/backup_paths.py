@@ -198,6 +198,5 @@ def main():
     bp = BackupPaths()
     bp.analyze_all_node_pairs()
 
-
 if __name__ == "__main__":
     main()
