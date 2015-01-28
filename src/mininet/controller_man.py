@@ -1,9 +1,10 @@
 import os
+import sys
 __author__ = 'Shane Rogers'
 
 num_cons = 0
 
-class ControllerMan(num_cons):
+class ControllerMan():
 
     def __init__(self, num_cons):
     	print num_cons
@@ -17,10 +18,10 @@ class ControllerMan(num_cons):
         print 'here '
 
 def main():
-	num_cons = argv[1]
+	num_cons = sys.argv[1]
 	print num_cons
-	cm = ControllerMan(num_cons)
-	cm.get_next()
+	#cm = ControllerMan(num_cons)
+	#cm.get_next()
     
 if __name__ == "__main__":
     main()
