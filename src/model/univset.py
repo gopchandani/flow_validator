@@ -3,50 +3,49 @@ __author__ = 'Rakesh Kumar'
 
 class univset(object):
     def __init__(self):
-        self._diff = set()
+        self._exceptions = set()
 
     def __sub__(self, other):
         S = univset()
         if type(other) == set:
-            S._diff = self._diff | other
+            S._exceptions = self._exceptions | other
             return S
         else:
-            S._diff = self._diff | other._diff
+            S._exceptions = self._exceptions | other._exceptions
             return S
 
     def __rsub__(self, other):
-        return other & self._diff
+        return other & self._exceptions
 
     def __contains__(self, obj):
-        return not obj in self._diff
+        return not obj in self._exceptions
 
     def __and__(self, other):
-        return other - self._diff
+        return other - self._exceptions
 
     def __rand__(self, other):
-        return other - self._diff
+        return other - self._exceptions
 
     def __repr__(self):
-        Shan
-        if self._diff == set():
+        if self._exceptions == set():
             return "ANY"
         else:
-            return "ANY - %s"%self._diff
+            return "ANY - %s"%self._exceptions
 
     def __or__(self, other):
         S = univset()
-        S._diff = self._diff - other
+        S._exceptions = self._exceptions - other
         return S
 
     def __xor__(self, other):
         return (self - other) | (other - self)
 
     def add(self, elem):
-        if elem in self._diff:
-            self._diff.remove(elem)
+        if elem in self._exceptions:
+            self._exceptions.remove(elem)
 
     def update(self, elem):
-        self._diff = self._diff - other
+        self._exceptions = self._exceptions - other
 
     def __ror__(self, other):
         return self.__or__(other)
@@ -60,18 +59,18 @@ class univset(object):
     def intersection(self, other):
         return self.__and__(other)
 
-    def symmetric_difference(self, other):
+    def symmetric_exceptionserence(self, other):
         return self.__xor__(other)
 
     def issubset(self, other):
         if type(other) == set:
             return False
-        if issubset(other._diff, self._diff):
+        if issubset(other._exceptions, self._exceptions):
             return True
         return False
 
     def issuperset(self, other):
-        if self._diff & other:
+        if self._exceptions & other:
             return False
         return True
 
@@ -82,7 +81,7 @@ class univset(object):
         if type(other) == set:
             return False
         try:
-            return self._diff == other._diff
+            return self._exceptions == other._exceptions
         except AttributeError:
             return False
 

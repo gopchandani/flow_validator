@@ -5,67 +5,33 @@ from univset import univset
 
 class MatchField(object):
     
-    def __init__(self, name, val):
+    def __init__(self, name, val=None):
 
         self.name = name
-        self.exception_set = univset()
-        self.value_set = set()
-
-        self.set_field_value(val)
-
-        if self.name in ["src_ip_addr", "dst_ip_addr"]:
-            self.is_ip_field = True
+        if not val:
+            self.value_set = univset()
         else:
-            self.is_ip_field = False
+            self.set_field_value(val)
 
     def set_field_value(self, val):
 
         if isinstance(val, int):
-            self.value_set.add(val)
+            self.value_set = set([val])
+        elif isinstance(val, univset):
+            self.value_set = val
+        elif isinstance(val, set):
+            self.value_set = val
         else:
             raise Exception("Invalid type of value for MatchField: " + str(type(val)))
 
-    def intersect_ip_field(self, in_field):
-        field_intersection = MatchField(self.name, self.val)
-
-        if self.val == univset():
-            field_intersection.val = in_field.val
-        elif in_field.val == univset():
-            field_intersection.val = self.val
-        elif in_field.val in self.val:
-            field_intersection.val = in_field.val
-        else:
-            field_intersection.val = None
-
-        return field_intersection
-
-    def intersect_ordinal_field(self, in_field):
-
-        field_intersection = MatchField(self.name, self.val)
-
-        if self.val == univset():
-            field_intersection.val = in_field.val
-        elif in_field.val == univset():
-            field_intersection.val = self.val
-        elif self.val.lower() == in_field.val.lower():
-            field_intersection.val = in_field.val
-        else:
-            field_intersection.val = None
-
-        return field_intersection
-
     def intersect(self, in_field):
-        if self.is_ip_field:
-            return self.intersect_ip_field(in_field)
-        else:
-            return self.intersect_ordinal_field(in_field)
+        return MatchField(self.name, in_field.value_set & self.value_set)
 
     def complement(self, in_field):
         pass
 
     def __str__(self):
-        return str(self.name) + ": " + str(self.val) + " exception_set:" + str(self.exception_set)
-
+        return str(self.name) + ": " + str(self.value_set)
 
 class Match():
 
@@ -73,19 +39,19 @@ class Match():
         
         self.match_fields = {}
 
-        self.set_field("in_port", univset())
-        self.set_field("ethernet_type", univset())
-        self.set_field("ethernet_source", univset())
-        self.set_field("ethernet_destination", univset())
-        self.set_field("src_ip_addr", univset())
-        self.set_field("dst_ip_addr", univset())
-        self.set_field("ip_protocol", univset())
-        self.set_field("tcp_destination_port", univset())
-        self.set_field("tcp_source_port", univset())
-        self.set_field("udp_destination_port", univset())
-        self.set_field("udp_source_port", univset())
-        self.set_field("vlan_id", univset())
-        self.set_field("has_vlan_tag", univset())
+        self.set_field("in_port")
+        self.set_field("ethernet_type")
+        self.set_field("ethernet_source")
+        self.set_field("ethernet_destination")
+        self.set_field("src_ip_addr")
+        self.set_field("dst_ip_addr")
+        self.set_field("ip_protocol")
+        self.set_field("tcp_destination_port")
+        self.set_field("tcp_source_port")
+        self.set_field("udp_destination_port")
+        self.set_field("udp_source_port")
+        self.set_field("vlan_id")
+        self.set_field("has_vlan_tag")
 
         if match_json:
             self.set_fields_with_match_json(match_json)
@@ -93,9 +59,9 @@ class Match():
     def __str__(self):
         return ", ".join([str(field) for field in self.match_fields.values()])
 
-    def set_field(self, name, val):
-        if name in ["src_ip_addr", "dst_ip_addr"]:
-            self.match_fields[name] = MatchField(name, val)
+    def set_field(self, name, val=None):
+        if name in self.match_fields:
+            self.match_fields[name].set_field_value(val)
         else:
             self.match_fields[name] = MatchField(name, val)
 
@@ -107,17 +73,19 @@ class Match():
         for match_field in match_json:
 
             if match_field == 'in-port':
-                self.set_field("in_port", str(match_json[match_field]).split(":")[2])
+                self.set_field("in_port", int(match_json[match_field].split(":")[2]))
 
             elif match_field == "ethernet-match":
                 if "ethernet-type" in match_json[match_field]:
-                    self.set_field("ethernet_type", str(match_json[match_field]["ethernet-type"]["type"]))
+                    self.set_field("ethernet_type", int(match_json[match_field]["ethernet-type"]["type"]))
 
                 if "ethernet-source" in match_json[match_field]:
-                    self.set_field("ethernet_source", str(match_json[match_field]["ethernet-source"]["address"]))
+                    mac_int = int(match_json[match_field]["ethernet-source"]["address"].replace(":", ""), 16)
+                    self.set_field("ethernet_source", mac_int)
 
                 if "ethernet-destination" in match_json[match_field]:
-                    self.set_field("ethernet_destination", str(match_json[match_field]["ethernet-destination"]["address"]))
+                    mac_int = int(match_json[match_field]["ethernet-destination"]["address"].replace(":", ""), 16)
+                    self.set_field("ethernet_destination", mac_int)
 
             elif match_field == 'ipv4-destination':
                 self.set_field("dst_ip_addr", IPNetwork(match_json[match_field]))
@@ -143,11 +111,11 @@ class Match():
 
             elif match_field == "vlan-match":
                 if "vlan-id" in match_json[match_field]:
-                    self.set_field("vlan_id", str(match_json[match_field]["vlan-id"]["vlan-id"]))
-                    self.set_field("has_vlan_tag", str(True))
+                    self.set_field("vlan_id", match_json[match_field]["vlan-id"]["vlan-id"])
+                    self.set_field("has_vlan_tag", 1)
+
 
     def generate_match_json(self, match):
-
         if self.get_field("in_port") != univset():
             match["in-port"] = self.get_field("in_port")
 
@@ -198,23 +166,23 @@ class Match():
         return match
 
     def intersect(self, in_match):
-
         match_intersection = Match()
 
         for field in self.match_fields:
+
             field_intersection = self.match_fields[field].intersect(in_match.match_fields[field])
 
-            if field_intersection.val:
+            if field_intersection:
                 match_intersection.match_fields[field] = field_intersection
             else:
-                print "Mismatching Field:", field, "Rule Value:", self.match_fields[field].val, \
-                    "Flow Value:", in_match.match_fields[field].val
+                print self.match_fields[field]
+                print in_match.match_fields[field]
+
                 return None
 
         return match_intersection
 
     def complement(self, in_match):
-
         match_complement = Match()
 
         for field in self.match_fields:
