@@ -69,7 +69,7 @@ class Switch():
 
         while has_table_to_check:
 
-            #print "Going to table:", table_id_to_check
+            print "Going to table:", table_id_to_check
 
             # Grab the table
             flow_table = self.flow_tables[table_id_to_check]

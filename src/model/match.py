@@ -5,13 +5,10 @@ from univset import univset
 
 class MatchField(object):
     
-    def __init__(self, name, val=None):
+    def __init__(self, name, val):
 
         self.name = name
-        if not val:
-            self.value_set = univset()
-        else:
-            self.set_field_value(val)
+        self.set_field_value(val)
 
     def set_field_value(self, val):
 
@@ -39,19 +36,19 @@ class Match():
         
         self.match_fields = {}
 
-        self.set_field("in_port")
-        self.set_field("ethernet_type")
-        self.set_field("ethernet_source")
-        self.set_field("ethernet_destination")
-        self.set_field("src_ip_addr")
-        self.set_field("dst_ip_addr")
-        self.set_field("ip_protocol")
-        self.set_field("tcp_destination_port")
-        self.set_field("tcp_source_port")
-        self.set_field("udp_destination_port")
-        self.set_field("udp_source_port")
-        self.set_field("vlan_id")
-        self.set_field("has_vlan_tag")
+        self.set_field("in_port", univset())
+        self.set_field("ethernet_type", univset())
+        self.set_field("ethernet_source", univset())
+        self.set_field("ethernet_destination", univset())
+        self.set_field("src_ip_addr", univset())
+        self.set_field("dst_ip_addr", univset())
+        self.set_field("ip_protocol", univset())
+        self.set_field("tcp_destination_port", univset())
+        self.set_field("tcp_source_port", univset())
+        self.set_field("udp_destination_port", univset())
+        self.set_field("udp_source_port", univset())
+        self.set_field("vlan_id", univset())
+        self.set_field("has_vlan_tag", univset())
 
         if match_json:
             self.set_fields_with_match_json(match_json)
@@ -59,7 +56,7 @@ class Match():
     def __str__(self):
         return ", ".join([str(field) for field in self.match_fields.values()])
 
-    def set_field(self, name, val=None):
+    def set_field(self, name, val):
         if name in self.match_fields:
             self.match_fields[name].set_field_value(val)
         else:
@@ -171,13 +168,13 @@ class Match():
         for field in self.match_fields:
 
             field_intersection = self.match_fields[field].intersect(in_match.match_fields[field])
+            print "Flow Field:", self.match_fields[field]
+            print "In Field:", in_match.match_fields[field]
+            print "Intersection:", field_intersection
 
             if field_intersection:
                 match_intersection.match_fields[field] = field_intersection
             else:
-                print self.match_fields[field]
-                print in_match.match_fields[field]
-
                 return None
 
         return match_intersection
