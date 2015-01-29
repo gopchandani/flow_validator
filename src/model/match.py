@@ -22,7 +22,12 @@ class MatchField(object):
             raise Exception("Invalid type of value for MatchField: " + str(type(val)))
 
     def intersect(self, in_field):
-        return MatchField(self.name, in_field.value_set & self.value_set)
+
+        field_intersection = in_field.value_set & self.value_set
+        if not field_intersection:
+            return MatchField(self.name, in_field.value_set & self.value_set)
+        else:
+            return None
 
     def complement(self, in_field):
         pass
