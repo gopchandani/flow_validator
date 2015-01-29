@@ -24,7 +24,7 @@ class MatchField(object):
     def intersect(self, in_field):
 
         field_intersection = in_field.value_set & self.value_set
-        if not field_intersection:
+        if field_intersection:
             return MatchField(self.name, in_field.value_set & self.value_set)
         else:
             return None
@@ -173,9 +173,6 @@ class Match():
         for field in self.match_fields:
 
             field_intersection = self.match_fields[field].intersect(in_match.match_fields[field])
-            print "Flow Field:", self.match_fields[field]
-            print "In Field:", in_match.match_fields[field]
-            print "Intersection:", field_intersection
 
             if field_intersection:
                 match_intersection.match_fields[field] = field_intersection
