@@ -188,7 +188,7 @@ def main():
 
     am = AddressMap()
     am.addElement(0, 10, 1)
-    am.addElement(0, 10, 2)
+    am.addElement(0, 9, 2)
 
     print am.cover(1, 10)
 
