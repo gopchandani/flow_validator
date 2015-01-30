@@ -30,7 +30,9 @@ class MatchField(object):
             return None
 
     def complement(self, in_field):
-        pass
+
+        field_complement = self.value_set - in_field.value_set
+        return MatchField(self.name, field_complement)
 
     def __str__(self):
         return str(self.name) + ": " + str(self.value_set)

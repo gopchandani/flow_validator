@@ -1,58 +1,40 @@
-'''
-Created on October 27, 2013
+__author__ = 'Rakesh Kumar'
 
-'''
-# poke for good measure
-
-from __future__ import print_function
 import pdb
 import bisect 
 import warnings
-from mynetaddr import *
-from shared import *
-from state.gateway import Gateway
-from state.addressblock import AddressBlock
-from analysis.analysis_utils import bsLeft
+from netaddr import *
+
 
 class AddressMapElement(object):
-    def __init__(self, low, high, netId, rId=None):
+    def __init__(self, low, high, tag):
         self.low  = low
         self.size = high - low
-        self.rules = set()
 
-        if rId:
-           self.rules.add(rId)
-
-        self.id = netId
+        self.tag = tag
         self.qMap = {}
         self.qMap
 
+
 class AddressMap(object):
 
-    def __init__(self, type):
+    def __init__(self):
 
         self.lowDict = {}
-
-        # type is 'src' or 'dst'
-        #
-        self.type = type
         self.ordered = False
 
-    def addElement(self, low, high, netId, rId):
+    def addElement(self, low, high, tag):
 
-         if not low in self.lowDict:
-             self.lowDict[low] = {} 
+        if not low in self.lowDict:
+            self.lowDict[low] = {} 
+        
+        size = high - low
+        if not size in self.lowDict[low]:
+            e = AddressMapElement(low, high, tag)
+            self.lowDict[low][size] = e
+        else:
+            pass
 
-         # store only unique sizes for each starting point
-         #
-         size = high - low
-
-         if not size in self.lowDict[low]:
-             e = AddressMapElement(low, high, netId, rId)
-             self.lowDict[low][size] = e
-         else:
-             self.lowDict[low][size].rules.add(rId)
- 
     def orderElements(self):
 
        self.ordered = True
@@ -95,7 +77,7 @@ class AddressMap(object):
           idx, L = self.lowDict[low]
           for j in xrange(0, len(idx)):
 
-              if not L[j].id:
+              if not L[j].tag:
                   continue
 
               ### DEC 4
@@ -104,14 +86,14 @@ class AddressMap(object):
 
               # mark that range begins at low
               # 
-              self.qMap[low][1].add( L[j].id )    
+              self.qMap[low][1].add( L[j].tag )    
               high = low+idx[j]
               if not high in self.qMap:
                  self.qMap[high] = [set(),set(),set()] 
 
               # mark that range ends at high
               #
-              self.qMap[high][2].add( L[j].id )
+              self.qMap[high][2].add( L[j].tag )
 
        active = set()
        priorEnd = set()
@@ -187,12 +169,12 @@ class AddressMap(object):
         else:
            return None
         
-    def setId(self,low,high,id):
+    def setId(self,low,high,tag):
         eIdx = self.getElementIdx(low,high)
         if eIdx is None:
            return False
         idx, L = self.lowDict[low]
-        L[eIdx].id = id 
+        L[eIdx].tag = tag 
         return True
 
     def getId(self,low,high):
@@ -200,51 +182,17 @@ class AddressMap(object):
         if eIdx is None:
            return None
         idx, L = self.lowDict[low]
-        id = L[eIdx].id
-        return id
+        tag = L[eIdx].tag
+        return tag
 
-    # return rules linked to the range described by low and high
-    #
-    def getRules(self,low,high):
-        rset = set()
-        coveringBlocks = self.cover(low,high)
-        if coveringBlocks is None:
-           return set()
-        for abId in coveringBlocks:
-           obj = shared.IdToObj[abId]
-           idx, L = self.lowDict[obj.low]
-           for e in L:
-             if obj.high <= obj.low+e.size:
-                 rset = rset | e.rules
-        return rset 
-
-    def makeRuleLinks(self):
-       for low in self.lowDict:
-         idx, L = self.lowDict[low]
-
-         for e in L:
-
-           #### DEC 4
-           #if e.size == 4294967295:
-           #  continue 
-           eid = e.id 
-           if eid is None:
-              continue
-
-           for r in e.rules:
-             if self.type == 'src':
-                shared.rule[ r ].srcABId.add( eid )
-             else:
-                shared.rule[ r ].dstABId.add( eid )
- 
     # return list of 'related' networks
     #
-    def getRelated(self,id):
+    def getRelated(self,tag):
 
          related = set() 
-         if id not in shared.IdToObj:
+         if tag not in shared.IdToObj:
             warnings.warn('run time error 13', stacklevel=2)
-         ab   = shared.IdToObj[id]
+         ab   = shared.IdToObj[tag]
          if not isinstance(ab,AddressBlock):
              return set()
 
@@ -280,8 +228,8 @@ class AddressMap(object):
                    #if idx[j] == 4294967295:
                    #    continue
                    if low <= srtAdrs[i]+idx[j]:
-                         if not L[j].id is None and not isinstance( shared.IdToObj[ L[j].id ], Gateway):
-                           related.add( L[j].id ) 
+                         if not L[j].tag is None and not isinstance( shared.IdToObj[ L[j].tag ], Gateway):
+                           related.add( L[j].tag ) 
                    else:
                      break
             i = i+1
@@ -293,8 +241,8 @@ class AddressMap(object):
             idx, L  = self.lowDict[ srtAdrs[i] ]
             for j in xrange(0,len(L)):
                 if L[j].size < 4294967295:
-                   if not L[j].id is None and not isinstance( shared.IdToObj[ L[j].id ], Gateway):
-                     related.add( L[j].id )
+                   if not L[j].tag is None and not isinstance( shared.IdToObj[ L[j].tag ], Gateway):
+                     related.add( L[j].tag )
 
             i = i+1
 
@@ -323,12 +271,11 @@ class AddressMap(object):
                # an Orphan might be reference to an interface IP, which is OK.
                # would be better to scan all the interfaces to double check
                #
-               if e.id is None and s>0:
+               if e.tag is None and s>0:
                      
                   high = low+s
                   ipr = IPRange(low,high)
-                  print('WARNING: Orphaned range ',ipr,' referenced in rules ',e.rules, file=sys.stderr)
-                  
+
        net_orphans = []
        hst_orphans = []
        rg_orphans  = []
@@ -363,7 +310,20 @@ class AddressMap(object):
                            break 
                   if not found: 
                      oList.append(ab.name)
-                     reported[ab.id] = True
+                     reported[ab.tag] = True
                      #ab.reported = True
                
        return net_orphans, hst_orphans, rg_orphans, reported
+
+
+def main():
+
+    am = AddressMap()
+    am.addElement(0, 10, 1)
+    am.addElement(0, 10, 2)
+
+    print am.cover(1, 10)
+
+
+if __name__ == "__main__":
+    main()
