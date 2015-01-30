@@ -70,15 +70,14 @@ class MatchField(object):
                 self.qMap[low] = [set(), set(), set()]
     
             elements_sizes, elements = self.lowDict[low]
-            for j in xrange(0, len(elements_sizes)):
 
-                if not elements[j].tag:
-                    continue
+            for j in xrange(0, len(elements)):
 
                 # mark that range begins at low
                 #
                 self.qMap[low][1].add(elements[j].tag)
-                high = low + elements_sizes[j]
+                high = low + elements[j].size
+
                 if not high in self.qMap:
                     self.qMap[high] = [set(), set(), set()]
 
