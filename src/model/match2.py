@@ -52,9 +52,16 @@ class MatchField(object):
 
             self.lowDict[low] = [elements_sizes, elements]
 
-    # build data structure suitable for determining intersection of
-    # IP addresses and IP ranges with members of this map
-    #
+
+    # build data structure suitable for determining intersection of elements
+    # This essentially takes form of a dictionary self.qMap, keyed by places of 'interest',
+    # i.e. where elements begin and end, all of these keys are also maintained in a list self.qMapIdx
+    # The dictionary self.qMap contains as values a list of three sets;
+
+    # set of all tags of elements that 'occupy'/run through at that place of interest
+    # set of all tags of elements that begin at that place of interest
+    # set of all tags of elements that end at that place of interest
+
     def buildQueryMap(self):
 
         if not self.ordered:
@@ -73,7 +80,6 @@ class MatchField(object):
             for j in xrange(0, len(elements)):
 
                 # mark that range begins at low
-
                 self.qMap[low][1].add(elements[j].tag)
                 high = low + elements[j].size
 
@@ -83,18 +89,18 @@ class MatchField(object):
                 # mark that range ends at high
                 self.qMap[high][2].add(elements[j].tag)
 
-        active = set()
-        priorEnd = set()
+        active_tags = set()
+        previously_ended_tags = set()
 
         self.qMapIdx = sorted(self.qMap.keys())
         for pos in self.qMapIdx:
 
             [on, start, end] = self.qMap[pos]
-            # compute the set of address blocks that include IP address 'pos'
+            # compute the set of elements that include element 'pos'
             #
-            active = (active | start ) - priorEnd
-            self.qMap[pos][0] = active
-            priorEnd = end
+            active_tags = (active_tags | start) - previously_ended_tags
+            self.qMap[pos][0] = active_tags
+            previously_ended_tags = end
 
     # return a set of address block ids that intersect the range from low to high
     def cover(self, low, high):
@@ -146,7 +152,7 @@ def main():
 
     m = MatchField()
     
-    m.addElement(0, 4, 1)
+    m.addElement(0, 2, 1)
     m.addElement(4, 9, 2)
 
     print m.cover(1, 100)
