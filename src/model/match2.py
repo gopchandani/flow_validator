@@ -5,8 +5,7 @@ import bisect
 import warnings
 from netaddr import *
 
-
-class AddressMapElement(object):
+class MatchFieldElement(object):
 
     def __init__(self, low, high, tag):
         self.low  = low
@@ -16,8 +15,7 @@ class AddressMapElement(object):
         self.qMap = {}
         self.qMap
 
-
-class AddressMap(object):
+class MatchField(object):
 
     def __init__(self):
 
@@ -31,7 +29,7 @@ class AddressMap(object):
         
         size = high - low
         if not size in self.lowDict[low]:
-            e = AddressMapElement(low, high, tag)
+            e = MatchFieldElement(low, high, tag)
             self.lowDict[low][size] = e
         else:
             pass
@@ -41,21 +39,18 @@ class AddressMap(object):
         self.ordered = True
         for low in self.lowDict:
 
-            # before this call, self.size[s] will be a list.
-            # after this call it will be a pair of lists
-            #
-            sList = sorted(self.lowDict[low].keys())
+            # before this call, self.lowDict[low] would be a dictionary of sizes.
+            # after this call it will be a 2-element list of lists
 
-            # copy the low values into a key array we use for searching
-            #
-            idx = [0]*len(sList)
-            L = [0]*len(sList)
+            size_list = sorted(self.lowDict[low].keys())
+            ordered_match_field_elements_sizes = []
+            ordered_match_field_elements = []
+            for i in xrange(0, len(size_list)):
+                
+                ordered_match_field_elements.append(self.lowDict[low][size_list[i]])
+                ordered_match_field_elements_sizes.append(ordered_match_field_elements[i].size)
 
-            for i in xrange(0, len(sList)):
-                L[i] = self.lowDict[low][sList[i]]
-                idx[i] = L[i].size
-
-            self.lowDict[low] = [idx, L]
+            self.lowDict[low] = [ordered_match_field_elements_sizes, ordered_match_field_elements]
 
     # build data structure suitable for determining intersection of
     # IP addresses and IP ranges with members of this map
@@ -94,7 +89,7 @@ class AddressMap(object):
         active = set()
         priorEnd = set()
 
-        self.qMapIdx = sorted( self.qMap.keys() )
+        self.qMapIdx = sorted(self.qMap.keys())
   
         for pos in self.qMapIdx:
 
@@ -114,7 +109,7 @@ class AddressMap(object):
 
          # where do we start the scan?
          #
-        idx = bisect.bisect_left( self.qMapIdx, low )
+        idx = bisect.bisect_left(self.qMapIdx, low)
 
         if idx == len(self.qMapIdx):
             return set()
@@ -155,7 +150,7 @@ class AddressMap(object):
 
     def getElementIdx(self,low,high):
         try:
-           idx, sList = self.lowDict[low]
+           idx, size_list = self.lowDict[low]
         except:
            return None
 
@@ -183,15 +178,14 @@ class AddressMap(object):
         tag = L[eIdx].tag
         return tag
 
-
 def main():
 
-    am = AddressMap()
-    am.addElement(0, 10, 1)
-    am.addElement(0, 9, 2)
+    m = MatchField()
+    
+    m.addElement(0, 4, 1)
+    m.addElement(4, 9, 2)
 
-    print am.cover(1, 10)
-
+    print m.cover(1, 100)
 
 if __name__ == "__main__":
     main()
