@@ -62,99 +62,96 @@ class AddressMap(object):
     #
     def buildQueryMap(self):
 
-       if not self.ordered:
-          self.orderElements()
+        if not self.ordered:
+            self.orderElements()
 
-       self.qMap = {}
-       self.qMapIdx = []
+        self.qMap = {}
+        self.qMapIdx = []
 
-       for low in self.lowDict:
-          if not low in self.qMap:
-
-             # record set of ranges that include low, that start at low, and that end at low
-             #
-             self.qMap[low] = [set(), set(), set()]
+        for low in self.lowDict:
+            if not low in self.qMap:
+                # record set of ranges that include low, that start at low, and that end at low
+                #
+                self.qMap[low] = [set(), set(), set()]
     
-          idx, L = self.lowDict[low]
-          for j in xrange(0, len(idx)):
+            idx, L = self.lowDict[low]
+            for j in xrange(0, len(idx)):
 
-              if not L[j].tag:
-                  continue
+                if not L[j].tag:
+                    continue
 
-              ### DEC 4
-              #if idx[j] == 4294967295:
-              #    continue
+                # mark that range begins at low
+                #
+                self.qMap[low][1].add(L[j].tag)
+                high = low+idx[j]
+                if not high in self.qMap:
+                    self.qMap[high] = [set(), set(), set()]
 
-              # mark that range begins at low
-              # 
-              self.qMap[low][1].add( L[j].tag )    
-              high = low+idx[j]
-              if not high in self.qMap:
-                 self.qMap[high] = [set(),set(),set()] 
+                # mark that range ends at high
+                #
+                self.qMap[high][2].add(L[j].tag)
 
-              # mark that range ends at high
-              #
-              self.qMap[high][2].add( L[j].tag )
+        active = set()
+        priorEnd = set()
 
-       active = set()
-       priorEnd = set()
-
-       self.qMapIdx = sorted( self.qMap.keys() )
+        self.qMapIdx = sorted( self.qMap.keys() )
   
-       for pos in self.qMapIdx: 
+        for pos in self.qMapIdx:
 
-          [on,start,end] = self.qMap[pos]
-
-          # compute the set of address blocks that include IP address 'pos'
-          #
-          active = (active | start ) - priorEnd
-          self.qMap[pos][0] = active
-          priorEnd = end 
+            [on, start, end] = self.qMap[pos]
+            # compute the set of address blocks that include IP address 'pos'
+            #
+            active = (active | start ) - priorEnd
+            self.qMap[pos][0] = active
+            priorEnd = end
 
     # return a set of address block ids that intersect the range from low to high
     #
-    def cover(self,low,high):
+    def cover(self, low, high):
 
-         if 'qMapIdx' not in self.__dict__:
-           self.buildQueryMap()
+        if 'qMapIdx' not in self.__dict__:
+            self.buildQueryMap()
 
          # where do we start the scan?
          #
-         idx = bisect.bisect_left( self.qMapIdx, low )
-       
-         if idx == len(self.qMapIdx):
-              return set()
+        idx = bisect.bisect_left( self.qMapIdx, low )
 
-         if idx == 0 and low < self.qMapIdx[ 0 ] and self.qMapIdx[0] <= high:
-             adrs = self.qMapIdx[ idx ]
-             active = self.qMap[ adrs ][0]
+        if idx == len(self.qMapIdx):
+            return set()
 
-         elif len(self.qMapIdx) >1 and idx+1 < len(self.qMapIdx) and self.qMapIdx[idx+1] == low:
-            idx = idx+1 
-            adrs = self.qMapIdx[ idx ] 
-            active = self.qMap[ adrs ][0] 
+        if idx == 0 and low < self.qMapIdx[ 0 ] and self.qMapIdx[0] <= high:
+            adrs = self.qMapIdx[ idx ]
+            active = self.qMap[ adrs ][0]
+
+        elif len(self.qMapIdx) >1 and idx+1 < len(self.qMapIdx) and self.qMapIdx[idx+1] == low:
+            idx = idx+1
+            adrs = self.qMapIdx[ idx ]
+            active = self.qMap[ adrs ][0]
 
          # value at idx is strictly larger than low and value at idx-1
          # is strictly lower
          #
-         elif 0< idx:
-            adrs = self.qMapIdx[ idx-1 ] 
+        elif 0< idx:
+            adrs = self.qMapIdx[ idx-1 ]
             active = self.qMap[ adrs ][0] - self.qMap[ adrs ][2]
-            idx = idx-1 
-         # self.qMapIdx[idx] < low or possibly self.qMapIdx[idx] == low
-         else:
-                if self.qMapIdx[idx] == low:
-                     adrs = self.qMapIdx[ idx ]
-                     active = self.qMap[ adrs ][1]
-                else:
-                     active = set()
-         idx = idx+1 
-         while idx < len(self.qMapIdx) and self.qMapIdx[ idx ] <= high:
-             adrs = self.qMapIdx[idx] 
-             active = active | self.qMap[adrs][0]
-             idx = idx+1
+            idx = idx-1
 
-         return active 
+         # self.qMapIdx[idx] < low or possibly self.qMapIdx[idx] == low
+        else:
+            if self.qMapIdx[idx] == low:
+                adrs = self.qMapIdx[ idx ]
+                active = self.qMap[ adrs ][1]
+            else:
+                active = set()
+
+
+        idx = idx+1
+        while idx < len(self.qMapIdx) and self.qMapIdx[ idx ] <= high:
+            adrs = self.qMapIdx[idx]
+            active = active | self.qMap[adrs][0]
+            idx = idx+1
+
+        return active
 
     def getElementIdx(self,low,high):
         try:
