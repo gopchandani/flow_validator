@@ -26,38 +26,6 @@ class Switch():
         self.accepted_destination_match = {}
 
 
-    def passes_flow(self, flow_match, out_port):
-
-        is_reachable = False
-
-        for flow_table_id in self.flow_tables:
-            node_flow_table = self.flow_tables[flow_table_id]
-
-            #  Will this flow_table do the trick?
-            is_reachable = node_flow_table.passes_flow(flow_match, out_port)
-
-            # If flow table passes, just break, otherwise keep going to the next table
-            if is_reachable:
-                break
-
-        return is_reachable
-
-    def compute_transfer_function(self):
-
-        # A dictionary of dictionaries
-        self.tf = {}
-        
-        # Apply a wild-card match at all input ports and see what comes out
-        # at the other end.
-        
-        for in_port in self.ports.values():
-            destination_match = Match()
-            destination_match.in_port = in_port.port_number
-            output_match = self.transfer_function(destination_match)
-            self.tf[in_port.port_number] = output_match
-
-        print self.tf
-
     def transfer_function(self, in_port_match):
 
         written_action_set = ActionSet(self)
