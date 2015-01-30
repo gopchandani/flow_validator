@@ -39,22 +39,19 @@ class MatchField(object):
         self.ordered = True
         for low in self.lowDict:
 
-            # before this call, self.lowDict[low] would be a dictionary of sizes.
-            # after this call it will be a 2-element list of lists
+            # before: self.lowDict[low] would be a dictionary keyed by sizes containing MatchFieldElement objects
+            # after: it will be a list of MatchFieldElement objects ordered by their size
 
             size_list = sorted(self.lowDict[low].keys())
-            elements_sizes = []
             elements = []
             for i in xrange(0, len(size_list)):
-                
                 elements.append(self.lowDict[low][size_list[i]])
-                elements_sizes.append(elements[i].size)
 
-            self.lowDict[low] = [elements_sizes, elements]
+            self.lowDict[low] = elements
 
 
     # build data structure suitable for determining intersection of elements
-    # This essentially takes form of a dictionary self.qMap, keyed by places of 'interest',
+    # This essentially takes form of a dictionary self.qMap, keyed by places of 'interest' (pos),
     # i.e. where elements begin and end, all of these keys are also maintained in a list self.qMapIdx
     # The dictionary self.qMap contains as values a list of three sets;
 
@@ -76,7 +73,7 @@ class MatchField(object):
                 # record set of ranges that include low, that start at low, and that end at low
                 self.qMap[low] = [set(), set(), set()]
 
-            elements_sizes, elements = self.lowDict[low]
+            elements = self.lowDict[low]
             for j in xrange(0, len(elements)):
 
                 # mark that range begins at low
@@ -96,13 +93,13 @@ class MatchField(object):
         for pos in self.qMapIdx:
 
             [on, start, end] = self.qMap[pos]
+
             # compute the set of elements that include element 'pos'
-            #
             active_tags = (active_tags | start) - previously_ended_tags
             self.qMap[pos][0] = active_tags
             previously_ended_tags = end
 
-    # return a set of address block ids that intersect the range from low to high
+    # return a set of element tags that intersect the range from low to high
     def cover(self, low, high):
 
         if 'qMapIdx' not in self.__dict__:
@@ -115,36 +112,36 @@ class MatchField(object):
         if elements_sizes == len(self.qMapIdx):
             return set()
 
-        if elements_sizes == 0 and low < self.qMapIdx[ 0 ] and self.qMapIdx[0] <= high:
-            adrs = self.qMapIdx[ elements_sizes ]
-            active = self.qMap[ adrs ][0]
+        if elements_sizes == 0 and low < self.qMapIdx[0] and self.qMapIdx[0] <= high:
+            adrs = self.qMapIdx[elements_sizes]
+            active = self.qMap[adrs][0]
 
-        elif len(self.qMapIdx) >1 and elements_sizes+1 < len(self.qMapIdx) and self.qMapIdx[elements_sizes+1] == low:
-            elements_sizes = elements_sizes+1
-            adrs = self.qMapIdx[ elements_sizes ]
-            active = self.qMap[ adrs ][0]
+        elif len(self.qMapIdx) > 1 and elements_sizes + 1 < len(self.qMapIdx) and self.qMapIdx[elements_sizes + 1] == low:
+            elements_sizes = elements_sizes + 1
+            adrs = self.qMapIdx[elements_sizes]
+            active = self.qMap[adrs][0]
 
          # value at elements_sizes is strictly larger than low and value at elements_sizes-1
          # is strictly lower
          #
         elif 0 < elements_sizes:
-            adrs = self.qMapIdx[ elements_sizes-1 ]
-            active = self.qMap[ adrs ][0] - self.qMap[ adrs ][2]
-            elements_sizes = elements_sizes-1
+            adrs = self.qMapIdx[elements_sizes - 1]
+            active = self.qMap[adrs][0] - self.qMap[adrs][2]
+            elements_sizes = elements_sizes - 1
 
          # self.qMapIdx[elements_sizes] < low or possibly self.qMapIdx[elements_sizes] == low
         else:
             if self.qMapIdx[elements_sizes] == low:
-                adrs = self.qMapIdx[ elements_sizes ]
-                active = self.qMap[ adrs ][1]
+                adrs = self.qMapIdx[elements_sizes]
+                active = self.qMap[adrs][1]
             else:
                 active = set()
 
-        elements_sizes = elements_sizes+1
-        while elements_sizes < len(self.qMapIdx) and self.qMapIdx[ elements_sizes ] <= high:
+        elements_sizes = elements_sizes + 1
+        while elements_sizes < len(self.qMapIdx) and self.qMapIdx[elements_sizes] <= high:
             adrs = self.qMapIdx[elements_sizes]
             active = active | self.qMap[adrs][0]
-            elements_sizes = elements_sizes+1
+            elements_sizes = elements_sizes + 1
 
         return active
 
