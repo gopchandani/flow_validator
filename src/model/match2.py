@@ -65,16 +65,15 @@ class MatchField(object):
 
         for low in self.lowDict:
             if not low in self.qMap:
-                # record set of ranges that include low, that start at low, and that end at low
-                #
-                self.qMap[low] = [set(), set(), set()]
-    
-            elements_sizes, elements = self.lowDict[low]
 
+                # record set of ranges that include low, that start at low, and that end at low
+                self.qMap[low] = [set(), set(), set()]
+
+            elements_sizes, elements = self.lowDict[low]
             for j in xrange(0, len(elements)):
 
                 # mark that range begins at low
-                #
+
                 self.qMap[low][1].add(elements[j].tag)
                 high = low + elements[j].size
 
@@ -82,14 +81,12 @@ class MatchField(object):
                     self.qMap[high] = [set(), set(), set()]
 
                 # mark that range ends at high
-                #
                 self.qMap[high][2].add(elements[j].tag)
 
         active = set()
         priorEnd = set()
 
         self.qMapIdx = sorted(self.qMap.keys())
-  
         for pos in self.qMapIdx:
 
             [on, start, end] = self.qMap[pos]
@@ -100,7 +97,6 @@ class MatchField(object):
             priorEnd = end
 
     # return a set of address block ids that intersect the range from low to high
-    #
     def cover(self, low, high):
 
         if 'qMapIdx' not in self.__dict__:
@@ -125,7 +121,7 @@ class MatchField(object):
          # value at elements_sizes is strictly larger than low and value at elements_sizes-1
          # is strictly lower
          #
-        elif 0< elements_sizes:
+        elif 0 < elements_sizes:
             adrs = self.qMapIdx[ elements_sizes-1 ]
             active = self.qMap[ adrs ][0] - self.qMap[ adrs ][2]
             elements_sizes = elements_sizes-1
@@ -159,22 +155,6 @@ class MatchField(object):
            return j
         else:
            return None
-        
-    def setId(self,low,high,tag):
-        eIdx = self.getElementIdx(low,high)
-        if eIdx is None:
-           return False
-        elements_sizes, elements = self.lowDict[low]
-        elements[eIdx].tag = tag 
-        return True
-
-    def getId(self,low,high):
-        eIdx = self.getElementIdx(low,high)
-        if eIdx is None:
-           return None
-        elements_sizes, elements = self.lowDict[low]
-        tag = elements[eIdx].tag
-        return tag
 
 def main():
 
