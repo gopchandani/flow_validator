@@ -142,20 +142,6 @@ class MatchField(object):
 
         return active
 
-    def getElementIdx(self,low,high):
-        try:
-           elements_sizes, size_list = self.lowDict[low]
-        except:
-           return None
-
-        size = high-low
-        j = bisect.bisect_left(elements_sizes, size)
-       
-        if j != len(elements_sizes) and elements_sizes[j] == size:
-           return j
-        else:
-           return None
-
 def main():
 
     m = MatchField()
