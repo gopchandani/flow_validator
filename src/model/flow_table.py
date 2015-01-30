@@ -40,33 +40,6 @@ class Flow():
             # TODO: Write meta-data case
             # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
-    def does_it_match(self, flow_match):
-
-        # If the intersection exists.
-        if self.match.intersect(flow_match):
-            return True
-        else:
-            return False
-
-
-    def does_it_forward(self, in_port, out_port):
-        ret_val = False
-
-        # Requiring that any single action has to forward it
-        for action in self.written_actions:
-            if action.does_it_forward(in_port, out_port):
-                ret_val = True
-                break
-
-        return ret_val
-
-    def passes_flow(self, flow_match, out_port):
-        ret_val = False
-        if self.does_it_match(flow_match):
-            if self.does_it_forward(flow_match.in_port, out_port):
-                ret_val = True
-
-        return ret_val
 
 class FlowTable():
     def __init__(self, sw, table_id, flow_list):
