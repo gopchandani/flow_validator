@@ -43,14 +43,14 @@ class MatchField(object):
             # after this call it will be a 2-element list of lists
 
             size_list = sorted(self.lowDict[low].keys())
-            ordered_match_field_elements_sizes = []
-            ordered_match_field_elements = []
+            elements_sizes = []
+            elements = []
             for i in xrange(0, len(size_list)):
                 
-                ordered_match_field_elements.append(self.lowDict[low][size_list[i]])
-                ordered_match_field_elements_sizes.append(ordered_match_field_elements[i].size)
+                elements.append(self.lowDict[low][size_list[i]])
+                elements_sizes.append(elements[i].size)
 
-            self.lowDict[low] = [ordered_match_field_elements_sizes, ordered_match_field_elements]
+            self.lowDict[low] = [elements_sizes, elements]
 
     # build data structure suitable for determining intersection of
     # IP addresses and IP ranges with members of this map
@@ -69,22 +69,22 @@ class MatchField(object):
                 #
                 self.qMap[low] = [set(), set(), set()]
     
-            idx, L = self.lowDict[low]
-            for j in xrange(0, len(idx)):
+            elements_sizes, elements = self.lowDict[low]
+            for j in xrange(0, len(elements_sizes)):
 
-                if not L[j].tag:
+                if not elements[j].tag:
                     continue
 
                 # mark that range begins at low
                 #
-                self.qMap[low][1].add(L[j].tag)
-                high = low+idx[j]
+                self.qMap[low][1].add(elements[j].tag)
+                high = low + elements_sizes[j]
                 if not high in self.qMap:
                     self.qMap[high] = [set(), set(), set()]
 
                 # mark that range ends at high
                 #
-                self.qMap[high][2].add(L[j].tag)
+                self.qMap[high][2].add(elements[j].tag)
 
         active = set()
         priorEnd = set()
@@ -109,55 +109,54 @@ class MatchField(object):
 
          # where do we start the scan?
          #
-        idx = bisect.bisect_left(self.qMapIdx, low)
+        elements_sizes = bisect.bisect_left(self.qMapIdx, low)
 
-        if idx == len(self.qMapIdx):
+        if elements_sizes == len(self.qMapIdx):
             return set()
 
-        if idx == 0 and low < self.qMapIdx[ 0 ] and self.qMapIdx[0] <= high:
-            adrs = self.qMapIdx[ idx ]
+        if elements_sizes == 0 and low < self.qMapIdx[ 0 ] and self.qMapIdx[0] <= high:
+            adrs = self.qMapIdx[ elements_sizes ]
             active = self.qMap[ adrs ][0]
 
-        elif len(self.qMapIdx) >1 and idx+1 < len(self.qMapIdx) and self.qMapIdx[idx+1] == low:
-            idx = idx+1
-            adrs = self.qMapIdx[ idx ]
+        elif len(self.qMapIdx) >1 and elements_sizes+1 < len(self.qMapIdx) and self.qMapIdx[elements_sizes+1] == low:
+            elements_sizes = elements_sizes+1
+            adrs = self.qMapIdx[ elements_sizes ]
             active = self.qMap[ adrs ][0]
 
-         # value at idx is strictly larger than low and value at idx-1
+         # value at elements_sizes is strictly larger than low and value at elements_sizes-1
          # is strictly lower
          #
-        elif 0< idx:
-            adrs = self.qMapIdx[ idx-1 ]
+        elif 0< elements_sizes:
+            adrs = self.qMapIdx[ elements_sizes-1 ]
             active = self.qMap[ adrs ][0] - self.qMap[ adrs ][2]
-            idx = idx-1
+            elements_sizes = elements_sizes-1
 
-         # self.qMapIdx[idx] < low or possibly self.qMapIdx[idx] == low
+         # self.qMapIdx[elements_sizes] < low or possibly self.qMapIdx[elements_sizes] == low
         else:
-            if self.qMapIdx[idx] == low:
-                adrs = self.qMapIdx[ idx ]
+            if self.qMapIdx[elements_sizes] == low:
+                adrs = self.qMapIdx[ elements_sizes ]
                 active = self.qMap[ adrs ][1]
             else:
                 active = set()
 
-
-        idx = idx+1
-        while idx < len(self.qMapIdx) and self.qMapIdx[ idx ] <= high:
-            adrs = self.qMapIdx[idx]
+        elements_sizes = elements_sizes+1
+        while elements_sizes < len(self.qMapIdx) and self.qMapIdx[ elements_sizes ] <= high:
+            adrs = self.qMapIdx[elements_sizes]
             active = active | self.qMap[adrs][0]
-            idx = idx+1
+            elements_sizes = elements_sizes+1
 
         return active
 
     def getElementIdx(self,low,high):
         try:
-           idx, size_list = self.lowDict[low]
+           elements_sizes, size_list = self.lowDict[low]
         except:
            return None
 
         size = high-low
-        j = bisect.bisect_left(idx, size)
+        j = bisect.bisect_left(elements_sizes, size)
        
-        if j != len(idx) and idx[j] == size:
+        if j != len(elements_sizes) and elements_sizes[j] == size:
            return j
         else:
            return None
@@ -166,16 +165,16 @@ class MatchField(object):
         eIdx = self.getElementIdx(low,high)
         if eIdx is None:
            return False
-        idx, L = self.lowDict[low]
-        L[eIdx].tag = tag 
+        elements_sizes, elements = self.lowDict[low]
+        elements[eIdx].tag = tag 
         return True
 
     def getId(self,low,high):
         eIdx = self.getElementIdx(low,high)
         if eIdx is None:
            return None
-        idx, L = self.lowDict[low]
-        tag = L[eIdx].tag
+        elements_sizes, elements = self.lowDict[low]
+        tag = elements[eIdx].tag
         return tag
 
 def main():
