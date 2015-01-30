@@ -7,6 +7,7 @@ from netaddr import *
 
 
 class AddressMapElement(object):
+
     def __init__(self, low, high, tag):
         self.low  = low
         self.size = high - low
@@ -37,24 +38,24 @@ class AddressMap(object):
 
     def orderElements(self):
 
-       self.ordered = True
-       for low in self.lowDict:
+        self.ordered = True
+        for low in self.lowDict:
 
-          # before this call, self.size[s] will be a list.
-          # after this call it will be a pair of lists
-          #
-          sList = sorted(self.lowDict[low].keys())
+            # before this call, self.size[s] will be a list.
+            # after this call it will be a pair of lists
+            #
+            sList = sorted(self.lowDict[low].keys())
 
-          # copy the low values into a key array we use for searching
-          #
-          idx = [0]*len(sList)
-          L = [0]*len(sList)
+            # copy the low values into a key array we use for searching
+            #
+            idx = [0]*len(sList)
+            L = [0]*len(sList)
 
-          for i in xrange(0, len(sList)):
-             L[i] = self.lowDict[low][sList[i]]
-             idx[i] = L[i].size
-         
-          self.lowDict[low] = [idx, L]
+            for i in xrange(0, len(sList)):
+                L[i] = self.lowDict[low][sList[i]]
+                idx[i] = L[i].size
+
+            self.lowDict[low] = [idx, L]
 
     # build data structure suitable for determining intersection of
     # IP addresses and IP ranges with members of this map
@@ -184,136 +185,6 @@ class AddressMap(object):
         idx, L = self.lowDict[low]
         tag = L[eIdx].tag
         return tag
-
-    # return list of 'related' networks
-    #
-    def getRelated(self,tag):
-
-         related = set() 
-         if tag not in shared.IdToObj:
-            warnings.warn('run time error 13', stacklevel=2)
-         ab   = shared.IdToObj[tag]
-         if not isinstance(ab,AddressBlock):
-             return set()
-
-         low  = ab.low
-         high = ab.high
-
-         present = True
-         if self.getId(low,high) is None:
-             present = False
-
-         # make a list of the starting addresses, sorted
-         #
-         srtAdrs = sorted(self.lowDict.keys())
-         i = 0
-
-         # check for overlaps from the bottom
-         #
-         while i<len(srtAdrs) and srtAdrs[i] < low:
-            try:
-               idx, L = self.lowDict[ srtAdrs[i] ]
-            except:
-               warnings.warn('run time error 14', stacklevel=2)
-
-            # necessary condition for any range that starts below
-            # the target is that the largest block starting 
-            # at srtAdrs[i] overlap the target.  If it does, then
-            # march backward through sizes, including each containing block
-            #
-            if low <= srtAdrs[i]+idx[-1]:
-                for j in reversed( xrange(0,len(idx)) ):
-
-                   ## DEC 4
-                   #if idx[j] == 4294967295:
-                   #    continue
-                   if low <= srtAdrs[i]+idx[j]:
-                         if not L[j].tag is None and not isinstance( shared.IdToObj[ L[j].tag ], Gateway):
-                           related.add( L[j].tag ) 
-                   else:
-                     break
-            i = i+1
-
-         # necessary condition for range starting after low is that low overlaps it
-         #
-         while i< len(srtAdrs) and srtAdrs[i] <= high: 
-
-            idx, L  = self.lowDict[ srtAdrs[i] ]
-            for j in xrange(0,len(L)):
-                if L[j].size < 4294967295:
-                   if not L[j].tag is None and not isinstance( shared.IdToObj[ L[j].tag ], Gateway):
-                     related.add( L[j].tag )
-
-            i = i+1
-
-         # that's all!
-         #
-         return related
-
-    def listOrphans(self):
-
-       reported = {}
-
-       # (a) --- has every rule range been mapped to a network object?
-
-       # with country codes a zillion orphaned ranges might be thrown
-       #
-       # @return 3 lists with any networks, hosts or hosts found orphans
-       #
-       if not shared.lookupDict:
-
-          for low in self.lowDict:
-             sizes, L = self.lowDict[low]
-             for i in xrange(0,len(sizes)):
-               s = sizes[i] 
-               e = L[i]
-
-               # an Orphan might be reference to an interface IP, which is OK.
-               # would be better to scan all the interfaces to double check
-               #
-               if e.tag is None and s>0:
-                     
-                  high = low+s
-                  ipr = IPRange(low,high)
-
-       net_orphans = []
-       hst_orphans = []
-       rg_orphans  = []
-
-       ab_pairs = ([shared.netlist,net_orphans],[shared.hostlist,hst_orphans],[shared.rangelist,rg_orphans])
-
-       for sList, oList in ab_pairs:
-           for abId in sList:
-              ab = sList[abId]
-              if ab.type == 'vlan':
-                 continue
-              if isinstance(ab,Gateway):
-                   warnings.warn('run time error 15', stacklevel=2)
-
-              low  = ab.low
-              high = ab.high
-
-              if self.getId(low,high) is None:
-
-                  # get the relations and see if all of them are empty too
-                  #
-                  related = self.getRelated(abId)
-                  found = False
-                  for n in related:
-                       net   = shared.IdToObj[n] 
-                       if isinstance(net,Gateway):
-                           continue
-                       low  = net.low
-                       high = net.high
-                       if self.getId(low,high):
-                           found = True
-                           break 
-                  if not found: 
-                     oList.append(ab.name)
-                     reported[ab.tag] = True
-                     #ab.reported = True
-               
-       return net_orphans, hst_orphans, rg_orphans, reported
 
 
 def main():
