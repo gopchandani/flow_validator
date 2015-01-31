@@ -1,10 +1,14 @@
 __author__ = 'Rakesh Kumar'
 
+
+import sys
+
 from netaddr import IPNetwork
 from univset import univset
 
 from UserDict import DictMixin
 from match_field import MatchField2
+
 
 
 class Match2(DictMixin):
@@ -46,68 +50,70 @@ class Match2(DictMixin):
 
     def add_elements_from_match_json(self, match_json, flow):
 
-        for match_field in match_json:
+        for field_name in self.keys():
 
-            if match_field == 'in-port':
-                self["in_port"].add_element(int(match_json[match_field].split(":")[2]),
-                                            int(match_json[match_field].split(":")[2]),
-                                            flow)
+            try:
+                if field_name == "in_port":
+                    self[field_name].add_element(int(match_json["in-port"].split(":")[2]),
+                                                int(match_json["in-port"].split(":")[2]),
+                                                flow)
 
-            elif match_field == "ethernet-match":
-                if "ethernet-type" in match_json[match_field]:
-                    self["ethernet_type"].add_element(int(match_json[match_field]["ethernet-type"]["type"]),
-                                                      int(match_json[match_field]["ethernet-type"]["type"]),
-                                                      flow)
+                elif field_name == "ethernet_type":
+                    self[field_name].add_element(int(match_json["ethernet-match"]["ethernet-type"]["type"]),
+                                                 int(match_json["ethernet-match"]["ethernet-type"]["type"]),
+                                                 flow)
 
-                if "ethernet-source" in match_json[match_field]:
-                    mac_int = int(match_json[match_field]["ethernet-source"]["address"].replace(":", ""), 16)
-                    self["ethernet_source"].add_element(mac_int, mac_int, flow)
+                elif field_name == "ethernet_source":
+                    mac_int = int(match_json["ethernet-match"]["ethernet-source"]["address"].replace(":", ""), 16)
+                    self[field_name].add_element(mac_int, mac_int, flow)
 
-                if "ethernet-destination" in match_json[match_field]:
-                    mac_int = int(match_json[match_field]["ethernet-destination"]["address"].replace(":", ""), 16)
-                    self["ethernet_destination"].add_element(mac_int, mac_int, flow)
+                elif field_name == "ethernet_destination":
+                    mac_int = int(match_json["ethernet-match"]["ethernet-destination"]["address"].replace(":", ""), 16)
+                    self[field_name].add_element(mac_int, mac_int, flow)
 
-            elif match_field == 'ipv4-destination':
-                a = IPNetwork(match_json[match_field])
-                b = int(a)
-                self["dst_ip_addr"].add_element(IPNetwork(match_json[match_field]))
+                elif field_name == "src_ip_addr":
+                    self[field_name].add_element(IPNetwork(match_json["src_ip_addr"]))
 
-            elif match_field == 'ipv4-source':
-                self["src_ip_addr"].add_element(IPNetwork(match_json[match_field]))
+                elif field_name == "dst_ip_addr":
+                    self[field_name].add_element(IPNetwork(match_json["dst_ip_addr"]))
 
-            elif match_field == "ip-match":
-                if "ip-protocol" in match_json[match_field]:
-                    self["ip_protocol"].add_element(int(match_json[match_field]["ip-protocol"]),
-                                                    int(match_json[match_field]["ip-protocol"]),
-                                                    flow)
+                elif field_name == "ip_protocol":
+                    self[field_name].add_element(int(match_json["ip-match"]["ip-protocol"]),
+                                                 int(match_json["ip-match"]["ip-protocol"]),
+                                                 flow)
 
-            elif match_field == "tcp-destination-port":
-                self["tcp_destination_port"].add_element(int(match_json[match_field]),
-                                                         int(match_json[match_field]),
-                                                         flow)
+                elif field_name == "tcp_destination_port":
+                    self[field_name].add_element(int(match_json["tcp-destination-port"]),
+                                                 int(match_json["tcp-destination-port"]),
+                                                 flow)
 
-            elif match_field == "tcp-source-port":
-                self["tcp_source_port"].add_element(int(match_json[match_field]),
-                                                    int(match_json[match_field]),
-                                                    flow)
+                elif field_name == "tcp_source_port":
+                    self[field_name].add_element(int(match_json["tcp-source-port"]),
+                                                 int(match_json["tcp-source-port"]),
+                                                 flow)
 
-            elif match_field == "udp-destination-port":
-                self["udp_destination_port"].add_element(int(match_json[match_field]),
-                                                         int(match_json[match_field]),
-                                                         flow)
-
-            elif match_field == "udp-source-port":
-                self["udp_source_port"].add_element(int(match_json[match_field]),
-                                                    int(match_json[match_field]),
-                                                    flow)
-
-            elif match_field == "vlan-match":
-                if "vlan-id" in match_json[match_field]:
-                    self["vlan_id"].add_element(int(match_json[match_field]["vlan-id"]["vlan-id"]),
-                                                int(match_json[match_field]["vlan-id"]["vlan-id"]),
+                elif field_name == "udp_destination_port":
+                    self[field_name].add_element(int(match_json["udp-destination-port"]),
+                                                 int(match_json["udp-destination-port"]),
+                                                 flow)
+                elif field_name == "udp_source_port":
+                    self[field_name].add_element(int(match_json["udp-source-port"]),
+                                                 int(match_json["udp-source-port"]),
+                                                 flow)
+                elif field_name == "vlan_id":
+                    self["vlan_id"].add_element(int(match_json["vlan-match"]["vlan-id"]["vlan-id"]),
+                                                int(match_json["vlan-match"]["vlan-id"]["vlan-id"]),
                                                 flow)
 
                     self["has_vlan_tag"].add_element(1, 1, flow)
+
+                elif field_name == "has_vlan_tag" and "vlan-match" in match_json:
+                    pass
+
+            except KeyError:
+                self[field_name].add_element(0, sys.maxsize, flow)
+                continue
+
 
     def add_elements_from_match(self, match):
 
