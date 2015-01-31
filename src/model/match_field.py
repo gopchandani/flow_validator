@@ -8,21 +8,22 @@ from netaddr import *
 class MatchFieldElement(object):
 
     def __init__(self, low, high, tag):
-        self.low  = low
+        self.low = low
         self.size = high - low
 
         self.tag = tag
         self.qMap = {}
         self.qMap
 
-class MatchField(object):
+class MatchField2(object):
 
-    def __init__(self):
+    def __init__(self, field_name):
 
+        self.field_name = field_name
         self.lowDict = {}
         self.ordered = False
 
-    def addElement(self, low, high, tag):
+    def add_element(self, low, high, tag):
 
         if not low in self.lowDict:
             self.lowDict[low] = {} 
@@ -34,7 +35,7 @@ class MatchField(object):
         else:
             pass
 
-    def orderElements(self):
+    def order_elements(self):
 
         self.ordered = True
         for low in self.lowDict:
@@ -62,7 +63,7 @@ class MatchField(object):
     def buildQueryMap(self):
 
         if not self.ordered:
-            self.orderElements()
+            self.order_elements()
 
         self.qMap = {}
         self.qMapIdx = []
@@ -147,10 +148,10 @@ class MatchField(object):
 
 def main():
 
-    m = MatchField()
+    m = MatchField2("dummy")
     
-    m.addElement(0, 2, 1)
-    m.addElement(4, 9, 2)
+    m.add_element(0, 2, 1)
+    m.add_element(4, 4, 2)
 
     print m.cover(1, 100)
 
