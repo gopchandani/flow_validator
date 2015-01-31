@@ -55,6 +55,8 @@ class FlowTable():
             self.flows.append(f)
             self.table_match.add_elements_from_match(f.flow_match)
 
+        print self.table_match
+
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 

@@ -7,41 +7,6 @@ from UserDict import DictMixin
 from match_field import MatchField2
 
 
-class MatchField(object):
-    
-    def __init__(self, name, val):
-
-        self.name = name
-        self.set_field_value(val)
-
-    def set_field_value(self, val):
-
-        if isinstance(val, int):
-            self.value_set = set([val])
-        elif isinstance(val, univset):
-            self.value_set = val
-        elif isinstance(val, set):
-            self.value_set = val
-        else:
-            raise Exception("Invalid type of value for MatchField: " + str(type(val)))
-
-    def intersect(self, in_field):
-
-        field_intersection = in_field.value_set & self.value_set
-        if field_intersection:
-            return MatchField(self.name, in_field.value_set & self.value_set)
-        else:
-            return None
-
-    def complement(self, in_field):
-
-        field_complement = self.value_set - in_field.value_set
-        return MatchField(self.name, field_complement)
-
-    def __str__(self):
-        return str(self.name) + ": " + str(self.value_set)
-
-
 class Match2(DictMixin):
 
     def __init__(self, match_json=None, flow=None):
@@ -147,10 +112,41 @@ class Match2(DictMixin):
     def add_elements_from_match(self, match):
 
         for field_name in match:
-            self[field_name].add_element(match[field_name].low,
-                                         match[field_name].high,
-                                         match[field_name].tag)
+            self[field_name].union(match[field_name])
 
+class MatchField(object):
+
+    def __init__(self, name, val):
+
+        self.name = name
+        self.set_field_value(val)
+
+    def set_field_value(self, val):
+
+        if isinstance(val, int):
+            self.value_set = set([val])
+        elif isinstance(val, univset):
+            self.value_set = val
+        elif isinstance(val, set):
+            self.value_set = val
+        else:
+            raise Exception("Invalid type of value for MatchField: " + str(type(val)))
+
+    def intersect(self, in_field):
+
+        field_intersection = in_field.value_set & self.value_set
+        if field_intersection:
+            return MatchField(self.name, in_field.value_set & self.value_set)
+        else:
+            return None
+
+    def complement(self, in_field):
+
+        field_complement = self.value_set - in_field.value_set
+        return MatchField(self.name, field_complement)
+
+    def __str__(self):
+        return str(self.name) + ": " + str(self.value_set)
 
 
 class Match():
