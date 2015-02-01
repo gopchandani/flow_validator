@@ -100,8 +100,21 @@ class MatchField2(object):
             self.qMap[pos][0] = active_tags
             previously_ended_tags = end
 
-    # return a set of element tags that intersect the range from low to high
-    def intersect(self, low, high):
+    # Returns a set of tags that intersect between the in_match_field and self
+    def intersect(self, in_match_field):
+
+        if 'qMapIdx' not in self.__dict__:
+            self.buildQueryMap()
+
+        intersecting_set = set()
+        if self.qMapIdx:
+            intersecting_set = self.cover(self.qMapIdx[0], self.qMapIdx[len(self.qMapIdx) - 1])
+
+        return intersecting_set
+
+
+    # return a set of element tags that cover the range from low to high
+    def cover(self, low, high):
 
         if 'qMapIdx' not in self.__dict__:
             self.buildQueryMap()
@@ -160,7 +173,7 @@ def main():
     m.add_element(4, 4, "tag2")
     m.add_element(7, 9, "tag3")
 
-    print m.intersect(0, 10)
+    print m.cover(0, 10)
 
 if __name__ == "__main__":
     main()

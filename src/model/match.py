@@ -122,14 +122,13 @@ class Match(DictMixin):
 
     def intersect(self, in_match):
 
-        match_intersection = Match2()
+        match_intersection = Match()
 
         for field in self.match_fields:
-            match_intersection[field] = self[field].intersect(in_match[field])
 
+            match_intersection[field] = self[field].intersect(in_match[field])
             if not match_intersection[field]:
                 return None
-
 
         return match_intersection
 
@@ -150,6 +149,15 @@ class MatchField(object):
             self.value_set = val
         else:
             raise Exception("Invalid type of value for MatchField: " + str(type(val)))
+
+    def get_field_value(self):
+
+        if isinstance(self.value_set, univset):
+            return univset()
+        else:
+            a = self.value_set.pop()
+            self.value_set.add(a)
+            return a
 
     def intersect(self, in_field):
 
@@ -201,7 +209,7 @@ class Match2():
             self.match_fields[name] = MatchField(name, val)
 
     def get_field(self, name):
-        return self.match_fields[name].val
+        return self.match_fields[name].get_field_value()
 
     def set_fields_with_match_json(self, match_json):
 
