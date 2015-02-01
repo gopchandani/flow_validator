@@ -106,15 +106,16 @@ class MatchField2(object):
         if 'qMapIdx' not in self.__dict__:
             self.buildQueryMap()
 
-        # where do we start the scan?
-        #
+        # Where do we start the scan?
+        # i will be the index for going through qMapIdx array of places of interest
         i = bisect.bisect_left(self.qMapIdx, low)
 
         # If the i falls to the right of all of the places of interest,,,
         if i == len(self.qMapIdx) - 1:
             return set()
 
-        # If the low value was s.t.
+        # If i falls to the left of all of the places of interest and...
+        # The low and high are such that that will include the first qMapIdx, then, collect the first one...
         if i == 0 and low < self.qMapIdx[0] and self.qMapIdx[0] <= high:
             adrs = self.qMapIdx[i]
             active_tags = self.qMap[adrs][0]
