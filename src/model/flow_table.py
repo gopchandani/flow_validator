@@ -15,7 +15,7 @@ class Flow():
         self.sw = sw
         self.priority = int(flow["priority"])
         self.match = Match(flow["match"])
-        self.flow_match = Match2(flow["match"], flow)
+        #self.flow_match = Match2(flow["match"], flow)
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
@@ -48,14 +48,12 @@ class FlowTable():
         self.sw = sw
         self.table_id = table_id
         self.flows = []
-        self.table_match = Match2()
+        #self.table_match = Match2()
 
         for f in flow_list:
             f = Flow(sw, f)
             self.flows.append(f)
-            self.table_match.add_elements_from_match(f.flow_match)
-
-        print self.table_match
+            #self.table_match.add_elements_from_match(f.flow_match)
 
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)

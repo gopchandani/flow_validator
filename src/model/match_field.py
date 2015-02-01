@@ -106,57 +106,60 @@ class MatchField2(object):
         if 'qMapIdx' not in self.__dict__:
             self.buildQueryMap()
 
-         # where do we start the scan?
-         #
-        elements_sizes = bisect.bisect_left(self.qMapIdx, low)
+        # where do we start the scan?
+        #
+        i = bisect.bisect_left(self.qMapIdx, low)
 
-        if elements_sizes == len(self.qMapIdx):
+        # If the i falls to the right of all of the places of interest,,,
+        if i == len(self.qMapIdx) - 1:
             return set()
 
-        if elements_sizes == 0 and low < self.qMapIdx[0] and self.qMapIdx[0] <= high:
-            adrs = self.qMapIdx[elements_sizes]
-            active = self.qMap[adrs][0]
+        # If the low value was s.t.
+        if i == 0 and low < self.qMapIdx[0] and self.qMapIdx[0] <= high:
+            adrs = self.qMapIdx[i]
+            active_tags = self.qMap[adrs][0]
 
-        elif len(self.qMapIdx) > 1 and elements_sizes + 1 < len(self.qMapIdx) and self.qMapIdx[elements_sizes + 1] == low:
-            elements_sizes = elements_sizes + 1
-            adrs = self.qMapIdx[elements_sizes]
-            active = self.qMap[adrs][0]
+        elif len(self.qMapIdx) > 1 and i + 1 < len(self.qMapIdx) and self.qMapIdx[i + 1] == low:
+            i = i + 1
+            adrs = self.qMapIdx[i]
+            active_tags = self.qMap[adrs][0]
 
-         # value at elements_sizes is strictly larger than low and value at elements_sizes-1
+         # value at i is strictly larger than low and value at i-1
          # is strictly lower
          #
-        elif 0 < elements_sizes:
-            adrs = self.qMapIdx[elements_sizes - 1]
-            active = self.qMap[adrs][0] - self.qMap[adrs][2]
-            elements_sizes = elements_sizes - 1
+        elif 0 < i:
+            adrs = self.qMapIdx[i - 1]
+            active_tags = self.qMap[adrs][0] - self.qMap[adrs][2]
+            i = i - 1
 
-         # self.qMapIdx[elements_sizes] < low or possibly self.qMapIdx[elements_sizes] == low
+         # self.qMapIdx[i] < low or possibly self.qMapIdx[i] == low
         else:
-            if self.qMapIdx[elements_sizes] == low:
-                adrs = self.qMapIdx[elements_sizes]
-                active = self.qMap[adrs][1]
+            if self.qMapIdx[i] == low:
+                adrs = self.qMapIdx[i]
+                active_tags = self.qMap[adrs][1]
             else:
-                active = set()
+                active_tags = set()
 
-        elements_sizes = elements_sizes + 1
-        while elements_sizes < len(self.qMapIdx) and self.qMapIdx[elements_sizes] <= high:
-            adrs = self.qMapIdx[elements_sizes]
-            active = active | self.qMap[adrs][0]
-            elements_sizes = elements_sizes + 1
 
-        return active
+        # This is including the rest of them...
+        i = i + 1
+        while i < len(self.qMapIdx) and self.qMapIdx[i] <= high:
+            adrs = self.qMapIdx[i]
+            active_tags = active_tags | self.qMap[adrs][0]
+            i = i + 1
 
-    def union(self, element):
-        pass
+        return active_tags
+
 
 def main():
 
     m = MatchField2("dummy")
     
-    m.add_element(0, 2, 1)
-    m.add_element(4, 4, 2)
+    m.add_element(1, 2, "tag1")
+    m.add_element(4, 4, "tag2")
+    m.add_element(7, 9, "tag3")
 
-    print m.intersect(1, 100)
+    print m.intersect(0, 10)
 
 if __name__ == "__main__":
     main()

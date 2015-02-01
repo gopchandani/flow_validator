@@ -11,7 +11,7 @@ from match_field import MatchField2
 
 
 
-class Match2(DictMixin):
+class Match(DictMixin):
 
     def __init__(self, match_json=None, flow=None):
 
@@ -115,10 +115,23 @@ class Match2(DictMixin):
                 continue
 
 
-    def add_elements_from_match(self, match):
+    def add_elements_from_match(self, in_match):
 
-        for field_name in match:
-            self[field_name].union(match[field_name])
+        for field_name in in_match:
+            self[field_name].union(in_match[field_name])
+
+    def intersect(self, in_match):
+
+        match_intersection = Match2()
+
+        for field in self.match_fields:
+            match_intersection[field] = self[field].intersect(in_match[field])
+
+            if not match_intersection[field]:
+                return None
+
+
+        return match_intersection
 
 class MatchField(object):
 
@@ -155,7 +168,7 @@ class MatchField(object):
         return str(self.name) + ": " + str(self.value_set)
 
 
-class Match():
+class Match2():
 
     def __init__(self, match_json=None):
         
