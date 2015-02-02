@@ -34,8 +34,6 @@ class MatchField(object):
         else:
             pass
 
-        self.buildQueryMap()
-
     def order_elements(self):
 
         self.ordered = True
