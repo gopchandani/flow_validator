@@ -1,8 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
-import pdb
-import bisect 
-import warnings
+import sys
+import bisect
 from netaddr import *
 
 class MatchFieldElement(object):
@@ -10,18 +9,17 @@ class MatchFieldElement(object):
     def __init__(self, low, high, tag):
         self.low = low
         self.size = high - low
-
         self.tag = tag
-        self.qMap = {}
-        self.qMap
 
-class MatchField2(object):
+class MatchField(object):
 
     def __init__(self, field_name):
 
         self.field_name = field_name
         self.lowDict = {}
         self.ordered = False
+        self.qMap = {}
+        self.qMapIdx = []
 
     def add_element(self, low, high, tag):
 
@@ -34,6 +32,8 @@ class MatchField2(object):
             self.lowDict[low][size] = e
         else:
             pass
+
+        self.buildQueryMap()
 
     def order_elements(self):
 
@@ -103,12 +103,19 @@ class MatchField2(object):
     # Returns a set of tags that intersect between the in_match_field and self
     def intersect(self, in_match_field):
 
-        if 'qMapIdx' not in self.__dict__:
-            self.buildQueryMap()
-
         intersecting_set = set()
-        if self.qMapIdx:
-            intersecting_set = self.cover(self.qMapIdx[0], self.qMapIdx[len(self.qMapIdx) - 1])
+        if in_match_field.qMapIdx:
+            # TODO: Right now taking the whole _range_, including any possible holes -- may yield incorrect results
+            intersecting_set = self.cover(in_match_field.qMapIdx[0],
+                                          in_match_field.qMapIdx[len(in_match_field.qMapIdx) - 1])
+        else:
+            #TODO: If there is nothing in the list (implies nothing in the field's set), then just assume it is a
+            # wildcard
+            intersecting_set = self.cover(0, sys.maxsize)
+
+        if len(intersecting_set) == 0:
+            print in_match_field.field_name, intersecting_set
+            return None
 
         return intersecting_set
 
@@ -124,7 +131,7 @@ class MatchField2(object):
         i = bisect.bisect_left(self.qMapIdx, low)
 
         # If the i falls to the right of all of the places of interest,,,
-        if i == len(self.qMapIdx) - 1:
+        if i == len(self.qMapIdx):
             return set()
 
         # If i falls to the left of all of the places of interest and...
@@ -167,7 +174,7 @@ class MatchField2(object):
 
 def main():
 
-    m = MatchField2("dummy")
+    m = MatchField("dummy")
     
     m.add_element(1, 2, "tag1")
     m.add_element(4, 4, "tag2")

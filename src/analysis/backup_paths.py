@@ -181,15 +181,15 @@ class BackupPaths:
                 print "----------------------------------------------------------------------------------------------"
 
                 in_port_match = Match()
-                in_port_match["ethernet_type"].add_element(0x0800, 0x0800, None)
+                in_port_match["ethernet_type"].add_element(0x0800, 0x0800, "in_match")
 
                 src_mac_int = int(self.model.graph.node[src]["h"].mac_addr.replace(":", ""), 16)
-                in_port_match["ethernet_source"].add_element(src_mac_int, src_mac_int, None)
+                in_port_match["ethernet_source"].add_element(src_mac_int, src_mac_int, "in_match")
 
                 dst_mac_int = int(self.model.graph.node[dst]["h"].mac_addr.replace(":", ""), 16)
-                in_port_match["ethernet_source"].add_element(dst_mac_int, dst_mac_int, None)
+                in_port_match["ethernet_destination"].add_element(dst_mac_int, dst_mac_int, "in_match")
 
-                in_port_match["has_vlan_tag"].add_element(0, 0, None)
+                in_port_match["has_vlan_tag"].add_element(0, 0, "in_match")
 
                 primary_and_backup_exists = self.has_primary_and_backup(src, dst, in_port_match)
 

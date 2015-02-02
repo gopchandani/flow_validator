@@ -10,12 +10,18 @@ from match import Match
 from match import Match2
 
 class Flow():
+
+    def __hash__(self):
+        return hash(str(self.sw.node_id) + str(self.table_id) + str(self.id))
+
     def __init__(self, sw, flow):
 
         self.sw = sw
+        self.table_id = flow["table_id"]
+        self.id = flow["id"]
+
         self.priority = int(flow["priority"])
-        self.match = Match(flow["match"])
-        #self.flow_match = Match2(flow["match"], flow)
+        self.match = Match(flow["match"], self)
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
@@ -48,7 +54,6 @@ class FlowTable():
         self.sw = sw
         self.table_id = table_id
         self.flows = []
-        #self.table_match = Match2()
 
         for f in flow_list:
             f = Flow(sw, f)

@@ -7,7 +7,7 @@ from netaddr import IPNetwork
 from univset import univset
 
 from UserDict import DictMixin
-from match_field import MatchField2
+from match_field import MatchField
 
 
 
@@ -31,7 +31,7 @@ class Match(DictMixin):
 
         self.match_fields = {}
         for field_name in field_names:
-            self[field_name] = MatchField2(field_name)
+            self[field_name] = MatchField(field_name)
 
         if match_json:
             self.add_elements_from_match_json(match_json, flow)
@@ -54,9 +54,14 @@ class Match(DictMixin):
 
             try:
                 if field_name == "in_port":
-                    self[field_name].add_element(int(match_json["in-port"].split(":")[2]),
-                                                int(match_json["in-port"].split(":")[2]),
-                                                flow)
+
+                    self[field_name].add_element(int(match_json["in-port"]),
+                                                 int(match_json["in-port"]),
+                                                 flow)
+
+                    #self[field_name].add_element(int(match_json["in-port"].split(":")[2]),
+                    #                            int(match_json["in-port"].split(":")[2]),
+                    #                            flow)
 
                 elif field_name == "ethernet_type":
                     self[field_name].add_element(int(match_json["ethernet-match"]["ethernet-type"]["type"]),
@@ -115,6 +120,7 @@ class Match(DictMixin):
                 continue
 
 
+    #TODO:
     def add_elements_from_match(self, in_match):
 
         for field_name in in_match:
@@ -132,7 +138,7 @@ class Match(DictMixin):
 
         return match_intersection
 
-class MatchField(object):
+class MatchField2(object):
 
     def __init__(self, name, val):
 
@@ -148,7 +154,7 @@ class MatchField(object):
         elif isinstance(val, set):
             self.value_set = val
         else:
-            raise Exception("Invalid type of value for MatchField: " + str(type(val)))
+            raise Exception("Invalid type of value for MatchField2: " + str(type(val)))
 
     def get_field_value(self):
 
@@ -163,14 +169,14 @@ class MatchField(object):
 
         field_intersection = in_field.value_set & self.value_set
         if field_intersection:
-            return MatchField(self.name, in_field.value_set & self.value_set)
+            return MatchField2(self.name, in_field.value_set & self.value_set)
         else:
             return None
 
     def complement(self, in_field):
 
         field_complement = self.value_set - in_field.value_set
-        return MatchField(self.name, field_complement)
+        return MatchField2(self.name, field_complement)
 
     def __str__(self):
         return str(self.name) + ": " + str(self.value_set)
@@ -206,7 +212,7 @@ class Match2():
         if name in self.match_fields:
             self.match_fields[name].set_field_value(val)
         else:
-            self.match_fields[name] = MatchField(name, val)
+            self.match_fields[name] = MatchField2(name, val)
 
     def get_field(self, name):
         return self.match_fields[name].get_field_value()
