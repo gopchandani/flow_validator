@@ -25,16 +25,21 @@ field_names = ["in_port",
 
 class MatchElement(DictMixin):
 
-    def __init__(self, match_json, flow):
+    def __init__(self, match_json=None, flow=None):
 
         self.match_fields = {}
-        self.add_element_from_match_json(match_json, flow)
+
+        if match_json and flow:
+            self.add_element_from_match_json(match_json, flow)
 
     def __getitem__(self, item):
         return self.match_fields[item]
 
     def __setitem__(self, key, value):
         self.match_fields[key] = value
+
+    def set_match_field_element(self, key, value, tag=None):
+        self.match_fields[key] = MatchFieldElement(value, value, tag)
 
     def __delitem__(self, key):
         del self.match_fields[key]
@@ -126,6 +131,60 @@ class MatchElement(DictMixin):
                     self["has_vlan_tag"] = MatchFieldElement(0, sys.maxsize, flow)
 
                 continue
+                
+                
+    def generate_match_json(self, match):
+
+        if "in_port" in self and self["in_port"].high != sys.maxsize:
+            match["in-port"] = self["in_port"].low
+
+        ethernet_match = {}
+
+        if "ethernet_type" in self and self["ethernet_type"].high != sys.maxsize:
+            ethernet_match["ethernet-type"] = {"type": self["ethernet_type"].low}
+
+        if "ethernet_source" in self and self["ethernet_source"].high != sys.maxsize:
+            ethernet_match["ethernet-source"] = {"address": self["ethernet_source"].low}
+
+        if "ethernet_destination" in self and self["ethernet_destination"].high != sys.maxsize:
+            ethernet_match["ethernet-destination"] = {"address": self["ethernet_destination"].low}
+
+        match["ethernet-match"] = ethernet_match
+
+        if "src_ip_addr" in self and self["src_ip_addr"].high != sys.maxsize:
+            match["ipv4-source"] = self["src_ip_addr"].low
+
+        if "dst_ip_addr" in self and self["dst_ip_addr"].high != sys.maxsize:
+            match["ipv4-destination"] = self["dst_ip_addr"].low
+
+        if ("tcp_destination_port" in self and self["tcp_destination_port"].high != sys.maxsize) or \
+                ("tcp_source_port" in self and self["tcp_source_port"].high != sys.maxsize):
+            self["ip_protocol"].low = 6
+            match["ip-match"] = {"ip-protocol": self["ip_protocol"].low}
+
+            if "tcp_destination_port" in self and self["tcp_destination_port"].high != sys.maxsize:
+                match["tcp-destination-port"] = self["tcp_destination_port"].low
+
+            if "tcp_source_port" in self and self["tcp_source_port"].high != sys.maxsize:
+                match["tcp-source-port"] = self["tcp_source_port"].low
+
+        if ("udp_destination_port" in self and self["udp_destination_port"].high != sys.maxsize) or \
+                ("udp_source_port" in self and self["udp_source_port"].high != sys.maxsize):
+            self["ip_protocol"].low = 17
+            match["ip-match"] = {"ip-protocol": self["ip_protocol"].low}
+
+            if "udp_destination_port" in self and self["udp_destination_port"].high != sys.maxsize:
+                match["udp-destination-port"]= self["udp_destination_port"].low
+
+            if "udp_source_port" in self and self["udp_source_port"].high != sys.maxsize:
+                match["udp-source-port"] = self["udp_source_port"].low
+
+        if "vlan_id" in self and self["vlan_id"].high != sys.maxsize:
+            vlan_match = {}
+            vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"].low, "vlan-id-present": True}
+            match["vlan-match"] = vlan_match
+
+        return match
 
 
 class Match(DictMixin):
