@@ -6,8 +6,7 @@ import pprint
 from netaddr import IPNetwork
 from netaddr import IPAddress
 from group_table import Action
-from match import Match
-from match import Match2
+from match import MatchElement
 
 class Flow():
 
@@ -20,8 +19,7 @@ class Flow():
         self.table_id = flow["table_id"]
         self.id = flow["id"]
         self.priority = int(flow["priority"])
-        self.match = Match(flow["match"], self)
-        print self.match["has_vlan_tag"].qMapIdx
+        self.match = MatchElement(flow["match"], self)
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
@@ -58,7 +56,6 @@ class FlowTable():
         for f in flow_list:
             f = Flow(sw, f)
             self.flows.append(f)
-            #self.table_match.add_elements_from_match(f.flow_match)
 
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)

@@ -5,7 +5,6 @@ import sys
 
 from model.model import Model
 from model.match import Match
-
 from netaddr import IPNetwork
 
 class BackupPaths:

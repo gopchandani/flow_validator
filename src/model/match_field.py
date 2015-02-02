@@ -8,6 +8,7 @@ class MatchFieldElement(object):
 
     def __init__(self, low, high, tag):
         self.low = low
+        self.high = high
         self.size = high - low
         self.tag = tag
 
@@ -101,22 +102,12 @@ class MatchField(object):
             previously_ended_tags = end
 
     # Returns a set of tags that intersect between the in_match_field and self
-    def intersect(self, in_match_field):
+    def intersect(self, in_match_field_element):
 
         intersecting_set = set()
 
-        if in_match_field.qMapIdx:
-            # TODO: Right now taking the whole _range_, including any possible holes -- may yield incorrect results
-            intersecting_set = self.cover(in_match_field.qMapIdx[0],
-                                          in_match_field.qMapIdx[len(in_match_field.qMapIdx) - 1])
-        else:
-            #TODO: If there is nothing in the list (implies nothing in the field's set), then just assume it is a
-            # wildcard
-            intersecting_set = self.cover(0, sys.maxsize)
-
-        if len(intersecting_set) == 0:
-            print in_match_field.field_name, in_match_field.qMapIdx, self.qMapIdx
-            return None
+        intersecting_set = self.cover(in_match_field_element.low,
+                                        in_match_field_element.high)
 
         return intersecting_set
 
