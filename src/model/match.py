@@ -54,6 +54,7 @@ class MatchElement(DictMixin):
         for field in self.match_fields:
             match_intersection[field] = in_match[field].intersect(self[field])
             if not match_intersection[field]:
+                print field, in_match[field].qMapIdx
                 return None
 
         return match_intersection
@@ -189,14 +190,14 @@ class MatchElement(DictMixin):
 
 class Match(DictMixin):
 
-    def __init__(self, match_json=None, flow=None):
+    def __init__(self, tag=None):
 
         self.match_fields = {}
+        self.tag = tag
+
         for field_name in field_names:
             self[field_name] = MatchField(field_name)
-
-        if match_json != None:
-            self.add_elements_from_match_json(match_json, flow)
+            self[field_name].add_element(0, sys.maxsize, tag)
 
     def __getitem__(self, item):
         return self.match_fields[item]
@@ -210,21 +211,11 @@ class Match(DictMixin):
     def keys(self):
         return self.match_fields.keys()
 
+    def set_field(self, key, value):
+        self[key] = MatchField(key)
+        self[key].add_element(value, value, self.tag)
 
-    def add_elements_from_match(self, in_match):
 
-        for field_name in in_match:
-            self[field_name].union(in_match[field_name])
-
-    def intersect(self, in_match):
-
-        match_intersection = Match()
-        for field in self.match_fields:
-            match_intersection[field] = self[field].intersect(in_match[field])
-            if not match_intersection[field]:
-                return None
-
-        return match_intersection
 
 def main():
     m1 = Match()

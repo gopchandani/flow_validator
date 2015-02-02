@@ -19,8 +19,6 @@ class MatchField(object):
         self.field_name = field_name
         self.lowDict = {}
         self.ordered = False
-        self.qMap = {}
-        self.qMapIdx = []
 
     def add_element(self, low, high, tag):
 
@@ -150,7 +148,6 @@ class MatchField(object):
                 active_tags = self.qMap[adrs][1]
             else:
                 active_tags = set()
-
 
         # This is including the rest of them...
         i = i + 1
