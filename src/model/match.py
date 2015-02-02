@@ -33,7 +33,7 @@ class Match(DictMixin):
         for field_name in field_names:
             self[field_name] = MatchField(field_name)
 
-        if match_json:
+        if match_json != None:
             self.add_elements_from_match_json(match_json, flow)
 
     def __getitem__(self, item):
@@ -119,7 +119,6 @@ class Match(DictMixin):
                 self[field_name].add_element(0, sys.maxsize, flow)
                 continue
 
-
     #TODO:
     def add_elements_from_match(self, in_match):
 
@@ -129,9 +128,7 @@ class Match(DictMixin):
     def intersect(self, in_match):
 
         match_intersection = Match()
-
         for field in self.match_fields:
-
             match_intersection[field] = self[field].intersect(in_match[field])
             if not match_intersection[field]:
                 return None
@@ -315,12 +312,10 @@ class Match2():
         return match
 
     def intersect(self, in_match):
+
         match_intersection = Match()
-
         for field in self.match_fields:
-
             field_intersection = self.match_fields[field].intersect(in_match.match_fields[field])
-
             if field_intersection:
                 match_intersection.match_fields[field] = field_intersection
             else:

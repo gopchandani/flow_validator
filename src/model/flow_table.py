@@ -19,7 +19,6 @@ class Flow():
         self.sw = sw
         self.table_id = flow["table_id"]
         self.id = flow["id"]
-
         self.priority = int(flow["priority"])
         self.match = Match(flow["match"], self)
         self.written_actions = []

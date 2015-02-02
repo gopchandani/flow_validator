@@ -104,6 +104,7 @@ class MatchField(object):
     def intersect(self, in_match_field):
 
         intersecting_set = set()
+
         if in_match_field.qMapIdx:
             # TODO: Right now taking the whole _range_, including any possible holes -- may yield incorrect results
             intersecting_set = self.cover(in_match_field.qMapIdx[0],
@@ -114,7 +115,8 @@ class MatchField(object):
             intersecting_set = self.cover(0, sys.maxsize)
 
         if len(intersecting_set) == 0:
-            print in_match_field.field_name, intersecting_set
+            print in_match_field.field_name, in_match_field.qMapIdx, self.qMapIdx
+            print intersecting_set
             return None
 
         return intersecting_set
