@@ -21,6 +21,7 @@ class Flow():
         self.id = flow["id"]
         self.priority = int(flow["priority"])
         self.match = Match(flow["match"], self)
+        print self.match["has_vlan_tag"].qMapIdx
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None

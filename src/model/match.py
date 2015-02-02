@@ -112,14 +112,15 @@ class Match(DictMixin):
 
                     self["has_vlan_tag"].add_element(1, 1, flow)
 
-                elif field_name == "has_vlan_tag" and "vlan-match" in match_json:
-                    pass
-
             except KeyError:
                 self[field_name].add_element(0, sys.maxsize, flow)
+
+                # Special case
+                if field_name == "vlan_id":
+                    self["has_vlan_tag"].add_element(0, sys.maxsize, flow)
+
                 continue
 
-    #TODO:
     def add_elements_from_match(self, in_match):
 
         for field_name in in_match:

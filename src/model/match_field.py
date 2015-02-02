@@ -116,7 +116,6 @@ class MatchField(object):
 
         if len(intersecting_set) == 0:
             print in_match_field.field_name, in_match_field.qMapIdx, self.qMapIdx
-            print intersecting_set
             return None
 
         return intersecting_set
