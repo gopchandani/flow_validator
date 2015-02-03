@@ -107,6 +107,16 @@ class MatchField(object):
 
         return intersecting_set
 
+    def complement(self, in_match_field_element):
+
+
+        complement = self.cover(in_match_field_element.low,
+                                        in_match_field_element.high)
+
+
+
+
+
 
     # return a set of element tags that cover the range from low to high
     def cover(self, low, high):

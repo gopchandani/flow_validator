@@ -81,5 +81,5 @@ class FlowTable():
         for flow in self.flows:
             intersection = flow.match.intersect(table_matches_on)
             if intersection:
-                remaining_match = table_matches_on.complement(flow.match)
+                remaining_match = flow.match.complement(table_matches_on)
                 yield flow, intersection, remaining_match

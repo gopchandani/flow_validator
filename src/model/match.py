@@ -47,6 +47,16 @@ class MatchElement(DictMixin):
     def keys(self):
         return self.match_fields.keys()
 
+    def complement(self, in_match):
+
+        match_complement = Match()
+
+        for field in self.match_fields:
+            complement = in_match[field].complement(self[field])
+
+
+        return match_complement
+
     def intersect(self, in_match):
 
         match_intersection = Match()
@@ -98,6 +108,7 @@ class MatchElement(DictMixin):
                     mac_int = int(match_json["ethernet-match"]["ethernet-destination"]["address"].replace(":", ""), 16)
                     self[field_name] = MatchFieldElement(mac_int, mac_int, flow)
 
+                #TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
                     self[field_name] = MatchFieldElement(IPNetwork(match_json["src_ip_addr"]))
 
