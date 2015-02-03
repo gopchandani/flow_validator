@@ -54,11 +54,18 @@ class MatchElement(DictMixin):
         for field in self.match_fields:
             intersection = in_match[field].intersect(self[field])
             if not intersection:
-                print field
                 return None
             else:
                 match_intersection[field] = MatchField(field)
-                match_intersection[field].add_element(self[field].low, self[field].high, "intersection")
+
+                if in_match.get_field(field):
+
+                    match_intersection[field].add_element(in_match.get_field(field),
+                                                          in_match.get_field(field),
+                                                          "intersection")
+                else:
+                    match_intersection[field].add_element(self[field].low, self[field].high, "intersection")
+
 
         return match_intersection
 
@@ -148,10 +155,20 @@ class MatchElement(DictMixin):
             ethernet_match["ethernet-type"] = {"type": self["ethernet_type"].low}
 
         if "ethernet_source" in self and self["ethernet_source"].high != sys.maxsize:
-            ethernet_match["ethernet-source"] = {"address": self["ethernet_source"].low}
+
+            mac_int = self["ethernet_source"].low
+            mac_hex_str = hex(mac_int)[2:]
+            mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
+
+            ethernet_match["ethernet-source"] = {"address": mac_hex_str}
 
         if "ethernet_destination" in self and self["ethernet_destination"].high != sys.maxsize:
-            ethernet_match["ethernet-destination"] = {"address": self["ethernet_destination"].low}
+
+            mac_int = self["ethernet_destination"].low
+            mac_hex_str = hex(mac_int)[2:]
+            mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
+
+            ethernet_match["ethernet-destination"] = {"address": mac_hex_str}
 
         match["ethernet-match"] = ethernet_match
 

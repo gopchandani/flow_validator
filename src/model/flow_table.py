@@ -24,8 +24,6 @@ class Flow():
         self.applied_actions = []
         self.go_to_table = None
 
-        print "Node", str(self.sw.node_id), "Table:", str(self.table_id), "FlowID:", str(self.id)
-
         # Go through instructions
         for instruction_json in flow["instructions"]["instruction"]:
 

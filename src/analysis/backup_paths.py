@@ -78,6 +78,9 @@ class BackupPaths:
                 in_port_match = switch_out_port_match[out_port]
                 is_reachable = True
 
+            print "vlan_id:", in_port_match.get_field("vlan_id")
+
+
             # Prepare for next switch along the path if there is a next switch along the path
             if self.model.graph.node[node_path[i+1]]["node_type"] != "host":
 
