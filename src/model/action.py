@@ -125,10 +125,10 @@ class ActionSet():
 
         # Go through the operations that are performed to the match before the packet is sent out
         if "pop_vlan" in self.action_set:
-            output_match.match_fields["has_vlan_tag"].val = str(False)
+            output_match.set_field("has_vlan_tag", int(False))
 
         if "push_vlan" in self.action_set:
-            output_match.match_fields["has_vlan_tag"].val = str(True)
+            output_match.set_field("has_vlan_tag", int(True))
 
         if "set_field" in self.action_set:
             output_match.set_fields_with_match_json(self.action_set["set_field"][0].set_field_match_json)
@@ -137,7 +137,7 @@ class ActionSet():
 
 
     def get_out_port_matches(self, in_port_match):
-        in_port = in_port_match.match_fields["in_port"].val
+        in_port = in_port_match.get_field("in_port")
 
         out_port_match = {}
 

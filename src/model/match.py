@@ -54,13 +54,10 @@ class MatchElement(DictMixin):
         for field in self.match_fields:
             intersection = in_match[field].intersect(self[field])
             if not intersection:
-                print field, self[field].low, self[field].high
                 return None
             else:
-                match_intersection[field] = MatchElement()
-                match_intersection[field][field] = MatchFieldElement(self[field].low, self[field].high, "intersection")
-
-                #match_intersection[field] = MatchFieldElement(self[field].low, self[field].high, "intersection")
+                match_intersection[field] = MatchField(field)
+                match_intersection[field].add_element(self[field].low, self[field].high, "intersection")
 
         return match_intersection
 
@@ -139,51 +136,6 @@ class MatchElement(DictMixin):
                 continue
                 
 
-    def set_fields_with_match_json(self, match_json):
-
-        for match_field in match_json:
-
-            if match_field == 'in-port':
-                self.match_fields["in_port"].val = str(match_json[match_field])
-
-            elif match_field == "ethernet-match":
-                if "ethernet-type" in match_json[match_field]:
-                    self.match_fields["ethernet_type"].val = str(match_json[match_field]["ethernet-type"]["type"])
-
-                if "ethernet-source" in match_json[match_field]:
-                    self.match_fields["ethernet_source"].val = str(match_json[match_field]["ethernet-source"]["address"])
-
-                if "ethernet-destination" in match_json[match_field]:
-                    self.match_fields["ethernet_destination"].val = str(match_json[match_field]["ethernet-destination"]["address"])
-
-            elif match_field == 'ipv4-destination':
-                self.match_fields["dst_ip_addr"].val = IPNetwork(match_json[match_field])
-
-            elif match_field == 'ipv4-source':
-                self.match_fields["src_ip_addr"].val = IPNetwork(match_json[match_field])
-
-            elif match_field == "ip-match":
-                if "ip-protocol" in match_json[match_field]:
-                    self.match_fields["ip_protocol"].val = str(match_json[match_field]["ip-protocol"])
-
-            elif match_field == "tcp-destination-port":
-                self.match_fields["tcp_destination_port"].val = str(match_json[match_field])
-
-            elif match_field == "tcp-source-port":
-                self.match_fields["tcp_source_port"].val = str(match_json[match_field])
-
-            elif match_field == "udp-destination-port":
-                self.match_fields["udp_destination_port"].val = str(match_json[match_field])
-
-            elif match_field == "udp-source-port":
-                self.match_fields["udp_source_port"].val = str(match_json[match_field])
-
-            elif match_field == "vlan-match":
-                if "vlan-id" in match_json[match_field]:
-                    self.match_fields["vlan_id"].val = str(match_json[match_field]["vlan-id"]["vlan-id"])
-                    self.match_fields["has_vlan_tag"].val = str(True)
-
-
     def generate_match_json(self, match):
 
         if "in_port" in self and self["in_port"].high != sys.maxsize:
@@ -249,23 +201,78 @@ class Match(DictMixin):
             self[field_name] = MatchField(field_name)
             self[field_name].add_element(0, sys.maxsize, tag)
 
-    def __getitem__(self, item):
-        return self.match_fields[item]
-    
-    def __setitem__(self, key, value):
-        self.match_fields[key] = value
-    
     def __delitem__(self, key):
         del self.match_fields[key]
     
     def keys(self):
         return self.match_fields.keys()
 
+    def __getitem__(self, item):
+        return self.match_fields[item]
+
+    def __setitem__(self, key, value):
+        self.match_fields[key] = value
+
     def set_field(self, key, value):
         self[key] = MatchField(key)
         self[key].add_element(value, value, self.tag)
 
+    def get_field(self, key):
+        field = self.match_fields[key]
+        field.buildQueryMap()
 
+        # If the field is not a wildcard, return a value, otherwise none
+        if field.qMapIdx and field.qMapIdx[len(field.qMapIdx) -1] != sys.maxsize:
+            return field.qMapIdx[0]
+        else:
+             return None
+
+    def set_fields_with_match_json(self, match_json):
+
+        for match_field in match_json:
+
+            if match_field == 'in-port':
+                self.set_field("in_port", int(match_json[match_field]))
+
+            elif match_field == "ethernet-match":
+                if "ethernet-type" in match_json[match_field]:
+                    self.set_field("ethernet_type", int(match_json[match_field]["ethernet-type"]["type"]))
+
+                if "ethernet-source" in match_json[match_field]:
+                    self.set_field("ethernet_source", int(match_json[match_field]["ethernet-source"]["address"]))
+
+                if "ethernet-destination" in match_json[match_field]:
+                    self.set_field("ethernet_destination", int(match_json[match_field]["ethernet-destination"]["address"]))
+
+            elif match_field == 'ipv4-destination':
+                self.set_field("dst_ip_addr", IPNetwork(match_json[match_field]))
+
+            elif match_field == 'ipv4-source':
+                self.set_field("src_ip_addr", IPNetwork(match_json[match_field]))
+
+            elif match_field == "ip-match":
+                if "ip-protocol" in match_json[match_field]:
+                    self.set_field("ip_protocol", int(match_json[match_field]["ip-protocol"]))
+
+            elif match_field == "tcp-destination-port":
+                self.set_field("tcp_destination_port", int(match_json[match_field]))
+
+            elif match_field == "tcp-source-port":
+                self.set_field("tcp_source_port", int(match_json[match_field]))
+
+            elif match_field == "udp-destination-port":
+                self.set_field("udp_destination_port", int(match_json[match_field]))
+
+            elif match_field == "udp-source-port":
+                self.set_field("udp_source_port", int(match_json[match_field]))
+
+            elif match_field == "vlan-match":
+                if "vlan-id" in match_json[match_field]:
+                    self.set_field("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
+                    self.set_field("has_vlan_tag", int(True))
+
+    
+    
 
 def main():
     m1 = Match()

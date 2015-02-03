@@ -67,7 +67,7 @@ class BackupPaths:
                     in_port_match = switch.in_port_match
 
             #  This has to happen at every switch, because every switch has its own in_port
-            in_port_match.match_fields["in_port"].val = in_port
+            in_port_match.set_field("in_port", int(in_port))
 
             switch_out_port_match = switch.transfer_function(in_port_match)
 
