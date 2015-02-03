@@ -54,6 +54,7 @@ class MatchElement(DictMixin):
         for field in self.match_fields:
             intersection = in_match[field].intersect(self[field])
             if not intersection:
+                print field
                 return None
             else:
                 match_intersection[field] = MatchField(field)
