@@ -49,7 +49,7 @@ class MatchElement(DictMixin):
 
     def intersect(self, in_match):
 
-        match_intersection = MatchElement()
+        match_intersection = Match()
 
         for field in self.match_fields:
             intersection = in_match[field].intersect(self[field])
@@ -57,7 +57,10 @@ class MatchElement(DictMixin):
                 print field, self[field].low, self[field].high
                 return None
             else:
-                match_intersection[field] = MatchFieldElement(self[field].low, self[field].high, "intersection")
+                match_intersection[field] = MatchElement()
+                match_intersection[field][field] = MatchFieldElement(self[field].low, self[field].high, "intersection")
+
+                #match_intersection[field] = MatchFieldElement(self[field].low, self[field].high, "intersection")
 
         return match_intersection
 
