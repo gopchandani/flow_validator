@@ -71,14 +71,12 @@ class BackupPaths:
 
             switch_out_port_match = switch.transfer_function(in_port_match)
 
-            if out_port not in switch_out_port_match:
+            if int(out_port) not in switch_out_port_match:
                 is_reachable = False
                 break
             else:
-                in_port_match = switch_out_port_match[out_port]
+                in_port_match = switch_out_port_match[int(out_port)]
                 is_reachable = True
-
-            print "vlan_id:", in_port_match.get_field("vlan_id")
 
 
             # Prepare for next switch along the path if there is a next switch along the path

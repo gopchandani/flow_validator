@@ -147,8 +147,8 @@ class ActionSet():
             output_match = self.get_resulting_match(output_action.matched_flow)
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
-                out_port_match[in_port] = output_match
+                out_port_match[int(in_port)] = output_match
             else:
-                out_port_match[output_action.out_port] = output_match
+                out_port_match[int(output_action.out_port)] = output_match
 
         return out_port_match

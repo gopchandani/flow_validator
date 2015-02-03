@@ -103,6 +103,7 @@ class Model():
     def add_edge(self, node1_id, node1_port, node2_id, node2_port):
 
         edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
+
         e = (node1_id, node2_id)
         self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
 
