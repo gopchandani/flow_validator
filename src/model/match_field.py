@@ -110,13 +110,14 @@ class MatchField(object):
     def complement(self, in_match_field_element):
 
 
-        complement = self.cover(in_match_field_element.low,
-                                        in_match_field_element.high)
+        complement = self.complement_cover(in_match_field_element.low,
+                                           in_match_field_element.high)
 
 
-
-
-
+    def complement_cover(self, low, high):
+        complement = set()
+        complement = self.cover(0, low-1) | self.cover(high+1, sys.maxsize)
+        return complement
 
     # return a set of element tags that cover the range from low to high
     def cover(self, low, high):
@@ -178,6 +179,8 @@ def main():
     m.add_element(7, 9, "tag3")
 
     print m.cover(0, 10)
+
+    print m.complement_cover(4, 7)
 
 if __name__ == "__main__":
     main()
