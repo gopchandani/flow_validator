@@ -135,24 +135,28 @@ class MatchField(object):
 
         # If i falls to the left of all of the places of interest and...
         # The low and high are such that that will include the first boundaries, then, collect the first one...
+        # This also means that low here is strictly less than self.boundaries[0]
+
         if i == 0 and low < self.boundaries[0] and self.boundaries[0] <= high:
             adrs = self.boundaries[i]
             active_tags = self.qMap[adrs][0]
 
-        elif len(self.boundaries) > 1 and i + 1 < len(self.boundaries) and self.boundaries[i + 1] == low:
-            i = i + 1
+        # Sort of special case when i > 0 and there is one more guy which is exactly equal to low but is next to i
+        # This seems like it happens because of bisect_left
+        # Collect things from this next guy
+
+        elif i > 0 and len(self.boundaries) > 1 and i + 1 < len(self.boundaries) and self.boundaries[i + 1] == low:
+            i += 1
             adrs = self.boundaries[i]
             active_tags = self.qMap[adrs][0]
 
-         # value at i is strictly larger than low and value at i-1
-         # is strictly lower
-         #
-        elif 0 < i:
+        # value at i is strictly larger than low and value at i-1 is strictly lower, so grab things from i-1
+        elif i > 0:
             adrs = self.boundaries[i - 1]
             active_tags = self.qMap[adrs][0] - self.qMap[adrs][2]
-            i = i - 1
+            i -= 1
 
-         # self.boundaries[i] < low or possibly self.boundaries[i] == low
+        # self.boundaries[i] < low or possibly self.boundaries[i] == low
         else:
             if self.boundaries[i] == low:
                 adrs = self.boundaries[i]
@@ -161,11 +165,11 @@ class MatchField(object):
                 active_tags = set()
 
         # This is including the rest of them...
-        i = i + 1
+        i += 1
         while i < len(self.boundaries) and self.boundaries[i] <= high:
             adrs = self.boundaries[i]
             active_tags = active_tags | self.qMap[adrs][0]
-            i = i + 1
+            i += 1
 
         return active_tags
 
@@ -175,10 +179,9 @@ def main():
     m = MatchField("dummy")
     
     m.add_element(1, 2, "tag1")
-    m.add_element(4, 4, "tag2")
     m.add_element(7, 9, "tag3")
 
-    print m.cover(0, 10)
+    print m.cover(7, 10)
 
     #print m.complement_cover(4, 7)
 
