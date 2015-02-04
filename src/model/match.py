@@ -251,8 +251,8 @@ class Match(DictMixin):
         field.buildQueryMap()
 
         # If the field is not a wildcard, return a value, otherwise none
-        if field.qMapIdx and field.qMapIdx[len(field.qMapIdx) -1] != sys.maxsize:
-            return field.qMapIdx[0]
+        if field.boundaries and field.boundaries[len(field.boundaries) -1] != sys.maxsize:
+            return field.boundaries[0]
         else:
              return None
 

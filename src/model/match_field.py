@@ -50,7 +50,7 @@ class MatchField(object):
 
     # build data structure suitable for determining intersection of elements
     # This essentially takes form of a dictionary self.qMap, keyed by places of 'interest' (pos),
-    # i.e. where elements begin and end, all of these keys are also maintained in a list self.qMapIdx
+    # i.e. where elements begin and end, all of these keys are also maintained in a list self.boundaries
     # The dictionary self.qMap contains as values a list of three sets;
 
     # set of all tags of elements that 'occupy'/run through at that place of interest
@@ -63,7 +63,7 @@ class MatchField(object):
             self.order_elements()
 
         self.qMap = {}
-        self.qMapIdx = []
+        self.boundaries = []
 
         for low in self.lowDict:
             if not low in self.qMap:
@@ -87,8 +87,8 @@ class MatchField(object):
         active_tags = set()
         previously_ended_tags = set()
 
-        self.qMapIdx = sorted(self.qMap.keys())
-        for pos in self.qMapIdx:
+        self.boundaries = sorted(self.qMap.keys())
+        for pos in self.boundaries:
 
             [on, start, end] = self.qMap[pos]
 
@@ -122,48 +122,48 @@ class MatchField(object):
     # return a set of element tags that cover the range from low to high
     def cover(self, low, high):
 
-        if 'qMapIdx' not in self.__dict__:
+        if 'boundaries' not in self.__dict__:
             self.buildQueryMap()
 
         # Where do we start the scan?
-        # i will be the index for going through qMapIdx array of places of interest
-        i = bisect.bisect_left(self.qMapIdx, low)
+        # i will be the index for going through boundaries array of places of interest
+        i = bisect.bisect_left(self.boundaries, low)
 
         # If the i falls to the right of all of the places of interest,,,
-        if i == len(self.qMapIdx):
+        if i == len(self.boundaries):
             return set()
 
         # If i falls to the left of all of the places of interest and...
-        # The low and high are such that that will include the first qMapIdx, then, collect the first one...
-        if i == 0 and low < self.qMapIdx[0] and self.qMapIdx[0] <= high:
-            adrs = self.qMapIdx[i]
+        # The low and high are such that that will include the first boundaries, then, collect the first one...
+        if i == 0 and low < self.boundaries[0] and self.boundaries[0] <= high:
+            adrs = self.boundaries[i]
             active_tags = self.qMap[adrs][0]
 
-        elif len(self.qMapIdx) > 1 and i + 1 < len(self.qMapIdx) and self.qMapIdx[i + 1] == low:
+        elif len(self.boundaries) > 1 and i + 1 < len(self.boundaries) and self.boundaries[i + 1] == low:
             i = i + 1
-            adrs = self.qMapIdx[i]
+            adrs = self.boundaries[i]
             active_tags = self.qMap[adrs][0]
 
          # value at i is strictly larger than low and value at i-1
          # is strictly lower
          #
         elif 0 < i:
-            adrs = self.qMapIdx[i - 1]
+            adrs = self.boundaries[i - 1]
             active_tags = self.qMap[adrs][0] - self.qMap[adrs][2]
             i = i - 1
 
-         # self.qMapIdx[i] < low or possibly self.qMapIdx[i] == low
+         # self.boundaries[i] < low or possibly self.boundaries[i] == low
         else:
-            if self.qMapIdx[i] == low:
-                adrs = self.qMapIdx[i]
+            if self.boundaries[i] == low:
+                adrs = self.boundaries[i]
                 active_tags = self.qMap[adrs][1]
             else:
                 active_tags = set()
 
         # This is including the rest of them...
         i = i + 1
-        while i < len(self.qMapIdx) and self.qMapIdx[i] <= high:
-            adrs = self.qMapIdx[i]
+        while i < len(self.boundaries) and self.boundaries[i] <= high:
+            adrs = self.boundaries[i]
             active_tags = active_tags | self.qMap[adrs][0]
             i = i + 1
 
@@ -180,7 +180,7 @@ def main():
 
     print m.cover(0, 10)
 
-    print m.complement_cover(4, 7)
+    #print m.complement_cover(4, 7)
 
 if __name__ == "__main__":
     main()
