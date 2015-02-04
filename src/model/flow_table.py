@@ -83,3 +83,18 @@ class FlowTable():
             if intersection:
                 remaining_match = flow.match.complement(table_matches_on)
                 yield flow, intersection, remaining_match
+
+    # Returns a dictionary, keyed by flow objects with values containing what match
+    # each intersects with
+    def get_all_rule_matches(self, in_match):
+
+        intersection = None
+        remaining_match = in_match
+        output = {}
+
+        for flow in self.flows:
+            intersection = flow.match.intersect(remaining_match)
+            remaining_match = flow.match.complement(in_match)
+            output[self] = intersection
+
+        return output
