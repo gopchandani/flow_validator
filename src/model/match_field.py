@@ -116,7 +116,11 @@ class MatchField(object):
 
     def complement_cover(self, low, high):
         complement = set()
-        complement = self.cover(0, low-1) | self.cover(high+1, sys.maxsize)
+
+        #TODO: cover(0, sys.maxsize) should really be something that simple and a constant
+        # not required to be computed
+
+        complement = self.cover(0, sys.maxsize) - self.cover(low, high)
         return complement
 
     # return a set of element tags that cover the range from low to high
@@ -179,11 +183,12 @@ def main():
     m = MatchField("dummy")
     
     m.add_element(1, 2, "tag1")
+    m.add_element(3, 5, "tag2")
     m.add_element(7, 9, "tag3")
 
     print m.cover(7, 10)
 
-    #print m.complement_cover(4, 7)
+    print m.complement_cover(1, 2)
 
 if __name__ == "__main__":
     main()
