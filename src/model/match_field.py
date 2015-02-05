@@ -9,8 +9,8 @@ class MatchFieldElement(object):
     def __init__(self, low, high, tag):
         self.low = low
         self.high = high
-        self.size = high - low
         self.tag = tag
+        self.size = high - low
 
 class MatchField(object):
 
@@ -117,9 +117,6 @@ class MatchField(object):
     def complement_cover(self, low, high):
         complement = set()
 
-        #TODO: cover(0, sys.maxsize) should really be something that simple and a constant
-        # not required to be computed
-
         complement = self.cover(0, sys.maxsize) - self.cover(low, high)
         return complement
 
@@ -128,6 +125,89 @@ class MatchField(object):
 
         if 'pos_dict' not in self.__dict__:
             self.buildQueryMap()
+
+        # Where do we start the scan?
+        # i will be the index for going through pos_dict array of places of interest
+        i = bisect.bisect_left(self.pos_dict, low)
+
+        # If the i falls to the right of all of the places of interest,,,
+        if i == len(self.pos_dict):
+            return set()
+
+        # If i falls to the left of all of the places of interest and...
+        # The low and high are such that that will include the first pos_dict, then, collect the first one...
+        # This also means that low here is strictly less than self.pos_dict[0]
+
+        if i == 0 and low < self.pos_dict[0] and self.pos_dict[0] <= high:
+            pos = self.pos_dict[i]
+            active_tags = self.qMap[pos][0]
+
+        # Sort of special case when i > 0 and there is one more guy which is exactly equal to low but is next to i
+        # This seems like it happens because of bisect_left
+        # Collect things from this next guy
+
+        elif i > 0 and len(self.pos_dict) > 1 and i + 1 < len(self.pos_dict) and self.pos_dict[i + 1] == low:
+            i += 1
+            pos = self.pos_dict[i]
+            active_tags = self.qMap[pos][0]
+
+        # value at i is strictly larger than low and value at i-1 is strictly lower, so grab things from i-1
+        elif i > 0:
+            pos = self.pos_dict[i - 1]
+            active_tags = self.qMap[pos][0] - self.qMap[pos][2]
+            i -= 1
+
+        # self.pos_dict[i] < low or possibly self.pos_dict[i] == low
+        else:
+            if self.pos_dict[i] == low:
+                pos = self.pos_dict[i]
+                active_tags = self.qMap[pos][1]
+            else:
+                active_tags = set()
+
+        # This is including the rest of them...
+        i += 1
+        while i < len(self.pos_dict) and self.pos_dict[i] <= high:
+            pos = self.pos_dict[i]
+            active_tags = active_tags | self.qMap[pos][0]
+            i += 1
+
+        return active_tags
+
+
+class MatchField2(object):
+
+    def __init__(self, field_name):
+
+        self.field_name = field_name
+        self.pos = []
+        self.pos_dict = []
+        self.lowDict = {}
+        self.elements = {}
+
+    def __delitem__(self, key):
+        del self.elements[key]
+
+    def keys(self):
+        return self.elements.keys()
+
+    def __getitem__(self, item):
+        return self.elements[item]
+
+    def __setitem__(self, key, value):
+        self.elements[key] = value
+
+    def complement_cover(self, low, high):
+        complement = set()
+
+        #TODO: cover(0, sys.maxsize) should really be something that simple and a constant
+        # not required to be computed
+
+        complement = self.cover(0, sys.maxsize) - self.cover(low, high)
+        return complement
+
+    # return a set of element tags that cover the range from low to high
+    def cover(self, low, high):
 
         # Where do we start the scan?
         # i will be the index for going through pos_dict array of places of interest
@@ -187,8 +267,13 @@ def main():
     m.add_element(7, 9, "tag3")
 
     print m.cover(7, 10)
-
     print m.complement_cover(1, 2)
+
+
+    mfe = MatchFieldElement(0, 1, "tagz")
+    m2 = MatchField2("dummy")
+    m2[mfe.tag] = mfe
+    print m2.keys()
 
 if __name__ == "__main__":
     main()
