@@ -183,16 +183,16 @@ class MatchField2(object):
         self.pos_list = []
         self.pos_dict = {}
         self.lowDict = {}
-        self.elements = {}
+        self.element_dict = {}
 
     def __delitem__(self, key):
-        del self.elements[key]
+        del self.element_dict[key]
 
     def keys(self):
-        return self.elements.keys()
+        return self.element_dict.keys()
 
     def __getitem__(self, item):
-        return self.elements[item]
+        return self.element_dict[item]
 
     def __setitem__(self, key, value):
 
@@ -206,27 +206,33 @@ class MatchField2(object):
             if not e.size in self.lowDict[e.low]:
                 bisect.insort(self.lowDict[e.low], e.size)
 
+        # Takes an element and puts it in the pos_dict
         def add_to_pos_dict(e):
 
             if e.low not in self.pos_dict and e.high not in self.pos_dict:
                 # Add the low point
                 self.pos_dict[e.low] = [set(), set(), set()]
+                self.pos_dict[e.low][0].add(e.tag)
                 self.pos_dict[e.low][1].add(e.tag)
+                bisect.insort(self.pos_list, e.low)
 
                 # Add the low point
-                self.pos_dict[e.low] = [set(), set(), set()]
-                self.pos_dict[e.low][2].add(e.tag)
+                self.pos_dict[e.high] = [set(), set(), set()]
+                self.pos_dict[e.high][0].add(e.tag)
+                self.pos_dict[e.high][2].add(e.tag)
+                bisect.insort(self.pos_list, e.high)
 
         add_to_lowDict(value)
-        self.elements[key] = value
 
         # If this is the first element
-        if not self.elements:
+        if not self.element_dict:
             # record set of ranges that include low, that start at low, and that end at low
-
-            add_to_pos_dict()
+            add_to_pos_dict(value)
         else:
-            pass
+            add_to_pos_dict(value)
+            #TODO: Figure out the first sets member at e.low and e.high
+
+        self.element_dict[key] = value
 
 
     def complement_cover(self, low, high):
