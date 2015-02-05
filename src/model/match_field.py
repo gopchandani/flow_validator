@@ -70,6 +70,7 @@ class MatchField(object):
                 # record set of ranges that include low, that start at low, and that end at low
                 self.pos_dict[low] = [set(), set(), set()]
 
+            # Pick up all elements associated with this low (all various sizes, i.e.)
             elements = self.lowDict[low]
             for j in xrange(0, len(elements)):
 
@@ -179,8 +180,8 @@ class MatchField2(object):
     def __init__(self, field_name):
 
         self.field_name = field_name
-        self.pos = []
         self.pos_list = []
+        self.pos_dict = {}
         self.lowDict = {}
         self.elements = {}
 
@@ -195,7 +196,7 @@ class MatchField2(object):
 
     def __setitem__(self, key, value):
 
-        def add_element(e):
+        def add_to_lowDict(e):
 
             # Initialize a list for this low, this list is meant to be kept sorted
             if not e.low in self.lowDict:
@@ -205,12 +206,25 @@ class MatchField2(object):
             if not e.size in self.lowDict[e.low]:
                 bisect.insort(self.lowDict[e.low], e.size)
 
-        add_element(value)
+        def add_to_pos_dict(e):
+
+            if e.low not in self.pos_dict and e.high not in self.pos_dict:
+                # Add the low point
+                self.pos_dict[e.low] = [set(), set(), set()]
+                self.pos_dict[e.low][1].add(e.tag)
+
+                # Add the low point
+                self.pos_dict[e.low] = [set(), set(), set()]
+                self.pos_dict[e.low][2].add(e.tag)
+
+        add_to_lowDict(value)
         self.elements[key] = value
 
         # If this is the first element
         if not self.elements:
-            pass
+            # record set of ranges that include low, that start at low, and that end at low
+
+            add_to_pos_dict()
         else:
             pass
 
@@ -280,22 +294,22 @@ def main():
 
     m = MatchField("dummy")
     
-    m.add_element(1, 2, "tag1")
-    m.add_element(3, 5, "tag2")
-    m.add_element(7, 9, "tag3")
+    m.add_element(1, 3, "tag1")
+    #m.add_element(1, 2, "tag2")
+    #m.add_element(7, 9, "tag3")
 
-    print m.cover(7, 10)
-    print m.complement_cover(1, 2)
+    print m.cover(2, 10)
+    #print m.complement_cover(1, 2)
 
     mfe1 = MatchFieldElement(1, 3, "tagz1")
-    mfe2 = MatchFieldElement(1, 2, "tagz2")
+    #mfe2 = MatchFieldElement(1, 2, "tagz2")
 
     m2 = MatchField2("dummy")
     m2[mfe1.tag] = mfe1
-    m2[mfe2.tag] = mfe2
+    #m2[mfe2.tag] = mfe2
 
 
-    m2.cover(3, 4)
+    print m2.cover(2, 10)
 
 
 if __name__ == "__main__":
