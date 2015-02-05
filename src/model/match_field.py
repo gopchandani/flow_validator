@@ -49,9 +49,9 @@ class MatchField(object):
 
 
     # build data structure suitable for determining intersection of elements
-    # This essentially takes form of a dictionary self.qMap, keyed by places of 'interest' (pos),
-    # i.e. where elements begin and end, all of these keys are also maintained in a list self.pos_dict
-    # The dictionary self.qMap contains as values a list of three sets;
+    # This essentially takes form of a dictionary self.pos_dict, keyed by places of 'interest' (pos),
+    # i.e. where elements begin and end, all of these keys are also maintained in a list self.pos_list
+    # The dictionary self.pos_dict contains as values a list of three sets;
 
     # set of all tags of elements that 'occupy'/run through at that place of interest
     # set of all tags of elements that begin at that place of interest
@@ -62,39 +62,39 @@ class MatchField(object):
         if not self.ordered:
             self.order_elements()
 
-        self.qMap = {}
-        self.pos_dict = []
+        self.pos_dict = {}
+        self.pos_list = []
 
         for low in self.lowDict:
-            if not low in self.qMap:
+            if not low in self.pos_dict:
 
                 # record set of ranges that include low, that start at low, and that end at low
-                self.qMap[low] = [set(), set(), set()]
+                self.pos_dict[low] = [set(), set(), set()]
 
             elements = self.lowDict[low]
             for j in xrange(0, len(elements)):
 
                 # mark that range begins at low
-                self.qMap[low][1].add(elements[j].tag)
+                self.pos_dict[low][1].add(elements[j].tag)
                 high = low + elements[j].size
 
-                if not high in self.qMap:
-                    self.qMap[high] = [set(), set(), set()]
+                if not high in self.pos_dict:
+                    self.pos_dict[high] = [set(), set(), set()]
 
                 # mark that range ends at high
-                self.qMap[high][2].add(elements[j].tag)
+                self.pos_dict[high][2].add(elements[j].tag)
 
         active_tags = set()
         previously_ended_tags = set()
 
-        self.pos_dict = sorted(self.qMap.keys())
-        for pos in self.pos_dict:
+        self.pos_list = sorted(self.pos_dict.keys())
+        for pos in self.pos_list:
 
-            [on, start, end] = self.qMap[pos]
+            [on, start, end] = self.pos_dict[pos]
 
             # compute the set of elements that include element 'pos'
             active_tags = (active_tags | start) - previously_ended_tags
-            self.qMap[pos][0] = active_tags
+            self.pos_dict[pos][0] = active_tags
             previously_ended_tags = end
 
     # Returns a set of tags that intersect between the in_match_field and self
@@ -123,53 +123,53 @@ class MatchField(object):
     # return a set of element tags that cover the range from low to high
     def cover(self, low, high):
 
-        if 'pos_dict' not in self.__dict__:
+        if 'pos_list' not in self.__dict__:
             self.buildQueryMap()
 
         # Where do we start the scan?
-        # i will be the index for going through pos_dict array of places of interest
-        i = bisect.bisect_left(self.pos_dict, low)
+        # i will be the index for going through pos_list array of places of interest
+        i = bisect.bisect_left(self.pos_list, low)
 
         # If the i falls to the right of all of the places of interest,,,
-        if i == len(self.pos_dict):
+        if i == len(self.pos_list):
             return set()
 
         # If i falls to the left of all of the places of interest and...
-        # The low and high are such that that will include the first pos_dict, then, collect the first one...
-        # This also means that low here is strictly less than self.pos_dict[0]
+        # The low and high are such that that will include the first pos_list, then, collect the first one...
+        # This also means that low here is strictly less than self.pos_list[0]
 
-        if i == 0 and low < self.pos_dict[0] and self.pos_dict[0] <= high:
-            pos = self.pos_dict[i]
-            active_tags = self.qMap[pos][0]
+        if i == 0 and low < self.pos_list[0] and self.pos_list[0] <= high:
+            pos = self.pos_list[i]
+            active_tags = self.pos_dict[pos][0]
 
         # Sort of special case when i > 0 and there is one more guy which is exactly equal to low but is next to i
         # This seems like it happens because of bisect_left
         # Collect things from this next guy
 
-        elif i > 0 and len(self.pos_dict) > 1 and i + 1 < len(self.pos_dict) and self.pos_dict[i + 1] == low:
+        elif i > 0 and len(self.pos_list) > 1 and i + 1 < len(self.pos_list) and self.pos_list[i + 1] == low:
             i += 1
-            pos = self.pos_dict[i]
-            active_tags = self.qMap[pos][0]
+            pos = self.pos_list[i]
+            active_tags = self.pos_dict[pos][0]
 
         # value at i is strictly larger than low and value at i-1 is strictly lower, so grab things from i-1
         elif i > 0:
-            pos = self.pos_dict[i - 1]
-            active_tags = self.qMap[pos][0] - self.qMap[pos][2]
+            pos = self.pos_list[i - 1]
+            active_tags = self.pos_dict[pos][0] - self.pos_dict[pos][2]
             i -= 1
 
-        # self.pos_dict[i] < low or possibly self.pos_dict[i] == low
+        # self.pos_list[i] < low or possibly self.pos_list[i] == low
         else:
-            if self.pos_dict[i] == low:
-                pos = self.pos_dict[i]
-                active_tags = self.qMap[pos][1]
+            if self.pos_list[i] == low:
+                pos = self.pos_list[i]
+                active_tags = self.pos_dict[pos][1]
             else:
                 active_tags = set()
 
         # This is including the rest of them...
         i += 1
-        while i < len(self.pos_dict) and self.pos_dict[i] <= high:
-            pos = self.pos_dict[i]
-            active_tags = active_tags | self.qMap[pos][0]
+        while i < len(self.pos_list) and self.pos_list[i] <= high:
+            pos = self.pos_list[i]
+            active_tags = active_tags | self.pos_dict[pos][0]
             i += 1
 
         return active_tags
@@ -181,7 +181,7 @@ class MatchField2(object):
 
         self.field_name = field_name
         self.pos = []
-        self.pos_dict = []
+        self.pos_list = []
         self.lowDict = {}
         self.elements = {}
 
@@ -196,6 +196,14 @@ class MatchField2(object):
 
     def __setitem__(self, key, value):
         self.elements[key] = value
+        
+        # If this is the first element
+        if not self.elements:
+            self.pos.append(value.low)
+            self.pos.append(value.high)
+            
+        else:
+            pass
 
     def complement_cover(self, low, high):
         complement = set()
@@ -210,49 +218,49 @@ class MatchField2(object):
     def cover(self, low, high):
 
         # Where do we start the scan?
-        # i will be the index for going through pos_dict array of places of interest
-        i = bisect.bisect_left(self.pos_dict, low)
+        # i will be the index for going through pos_list array of places of interest
+        i = bisect.bisect_left(self.pos_list, low)
 
         # If the i falls to the right of all of the places of interest,,,
-        if i == len(self.pos_dict):
+        if i == len(self.pos_list):
             return set()
 
         # If i falls to the left of all of the places of interest and...
-        # The low and high are such that that will include the first pos_dict, then, collect the first one...
-        # This also means that low here is strictly less than self.pos_dict[0]
+        # The low and high are such that that will include the first pos_list, then, collect the first one...
+        # This also means that low here is strictly less than self.pos_list[0]
 
-        if i == 0 and low < self.pos_dict[0] and self.pos_dict[0] <= high:
-            pos = self.pos_dict[i]
-            active_tags = self.qMap[pos][0]
+        if i == 0 and low < self.pos_list[0] and self.pos_list[0] <= high:
+            pos = self.pos_list[i]
+            active_tags = self.pos_dict[pos][0]
 
         # Sort of special case when i > 0 and there is one more guy which is exactly equal to low but is next to i
         # This seems like it happens because of bisect_left
         # Collect things from this next guy
 
-        elif i > 0 and len(self.pos_dict) > 1 and i + 1 < len(self.pos_dict) and self.pos_dict[i + 1] == low:
+        elif i > 0 and len(self.pos_list) > 1 and i + 1 < len(self.pos_list) and self.pos_list[i + 1] == low:
             i += 1
-            pos = self.pos_dict[i]
-            active_tags = self.qMap[pos][0]
+            pos = self.pos_list[i]
+            active_tags = self.pos_dict[pos][0]
 
         # value at i is strictly larger than low and value at i-1 is strictly lower, so grab things from i-1
         elif i > 0:
-            pos = self.pos_dict[i - 1]
-            active_tags = self.qMap[pos][0] - self.qMap[pos][2]
+            pos = self.pos_list[i - 1]
+            active_tags = self.pos_dict[pos][0] - self.pos_dict[pos][2]
             i -= 1
 
-        # self.pos_dict[i] < low or possibly self.pos_dict[i] == low
+        # self.pos_list[i] < low or possibly self.pos_list[i] == low
         else:
-            if self.pos_dict[i] == low:
-                pos = self.pos_dict[i]
-                active_tags = self.qMap[pos][1]
+            if self.pos_list[i] == low:
+                pos = self.pos_list[i]
+                active_tags = self.pos_dict[pos][1]
             else:
                 active_tags = set()
 
         # This is including the rest of them...
         i += 1
-        while i < len(self.pos_dict) and self.pos_dict[i] <= high:
-            pos = self.pos_dict[i]
-            active_tags = active_tags | self.qMap[pos][0]
+        while i < len(self.pos_list) and self.pos_list[i] <= high:
+            pos = self.pos_list[i]
+            active_tags = active_tags | self.pos_dict[pos][0]
             i += 1
 
         return active_tags
@@ -269,11 +277,11 @@ def main():
     print m.cover(7, 10)
     print m.complement_cover(1, 2)
 
-
-    mfe = MatchFieldElement(0, 1, "tagz")
+    mfe = MatchFieldElement(1, 2, "tagz")
     m2 = MatchField2("dummy")
     m2[mfe.tag] = mfe
-    print m2.keys()
+    m2.cover(3, 4)
+
 
 if __name__ == "__main__":
     main()

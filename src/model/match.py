@@ -251,8 +251,8 @@ class Match(DictMixin):
         field.buildQueryMap()
 
         # If the field is not a wildcard, return a value, otherwise none
-        if field.pos_dict and field.pos_dict[len(field.pos_dict) - 1] != sys.maxsize:
-            return field.pos_dict[0]
+        if field.pos_list and field.pos_list[len(field.pos_list) - 1] != sys.maxsize:
+            return field.pos_list[0]
         else:
              return None
 
