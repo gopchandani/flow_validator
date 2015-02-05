@@ -29,8 +29,7 @@ class MatchField(object):
         if not size in self.lowDict[low]:
             e = MatchFieldElement(low, high, tag)
             self.lowDict[low][size] = e
-        else:
-            pass
+
 
     def order_elements(self):
 
@@ -195,15 +194,26 @@ class MatchField2(object):
         return self.elements[item]
 
     def __setitem__(self, key, value):
+
+        def add_element(e):
+
+            # Initialize a list for this low, this list is meant to be kept sorted
+            if not e.low in self.lowDict:
+                self.lowDict[e.low] = []
+
+            # If the size does not already exist in the sorted list...
+            if not e.size in self.lowDict[e.low]:
+                bisect.insort(self.lowDict[e.low], e.size)
+
+        add_element(value)
         self.elements[key] = value
-        
+
         # If this is the first element
         if not self.elements:
-            self.pos.append(value.low)
-            self.pos.append(value.high)
-            
+            pass
         else:
             pass
+
 
     def complement_cover(self, low, high):
         complement = set()
@@ -277,9 +287,14 @@ def main():
     print m.cover(7, 10)
     print m.complement_cover(1, 2)
 
-    mfe = MatchFieldElement(1, 2, "tagz")
+    mfe1 = MatchFieldElement(1, 3, "tagz1")
+    mfe2 = MatchFieldElement(1, 2, "tagz2")
+
     m2 = MatchField2("dummy")
-    m2[mfe.tag] = mfe
+    m2[mfe1.tag] = mfe1
+    m2[mfe2.tag] = mfe2
+
+
     m2.cover(3, 4)
 
 
