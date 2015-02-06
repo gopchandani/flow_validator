@@ -187,8 +187,37 @@ class MatchField2(object):
 
     def __delitem__(self, key):
 
+        def remove_element_from_pos_dict(e):
+
+            # Start with the low index
+            self.pos_dict[e.low][0].remove(e.tag)
+            self.pos_dict[e.low][1].remove(e.tag)
+
+            # Then the high index
+            self.pos_dict[e.high][0].remove(e.tag)
+            self.pos_dict[e.high][2].remove(e.tag)
+
+        def remove_element_dependencies_to_pos_dict(e1, e2):
+
+            if e1.low <= e2.low and e2.low <= e1.high:
+                self.pos_dict[e2.low][0].remove(e1.tag)
+
+            if e1.low <= e2.high and e2.high <= e1.high:
+                self.pos_dict[e2.low][0].remove(e1.tag)
+
+            if e2.low <= e1.low and e1.low <= e2.high:
+                self.pos_dict[e1.low][0].remove(e2.tag)
+
+            if e2.low <= e1.high and e1.high <= e2.high:
+                self.pos_dict[e1.low][0].remove(e2.tag)
+
         e = self.element_dict[key]
 
+        remove_element_from_pos_dict(e)
+
+        # Check what previous ranges, this new range intersects with and update
+        for prev in self.cover(e.low, e.high):
+            remove_element_dependencies_to_pos_dict(self[prev], e)
 
 
         del self.element_dict[key]
@@ -199,8 +228,7 @@ class MatchField2(object):
     def __getitem__(self, item):
         return self.element_dict[item]
 
-    def __setitem__(self, key, value):
-
+    def __setitem__(self, key, e):
 
         def init_pos(pos):
             # If this new endpoint is new add it to appropriate place in pos_list and pos_dict
@@ -208,7 +236,6 @@ class MatchField2(object):
                 self.pos_dict[pos] = [set(), set(), set()]
                 bisect.insort(self.pos_list, pos)
 
-        # Take a new element and put it in the pos_dict
         def add_element_to_pos_dict(e):
 
             init_pos(e.low)
@@ -233,12 +260,12 @@ class MatchField2(object):
             if e2.low <= e1.high and e1.high <= e2.high:
                 self.pos_dict[e1.low][0].add(e2.tag)
 
-        add_element_to_pos_dict(value)
-        self.element_dict[key] = value
+        add_element_to_pos_dict(e)
+        self.element_dict[key] = e
 
         # Check what previous ranges, this new range intersects with and update
-        for prev in self.cover(value.low, value.high):
-            add_element_dependencies_to_pos_dict(self[prev], value)
+        for prev in self.cover(e.low, e.high):
+            add_element_dependencies_to_pos_dict(self[prev], e)
 
     def complement_cover(self, low, high):
         complement = set()
