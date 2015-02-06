@@ -60,6 +60,15 @@ class MatchFeildTest(unittest.TestCase):
             
         self.assertEqual(self.left_overlap_result, self.m.cover(5, 10))
 
+    def test_remove_elements_cover_left_overlap(self):
+        self.init_match()
+        self.test_add_elements_cover_left_overlap()
+
+        for e in self.m.values():
+            del self.m[e.tag]
+            self.assertEqual(self.left_overlap_result - set(e.tag), self.m.cover(5, 10))
+
+
     def test_add_elements_cover_right_overlap(self):
         self.init_match()
 

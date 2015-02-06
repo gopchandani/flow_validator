@@ -194,19 +194,20 @@ class MatchField2(object):
             return
 
         # Check what previous ranges, this new range intersects with and update
-        for prev in self.cover(e.low, e.high):
+        for prev_tag in self.cover(e.low, e.high):
+            prev = self[prev_tag]
 
-            if self[prev].low <= e.low <= self[prev].high:
-                self.pos_dict[e.low][0].remove(self[prev].tag)
+            if prev.low <= e.low <= prev.high:
+                self.pos_dict[e.low][0].remove(prev.tag)
 
-            if self[prev].low <= e.high <= self[prev].high:
-                self.pos_dict[e.high][0].remove(self[prev].tag)
+            if prev.low <= e.high <= prev.high:
+                self.pos_dict[e.high][0].remove(prev.tag)
 
-            if e.low <= self[prev].low <= e.high:
-                self.pos_dict[self[prev].low][0].remove(e.tag)
+            if e.low <= prev.low <= e.high:
+                self.pos_dict[prev.low][0].remove(e.tag)
 
-            if e.low <= self[prev].high <= e.high:
-                self.pos_dict[self[prev].high][0].remove(e.tag)
+            if e.low <= prev.high <= e.high:
+                self.pos_dict[prev.high][0].remove(e.tag)
 
         # Start with the low index
         self.pos_dict[e.low][0].remove(e.tag)
@@ -241,19 +242,20 @@ class MatchField2(object):
         self.pos_dict[e.high][2].add(e.tag)
 
         # Check what previous ranges, this new range intersects with and update
-        for prev in self.cover(e.low, e.high):
+        for prev_tag in self.cover(e.low, e.high):
+            prev = self[prev_tag]
 
-            if self[prev].low <= e.low <= self[prev].high:
-                self.pos_dict[e.low][0].add(self[prev].tag)
+            if prev.low <= e.low <= prev.high:
+                self.pos_dict[e.low][0].add(prev.tag)
 
-            if self[prev].low <= e.high <= self[prev].high:
-                self.pos_dict[e.high][0].add(self[prev].tag)
+            if prev.low <= e.high <= prev.high:
+                self.pos_dict[e.high][0].add(prev.tag)
 
-            if e.low <= self[prev].low <= e.high:
-                self.pos_dict[self[prev].low][0].add(e.tag)
+            if e.low <= prev.low <= e.high:
+                self.pos_dict[prev.low][0].add(e.tag)
 
-            if e.low <= self[prev].high <= e.high:
-                self.pos_dict[self[prev].high][0].add(e.tag)
+            if e.low <= prev.high <= e.high:
+                self.pos_dict[prev.high][0].add(e.tag)
 
     def __delitem__(self, key):
 
