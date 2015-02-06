@@ -47,7 +47,6 @@ class MatchField(object):
 
             self.lowDict[low] = elements
 
-
     # build data structure suitable for determining intersection of elements
     # This essentially takes form of a dictionary self.pos_dict, keyed by places of 'interest' (pos),
     # i.e. where elements begin and end, all of these keys are also maintained in a list self.pos_list
@@ -184,10 +183,14 @@ class MatchField2(object):
         self.field_name = field_name
         self.pos_list = []
         self.pos_dict = {}
-        self.lowDict = {}
         self.element_dict = {}
 
     def __delitem__(self, key):
+
+        e = self.element_dict[key]
+
+
+
         del self.element_dict[key]
 
     def keys(self):
@@ -198,15 +201,6 @@ class MatchField2(object):
 
     def __setitem__(self, key, value):
 
-        def add_to_lowDict(e):
-
-            # Initialize a list for this low, this list is meant to be kept sorted
-            if not e.low in self.lowDict:
-                self.lowDict[e.low] = []
-
-            # If the size does not already exist in the sorted list...
-            if not e.size in self.lowDict[e.low]:
-                bisect.insort(self.lowDict[e.low], e.size)
 
         def init_pos(pos):
             # If this new endpoint is new add it to appropriate place in pos_list and pos_dict
@@ -245,7 +239,6 @@ class MatchField2(object):
         # Check what previous ranges, this new range intersects with and update
         for prev in self.cover(value.low, value.high):
             add_element_dependencies_to_pos_dict(self[prev], value)
-
 
     def complement_cover(self, low, high):
         complement = set()
@@ -323,21 +316,11 @@ def main():
     
     m.add_element(1, 3, "tag1")
     m.add_element(1, 4, "tag2")
-    #m.add_element(7, 9, "tag3")
+    m.add_element(7, 9, "tag3")
 
     print m.cover(2, 10)
-    #print m.complement_cover(1, 2)
+    print m.complement_cover(1, 2)
 
-    mfe1 = MatchFieldElement(1, 3, "tagz1")
-    mfe2 = MatchFieldElement(1, 4, "tagz2")
-    mfe3 = MatchFieldElement(11, 15, "tagz3")
-
-    m2 = MatchField2("dummy")
-    m2[mfe1.tag] = mfe1
-    m2[mfe2.tag] = mfe2
-    m2[mfe3.tag] = mfe3
-
-    print m2.cover(2, 10)
 
 if __name__ == "__main__":
     main()
