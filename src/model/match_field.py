@@ -1,4 +1,4 @@
-__author__ = 'Rakesh Kumar'
+__author__ = 'David M. Nicol'
 
 import sys
 import bisect
@@ -239,12 +239,12 @@ class MatchField2(object):
             if e2.low <= e1.high and e1.high <= e2.high:
                 self.pos_dict[e1.low][0].add(e2.tag)
 
+        add_element_to_pos_dict(value)
+        self.element_dict[key] = value
+
         # Check what previous ranges, this new range intersects with and update
         for prev in self.cover(value.low, value.high):
             add_element_dependencies_to_pos_dict(self[prev], value)
-
-        add_element_to_pos_dict(value)
-        self.element_dict[key] = value
 
 
     def complement_cover(self, low, high):
