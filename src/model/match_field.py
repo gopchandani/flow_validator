@@ -19,6 +19,7 @@ class MatchField(object):
         self.field_name = field_name
         self.lowDict = {}
         self.ordered = False
+        self.ordered = False
 
     def add_element(self, low, high, tag):
 
@@ -207,26 +208,24 @@ class MatchField2(object):
             if not e.size in self.lowDict[e.low]:
                 bisect.insort(self.lowDict[e.low], e.size)
 
-        # Takes an element and puts it in the pos_dict
-        def add_to_pos_dict(e):
+        def init_pos(pos):
+            # If this new endpoint is new add it to appropriate place in pos_list and pos_dict
+            if pos not in self.pos_dict:
+                self.pos_dict[pos] = [set(), set(), set()]
+                bisect.insort(self.pos_list, pos)
 
-            if e.low not in self.pos_dict:
-                # Add the low point
-                self.pos_dict[e.low] = [set(), set(), set()]
-                bisect.insort(self.pos_list, e.low)
+        # Take a new element and put it in the pos_dict
+        def add_element_to_pos_dict(e):
 
+            init_pos(e.low)
             self.pos_dict[e.low][0].add(e.tag)
             self.pos_dict[e.low][1].add(e.tag)
 
-            if e.high not in self.pos_dict:
-                # Add the low point
-                self.pos_dict[e.high] = [set(), set(), set()]
-                bisect.insort(self.pos_list, e.high)
-
+            init_pos(e.high)
             self.pos_dict[e.high][0].add(e.tag)
             self.pos_dict[e.high][2].add(e.tag)
 
-        def add_to_pos_dict_2(e1, e2):
+        def add_element_dependencies_to_pos_dict(e1, e2):
 
             if e1.low <= e2.low and e2.low <= e1.high:
                 self.pos_dict[e2.low][0].add(e1.tag)
@@ -234,12 +233,17 @@ class MatchField2(object):
             if e1.low <= e2.high and e2.high <= e1.high:
                 self.pos_dict[e2.low][0].add(e1.tag)
 
+            if e2.low <= e1.low and e1.low <= e2.high:
+                self.pos_dict[e1.low][0].add(e2.tag)
 
+            if e2.low <= e1.high and e1.high <= e2.high:
+                self.pos_dict[e1.low][0].add(e2.tag)
+
+        # Check what previous ranges, this new range intersects with and update
         for prev in self.cover(value.low, value.high):
-            add_to_pos_dict_2(self[prev], value)
+            add_element_dependencies_to_pos_dict(self[prev], value)
 
-        add_to_pos_dict(value)
-        add_to_lowDict(value)
+        add_element_to_pos_dict(value)
         self.element_dict[key] = value
 
 
@@ -315,21 +319,23 @@ class MatchField2(object):
 
 def main():
 
-    #m = MatchField("dummy")
+    m = MatchField("dummy")
     
-    #m.add_element(1, 3, "tag1")
-    #m.add_element(1, 2, "tag2")
+    m.add_element(1, 3, "tag1")
+    m.add_element(1, 4, "tag2")
     #m.add_element(7, 9, "tag3")
 
-    #print m.cover(2, 10)
+    print m.cover(2, 10)
     #print m.complement_cover(1, 2)
 
     mfe1 = MatchFieldElement(1, 3, "tagz1")
     mfe2 = MatchFieldElement(1, 4, "tagz2")
+    mfe3 = MatchFieldElement(11, 15, "tagz3")
 
     m2 = MatchField2("dummy")
     m2[mfe1.tag] = mfe1
     m2[mfe2.tag] = mfe2
+    m2[mfe3.tag] = mfe3
 
     print m2.cover(2, 10)
 
