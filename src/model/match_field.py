@@ -187,6 +187,12 @@ class MatchField2(object):
 
     def remove_element_from_pos_dict(self, e):
 
+        # If there is one element left and this is that one last element...
+        if len(self.element_dict) == 1 and e.tag in self.element_dict:
+            del self.pos_dict[e.low]
+            del self.pos_dict[e.high]
+            return
+
         # Check what previous ranges, this new range intersects with and update
         for prev in self.cover(e.low, e.high):
 
@@ -194,13 +200,13 @@ class MatchField2(object):
                 self.pos_dict[e.low][0].remove(self[prev].tag)
 
             if self[prev].low <= e.high <= self[prev].high:
-                self.pos_dict[e.low][0].remove(self[prev].tag)
+                self.pos_dict[e.high][0].remove(self[prev].tag)
 
             if e.low <= self[prev].low <= e.high:
                 self.pos_dict[self[prev].low][0].remove(e.tag)
 
             if e.low <= self[prev].high <= e.high:
-                self.pos_dict[self[prev].low][0].remove(e.tag)
+                self.pos_dict[self[prev].high][0].remove(e.tag)
 
         # Start with the low index
         self.pos_dict[e.low][0].remove(e.tag)
@@ -241,13 +247,13 @@ class MatchField2(object):
                 self.pos_dict[e.low][0].add(self[prev].tag)
 
             if self[prev].low <= e.high <= self[prev].high:
-                self.pos_dict[e.low][0].add(self[prev].tag)
+                self.pos_dict[e.high][0].add(self[prev].tag)
 
             if e.low <= self[prev].low <= e.high:
                 self.pos_dict[self[prev].low][0].add(e.tag)
 
             if e.low <= self[prev].high <= e.high:
-                self.pos_dict[self[prev].low][0].add(e.tag)
+                self.pos_dict[self[prev].high][0].add(e.tag)
 
     def __delitem__(self, key):
 
@@ -256,6 +262,9 @@ class MatchField2(object):
 
     def keys(self):
         return self.element_dict.keys()
+
+    def values(self):
+        return self.element_dict.values()
 
     def __getitem__(self, item):
         return self.element_dict[item]
@@ -268,6 +277,7 @@ class MatchField2(object):
             self.element_dict[key] = e
             self.add_element_to_pos_dict(e)
 
+
     def complement_cover(self, low, high):
         complement = set()
 
@@ -279,6 +289,10 @@ class MatchField2(object):
 
     # return a set of element tags that cover the range from low to high
     def cover(self, low, high):
+
+        # If there are no elements to intersect this with...
+        if not self.element_dict:
+            return set()
 
         if 'pos_list' not in self.__dict__:
             self.buildQueryMap()

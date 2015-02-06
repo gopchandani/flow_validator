@@ -30,8 +30,6 @@ class MatchFeildTest(unittest.TestCase):
 
         self.full_overlap_result = self.simple_cover_result | set(["tag2", "tag3"])
 
-
-
     def test_simple_cover_left_overlap(self):
         self.init_match()
         self.assertEqual(self.simple_cover_result, self.m.cover(1, 10))
@@ -47,6 +45,12 @@ class MatchFeildTest(unittest.TestCase):
     def test_simple_cover_no_overlap(self):
         self.init_match()
         self.assertEqual(set(), self.m.cover(25, 30))
+
+    def test_simple_remove(self):
+        self.init_match()
+        for e in self.m.values():
+            del self.m[e.tag]
+            self.m.cover(set(), self.m.cover(e.low, e.high))
 
     def test_add_elements_cover_left_overlap(self):
         self.init_match()
@@ -71,7 +75,6 @@ class MatchFeildTest(unittest.TestCase):
             self.m[e.tag] = e
 
         self.assertEqual(self.full_overlap_result, self.m.cover(7, 18))
-
 
 if __name__ == '__main__':
     unittest.main()
