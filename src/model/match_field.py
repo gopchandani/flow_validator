@@ -130,7 +130,7 @@ class MatchField(object):
         # i will be the index for going through pos_list array of places of interest
         i = bisect.bisect_left(self.pos_list, low)
 
-        # If the i falls to the right of all of the places of interest,,,
+        # If the i falls to the right of all of the places of interest, then you are done, nothing intersects
         if i == len(self.pos_list):
             return set()
 
@@ -165,7 +165,8 @@ class MatchField(object):
             else:
                 active_tags = set()
 
-        # This is including the rest of them...
+
+        # Collect elements by sweeping right until you hit _high_
         i += 1
         while i < len(self.pos_list) and self.pos_list[i] <= high:
             pos = self.pos_list[i]
@@ -209,29 +210,36 @@ class MatchField2(object):
         # Takes an element and puts it in the pos_dict
         def add_to_pos_dict(e):
 
-            if e.low not in self.pos_dict and e.high not in self.pos_dict:
+            if e.low not in self.pos_dict:
                 # Add the low point
                 self.pos_dict[e.low] = [set(), set(), set()]
-                self.pos_dict[e.low][0].add(e.tag)
-                self.pos_dict[e.low][1].add(e.tag)
                 bisect.insort(self.pos_list, e.low)
 
+            self.pos_dict[e.low][0].add(e.tag)
+            self.pos_dict[e.low][1].add(e.tag)
+
+            if e.high not in self.pos_dict:
                 # Add the low point
                 self.pos_dict[e.high] = [set(), set(), set()]
-                self.pos_dict[e.high][0].add(e.tag)
-                self.pos_dict[e.high][2].add(e.tag)
                 bisect.insort(self.pos_list, e.high)
 
+            self.pos_dict[e.high][0].add(e.tag)
+            self.pos_dict[e.high][2].add(e.tag)
+
+        def add_to_pos_dict_2(e1, e2):
+
+            if e1.low <= e2.low and e2.low <= e1.high:
+                self.pos_dict[e2.low][0].add(e1.tag)
+
+            if e1.low <= e2.high and e2.high <= e1.high:
+                self.pos_dict[e2.low][0].add(e1.tag)
+
+
+        for prev in self.cover(value.low, value.high):
+            add_to_pos_dict_2(self[prev], value)
+
+        add_to_pos_dict(value)
         add_to_lowDict(value)
-
-        # If this is the first element
-        if not self.element_dict:
-            # record set of ranges that include low, that start at low, and that end at low
-            add_to_pos_dict(value)
-        else:
-            add_to_pos_dict(value)
-            #TODO: Figure out the first sets member at e.low and e.high
-
         self.element_dict[key] = value
 
 
@@ -244,49 +252,57 @@ class MatchField2(object):
         complement = self.cover(0, sys.maxsize) - self.cover(low, high)
         return complement
 
+
     # return a set of element tags that cover the range from low to high
     def cover(self, low, high):
+
+        if 'pos_list' not in self.__dict__:
+            self.buildQueryMap()
 
         # Where do we start the scan?
         # i will be the index for going through pos_list array of places of interest
         i = bisect.bisect_left(self.pos_list, low)
 
-        # If the i falls to the right of all of the places of interest,,,
+        # If the i falls to the right of all of the places of interest, then you are done, nothing intersects
         if i == len(self.pos_list):
             return set()
 
-        # If i falls to the left of all of the places of interest and...
-        # The low and high are such that that will include the first pos_list, then, collect the first one...
-        # This also means that low here is strictly less than self.pos_list[0]
-
+        # Case when the incoming range falls completely to the left of even the first one of pre-existing:
+        # Collect the set of the first one
         if i == 0 and low < self.pos_list[0] and self.pos_list[0] <= high:
             pos = self.pos_list[i]
             active_tags = self.pos_dict[pos][0]
 
-        # Sort of special case when i > 0 and there is one more guy which is exactly equal to low but is next to i
         # This seems like it happens because of bisect_left
-        # Collect things from this next guy
-
-        elif i > 0 and len(self.pos_list) > 1 and i + 1 < len(self.pos_list) and self.pos_list[i + 1] == low:
+        # Case when incoming range's low falls right on the pos immediately to the right of i:
+        # Collect things from this pos on the right
+        elif len(self.pos_list) > 1 and i + 1 < len(self.pos_list) and self.pos_list[i + 1] == low:
             i += 1
             pos = self.pos_list[i]
             active_tags = self.pos_dict[pos][0]
 
-        # value at i is strictly larger than low and value at i-1 is strictly lower, so grab things from i-1
+
+        # i falls in the middle of some things s.t. value at i is strictly larger than low
+        # Collect things that are being carried forward from i-i
         elif i > 0:
             pos = self.pos_list[i - 1]
             active_tags = self.pos_dict[pos][0] - self.pos_dict[pos][2]
             i -= 1
 
-        # self.pos_list[i] < low or possibly self.pos_list[i] == low
+        # i == 0 and (low > self.pos_list[0] or self.pos_list[0] == low):
+        # Can this even happen?
         else:
+            if low > self.pos_list[0]:
+                raise Exception("This happened!")
+
             if self.pos_list[i] == low:
                 pos = self.pos_list[i]
                 active_tags = self.pos_dict[pos][1]
             else:
                 active_tags = set()
 
-        # This is including the rest of them...
+
+        # Collect elements by sweeping right until you hit _high_
         i += 1
         while i < len(self.pos_list) and self.pos_list[i] <= high:
             pos = self.pos_list[i]
@@ -296,27 +312,26 @@ class MatchField2(object):
         return active_tags
 
 
+
 def main():
 
-    m = MatchField("dummy")
+    #m = MatchField("dummy")
     
-    m.add_element(1, 3, "tag1")
+    #m.add_element(1, 3, "tag1")
     #m.add_element(1, 2, "tag2")
     #m.add_element(7, 9, "tag3")
 
-    print m.cover(2, 10)
+    #print m.cover(2, 10)
     #print m.complement_cover(1, 2)
 
     mfe1 = MatchFieldElement(1, 3, "tagz1")
-    #mfe2 = MatchFieldElement(1, 2, "tagz2")
+    mfe2 = MatchFieldElement(1, 4, "tagz2")
 
     m2 = MatchField2("dummy")
     m2[mfe1.tag] = mfe1
-    #m2[mfe2.tag] = mfe2
-
+    m2[mfe2.tag] = mfe2
 
     print m2.cover(2, 10)
-
 
 if __name__ == "__main__":
     main()
