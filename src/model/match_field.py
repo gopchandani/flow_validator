@@ -185,41 +185,73 @@ class MatchField2(object):
         self.pos_dict = {}
         self.element_dict = {}
 
-    def __delitem__(self, key):
-
-        def remove_element_from_pos_dict(e):
-
-            # Start with the low index
-            self.pos_dict[e.low][0].remove(e.tag)
-            self.pos_dict[e.low][1].remove(e.tag)
-
-            # Then the high index
-            self.pos_dict[e.high][0].remove(e.tag)
-            self.pos_dict[e.high][2].remove(e.tag)
-
-        def remove_element_dependencies_to_pos_dict(e1, e2):
-
-            if e1.low <= e2.low and e2.low <= e1.high:
-                self.pos_dict[e2.low][0].remove(e1.tag)
-
-            if e1.low <= e2.high and e2.high <= e1.high:
-                self.pos_dict[e2.low][0].remove(e1.tag)
-
-            if e2.low <= e1.low and e1.low <= e2.high:
-                self.pos_dict[e1.low][0].remove(e2.tag)
-
-            if e2.low <= e1.high and e1.high <= e2.high:
-                self.pos_dict[e1.low][0].remove(e2.tag)
-
-        e = self.element_dict[key]
-
-        remove_element_from_pos_dict(e)
+    def remove_element_from_pos_dict(self, e):
 
         # Check what previous ranges, this new range intersects with and update
         for prev in self.cover(e.low, e.high):
-            remove_element_dependencies_to_pos_dict(self[prev], e)
 
+            if self[prev].low <= e.low <= self[prev].high:
+                self.pos_dict[e.low][0].remove(self[prev].tag)
 
+            if self[prev].low <= e.high <= self[prev].high:
+                self.pos_dict[e.low][0].remove(self[prev].tag)
+
+            if e.low <= self[prev].low <= e.high:
+                self.pos_dict[self[prev].low][0].remove(e.tag)
+
+            if e.low <= self[prev].high <= e.high:
+                self.pos_dict[self[prev].low][0].remove(e.tag)
+
+        # Start with the low index
+        self.pos_dict[e.low][0].remove(e.tag)
+        self.pos_dict[e.low][1].remove(e.tag)
+
+        # Then the high index
+        self.pos_dict[e.high][0].remove(e.tag)
+        self.pos_dict[e.high][2].remove(e.tag)
+
+        # Check if nothing starts/stops at endpoints anymore
+        # if so, get rid of them from pos_dict
+        if not len(self.pos_dict[e.low][1]) and not len(self.pos_dict[e.low][2]):
+            del self.pos_dict[e.low]
+
+        if not len(self.pos_dict[e.high][1]) and not len(self.pos_dict[e.high][2]):
+            del self.pos_dict[e.high]
+
+    def add_element_to_pos_dict(self, e):
+
+        def init_pos(pos):
+            # If this new endpoint is new add it to appropriate place in pos_list and pos_dict
+            if pos not in self.pos_dict:
+                self.pos_dict[pos] = [set(), set(), set()]
+                bisect.insort(self.pos_list, pos)
+
+        init_pos(e.low)
+        self.pos_dict[e.low][0].add(e.tag)
+        self.pos_dict[e.low][1].add(e.tag)
+
+        init_pos(e.high)
+        self.pos_dict[e.high][0].add(e.tag)
+        self.pos_dict[e.high][2].add(e.tag)
+
+        # Check what previous ranges, this new range intersects with and update
+        for prev in self.cover(e.low, e.high):
+
+            if self[prev].low <= e.low <= self[prev].high:
+                self.pos_dict[e.low][0].add(self[prev].tag)
+
+            if self[prev].low <= e.high <= self[prev].high:
+                self.pos_dict[e.low][0].add(self[prev].tag)
+
+            if e.low <= self[prev].low <= e.high:
+                self.pos_dict[self[prev].low][0].add(e.tag)
+
+            if e.low <= self[prev].high <= e.high:
+                self.pos_dict[self[prev].low][0].add(e.tag)
+
+    def __delitem__(self, key):
+
+        self.remove_element_from_pos_dict(self.element_dict[key])
         del self.element_dict[key]
 
     def keys(self):
@@ -230,42 +262,11 @@ class MatchField2(object):
 
     def __setitem__(self, key, e):
 
-        def init_pos(pos):
-            # If this new endpoint is new add it to appropriate place in pos_list and pos_dict
-            if pos not in self.pos_dict:
-                self.pos_dict[pos] = [set(), set(), set()]
-                bisect.insort(self.pos_list, pos)
-
-        def add_element_to_pos_dict(e):
-
-            init_pos(e.low)
-            self.pos_dict[e.low][0].add(e.tag)
-            self.pos_dict[e.low][1].add(e.tag)
-
-            init_pos(e.high)
-            self.pos_dict[e.high][0].add(e.tag)
-            self.pos_dict[e.high][2].add(e.tag)
-
-        def add_element_dependencies_to_pos_dict(e1, e2):
-
-            if e1.low <= e2.low and e2.low <= e1.high:
-                self.pos_dict[e2.low][0].add(e1.tag)
-
-            if e1.low <= e2.high and e2.high <= e1.high:
-                self.pos_dict[e2.low][0].add(e1.tag)
-
-            if e2.low <= e1.low and e1.low <= e2.high:
-                self.pos_dict[e1.low][0].add(e2.tag)
-
-            if e2.low <= e1.high and e1.high <= e2.high:
-                self.pos_dict[e1.low][0].add(e2.tag)
-
-        add_element_to_pos_dict(e)
-        self.element_dict[key] = e
-
-        # Check what previous ranges, this new range intersects with and update
-        for prev in self.cover(e.low, e.high):
-            add_element_dependencies_to_pos_dict(self[prev], e)
+        if key in self.element_dict:
+            del self.element_dict[key]
+        else:
+            self.element_dict[key] = e
+            self.add_element_to_pos_dict(e)
 
     def complement_cover(self, low, high):
         complement = set()
@@ -275,7 +276,6 @@ class MatchField2(object):
 
         complement = self.cover(0, sys.maxsize) - self.cover(low, high)
         return complement
-
 
     # return a set of element tags that cover the range from low to high
     def cover(self, low, high):
