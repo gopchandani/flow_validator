@@ -6,8 +6,6 @@ from model.match_field import MatchFieldElement
 
 class MatchFeildTest(unittest.TestCase):
 
-
-
     def init_match(self):
         # Initialize with a single element
         self.m = MatchField2("dummy")
@@ -109,7 +107,6 @@ class MatchFeildTest(unittest.TestCase):
         self.m[modified_e._tag] = MatchFieldElement(1, 9, modified_e._tag)
         self.assertEqual(self.right_overlap_result, self.m.cover(15, 19))
 
-
     def test_add_elements_cover_full_overlap(self):
         self.init_match()
 
@@ -134,7 +131,6 @@ class MatchFeildTest(unittest.TestCase):
         modified_e = self.m[self.full_overlap_result.pop()]
         self.m[modified_e._tag] = MatchFieldElement(1, 2, modified_e._tag)
         self.assertEqual(self.full_overlap_result, self.m.cover(5, 20))
-
 
 if __name__ == '__main__':
     unittest.main()
