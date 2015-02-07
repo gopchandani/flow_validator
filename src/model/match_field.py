@@ -197,6 +197,10 @@ class MatchField2(object):
         for prev_tag in self.cover(e.low, e.high):
             prev = self[prev_tag]
 
+            # If I arrived on to myself, don't do anything...
+            if prev.tag == e.tag:
+                continue
+
             if prev.low <= e.low <= prev.high:
                 self.pos_dict[e.low][0].remove(prev.tag)
 
@@ -210,11 +214,15 @@ class MatchField2(object):
                 self.pos_dict[prev.high][0].remove(e.tag)
 
         # Start with the low index
-        self.pos_dict[e.low][0].remove(e.tag)
+        if e.tag in self.pos_dict[e.low][0]:
+            self.pos_dict[e.low][0].remove(e.tag)
+
         self.pos_dict[e.low][1].remove(e.tag)
 
         # Then the high index
-        self.pos_dict[e.high][0].remove(e.tag)
+        if e.tag in self.pos_dict[e.high][0]:
+            self.pos_dict[e.high][0].remove(e.tag)
+
         self.pos_dict[e.high][2].remove(e.tag)
 
         # Check if nothing starts/stops at endpoints anymore
@@ -244,6 +252,10 @@ class MatchField2(object):
         # Check what previous ranges, this new range intersects with and update
         for prev_tag in self.cover(e.low, e.high):
             prev = self[prev_tag]
+
+            # If I arrived on to myself
+            if prev.tag == e.tag:
+                continue
 
             if prev.low <= e.low <= prev.high:
                 self.pos_dict[e.low][0].add(prev.tag)
