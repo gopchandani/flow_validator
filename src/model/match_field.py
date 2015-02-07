@@ -195,22 +195,23 @@ class MatchField2(object):
 
         # Check what previous ranges, this new range intersects with and update
         for prev_tag in self.cover(e.low, e.high):
+
             prev = self[prev_tag]
 
             # If I arrived on to myself, don't do anything...
             if prev.tag == e.tag:
                 continue
 
-            if prev.low <= e.low <= prev.high:
+            if prev.low <= e.low <= prev.high and prev.tag in self.pos_dict[e.low][0]:
                 self.pos_dict[e.low][0].remove(prev.tag)
 
-            if prev.low <= e.high <= prev.high:
+            if prev.low <= e.high <= prev.high and prev.tag in self.pos_dict[e.high][0]:
                 self.pos_dict[e.high][0].remove(prev.tag)
 
-            if e.low <= prev.low <= e.high:
+            if e.low <= prev.low <= e.high and e.tag in self.pos_dict[e.low][0]:
                 self.pos_dict[prev.low][0].remove(e.tag)
 
-            if e.low <= prev.high <= e.high:
+            if e.low <= prev.high <= e.high and e.tag in self.pos_dict[e.high][0]:
                 self.pos_dict[prev.high][0].remove(e.tag)
 
         # Start with the low index
@@ -225,13 +226,15 @@ class MatchField2(object):
 
         self.pos_dict[e.high][2].remove(e.tag)
 
-        # Check if nothing starts/stops at endpoints anymore
-        # if so, get rid of them from pos_dict
+        # Check if nothing starts/stops at endpoints any more
+        # if so, get rid of them from pos_dict and pos_list
         if not len(self.pos_dict[e.low][1]) and not len(self.pos_dict[e.low][2]):
             del self.pos_dict[e.low]
+            self.pos_list.remove(e.low)
 
         if not len(self.pos_dict[e.high][1]) and not len(self.pos_dict[e.high][2]):
             del self.pos_dict[e.high]
+            self.pos_list.remove(e.high)
 
     def add_element_to_pos_dict(self, e):
 
