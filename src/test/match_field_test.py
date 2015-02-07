@@ -61,7 +61,6 @@ class MatchFeildTest(unittest.TestCase):
         self.assertEqual(self.left_overlap_result, self.m.cover(5, 10))
 
     def test_remove_elements_cover_left_overlap(self):
-        self.init_match()
         self.test_add_elements_cover_left_overlap()
         expected_result = self.left_overlap_result
 
@@ -80,19 +79,13 @@ class MatchFeildTest(unittest.TestCase):
         self.assertEqual(self.right_overlap_result, self.m.cover(15, 19))
 
     def test_remove_elements_cover_right_overlap(self):
-        self.init_match()
         self.test_add_elements_cover_right_overlap()
         expected_result = self.right_overlap_result
-
-        print 'Start:', expected_result
 
         for e in self.m.values():
             del self.m[e.tag]
             cover_result = self.m.cover(15, 19)
             expected_result = expected_result - set([e.tag])
-
-            print expected_result, cover_result, e.tag
-
             self.assertEqual(expected_result, cover_result)
 
     def test_add_elements_cover_full_overlap(self):
@@ -102,6 +95,16 @@ class MatchFeildTest(unittest.TestCase):
             self.m[e.tag] = e
 
         self.assertEqual(self.full_overlap_result, self.m.cover(7, 18))
+
+    def test_remove_elements_cover_full_overlap(self):
+        self.test_add_elements_cover_full_overlap()
+        expected_result = self.full_overlap_result
+
+        for e in self.m.values():
+            del self.m[e.tag]
+            cover_result = self.m.cover(5, 20)
+            expected_result = expected_result - set([e.tag])
+            self.assertEqual(expected_result, cover_result)
 
 if __name__ == '__main__':
     unittest.main()

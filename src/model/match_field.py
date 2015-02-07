@@ -202,12 +202,6 @@ class MatchField2(object):
             if prev.tag == e.tag:
                 continue
 
-            if prev.low <= e.low <= prev.high and prev.tag in self.pos_dict[e.low][0]:
-                self.pos_dict[e.low][0].remove(prev.tag)
-
-            if prev.low <= e.high <= prev.high and prev.tag in self.pos_dict[e.high][0]:
-                self.pos_dict[e.high][0].remove(prev.tag)
-
             if e.low <= prev.low <= e.high and e.tag in self.pos_dict[e.low][0]:
                 self.pos_dict[prev.low][0].remove(e.tag)
 
