@@ -12,7 +12,7 @@ class MatchFieldElement(object):
         self._tag = tag
         self._size = high - low
 
-class MatchField(object):
+class MatchField2(object):
 
     def __init__(self, field_name):
 
@@ -102,16 +102,16 @@ class MatchField(object):
 
         intersecting_set = set()
 
-        intersecting_set = self.cover(in_match_field_element.low,
-                                        in_match_field_element.high)
+        intersecting_set = self.cover(in_match_field_element._low,
+                                        in_match_field_element._high)
 
         return intersecting_set
 
     def complement(self, in_match_field_element):
 
 
-        complement = self.complement_cover(in_match_field_element.low,
-                                           in_match_field_element.high)
+        complement = self.complement_cover(in_match_field_element._low,
+                                           in_match_field_element._high)
 
 
     def complement_cover(self, low, high):
@@ -176,7 +176,7 @@ class MatchField(object):
         return active_tags
 
 
-class MatchField2(object):
+class MatchField(object):
 
     def __init__(self, field_name):
 
@@ -367,6 +367,22 @@ class MatchField2(object):
             i += 1
 
         return active_tags
+
+    # Returns a set of tags that intersect between the in_match_field and self
+    def intersect(self, in_match_field_element):
+
+        intersecting_set = set()
+
+        intersecting_set = self.cover(in_match_field_element._low,
+                                        in_match_field_element._high)
+
+        return intersecting_set
+
+    def complement(self, in_match_field_element):
+
+
+        complement = self.complement_cover(in_match_field_element._low,
+                                           in_match_field_element._high)
 
 
 

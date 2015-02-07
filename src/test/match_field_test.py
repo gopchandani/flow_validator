@@ -1,14 +1,14 @@
 __author__ = 'Rakesh Kumar'
 
 import unittest
-from model.match_field import MatchField2
+from model.match_field import MatchField
 from model.match_field import MatchFieldElement
 
 class MatchFeildTest(unittest.TestCase):
 
     def init_match(self):
         # Initialize with a single element
-        self.m = MatchField2("dummy")
+        self.m = MatchField("dummy")
         self.m["tag1"] = MatchFieldElement(10, 15, "tag1")
         self.simple_cover_result = set(["tag1"])
 

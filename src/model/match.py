@@ -70,15 +70,16 @@ class MatchElement(DictMixin):
 
                 if in_match.get_field(field):
 
-                    match_intersection[field].add_element(in_match.get_field(field),
+                    match_intersection[field]["intersection"] = MatchFieldElement(in_match.get_field(field),
                                                           in_match.get_field(field),
                                                           "intersection")
                 else:
-                    match_intersection[field].add_element(self[field].low, self[field].high, "intersection")
+                    match_intersection[field]["intersection"] = MatchFieldElement(self[field]._low,
+                                                                                  self[field]._high,
+                                                                                  "intersection")
 
 
         return match_intersection
-
 
     def add_element_from_match_json(self, match_json, flow):
 
@@ -153,7 +154,6 @@ class MatchElement(DictMixin):
                     self["has_vlan_tag"] = MatchFieldElement(0, sys.maxsize, flow)
 
                 continue
-                
 
     def generate_match_json(self, match):
 
@@ -228,7 +228,7 @@ class Match(DictMixin):
 
         for field_name in field_names:
             self[field_name] = MatchField(field_name)
-            self[field_name].add_element(0, sys.maxsize, tag)
+            self[field_name][tag] = MatchFieldElement(0, sys.maxsize, tag)
 
     def __delitem__(self, key):
         del self.match_fields[key]
@@ -244,11 +244,10 @@ class Match(DictMixin):
 
     def set_field(self, key, value):
         self[key] = MatchField(key)
-        self[key].add_element(value, value, self.tag)
+        self[key][self.tag] = MatchFieldElement(value, value, self.tag)
 
     def get_field(self, key):
         field = self.match_fields[key]
-        field.buildQueryMap()
 
         # If the field is not a wildcard, return a value, otherwise none
         if field.pos_list and field.pos_list[len(field.pos_list) - 1] != sys.maxsize:
