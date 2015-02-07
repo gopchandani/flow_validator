@@ -7,49 +7,49 @@ from netaddr import *
 class MatchFieldElement(object):
 
     def __init__(self, low, high, tag):
-        self.low = low
-        self.high = high
-        self.tag = tag
-        self.size = high - low
+        self._low = low
+        self._high = high
+        self._tag = tag
+        self._size = high - low
 
 class MatchField(object):
 
     def __init__(self, field_name):
 
         self.field_name = field_name
-        self.lowDict = {}
+        self._lowDict = {}
         self.ordered = False
         self.ordered = False
 
     def add_element(self, low, high, tag):
 
-        if not low in self.lowDict:
-            self.lowDict[low] = {} 
+        if not low in self._lowDict:
+            self._lowDict[low] = {} 
         
         size = high - low
-        if not size in self.lowDict[low]:
+        if not size in self._lowDict[low]:
             e = MatchFieldElement(low, high, tag)
-            self.lowDict[low][size] = e
+            self._lowDict[low][size] = e
 
 
     def order_elements(self):
 
         self.ordered = True
-        for low in self.lowDict:
+        for low in self._lowDict:
 
-            # before: self.lowDict[low] would be a dictionary keyed by sizes containing MatchFieldElement objects
+            # before: self._lowDict[low] would be a dictionary keyed by sizes containing MatchFieldElement objects
             # after: it will be a list of MatchFieldElement objects ordered by their size
 
-            size_list = sorted(self.lowDict[low].keys())
+            size_list = sorted(self._lowDict[low].keys())
             elements = []
             for i in xrange(0, len(size_list)):
-                elements.append(self.lowDict[low][size_list[i]])
+                elements.append(self._lowDict[low][size_list[i]])
 
-            self.lowDict[low] = elements
+            self._lowDict[low] = elements
 
     # build data structure suitable for determining intersection of elements
     # This essentially takes form of a dictionary self.pos_dict, keyed by places of 'interest' (pos),
-    # i.e. where elements begin and end, all of these keys are also maintained in a list self.pos_list
+    # i.e._ where elements begin and end, all of these keys are also maintained in a list self.pos_list
     # The dictionary self.pos_dict contains as values a list of three sets;
 
     # set of all tags of elements that 'occupy'/run through at that place of interest
@@ -64,14 +64,14 @@ class MatchField(object):
         self.pos_dict = {}
         self.pos_list = []
 
-        for low in self.lowDict:
+        for low in self._lowDict:
             if not low in self.pos_dict:
 
                 # record set of ranges that include low, that start at low, and that end at low
                 self.pos_dict[low] = [set(), set(), set()]
 
-            # Pick up all elements associated with this low (all various sizes, i.e.)
-            elements = self.lowDict[low]
+            # Pick up all elements associated with this low (all various sizes, i.e._)
+            elements = self._lowDict[low]
             for j in xrange(0, len(elements)):
 
                 # mark that range begins at low
@@ -135,7 +135,7 @@ class MatchField(object):
             return set()
 
         # If i falls to the left of all of the places of interest and...
-        # The low and high are such that that will include the first pos_list, then, collect the first one...
+        # The low and high are such that that will include the first pos_list, then, collect the first one._..
         # This also means that low here is strictly less than self.pos_list[0]
 
         if i == 0 and low < self.pos_list[0] and self.pos_list[0] <= high:
@@ -188,47 +188,49 @@ class MatchField2(object):
     def remove_element_from_pos_dict(self, e):
 
         # If there is one element left and this is that one last element...
-        if len(self.element_dict) == 1 and e.tag in self.element_dict:
-            del self.pos_dict[e.low]
-            del self.pos_dict[e.high]
+        if len(self.element_dict) == 1 and e._tag in self.element_dict:
+            del self.pos_dict[e._low]
+            del self.pos_dict[e._high]
+            self.pos_list.remove(e._low)
+            self.pos_list.remove(e._high)
             return
 
         # Check what previous ranges, this new range intersects with and update
-        for prev_tag in self.cover(e.low, e.high):
+        for prev_tag in self.cover(e._low, e._high):
 
             prev = self[prev_tag]
 
             # If I arrived on to myself, don't do anything...
-            if prev.tag == e.tag:
+            if prev._tag == e._tag:
                 continue
 
-            if e.low <= prev.low <= e.high and e.tag in self.pos_dict[e.low][0]:
-                self.pos_dict[prev.low][0].remove(e.tag)
+            if e._low <= prev._low <= e._high and e._tag in self.pos_dict[e._low][0]:
+                self.pos_dict[prev._low][0].remove(e._tag)
 
-            if e.low <= prev.high <= e.high and e.tag in self.pos_dict[e.high][0]:
-                self.pos_dict[prev.high][0].remove(e.tag)
+            if e._low <= prev._high <= e._high and e._tag in self.pos_dict[e._high][0]:
+                self.pos_dict[prev._high][0].remove(e._tag)
 
         # Start with the low index
-        if e.tag in self.pos_dict[e.low][0]:
-            self.pos_dict[e.low][0].remove(e.tag)
+        if e._tag in self.pos_dict[e._low][0]:
+            self.pos_dict[e._low][0].remove(e._tag)
 
-        self.pos_dict[e.low][1].remove(e.tag)
+        self.pos_dict[e._low][1].remove(e._tag)
 
         # Then the high index
-        if e.tag in self.pos_dict[e.high][0]:
-            self.pos_dict[e.high][0].remove(e.tag)
+        if e._tag in self.pos_dict[e._high][0]:
+            self.pos_dict[e._high][0].remove(e._tag)
 
-        self.pos_dict[e.high][2].remove(e.tag)
+        self.pos_dict[e._high][2].remove(e._tag)
 
         # Check if nothing starts/stops at endpoints any more
         # if so, get rid of them from pos_dict and pos_list
-        if not len(self.pos_dict[e.low][1]) and not len(self.pos_dict[e.low][2]):
-            del self.pos_dict[e.low]
-            self.pos_list.remove(e.low)
+        if not len(self.pos_dict[e._low][1]) and not len(self.pos_dict[e._low][2]):
+            del self.pos_dict[e._low]
+            self.pos_list.remove(e._low)
 
-        if not len(self.pos_dict[e.high][1]) and not len(self.pos_dict[e.high][2]):
-            del self.pos_dict[e.high]
-            self.pos_list.remove(e.high)
+        if not len(self.pos_dict[e._high][1]) and not len(self.pos_dict[e._high][2]):
+            del self.pos_dict[e._high]
+            self.pos_list.remove(e._high)
 
     def add_element_to_pos_dict(self, e):
 
@@ -238,33 +240,33 @@ class MatchField2(object):
                 self.pos_dict[pos] = [set(), set(), set()]
                 bisect.insort(self.pos_list, pos)
 
-        init_pos(e.low)
-        self.pos_dict[e.low][0].add(e.tag)
-        self.pos_dict[e.low][1].add(e.tag)
+        init_pos(e._low)
+        self.pos_dict[e._low][0].add(e._tag)
+        self.pos_dict[e._low][1].add(e._tag)
 
-        init_pos(e.high)
-        self.pos_dict[e.high][0].add(e.tag)
-        self.pos_dict[e.high][2].add(e.tag)
+        init_pos(e._high)
+        self.pos_dict[e._high][0].add(e._tag)
+        self.pos_dict[e._high][2].add(e._tag)
 
         # Check what previous ranges, this new range intersects with and update
-        for prev_tag in self.cover(e.low, e.high):
+        for prev_tag in self.cover(e._low, e._high):
             prev = self[prev_tag]
 
             # If I arrived on to myself
-            if prev.tag == e.tag:
+            if prev._tag == e._tag:
                 continue
 
-            if prev.low <= e.low <= prev.high:
-                self.pos_dict[e.low][0].add(prev.tag)
+            if prev._low <= e._low <= prev._high:
+                self.pos_dict[e._low][0].add(prev._tag)
 
-            if prev.low <= e.high <= prev.high:
-                self.pos_dict[e.high][0].add(prev.tag)
+            if prev._low <= e._high <= prev._high:
+                self.pos_dict[e._high][0].add(prev._tag)
 
-            if e.low <= prev.low <= e.high:
-                self.pos_dict[prev.low][0].add(e.tag)
+            if e._low <= prev._low <= e._high:
+                self.pos_dict[prev._low][0].add(e._tag)
 
-            if e.low <= prev.high <= e.high:
-                self.pos_dict[prev.high][0].add(e.tag)
+            if e._low <= prev._high <= e._high:
+                self.pos_dict[prev._high][0].add(e._tag)
 
     def __delitem__(self, key):
 
@@ -282,8 +284,14 @@ class MatchField2(object):
 
     def __setitem__(self, key, e):
 
+        if e._tag != key:
+            raise Exception("Invalid element being added tag != key")
+
         if key in self.element_dict:
-            del self.element_dict[key]
+            del self[key]
+            self.element_dict[key] = e
+            self.add_element_to_pos_dict(e)
+
         else:
             self.element_dict[key] = e
             self.add_element_to_pos_dict(e)
