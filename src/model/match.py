@@ -299,9 +299,6 @@ class Match(DictMixin):
                     self.set_field("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
                     self.set_field("has_vlan_tag", int(True))
 
-    
-    
-
 def main():
     m1 = Match()
     print m1
