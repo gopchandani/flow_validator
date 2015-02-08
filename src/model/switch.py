@@ -121,7 +121,10 @@ class Switch():
         for flow_table in self.flow_tables.values():
 
             print "At table:", flow_table.table_id
-            print flow_table.get_all_rule_matches(in_port_match)
+            r =  flow_table.get_all_rule_matches(in_port_match)
+            for t in r:
+                print str(t)
+                print str(r[t])
 
         out_port_match = {}
         return out_port_match

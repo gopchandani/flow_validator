@@ -25,11 +25,11 @@ class MatchField(object):
         self.element_dict = {}
 
     def __str__(self):
-        ret_str = "MatchField: "
+        ret_str = "MatchField: " + self.field_name + " "
         for e in self.element_dict:
             ret_str = ret_str + str(self.element_dict[e])
 
-        return str(ret_str)
+        return ret_str
 
     def remove_element_from_pos_dict(self, e):
 

@@ -54,7 +54,6 @@ class MatchElement(DictMixin):
         for field in self.match_fields:
             complement = in_match[field].complement(self[field])
 
-
         return match_complement
 
     def intersect(self, in_match):
@@ -220,6 +219,13 @@ class MatchElement(DictMixin):
 
 
 class Match(DictMixin):
+
+    def __str__(self):
+        ret_str = "Match: "
+        for f in self.match_fields:
+            ret_str += "\n" + str(self.match_fields[f])
+
+        return ret_str
 
     def __init__(self, tag=None):
 
