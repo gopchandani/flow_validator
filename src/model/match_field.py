@@ -158,10 +158,6 @@ class MatchField(object):
 
     def complement_cover(self, low, high):
         complement = set()
-
-        #TODO: cover(0, sys.maxsize) should really be something that simple and a constant
-        # not required to be computed
-
         complement = set(self.element_dict.keys()) - self.cover(low, high)
         return complement
 
@@ -239,9 +235,10 @@ class MatchField(object):
 
     def complement(self, in_match_field_element):
 
-
         complement = self.complement_cover(in_match_field_element._low,
                                            in_match_field_element._high)
+
+        return complement
 
 def main():
 

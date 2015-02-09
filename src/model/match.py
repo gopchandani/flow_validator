@@ -47,15 +47,6 @@ class MatchElement(DictMixin):
     def keys(self):
         return self.match_fields.keys()
 
-    def complement(self, in_match):
-
-        match_complement = Match()
-
-        for field in self.match_fields:
-            complement = in_match[field].complement(self[field])
-
-        return match_complement
-
     def intersect(self, in_match):
 
         match_intersection = Match()
@@ -84,13 +75,6 @@ class MatchElement(DictMixin):
 
 
         return match_intersection
-
-    def interesct_match(self, in_match):
-        pass
-
-    def complement_match(self, in_match):
-        pass
-
 
     def add_element_from_match_json(self, match_json, flow):
 
@@ -229,7 +213,6 @@ class MatchElement(DictMixin):
 
         return match
 
-
 class Match(DictMixin):
 
     def __str__(self):
@@ -245,9 +228,13 @@ class Match(DictMixin):
         self.tag = tag
 
         for field_name in field_names:
-            #Making everything wildcard to begin with
             self[field_name] = MatchField(field_name)
-            self[field_name][tag] = MatchFieldElement(0, sys.maxsize, tag)
+
+            if match_element_list:
+                for match_element in match_element_list:
+                    self[field_name][match_element[field_name]._tag] = match_element[field_name]
+            else:
+                self[field_name][tag] = MatchFieldElement(0, sys.maxsize, tag)
 
     def __delitem__(self, key):
         del self.match_fields[key]

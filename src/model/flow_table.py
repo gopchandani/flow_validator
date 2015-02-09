@@ -22,9 +22,6 @@ class Flow():
         self.priority = int(flow["priority"])
         self.match_element = MatchElement(flow["match"], self)
 
-        self.flow_match = Match(match_element_list=[self.match_element])
-        #self.complement_match = Match(complement_element=self.match_element)
-
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
@@ -98,8 +95,7 @@ class FlowTable():
         output = {}
 
         for flow in self.flows:
-            intersection = flow.match.intersect(remaining_match)
-            remaining_match = flow.match.complement(remaining_match)
+            intersection = flow.match_element.intersect(remaining_match)
             output[flow] = intersection
 
         return output
