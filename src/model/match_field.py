@@ -7,7 +7,12 @@ from netaddr import *
 class MatchFieldElement(object):
 
     def __str__(self):
-        return "|tag:" + str(self._tag) + "|low:" + str(self._low) + "|high:" + str(self._high) + "|"
+        if self._low == 0 and self._high == sys.maxsize:
+            #return "|tag:" + str(self._tag) + "|all|"
+            return ""
+        else:
+            return "|tag:" + str(self._tag) + "|low:" + str(self._low) + "|high:" + str(self._high) + "|"
+
 
     def __init__(self, low, high, tag):
         self._low = low
@@ -26,9 +31,16 @@ class MatchField(object):
 
     def __str__(self):
 
-        ret_str = "MatchField: " + self.field_name + " "
+        ret_str = self.field_name + ": "
+        field_elem = ""
+
         for e in self.element_dict:
-            ret_str = ret_str + str(self.element_dict[e])
+            field_elem = field_elem + str(self.element_dict[e])
+
+        if field_elem != "":
+            ret_str = ret_str + field_elem
+        else:
+            ret_str = ""
 
         return ret_str
 

@@ -224,7 +224,7 @@ class Match(DictMixin):
     def __str__(self):
         ret_str = "Match: "
         for f in self.match_fields:
-            ret_str += "\n" + str(self.match_fields[f])
+            ret_str += str(self.match_fields[f])
 
         return ret_str
 
