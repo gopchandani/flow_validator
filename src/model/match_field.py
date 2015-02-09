@@ -25,6 +25,7 @@ class MatchField(object):
         self.element_dict = {}
 
     def __str__(self):
+
         ret_str = "MatchField: " + self.field_name + " "
         for e in self.element_dict:
             ret_str = ret_str + str(self.element_dict[e])
@@ -149,7 +150,7 @@ class MatchField(object):
         #TODO: cover(0, sys.maxsize) should really be something that simple and a constant
         # not required to be computed
 
-        complement = self.cover(0, sys.maxsize) - self.cover(low, high)
+        complement = set(self.element_dict.keys()) - self.cover(low, high)
         return complement
 
     # return a set of element tags that cover the range from low to high
@@ -240,9 +241,6 @@ def main():
 
     print m.cover(2, 10)
     print m.complement_cover(1, 2)
-
-    print m["tag1"]
-    print m
 
 
 if __name__ == "__main__":

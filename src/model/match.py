@@ -68,11 +68,12 @@ class MatchElement(DictMixin):
                 match_intersection[field] = MatchField(field)
 
                 if in_match.get_field(field):
-
+                    # If a valid field returns, use th value
                     match_intersection[field]["intersection"] = MatchFieldElement(in_match.get_field(field),
                                                           in_match.get_field(field),
                                                           "intersection")
                 else:
+                    # Otherwise it is a wildcard
                     match_intersection[field]["intersection"] = MatchFieldElement(self[field]._low,
                                                                                   self[field]._high,
                                                                                   "intersection")
