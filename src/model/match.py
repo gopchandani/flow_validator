@@ -62,13 +62,17 @@ class MatchElement(DictMixin):
 
         for field in self.match_fields:
             intersection = in_match[field].intersect(self[field])
+
+            # If there is no intersection for this field
             if not intersection:
                 return None
+
+            # What type of intersection is it?
             else:
                 match_intersection[field] = MatchField(field)
 
                 if in_match.get_field(field):
-                    # If a valid field returns, use th value
+                    # If a valid field returns, use the value
                     match_intersection[field]["intersection"] = MatchFieldElement(in_match.get_field(field),
                                                           in_match.get_field(field),
                                                           "intersection")
@@ -80,6 +84,13 @@ class MatchElement(DictMixin):
 
 
         return match_intersection
+
+    def interesct_match(self, in_match):
+        pass
+
+    def complement_match(self, in_match):
+        pass
+
 
     def add_element_from_match_json(self, match_json, flow):
 
@@ -228,12 +239,13 @@ class Match(DictMixin):
 
         return ret_str
 
-    def __init__(self, tag=None):
+    def __init__(self, tag=None, match_element_list=[]):
 
         self.match_fields = {}
         self.tag = tag
 
         for field_name in field_names:
+            #Making everything wildcard to begin with
             self[field_name] = MatchField(field_name)
             self[field_name][tag] = MatchFieldElement(0, sys.maxsize, tag)
 
