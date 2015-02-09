@@ -3,6 +3,7 @@ __author__ = 'David M. Nicol'
 import sys
 import bisect
 from netaddr import *
+from copy import deepcopy
 
 class MatchFieldElement(object):
 
@@ -48,10 +49,14 @@ class MatchField(object):
 
         # If there is one element left and this is that one last element...
         if len(self.element_dict) == 1 and e._tag in self.element_dict:
-            del self.pos_dict[e._low]
-            del self.pos_dict[e._high]
-            self.pos_list.remove(e._low)
-            self.pos_list.remove(e._high)
+            if e._low in self.pos_dict:
+                del self.pos_dict[e._low]
+                self.pos_list.remove(e._low)
+
+            if e._high in self.pos_dict:
+                del self.pos_dict[e._high]
+                self.pos_list.remove(e._high)
+
             return
 
         # Check what previous ranges, this new range intersects with and update
@@ -235,10 +240,12 @@ class MatchField(object):
 
     def complement(self, in_match_field_element):
 
-        complement = self.complement_cover(in_match_field_element._low,
-                                           in_match_field_element._high)
+        complement_field = deepcopy(self)
 
-        return complement
+        for tag in self.cover(in_match_field_element._low, in_match_field_element._high):
+            del complement_field[tag]
+
+        return complement_field
 
 def main():
 

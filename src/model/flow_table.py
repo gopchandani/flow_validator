@@ -90,12 +90,15 @@ class FlowTable():
     # each intersects with
     def get_all_rule_matches(self, in_match):
 
-        intersection = None
         remaining_match = in_match
         output = {}
 
         for flow in self.flows:
             intersection = flow.match_element.intersect(remaining_match)
+            remaining_match = flow.match_element.complement(remaining_match)
+
+            print intersection, remaining_match
+
             output[flow] = intersection
 
         return output

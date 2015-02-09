@@ -51,8 +51,8 @@ class MatchElement(DictMixin):
 
         match_intersection = Match()
 
-        for field in self.match_fields:
-            intersection = in_match[field].intersect(self[field])
+        for field_name in self.match_fields:
+            intersection = in_match[field_name].intersect(self[field_name])
 
             # If there is no intersection for this field
             if not intersection:
@@ -60,21 +60,29 @@ class MatchElement(DictMixin):
 
             # What type of intersection is it?
             else:
-                match_intersection[field] = MatchField(field)
+                match_intersection[field_name] = MatchField(field_name)
 
-                if in_match.get_field(field):
+                if in_match.get_field(field_name):
                     # If a valid field returns, use the value
-                    match_intersection[field]["intersection"] = MatchFieldElement(in_match.get_field(field),
-                                                          in_match.get_field(field),
+                    match_intersection[field_name]["intersection"] = MatchFieldElement(in_match.get_field(field_name),
+                                                          in_match.get_field(field_name),
                                                           "intersection")
                 else:
                     # Otherwise it is a wildcard
-                    match_intersection[field]["intersection"] = MatchFieldElement(self[field]._low,
-                                                                                  self[field]._high,
+                    match_intersection[field_name]["intersection"] = MatchFieldElement(self[field_name]._low,
+                                                                                  self[field_name]._high,
                                                                                   "intersection")
 
 
         return match_intersection
+
+    def complement(self, in_match):
+        match_complement = Match()
+
+        for field_name in self.match_fields:
+            match_complement[field_name] = in_match[field_name].complement(self[field_name])
+
+        return match_complement
 
     def add_element_from_match_json(self, match_json, flow):
 
