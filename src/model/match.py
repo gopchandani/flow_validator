@@ -52,29 +52,29 @@ class MatchElement(DictMixin):
         match_intersection = Match()
 
         for field_name in self.match_fields:
-            intersection = in_match[field_name].intersect(self[field_name])
-
-            # If there is no intersection for this field
-            if not intersection:
-                return None
-
-            # What type of intersection is it?
-            else:
-                match_intersection[field_name] = MatchField(field_name)
-
-                if in_match.get_field(field_name):
-                    # If a valid field returns, use the value
-                    match_intersection[field_name]["intersection"] = MatchFieldElement(in_match.get_field(field_name),
-                                                          in_match.get_field(field_name),
-                                                          "intersection")
-                else:
-                    # Otherwise it is a wildcard
-                    match_intersection[field_name]["intersection"] = MatchFieldElement(self[field_name]._low,
-                                                                                  self[field_name]._high,
-                                                                                  "intersection")
-
+            match_intersection[field_name] = in_match[field_name].intersect(self[field_name])
 
         return match_intersection
+
+            # # If there is no intersection for this field
+            # if not intersection:
+            #     return None
+            #
+            # # What type of intersection is it?
+            # else:
+            #     match_intersection[field_name] = MatchField(field_name)
+            #
+            #     if in_match.get_field(field_name):
+            #         # If a valid field returns, use the value
+            #         match_intersection[field_name]["intersection"] = MatchFieldElement(in_match.get_field(field_name),
+            #                                               in_match.get_field(field_name),
+            #                                               "intersection")
+            #     else:
+            #         # Otherwise it is a wildcard
+            #         match_intersection[field_name]["intersection"] = MatchFieldElement(self[field_name]._low,
+            #                                                                       self[field_name]._high,
+            #                                                                       "intersection")
+            #
 
     def complement(self, in_match):
         match_complement = Match()
@@ -255,6 +255,13 @@ class Match(DictMixin):
 
     def __setitem__(self, key, value):
         self.match_fields[key] = value
+
+    def has_empty_field(self):
+        for match_field in self.keys():
+            if not self[match_field].keys():
+                return True
+
+        return False
 
     def set_field(self, key, value):
         self[key] = MatchField(key)

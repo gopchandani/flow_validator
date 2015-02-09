@@ -228,20 +228,24 @@ class MatchField(object):
 
         return active_tags
 
-    # Returns a set of tags that intersect between the in_match_field and self
+    # Start with nothing and add things that have intersection
     def intersect(self, in_match_field_element):
 
-        intersecting_set = set()
+        intersect_field = MatchField(self.field_name)
+        for tag in self.cover(in_match_field_element._low, in_match_field_element._high):
 
-        intersecting_set = self.cover(in_match_field_element._low,
-                                        in_match_field_element._high)
+            #TODO: Need to figure out a way to determine if a particular tag was _fully_ in the intersection
+            #TODO: Think 1---5 has 2-3 but not 4--6
+            intersect_field[in_match_field_element._tag] = in_match_field_element
 
-        return intersecting_set
+        return intersect_field
 
+    # Start with everything and remove things that have intersection
     def complement(self, in_match_field_element):
 
         complement_field = deepcopy(self)
 
+        # Delete things that have intersection
         for tag in self.cover(in_match_field_element._low, in_match_field_element._high):
             del complement_field[tag]
 
