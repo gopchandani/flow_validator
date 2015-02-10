@@ -9,10 +9,10 @@ class MatchFieldElement(object):
 
     def __str__(self):
         if self._low == 0 and self._high == sys.maxsize:
-            #return "|tag:" + str(self._tag) + "|all|"
+            #return "|all|"
             return ""
         else:
-            return "|tag:" + str(self._tag) + "|low:" + str(self._low) + "|high:" + str(self._high) + "|"
+            return "|low:" + str(self._low) + "|high:" + str(self._high) + "|"
 
 
     def __init__(self, low, high, tag):
@@ -32,16 +32,18 @@ class MatchField(object):
 
     def __str__(self):
 
-        ret_str = self.field_name + ": "
-        field_elem = ""
+        if self.element_dict:
+            ret_str = self.field_name + ": "
+            field_elem = ""
+            for e in self.element_dict:
+                field_elem = field_elem + str(self.element_dict[e])
 
-        for e in self.element_dict:
-            field_elem = field_elem + str(self.element_dict[e])
-
-        if field_elem != "":
-            ret_str = ret_str + field_elem
+            if field_elem != "":
+                ret_str = ret_str + field_elem
+            else:
+                ret_str = ""
         else:
-            ret_str = ""
+            ret_str = self.field_name + ": Empty "
 
         return ret_str
 
