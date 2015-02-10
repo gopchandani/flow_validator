@@ -3,6 +3,18 @@ import sys
 import subprocess
 __author__ = 'Shane Rogers'
 
+#  controllerMan will spin up the number of containers you pass as a parameter.
+#  command line usage: python controller_man X   where X is an integer.
+#  cm = ControllerMan(X) as an import function
+#  you can then retrieve one of the containers with 
+#  cm.get_next(), which returns the port the container will be listening on.
+#  You can kill all containers by running cm.kill_all()
+#  WARNING
+#  This function does not currently sanitize user input in any way, so if you
+#  give it a funny value for the number of containers or try to pull more containers
+#  than you spin up, it will break.  Send questions or comments to shane@shanerogers.info
+
+
 num_cons = 0
 ports = []
 data = []
@@ -10,11 +22,6 @@ a_container_is_running = False
 this_port = 0
 
 class ControllerMan():
-
-#    def get_container_ids(self):
-#   		data.append(sys.stdin.readline())
-#   		subprocess.call("sudo docker ps -q", shell=True)
-#   		sys.stdin.close() ##need something here to tell readlines() to stop. 
 
     def __init__(self, num_cons):
     	for i in range (num_cons):
@@ -34,9 +41,6 @@ class ControllerMan():
     				os.system(stop_command)
     			else:
     				break
-
-
-#        self.get_container_ids()
         
         
     def start_container(self):
@@ -59,15 +63,6 @@ class ControllerMan():
         else:
         	this_port = self.start_container()
         	return this_port	
-        #this will unpause the next container and return a port number
-        #it will also rmove the container ID from the array
-        #will eventually start a new container and add it to the back of array
-
-
-
-
-
-
 
     def kill_all(self):
     	os.system("docker stop $(docker ps -a -q)")
