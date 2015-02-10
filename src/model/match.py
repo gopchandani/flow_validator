@@ -65,6 +65,22 @@ class MatchElement(DictMixin):
 
         return match_complement
 
+    def next_flow_match(self, in_match):
+        next_flow_match = Match()
+
+        for field_name in self.match_fields:
+
+            # If the MatchFieldElement is a wildcard, set the complement to wildcard
+            # TODO: Feels like an ugly hack
+            if self[field_name]._low == 0 and self[field_name]._high == sys.maxsize:
+                next_flow_match[field_name] = MatchField(field_name)
+                next_flow_match[field_name][self[field_name]._tag] = self[field_name]
+            else:
+                next_flow_match[field_name] = in_match[field_name].complement(self[field_name])
+
+        return next_flow_match
+
+
     def add_element_from_match_json(self, match_json, flow):
 
         for field_name in field_names:
