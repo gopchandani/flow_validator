@@ -61,9 +61,15 @@ class MatchElement(DictMixin):
 
         for field_name in self.match_elements:
             match_complement[field_name] = MatchField(field_name)
+            field_element = self[field_name]
 
-            for ce in self[field_name].complement_elements():
-                match_complement[field_name][ce._tag] = ce
+            #If the field is a wildcard, its complement is a wildcard:
+            if field_element.is_wildcard():
+                match_complement[field_name][field_element._tag] = field_element
+            else:
+                # If the field is not a wildcard, grab the field's equivalent complement elements
+                for ce in self[field_name].complement_elements():
+                    match_complement[field_name][ce._tag] = ce
 
         return match_complement
 
