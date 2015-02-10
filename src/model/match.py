@@ -56,8 +56,8 @@ class MatchElement(DictMixin):
 
         return match_intersection
 
-    def complement_match(self):
-        match_complement = Match()
+    def complement_match(self, tag):
+        match_complement = Match(tag)
 
         for field_name in self.match_elements:
             match_complement[field_name] = MatchField(field_name)

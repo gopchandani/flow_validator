@@ -21,7 +21,7 @@ class Flow():
         self.id = flow["id"]
         self.priority = int(flow["priority"])
         self.match_element = MatchElement(flow["match"], self)
-        self.complement_match = self.match_element.complement_match()
+        self.complement_match = self.match_element.complement_match(self)
 
         self.written_actions = []
         self.applied_actions = []
@@ -107,7 +107,7 @@ class FlowTable():
                 # See what is left after this rule is through
                 remaining_match = flow.complement_match.intersect(remaining_match)
 
-                print "Remaining After:", remaining_match
+                print "Remaining After: ", remaining_match
                 output[flow] = intersection
 
             else:
