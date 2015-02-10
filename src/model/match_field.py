@@ -21,8 +21,20 @@ class MatchFieldElement(object):
         self._tag = tag
         self._size = high - low
 
-    def is_wildcard_element(self):
+    def is_wildcard(self):
         return self._low == 0 and self._high == sys.maxsize
+
+    def complement_elements(self):
+        complement_elements = []
+
+        if 0 < self._low:
+            complement_elements.append(MatchFieldElement(0, self._low - 1, "ce1"))
+
+        if self._high < sys.maxsize:
+            complement_elements.append(MatchFieldElement(self._high + 1, sys.maxsize, "ce2"))
+
+        return complement_elements
+
 
 class MatchField(object):
 
@@ -244,7 +256,7 @@ class MatchField(object):
         cover_result = self.cover(in_match_field_element._low, in_match_field_element._high)
 
         # If the in_match_field_element is a wildcard
-        if in_match_field_element.is_wildcard_element():
+        if in_match_field_element.is_wildcard():
             for tag in cover_result:
                 intersect_field[tag] = self[tag]
 
@@ -266,6 +278,7 @@ class MatchField(object):
 
         return complement_field
 
+
 def main():
 
     m = MatchField("dummy")
@@ -273,10 +286,20 @@ def main():
     m["tag1"] = MatchFieldElement(1, 3, "tag1")
     m["tag2"] = MatchFieldElement(1, 4, "tag2")
     m["tag3"] = MatchFieldElement(7, 9, "tag3")
+    m["tag4"] = MatchFieldElement(0, 5, "tag4")
+    m["tag5"] = MatchFieldElement(5, sys.maxsize, "tag5")
+    m["tag6"] = MatchFieldElement(0, sys.maxsize, "tag6")
 
     print m.cover(2, 10)
     print m.complement_cover(1, 2)
 
+    a = m["tag1"].complement_elements()
+    a = m["tag4"].complement_elements()
+    a = m["tag5"].complement_elements()
+    a = m["tag6"].complement_elements()
+
+
+    print a
 
 if __name__ == "__main__":
     main()

@@ -21,6 +21,7 @@ class Flow():
         self.id = flow["id"]
         self.priority = int(flow["priority"])
         self.match_element = MatchElement(flow["match"], self)
+        self.complement_match = self.match_element.complement_match()
 
         self.written_actions = []
         self.applied_actions = []
@@ -102,6 +103,7 @@ class FlowTable():
             # Don't care about matches that have full empty fields
             if not intersection.has_empty_field():
                 print "Intersection:", intersection
+
                 # See what is left after this rule is through
                 remaining_match = flow.match_element.next_flow_match(remaining_match)
                 print "Remaining After:", remaining_match

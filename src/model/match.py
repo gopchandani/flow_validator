@@ -27,52 +27,55 @@ class MatchElement(DictMixin):
 
     def __init__(self, match_json=None, flow=None):
 
-        self.match_fields = {}
+        self.match_elements = {}
 
         if match_json is not None and flow:
             self.add_element_from_match_json(match_json, flow)
 
     def __getitem__(self, item):
-        return self.match_fields[item]
+        return self.match_elements[item]
 
     def __setitem__(self, key, value):
-        self.match_fields[key] = value
+        self.match_elements[key] = value
 
     def set_match_field_element(self, key, value, tag=None):
-        self.match_fields[key] = MatchFieldElement(value, value, tag)
+        self.match_elements[key] = MatchFieldElement(value, value, tag)
 
     def __delitem__(self, key):
-        del self.match_fields[key]
+        del self.match_elements[key]
 
     def keys(self):
-        return self.match_fields.keys()
+        return self.match_elements.keys()
 
     def intersect(self, in_match):
 
         match_intersection = Match()
 
-        for field_name in self.match_fields:
+        for field_name in self.match_elements:
             match_intersection[field_name] = in_match[field_name].intersect(self[field_name])
 
         return match_intersection
 
-
-    def complement(self, in_match):
+    def complement_match(self):
         match_complement = Match()
 
-        for field_name in self.match_fields:
-            match_complement[field_name] = in_match[field_name].complement(self[field_name])
+        for field_name in self.match_elements:
+            match_complement[field_name] = MatchField(field_name)
+
+            for ce in self[field_name].complement_elements():
+                match_complement[field_name][ce._tag] = ce
 
         return match_complement
+
 
     def next_flow_match(self, in_match):
         next_flow_match = Match()
 
-        for field_name in self.match_fields:
+        for field_name in self.match_elements:
 
             # If the MatchFieldElement is a wildcard, set the complement to wildcard
             # TODO: Feels like an ugly hack
-            if self[field_name]._low == 0 and self[field_name]._high == sys.maxsize:
+            if self[field_name].is_wildcard():
                 next_flow_match[field_name] = MatchField(field_name)
                 next_flow_match[field_name][self[field_name]._tag] = self[field_name]
             else:
