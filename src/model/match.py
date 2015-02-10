@@ -230,7 +230,7 @@ class Match(DictMixin):
 
         return ret_str
 
-    def __init__(self, tag=None, match_element_list=[]):
+    def __init__(self, tag=None, match_element_list=[], init_wildcard=False):
 
         self.match_fields = {}
         self.tag = tag
@@ -241,12 +241,13 @@ class Match(DictMixin):
             if match_element_list:
                 for match_element in match_element_list:
                     self[field_name][match_element[field_name]._tag] = match_element[field_name]
-            else:
+
+            elif init_wildcard:
                 self[field_name][tag] = MatchFieldElement(0, sys.maxsize, tag)
 
     def __delitem__(self, key):
         del self.match_fields[key]
-    
+
     def keys(self):
         return self.match_fields.keys()
 
