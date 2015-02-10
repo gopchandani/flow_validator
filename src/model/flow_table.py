@@ -94,19 +94,21 @@ class FlowTable():
         output = {}
 
         for flow in self.flows:
+
+            print "Remaining Before:", remaining_match
+
             intersection = flow.match_element.intersect(remaining_match)
 
-            # Dont care about matches that have full empty fields
-            #if not intersection.has_empty_field():
+            # Don't care about matches that have full empty fields
+            if not intersection.has_empty_field():
+                print "Intersection:", intersection
+                # See what is left after this rule is through
+                remaining_match = flow.match_element.next_flow_match(remaining_match)
+                print "Remaining After:", remaining_match
+                output[flow] = intersection
 
-            print "Intersection:", intersection
-
-            # See what is left after this rule is through
-            remaining_match = flow.match_element.next_flow_match(remaining_match)
-
-
-            print "Remaining:", remaining_match
-
-            output[flow] = intersection
+            else:
+                # Say that this flow does not matter
+                output[flow] = None
 
         return output

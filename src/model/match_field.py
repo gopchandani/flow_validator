@@ -21,6 +21,9 @@ class MatchFieldElement(object):
         self._tag = tag
         self._size = high - low
 
+    def is_wildcard_element(self):
+        return self._low == 0 and self._high == sys.maxsize
+
 class MatchField(object):
 
     def __init__(self, field_name):
@@ -230,15 +233,25 @@ class MatchField(object):
 
         return active_tags
 
+    #TODO: Need to figure out a way to determine if a particular tag was _fully_ in the intersection
+    #TODO: Think 1---5 has 2-3 but not 4--6
+    #TODO: This guy is not paying attention to exact ranges of intersection at all
+
     # Start with nothing and add things that have intersection
     def intersect(self, in_match_field_element):
 
         intersect_field = MatchField(self.field_name)
-        for tag in self.cover(in_match_field_element._low, in_match_field_element._high):
+        cover_result = self.cover(in_match_field_element._low, in_match_field_element._high)
 
-            #TODO: Need to figure out a way to determine if a particular tag was _fully_ in the intersection
-            #TODO: Think 1---5 has 2-3 but not 4--6
-            intersect_field[in_match_field_element._tag] = in_match_field_element
+        # If the in_match_field_element is a wildcard
+        if in_match_field_element.is_wildcard_element():
+            for tag in cover_result:
+                intersect_field[tag] = self[tag]
+
+        # If the in_match_field_element is not a wildcard
+        else:
+            if cover_result:
+                intersect_field[in_match_field_element._tag] = in_match_field_element
 
         return intersect_field
 
