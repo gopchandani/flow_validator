@@ -56,25 +56,6 @@ class MatchElement(DictMixin):
 
         return match_intersection
 
-            # # If there is no intersection for this field
-            # if not intersection:
-            #     return None
-            #
-            # # What type of intersection is it?
-            # else:
-            #     match_intersection[field_name] = MatchField(field_name)
-            #
-            #     if in_match.get_field(field_name):
-            #         # If a valid field returns, use the value
-            #         match_intersection[field_name]["intersection"] = MatchFieldElement(in_match.get_field(field_name),
-            #                                               in_match.get_field(field_name),
-            #                                               "intersection")
-            #     else:
-            #         # Otherwise it is a wildcard
-            #         match_intersection[field_name]["intersection"] = MatchFieldElement(self[field_name]._low,
-            #                                                                       self[field_name]._high,
-            #                                                                       "intersection")
-            #
 
     def complement(self, in_match):
         match_complement = Match()

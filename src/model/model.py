@@ -86,16 +86,17 @@ class Model():
                     switch_ports[nc["flow-node-inventory:port-number"]] = Port(sw, nc)
 
             #  Get all the flow tables
-            switch_flow_tables = {}
+            switch_flow_tables = []
             for flow_table in node["flow-node-inventory:table"]:
                 if "flow" in flow_table:
-                    switch_flow_tables[flow_table["id"]] = FlowTable(sw, flow_table["id"], flow_table["flow"])
+                    switch_flow_tables.append(FlowTable(sw, flow_table["id"], flow_table["flow"]))
 
             #  Get the group table
             switch_group_table = self._prepare_group_table(sw)
 
-            #  Set the values in the object instance
-            sw.flow_tables = switch_flow_tables
+            #  Set the flow tables in the object instance while sorting them
+            sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+
             sw.group_table = switch_group_table
             sw.ports = switch_ports
 
