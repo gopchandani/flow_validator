@@ -177,12 +177,6 @@ class MatchField(object):
             self.element_dict[key] = e
             self.add_element_to_pos_dict(e)
 
-
-    def complement_cover(self, low, high):
-        complement = set()
-        complement = set(self.element_dict.keys()) - self.cover(low, high)
-        return complement
-
     # return a set of element tags that cover the range from low to high
     def cover(self, low, high):
 
@@ -249,34 +243,34 @@ class MatchField(object):
     #TODO: Think 1---5 has 2-3 but not 4--6
     #TODO: This guy is not paying attention to exact ranges of intersection at all
 
+
     # Start with nothing and add things that have intersection
-    def intersect(self, in_match_field_element):
+    def intersect(self, input_object):
 
         intersect_field = MatchField(self.field_name)
-        cover_result = self.cover(in_match_field_element._low, in_match_field_element._high)
+        in_match_field_elements = []
 
-        # If the in_match_field_element is a wildcard
-        if in_match_field_element.is_wildcard():
-            for tag in cover_result:
-                intersect_field[tag] = self[tag]
+        if isinstance(input_object, MatchField):
+            in_match_field_elements = input_object.values()
 
-        # If the in_match_field_element is not a wildcard
-        else:
-            if cover_result:
-                intersect_field[in_match_field_element._tag] = in_match_field_element
+        elif isinstance(input_object, MatchFieldElement):
+            in_match_field_elements = [input_object]
+
+        for e in in_match_field_elements:
+
+            cover_result = self.cover(e._low, e._high)
+
+            # If the e is a wildcard, then add all of elements that this field has to the intersection
+            if e.is_wildcard():
+                for tag in cover_result:
+                    intersect_field[tag] = self[tag]
+
+            # If the e is not a wildcard, add only this one element IFF the cover exists
+            else:
+                if cover_result:
+                    intersect_field[e._tag] = e
 
         return intersect_field
-
-    # Start with everything and remove things that have intersection
-    def complement(self, in_match_field_element):
-
-        complement_field = deepcopy(self)
-
-        # Delete things that have intersection
-        for tag in self.cover(in_match_field_element._low, in_match_field_element._high):
-            del complement_field[tag]
-
-        return complement_field
 
 
 def main():

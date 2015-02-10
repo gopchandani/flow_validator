@@ -105,7 +105,8 @@ class FlowTable():
                 print "Intersection:", intersection
 
                 # See what is left after this rule is through
-                remaining_match = flow.match_element.next_flow_match(remaining_match)
+                remaining_match = flow.complement_match.intersect(remaining_match)
+
                 print "Remaining After:", remaining_match
                 output[flow] = intersection
 

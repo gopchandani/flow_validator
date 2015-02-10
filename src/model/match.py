@@ -68,20 +68,20 @@ class MatchElement(DictMixin):
         return match_complement
 
 
-    def next_flow_match(self, in_match):
-        next_flow_match = Match()
+    def subtract(self, in_match):
+        sub_result = Match()
 
         for field_name in self.match_elements:
 
-            # If the MatchFieldElement is a wildcard, set the complement to wildcard
+            # If the MatchFieldElement is a wildcard, set the sub_result to wildcard
             # TODO: Feels like an ugly hack
             if self[field_name].is_wildcard():
-                next_flow_match[field_name] = MatchField(field_name)
-                next_flow_match[field_name][self[field_name]._tag] = self[field_name]
+                sub_result[field_name] = MatchField(field_name)
+                sub_result[field_name][self[field_name]._tag] = self[field_name]
             else:
-                next_flow_match[field_name] = in_match[field_name].complement(self[field_name])
+                sub_result[field_name] = in_match[field_name].sub_result(self[field_name])
 
-        return next_flow_match
+        return sub_result
 
 
     def add_element_from_match_json(self, match_json, flow):
@@ -320,6 +320,15 @@ class Match(DictMixin):
                 if "vlan-id" in match_json[match_field]:
                     self.set_field("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
                     self.set_field("has_vlan_tag", int(True))
+
+    def intersect(self, in_match):
+
+        match_intersection = Match()
+
+        for field_name in self.match_fields:
+            match_intersection[field_name] = in_match[field_name].intersect(self[field_name])
+
+        return match_intersection
 
 def main():
     m1 = Match()
