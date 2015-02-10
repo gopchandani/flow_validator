@@ -39,31 +39,34 @@ class ControllerMan():
 #        self.get_container_ids()
         
         
-
-
-    def get_next(self):
-        if a_container_is_running:
-        	kill_container()
-        	this_port = start_container()
-        	return this_port
-        else:
-        	this_port = start_container()
-        	return this_port	
-        #this will unpause the next container and return a port number
-        #it will also rmove the container ID from the array
-        #will eventually start a new container and add it to the back of array
-
     def start_container(self):
     	a_container_is_running = True
-    	os.system("docker start %s"%str(data(0)))
-    	return ports(0)
-
+    	next_container = str(data[0])
+    	os.system("docker start %s"%next_container)
+    	return ports[0]
 
     def kill_container(self):
     	this_id = data.pop(0)
     	ports.pop(0)
     	os.system("docker stop %s"%str(this_id))
-    	os.system("docker remove %s"%str(this_id))
+    	os.system("docker remove %s"%str(this_id))    	
+
+    def get_next(self):
+        if a_container_is_running:
+        	kill_container()
+        	this_port = self.start_container()
+        	return this_port
+        else:
+        	this_port = self.start_container()
+        	return this_port	
+        #this will unpause the next container and return a port number
+        #it will also rmove the container ID from the array
+        #will eventually start a new container and add it to the back of array
+
+
+
+
+
 
 
     def kill_all(self):
