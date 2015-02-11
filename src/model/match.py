@@ -5,7 +5,7 @@ import sys
 
 from netaddr import IPNetwork
 from UserDict import DictMixin
-from match_field import MatchField, MatchFieldElement
+from intervaltree import Interval, IntervalTree
 
 field_names = ["in_port",
               "ethernet_type",
@@ -20,6 +20,7 @@ field_names = ["in_port",
               "udp_source_port",
               "vlan_id",
               "has_vlan_tag"]
+
 
 class MatchElement(DictMixin):
 
@@ -37,7 +38,7 @@ class MatchElement(DictMixin):
         self.match_elements[key] = value
 
     def set_match_field_element(self, key, value, tag=None):
-        self.match_elements[key] = MatchFieldElement(value, value, tag)
+        self.match_elements[key] = Interval(value, value + 1, tag)
 
     def __delitem__(self, key):
         del self.match_elements[key]
@@ -72,22 +73,6 @@ class MatchElement(DictMixin):
         return match_complement
 
 
-    def subtract(self, in_match):
-        sub_result = Match()
-
-        for field_name in self.match_elements:
-
-            # If the MatchFieldElement is a wildcard, set the sub_result to wildcard
-            # TODO: Feels like an ugly hack
-            if self[field_name].is_wildcard():
-                sub_result[field_name] = MatchField(field_name)
-                sub_result[field_name][self[field_name]._tag] = self[field_name]
-            else:
-                sub_result[field_name] = in_match[field_name].sub_result(self[field_name])
-
-        return sub_result
-
-
     def add_element_from_match_json(self, match_json, flow):
 
         for field_name in field_names:
@@ -95,70 +80,66 @@ class MatchElement(DictMixin):
             try:
                 if field_name == "in_port":
 
-                    self[field_name] = MatchFieldElement(int(match_json["in-port"]),
-                                                 int(match_json["in-port"]),
+                    self[field_name] = Interval(int(match_json["in-port"]),
+                                                 int(match_json["in-port"] + 1),
                                                  flow)
 
-                    #self[field_name] = MatchFieldElement(int(match_json["in-port"].split(":")[2]),
-                    #                            int(match_json["in-port"].split(":")[2]),
-                    #                            flow)
-
                 elif field_name == "ethernet_type":
-                    self[field_name] = MatchFieldElement(int(match_json["ethernet-match"]["ethernet-type"]["type"]),
-                                                 int(match_json["ethernet-match"]["ethernet-type"]["type"]),
+                    self[field_name] = Interval(int(match_json["ethernet-match"]["ethernet-type"]["type"]),
+                                                 int(match_json["ethernet-match"]["ethernet-type"]["type"]) + 1,
                                                  flow)
 
                 elif field_name == "ethernet_source":
                     mac_int = int(match_json["ethernet-match"]["ethernet-source"]["address"].replace(":", ""), 16)
-                    self[field_name] = MatchFieldElement(mac_int, mac_int, flow)
+                    self[field_name] = Interval(mac_int, mac_int + 1, flow)
 
                 elif field_name == "ethernet_destination":
                     mac_int = int(match_json["ethernet-match"]["ethernet-destination"]["address"].replace(":", ""), 16)
-                    self[field_name] = MatchFieldElement(mac_int, mac_int, flow)
+                    self[field_name] = Interval(mac_int, mac_int + 1, flow)
 
                 #TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
-                    self[field_name] = MatchFieldElement(IPNetwork(match_json["src_ip_addr"]))
+                    self[field_name] = Interval(IPNetwork(match_json["src_ip_addr"]))
 
                 elif field_name == "dst_ip_addr":
-                    self[field_name] = MatchFieldElement(IPNetwork(match_json["dst_ip_addr"]))
+                    self[field_name] = Interval(IPNetwork(match_json["dst_ip_addr"]))
 
                 elif field_name == "ip_protocol":
-                    self[field_name] = MatchFieldElement(int(match_json["ip-match"]["ip-protocol"]),
-                                                 int(match_json["ip-match"]["ip-protocol"]),
+                    self[field_name] = Interval(int(match_json["ip-match"]["ip-protocol"]),
+                                                 int(match_json["ip-match"]["ip-protocol"]) + 1,
                                                  flow)
 
                 elif field_name == "tcp_destination_port":
-                    self[field_name] = MatchFieldElement(int(match_json["tcp-destination-port"]),
-                                                 int(match_json["tcp-destination-port"]),
+                    self[field_name] = Interval(int(match_json["tcp-destination-port"]),
+                                                 int(match_json["tcp-destination-port"]) + 1,
                                                  flow)
 
                 elif field_name == "tcp_source_port":
-                    self[field_name] = MatchFieldElement(int(match_json["tcp-source-port"]),
-                                                 int(match_json["tcp-source-port"]),
+                    self[field_name] = Interval(int(match_json["tcp-source-port"]),
+                                                 int(match_json["tcp-source-port"]) + 1,
                                                  flow)
 
                 elif field_name == "udp_destination_port":
-                    self[field_name] = MatchFieldElement(int(match_json["udp-destination-port"]),
-                                                 int(match_json["udp-destination-port"]),
+                    self[field_name] = Interval(int(match_json["udp-destination-port"]),
+                                                 int(match_json["udp-destination-port"]) + 1,
                                                  flow)
                 elif field_name == "udp_source_port":
-                    self[field_name] = MatchFieldElement(int(match_json["udp-source-port"]),
-                                                 int(match_json["udp-source-port"]),
+                    self[field_name] = Interval(int(match_json["udp-source-port"]),
+                                                 int(match_json["udp-source-port"]) + 1,
                                                  flow)
                 elif field_name == "vlan_id":
-                    self["vlan_id"] = MatchFieldElement(int(match_json["vlan-match"]["vlan-id"]["vlan-id"]),
-                                                int(match_json["vlan-match"]["vlan-id"]["vlan-id"]),
+                    self["vlan_id"] = Interval(int(match_json["vlan-match"]["vlan-id"]["vlan-id"]),
+                                                int(match_json["vlan-match"]["vlan-id"]["vlan-id"]) + 1,
                                                 flow)
 
-                    self["has_vlan_tag"] = MatchFieldElement(1, 1, flow)
+                    self["has_vlan_tag"] = Interval(1, 1 + 1, flow)
 
             except KeyError:
-                self[field_name] = MatchFieldElement(0, sys.maxsize, flow)
+                self[field_name] = Interval(0, sys.maxsize + 1, flow)
 
                 # Special case
                 if field_name == "vlan_id":
-                    self["has_vlan_tag"] = MatchFieldElement(0, sys.maxsize, flow)
+                    self["has_vlan_tag"] = Interval(0, sys.maxsize + 1, flow)
 
                 continue
 
@@ -247,7 +228,7 @@ class Match(DictMixin):
                     self[field_name][match_element[field_name]._tag] = match_element[field_name]
 
             elif init_wildcard:
-                self[field_name][tag] = MatchFieldElement(0, sys.maxsize, tag)
+                self[field_name][tag] = Interval(0, sys.maxsize + 1, tag)
 
     def __delitem__(self, key):
         del self.match_fields[key]
@@ -270,7 +251,7 @@ class Match(DictMixin):
 
     def set_field(self, key, value):
         self[key] = MatchField(key)
-        self[key][self.tag] = MatchFieldElement(value, value, self.tag)
+        self[key][self.tag] = Interval(value, value + 1, self.tag)
 
     def get_field(self, key):
         field = self.match_fields[key]
