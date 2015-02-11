@@ -56,22 +56,15 @@ class MatchElement(DictMixin):
         return match_intersection
 
     def complement_match(self, tag):
-        match_complement = Match(tag)
+        match_complement = Match(tag, init_wildcard=True)
 
         for field_name in self.match_elements:
-            match_complement[field_name] = MatchField(field_name)
-            field_element = self[field_name]
-
-            #If the field is a wildcard, its complement is a wildcard:
-            if field_element.is_wildcard():
-                match_complement[field_name][field_element._tag] = field_element
-            else:
-                # If the field is not a wildcard, grab the field's equivalent complement elements
-                for ce in self[field_name].complement_elements():
-                    match_complement[field_name][ce._tag] = ce
+            
+            #If the field is not a wildcard, then chop it from the wildcard initialized Match
+            if not (self[field_name].begin == 0 and self[field_name].end == sys.maxsize):
+                match_complement[field_name].chop(self[field_name].begin, self[field_name].end)
 
         return match_complement
-
 
     def add_element_from_match_json(self, match_json, flow):
 
@@ -81,7 +74,7 @@ class MatchElement(DictMixin):
                 if field_name == "in_port":
 
                     self[field_name] = Interval(int(match_json["in-port"]),
-                                                 int(match_json["in-port"] + 1),
+                                                 int(match_json["in-port"]) + 1,
                                                  flow)
 
                 elif field_name == "ethernet_type":
@@ -135,35 +128,35 @@ class MatchElement(DictMixin):
                     self["has_vlan_tag"] = Interval(1, 1 + 1, flow)
 
             except KeyError:
-                self[field_name] = Interval(0, sys.maxsize + 1, flow)
+                self[field_name] = Interval(0, sys.maxsize, flow)
 
                 # Special case
                 if field_name == "vlan_id":
-                    self["has_vlan_tag"] = Interval(0, sys.maxsize + 1, flow)
+                    self["has_vlan_tag"] = Interval(0, sys.maxsize, flow)
 
                 continue
 
     def generate_match_json(self, match):
 
-        if "in_port" in self and self["in_port"]._high != sys.maxsize:
-            match["in-port"] = self["in_port"]._low
+        if "in_port" in self and self["in_port"].end != sys.maxsize:
+            match["in-port"] = self["in_port"].begin
 
         ethernet_match = {}
 
-        if "ethernet_type" in self and self["ethernet_type"]._high != sys.maxsize:
-            ethernet_match["ethernet-type"] = {"type": self["ethernet_type"]._low}
+        if "ethernet_type" in self and self["ethernet_type"].end != sys.maxsize:
+            ethernet_match["ethernet-type"] = {"type": self["ethernet_type"].begin}
 
-        if "ethernet_source" in self and self["ethernet_source"]._high != sys.maxsize:
+        if "ethernet_source" in self and self["ethernet_source"].end != sys.maxsize:
 
-            mac_int = self["ethernet_source"]._low
+            mac_int = self["ethernet_source"].begin
             mac_hex_str = hex(mac_int)[2:]
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
             ethernet_match["ethernet-source"] = {"address": mac_hex_str}
 
-        if "ethernet_destination" in self and self["ethernet_destination"]._high != sys.maxsize:
+        if "ethernet_destination" in self and self["ethernet_destination"].end != sys.maxsize:
 
-            mac_int = self["ethernet_destination"]._low
+            mac_int = self["ethernet_destination"].begin
             mac_hex_str = hex(mac_int)[2:]
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
@@ -171,37 +164,37 @@ class MatchElement(DictMixin):
 
         match["ethernet-match"] = ethernet_match
 
-        if "src_ip_addr" in self and self["src_ip_addr"]._high != sys.maxsize:
-            match["ipv4-source"] = self["src_ip_addr"]._low
+        if "src_ip_addr" in self and self["src_ip_addr"].end != sys.maxsize:
+            match["ipv4-source"] = self["src_ip_addr"].begin
 
-        if "dst_ip_addr" in self and self["dst_ip_addr"]._high != sys.maxsize:
-            match["ipv4-destination"] = self["dst_ip_addr"]._low
+        if "dst_ip_addr" in self and self["dst_ip_addr"].end != sys.maxsize:
+            match["ipv4-destination"] = self["dst_ip_addr"].begin
 
-        if ("tcp_destination_port" in self and self["tcp_destination_port"]._high != sys.maxsize) or \
-                ("tcp_source_port" in self and self["tcp_source_port"]._high != sys.maxsize):
-            self["ip_protocol"]._low = 6
-            match["ip-match"] = {"ip-protocol": self["ip_protocol"]._low}
+        if ("tcp_destination_port" in self and self["tcp_destination_port"].end != sys.maxsize) or \
+                ("tcp_source_port" in self and self["tcp_source_port"].end != sys.maxsize):
+            self["ip_protocol"].begin = 6
+            match["ip-match"] = {"ip-protocol": self["ip_protocol"].begin}
 
-            if "tcp_destination_port" in self and self["tcp_destination_port"]._high != sys.maxsize:
-                match["tcp-destination-port"] = self["tcp_destination_port"]._low
+            if "tcp_destination_port" in self and self["tcp_destination_port"].end != sys.maxsize:
+                match["tcp-destination-port"] = self["tcp_destination_port"].begin
 
-            if "tcp_source_port" in self and self["tcp_source_port"]._high != sys.maxsize:
-                match["tcp-source-port"] = self["tcp_source_port"]._low
+            if "tcp_source_port" in self and self["tcp_source_port"].end != sys.maxsize:
+                match["tcp-source-port"] = self["tcp_source_port"].begin
 
-        if ("udp_destination_port" in self and self["udp_destination_port"]._high != sys.maxsize) or \
-                ("udp_source_port" in self and self["udp_source_port"]._high != sys.maxsize):
-            self["ip_protocol"]._low = 17
-            match["ip-match"] = {"ip-protocol": self["ip_protocol"]._low}
+        if ("udp_destination_port" in self and self["udp_destination_port"].end != sys.maxsize) or \
+                ("udp_source_port" in self and self["udp_source_port"].end != sys.maxsize):
+            self["ip_protocol"].begin = 17
+            match["ip-match"] = {"ip-protocol": self["ip_protocol"].begin}
 
-            if "udp_destination_port" in self and self["udp_destination_port"]._high != sys.maxsize:
-                match["udp-destination-port"]= self["udp_destination_port"]._low
+            if "udp_destination_port" in self and self["udp_destination_port"].end != sys.maxsize:
+                match["udp-destination-port"]= self["udp_destination_port"].begin
 
-            if "udp_source_port" in self and self["udp_source_port"]._high != sys.maxsize:
-                match["udp-source-port"] = self["udp_source_port"]._low
+            if "udp_source_port" in self and self["udp_source_port"].end != sys.maxsize:
+                match["udp-source-port"] = self["udp_source_port"].begin
 
-        if "vlan_id" in self and self["vlan_id"]._high != sys.maxsize:
+        if "vlan_id" in self and self["vlan_id"].end != sys.maxsize:
             vlan_match = {}
-            vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"]._low, "vlan-id-present": True}
+            vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"].begin, "vlan-id-present": True}
             match["vlan-match"] = vlan_match
 
         return match
@@ -221,14 +214,14 @@ class Match(DictMixin):
         self.tag = tag
 
         for field_name in field_names:
-            self[field_name] = MatchField(field_name)
+            self[field_name] = IntervalTree()
 
             if match_element_list:
                 for match_element in match_element_list:
-                    self[field_name][match_element[field_name]._tag] = match_element[field_name]
+                    self[field_name].add(match_element[field_name])
 
             elif init_wildcard:
-                self[field_name][tag] = Interval(0, sys.maxsize + 1, tag)
+                self[field_name].add(Interval(0, sys.maxsize, tag))
 
     def __delitem__(self, key):
         del self.match_fields[key]
@@ -242,16 +235,16 @@ class Match(DictMixin):
     def __setitem__(self, key, value):
         self.match_fields[key] = value
 
-    def has_empty_field(self):
-        for match_field in self.keys():
-            if not self[match_field].keys():
-                return True
-
-        return False
+    # def has_empty_field(self):
+    #     for match_field in self.keys():
+    #         if not self[match_field].keys():
+    #             return True
+    #
+    #     return False
 
     def set_field(self, key, value):
-        self[key] = MatchField(key)
-        self[key][self.tag] = Interval(value, value + 1, self.tag)
+        self[key] = IntervalTree()
+        self[key][self.tag].add(Interval(value, value + 1, self.tag))
 
     def get_field(self, key):
         field = self.match_fields[key]
