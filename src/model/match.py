@@ -5,7 +5,7 @@ import sys
 
 from netaddr import IPNetwork
 from UserDict import DictMixin
-from intervaltree import Interval, IntervalTree
+from external.intervaltree import Interval, IntervalTree
 
 field_names = ["in_port",
               "ethernet_type",
@@ -46,12 +46,25 @@ class MatchElement(DictMixin):
     def keys(self):
         return self.match_elements.keys()
 
+    def get_matched_tree(self, tree, iv):
+    
+        matched_tree = IntervalTree()
+        for matched_interval in tree.search(iv.begin, iv.end):
+    
+            #Take the smaller interval of the two and put it in the matched_tree
+            if matched_interval.contains_point(iv):
+                matched_tree.add(iv)
+            elif iv.contains_point(matched_interval):
+                matched_tree.add(matched_interval)
+    
+        return matched_tree
+
     def intersect(self, in_match):
 
         match_intersection = Match()
 
         for field_name in self.match_elements:
-            match_intersection[field_name] = in_match[field_name].intersect(self[field_name])
+            match_intersection[field_name] = self.get_matched_tree(in_match[field_name], self[field_name])
 
         return match_intersection
 
@@ -204,7 +217,7 @@ class Match(DictMixin):
     def __str__(self):
         ret_str = "Match: "
         for f in self.match_fields:
-            ret_str += str(self.match_fields[f])
+            ret_str += f + " " + str(self.match_fields[f])
 
         return ret_str
 
@@ -235,23 +248,29 @@ class Match(DictMixin):
     def __setitem__(self, key, value):
         self.match_fields[key] = value
 
-    # def has_empty_field(self):
-    #     for match_field in self.keys():
-    #         if not self[match_field].keys():
-    #             return True
-    #
-    #     return False
+    def has_empty_field(self):
+        for match_field in self.keys():
+            if not self[match_field].items():
+                return True
+
+        return False
 
     def set_field(self, key, value):
         self[key] = IntervalTree()
-        self[key][self.tag].add(Interval(value, value + 1, self.tag))
+        self[key].add(Interval(value, value + 1, self.tag))
 
+    #TODO: away with the ugly hacks...
     def get_field(self, key):
         field = self.match_fields[key]
 
         # If the field is not a wildcard, return a value, otherwise none
-        if field.pos_list and field.pos_list[len(field.pos_list) - 1] != sys.maxsize:
-            return field.pos_list[0]
+        items = field.items()
+        item = None
+        if items:
+            item = items.pop()
+
+        if item.end != sys.maxsize:
+            return item.begin
         else:
              return None
 
@@ -299,12 +318,26 @@ class Match(DictMixin):
                     self.set_field("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
                     self.set_field("has_vlan_tag", int(True))
 
+    def get_matched_tree(self, tree1, tree2):
+
+        matched_tree = IntervalTree()
+        for iv in tree1:
+            for matched_iv in tree2.search(iv.begin, iv.end):
+
+                #Take the smaller interval of the two and put it in the matched_tree
+                if matched_iv.contains_point(iv):
+                    matched_tree.add(iv)
+                elif iv.contains_point(matched_iv):
+                    matched_tree.add(matched_iv)
+
+        return matched_tree
+
     def intersect(self, in_match):
 
         match_intersection = Match()
 
         for field_name in self.match_fields:
-            match_intersection[field_name] = in_match[field_name].intersect(self[field_name])
+            match_intersection[field_name] = self.get_matched_tree(in_match[field_name], self[field_name])
 
         return match_intersection
 

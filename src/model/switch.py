@@ -39,6 +39,7 @@ class Switch():
         while has_table_to_check:
 
             # Grab the table
+
             flow_table = self.flow_tables[table_id_to_check]
 
             # Get the highest priority matching flow in this table
