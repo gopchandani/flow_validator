@@ -82,7 +82,7 @@ class Switch():
         for flow_table in self.flow_tables:
 
             print "At table:", flow_table.table_id
-            r = flow_table.get_all_rule_matches(in_port_match)
+            flow_table.compute_applied_matches(in_port_match)
 
         out_port_match = {}
         return out_port_match

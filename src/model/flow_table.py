@@ -23,6 +23,8 @@ class Flow():
         self.match_element = MatchElement(flow["match"], self)
         self.complement_match = self.match_element.complement_match(self)
 
+        self.applied_match = None
+
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
@@ -87,12 +89,10 @@ class FlowTable():
                 remaining_match = flow.match.complement(table_matches_on)
                 yield flow, intersection, remaining_match
 
-    # Returns a dictionary, keyed by flow objects with values containing what match
-    # each intersects with
-    def get_all_rule_matches(self, in_match):
+
+    def compute_applied_matches(self, in_match):
 
         remaining_match = in_match
-        output = {}
 
         for flow in self.flows:
 
@@ -108,10 +108,9 @@ class FlowTable():
                 remaining_match = flow.complement_match.intersect(remaining_match)
 
                 print "Remaining After: ", remaining_match
-                output[flow] = intersection
+                flow.applied_match = intersection
 
             else:
                 # Say that this flow does not matter
-                output[flow] = None
+                flow.applied_match = None
 
-        return output
