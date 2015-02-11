@@ -12,31 +12,28 @@ from model.port import Port
 from model.match import Match
 
 
-class NetSwitch:
+class PortGraph:
 
     def __init__(self, model):
         self.model = model
-        self.port_graph = self.init_port_graph()
 
-    def _get_table_port_id(self, switch_id, table_number):
+        self.init_port_graph()
+
+    def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
-    def _get_table_port(self, switch_id, table_number):
-        return self.port_graph.node[self._get_table_port_id(switch_id,table_number)]["p"]
+    def get_table_port(self, switch_id, table_number):
+        return self.g.node[self._get_table_port_id(switch_id,table_number)]["p"]
 
     def init_port_graph(self):
-        port_graph = nx.Graph()
+        self.g = nx.Graph()
 
-        # Iterate through switches and add the ports
+        # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.model.get_switches():
-            for port in sw.ports:
-                port_graph.add_node(sw.ports[port].port_id, p=sw.ports[port])
+            sw.compute_switch_port_graph(self)
 
-            for i in range(len(sw.flow_tables)):
-                p = Port(sw, port_type="table", port_id=self._get_table_port_id(sw.node_id, i))
-                port_graph.add_node(p.port_id, p=p)
+        #TODO: Do something for ports between the switches, representing physical topology
 
-        return port_graph
 
     # This function populates the port graph with edges and match state
     def populate_port_graph(self, port):
@@ -103,14 +100,17 @@ class NetSwitch:
 
             # Inject a wild-card (albeit with some realism) at the appropriate port
             # This here specifies the
-            host_match = Match()
-            host_match.ethernet_type = 0x0800
-            host_match.ethernet_source = h.mac_addr
-            host_match.has_vlan_tag = False
 
-            h.switch_port.destination_match[h.mac_addr] = host_match
+            in_port_match = Match(tag="match@" + str(h.node_id), init_wildcard=True)
+            in_port_match.set_field("ethernet_type", 0x0800)
+            src_mac_int = int(h.mac_addr.replace(":", ""), 16)
+            in_port_match.set_field("ethernet_source", src_mac_int)
+            in_port_match.set_field("has_vlan_tag", 0)
+
+            h.switch_port.destination_match[h.mac_addr] = in_port_match
 
             self.populate_port_graph(h.switch_port)
+
             break
 
     #TODO: Methods for events
@@ -119,8 +119,8 @@ class NetSwitch:
 def main():
 
     m = Model()
-    pm = NetSwitch(m)
-    pm.perform_wildcard_analysis()
+    pm = PortGraph(m)
+    #pm.perform_wildcard_analysis()
 
 if __name__ == "__main__":
     main()
