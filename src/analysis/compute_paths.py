@@ -19,7 +19,7 @@ class ComputePaths:
         edge_port_dict = self.model.get_edge_port_dict(neighbor_obj.node_id, node_obj.node_id)
 
         #Check to see if the requirped destination match can get from neighbor to node
-        out_port_match = neighbor_obj.transfer_function_2(node_obj.accepted_destination_match[destination])
+        out_port_match = neighbor_obj.transfer_function_3(node_obj.accepted_destination_match[destination])
 
         if edge_port_dict[neighbor_obj.node_id] in out_port_match:
 
@@ -70,11 +70,15 @@ class ComputePaths:
 
                 print "Setting accepted destination at switch:", dst_h_obj.switch_obj, "connected to host", dst_h_id
 
-                accepted_match = Match()
-                accepted_match.ethernet_type = 0x0800
-                accepted_match.ethernet_source = src_h_obj.mac_addr
-                accepted_match.ethernet_destination = dst_h_obj.mac_addr
-                
+                accepted_match = Match(init_wildcard=True, tag="flow")
+                accepted_match.set_field("ethernet_type", 0x0800)
+
+                src_mac_int = int(src_h_obj.mac_addr.replace(":", ""), 16)
+                accepted_match.set_field("ethernet_source", src_mac_int)
+
+                dst_mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
+                accepted_match.set_field("ethernet_destination", dst_mac_int)
+
                 dst_h_obj.switch_obj.accepted_destination_match[dst_h_obj.node_id] = accepted_match
 
                 print "--"
@@ -84,6 +88,8 @@ class ComputePaths:
         for sw in self.model.get_switches():
             print sw.node_id
             sw.compute_transfer_function()
+
+
 
 def main():
     bp = ComputePaths()

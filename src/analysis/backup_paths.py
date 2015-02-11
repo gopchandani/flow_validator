@@ -180,7 +180,7 @@ class BackupPaths:
                 print 'Checking primary and backup paths from', src, 'to', dst
                 print "----------------------------------------------------------------------------------------------"
 
-                in_port_match = Match()
+                in_port_match = Match(init_wildcard=True)
                 in_port_match.set_field("ethernet_type", 0x0800)
 
                 src_mac_int = int(self.model.graph.node[src]["h"].mac_addr.replace(":", ""), 16)

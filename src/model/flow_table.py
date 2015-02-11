@@ -7,6 +7,7 @@ from netaddr import IPNetwork
 from netaddr import IPAddress
 from group_table import Action
 from match import MatchElement
+from match import Match
 
 class Flow():
 
@@ -19,7 +20,11 @@ class Flow():
         self.table_id = flow["table_id"]
         self.id = flow["id"]
         self.priority = int(flow["priority"])
-        self.match = MatchElement(flow["match"], self)
+        self.match_element = MatchElement(flow["match"], self)
+        self.complement_match = self.match_element.complement_match(self)
+
+        self.applied_match = None
+
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
@@ -66,8 +71,8 @@ class FlowTable():
         intersection = None
 
         for flow in self.flows:
-            intersection = flow.match.intersect(table_matches_on)
-            if intersection:
+            intersection = flow.match_element.intersect(table_matches_on)
+            if not intersection.has_empty_field():
                 hpm_flow = flow
                 break
 
@@ -81,5 +86,31 @@ class FlowTable():
         for flow in self.flows:
             intersection = flow.match.intersect(table_matches_on)
             if intersection:
-                remaining_match = table_matches_on.complement(flow.match)
+                remaining_match = flow.match.complement(table_matches_on)
                 yield flow, intersection, remaining_match
+
+
+    def compute_applied_matches(self, in_match):
+
+        remaining_match = in_match
+
+        for flow in self.flows:
+
+            print "Remaining Before:", remaining_match
+
+            intersection = flow.match_element.intersect(remaining_match)
+
+            # Don't care about matches that have full empty fields
+            if not intersection.has_empty_field():
+                print "Intersection:", intersection
+
+                # See what is left after this rule is through
+                remaining_match = flow.complement_match.intersect(remaining_match)
+
+                print "Remaining After: ", remaining_match
+                flow.applied_match = intersection
+
+            else:
+                # Say that this flow does not matter
+                flow.applied_match = None
+

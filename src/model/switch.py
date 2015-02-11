@@ -12,7 +12,7 @@ class Switch():
 
         self.node_id = sw_id
         self.model = model
-        self.flow_tables = None
+        self.flow_tables = []
         self.group_table = None
         self.ports = None
 
@@ -32,7 +32,7 @@ class Switch():
 
         # Check if the switch has at least one table
         table_id_to_check = 0
-        has_table_to_check = table_id_to_check in self.flow_tables
+        has_table_to_check = True
         next_table_matches_on = in_port_match
 
         while has_table_to_check:
@@ -63,11 +63,7 @@ class Switch():
                 # update table_id_to_check and has_table_to_check accordingly
                 if hpm_flow.go_to_table:
                     table_id_to_check = hpm_flow.go_to_table
-                    has_table_to_check = table_id_to_check in self.flow_tables
-
-                    # Throw a tantrum if this check if False, switch is telling lies
-                    if not has_table_to_check:
-                        raise Exception("has_table_to_check should have been True")
+                    has_table_to_check = True
                 else:
                     has_table_to_check = False
 
@@ -81,19 +77,15 @@ class Switch():
         return out_port_match
 
 
-    def transfer_function_2(self, in_port_match):
-
-
-        for flow_table in self.flow_tables.values():
-
-            print "At table:", flow_table.table_id
-
-            # Get the highest priority matching flow in this table
-            for matched_flow, intersection, complement in flow_table.get_next_matching_flow(in_port_match):
-                print "Matched Flow:", matched_flow.applied_actions, matched_flow.written_actions, matched_flow.go_to_table
-                print "Intersection:", intersection
-                print "Complement:", complement
-
+    def transfer_function_3(self, in_port_match):
 
         out_port_match = {}
+
         return out_port_match
+
+    def compute_transfer_function(self, in_port_match):
+
+        for flow_table in self.flow_tables:
+
+            print "At table:", flow_table.table_id
+            flow_table.compute_applied_matches(in_port_match)
