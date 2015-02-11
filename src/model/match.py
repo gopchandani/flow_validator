@@ -166,25 +166,25 @@ class MatchElement(DictMixin):
 
     def generate_match_json(self, match):
 
-        if "in_port" in self and self["in_port"].high != sys.maxsize:
-            match["in-port"] = self["in_port"].low
+        if "in_port" in self and self["in_port"]._high != sys.maxsize:
+            match["in-port"] = self["in_port"]._low
 
         ethernet_match = {}
 
-        if "ethernet_type" in self and self["ethernet_type"].high != sys.maxsize:
-            ethernet_match["ethernet-type"] = {"type": self["ethernet_type"].low}
+        if "ethernet_type" in self and self["ethernet_type"]._high != sys.maxsize:
+            ethernet_match["ethernet-type"] = {"type": self["ethernet_type"]._low}
 
-        if "ethernet_source" in self and self["ethernet_source"].high != sys.maxsize:
+        if "ethernet_source" in self and self["ethernet_source"]._high != sys.maxsize:
 
-            mac_int = self["ethernet_source"].low
+            mac_int = self["ethernet_source"]._low
             mac_hex_str = hex(mac_int)[2:]
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
             ethernet_match["ethernet-source"] = {"address": mac_hex_str}
 
-        if "ethernet_destination" in self and self["ethernet_destination"].high != sys.maxsize:
+        if "ethernet_destination" in self and self["ethernet_destination"]._high != sys.maxsize:
 
-            mac_int = self["ethernet_destination"].low
+            mac_int = self["ethernet_destination"]._low
             mac_hex_str = hex(mac_int)[2:]
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
@@ -192,37 +192,37 @@ class MatchElement(DictMixin):
 
         match["ethernet-match"] = ethernet_match
 
-        if "src_ip_addr" in self and self["src_ip_addr"].high != sys.maxsize:
-            match["ipv4-source"] = self["src_ip_addr"].low
+        if "src_ip_addr" in self and self["src_ip_addr"]._high != sys.maxsize:
+            match["ipv4-source"] = self["src_ip_addr"]._low
 
-        if "dst_ip_addr" in self and self["dst_ip_addr"].high != sys.maxsize:
-            match["ipv4-destination"] = self["dst_ip_addr"].low
+        if "dst_ip_addr" in self and self["dst_ip_addr"]._high != sys.maxsize:
+            match["ipv4-destination"] = self["dst_ip_addr"]._low
 
-        if ("tcp_destination_port" in self and self["tcp_destination_port"].high != sys.maxsize) or \
-                ("tcp_source_port" in self and self["tcp_source_port"].high != sys.maxsize):
-            self["ip_protocol"].low = 6
-            match["ip-match"] = {"ip-protocol": self["ip_protocol"].low}
+        if ("tcp_destination_port" in self and self["tcp_destination_port"]._high != sys.maxsize) or \
+                ("tcp_source_port" in self and self["tcp_source_port"]._high != sys.maxsize):
+            self["ip_protocol"]._low = 6
+            match["ip-match"] = {"ip-protocol": self["ip_protocol"]._low}
 
-            if "tcp_destination_port" in self and self["tcp_destination_port"].high != sys.maxsize:
-                match["tcp-destination-port"] = self["tcp_destination_port"].low
+            if "tcp_destination_port" in self and self["tcp_destination_port"]._high != sys.maxsize:
+                match["tcp-destination-port"] = self["tcp_destination_port"]._low
 
-            if "tcp_source_port" in self and self["tcp_source_port"].high != sys.maxsize:
-                match["tcp-source-port"] = self["tcp_source_port"].low
+            if "tcp_source_port" in self and self["tcp_source_port"]._high != sys.maxsize:
+                match["tcp-source-port"] = self["tcp_source_port"]._low
 
-        if ("udp_destination_port" in self and self["udp_destination_port"].high != sys.maxsize) or \
-                ("udp_source_port" in self and self["udp_source_port"].high != sys.maxsize):
-            self["ip_protocol"].low = 17
-            match["ip-match"] = {"ip-protocol": self["ip_protocol"].low}
+        if ("udp_destination_port" in self and self["udp_destination_port"]._high != sys.maxsize) or \
+                ("udp_source_port" in self and self["udp_source_port"]._high != sys.maxsize):
+            self["ip_protocol"]._low = 17
+            match["ip-match"] = {"ip-protocol": self["ip_protocol"]._low}
 
-            if "udp_destination_port" in self and self["udp_destination_port"].high != sys.maxsize:
-                match["udp-destination-port"]= self["udp_destination_port"].low
+            if "udp_destination_port" in self and self["udp_destination_port"]._high != sys.maxsize:
+                match["udp-destination-port"]= self["udp_destination_port"]._low
 
-            if "udp_source_port" in self and self["udp_source_port"].high != sys.maxsize:
-                match["udp-source-port"] = self["udp_source_port"].low
+            if "udp_source_port" in self and self["udp_source_port"]._high != sys.maxsize:
+                match["udp-source-port"] = self["udp_source_port"]._low
 
-        if "vlan_id" in self and self["vlan_id"].high != sys.maxsize:
+        if "vlan_id" in self and self["vlan_id"]._high != sys.maxsize:
             vlan_match = {}
-            vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"].low, "vlan-id-present": True}
+            vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"]._low, "vlan-id-present": True}
             match["vlan-match"] = vlan_match
 
         return match

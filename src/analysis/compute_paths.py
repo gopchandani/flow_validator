@@ -89,6 +89,8 @@ class ComputePaths:
             print sw.node_id
             sw.compute_transfer_function()
 
+
+
 def main():
     bp = ComputePaths()
     bp.analyze_all_node_pairs()

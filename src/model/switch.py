@@ -79,10 +79,13 @@ class Switch():
 
     def transfer_function_3(self, in_port_match):
 
+        out_port_match = {}
+
+        return out_port_match
+
+    def compute_transfer_function(self, in_port_match):
+
         for flow_table in self.flow_tables:
 
             print "At table:", flow_table.table_id
             flow_table.compute_applied_matches(in_port_match)
-
-        out_port_match = {}
-        return out_port_match
