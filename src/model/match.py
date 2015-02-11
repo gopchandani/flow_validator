@@ -4,8 +4,6 @@ __author__ = 'Rakesh Kumar'
 import sys
 
 from netaddr import IPNetwork
-from univset import univset
-
 from UserDict import DictMixin
 from match_field import MatchField, MatchFieldElement
 
