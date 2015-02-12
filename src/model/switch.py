@@ -105,7 +105,6 @@ class Switch():
 
             # Try passing a wildcard through the flow table
             in_port_match = Match(init_wildcard=True)
-            flow_table.compute_applied_matches(in_port_match)
+            flow_table.compute_applied_matches_and_actions(in_port_match)
 
-            # Add the edges in the portgraph
-            flow_table.add_port_graph_edges()
+            #flow_table.add_port_graph_edges()

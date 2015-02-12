@@ -1,14 +1,9 @@
 __author__ = 'Rakesh Kumar'
 
 
-import pprint
-
-from netaddr import IPNetwork
-from netaddr import IPAddress
-
 from action import Action, ActionSet
 from match import MatchElement
-from match import Match
+from instructions import Instructions
 
 class Flow():
 
@@ -23,9 +18,11 @@ class Flow():
         self.id = flow["id"]
         self.priority = int(flow["priority"])
         self.match_element = MatchElement(flow["match"], self)
-        self.complement_match = self.match_element.complement_match(self)
 
+        # Port Graph Stuff
+        self.complement_match = self.match_element.complement_match(self)
         self.applied_match = None
+        self.instructions = Instructions(self.sw, flow["instructions"]["instruction"])
 
         self.written_actions = []
         self.applied_actions = []
@@ -93,7 +90,7 @@ class FlowTable():
                 remaining_match = flow.match.complement(table_matches_on)
                 yield flow, intersection, remaining_match
 
-    def compute_applied_matches(self, in_match):
+    def compute_applied_matches_and_actions(self, in_match):
 
         remaining_match = in_match
 
@@ -107,34 +104,15 @@ class FlowTable():
                 # See what is left after this rule is through
                 remaining_match = flow.complement_match.intersect(remaining_match)
                 flow.applied_match = intersection
+
+                # Add the edges in the portgraph
+                actions_to_write = flow.instructions.get_actions_to_write()
+
+                self.model.port_graph.add_edge(self.sw.flow_tables[flow.table_id].input_port,
+                                               self.sw.flow_tables[flow.go_to_table].input_port,
+                                               flow.applied_match,
+                                               actions_to_write)
             else:
                 
                 # Say that this flow does not matter
                 flow.applied_match = None
-
-    def add_port_graph_edges(self):
-
-        for flow in self.flows:
-
-            #Actions will be gathered here...
-            written_action_set = ActionSet(self.sw)
-
-            #TODO. Figure out this.
-            if flow.applied_actions:
-                table_applied_action_set = ActionSet(self)
-                table_applied_action_set.add_actions(flow.applied_actions, flow.applied_match)
-                written_action_set.add_actions(flow.applied_actions, flow.applied_match)
-            else:
-                pass
-                #next_table_matches_on = in_port_match
-
-            # If there are any written-actions that hpm_flow does, accumulate them
-            if flow.written_actions:
-                written_action_set.add_actions(flow.written_actions, flow.applied_match)
-
-            # flow has an instruction to go to another table, add a port in port graph for that...
-            if flow.go_to_table:
-                self.model.port_graph.add_edge(self.sw.flow_tables[flow.table_id].input_port,
-                                               self.sw.flow_tables[flow.go_to_table].input_port,
-                                               flow.applied_match,
-                                               written_action_set)

@@ -1,6 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-
 import networkx as nx
 import sys
 
@@ -9,7 +8,6 @@ from copy import deepcopy
 
 from port import Port
 from match import Match
-
 
 class PortGraph:
 
@@ -54,9 +52,6 @@ class PortGraph:
 
     def update_edge_up(self):
         pass
-
-
-
 
     # This function populates the port graph with edges and match state
     def populate_port_graph(self, port):

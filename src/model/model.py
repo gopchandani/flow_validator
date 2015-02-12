@@ -16,7 +16,7 @@ from port_graph import PortGraph
 
 class Model():
 
-    def __init__(self):
+    def __init__(self, init_port_graph=False):
 
         self.OFPP_CONTROLLER = 0xfffffffd
         self.OFPP_ALL = 0xfffffffc
@@ -35,6 +35,7 @@ class Model():
         self.switch_ids = []
 
         #  Load up everything
+        self.init_port_graph = init_port_graph
         self._load_model()
 
 
@@ -210,7 +211,9 @@ class Model():
 
         self._prepare_switch_nodes()
         self._prepare_node_edges()
-        self._prepare_port_graph()
+
+        if self.init_port_graph:
+            self._prepare_port_graph()
 
         #self.dump_model()
 
@@ -265,7 +268,7 @@ class Model():
         return node_type
 
 def main():
-    m = Model()
+    m = Model(init_port_graph=True)
 
 if __name__ == "__main__":
     main()
