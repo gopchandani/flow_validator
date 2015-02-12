@@ -217,7 +217,7 @@ class Match(DictMixin):
     def __str__(self):
         ret_str = "Match: "
         for f in self.match_fields:
-            ret_str += f + " " + str(self.match_fields[f])
+            ret_str +=  f + " " + str(self.match_fields[f])
 
         return ret_str
 
@@ -325,9 +325,9 @@ class Match(DictMixin):
             for matched_iv in tree2.search(iv.begin, iv.end):
 
                 #Take the smaller interval of the two and put it in the matched_tree
-                if matched_iv.contains_point(iv):
+                if matched_iv.contains_interval(iv):
                     matched_tree.add(iv)
-                elif iv.contains_point(matched_iv):
+                elif iv.contains_interval(matched_iv):
                     matched_tree.add(matched_iv)
 
         return matched_tree
