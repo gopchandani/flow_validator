@@ -12,6 +12,7 @@ from flow_table import FlowTable
 from group_table import GroupTable
 from group_table import Group
 from port import Port
+from port_graph import PortGraph
 
 class Model():
 
@@ -35,6 +36,7 @@ class Model():
 
         #  Load up everything
         self._load_model()
+
 
 
     def _prepare_group_table(self, sw):
@@ -196,10 +198,16 @@ class Model():
             for port in self.graph.node[sw]["sw"].ports:
                 print self.graph.node[sw]["sw"].ports[port]
 
+    def _prepare_port_graph(self):
+        self.port_graph = PortGraph(self)
+        self.port_graph.init_port_graph()
+
     def _load_model(self):
 
         self._prepare_switch_nodes()
         self._prepare_node_edges()
+        self._prepare_port_graph()
+
         #self.dump_model()
 
     def get_node_graph(self):

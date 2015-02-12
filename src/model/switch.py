@@ -78,19 +78,17 @@ class Switch():
 
         return out_port_match
 
-
     def transfer_function_3(self, in_port_match):
 
         out_port_match = {}
         return out_port_match
 
-
-    def compute_switch_port_graph(self, port_graph):
+    def compute_switch_port_graph(self):
         print "At Switch:", self.node_id
 
         # Add a node per physical port in port graph
         for port in self.ports:
-            port_graph.g.add_node(self.ports[port].port_id, p=self.ports[port])
+            self.model.port_graph.add_port(self.ports[port])
 
         for flow_table in self.flow_tables:
             print "At table:", flow_table.table_id
@@ -99,10 +97,11 @@ class Switch():
 
             p = Port(self,
                      port_type="table",
-                     port_id=port_graph.get_table_port_id(self.node_id, flow_table.table_id))
+                     port_id = self.model.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
 
-            port_graph.g.add_node(p.port_id, p=p)
+            self.model.port_graph.g.add_node(p.port_id, p=p)
 
             # Try passing a wildcard through the flow table
             in_port_match = Match(init_wildcard=True)
             flow_table.compute_applied_matches(in_port_match)
+            flow_table.add_port_graph_edges()

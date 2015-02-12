@@ -5,7 +5,8 @@ import pprint
 
 from netaddr import IPNetwork
 from netaddr import IPAddress
-from group_table import Action
+
+from action import Action, ActionSet
 from match import MatchElement
 from match import Match
 
@@ -89,7 +90,6 @@ class FlowTable():
                 remaining_match = flow.match.complement(table_matches_on)
                 yield flow, intersection, remaining_match
 
-
     def compute_applied_matches(self, in_match):
 
         remaining_match = in_match
@@ -114,3 +114,27 @@ class FlowTable():
                 # Say that this flow does not matter
                 flow.applied_match = None
 
+    def add_port_graph_edges(self):
+
+        for flow in self.flows:
+
+            #Actions will be gathered here...
+            written_action_set = ActionSet(self.sw)
+
+            if flow.applied_actions:
+                table_applied_action_set = ActionSet(self)
+                table_applied_action_set.add_actions(flow.applied_actions, flow.applied_match)
+#                next_table_matches_on = table_applied_action_set.get_resulting_match(next_table_matches_on)
+                written_action_set.add_actions(flow.applied_actions, flow.applied_match)
+            else:
+                pass
+                #next_table_matches_on = in_port_match
+
+            # If there are any written-actions that hpm_flow does, accumulate them
+            if flow.written_actions:
+                written_action_set.add_actions(flow.written_actions, flow.applied_match)
+
+            # flow has an instruction to go somewhere else.
+            if flow.go_to_table:
+                pass
+                #flow.go_to_table

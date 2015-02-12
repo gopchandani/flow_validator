@@ -7,9 +7,8 @@ import sys
 from netaddr import IPNetwork
 from copy import deepcopy
 
-from model.model import Model
-from model.port import Port
-from model.match import Match
+from port import Port
+from match import Match
 
 
 class PortGraph:
@@ -17,20 +16,30 @@ class PortGraph:
     def __init__(self, model):
         self.model = model
 
-        self.init_port_graph()
-
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
     def get_table_port(self, switch_id, table_number):
         return self.g.node[self._get_table_port_id(switch_id,table_number)]["p"]
 
+    def add_port(self, port):
+        self.g.add_node(port.port_id, p=port)
+
+    def add_edge(self, port1, port2, match, actions):
+
+        edge_data = {"match": match, "actions": actions}
+        e = (port1.port_id, port2.port_id)
+        self.g.add_edge(*e, edge_data=edge_data)
+
+    def get_edge_data(self, node1, node2):
+        return self.g[node1.node_id][node2.node_id]['edge_data']
+
     def init_port_graph(self):
         self.g = nx.Graph()
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.model.get_switches():
-            sw.compute_switch_port_graph(self)
+            sw.compute_switch_port_graph()
 
         #TODO: Do something for ports between the switches, representing physical topology
 
@@ -119,7 +128,6 @@ class PortGraph:
 def main():
 
     m = Model()
-    pm = PortGraph(m)
     #pm.perform_wildcard_analysis()
 
 if __name__ == "__main__":
