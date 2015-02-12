@@ -18,6 +18,7 @@ class Flow():
     def __init__(self, sw, flow):
 
         self.sw = sw
+        self.model = sw.model
         self.table_id = flow["table_id"]
         self.id = flow["id"]
         self.priority = int(flow["priority"])
@@ -56,8 +57,10 @@ class FlowTable():
     def __init__(self, sw, table_id, flow_list):
 
         self.sw = sw
+        self.model = sw.model
         self.table_id = table_id
         self.flows = []
+        self.input_port = None
 
         for f in flow_list:
             f = Flow(sw, f)
@@ -96,21 +99,16 @@ class FlowTable():
 
         for flow in self.flows:
 
-            print "Remaining Before:", remaining_match
-
             intersection = flow.match_element.intersect(remaining_match)
 
             # Don't care about matches that have full empty fields
             if not intersection.has_empty_field():
-                print "Intersection:", intersection
 
                 # See what is left after this rule is through
                 remaining_match = flow.complement_match.intersect(remaining_match)
-
-                print "Remaining After: ", remaining_match
                 flow.applied_match = intersection
-
             else:
+                
                 # Say that this flow does not matter
                 flow.applied_match = None
 
@@ -121,10 +119,10 @@ class FlowTable():
             #Actions will be gathered here...
             written_action_set = ActionSet(self.sw)
 
+            #TODO. Figure out this.
             if flow.applied_actions:
                 table_applied_action_set = ActionSet(self)
                 table_applied_action_set.add_actions(flow.applied_actions, flow.applied_match)
-#                next_table_matches_on = table_applied_action_set.get_resulting_match(next_table_matches_on)
                 written_action_set.add_actions(flow.applied_actions, flow.applied_match)
             else:
                 pass
@@ -134,7 +132,9 @@ class FlowTable():
             if flow.written_actions:
                 written_action_set.add_actions(flow.written_actions, flow.applied_match)
 
-            # flow has an instruction to go somewhere else.
+            # flow has an instruction to go to another table, add a port in port graph for that...
             if flow.go_to_table:
-                pass
-                #flow.go_to_table
+                self.model.port_graph.add_edge(self.sw.flow_tables[flow.table_id].input_port,
+                                               self.sw.flow_tables[flow.go_to_table].input_port,
+                                               flow.applied_match,
+                                               written_action_set)

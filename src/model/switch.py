@@ -26,7 +26,6 @@ class Switch():
 
         self.accepted_destination_match = {}
 
-
     def transfer_function(self, in_port_match):
 
         written_action_set = ActionSet(self)
@@ -90,18 +89,23 @@ class Switch():
         for port in self.ports:
             self.model.port_graph.add_port(self.ports[port])
 
+        # Add a node per table in the port graph
         for flow_table in self.flow_tables:
-            print "At table:", flow_table.table_id
 
             # Add a output node in port graph for each table
 
             p = Port(self,
-                     port_type="table",
+                     port_type = "table",
                      port_id = self.model.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
 
             self.model.port_graph.g.add_node(p.port_id, p=p)
+            flow_table.input_port = p
+
+        for flow_table in self.flow_tables:
 
             # Try passing a wildcard through the flow table
             in_port_match = Match(init_wildcard=True)
             flow_table.compute_applied_matches(in_port_match)
+
+            # Add the edges in the portgraph
             flow_table.add_port_graph_edges()

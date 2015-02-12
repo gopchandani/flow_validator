@@ -201,6 +201,10 @@ class Model():
     def _prepare_port_graph(self):
         self.port_graph = PortGraph(self)
         self.port_graph.init_port_graph()
+        for node in self.port_graph.g.nodes():
+            print node
+        for edge in self.port_graph.g.edges():
+            print edge
 
     def _load_model(self):
 
