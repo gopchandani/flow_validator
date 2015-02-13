@@ -23,7 +23,7 @@ class Action():
 
     Required Action: Group. Process the packet through the specified group. The exact interpretation depends on group
                             type.
-    Optional Action: Push-Tag/Pop-Tag. Switches may support the ability to push/pop tags as shown in Table 6. To aid
+    Optional Action: Push-Tag/Pop-Tag. Switches may support the ability to push/pop tags. To aid
                             integration with existing networks, we suggest that the ability to push/pop VLAN tags be
                             supported.
     '''

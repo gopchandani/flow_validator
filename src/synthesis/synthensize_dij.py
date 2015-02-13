@@ -147,7 +147,7 @@ class SynthesizeDij():
 
         push_vlan_match= deepcopy(flow_match)
         push_vlan_match.set_match_field_element("in_port", int(h_obj.switch_port_attached))
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all")
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", True)
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         # Avoiding adding a new intent for every departing flow for this switch,
@@ -159,7 +159,7 @@ class SynthesizeDij():
 
         pop_vlan_match = deepcopy(flow_match)
         pop_vlan_match.set_match_field_element("vlan_id", int(matching_tag))
-        pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all")
+        pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all", True)
 
         # Avoiding adding a new intent for every arriving flow for this switch
         #  at destination by using the tag as the key

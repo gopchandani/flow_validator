@@ -70,14 +70,16 @@ class InstructionSet():
         self.sw = sw
         self.flow = flow
         self.model = self.sw.model
-
         self.instruction_list = []
-        self.written_actions = []
-        self.applied_actions = []
-        self.go_to_table = None
 
         for instruction_json in instructions_json:
-            self.instruction_list.append(Instruction(sw, instructions_json))
+            instruction = Instruction(sw, instruction_json)
+
+            #Apply-Action has to be the first one, so reorganizing that...
+            if instruction.instruction_type == "":
+                self.instruction_list.insert(0, instruction)
+            else:
+                self.instruction_list.append(instruction)
 
     def add_port_graph_edges(self):
 
@@ -86,6 +88,7 @@ class InstructionSet():
         match_for_port = self.flow.applied_match
         actions_for_port = ActionSet(self.sw)
 
+        #TODO: Sort the instruction list so that the apply-actions is always first...
         for instruction in self.instruction_list:
 
             # Instructions dictate that things be done immediately and may include output
@@ -108,13 +111,13 @@ class InstructionSet():
 
             # These things affect the next table, so the edge to next table is going to contain these two
             # types of "edits" on the ActionSet
-            if instruction.instruction_type == "write-actions":
+            elif instruction.instruction_type == "write-actions":
                 pass
 
 
-            if instruction.instruction_type == "go-to-table":
+            elif instruction.instruction_type == "go-to-table":
                 port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
-                                                self.sw.flow_tables[self.go_to_table].port,
+                                                self.sw.flow_tables[instruction.go_to_table].port,
                                                 match_for_port,
                                                 actions_for_port))
 
@@ -127,5 +130,3 @@ class InstructionSet():
         # Add them all in
         for src, dst, match, actions in port_additions:
             self.model.port_graph.add_edge(src, dst, match, actions)
-
-        return match_action_tuple_list
