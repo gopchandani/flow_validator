@@ -85,6 +85,8 @@ class InstructionSet():
 
         port_additions = []
 
+        # match_for_port is what matched and it will be modified by any apply-action instructions below
+
         match_for_port = self.flow.applied_match
         actions_for_port = ActionSet(self.sw)
 
