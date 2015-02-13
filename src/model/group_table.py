@@ -36,6 +36,37 @@ class Bucket():
         return ret_val
 
 class Group():
+    '''
+    As per OF1.3 specification:
+
+    A switch is not required to support all group types, just those marked "Required" below.
+
+    The controller can also query the switch about which of the "Optional" group type it supports.
+    Required: all:      Execute all buckets in the group. This group is used for multi-cast or broadcast forwarding.
+                        The packet is effectively cloned for each bucket; one packet is processed for each bucket of the
+                        group. If a bucket directs a packet explicitly out the ingress port, this packet clone is dropped.
+                        If the controller writer wants to forward out the ingress port, the group should include an extra
+                        bucket which includes an output action to the OFPP_IN_PORT reserved port.
+    Optional: select:   Execute one bucket in the group. Packets are processed by a single bucket in the group,
+                        based on a switch-computed selection algorithm (e.g. hash on some user-configured tuple or
+                        simple round robin). All configuration and state for the selection algorithm is external to
+                        OpenFlow. The selection algorithm should implement equal load sharing and can optionally be
+                        based on bucket weights. When a port specified in a bucket in a select group goes down,
+                        the switch may restrict bucket selection to the remaining set (those with forwarding actions
+                        to live ports) instead of dropping packets destined to that port. This behavior may reduce
+                        the disruption of a downed link or switch.
+
+    Required: indirect: Execute the one defined bucket in this group. This group supports only a single bucket.
+                        Allows multiple flow entries or groups to point to a common group identifier, supporting
+                        faster, more efficient convergence.
+
+    Optional: ff:       Execute the first live bucket. Each action bucket is associated with a specific port and/or
+                        group that controls its liveness. The buckets are evaluated in the order defined by the group,
+                        and the first bucket which is associated with a live port/group is selected. This group type
+                        enables the switch to change forwarding without requiring a round trip to the controller.
+                        If no buckets are live, packets are dropped.
+    '''
+
     def __init__(self, sw, group_json):
 
         self.sw = sw
@@ -58,7 +89,6 @@ class Group():
 
             for action_bucket in self.bucket_list:
                 active_action_list.extend(action_bucket.action_list)
-
 
         # If it is a fast-failover group, collect the bucket which is active
         elif self.group_type == "group-ff":

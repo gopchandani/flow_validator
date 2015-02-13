@@ -73,22 +73,26 @@ class InstructionSet():
 
     def add_port_graph_edges(self):
 
-        match_action_tuple_list = []
+        port_additions = []
 
         match_for_port = self.flow.applied_match
         actions_for_port = ActionSet(self.sw)
 
         # Instructions dictate that things be done immediately and may include output
         if self.applied_actions:
-            pass
+            match_for_port = get_new_match(match_for_port)
+
+            port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
+                                            self.sw.flow_tables[self.go_to_table].port,
+                                            match_for_port,
+                                            actions_for_port))
 
         # These things are applied upon traversal of the edge
         if self.written_actions:
             pass
 
-
         if self.go_to_table:
-            match_action_tuple_list.append((self.sw.flow_tables[self.flow.table_id].port,
+            port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                             self.sw.flow_tables[self.go_to_table].port,
                                             match_for_port,
                                             actions_for_port))
@@ -96,7 +100,7 @@ class InstructionSet():
 
 
         # Add them all in
-        for src, dst, match, actions in match_action_tuple_list:
+        for src, dst, match, actions in port_additions:
             self.model.port_graph.add_edge(src, dst, match, actions)
 
         return match_action_tuple_list
