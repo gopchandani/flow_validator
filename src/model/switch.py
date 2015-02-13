@@ -52,6 +52,8 @@ class Switch():
                     table_applied_action_set = ActionSet(self)
                     table_applied_action_set.add_actions(hpm_flow.applied_actions, intersection)
                     next_table_matches_on = table_applied_action_set.get_resulting_match(next_table_matches_on)
+
+                    #Ugly
                     written_action_set.add_actions(hpm_flow.applied_actions, intersection)
                 else:
                     next_table_matches_on = in_port_match
