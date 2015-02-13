@@ -96,6 +96,12 @@ class Action():
 
 class ActionSet():
 
+    '''
+    As per OF1.3 specification:
+
+
+    '''
+
     def __init__(self, sw):
 
         # Modelling the ActionSet as a dictionary of lists, keyed by various actions.

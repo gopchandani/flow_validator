@@ -1,9 +1,9 @@
 __author__ = 'Rakesh Kumar'
 
 
-from action import Action, ActionSet
+from action_set import Action, ActionSet
 from match import MatchElement
-from instructions import Instructions
+from instruction_set import InstructionSet
 
 class Flow():
 
@@ -22,7 +22,7 @@ class Flow():
         # Port Graph Stuff
         self.complement_match = self.match_element.complement_match(self)
         self.applied_match = None
-        self.instructions = Instructions(self.sw, self, flow["instructions"]["instruction"])
+        self.instructions = InstructionSet(self.sw, self, flow["instructions"]["instruction"])
 
         self.written_actions = []
         self.applied_actions = []
