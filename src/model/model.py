@@ -111,7 +111,6 @@ class Model():
 
         e = (node1_id, node2_id)
         self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
-
         # Ensure that the ports are set up
 
         if self.graph.node[node1_id]["node_type"] == "switch":

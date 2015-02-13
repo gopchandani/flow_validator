@@ -1,12 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
-
-import networkx as nx
-import sys
-
 from model.model import Model
 from model.match import Match
-
 
 class ComputePortPaths:
     def __init__(self):
@@ -67,22 +62,19 @@ class ComputePortPaths:
                 if src_h_id == dst_h_id:
                     continue
 
-                print "Setting accepted destination at switch:", dst_h_obj.switch_obj, "connected to host", dst_h_id
+                print "Setting admitted_match:", dst_h_id
 
                 admitted_match = Match(init_wildcard=True, tag="flow")
                 admitted_match.set_field("ethernet_type", 0x0800)
-
                 src_mac_int = int(src_h_obj.mac_addr.replace(":", ""), 16)
                 admitted_match.set_field("ethernet_source", src_mac_int)
-
                 dst_mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
                 admitted_match.set_field("ethernet_destination", dst_mac_int)
+                
+                self.port_graph.add_destination_host(dst_h_obj, admitted_match)
 
-                dst_h_obj.switch_obj.accepted_destination_match[dst_h_obj.node_id] = admitted_match
-
-                print "--"
-                print list(self.bfs_paths(src_h_obj.switch_obj, dst_h_obj.switch_obj, dst_h_id))
-
+                #print "--"
+                #print list(self.bfs_paths(src_h_obj.switch_obj, dst_h_obj.switch_obj, dst_h_id))
 
 def main():
     bp = ComputePortPaths()
