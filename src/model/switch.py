@@ -92,6 +92,8 @@ class Switch():
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
 
+            print "At Table:", flow_table.table_id
+
             # Add a output node in port graph for each table
 
             p = Port(self,
@@ -99,12 +101,10 @@ class Switch():
                      port_id = self.model.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
 
             self.model.port_graph.g.add_node(p.port_id, p=p)
-            flow_table.input_port = p
+            flow_table.port = p
 
         for flow_table in self.flow_tables:
 
             # Try passing a wildcard through the flow table
             in_port_match = Match(init_wildcard=True)
             flow_table.compute_applied_matches_and_actions(in_port_match)
-
-            #flow_table.add_port_graph_edges()

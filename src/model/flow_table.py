@@ -22,7 +22,7 @@ class Flow():
         # Port Graph Stuff
         self.complement_match = self.match_element.complement_match(self)
         self.applied_match = None
-        self.instructions = Instructions(self.sw, flow["instructions"]["instruction"])
+        self.instructions = Instructions(self.sw, self, flow["instructions"]["instruction"])
 
         self.written_actions = []
         self.applied_actions = []
@@ -106,12 +106,8 @@ class FlowTable():
                 flow.applied_match = intersection
 
                 # Add the edges in the portgraph
-                actions_to_write = flow.instructions.get_actions_to_write()
+                flow.instructions.add_port_graph_edges()
 
-                self.model.port_graph.add_edge(self.sw.flow_tables[flow.table_id].input_port,
-                                               self.sw.flow_tables[flow.go_to_table].input_port,
-                                               flow.applied_match,
-                                               actions_to_write)
             else:
                 
                 # Say that this flow does not matter
