@@ -227,8 +227,8 @@ class ActionSet():
         for output_action in self.action_dict["output"]:
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
-                out_port_list.append(int(in_port))
+                out_port_list.append(str(in_port))
             else:
-                out_port_list.append(int(output_action.out_port))
+                out_port_list.append(str(output_action.out_port))
 
         return out_port_list

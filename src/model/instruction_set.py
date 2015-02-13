@@ -86,11 +86,8 @@ class InstructionSet():
         port_additions = []
 
         # match_for_port is what matched and it will be modified by any apply-action instructions below
-
         match_for_port = self.flow.applied_match
-        actions_for_port = ActionSet(self.sw)
 
-        #TODO: Sort the instruction list so that the apply-actions is always first...
         for instruction in self.instruction_list:
 
             # Instructions dictate that things be done immediately and may include output
@@ -106,7 +103,7 @@ class InstructionSet():
                 #Check to see if applied_action_set has any output edges to contribute
                 out_port_list = applied_action_set.get_out_port_list(match_for_port)
                 for out_port in out_port_list:
-                    if out_port == 4294967293:
+                    if out_port == "4294967293":
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.model.port_graph.get_port(str(out_port)),
                                                         match_for_port,
@@ -120,14 +117,30 @@ class InstructionSet():
             # These things affect the next table, so the edge to next table is going to contain these two
             # types of "edits" on the ActionSet
             elif instruction.instruction_type == "write-actions":
-                pass
+                # Put all the actions under this instruction in an ActionSet and pass it down .
+                written_action_set = ActionSet(self.sw)
+                written_action_set.add_actions(instruction.actions_list, match_for_port)
+
+                #Check to see if written_action_set has any output edges to contribute
+                out_port_list = written_action_set.get_out_port_list(match_for_port)
+                for out_port in out_port_list:
+                    if out_port == 4294967293:
+                        port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
+                                                        self.sw.model.port_graph.get_port(out_port),
+                                                        match_for_port,
+                                                        written_action_set))
+                    else:
+                        port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
+                                                        self.sw.ports[out_port],
+                                                        match_for_port,
+                                                        written_action_set))
 
 
             elif instruction.instruction_type == "go-to-table":
                 port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                 self.sw.flow_tables[instruction.go_to_table].port,
                                                 match_for_port,
-                                                actions_for_port))
+                                                None))
 
 
             # TODO: Handle meter instruction
