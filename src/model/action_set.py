@@ -217,3 +217,18 @@ class ActionSet():
                 out_port_match[int(output_action.out_port)] = output_match
 
         return out_port_match
+
+    def get_out_port_list(self, in_port_match):
+        in_port = in_port_match.get_field("in_port")
+
+        out_port_list = []
+
+        #  For each output action, there is a corresponding out_port_match entry
+        for output_action in self.action_dict["output"]:
+
+            if self.sw.model.OFPP_IN == int(output_action.out_port):
+                out_port_list.append(int(in_port))
+            else:
+                out_port_list.append(int(output_action.out_port))
+
+        return out_port_list

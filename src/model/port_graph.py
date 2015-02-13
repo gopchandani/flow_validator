@@ -27,6 +27,9 @@ class PortGraph:
     def remove_port(self):
         pass
 
+    def get_port(self, port_id):
+        return self.g.node[port_id]["p"]
+
     def add_edge(self, port1, port2, match, actions):
 
         edge_data = {"match": match, "actions": actions}
@@ -39,7 +42,14 @@ class PortGraph:
     def get_edge_data(self, node1, node2):
         return self.g[node1.node_id][node2.node_id]['edge_data']
 
+    def init_global_controller_port(self):
+        cp = Port(None, port_type="controller", port_id="4294967293")
+        self.add_port(cp)
+
     def init_port_graph(self):
+
+        #Add a port for controller
+        self.init_global_controller_port()
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.model.get_switches():

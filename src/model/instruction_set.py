@@ -103,13 +103,19 @@ class InstructionSet():
                 # Get the resulting match and have it be applied
                 match_for_port = applied_action_set.get_resulting_match(match_for_port)
 
-                #TODO: Check to see if applied_action_set has any output edges to contribute
-                # Something like instruction.get_out_port_matches(match_for_port)
-                #
-                # port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
-                #                                 self.sw.flow_tables[self.go_to_table].port,
-                #                                 new_match_for_port,
-                #                                 actions_for_port))
+                #Check to see if applied_action_set has any output edges to contribute
+                out_port_list = applied_action_set.get_out_port_list(match_for_port)
+                for out_port in out_port_list:
+                    if out_port == 4294967293:
+                        port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
+                                                        self.sw.model.port_graph.get_port(str(out_port)),
+                                                        match_for_port,
+                                                        None))
+                    else:
+                        port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
+                                                        self.sw.ports[out_port],
+                                                        match_for_port,
+                                                        None))
 
             # These things affect the next table, so the edge to next table is going to contain these two
             # types of "edits" on the ActionSet
