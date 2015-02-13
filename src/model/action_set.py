@@ -4,6 +4,29 @@ from match import Match
 from collections import defaultdict
 
 class Action():
+    '''
+     As per OF1.3 specification:
+
+    Required Action: Output. The Output action forwards a packet to a specified OpenFlow port.
+                            OpenFlow switches must support forwarding to physical ports, switch-defined logical ports
+                            and the required reserved ports.
+
+    Optional Action: Set-Queue. The set-queue action sets the queue id for a packet. When the packet is forwarded to
+                            a port using the output action, the queue id determines which queue attached to this port
+                            is used for scheduling and forwarding the packet. Forwarding behavior is dictated by the
+                            configuration of the queue and is used to provide basic Quality-of-Service (QoS) support
+
+    Required Action: Drop. There is no explicit action to represent drops. Instead, packets whose action sets have no
+                            output actions should be dropped. This result could come from empty instruction sets or
+                            empty action buckets in the processing pipeline, or after executing a Clear-Actions
+                            instruction.
+
+    Required Action: Group. Process the packet through the specified group. The exact interpretation depends on group
+                            type.
+    Optional Action: Push-Tag/Pop-Tag. Switches may support the ability to push/pop tags as shown in Table 6. To aid
+                            integration with existing networks, we suggest that the ability to push/pop VLAN tags be
+                            supported.
+    '''
 
     def __init__(self, sw, action_json):
 
@@ -99,6 +122,37 @@ class ActionSet():
     '''
     As per OF1.3 specification:
 
+    An action set is associated with each packet.
+    An action set contains a maximum of one action of each type.
+    The set-field actions are identified by their field types, therefore the action set contains a maximum of one
+    set-field action for each field type (i.e. multiple fields can be set). When multiple actions of the same type are
+    required, e.g. pushing multiple MPLS labels or popping multiple MPLS labels, the Apply-Actions instruction may be
+    used.
+
+
+    The actions in an action set are applied in the order specified below,
+    regardless of the order that they were added to the set.
+    If an action set contains a group action, the actions in the appropriate action bucket
+    of the group are also applied in the order specified below. The switch may support arbitrary
+    action execution order through the action list of the Apply-Actions instruction.
+
+    1. copy TTL inwards: apply copy TTL inward actions to the packet
+    2. pop: apply all tag pop actions to the packet
+    3. push-MPLS: apply MPLS tag push action to the packet
+    4. push-PBB: apply PBB tag push action to the packet
+    5. push-VLAN: apply VLAN tag push action to the packet
+    6. copy TTL outwards: apply copy TTL outwards action to the packet
+    7. decrement TTL: apply decrement TTL action to the packet
+    8. set: apply all set-field actions to the packet
+    9. qos: apply all QoS actions, such as set queue to the packet
+    10. group: if a group action is specified, apply the actions of the relevant group bucket(s) in the order specified by this list
+    11. output: if no group action is specified, forward the packet on the port specified by the output action
+
+    The output action in the action set is executed last. If both an output action and a group action are specified
+    in an action set, the output action is ignored and the group action takes precedence.
+    If no output action and no group action were specified in an action set, the packet is dropped.
+    The execution of groups is recursive if the switch supports it; a group bucket may specify another group,
+    in which case the execution of actions traverses all the groups specified by the group configuration.
 
     '''
 
