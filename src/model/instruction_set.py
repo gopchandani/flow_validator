@@ -3,6 +3,32 @@ __author__ = 'Rakesh Kumar'
 from action_set import ActionSet
 from action_set import Action
 
+class Instruction():
+
+    def __init__(self, sw, instruction_json):
+        self.instruction_type = None
+        self.sw = sw
+
+        if "write-actions" in instruction_json:
+            self.instruction_type = "write-actions"
+            write_actions_json = instruction_json["write-actions"]
+            for action_json in write_actions_json["action"]:
+                self.written_actions.append(Action(sw, action_json))
+
+        elif "apply-actions" in instruction_json:
+            self.instruction_type = "apply-actions"
+            apply_actions_json = instruction_json["apply-actions"]
+            for action_json in apply_actions_json["action"]:
+                self.applied_actions.append(Action(sw, action_json))
+
+        elif "go-to-table" in instruction_json:
+            self.instruction_type = "go-to-table"
+            self.go_to_table = instruction_json["go-to-table"]["table_id"]
+
+        # TODO: Handle meter instruction
+        # TODO: Handle clear-actions case
+        # TODO: Write meta-data case
+        # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
 class InstructionSet():
 
@@ -36,30 +62,14 @@ class InstructionSet():
         self.sw = sw
         self.flow = flow
         self.model = self.sw.model
+
+        self.instruction_list = []
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
 
         for instruction_json in instructions_json:
-
-            if "write-actions" in instruction_json:
-                write_actions_json = instruction_json["write-actions"]
-                for action_json in write_actions_json["action"]:
-                    self.written_actions.append(Action(sw, action_json))
-
-            if "apply-actions" in instruction_json:
-                apply_actions_json = instruction_json["apply-actions"]
-                for action_json in apply_actions_json["action"]:
-                    self.applied_actions.append(Action(sw, action_json))
-
-            if "go-to-table" in instruction_json:
-                self.go_to_table = instruction_json["go-to-table"]["table_id"]
-
-            # TODO: Handle meter instruction
-            # TODO: Handle clear-actions case
-            # TODO: Write meta-data case
-            # TODO: Handle apply-actions case (SEL however, does not support this yet)
-
+            self.instruction_list.append(Instruction(sw, instructions_json))
 
     def add_port_graph_edges(self):
 
