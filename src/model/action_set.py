@@ -161,7 +161,7 @@ class ActionSet():
         # Modelling the ActionSet as a dictionary of lists, keyed by various actions.
         # These actions may be tucked away inside a group too and the type might be group
 
-        self.action_set = defaultdict(list)
+        self.action_dict = defaultdict(list)
         self.sw = sw
 
 
@@ -182,21 +182,21 @@ class ActionSet():
                     raise Exception("Odd that a group_id is not provided in a group action")
             else:
                 action.matched_flow = intersection
-                self.action_set[action.action_type].append(action)
+                self.action_dict[action.action_type].append(action)
 
     def get_resulting_match(self, input_match):
 
         output_match = input_match
 
         # Go through the operations that are performed to the match before the packet is sent out
-        if "pop_vlan" in self.action_set:
+        if "pop_vlan" in self.action_dict:
             output_match.set_field("has_vlan_tag", int(False))
 
-        if "push_vlan" in self.action_set:
+        if "push_vlan" in self.action_dict:
             output_match.set_field("has_vlan_tag", int(True))
 
-        if "set_field" in self.action_set:
-            output_match.set_fields_with_match_json(self.action_set["set_field"][0].set_field_match_json)
+        if "set_field" in self.action_dict:
+            output_match.set_fields_with_match_json(self.action_dict["set_field"][0].set_field_match_json)
 
         return output_match
 
@@ -207,7 +207,7 @@ class ActionSet():
         out_port_match = {}
 
         #  For each output action, there is a corresponding out_port_match entry
-        for output_action in self.action_set["output"]:
+        for output_action in self.action_dict["output"]:
 
             output_match = self.get_resulting_match(output_action.matched_flow)
 
