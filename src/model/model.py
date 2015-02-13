@@ -268,8 +268,18 @@ class Model():
 
         return node_type
 
+def test_pygraphviz(networkx_graph):
+
+
+    A = nx.to_agraph(networkx_graph)
+    A.write("test.dot")
+    A.layout()
+    A.draw("test.png")
+
 def main():
+
     m = Model(init_port_graph=True)
+    #test_pygraphviz(m.port_graph.g)
 
 if __name__ == "__main__":
     main()
