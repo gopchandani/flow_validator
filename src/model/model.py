@@ -200,13 +200,17 @@ class Model():
             for port in self.graph.node[sw]["sw"].ports:
                 print self.graph.node[sw]["sw"].ports[port]
 
-    def _prepare_port_graph(self):
-        self.port_graph = PortGraph(self)
-        self.port_graph.init_port_graph()
+    def dump_node_graph(self):
+
         for node in self.port_graph.g.nodes():
             print node
         for edge in self.port_graph.g.edges():
             print edge
+
+    def _prepare_port_graph(self):
+        self.port_graph = PortGraph(self)
+        self.port_graph.init_port_graph()
+        #self.dump_node_graph()
 
     def _load_model(self):
 

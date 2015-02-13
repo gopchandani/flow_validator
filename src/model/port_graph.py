@@ -55,7 +55,20 @@ class PortGraph:
         for sw in self.model.get_switches():
             sw.compute_switch_port_graph()
 
-        #TODO: Do something for ports between the switches, representing physical topology
+
+        # Add edges between ports on node edges.
+        for node_edge in self.model.graph.edges():
+            if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
+
+                edge_port_dict = self.model.get_edge_port_dict(node_edge[0], node_edge[1])
+
+                port1 = self.get_port(node_edge[0] + ":" + edge_port_dict[node_edge[0]])
+                port2 = self.get_port(node_edge[1] + ":" + edge_port_dict[node_edge[1]])
+
+                self.add_edge(port1, port2, Match(init_wildcard=True), None)
+                self.add_edge(port2, port1, Match(init_wildcard=True), None)
+
+
 
     def update_edge_down(self):
         pass
