@@ -87,9 +87,6 @@ class Switch():
     def compute_switch_port_graph(self):
         print "At Switch:", self.node_id
 
-        # Add a node per physical port in port graph
-        for port in self.ports:
-            self.model.port_graph.add_port(self.ports[port])
 
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
@@ -105,6 +102,17 @@ class Switch():
             self.model.port_graph.g.add_node(p.port_id, p=p)
             flow_table.port = p
 
+        # Add a node per physical port in port graph and connect it to table 0's port
+        for port in self.ports:
+            self.model.port_graph.add_port(self.ports[port])
+
+            self.model.port_graph.add_edge(self.ports[port],
+                                           self.flow_tables[0].port,
+                                           Match(init_wildcard=True),
+                                           None)
+
+
+        # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:
 
             # Try passing a wildcard through the flow table
