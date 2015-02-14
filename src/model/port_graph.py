@@ -1,6 +1,8 @@
 __author__ = 'Rakesh Kumar'
 
 import networkx as nx
+from networkx import bfs_edges
+
 import sys
 
 from netaddr import IPNetwork
@@ -107,17 +109,27 @@ class PortGraph:
     def update_edge_up(self):
         pass
 
-    def add_destination_host(self, dst_h_obj, admitted_match):
+    def add_destination_host_port_traffic(self, host_obj, admitted_match):
 
         # Add the port for host
-        hp = Port(None, port_type="physical", port_id=dst_h_obj.node_id)
+        hp = Port(None, port_type="physical", port_id=host_obj.node_id)
         hp.admitted_match = admitted_match
         self.add_port(hp)
 
-        # Add the edge between host and switch in the port graph
-        node_edge = (dst_h_obj.node_id, dst_h_obj.switch_id)
-        self.add_edge(dst_h_obj.switch_port, hp, Match(init_wildcard=True), None)
+        # Add edges between host and switch in the port graph
+        self.add_edge(hp, host_obj.switch_port, Match(init_wildcard=True), None)
+        self.add_edge(host_obj.switch_port, hp, Match(init_wildcard=True), None)
 
 
-    def remove_destination_host(self, dst_h_obj):
+        return hp
+
+    def remove_destination_host(self, host_obj):
         pass
+
+
+    def bfs_paths_2(self, destination_port):
+
+        print destination_port.port_id
+        print list(bfs_edges(self.g, destination_port.port_id))
+        for edge in bfs_edges(self.g, destination_port.port_id):
+            print edge

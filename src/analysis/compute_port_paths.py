@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+
 from model.model import Model
 from model.match import Match
 
@@ -29,52 +30,57 @@ class ComputePortPaths:
         else:
             return False
 
-    def bfs_paths(self, start_node_obj, destination_node_obj, destination):
-
-        queue = [(destination_node_obj, [destination_node_obj])]
-
-        while queue:
-            node_obj, path = queue.pop(0)
-
-            for neighbor in self.model.graph.neighbors(node_obj.node_id):
-                neighbor_obj = self.model.get_node_object(neighbor)
-
-                # Consider only nodes that are not in the path accumulated so far
-                if neighbor_obj not in path:
-
-                    # If arrived at the source already, stop
-                    if neighbor_obj == start_node_obj:
-                        yield [neighbor_obj] + path
-
-                    # Otherwise, can I come from neighbor to here
-                    else:
-                        if self.check_port_crossing(neighbor_obj, node_obj, destination):
-                            queue.append((neighbor_obj, [neighbor_obj] + path))
+    # def bfs_paths(self, start_port, end_port):
+    #
+    #     queue = [(end_port, [end_port])]
+    #
+    #     while queue:
+    #         node_obj, path = queue.pop(0)
+    #
+    #         for neighbor in self.port_graph.g.neighbors(node_obj.node_id):
+    #             neighbor_obj = self.model.get_node_object(neighbor)
+    #
+    #             # Consider only nodes that are not in the path accumulated so far
+    #             if neighbor_obj not in path:
+    #
+    #                 # If arrived at the source already, stop
+    #                 if neighbor_obj == start_port:
+    #                     yield [neighbor_obj] + path
+    #
+    #                 # Otherwise, can I come from neighbor to here
+    #                 else:
+    #                     if self.check_port_crossing(neighbor_obj, node_obj, destination):
+    #                         queue.append((neighbor_obj, [neighbor_obj] + path))
 
     def analyze_all_node_pairs(self):
 
-        for src_h_id in self.model.get_host_ids():
-            for dst_h_id in self.model.get_host_ids():
+        # Attach a destination port for each host.
 
-                src_h_obj = self.model.get_node_object(src_h_id)
-                dst_h_obj = self.model.get_node_object(dst_h_id)
+        for host_id in self.model.get_host_ids():
+            print "Setting admitted_match:", host_id
+            host_obj = self.model.get_node_object(host_id)
 
-                if src_h_id == dst_h_id:
-                    continue
+            admitted_match = Match(init_wildcard=True, tag="flow")
+            admitted_match.set_field("ethernet_type", 0x0800)
+            dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
+            admitted_match.set_field("ethernet_destination", dst_mac_int)
+            host_port = self.port_graph.add_destination_host_port_traffic(host_obj, admitted_match)
 
-                print "Setting admitted_match:", dst_h_id
+            # Let it bleed
+            self.port_graph.bfs_paths_2(host_port)
 
-                admitted_match = Match(init_wildcard=True, tag="flow")
-                admitted_match.set_field("ethernet_type", 0x0800)
-                src_mac_int = int(src_h_obj.mac_addr.replace(":", ""), 16)
-                admitted_match.set_field("ethernet_source", src_mac_int)
-                dst_mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
-                admitted_match.set_field("ethernet_destination", dst_mac_int)
-                
-                self.port_graph.add_destination_host(dst_h_obj, admitted_match)
 
-                #print "--"
-                #print list(self.bfs_paths(src_h_obj.switch_obj, dst_h_obj.switch_obj, dst_h_id))
+        # for src_h_id in self.model.get_host_ids():
+        #     for dst_h_id in self.model.get_host_ids():
+        #
+        #         src_port = self.port_graph.get_port(src_h_id)
+        #         dst_port = self.port_graph.get_port(dst_h_id)
+        #
+        #         if src_port == dst_port:
+        #             continue
+        #
+        #         #print "--"
+        #         print list(self.bfs_paths(src_port, dst_port))
 
 def main():
     bp = ComputePortPaths()
