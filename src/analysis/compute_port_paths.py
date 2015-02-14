@@ -69,18 +69,17 @@ class ComputePortPaths:
             # Let it bleed
             self.port_graph.bfs_paths_2(host_port)
 
+        #  Test connectivity after flows have bled through the port graph
+        for src_h_id in self.model.get_host_ids():
+            for dst_h_id in self.model.get_host_ids():
 
-        # for src_h_id in self.model.get_host_ids():
-        #     for dst_h_id in self.model.get_host_ids():
-        #
-        #         src_port = self.port_graph.get_port(src_h_id)
-        #         dst_port = self.port_graph.get_port(dst_h_id)
-        #
-        #         if src_port == dst_port:
-        #             continue
-        #
-        #         #print "--"
-        #         print list(self.bfs_paths(src_port, dst_port))
+                src_port = self.port_graph.get_port(src_h_id)
+                dst_port = self.port_graph.get_port(dst_h_id)
+
+                if src_port == dst_port:
+                    continue
+
+                print src_port.admitted_match[dst_port.port_id]
 
 def main():
     bp = ComputePortPaths()

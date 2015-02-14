@@ -72,7 +72,8 @@ class PortGraph:
         pass
 
     def get_edge_data(self, node1, node2):
-        return self.g[node1.node_id][node2.node_id]['edge_data']
+        a = self.g[node1.port_id][node2.port_id]
+        return a[0]['edge_data']
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")
@@ -113,13 +114,12 @@ class PortGraph:
 
         # Add the port for host
         hp = Port(None, port_type="physical", port_id=host_obj.node_id)
-        hp.admitted_match = admitted_match
+        hp.admitted_match[host_obj.node_id] = admitted_match
         self.add_port(hp)
 
         # Add edges between host and switch in the port graph
         self.add_edge(hp, host_obj.switch_port, Match(init_wildcard=True), None)
         self.add_edge(host_obj.switch_port, hp, Match(init_wildcard=True), None)
-
 
         return hp
 
@@ -129,7 +129,18 @@ class PortGraph:
 
     def bfs_paths_2(self, destination_port):
 
-        print destination_port.port_id
-        print list(bfs_edges(self.g, destination_port.port_id))
         for edge in bfs_edges(self.g, destination_port.port_id):
-            print edge
+
+            # Traverse in reverse.
+            prev_port = self.get_port(edge[1])
+            curr_port = self.get_port(edge[0])
+            edge_data = self.get_edge_data(curr_port, prev_port)
+
+            # At prev_port, set up the admitted traffic for the destination_port, by examining
+            # admitted_matches at curr_port
+            for dst in curr_port.admitted_match:
+
+                # See what the intersection of edges is, and if not an empty field match then put it down
+                intersection = edge_data["match"].intersect(curr_port.admitted_match[dst])
+                if not intersection.has_empty_field():
+                    prev_port.admitted_match[dst] = intersection
