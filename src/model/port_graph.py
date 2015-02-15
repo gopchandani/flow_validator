@@ -129,18 +129,29 @@ class PortGraph:
 
     def bfs_paths_2(self, destination_port):
 
-        for edge in bfs_edges(self.g, destination_port.port_id):
+        # Traverse in reverse.
+        for edge in bfs_edges(self.g, destination_port.port_id, reverse=True):
+            next_port_towards_dst = self.get_port(edge[0])
+            curr_port = self.get_port(edge[1])
+            edge_data = self.get_edge_data(self.get_port(edge[1]), self.get_port(edge[0]))
+            print edge[1], "->", edge[0]
 
-            # Traverse in reverse.
-            prev_port = self.get_port(edge[1])
-            curr_port = self.get_port(edge[0])
-            edge_data = self.get_edge_data(curr_port, prev_port)
-
-            # At prev_port, set up the admitted traffic for the destination_port, by examining
+            # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at curr_port
-            for dst in curr_port.admitted_match:
+            for dst in next_port_towards_dst.admitted_match:
 
-                # See what the intersection of edges is, and if not an empty field match then put it down
-                intersection = edge_data["match"].intersect(curr_port.admitted_match[dst])
+                to_be_intersected = None
+                if edge_data["actions"]:
+                    to_be_intersected = edge_data["actions"].get_resulting_match(edge_data["match"])
+                else:
+                    to_be_intersected = edge_data["match"]
+
+                intersection = to_be_intersected.intersect(next_port_towards_dst.admitted_match[dst])
+
                 if not intersection.has_empty_field():
-                    prev_port.admitted_match[dst] = intersection
+                    print "Carried for destination:", dst
+                    curr_port.admitted_match[dst] = edge_data["match"]
+                else:
+                    print "Did not carry:", intersection
+                    print "Next Port Admits:", next_port_towards_dst.admitted_match[dst]
+                    print edge_data
