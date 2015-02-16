@@ -63,14 +63,21 @@ class PortGraph:
         return self.g.node[port_id]["p"]
 
     def add_edge(self, port1, port2, match, actions, active_status=True):
-        print port1.port_id, port2.port_id, match, actions
 
         edge_data = {"match": match, "actions": actions, "active_status": active_status}
         e = (port1.port_id, port2.port_id)
         self.g.add_edge(*e, edge_data=edge_data)
 
-    def remove_edge(self):
+    def remove_edge(self, port1, port2):
         pass
+        # Look at the source port and see what admitted_matches rely on this edge to be admitted
+        # TODO: Store tht information in the first place
+
+        # Ones that do, need to be found alternatives... This can be achieved by looking at other outgoing edges
+        # that may be active now...
+
+        # If the admitted matches chance (i,e. their content changes), everybody who relies on that edge needs to be
+        # updated, so the change travels back in the bfs fashion
 
     def get_edge_data(self, node1, node2):
         a = self.g[node1.port_id][node2.port_id]

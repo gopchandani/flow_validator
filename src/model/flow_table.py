@@ -96,7 +96,6 @@ class FlowTable():
 
         for flow in self.flows:
 
-            print flow.match_element
             intersection = flow.match_element.intersect(remaining_match)
 
             # Don't care about matches that have full empty fields
