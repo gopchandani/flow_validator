@@ -95,7 +95,7 @@ class InstructionSet():
 
                 # Put all the actions under this instruction in an ActionSet and mix it up...
                 applied_action_set = ActionSet(self.sw)
-                applied_action_set.add_actions(instruction.actions_list, match_for_port)
+                applied_action_set.add_all_actions(instruction.actions_list, match_for_port)
 
                 # Get the resulting match and have it be applied
                 match_for_port = applied_action_set.get_resulting_match(match_for_port)
@@ -119,7 +119,7 @@ class InstructionSet():
             elif instruction.instruction_type == "write-actions":
                 # Put all the actions under this instruction in an ActionSet and pass it down .
                 written_action_set = ActionSet(self.sw)
-                written_action_set.add_actions(instruction.actions_list, match_for_port)
+                written_action_set.add_all_actions(instruction.actions_list, match_for_port)
 
                 #Check to see if written_action_set has any output edges to contribute
                 out_port_list = written_action_set.get_out_port_list(match_for_port)

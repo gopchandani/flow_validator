@@ -81,6 +81,15 @@ class Group():
         #  Sort the bucket_list by bucket-id
         self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
 
+    def get_all_action_list(self):
+
+        all_action_list = []
+
+        for action_bucket in self.bucket_list:
+            all_action_list.extend(action_bucket.action_list)
+
+        return all_action_list
+
     def get_active_action_list(self):
         active_action_list = []
 

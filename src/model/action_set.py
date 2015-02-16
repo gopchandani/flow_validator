@@ -165,10 +165,9 @@ class ActionSet():
         self.sw = sw
 
 
-    # This essentially turns the nested action_list which may contain group actions in it,
+    # These  essentially turn the nested action_list which may contain group actions in it,
     # into a simple dictionary keyed by type and values containing the action itself
     # This is a way to essentially sort actions from being in groups into being categorized by their type
-
 
     def add_active_actions(self, action_list, intersection):
 
@@ -178,6 +177,20 @@ class ActionSet():
                 if action.group_id in self.sw.group_table.groups:
                     group_active_action_list =  self.sw.group_table.groups[action.group_id].get_active_action_list()
                     self.add_active_actions(group_active_action_list, intersection)
+                else:
+                    raise Exception("Odd that a group_id is not provided in a group action")
+            else:
+                action.matched_flow = intersection
+                self.action_dict[action.action_type].append(action)
+
+    def add_all_actions(self, action_list, intersection):
+
+        for action in action_list:
+
+            if action.action_type == "group":
+                if action.group_id in self.sw.group_table.groups:
+                    group_all_action_list =  self.sw.group_table.groups[action.group_id].get_all_action_list()
+                    self.add_all_actions(group_all_action_list, intersection)
                 else:
                     raise Exception("Odd that a group_id is not provided in a group action")
             else:
