@@ -21,6 +21,7 @@ field_names = ["in_port",
               "vlan_id",
               "has_vlan_tag"]
 
+
 class MatchElement(DictMixin):
 
     def __init__(self, match_json=None, flow=None):
