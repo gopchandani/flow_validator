@@ -28,12 +28,13 @@ class Action():
                             supported.
     '''
 
-    def __init__(self, sw, action_json):
+    def __init__(self, sw, action_json, is_active=True):
 
         self.sw = sw
         self.matched_flow = None
         self.order = action_json["order"]
         self.action_type = None
+        self.is_active = is_active
 
         if "output-action" in action_json:
             self.action_type = "output"
@@ -231,7 +232,7 @@ class ActionSet():
 
         return out_port_match
 
-    def get_out_port_list(self, in_port_match):
+    def get_out_port_and_active_status_tuple(self, in_port_match):
         in_port = in_port_match.get_field("in_port")
 
         out_port_list = []
@@ -240,8 +241,8 @@ class ActionSet():
         for output_action in self.action_dict["output"]:
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
-                out_port_list.append(str(in_port))
+                out_port_list.append((str(in_port), output_action.is_active))
             else:
-                out_port_list.append(str(output_action.out_port))
+                out_port_list.append((str(output_action.out_port), output_action.is_active))
 
         return out_port_list

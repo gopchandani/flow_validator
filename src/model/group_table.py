@@ -85,8 +85,26 @@ class Group():
 
         all_action_list = []
 
-        for action_bucket in self.bucket_list:
-            all_action_list.extend(action_bucket.action_list)
+        # If it is a _all_ group, collect all buckets
+        if self.group_type == "group-all":
+
+            for action_bucket in self.bucket_list:
+                all_action_list.extend(action_bucket.action_list)
+
+        # If it is a fast-failover group, collect the bucket which is active
+        elif self.group_type == "group-ff":
+
+            for action_bucket in self.bucket_list:
+
+                # Check if the port that the bucket watches is actually up
+                if self.sw.ports[action_bucket.watch_port].state == "up":
+                    all_action_list.extend(action_bucket.action_list)
+                else:
+                    for action in action_bucket.action_list:
+                        action.is_active = False
+
+                    all_action_list.extend(action_bucket.action_list)
+                    # Mark these actions as not active
 
         return all_action_list
 

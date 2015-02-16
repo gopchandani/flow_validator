@@ -101,53 +101,57 @@ class InstructionSet():
                 match_for_port = applied_action_set.get_resulting_match(match_for_port)
 
                 #Check to see if applied_action_set has any output edges to contribute
-                out_port_list = applied_action_set.get_out_port_list(match_for_port)
-                for out_port in out_port_list:
+                out_port_and_active_status_tuple_list = \
+                    applied_action_set.get_out_port_and_active_status_tuple(match_for_port)
+
+                for out_port, active_status in out_port_and_active_status_tuple_list:
                     if out_port == "4294967293":
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.model.port_graph.get_port(str(out_port)),
                                                         match_for_port,
-                                                        None))
+                                                        None, active_status))
                     else:
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.ports[out_port],
                                                         match_for_port,
-                                                        None))
+                                                        None, active_status))
 
             # These things affect the next table, so the edge to next table is going to contain these two
             # types of "edits" on the ActionSet
             elif instruction.instruction_type == "write-actions":
+                
                 # Put all the actions under this instruction in an ActionSet and pass it down .
                 written_action_set = ActionSet(self.sw)
                 written_action_set.add_all_actions(instruction.actions_list, match_for_port)
 
                 #Check to see if written_action_set has any output edges to contribute
-                out_port_list = written_action_set.get_out_port_list(match_for_port)
-                for out_port in out_port_list:
+                out_port_and_active_status_tuple_list = \
+                    written_action_set.get_out_port_and_active_status_tuple(match_for_port)
+
+                for out_port, active_status in out_port_and_active_status_tuple_list:
                     if out_port == 4294967293:
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.model.port_graph.get_port(out_port),
                                                         match_for_port,
-                                                        written_action_set))
+                                                        written_action_set, active_status))
                     else:
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.ports[out_port],
                                                         match_for_port,
-                                                        written_action_set))
+                                                        written_action_set, active_status))
 
 
             elif instruction.instruction_type == "go-to-table":
                 port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                 self.sw.flow_tables[instruction.go_to_table].port,
                                                 match_for_port,
-                                                None))
-
-
+                                                None, True))
+                
             # TODO: Handle meter instruction
             # TODO: Handle clear-actions case
             # TODO: Write meta-data case
             # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
         # Add them all in
-        for src, dst, match, actions in port_additions:
-            self.model.port_graph.add_edge(src, dst, match, actions)
+        for src, dst, match, actions, active_status in port_additions:
+            self.model.port_graph.add_edge(src, dst, match, actions, active_status)

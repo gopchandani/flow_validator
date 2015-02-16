@@ -62,10 +62,10 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, match, actions):
+    def add_edge(self, port1, port2, match, actions, active_status=True):
         print port1.port_id, port2.port_id, match, actions
 
-        edge_data = {"match": match, "actions": actions}
+        edge_data = {"match": match, "actions": actions, "active_status": active_status}
         e = (port1.port_id, port2.port_id)
         self.g.add_edge(*e, edge_data=edge_data)
 

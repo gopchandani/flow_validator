@@ -110,7 +110,6 @@ class Switch():
                                            Match(init_wildcard=True),
                                            None)
 
-
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:
 
