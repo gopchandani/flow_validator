@@ -79,11 +79,6 @@ class Switch():
 
         return out_port_match
 
-    def transfer_function_3(self, in_port_match):
-
-        out_port_match = {}
-        return out_port_match
-
     def compute_switch_port_graph(self):
         print "At Switch:", self.node_id
 

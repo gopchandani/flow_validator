@@ -80,14 +80,6 @@ class PortGraph:
         cp = Port(None, port_type="controller", port_id="4294967293")
         self.add_port(cp)
 
-    def add_node_graph_edge(self, node_edge):
-        edge_port_dict = self.model.get_edge_port_dict(node_edge[0], node_edge[1])
-        port1 = self.get_port(node_edge[0] + ":" + edge_port_dict[node_edge[0]])
-        port2 = self.get_port(node_edge[1] + ":" + edge_port_dict[node_edge[1]])
-
-        self.add_edge(port1, port2, Match(init_wildcard=True), None)
-        self.add_edge(port2, port1, Match(init_wildcard=True), None)
-
     def remove_node_graph_edge(self, node1, node2):
         pass
 
@@ -103,7 +95,13 @@ class PortGraph:
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.model.graph.edges():
             if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
-                self.add_node_graph_edge(node_edge)
+
+                edge_port_dict = self.model.get_edge_port_dict(node_edge[0], node_edge[1])
+                port1 = self.get_port(node_edge[0] + ":" + edge_port_dict[node_edge[0]])
+                port2 = self.get_port(node_edge[1] + ":" + edge_port_dict[node_edge[1]])
+
+                self.add_edge(port1, port2, Match(init_wildcard=True), None)
+                self.add_edge(port2, port1, Match(init_wildcard=True), None)
 
     def update_edge_down(self):
         pass
