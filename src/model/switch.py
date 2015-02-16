@@ -50,17 +50,17 @@ class Switch():
                 # otherwise following along the same match to next table
                 if hpm_flow.applied_actions:
                     table_applied_action_set = ActionSet(self)
-                    table_applied_action_set.add_actions(hpm_flow.applied_actions, intersection)
+                    table_applied_action_set.add_active_actions(hpm_flow.applied_actions, intersection)
                     next_table_matches_on = table_applied_action_set.get_resulting_match(next_table_matches_on)
 
                     #Ugly
-                    written_action_set.add_actions(hpm_flow.applied_actions, intersection)
+                    written_action_set.add_active_actions(hpm_flow.applied_actions, intersection)
                 else:
                     next_table_matches_on = in_port_match
 
                 # If there are any written-actions that hpm_flow does, accumulate them
                 if hpm_flow.written_actions:
-                    written_action_set.add_actions(hpm_flow.written_actions, intersection)
+                    written_action_set.add_active_actions(hpm_flow.written_actions, intersection)
 
                 # if the hpm_flow has any go-to-next table instructions then
                 # update table_id_to_check and has_table_to_check accordingly

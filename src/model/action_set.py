@@ -170,14 +170,14 @@ class ActionSet():
     # This is a way to essentially sort actions from being in groups into being categorized by their type
 
 
-    def add_actions(self, action_list, intersection):
+    def add_active_actions(self, action_list, intersection):
 
         for action in action_list:
 
             if action.action_type == "group":
                 if action.group_id in self.sw.group_table.groups:
                     group_active_action_list =  self.sw.group_table.groups[action.group_id].get_active_action_list()
-                    self.add_actions(group_active_action_list, intersection)
+                    self.add_active_actions(group_active_action_list, intersection)
                 else:
                     raise Exception("Odd that a group_id is not provided in a group action")
             else:

@@ -21,7 +21,6 @@ field_names = ["in_port",
               "vlan_id",
               "has_vlan_tag"]
 
-
 class MatchElement(DictMixin):
 
     def __init__(self, match_json=None, flow=None):
@@ -332,14 +331,6 @@ class Match(DictMixin):
 
         return matched_tree
 
-    def intersect(self, in_match):
-
-        match_intersection = Match()
-
-        for field_name in self.match_fields:
-            match_intersection[field_name] = self.get_matched_tree(in_match[field_name], self[field_name])
-
-        return match_intersection
 
 def main():
     m1 = Match()
