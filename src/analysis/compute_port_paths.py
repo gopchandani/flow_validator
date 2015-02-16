@@ -9,49 +9,6 @@ class ComputePortPaths:
         self.model = Model(init_port_graph=True)
         self.port_graph = self.model.port_graph
 
-    def check_port_crossing(self, neighbor_obj, node_obj, destination):
-
-        print "At switch:", node_obj.node_id, "Neighbor Switch:", neighbor_obj.node_id
-
-        edge_port_dict = self.model.get_edge_port_dict(neighbor_obj.node_id, node_obj.node_id)
-
-        #Check to see if the requirped destination match can get from neighbor to node
-        out_port_match = neighbor_obj.transfer_function_3(node_obj.accepted_destination_match[destination])
-
-        if edge_port_dict[neighbor_obj.node_id] in out_port_match:
-
-            # compute what traffic will arrive from neighbor
-            passing_match = out_port_match[edge_port_dict[neighbor_obj.node_id]]
-
-            # Set the match in the neighbor, indicating what passes
-            neighbor_obj.accepted_destination_match[destination] = passing_match
-
-            return True
-        else:
-            return False
-
-    # def bfs_paths(self, start_port, end_port):
-    #
-    #     queue = [(end_port, [end_port])]
-    #
-    #     while queue:
-    #         node_obj, path = queue.pop(0)
-    #
-    #         for neighbor in self.port_graph.g.neighbors(node_obj.node_id):
-    #             neighbor_obj = self.model.get_node_object(neighbor)
-    #
-    #             # Consider only nodes that are not in the path accumulated so far
-    #             if neighbor_obj not in path:
-    #
-    #                 # If arrived at the source already, stop
-    #                 if neighbor_obj == start_port:
-    #                     yield [neighbor_obj] + path
-    #
-    #                 # Otherwise, can I come from neighbor to here
-    #                 else:
-    #                     if self.check_port_crossing(neighbor_obj, node_obj, destination):
-    #                         queue.append((neighbor_obj, [neighbor_obj] + path))
-
     def analyze_all_node_pairs(self):
 
         # Attach a destination port for each host.
