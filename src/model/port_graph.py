@@ -71,7 +71,7 @@ class PortGraph:
     def remove_edge(self, port1, port2):
         pass
         # Look at the source port and see what admitted_matches rely on this edge to be admitted
-        # TODO: Store tht information in the first place
+        # TODO: Store that information in the first place
 
         # Ones that do, need to be found alternatives... This can be achieved by looking at other outgoing edges
         # that may be active now...

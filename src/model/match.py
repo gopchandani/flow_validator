@@ -221,19 +221,14 @@ class Match(DictMixin):
 
         return ret_str
 
-    def __init__(self, tag=None, match_element_list=[], init_wildcard=False):
+    def __init__(self, tag=None, init_wildcard=False):
 
         self.match_fields = {}
         self.tag = tag
 
         for field_name in field_names:
             self[field_name] = IntervalTree()
-
-            if match_element_list:
-                for match_element in match_element_list:
-                    self[field_name].add(match_element[field_name])
-
-            elif init_wildcard:
+            if init_wildcard:
                 self[field_name].add(Interval(0, sys.maxsize, tag))
 
     def __delitem__(self, key):
