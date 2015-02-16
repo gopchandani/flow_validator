@@ -86,6 +86,7 @@ class ComputePortPaths:
                 else:
                     print "No admission for dst_host:", dst_h_id, "at src host:", src_h_id
 
+
 def main():
     bp = ComputePortPaths()
     bp.analyze_all_node_pairs()

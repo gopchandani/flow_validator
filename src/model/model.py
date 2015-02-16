@@ -38,8 +38,6 @@ class Model():
         self.init_port_graph = init_port_graph
         self._load_model()
 
-
-
     def _prepare_group_table(self, sw):
 
         group_table = None
@@ -118,7 +116,6 @@ class Model():
 
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "up"
-
 
     def remove_edge(self, node1_id, node1_port, node2_id, node2_port):
         self.graph.remove_edge(node1_id, node2_id)

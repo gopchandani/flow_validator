@@ -63,6 +63,7 @@ class PortGraph:
         return self.g.node[port_id]["p"]
 
     def add_edge(self, port1, port2, match, actions):
+        print port1.port_id, port2.port_id, match, actions
 
         edge_data = {"match": match, "actions": actions}
         e = (port1.port_id, port2.port_id)
@@ -128,6 +129,7 @@ class PortGraph:
 
 
     def bfs_paths_2(self, destination_port):
+        print "bfs_paths_2"
 
         # Traverse in reverse.
         for edge in bfs_edges(self.g, destination_port.port_id, reverse=True):
@@ -135,8 +137,8 @@ class PortGraph:
             curr_port = self.get_port(edge[1])
             edge_data = self.get_edge_data(self.get_port(edge[1]), self.get_port(edge[0]))
             print edge[1], "->", edge[0]
-            # print "predecessors of", edge[1], ":", self.g.predecessors(edge[1])
-            # print "successors of", edge[1], ":", self.g.successors(edge[1])
+            print "predecessors of", edge[1], ":", self.g.predecessors(edge[1])
+            print "successors of", edge[1], ":", self.g.successors(edge[1])
 
             # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at curr_port
