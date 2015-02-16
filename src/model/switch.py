@@ -26,7 +26,7 @@ class Switch():
 
         self.accepted_destination_match = {}
 
-    def transfer_function(self, in_port_match):
+    def transfer_function(self, in_port_match, in_port):
 
         written_action_set = ActionSet(self)
 
@@ -75,7 +75,7 @@ class Switch():
             else:
                 has_table_to_check = False
 
-        out_port_match = written_action_set.get_out_port_matches(in_port_match)
+        out_port_match = written_action_set.get_out_port_matches(in_port_match, in_port)
 
         return out_port_match
 

@@ -22,60 +22,77 @@ field_names = ["in_port",
               "has_vlan_tag"]
 
 
-class MatchElement(DictMixin):
+class MatchElement():
 
-    def __init__(self, match_json=None, flow=None):
+    def __init__(self, match_json=None, flow=None, is_wildcard=True):
 
-        self.match_elements = {}
+        self.match_fields = {}
 
-        if match_json is not None and flow:
+        # Create one IntervalTree per field.
+        for field_name in field_names:
+            self.match_fields[field_name] = IntervalTree()
+
+        if match_json and flow:
             self.add_element_from_match_json(match_json, flow)
+        else:
+            for field_name in field_names:
+                self.set_match_field_element(field_name, is_wildcard=True)
 
-    def __getitem__(self, item):
-        return self.match_elements[item]
+    def set_match_field_element(self, key, value=None, flow=None, tag=None, is_wildcard=False):
 
-    def __setitem__(self, key, value):
-        self.match_elements[key] = value
+        # First remove all current intervals
+        prev_intervals = list(self.match_fields[key])
+        for iv in prev_intervals:
+            self.match_fields[key].remove(iv)
 
-    def set_match_field_element(self, key, value, tag=None):
-        self.match_elements[key] = Interval(value, value + 1, tag)
+        if is_wildcard:
+            self.match_fields[key].add(Interval(0, sys.maxsize, flow))
+        else:
+            self.match_fields[key].add(Interval(value, value + 1, tag))
 
-    def __delitem__(self, key):
-        del self.match_elements[key]
+    def get_matched_tree(self, tree1, tree2):
 
-    def keys(self):
-        return self.match_elements.keys()
-
-    def get_matched_tree(self, tree, iv):
-    
         matched_tree = IntervalTree()
-        for matched_interval in tree.search(iv.begin, iv.end):
-    
-            #Take the smaller interval of the two and put it in the matched_tree
-            if matched_interval.contains_point(iv):
-                matched_tree.add(iv)
-            elif iv.contains_point(matched_interval):
-                matched_tree.add(matched_interval)
-    
+        for iv in tree1:
+            for matched_iv in tree2.search(iv.begin, iv.end):
+
+                #Take the smaller interval of the two and put it in the matched_tree
+                if matched_iv.contains_interval(iv):
+                    matched_tree.add(iv)
+                elif iv.contains_interval(matched_iv):
+                    matched_tree.add(matched_iv)
+
         return matched_tree
 
-    def intersect(self, in_match):
+    def intersect(self, in_match_element):
 
-        match_intersection = Match()
+        intersection_element = MatchElement()
 
-        for field_name in self.match_elements:
-            match_intersection[field_name] = self.get_matched_tree(in_match[field_name], self[field_name])
+        for field_name in self.match_fields:
+            intersection_element.match_fields[field_name] = self.get_matched_tree(
+                in_match_element.match_fields[field_name], self.match_fields[field_name])
 
-        return match_intersection
+            # If the resulting tree has no intervals in it, then balk:
+            if not intersection_element.match_fields[field_name]:
+                return None
+
+        return intersection_element
 
     def complement_match(self, tag):
-        match_complement = Match(tag, init_wildcard=True)
 
-        for field_name in self.match_elements:
-            
+        match_complement = Match(tag)
+
+        for field_name in self.match_fields:
+
             #If the field is not a wildcard, then chop it from the wildcard initialized Match
-            if not (self[field_name].begin == 0 and self[field_name].end == sys.maxsize):
-                match_complement[field_name].chop(self[field_name].begin, self[field_name].end)
+            if not (Interval(0, sys.maxsize) in self.match_fields[field_name]):
+                me = MatchElement(is_wildcard=True)
+
+                # Chop out each interval from me[field_name]
+                for interval in self.match_fields[field_name]:
+                    me.match_fields[field_name].chop(interval.begin, interval.end)
+
+                match_complement.match_elements.append(me)
 
         return match_complement
 
@@ -85,67 +102,44 @@ class MatchElement(DictMixin):
 
             try:
                 if field_name == "in_port":
-
-                    self[field_name] = Interval(int(match_json["in-port"]),
-                                                 int(match_json["in-port"]) + 1,
-                                                 flow)
+                     self.set_match_field_element(field_name, int(match_json["in-port"]), flow)
 
                 elif field_name == "ethernet_type":
-                    self[field_name] = Interval(int(match_json["ethernet-match"]["ethernet-type"]["type"]),
-                                                 int(match_json["ethernet-match"]["ethernet-type"]["type"]) + 1,
-                                                 flow)
-
+                    self.set_match_field_element(field_name, int(match_json["ethernet-match"]["ethernet-type"]["type"]), flow)
                 elif field_name == "ethernet_source":
                     mac_int = int(match_json["ethernet-match"]["ethernet-source"]["address"].replace(":", ""), 16)
-                    self[field_name] = Interval(mac_int, mac_int + 1, flow)
+                    self.set_match_field_element(field_name, mac_int, flow)
 
                 elif field_name == "ethernet_destination":
                     mac_int = int(match_json["ethernet-match"]["ethernet-destination"]["address"].replace(":", ""), 16)
-                    self[field_name] = Interval(mac_int, mac_int + 1, flow)
+                    self.set_match_field_element(field_name, mac_int, flow)
 
                 #TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
-                    self[field_name] = Interval(IPNetwork(match_json["src_ip_addr"]))
-
+                    self.set_match_field_element(field_name, IPNetwork(match_json["src_ip_addr"]))
                 elif field_name == "dst_ip_addr":
-                    self[field_name] = Interval(IPNetwork(match_json["dst_ip_addr"]))
+                    self.set_match_field_element(field_name, IPNetwork(match_json["dst_ip_addr"]))
 
                 elif field_name == "ip_protocol":
-                    self[field_name] = Interval(int(match_json["ip-match"]["ip-protocol"]),
-                                                 int(match_json["ip-match"]["ip-protocol"]) + 1,
-                                                 flow)
-
+                    self.set_match_field_element(field_name, int(match_json["ip-match"]["ip-protocol"]), flow)
                 elif field_name == "tcp_destination_port":
-                    self[field_name] = Interval(int(match_json["tcp-destination-port"]),
-                                                 int(match_json["tcp-destination-port"]) + 1,
-                                                 flow)
-
+                    self.set_match_field_element(field_name, int(match_json["tcp-destination-port"]), flow)
                 elif field_name == "tcp_source_port":
-                    self[field_name] = Interval(int(match_json["tcp-source-port"]),
-                                                 int(match_json["tcp-source-port"]) + 1,
-                                                 flow)
-
+                    self.set_match_field_element(field_name, int(match_json["tcp-source-port"]), flow)
                 elif field_name == "udp_destination_port":
-                    self[field_name] = Interval(int(match_json["udp-destination-port"]),
-                                                 int(match_json["udp-destination-port"]) + 1,
-                                                 flow)
+                    self.set_match_field_element(field_name, int(match_json["udp-destination-port"]), flow)
                 elif field_name == "udp_source_port":
-                    self[field_name] = Interval(int(match_json["udp-source-port"]),
-                                                 int(match_json["udp-source-port"]) + 1,
-                                                 flow)
-                elif field_name == "vlan_id":
-                    self["vlan_id"] = Interval(int(match_json["vlan-match"]["vlan-id"]["vlan-id"]),
-                                                int(match_json["vlan-match"]["vlan-id"]["vlan-id"]) + 1,
-                                                flow)
+                    self.set_match_field_element(field_name, int(match_json["udp-source-port"]), flow)
 
-                    self["has_vlan_tag"] = Interval(1, 1 + 1, flow)
+                elif field_name == "vlan_id":
+                    self.set_match_field_element(field_name, int(match_json["vlan-match"]["vlan-id"]["vlan-id"]), flow)
+                    self.set_match_field_element(field_name, 1, flow)
 
             except KeyError:
-                self[field_name] = Interval(0, sys.maxsize, flow)
-
+                self.set_match_field_element(field_name, is_wildcard=True)
                 # Special case
                 if field_name == "vlan_id":
-                    self["has_vlan_tag"] = Interval(0, sys.maxsize, flow)
+                    self.set_match_field_element(field_name, is_wildcard=True)
 
                 continue
 
@@ -212,62 +206,23 @@ class MatchElement(DictMixin):
 
         return match
 
-class Match(DictMixin):
-
-    def __str__(self):
-        ret_str = "Match: "
-        for f in self.match_fields:
-            ret_str +=  f + " " + str(self.match_fields[f])
-
-        return ret_str
+class Match():
 
     def __init__(self, tag=None, init_wildcard=False):
 
-        self.match_fields = {}
         self.tag = tag
+        self.match_elements = []
 
-        for field_name in field_names:
-            self[field_name] = IntervalTree()
-            if init_wildcard:
-                self[field_name].add(Interval(0, sys.maxsize, tag))
-
-    def __delitem__(self, key):
-        del self.match_fields[key]
-
-    def keys(self):
-        return self.match_fields.keys()
-
-    def __getitem__(self, item):
-        return self.match_fields[item]
-
-    def __setitem__(self, key, value):
-        self.match_fields[key] = value
+        # If initialized as wildcard, add one to the list
+        if init_wildcard:
+            self.match_elements.append(MatchElement(is_wildcard=True))
 
     def has_empty_field(self):
-        for match_field in self.keys():
-            if not self[match_field].items():
-                return True
-
-        return False
+        raise Exception("Implement has_empty_field")
 
     def set_field(self, key, value):
-        self[key] = IntervalTree()
-        self[key].add(Interval(value, value + 1, self.tag))
-
-    #TODO: away with the ugly hacks...
-    def get_field(self, key):
-        field = self.match_fields[key]
-
-        # If the field is not a wildcard, return a value, otherwise none
-        items = field.items()
-        item = None
-        if items:
-            item = items.pop()
-
-        if item.end != sys.maxsize:
-            return item.begin
-        else:
-             return None
+        for me in self.match_elements:
+            me.set_match_field_element(key, value)
 
     def set_fields_with_match_json(self, match_json):
 
@@ -313,28 +268,14 @@ class Match(DictMixin):
                     self.set_field("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
                     self.set_field("has_vlan_tag", int(True))
 
-    def get_matched_tree(self, tree1, tree2):
-
-        matched_tree = IntervalTree()
-        for iv in tree1:
-            for matched_iv in tree2.search(iv.begin, iv.end):
-
-                #Take the smaller interval of the two and put it in the matched_tree
-                if matched_iv.contains_interval(iv):
-                    matched_tree.add(iv)
-                elif iv.contains_interval(matched_iv):
-                    matched_tree.add(matched_iv)
-
-        return matched_tree
-
     def intersect(self, in_match):
-
-        match_intersection = Match()
-
-        for field_name in self.match_fields:
-            match_intersection[field_name] = self.get_matched_tree(in_match[field_name], self[field_name])
-
-        return match_intersection
+        im = Match()
+        for e1 in self.match_elements:
+            for e2 in in_match.match_elements:
+                ei = e1.intersect(e2)
+                if ei:
+                    im.match_elements.append(ei)
+        return im
 
 def main():
     m1 = Match()
@@ -346,3 +287,19 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    #
+
+    #
+    # def get_matched_tree(self, tree, iv):
+    #
+    #     matched_tree = IntervalTree()
+    #     for matched_interval in tree.search(iv.begin, iv.end):
+    #
+    #         #Take the smaller interval of the two and put it in the matched_tree
+    #         if matched_interval.contains_point(iv):
+    #             matched_tree.add(iv)
+    #         elif iv.contains_point(matched_interval):
+    #             matched_tree.add(matched_interval)
+    #
+    #     return matched_tree

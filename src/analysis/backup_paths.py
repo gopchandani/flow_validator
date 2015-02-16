@@ -4,7 +4,7 @@ import networkx as nx
 import sys
 
 from model.model import Model
-from model.match import Match
+from model.match import MatchElement
 from netaddr import IPNetwork
 
 class BackupPaths:
@@ -67,9 +67,9 @@ class BackupPaths:
                     in_port_match = switch.in_port_match
 
             #  This has to happen at every switch, because every switch has its own in_port
-            in_port_match.set_field("in_port", int(in_port))
+            in_port_match.set_match_field_element("in_port", int(in_port))
 
-            switch_out_port_match = switch.transfer_function(in_port_match)
+            switch_out_port_match = switch.transfer_function(in_port_match, int(in_port))
 
             if int(out_port) not in switch_out_port_match:
                 is_reachable = False
@@ -180,16 +180,16 @@ class BackupPaths:
                 print 'Checking primary and backup paths from', src, 'to', dst
                 print "----------------------------------------------------------------------------------------------"
 
-                in_port_match = Match(init_wildcard=True)
-                in_port_match.set_field("ethernet_type", 0x0800)
+                in_port_match = MatchElement(is_wildcard=True)
+                in_port_match.set_match_field_element("ethernet_type", 0x0800)
 
                 src_mac_int = int(self.model.graph.node[src]["h"].mac_addr.replace(":", ""), 16)
-                in_port_match.set_field("ethernet_source", src_mac_int)
+                in_port_match.set_match_field_element("ethernet_source", src_mac_int)
 
                 dst_mac_int = int(self.model.graph.node[dst]["h"].mac_addr.replace(":", ""), 16)
-                in_port_match.set_field("ethernet_destination", dst_mac_int)
+                in_port_match.set_match_field_element("ethernet_destination", dst_mac_int)
 
-                in_port_match.set_field("has_vlan_tag", 0)
+                in_port_match.set_match_field_element("has_vlan_tag", 0)
 
                 primary_and_backup_exists = self.has_primary_and_backup(src, dst, in_port_match)
 
