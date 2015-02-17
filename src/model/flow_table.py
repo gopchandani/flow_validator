@@ -86,7 +86,6 @@ class FlowTable():
         remaining_match = Match(init_wildcard=True)
 
         for flow in self.flows:
-            print remaining_match
             intersection = flow.match.intersect(remaining_match)
 
             # Don't care about matches that have full empty fields
