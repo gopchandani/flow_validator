@@ -89,6 +89,9 @@ class MatchElement(DictMixin):
 
             # If the resulting tree has no intervals in it, then balk:
             if not intersection_element.match_fields[field_name]:
+                # print field_name, "failed to intersect"
+                # print "Traffic has:", in_match_element.match_fields[field_name]
+                # print "Flow has:", self.match_fields[field_name]
                 return None
 
         return intersection_element
@@ -148,7 +151,7 @@ class MatchElement(DictMixin):
 
                 elif field_name == "vlan_id":
                     self.set_match_field_element(field_name, int(match_json["vlan-match"]["vlan-id"]["vlan-id"]), flow)
-                    self.set_match_field_element(field_name, 1, flow)
+                    self.set_match_field_element("has_vlan_tag", 1, flow)
 
             except KeyError:
                 self.set_match_field_element(field_name, is_wildcard=True)

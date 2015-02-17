@@ -40,6 +40,9 @@ class Switch():
             # Grab the table
             flow_table = self.flow_tables[table_id_to_check]
 
+            #print "At Table: ", flow_table.table_id
+
+
             # Get the highest priority matching flow in this table
             hpm_flow, intersection = flow_table.get_highest_priority_matching_flow(next_table_matches_on)
 
