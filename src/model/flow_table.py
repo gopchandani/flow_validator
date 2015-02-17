@@ -81,23 +81,12 @@ class FlowTable():
 
         return hpm_flow, intersection
 
-    def get_next_matching_flow(self, table_matches_on):
-
-        intersection = None
-        remaining_match = None
-
-        for flow in self.flows:
-            intersection = flow.match.intersect(table_matches_on)
-            if intersection:
-                remaining_match = flow.match.complement(table_matches_on)
-                yield flow, intersection, remaining_match
-
     def compute_applied_matches_and_actions(self):
 
         remaining_match = Match(init_wildcard=True)
 
         for flow in self.flows:
-
+            print remaining_match
             intersection = flow.match.intersect(remaining_match)
 
             # Don't care about matches that have full empty fields
