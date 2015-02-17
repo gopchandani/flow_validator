@@ -62,9 +62,9 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, match, actions, active_status=True):
+    def add_edge(self, port1, port2, match, actions, is_active=True):
 
-        edge_data = {"match": match, "actions": actions, "active_status": active_status}
+        edge_data = {"match": match, "actions": actions, "is_active": is_active}
         e = (port1.port_id, port2.port_id)
         self.g.add_edge(*e, edge_data=edge_data)
 
@@ -139,8 +139,9 @@ class PortGraph:
 
             next_port_towards_dst = self.get_port(edge[0])
             curr_port = self.get_port(edge[1])
-
+            
             edge_data = self.get_edge_data(curr_port, next_port_towards_dst)
+            print edge_data
 
             # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at curr_port

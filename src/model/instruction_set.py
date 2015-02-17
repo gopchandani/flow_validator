@@ -104,17 +104,17 @@ class InstructionSet():
                 out_port_and_active_status_tuple_list = \
                     applied_action_set.get_out_port_and_active_status_tuple()
 
-                for out_port, active_status in out_port_and_active_status_tuple_list:
+                for out_port, is_active in out_port_and_active_status_tuple_list:
                     if out_port == "4294967293":
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.model.port_graph.get_port(str(out_port)),
                                                         match_for_port,
-                                                        None, active_status))
+                                                        None, is_active))
                     else:
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.ports[out_port],
                                                         match_for_port,
-                                                        None, active_status))
+                                                        None, is_active))
 
             # These things affect the next table, so the edge to next table is going to contain these two
             # types of "edits" on the ActionSet
@@ -128,17 +128,17 @@ class InstructionSet():
                 out_port_and_active_status_tuple_list = \
                     written_action_set.get_out_port_and_active_status_tuple()
 
-                for out_port, active_status in out_port_and_active_status_tuple_list:
+                for out_port, is_active in out_port_and_active_status_tuple_list:
                     if out_port == 4294967293:
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.model.port_graph.get_port(out_port),
                                                         match_for_port,
-                                                        written_action_set, active_status))
+                                                        written_action_set, is_active))
                     else:
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.ports[out_port],
                                                         match_for_port,
-                                                        written_action_set, active_status))
+                                                        written_action_set, is_active))
 
 
             elif instruction.instruction_type == "go-to-table":
