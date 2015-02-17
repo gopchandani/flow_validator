@@ -57,8 +57,5 @@ class Port():
 
         return "Port -- " + \
                " Id: " + str(self.port_id) + \
-               " Port Number: " + str(self.port_number) + \
                " MAC Address: " + str(self.mac_address) + \
-               " Faces: " + str(self.faces) + \
-               " Facing Node Id: " + str(self.facing_node_id) + \
                " State:" + str(self.state)

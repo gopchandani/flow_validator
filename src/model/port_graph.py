@@ -136,9 +136,11 @@ class PortGraph:
 
         # Traverse in reverse.
         for edge in bfs_edges(self.g, destination_port.port_id, reverse=True):
+
             next_port_towards_dst = self.get_port(edge[0])
             curr_port = self.get_port(edge[1])
-            edge_data = self.get_edge_data(self.get_port(edge[1]), self.get_port(edge[0]))
+
+            edge_data = self.get_edge_data(curr_port, next_port_towards_dst)
 
             # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at curr_port
