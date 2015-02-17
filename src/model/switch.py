@@ -117,5 +117,4 @@ class Switch():
                 print "At Table:", flow_table.table_id
 
             # Try passing a wildcard through the flow table
-            in_port_match = Match(init_wildcard=True)
-            flow_table.compute_applied_matches_and_actions(in_port_match)
+            flow_table.compute_applied_matches_and_actions()

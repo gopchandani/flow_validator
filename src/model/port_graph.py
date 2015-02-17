@@ -132,19 +132,13 @@ class PortGraph:
     def remove_destination_host(self, host_obj):
         pass
 
-
-    def bfs_paths_2(self, destination_port):
-        print "bfs_paths_2"
+    def compute_destination_edges(self, destination_port):
 
         # Traverse in reverse.
         for edge in bfs_edges(self.g, destination_port.port_id, reverse=True):
             next_port_towards_dst = self.get_port(edge[0])
             curr_port = self.get_port(edge[1])
             edge_data = self.get_edge_data(self.get_port(edge[1]), self.get_port(edge[0]))
-
-            # print edge[1], "->", edge[0]
-            # print "predecessors of", edge[1], ":", self.g.predecessors(edge[1])
-            # print "successors of", edge[1], ":", self.g.successors(edge[1])
 
             # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at curr_port
@@ -159,9 +153,4 @@ class PortGraph:
                 intersection = to_be_intersected.intersect(next_port_towards_dst.admitted_match[dst])
 
                 if not intersection.is_empty():
-                    #print "Carried for destination:", dst, "the match:", edge_data["match"]
                     curr_port.admitted_match[dst] = edge_data["match"]
-                else:
-                    print "Did not carry:", intersection
-                    print "Next Port Admits:", next_port_towards_dst.admitted_match[dst]
-                    print edge_data

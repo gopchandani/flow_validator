@@ -92,9 +92,9 @@ class FlowTable():
                 remaining_match = flow.match.complement(table_matches_on)
                 yield flow, intersection, remaining_match
 
-    def compute_applied_matches_and_actions(self, in_match):
+    def compute_applied_matches_and_actions(self):
 
-        remaining_match = in_match
+        remaining_match = Match(init_wildcard=True)
 
         for flow in self.flows:
 
