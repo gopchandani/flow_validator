@@ -141,7 +141,6 @@ class PortGraph:
             curr_port = self.get_port(edge[1])
             
             edge_data = self.get_edge_data(curr_port, next_port_towards_dst)
-            print edge_data
 
             # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at curr_port

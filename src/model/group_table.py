@@ -94,17 +94,29 @@ class Group():
         # If it is a fast-failover group, collect the bucket which is active
         elif self.group_type == "group-ff":
 
-            for action_bucket in self.bucket_list:
+            # at any point in time, only those actions are active that belong to the first live bucket
 
-                # Check if the port that the bucket watches is actually up
-                if self.sw.ports[action_bucket.watch_port].state == "up":
-                    all_action_list.extend(action_bucket.action_list)
+            # We begin by scanning the action buckets for the first live bucket, once found we break
+            i = 0
+            while i < len(self.bucket_list):
+                this_bucket = self.bucket_list[i]
+                if this_bucket.is_live():
+                    all_action_list.extend(this_bucket.action_list)
+                    break
                 else:
-                    for action in action_bucket.action_list:
+                    # Also adding any non-live buckets encountered until then to be as such
+                    for action in this_bucket.action_list:
                         action.is_active = False
+                    all_action_list.extend(this_bucket.action_list)
+                i += 1
 
-                    all_action_list.extend(action_bucket.action_list)
-                    # Mark these actions as not active
+            # If there are any buckets left, we add them as inactive buckets
+            while i < len(self.bucket_list):
+                this_bucket = self.bucket_list[i]
+                for action in this_bucket.action_list:
+                    action.is_active = False
+                all_action_list.extend(this_bucket.action_list)
+                i += 1
 
         return all_action_list
 
