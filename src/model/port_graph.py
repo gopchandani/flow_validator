@@ -1,7 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 import networkx as nx
-from networkx import bfs_edges
+from collections import deque
 
 import sys
 
@@ -80,7 +80,7 @@ class PortGraph:
         # updated, so the change travels back in the bfs fashion
 
     def get_edge_data(self, node1, node2):
-        a = self.g[node1.port_id][node2.port_id]
+        a = self.g[node1][node2]
         return a[0]['edge_data']
 
     def init_global_controller_port(self):
@@ -132,15 +132,51 @@ class PortGraph:
     def remove_destination_host(self, host_obj):
         pass
 
+    def bfs_edges(self, G, source, reverse=False):
+        """Produce edges in a breadth-first-search starting at source."""
+        # Based on http://www.ics.uci.edu/~eppstein/PADS/BFS.py
+        # by D. Eppstein, July 2004.
+        if reverse and isinstance(G, nx.DiGraph):
+            neighbors = G.predecessors_iter
+        else:
+            neighbors = G.neighbors_iter
+
+        visited=set([source])
+        queue = deque([(source, neighbors(source))])
+        edge_data = None
+
+        while queue:
+            parent, children = queue[0]
+            try:
+                child = next(children)
+
+                if reverse:
+                    edge_data = self.get_edge_data(child, parent)
+                else:
+                    edge_data = self.get_edge_data(parent, child)
+
+                if child not in visited and edge_data["is_active"]:
+
+                    if reverse:
+                        yield self.get_port(parent), \
+                              self.get_port(child), \
+                              edge_data
+                    else:
+                        yield self.get_port(child), \
+                              self.get_port(parent), \
+                              edge_data
+
+                    visited.add(child)
+                    queue.append((child, neighbors(child)))
+
+            except StopIteration:
+                queue.popleft()
+
     def compute_destination_edges(self, destination_port):
 
         # Traverse in reverse.
-        for edge in bfs_edges(self.g, destination_port.port_id, reverse=True):
-
-            next_port_towards_dst = self.get_port(edge[0])
-            curr_port = self.get_port(edge[1])
-            
-            edge_data = self.get_edge_data(curr_port, next_port_towards_dst)
+        for next_port_towards_dst, curr_port, edge_data in self.bfs_edges(self.g,
+                                                                          destination_port.port_id, reverse=True):
 
             # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at curr_port
