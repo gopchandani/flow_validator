@@ -132,7 +132,7 @@ class PortGraph:
     def remove_destination_host(self, host_obj):
         pass
 
-    def bfs_edges(self, G, source, reverse=False):
+    def bfs_active_edges(self, G, source, reverse=False):
         """Produce edges in a breadth-first-search starting at source."""
         # Based on http://www.ics.uci.edu/~eppstein/PADS/BFS.py
         # by D. Eppstein, July 2004.
@@ -175,7 +175,7 @@ class PortGraph:
     def compute_destination_edges(self, destination_port):
 
         # Traverse in reverse.
-        for next_port_towards_dst, curr_port, edge_data in self.bfs_edges(self.g,
+        for next_port_towards_dst, curr_port, edge_data in self.bfs_active_edges(self.g,
                                                                           destination_port.port_id, reverse=True):
 
             # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
