@@ -204,10 +204,10 @@ class ActionSet():
 
         # Go through the operations that are performed to the match before the packet is sent out
         if "pop_vlan" in self.action_dict:
-            output_match.set_field("has_vlan_tag", int(False))
+            output_match.set_match_field_element("has_vlan_tag", int(False))
 
         if "push_vlan" in self.action_dict:
-            output_match.set_field("has_vlan_tag", int(True))
+            output_match.set_match_field_element("has_vlan_tag", int(True))
 
         if "set_field" in self.action_dict:
             output_match.set_fields_with_match_json(self.action_dict["set_field"][0].set_field_match_json)

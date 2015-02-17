@@ -233,8 +233,8 @@ class SynthesizeDij():
                 print 'Synthesizing primary and backup paths from', src, 'to', dst
                 print "-----------------------------------------------------------------------------------------------"
 
-                flow_match = MatchElement()
-                flow_match.set_match_field_element("ethernet_type", 0x0800)
+                flow_match = MatchElement(is_wildcard=True)
+                flow_match["ethernet_type"] = 0x0800
 
                 self.synthesize_flow(self.model.get_node_object(src), self.model.get_node_object(dst), flow_match)
                 print "-----------------------------------------------------------------------------------------------"

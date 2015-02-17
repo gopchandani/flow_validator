@@ -22,10 +22,23 @@ field_names = ["in_port",
               "has_vlan_tag"]
 
 
-class MatchElement():
+class MatchElement(DictMixin):
+
+    def __getitem__(self, item):
+        return self.value_cache[item]
+
+    def __setitem__(self, key, value):
+        self.value_cache[key] = value
+
+    def __delitem__(self, key):
+        del self.value_cache[key]
+
+    def keys(self):
+        return self.value_cache.keys()
 
     def __init__(self, match_json=None, flow=None, is_wildcard=True):
 
+        self.value_cache = {}
         self.match_fields = {}
 
         # Create one IntervalTree per field.
@@ -47,8 +60,10 @@ class MatchElement():
 
         if is_wildcard:
             self.match_fields[key].add(Interval(0, sys.maxsize, flow))
+            self.value_cache[key] = sys.maxsize
         else:
             self.match_fields[key].add(Interval(value, value + 1, tag))
+            self.value_cache[key] = value
 
     def get_matched_tree(self, tree1, tree2):
 
@@ -139,69 +154,114 @@ class MatchElement():
                 self.set_match_field_element(field_name, is_wildcard=True)
                 # Special case
                 if field_name == "vlan_id":
-                    self.set_match_field_element(field_name, is_wildcard=True)
+                    self.set_match_field_element("has_vlan_tag", is_wildcard=True)
 
                 continue
 
+    def set_fields_with_match_json(self, match_json):
+
+        for match_field in match_json:
+
+            if match_field == 'in-port':
+                self.set_match_field_element("in_port", int(match_json[match_field]))
+
+            elif match_field == "ethernet-match":
+                if "ethernet-type" in match_json[match_field]:
+                    self.set_match_field_element("ethernet_type", int(match_json[match_field]["ethernet-type"]["type"]))
+
+                if "ethernet-source" in match_json[match_field]:
+                    self.set_match_field_element("ethernet_source", int(match_json[match_field]["ethernet-source"]["address"]))
+
+                if "ethernet-destination" in match_json[match_field]:
+                    self.set_match_field_element("ethernet_destination", int(match_json[match_field]["ethernet-destination"]["address"]))
+
+            elif match_field == 'ipv4-destination':
+                self.set_match_field_element("dst_ip_addr", IPNetwork(match_json[match_field]))
+
+            elif match_field == 'ipv4-source':
+                self.set_match_field_element("src_ip_addr", IPNetwork(match_json[match_field]))
+
+            elif match_field == "ip-match":
+                if "ip-protocol" in match_json[match_field]:
+                    self.set_match_field_element("ip_protocol", int(match_json[match_field]["ip-protocol"]))
+
+            elif match_field == "tcp-destination-port":
+                self.set_match_field_element("tcp_destination_port", int(match_json[match_field]))
+
+            elif match_field == "tcp-source-port":
+                self.set_match_field_element("tcp_source_port", int(match_json[match_field]))
+
+            elif match_field == "udp-destination-port":
+                self.set_match_field_element("udp_destination_port", int(match_json[match_field]))
+
+            elif match_field == "udp-source-port":
+                self.set_match_field_element("udp_source_port", int(match_json[match_field]))
+
+            elif match_field == "vlan-match":
+                if "vlan-id" in match_json[match_field]:
+                    self.set_match_field_element("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
+                    self.set_match_field_element("has_vlan_tag", int(True))
+
+
     def generate_match_json(self, match):
 
-        if "in_port" in self and self["in_port"].end != sys.maxsize:
-            match["in-port"] = self["in_port"].begin
+        if "in_port" in self and self["in_port"] != sys.maxsize:
+            match["in-port"] = self["in_port"]
 
         ethernet_match = {}
 
-        if "ethernet_type" in self and self["ethernet_type"].end != sys.maxsize:
-            ethernet_match["ethernet-type"] = {"type": self["ethernet_type"].begin}
+        if "ethernet_type" in self and self["ethernet_type"] != sys.maxsize:
+            ethernet_match["ethernet-type"] = {"type": self["ethernet_type"]}
 
-        if "ethernet_source" in self and self["ethernet_source"].end != sys.maxsize:
+        if "ethernet_source" in self and self["ethernet_source"] != sys.maxsize:
 
-            mac_int = self["ethernet_source"].begin
+            mac_int = self["ethernet_source"]
             mac_hex_str = hex(mac_int)[2:]
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
             ethernet_match["ethernet-source"] = {"address": mac_hex_str}
 
-        if "ethernet_destination" in self and self["ethernet_destination"].end != sys.maxsize:
+        if "ethernet_destination" in self and self["ethernet_destination"] != sys.maxsize:
 
-            mac_int = self["ethernet_destination"].begin
-            mac_hex_str = hex(mac_int)[2:]
+            mac_int = self["ethernet_destination"]
+            mac_hex_str = format(mac_int, "012x")
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
             ethernet_match["ethernet-destination"] = {"address": mac_hex_str}
 
         match["ethernet-match"] = ethernet_match
 
-        if "src_ip_addr" in self and self["src_ip_addr"].end != sys.maxsize:
-            match["ipv4-source"] = self["src_ip_addr"].begin
+        if "src_ip_addr" in self and self["src_ip_addr"] != sys.maxsize:
+            match["ipv4-source"] = self["src_ip_addr"]
 
-        if "dst_ip_addr" in self and self["dst_ip_addr"].end != sys.maxsize:
-            match["ipv4-destination"] = self["dst_ip_addr"].begin
+        if "dst_ip_addr" in self and self["dst_ip_addr"] != sys.maxsize:
+            match["ipv4-destination"] = self["dst_ip_addr"]
 
-        if ("tcp_destination_port" in self and self["tcp_destination_port"].end != sys.maxsize) or \
-                ("tcp_source_port" in self and self["tcp_source_port"].end != sys.maxsize):
-            self["ip_protocol"].begin = 6
-            match["ip-match"] = {"ip-protocol": self["ip_protocol"].begin}
+        if ("tcp_destination_port" in self and self["tcp_destination_port"] != sys.maxsize) or \
+                ("tcp_source_port" in self and self["tcp_source_port"] != sys.maxsize):
+            self["ip_protocol"] = 6
+            match["ip-match"] = {"ip-protocol": self["ip_protocol"]}
 
-            if "tcp_destination_port" in self and self["tcp_destination_port"].end != sys.maxsize:
-                match["tcp-destination-port"] = self["tcp_destination_port"].begin
+            if "tcp_destination_port" in self and self["tcp_destination_port"] != sys.maxsize:
+                match["tcp-destination-port"] = self["tcp_destination_port"]
 
-            if "tcp_source_port" in self and self["tcp_source_port"].end != sys.maxsize:
-                match["tcp-source-port"] = self["tcp_source_port"].begin
+            if "tcp_source_port" in self and self["tcp_source_port"] != sys.maxsize:
+                match["tcp-source-port"] = self["tcp_source_port"]
 
-        if ("udp_destination_port" in self and self["udp_destination_port"].end != sys.maxsize) or \
-                ("udp_source_port" in self and self["udp_source_port"].end != sys.maxsize):
-            self["ip_protocol"].begin = 17
-            match["ip-match"] = {"ip-protocol": self["ip_protocol"].begin}
+        if ("udp_destination_port" in self and self["udp_destination_port"] != sys.maxsize) or \
+                ("udp_source_port" in self and self["udp_source_port"] != sys.maxsize):
+            self["ip_protocol"] = 17
+            match["ip-match"] = {"ip-protocol": self["ip_protocol"]}
 
-            if "udp_destination_port" in self and self["udp_destination_port"].end != sys.maxsize:
-                match["udp-destination-port"]= self["udp_destination_port"].begin
+            if "udp_destination_port" in self and self["udp_destination_port"] != sys.maxsize:
+                match["udp-destination-port"]= self["udp_destination_port"]
 
-            if "udp_source_port" in self and self["udp_source_port"].end != sys.maxsize:
-                match["udp-source-port"] = self["udp_source_port"].begin
+            if "udp_source_port" in self and self["udp_source_port"] != sys.maxsize:
+                match["udp-source-port"] = self["udp_source_port"]
 
-        if "vlan_id" in self and self["vlan_id"].end != sys.maxsize:
+        if "vlan_id" in self and self["vlan_id"] != sys.maxsize:
             vlan_match = {}
-            vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"].begin, "vlan-id-present": True}
+            vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"], "vlan-id-present": True}
             match["vlan-match"] = vlan_match
 
         return match
@@ -224,49 +284,6 @@ class Match():
         for me in self.match_elements:
             me.set_match_field_element(key, value)
 
-    def set_fields_with_match_json(self, match_json):
-
-        for match_field in match_json:
-
-            if match_field == 'in-port':
-                self.set_field("in_port", int(match_json[match_field]))
-
-            elif match_field == "ethernet-match":
-                if "ethernet-type" in match_json[match_field]:
-                    self.set_field("ethernet_type", int(match_json[match_field]["ethernet-type"]["type"]))
-
-                if "ethernet-source" in match_json[match_field]:
-                    self.set_field("ethernet_source", int(match_json[match_field]["ethernet-source"]["address"]))
-
-                if "ethernet-destination" in match_json[match_field]:
-                    self.set_field("ethernet_destination", int(match_json[match_field]["ethernet-destination"]["address"]))
-
-            elif match_field == 'ipv4-destination':
-                self.set_field("dst_ip_addr", IPNetwork(match_json[match_field]))
-
-            elif match_field == 'ipv4-source':
-                self.set_field("src_ip_addr", IPNetwork(match_json[match_field]))
-
-            elif match_field == "ip-match":
-                if "ip-protocol" in match_json[match_field]:
-                    self.set_field("ip_protocol", int(match_json[match_field]["ip-protocol"]))
-
-            elif match_field == "tcp-destination-port":
-                self.set_field("tcp_destination_port", int(match_json[match_field]))
-
-            elif match_field == "tcp-source-port":
-                self.set_field("tcp_source_port", int(match_json[match_field]))
-
-            elif match_field == "udp-destination-port":
-                self.set_field("udp_destination_port", int(match_json[match_field]))
-
-            elif match_field == "udp-source-port":
-                self.set_field("udp_source_port", int(match_json[match_field]))
-
-            elif match_field == "vlan-match":
-                if "vlan-id" in match_json[match_field]:
-                    self.set_field("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
-                    self.set_field("has_vlan_tag", int(True))
 
     def intersect(self, in_match):
         im = Match()
