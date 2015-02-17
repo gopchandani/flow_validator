@@ -98,7 +98,7 @@ class InstructionSet():
                 applied_action_set.add_all_actions(instruction.actions_list, match_for_port)
 
                 # Get the resulting match and have it be applied
-                match_for_port = applied_action_set.get_resulting_match(match_for_port)
+                match_for_port = applied_action_set.get_resulting_match_2(match_for_port)
 
                 #Check to see if applied_action_set has any output edges to contribute
                 out_port_and_active_status_tuple_list = \

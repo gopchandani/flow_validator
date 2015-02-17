@@ -2,7 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 
 from action_set import Action, ActionSet
-from match import MatchElement
+from match import MatchElement, Match
 from instruction_set import InstructionSet
 
 class Flow():
@@ -19,14 +19,16 @@ class Flow():
         self.priority = int(flow["priority"])
         self.match_element = MatchElement(flow["match"], self)
 
-        # Port Graph Stuff
-        self.complement_match = self.match_element.complement_match(self)
-        self.applied_match = None
-        self.instructions = InstructionSet(self.sw, self, flow["instructions"]["instruction"])
-
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
+
+        # Port Graph Stuff
+        self.match = Match(tag=self)
+        self.match.match_elements.append(self.match_element)
+        self.complement_match = self.match_element.complement_match(self)
+        self.applied_match = None
+        self.instructions = InstructionSet(self.sw, self, flow["instructions"]["instruction"])
 
         # Go through instructions
         for instruction_json in flow["instructions"]["instruction"]:
@@ -96,10 +98,10 @@ class FlowTable():
 
         for flow in self.flows:
 
-            intersection = flow.match_element.intersect(remaining_match)
+            intersection = flow.match.intersect(remaining_match)
 
             # Don't care about matches that have full empty fields
-            if not intersection.has_empty_field():
+            if not intersection.is_empty():
 
                 # See what is left after this rule is through
                 remaining_match = flow.complement_match.intersect(remaining_match)

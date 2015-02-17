@@ -158,7 +158,7 @@ class PortGraph:
 
                 intersection = to_be_intersected.intersect(next_port_towards_dst.admitted_match[dst])
 
-                if not intersection.has_empty_field():
+                if not intersection.is_empty():
                     #print "Carried for destination:", dst, "the match:", edge_data["match"]
                     curr_port.admitted_match[dst] = edge_data["match"]
                 else:

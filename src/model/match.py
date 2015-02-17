@@ -121,7 +121,6 @@ class MatchElement(DictMixin):
             try:
                 if field_name == "in_port":
                      self.set_match_field_element(field_name, int(match_json["in-port"]), flow)
-
                 elif field_name == "ethernet_type":
                     self.set_match_field_element(field_name, int(match_json["ethernet-match"]["ethernet-type"]["type"]), flow)
                 elif field_name == "ethernet_source":
@@ -280,13 +279,18 @@ class Match():
         if init_wildcard:
             self.match_elements.append(MatchElement(is_wildcard=True))
 
-    def has_empty_field(self):
-        raise Exception("Implement has_empty_field")
+    def is_empty(self):
+        return len(self.match_elements) == 0
 
-    def set_field(self, key, value):
-        for me in self.match_elements:
-            me.set_match_field_element(key, value)
+    def set_field(self, key=None, value=None, match_json=None):
 
+        if key and value:
+            for me in self.match_elements:
+                me.set_match_field_element(key, value)
+
+        elif match_json:
+            for me in self.match_elements:
+                me.set_fields_with_match_json(match_json)
 
     def intersect(self, in_match):
         im = Match()
@@ -307,19 +311,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    #
-
-    #
-    # def get_matched_tree(self, tree, iv):
-    #
-    #     matched_tree = IntervalTree()
-    #     for matched_interval in tree.search(iv.begin, iv.end):
-    #
-    #         #Take the smaller interval of the two and put it in the matched_tree
-    #         if matched_interval.contains_point(iv):
-    #             matched_tree.add(iv)
-    #         elif iv.contains_point(matched_interval):
-    #             matched_tree.add(matched_interval)
-    #
-    #     return matched_tree
