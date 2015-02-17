@@ -28,6 +28,15 @@ class ComputePortPaths:
         for host_port in added_host_ports:
             self.port_graph.compute_destination_edges(host_port)
 
+        # The query should take the following form..
+        # self.port_graph.path_exists(src_port, dst_port)
+
+        # Once the path is gotten...
+        # We break edges along the path one by one... to see if a path after breaking every single link
+        # That would prove backup
+        # Yeah, but I didn't want this. I wanted this to be something more of naturally mutating path
+        # Admitted match's way of looking at it is interesting that way...
+
         #  Test connectivity after flows have bled through the port graph
         for src_h_id in self.model.get_host_ids():
             for dst_h_id in self.model.get_host_ids():
