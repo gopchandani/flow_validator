@@ -9,13 +9,14 @@ class Bucket():
 
         self.sw = sw
         self.action_list = []
+        self.watch_port = None
+        self.weight = None
 
         for action_json in bucket_json["action"]:
             self.action_list.append(Action(sw, action_json))
 
         #  Sort the action_list by order
         self.action_list = sorted(self.action_list, key=lambda action: action.order)
-
         self.bucket_id = bucket_json["bucket-id"]
 
         if "watch_port" in bucket_json:
@@ -24,16 +25,15 @@ class Bucket():
         if "weight" in bucket_json:
             self.weight = str(bucket_json["weight"])
 
-    def does_it_forward(self, in_port, out_port):
+    def is_live(self):
 
-        ret_val = False
+        # Check if the watch port is up.
+        if self.watch_port:
+             return self.sw.ports[self.watch_port].state == "up"
 
-        for action in self.action_list:
-            ret_val = action.does_it_forward(in_port, out_port)
-            if ret_val:
-                break
-
-        return ret_val
+        # If no watch_port was specified, then assume the bucket is always live
+        else:
+            return True
 
 class Group():
     '''
@@ -123,7 +123,7 @@ class Group():
             for action_bucket in self.bucket_list:
 
                 # Check if the port that the bucket watches is actually up
-                if self.sw.ports[action_bucket.watch_port].state == "up":
+                if action_bucket.is_live():
                     active_action_list.extend(action_bucket.action_list)
                     break
 

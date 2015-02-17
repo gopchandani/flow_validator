@@ -86,6 +86,7 @@ class Model():
             for nc in node["node-connector"]:
                 if nc["flow-node-inventory:port-number"] != "LOCAL":
                     switch_ports[nc["flow-node-inventory:port-number"]] = Port(sw, nc)
+            sw.ports = switch_ports
 
             #  Get all the flow tables
             switch_flow_tables = []
@@ -100,7 +101,6 @@ class Model():
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
             sw.group_table = switch_group_table
-            sw.ports = switch_ports
 
 
     def add_edge(self, node1_id, node1_port, node2_id, node2_port):
