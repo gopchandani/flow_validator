@@ -247,19 +247,18 @@ class ActionSet():
 
         return out_port_match
 
-    def get_out_port_and_active_status_tuple(self, in_port_match):
+    def get_out_port_and_active_status_tuple(self):
 
         out_port_list = []
 
-        # Consider all possible ports...
-        for in_port in self.sw.ports:
+        #  For each output action, there is a corresponding out_port_match entry
+        for output_action in self.action_dict["output"]:
 
-            #  For each output action, there is a corresponding out_port_match entry
-            for output_action in self.action_dict["output"]:
-
-                if self.sw.model.OFPP_IN == int(output_action.out_port):
+            if self.sw.model.OFPP_IN == int(output_action.out_port):
+                # Consider all possible ports...
+                for in_port in self.sw.ports:
                     out_port_list.append((str(in_port), output_action.is_active))
-                else:
-                    out_port_list.append((str(output_action.out_port), output_action.is_active))
+            else:
+                out_port_list.append((str(output_action.out_port), output_action.is_active))
 
         return out_port_list

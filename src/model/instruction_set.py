@@ -102,7 +102,7 @@ class InstructionSet():
 
                 #Check to see if applied_action_set has any output edges to contribute
                 out_port_and_active_status_tuple_list = \
-                    applied_action_set.get_out_port_and_active_status_tuple(match_for_port)
+                    applied_action_set.get_out_port_and_active_status_tuple()
 
                 for out_port, active_status in out_port_and_active_status_tuple_list:
                     if out_port == "4294967293":
@@ -126,7 +126,7 @@ class InstructionSet():
 
                 #Check to see if written_action_set has any output edges to contribute
                 out_port_and_active_status_tuple_list = \
-                    written_action_set.get_out_port_and_active_status_tuple(match_for_port)
+                    written_action_set.get_out_port_and_active_status_tuple()
 
                 for out_port, active_status in out_port_and_active_status_tuple_list:
                     if out_port == 4294967293:
