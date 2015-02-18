@@ -64,7 +64,14 @@ class PortGraph:
 
     def add_edge(self, port1, port2, match, actions, is_active=True):
 
+
+        # There are two types of edges, ones that trigger applications of all written rules thus far
+        # and ones that don't. Only edges that are between two switches, trigger application of written actions
+        # Because that's when a packet leaves a switch (OF1.3 specification's time of applying rules)
+        #TODO:
+
         edge_data = {"match": match, "actions": actions, "is_active": is_active}
+
         e = (port1.port_id, port2.port_id)
         self.g.add_edge(*e, edge_data=edge_data)
 

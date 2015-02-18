@@ -40,7 +40,7 @@ class SynthesizeDij():
             if not (i == 0 and intent_type == "primary"):
                 fwd_flow_match.set_match_field_element("vlan_id", int(dst_switch_tag))
 
-            intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port, True)
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
@@ -137,7 +137,7 @@ class SynthesizeDij():
         host_mac_match = deepcopy(flow_match)
         mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
         host_mac_match.set_match_field_element("ethernet_destination", int(mac_int))
-        host_mac_intent = Intent("mac", host_mac_match, "all", out_port)
+        host_mac_intent = Intent("mac", host_mac_match, "all", out_port, True)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
         # by using its mac address as the key
