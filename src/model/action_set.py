@@ -168,7 +168,8 @@ class ActionSet():
             output_match.set_field("has_vlan_tag", int(True))
 
         if "set_field" in self.action_dict:
-            output_match.set_field(match_json=self.action_dict["set_field"][0].set_field_match_json)
+            for action in self.action_dict["set_field"]:
+                output_match.set_field(action.set_field_match_json)
 
         return output_match
 
