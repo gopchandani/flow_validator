@@ -196,6 +196,7 @@ class ActionSet():
         for output_action in self.action_dict["output"]:
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
+
                 # Consider all possible ports...
                 for in_port in self.sw.ports:
                     out_port_list.append((str(in_port), output_action.is_active))
