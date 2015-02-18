@@ -133,15 +133,13 @@ class PortGraph:
         pass
 
     def bfs_active_edges(self, G, source, reverse=False):
-        """Produce edges in a breadth-first-search starting at source."""
-        # Based on http://www.ics.uci.edu/~eppstein/PADS/BFS.py
-        # by D. Eppstein, July 2004.
+
         if reverse and isinstance(G, nx.DiGraph):
             neighbors = G.predecessors_iter
         else:
             neighbors = G.neighbors_iter
 
-        visited=set([source])
+        visited = set([source])
         queue = deque([(source, neighbors(source))])
         edge_data = None
 
@@ -158,13 +156,9 @@ class PortGraph:
                 if child not in visited and edge_data["is_active"]:
 
                     if reverse:
-                        yield self.get_port(parent), \
-                              self.get_port(child), \
-                              edge_data
+                        yield self.get_port(parent), self.get_port(child), edge_data
                     else:
-                        yield self.get_port(child), \
-                              self.get_port(parent), \
-                              edge_data
+                        yield self.get_port(child), self.get_port(parent), edge_data
 
                     visited.add(child)
                     queue.append((child, neighbors(child)))
@@ -178,8 +172,8 @@ class PortGraph:
         for next_port_towards_dst, curr_port, edge_data in self.bfs_active_edges(self.g,
                                                                           destination_port.port_id, reverse=True):
 
-            # At next_port_towards_dst, set up the admitted traffic for the destination_port, by examining
-            # admitted_matches at curr_port
+            # At curr_port, set up the admitted traffic for the destination_port, by examining
+            # admitted_matches at next_port_towards_dst
             for dst in next_port_towards_dst.admitted_match:
 
                 to_be_intersected = None

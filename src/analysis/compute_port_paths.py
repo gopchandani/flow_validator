@@ -39,7 +39,8 @@ class ComputePortPaths:
                     continue
 
                 if dst_port.port_id in src_port.admitted_match:
-                    print src_port.admitted_match[dst_port.port_id]
+                    m =  src_port.admitted_match[dst_port.port_id]
+                    print m
                 else:
                     print "No admission for dst_host:", dst_h_id, "at src host:", src_h_id
 
