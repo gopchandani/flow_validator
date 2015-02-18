@@ -82,12 +82,9 @@ class Switch():
         return out_port_match
 
     def compute_switch_port_graph(self):
-        print "At Switch:", self.node_id
-
 
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
-
 
             # Add a output node in port graph for each table
 
@@ -109,12 +106,6 @@ class Switch():
 
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:
-
-            if self.node_id == "openflow:4" and flow_table.table_id == 3:
-                print "At Table:", flow_table.table_id
-
-            if self.node_id == "openflow:2" and flow_table.table_id == 3:
-                print "At Table:", flow_table.table_id
 
             # Try passing a wildcard through the flow table
             flow_table.compute_applied_matches_and_actions()
