@@ -53,7 +53,7 @@ class Switch():
                 if hpm_flow.applied_actions:
                     table_applied_action_set = ActionSet(self)
                     table_applied_action_set.add_active_actions(hpm_flow.applied_actions, intersection)
-                    next_table_matches_on = table_applied_action_set.get_resulting_match(next_table_matches_on)
+                    next_table_matches_on = table_applied_action_set.get_resulting_match_element(next_table_matches_on)
 
                     #Ugly
                     written_action_set.add_active_actions(hpm_flow.applied_actions, intersection)

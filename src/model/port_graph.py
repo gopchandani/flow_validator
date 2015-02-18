@@ -180,7 +180,7 @@ class PortGraph:
 
                 to_be_intersected = None
                 if edge_data["actions"]:
-                    to_be_intersected = edge_data["actions"].get_resulting_match(edge_data["match"])
+                    to_be_intersected = edge_data["actions"].get_resulting_match_element(edge_data["match"])
                 else:
                     to_be_intersected = edge_data["match"]
 

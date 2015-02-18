@@ -139,7 +139,7 @@ class ActionSet():
                 action.matched_flow = intersection
                 self.action_dict[action.action_type].append(action)
 
-    def get_resulting_match(self, input_match):
+    def get_resulting_match_element(self, input_match):
 
         output_match = input_match
 
@@ -155,7 +155,7 @@ class ActionSet():
 
         return output_match
 
-    def get_resulting_match_2(self, input_match):
+    def get_resulting_match(self, input_match):
 
         output_match = input_match
 
@@ -179,7 +179,7 @@ class ActionSet():
         #  For each output action, there is a corresponding out_port_match entry
         for output_action in self.action_dict["output"]:
 
-            output_match = self.get_resulting_match(output_action.matched_flow)
+            output_match = self.get_resulting_match_element(output_action.matched_flow)
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
                 out_port_match[int(in_port)] = output_match
