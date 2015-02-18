@@ -171,6 +171,9 @@ class PortGraph:
         # Traverse in reverse.
         for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, destination_port.port_id, reverse=True):
 
+            if next_port.admitted_match:
+                print curr_port.port_id, "->", next_port.port_id
+
             # At curr_port, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at next_port
             for dst in next_port.admitted_match:
@@ -184,4 +187,4 @@ class PortGraph:
                 intersection = to_be_intersected.intersect(next_port.admitted_match[dst])
 
                 if not intersection.is_empty():
-                    curr_port.admitted_match[dst] = edge_data["match"]
+                    curr_port.admitted_match[dst] = intersection
