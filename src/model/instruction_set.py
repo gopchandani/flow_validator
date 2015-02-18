@@ -101,6 +101,9 @@ class InstructionSet():
                 match_for_port = applied_action_set.get_resulting_match(match_for_port)
                 modified_fields = applied_action_set.get_modified_field_names()
 
+                if modified_fields:
+                    print "Here"
+
                 #Check to see if applied_action_set has any output edges to contribute
                 out_port_and_active_status_tuple_list = \
                     applied_action_set.get_out_port_and_active_status_tuple()

@@ -35,6 +35,7 @@ class Action():
         self.order = action_json["order"]
         self.action_type = None
         self.is_active = is_active
+        self.modified_field = None
 
         if "output-action" in action_json:
             self.action_type = "output"
@@ -59,7 +60,8 @@ class Action():
             self.action_type = "set_field"
             self.set_field_match_json = action_json["set-field"]
             mjp = MatchJsonParser(action_json["set-field"])
-            self.modified_field = mjp.keys()
+            if mjp.keys():
+                self.modified_field = mjp.keys()[0]
 
 class ActionSet():
 
