@@ -22,6 +22,69 @@ field_names = ["in_port",
               "has_vlan_tag"]
 
 
+class MatchJsonParser():
+
+    def __init__(self, match_json=None):
+        self.field_values = {}
+        self._parse(match_json)
+
+    def _parse(self, match_json):
+
+        for field_name in field_names:
+
+            try:
+                if field_name == "in_port":
+                     self[field_name] = match_json["in-port"]
+
+                elif field_name == "ethernet_type":
+                    self[field_name] = match_json["ethernet-match"]["ethernet-type"]["type"]
+
+                elif field_name == "ethernet_source":
+                     self[field_name] = match_json["ethernet-match"]["ethernet-source"]["address"]
+
+                elif field_name == "ethernet_destination":
+                    self[field_name] = match_json["ethernet-match"]["ethernet-destination"]["address"]
+
+                elif field_name == "src_ip_addr":
+                    self[field_name] =  match_json["src_ip_addr"]
+
+                elif field_name == "dst_ip_addr":
+                    self[field_name] =  match_json["dst_ip_addr"]
+
+                elif field_name == "ip_protocol":
+                    self[field_name] = match_json["ip-match"]["ip-protocol"]
+
+                elif field_name == "tcp_destination_port":
+                    self[field_name] = match_json["tcp-destination-port"]
+
+                elif field_name == "tcp_source_port":
+                    self[field_name] = match_json["tcp-source-port"]
+
+                elif field_name == "udp_destination_port":
+                    self[field_name] = match_json["udp-destination-port"]
+
+                elif field_name == "udp_source_port":
+                    self[field_name] = match_json["udp-source-port"]
+
+                elif field_name == "vlan_id":
+                    self[field_name] = match_json["vlan-match"]["vlan-id"]["vlan-id"]
+
+            except KeyError:
+                continue
+
+    def __getitem__(self, item):
+        return self.field_values[item]
+
+    def __setitem__(self, field_name, value):
+        self.field_values[field_name] = value
+
+    def __delitem__(self, field_name):
+        del self.field_values[field_name]
+
+    def keys(self):
+        return self.field_values.keys()
+
+
 class MatchElement(DictMixin):
 
     def __getitem__(self, item):
@@ -36,18 +99,19 @@ class MatchElement(DictMixin):
     def keys(self):
         return self.value_cache.keys()
 
-    def __init__(self, match_json=None, flow=None, is_wildcard=True):
+    def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True):
 
         self.value_cache = {}
         self.match_fields = {}
 
         # Create one IntervalTree per field.
-        for field_name in field_names:
-            self.match_fields[field_name] = IntervalTree()
+        if init_match_fields:
+            for field_name in field_names:
+                self.match_fields[field_name] = IntervalTree()
 
         if match_json and flow:
             self.add_element_from_match_json(match_json, flow)
-        else:
+        elif is_wildcard:
             for field_name in field_names:
                 self.set_match_field_element(field_name, is_wildcard=True)
 
@@ -83,7 +147,7 @@ class MatchElement(DictMixin):
 
         intersection_element = MatchElement()
 
-        for field_name in self.match_fields:
+        for field_name in field_names:
             intersection_element.match_fields[field_name] = self.get_matched_tree(
                 in_match_element.match_fields[field_name], self.match_fields[field_name])
 
@@ -100,7 +164,7 @@ class MatchElement(DictMixin):
 
         match_complement = Match(tag)
 
-        for field_name in self.match_fields:
+        for field_name in field_names:
 
             #If the field is not a wildcard, then chop it from the wildcard initialized Match
             if not (Interval(0, sys.maxsize) in self.match_fields[field_name]):
@@ -159,6 +223,23 @@ class MatchElement(DictMixin):
                     self.set_match_field_element("has_vlan_tag", is_wildcard=True)
 
                 continue
+
+    def get_orig_match_element(self, modified_fields, match_element):
+
+        orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
+
+        for field_name in field_names:
+            if field_name in modified_fields:
+
+                # If the field was modified, make it what it was (in abstract) before being modified
+                orig_match_element.match_fields[field_name] = match_element.match_fields[field_name]
+            else:
+
+                # Otherwise, just keep the field same as it was.
+                orig_match_element.match_fields[field_name] = self.match_fields[field_name]
+
+        return orig_match_element
+
 
     def set_fields_with_match_json(self, match_json):
 
@@ -300,6 +381,13 @@ class Match():
                 if ei:
                     im.match_elements.append(ei)
         return im
+
+    def get_orig_match(self, modified_fields, match_element):
+
+        orig_match = Match()
+        for me in self.match_elements:
+            orig_match.match_elements.append(me.get_orig_match_element(modified_fields, match_element))
+        return orig_match
 
 def main():
     m1 = Match()

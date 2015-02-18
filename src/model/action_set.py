@@ -1,6 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-from match import Match
+from match import Match, MatchJsonParser
 from collections import defaultdict
 
 class Action():
@@ -58,6 +58,8 @@ class Action():
         if "set-field" in action_json:
             self.action_type = "set_field"
             self.set_field_match_json = action_json["set-field"]
+            mjp = MatchJsonParser(action_json["set-field"])
+            self.modified_field = mjp.keys()
 
 class ActionSet():
 
@@ -206,3 +208,11 @@ class ActionSet():
                 out_port_list.append((str(output_action.out_port), output_action.is_active))
 
         return out_port_list
+
+    def get_modified_field_names(self):
+        modified_field_names = []
+
+        for set_action in self.action_dict["set_field"]:
+            modified_field_names.append(set_action.modified_field)
+
+        return modified_field_names

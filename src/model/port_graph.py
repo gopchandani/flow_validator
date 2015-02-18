@@ -62,7 +62,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, match, actions, is_active=True):
+    def add_edge(self, port1, port2, match, actions, is_active=True, match_element=None, modified_fields=None):
 
 
         # There are two types of edges, ones that trigger applications of all written rules thus far
@@ -70,7 +70,11 @@ class PortGraph:
         # Because that's when a packet leaves a switch (OF1.3 specification's time of applying rules)
         #TODO:
 
-        edge_data = {"match": match, "actions": actions, "is_active": is_active}
+        edge_data = {"match": match,
+                     "actions": actions,
+                     "is_active": is_active,
+                     "match_element":match_element,
+                     "modified_fields":modified_fields}
 
         e = (port1.port_id, port2.port_id)
         self.g.add_edge(*e, edge_data=edge_data)
@@ -178,20 +182,13 @@ class PortGraph:
         # Traverse in reverse.
         for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, destination_port.port_id, reverse=True):
 
-            if next_port.admitted_match:
-                print curr_port.port_id, "->", next_port.port_id
-
             # At curr_port, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at next_port
             for dst in next_port.admitted_match:
 
-                to_be_intersected = None
-                if edge_data["actions"]:
-                    to_be_intersected = edge_data["actions"].get_resulting_match_element(edge_data["match"])
-                else:
-                    to_be_intersected = edge_data["match"]
+                if edge_data["modified_fields"] and edge_data["match_element"]:
 
-                intersection = to_be_intersected.intersect(next_port.admitted_match[dst])
-
-                if not intersection.is_empty():
-                    curr_port.admitted_match[dst] = intersection
+                    transformed_match = next_port.admitted_match[dst]
+                    original_match = transformed_match.get_orig_match(edge_data["modified_fields"],
+                                                                       edge_data["match_element"])
+                    curr_port.admitted_match[dst] = original_match
