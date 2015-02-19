@@ -9,7 +9,7 @@ from netaddr import IPNetwork
 from copy import deepcopy
 
 from port import Port
-from match import Match
+from match import Match, MatchElement
 
 class PortGraph:
     '''
@@ -62,7 +62,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, match, is_active=True, modified_fields=None):
+    def add_edge(self, port1, port2, matching_element, is_active=True, modified_fields=[]):
 
 
         # There are two types of edges, ones that trigger applications of all written rules thus far
@@ -70,11 +70,9 @@ class PortGraph:
         # Because that's when a packet leaves a switch (OF1.3 specification's time of applying rules)
         #TODO:
 
-        edge_data = {"match": match,
+        edge_data = {"matching_element": matching_element,
                      "is_active": is_active,
                      "modified_fields": modified_fields}
-
-
 
         e = (port1.port_id, port2.port_id)
 
@@ -121,8 +119,8 @@ class PortGraph:
                 port1 = self.get_port(node_edge[0] + ":" + edge_port_dict[node_edge[0]])
                 port2 = self.get_port(node_edge[1] + ":" + edge_port_dict[node_edge[1]])
 
-                self.add_edge(port1, port2, Match(init_wildcard=True))
-                self.add_edge(port2, port1, Match(init_wildcard=True))
+                self.add_edge(port1, port2, MatchElement(is_wildcard=True))
+                self.add_edge(port2, port1, MatchElement(is_wildcard=True))
 
     def update_edge_down(self):
         pass
@@ -138,8 +136,8 @@ class PortGraph:
         self.add_port(hp)
 
         # Add edges between host and switch in the port graph
-        self.add_edge(hp, host_obj.switch_port, Match(init_wildcard=True))
-        self.add_edge(host_obj.switch_port, hp, Match(init_wildcard=True))
+        self.add_edge(hp, host_obj.switch_port, MatchElement(is_wildcard=True))
+        self.add_edge(host_obj.switch_port, hp, MatchElement(is_wildcard=True))
 
         return hp
 
@@ -192,13 +190,13 @@ class PortGraph:
             for dst in next_port.admitted_match:
 
                 # If fields were modified...
-                if edge_data["modified_fields"] and edge_data["match"]:
+                if edge_data["modified_fields"] and edge_data["matching_element"]:
                     transformed_match = next_port.admitted_match[dst]
                     original_match = transformed_match.get_orig_match(edge_data["modified_fields"],
-                                                                       edge_data["match"])
+                                                                       edge_data["matching_element"])
                     curr_port.admitted_match[dst] = original_match
 
-                elif edge_data["match"]:
+                elif edge_data["matching_element"]:
                     curr_port.admitted_match[dst] = next_port.admitted_match[dst]
                 else:
                     pass

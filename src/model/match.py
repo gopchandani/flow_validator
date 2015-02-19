@@ -224,7 +224,7 @@ class MatchElement(DictMixin):
 
                 continue
 
-    def get_orig_match_element(self, modified_fields, rule_match):
+    def get_orig_match_element(self, modified_fields, matching_element):
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
 
@@ -232,7 +232,7 @@ class MatchElement(DictMixin):
             if field_name in modified_fields:
 
                 # If the field was modified, make it what it was (in abstract) before being modified
-                orig_match_element.match_fields[field_name] = match_element.match_fields[field_name]
+                orig_match_element.match_fields[field_name] = matching_element.match_fields[field_name]
             else:
 
                 # Otherwise, just keep the field same as it was.
@@ -382,11 +382,11 @@ class Match():
                     im.match_elements.append(ei)
         return im
 
-    def get_orig_match(self, modified_fields, match_element):
+    def get_orig_match(self, modified_fields, matching_element):
 
         orig_match = Match()
         for me in self.match_elements:
-            orig_match.match_elements.append(me.get_orig_match_element(modified_fields, match_element))
+            orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
         return orig_match
 
 def main():

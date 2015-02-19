@@ -3,7 +3,7 @@ __author__ = 'Rakesh Kumar'
 from collections import defaultdict
 
 from action_set import ActionSet
-from match import Match
+from match import Match, MatchElement
 from port import Port
 
 
@@ -101,7 +101,7 @@ class Switch():
 
             self.model.port_graph.add_edge(self.ports[port],
                                            self.flow_tables[0].port,
-                                           Match(init_wildcard=True))
+                                           MatchElement(is_wildcard=True))
 
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:
