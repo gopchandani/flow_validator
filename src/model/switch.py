@@ -101,8 +101,7 @@ class Switch():
 
             self.model.port_graph.add_edge(self.ports[port],
                                            self.flow_tables[0].port,
-                                           Match(init_wildcard=True),
-                                           None)
+                                           Match(init_wildcard=True))
 
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:

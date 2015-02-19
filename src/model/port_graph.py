@@ -62,7 +62,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, match, actions, is_active=True, match_element=None, modified_fields=None):
+    def add_edge(self, port1, port2, match, is_active=True, modified_fields=None):
 
 
         # There are two types of edges, ones that trigger applications of all written rules thus far
@@ -71,12 +71,11 @@ class PortGraph:
         #TODO:
 
         edge_data = {"match": match,
-                     "actions": actions,
                      "is_active": is_active,
-                     "match_element":match_element,
-                     "modified_fields":modified_fields}
+                     "modified_fields": modified_fields}
 
         e = (port1.port_id, port2.port_id)
+        print e
         self.g.add_edge(*e, edge_data=edge_data)
 
     def remove_edge(self, port1, port2):
@@ -118,8 +117,8 @@ class PortGraph:
                 port1 = self.get_port(node_edge[0] + ":" + edge_port_dict[node_edge[0]])
                 port2 = self.get_port(node_edge[1] + ":" + edge_port_dict[node_edge[1]])
 
-                self.add_edge(port1, port2, Match(init_wildcard=True), None)
-                self.add_edge(port2, port1, Match(init_wildcard=True), None)
+                self.add_edge(port1, port2, Match(init_wildcard=True))
+                self.add_edge(port2, port1, Match(init_wildcard=True))
 
     def update_edge_down(self):
         pass
@@ -135,8 +134,8 @@ class PortGraph:
         self.add_port(hp)
 
         # Add edges between host and switch in the port graph
-        self.add_edge(hp, host_obj.switch_port, Match(init_wildcard=True), None)
-        self.add_edge(host_obj.switch_port, hp, Match(init_wildcard=True), None)
+        self.add_edge(hp, host_obj.switch_port, Match(init_wildcard=True))
+        self.add_edge(host_obj.switch_port, hp, Match(init_wildcard=True))
 
         return hp
 
@@ -186,9 +185,14 @@ class PortGraph:
             # admitted_matches at next_port
             for dst in next_port.admitted_match:
 
-                if edge_data["modified_fields"] and edge_data["match_element"]:
-
+                # If fields were modified...
+                if edge_data["modified_fields"] and edge_data["match"]:
                     transformed_match = next_port.admitted_match[dst]
                     original_match = transformed_match.get_orig_match(edge_data["modified_fields"],
-                                                                       edge_data["match_element"])
+                                                                       edge_data["match"])
                     curr_port.admitted_match[dst] = original_match
+
+                elif edge_data["match"]:
+                    curr_port.admitted_match[dst] = next_port.admitted_match[dst]
+                else:
+                    pass

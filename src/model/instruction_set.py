@@ -97,66 +97,36 @@ class InstructionSet():
                 applied_action_set = ActionSet(self.sw)
                 applied_action_set.add_all_actions(instruction.actions_list, match_for_port)
 
-                # Get the resulting match and have it be applied
-                match_for_port = applied_action_set.get_resulting_match(match_for_port)
-                modified_fields = applied_action_set.get_modified_field_names()
+                modified_fields_list = applied_action_set.get_modified_field_list()
+                out_port_and_active_status_tuple_list = applied_action_set.get_out_port_and_active_status_tuple_list()
 
-                if modified_fields:
-                    print "Here"
-
-                #Check to see if applied_action_set has any output edges to contribute
-                out_port_and_active_status_tuple_list = \
-                    applied_action_set.get_out_port_and_active_status_tuple()
-
-                for out_port, is_active in out_port_and_active_status_tuple_list:
-                    if out_port == "4294967293":
+                if not out_port_and_active_status_tuple_list:
+                    if self.flow.table_id < len(self.sw.flow_tables) - 1:
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
-                                                        self.sw.model.port_graph.get_port(str(out_port)),
+                                                        self.sw.flow_tables[self.flow.table_id + 1].port,
                                                         match_for_port,
-                                                        None,
-                                                        is_active, modified_fields))
+                                                        True,
+                                                        modified_fields_list))
                     else:
+                        #TODO: Handle this case
+                        pass
+                else:
+                    for out_port, is_active in out_port_and_active_status_tuple_list:
                         port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                         self.sw.ports[out_port],
                                                         match_for_port,
-                                                        None,
-                                                        is_active, modified_fields))
+                                                        is_active,
+                                                        modified_fields_list))
 
             # These things affect the next table, so the edge to next table is going to contain these two
             # types of "edits" on the ActionSet
             elif instruction.instruction_type == "write-actions":
-                
-                # Put all the actions under this instruction in an ActionSet and pass it down .
-                written_action_set = ActionSet(self.sw)
-                written_action_set.add_all_actions(instruction.actions_list, match_for_port)
-
-                #TODO: Figure this cookie out
-                modified_fields = None
-
-                #Check to see if written_action_set has any output edges to contribute
-                out_port_and_active_status_tuple_list = \
-                    written_action_set.get_out_port_and_active_status_tuple()
-
-                for out_port, is_active in out_port_and_active_status_tuple_list:
-                    if out_port == 4294967293:
-                        port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
-                                                        self.sw.model.port_graph.get_port(out_port),
-                                                        match_for_port,
-                                                        written_action_set,
-                                                        is_active, modified_fields))
-                    else:
-                        port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
-                                                        self.sw.ports[out_port],
-                                                        match_for_port,
-                                                        written_action_set,
-                                                        is_active, modified_fields))
-
+                pass
 
             elif instruction.instruction_type == "go-to-table":
                 port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
                                                 self.sw.flow_tables[instruction.go_to_table].port,
                                                 match_for_port,
-                                                None,
                                                 True,
                                                 None))
 
@@ -167,11 +137,9 @@ class InstructionSet():
             # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
         # Add them all in
-        for src, dst, match, actions, active_status, modified_fields in port_additions:
+        for src, dst, match, active_status, modified_fields_list in port_additions:
             self.model.port_graph.add_edge(src,
                                            dst,
                                            match,
-                                           actions,
                                            active_status,
-                                           self.flow.match_element,
-                                           modified_fields)
+                                           modified_fields_list)

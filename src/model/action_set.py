@@ -194,12 +194,16 @@ class ActionSet():
 
         return out_port_match
 
-    def get_out_port_and_active_status_tuple(self):
+    def get_out_port_and_active_status_tuple_list(self):
 
         out_port_list = []
 
         #  For each output action, there is a corresponding out_port_match entry
         for output_action in self.action_dict["output"]:
+
+            # Ignore outputs to controller
+            if output_action.out_port == 4294967293:
+                continue
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
 
@@ -211,7 +215,7 @@ class ActionSet():
 
         return out_port_list
 
-    def get_modified_field_names(self):
+    def get_modified_field_list(self):
         modified_field_names = []
 
         for set_action in self.action_dict["set_field"]:

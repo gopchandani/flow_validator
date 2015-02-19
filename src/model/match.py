@@ -224,7 +224,7 @@ class MatchElement(DictMixin):
 
                 continue
 
-    def get_orig_match_element(self, modified_fields, match_element):
+    def get_orig_match_element(self, modified_fields, rule_match):
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
 
