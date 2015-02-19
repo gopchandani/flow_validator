@@ -14,8 +14,10 @@ class ComputePortPaths:
         # Attach a destination port for each host.
         added_host_ports = []
         for host_id in self.model.get_host_ids():
-            print "Setting admitted_match:", host_id
             host_obj = self.model.get_node_object(host_id)
+            print "Setting admitted_match:", host_id, "connected to switch:", \
+                host_obj.switch_id, "at port:", \
+                host_obj.switch_port_attached
 
             admitted_match = Match(init_wildcard=True, tag="flow")
             admitted_match.set_field("ethernet_type", 0x0800)

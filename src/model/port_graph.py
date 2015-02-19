@@ -75,9 +75,6 @@ class PortGraph:
                      "modified_fields": modified_fields}
 
         e = (port1.port_id, port2.port_id)
-
-        print e, modified_fields
-
         self.g.add_edge(*e, edge_data=edge_data)
 
     def remove_edge(self, port1, port2):
@@ -182,11 +179,8 @@ class PortGraph:
 
     def compute_destination_edges(self, dst):
 
-
         # Traverse in reverse.
         for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, dst, reverse=True):
-
-            print curr_port.port_id, "->", next_port.port_id
 
             # At curr_port, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at next_port
@@ -209,8 +203,6 @@ class PortGraph:
                         #curr_port.admitted_match[dst] = original_match
                         #curr_port.admitted_match[dst] = m
                         curr_port.admitted_match[dst] = i
-                    else:
-                        print "Here"
 
                 elif edge_data["matching_element"]:
                     i = next_port.admitted_match[dst].intersect(m)
