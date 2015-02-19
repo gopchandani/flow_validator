@@ -62,7 +62,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, matching_element, is_active=True, modified_fields=[]):
+    def add_edge(self, port1, port2, matching_element, is_active=True, modified_fields={}):
 
 
         # There are two types of edges, ones that trigger applications of all written rules thus far
@@ -192,10 +192,9 @@ class PortGraph:
             # admitted_matches at next_port
             if dst in next_port.admitted_match:
 
-                # If fields were modified...
                 if edge_data["modified_fields"] and edge_data["matching_element"]:
                     transformed_match = next_port.admitted_match[dst]
-                    original_match = transformed_match.get_orig_match(edge_data["modified_fields"],
+                    original_match = transformed_match.get_orig_match(edge_data["modified_fields"].keys(),
                                                                       edge_data["matching_element"])
                     curr_port.admitted_match[dst] = original_match
 

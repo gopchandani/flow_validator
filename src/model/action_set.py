@@ -35,7 +35,10 @@ class Action():
         self.order = action_json["order"]
         self.action_type = None
         self.is_active = is_active
+
+        # Captures what the action is doing.
         self.modified_field = None
+        self.field_modified_to = None
 
         if "output-action" in action_json:
             self.action_type = "output"
@@ -62,6 +65,7 @@ class Action():
             mjp = MatchJsonParser(action_json["set-field"])
             if mjp.keys():
                 self.modified_field = mjp.keys()[0]
+                self.field_modified_to = mjp[self.modified_field]
 
 class ActionSet():
 
@@ -215,13 +219,17 @@ class ActionSet():
 
         return out_port_list
 
-    def get_modified_field_list(self):
-        modified_field_names = []
+    def get_modified_fields_dict(self):
+        modified_fields_dict = {}
 
         for set_action in self.action_dict["set_field"]:
-            modified_field_names.append(set_action.modified_field)
+            modified_fields_dict[set_action.modified_field] = set_action.field_modified_to
 
-        if "push_vlan" in self.action_dict or "pop_vlan" in self.action_dict:
-            modified_field_names.append("has_vlan_tag")
+        if "push_vlan" in self.action_dict:
+            modified_fields_dict["has_vlan_tag"] = 1
 
-        return modified_field_names
+        if "pop_vlan" in self.action_dict:
+            modified_fields_dict["has_vlan_tag"] = 0
+
+
+        return modified_fields_dict

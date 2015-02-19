@@ -108,7 +108,7 @@ class InstructionSet():
 
 
         # See the impact of all those instructions
-        modified_fields_list = applied_action_set.get_modified_field_list()
+        modified_fields = applied_action_set.get_modified_fields_dict()
         out_port_and_active_status_tuple_list = applied_action_set.get_out_port_and_active_status_tuple_list()
 
         # Add port edges based on the impact of ActionSet and GotoTable
@@ -117,12 +117,12 @@ class InstructionSet():
                                             self.sw.ports[out_port],
                                             matching_element,
                                             is_active,
-                                            modified_fields_list)
+                                            modified_fields)
 
         if goto_table:
             self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
                                             self.sw.flow_tables[goto_table].port,
                                             matching_element,
                                             True,
-                                            modified_fields_list)
+                                            modified_fields)
 
