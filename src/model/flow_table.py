@@ -10,14 +10,14 @@ class Flow():
     def __hash__(self):
         return hash(str(self.sw.node_id) + str(self.table_id) + str(self.id))
 
-    def __init__(self, sw, flow):
+    def __init__(self, sw, flow_json):
 
         self.sw = sw
         self.model = sw.model
-        self.table_id = flow["table_id"]
-        self.id = flow["id"]
-        self.priority = int(flow["priority"])
-        self.match_element = MatchElement(flow["match"], self)
+        self.table_id = flow_json["table_id"]
+        self.id = flow_json["id"]
+        self.priority = int(flow_json["priority"])
+        self.match_element = MatchElement(flow_json["match"], self)
 
         self.written_actions = []
         self.applied_actions = []
@@ -28,10 +28,10 @@ class Flow():
         self.match.match_elements.append(self.match_element)
         self.complement_match = self.match_element.complement_match(self)
         self.applied_match = None
-        self.instructions = InstructionSet(self.sw, self, flow["instructions"]["instruction"])
+        self.instructions = InstructionSet(self.sw, self, flow_json["instructions"]["instruction"])
 
         # Go through instructions
-        for instruction_json in flow["instructions"]["instruction"]:
+        for instruction_json in flow_json["instructions"]["instruction"]:
 
             if "write-actions" in instruction_json:
                 write_actions_json = instruction_json["write-actions"]

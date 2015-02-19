@@ -105,6 +105,7 @@ class PortGraph:
     def init_port_graph(self):
 
         #Add a port for controller
+        #TODO: Nothing gets added to this for now.
         self.init_global_controller_port()
 
         # Iterate through switches and add the ports and relevant abstract analysis
@@ -178,25 +179,32 @@ class PortGraph:
             except StopIteration:
                 queue.popleft()
 
-    def compute_destination_edges(self, destination_port):
+
+    def compute_destination_edges(self, dst):
+
 
         # Traverse in reverse.
-        for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, destination_port.port_id, reverse=True):
+        for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, dst, reverse=True):
 
             print curr_port.port_id, "->", next_port.port_id
 
             # At curr_port, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at next_port
-            for dst in next_port.admitted_match:
+            if dst in next_port.admitted_match:
 
                 # If fields were modified...
                 if edge_data["modified_fields"] and edge_data["matching_element"]:
                     transformed_match = next_port.admitted_match[dst]
                     original_match = transformed_match.get_orig_match(edge_data["modified_fields"],
-                                                                       edge_data["matching_element"])
+                                                                      edge_data["matching_element"])
                     curr_port.admitted_match[dst] = original_match
 
                 elif edge_data["matching_element"]:
-                    curr_port.admitted_match[dst] = next_port.admitted_match[dst]
+                    # TODO: This should really be passed down as part of the "flow"
+                    m = Match()
+                    m.match_elements.append(edge_data["matching_element"])
+
+                    if not next_port.admitted_match[dst].intersect(m).is_empty():
+                        curr_port.admitted_match[dst] = next_port.admitted_match[dst]
                 else:
                     pass

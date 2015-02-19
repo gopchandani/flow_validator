@@ -235,7 +235,7 @@ class MatchElement(DictMixin):
                 orig_match_element.match_fields[field_name] = matching_element.match_fields[field_name]
             else:
 
-                # Otherwise, just keep the field same as it was.
+                # Otherwise, just keep the field same as it was
                 orig_match_element.match_fields[field_name] = self.match_fields[field_name]
 
         return orig_match_element
