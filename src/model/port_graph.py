@@ -192,18 +192,32 @@ class PortGraph:
             # admitted_matches at next_port
             if dst in next_port.admitted_match:
 
+                # TODO: This should really be passed down as part of the "flow"
+                m = Match()
+                m.match_elements.append(edge_data["matching_element"])
+
                 if edge_data["modified_fields"] and edge_data["matching_element"]:
+
+                    # This is what the match would be before passing this match
                     transformed_match = next_port.admitted_match[dst]
                     original_match = transformed_match.get_orig_match(edge_data["modified_fields"].keys(),
-                                                                      edge_data["matching_element"])
-                    curr_port.admitted_match[dst] = original_match
+                                                  edge_data["matching_element"])
+
+                    # See if this hypothetical original_match (one that it would be if) actually passes the match
+                    i = original_match.intersect(m)
+                    if not i.is_empty():
+                        #curr_port.admitted_match[dst] = original_match
+                        #curr_port.admitted_match[dst] = m
+                        curr_port.admitted_match[dst] = i
+                    else:
+                        print "Here"
 
                 elif edge_data["matching_element"]:
-                    # TODO: This should really be passed down as part of the "flow"
-                    m = Match()
-                    m.match_elements.append(edge_data["matching_element"])
+                    i = next_port.admitted_match[dst].intersect(m)
+                    if not i.is_empty():
+                        #curr_port.admitted_match[dst] = next_port.admitted_match[dst]
+                        #curr_port.admitted_match[dst] = m
 
-                    if not next_port.admitted_match[dst].intersect(m).is_empty():
-                        curr_port.admitted_match[dst] = next_port.admitted_match[dst]
+                        curr_port.admitted_match[dst] = i
                 else:
                     pass
