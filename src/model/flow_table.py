@@ -96,6 +96,9 @@ class FlowTable():
                 flow.applied_match = intersection
 
                 # Add the edges in the portgraph
+                if self.sw.node_id == "openflow:3" and self.table_id == 1:
+                    print "here"
+
                 flow.instructions.add_port_graph_edges()
 
             else:

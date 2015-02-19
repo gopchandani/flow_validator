@@ -110,7 +110,6 @@ class ActionSet():
         self.action_dict = defaultdict(list)
         self.sw = sw
 
-
     # These  essentially turn the nested action_list which may contain group actions in it,
     # into a simple dictionary keyed by type and values containing the action itself
     # This is a way to essentially sort actions from being in groups into being categorized by their type
@@ -142,6 +141,7 @@ class ActionSet():
             else:
                 action.matched_flow = intersection
                 self.action_dict[action.action_type].append(action)
+
 
     def get_resulting_match_element(self, input_match):
 
@@ -220,5 +220,8 @@ class ActionSet():
 
         for set_action in self.action_dict["set_field"]:
             modified_field_names.append(set_action.modified_field)
+
+        if "push_vlan" in self.action_dict or "pop_vlan" in self.action_dict:
+            modified_field_names.append("has_vlan_tag")
 
         return modified_field_names

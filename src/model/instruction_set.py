@@ -83,63 +83,46 @@ class InstructionSet():
 
     def add_port_graph_edges(self):
 
-        port_additions = []
-
         # match_for_port is what matched and it will be modified by any apply-action instructions below
         match_for_port = self.flow.applied_match
 
+        # Initialize data structures to accumulate the effects of actions in the instructions that may result in
+        # creation of port edges later.
+
+        applied_action_set = ActionSet(self.sw)
+        written_action_set = ActionSet(self.sw)
+        goto_table = None
+
         for instruction in self.instruction_list:
 
-            # Instructions dictate that things be done immediately and may include output
             if instruction.instruction_type == "apply-actions":
-
-                # Put all the actions under this instruction in an ActionSet and mix it up...
-                applied_action_set = ActionSet(self.sw)
                 applied_action_set.add_all_actions(instruction.actions_list, match_for_port)
-
-                modified_fields_list = applied_action_set.get_modified_field_list()
-                out_port_and_active_status_tuple_list = applied_action_set.get_out_port_and_active_status_tuple_list()
-
-                if not out_port_and_active_status_tuple_list:
-                    if self.flow.table_id < len(self.sw.flow_tables) - 1:
-                        port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
-                                                        self.sw.flow_tables[self.flow.table_id + 1].port,
-                                                        match_for_port,
-                                                        True,
-                                                        modified_fields_list))
-                    else:
-                        #TODO: Handle this case
-                        pass
-                else:
-                    for out_port, is_active in out_port_and_active_status_tuple_list:
-                        port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
-                                                        self.sw.ports[out_port],
-                                                        match_for_port,
-                                                        is_active,
-                                                        modified_fields_list))
-
-            # These things affect the next table, so the edge to next table is going to contain these two
-            # types of "edits" on the ActionSet
             elif instruction.instruction_type == "write-actions":
                 pass
-
             elif instruction.instruction_type == "go-to-table":
-                port_additions.append((self.sw.flow_tables[self.flow.table_id].port,
-                                                self.sw.flow_tables[instruction.go_to_table].port,
-                                                match_for_port,
-                                                True,
-                                                None))
+                goto_table = instruction.go_to_table
 
-                
             # TODO: Handle meter instruction
             # TODO: Handle clear-actions case
             # TODO: Write meta-data case
-            # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
-        # Add them all in
-        for src, dst, match, active_status, modified_fields_list in port_additions:
-            self.model.port_graph.add_edge(src,
-                                           dst,
-                                           match,
-                                           active_status,
-                                           modified_fields_list)
+
+        # See the impact of all those instructions
+        modified_fields_list = applied_action_set.get_modified_field_list()
+        out_port_and_active_status_tuple_list = applied_action_set.get_out_port_and_active_status_tuple_list()
+
+        # Add port edges based on the impact of ActionSet and GotoTable
+        for out_port, is_active in out_port_and_active_status_tuple_list:
+            self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
+                                            self.sw.ports[out_port],
+                                            match_for_port,
+                                            is_active,
+                                            modified_fields_list)
+
+        if goto_table:
+            self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
+                                            self.sw.flow_tables[goto_table].port,
+                                            match_for_port,
+                                            True,
+                                            modified_fields_list)
+

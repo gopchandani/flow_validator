@@ -74,8 +74,12 @@ class PortGraph:
                      "is_active": is_active,
                      "modified_fields": modified_fields}
 
+
+
         e = (port1.port_id, port2.port_id)
-        print e
+
+        print e, modified_fields
+
         self.g.add_edge(*e, edge_data=edge_data)
 
     def remove_edge(self, port1, port2):
@@ -180,6 +184,8 @@ class PortGraph:
 
         # Traverse in reverse.
         for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, destination_port.port_id, reverse=True):
+
+            print curr_port.port_id, "->", next_port.port_id
 
             # At curr_port, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at next_port
