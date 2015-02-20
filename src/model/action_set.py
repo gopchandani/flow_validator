@@ -146,7 +146,6 @@ class ActionSet():
                 action.matched_flow = intersection
                 self.action_dict[action.action_type].append(action)
 
-
     def get_resulting_match_element(self, input_match):
 
         output_match = input_match
@@ -180,7 +179,6 @@ class ActionSet():
                 output_match.set_field(action.set_field_match_json)
 
         return output_match
-
 
     def get_out_port_matches(self, in_port_match, in_port):
 

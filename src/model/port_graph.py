@@ -75,8 +75,7 @@ class PortGraph:
                      "modified_fields": modified_fields}
 
         e = (port1.port_id, port2.port_id)
-        if port2.port_id == "openflow:1:3":
-            print e
+        print e, edge_data["is_active"]
 
         self.g.add_edge(*e, edge_data=edge_data)
 

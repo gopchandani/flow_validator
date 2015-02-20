@@ -102,13 +102,14 @@ class Group():
                 this_bucket = self.bucket_list[i]
                 if this_bucket.is_live():
                     all_action_list.extend(this_bucket.action_list)
+                    i += 1
                     break
                 else:
                     # Also adding any non-live buckets encountered until then to be as such
                     for action in this_bucket.action_list:
                         action.is_active = False
                     all_action_list.extend(this_bucket.action_list)
-                i += 1
+                    i += 1
 
             # If there are any buckets left, we add them as inactive buckets
             while i < len(self.bucket_list):
