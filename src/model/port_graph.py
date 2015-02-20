@@ -70,14 +70,16 @@ class PortGraph:
         # Because that's when a packet leaves a switch (OF1.3 specification's time of applying rules)
         #TODO:
 
-        edge_data = {"matching_element": matching_element,
-                     "is_active": is_active,
-                     "modified_fields": modified_fields}
+        if is_active:
 
-        e = (port1.port_id, port2.port_id)
-        print e, edge_data["is_active"]
+            edge_data = {"matching_element": matching_element,
+                         "is_active": is_active,
+                         "modified_fields": modified_fields}
 
-        self.g.add_edge(*e, edge_data=edge_data)
+            e = (port1.port_id, port2.port_id)
+            print e, edge_data["is_active"]
+
+            self.g.add_edge(*e, edge_data=edge_data)
 
     def remove_edge(self, port1, port2):
         pass
@@ -194,6 +196,10 @@ class PortGraph:
                 #print edge_data["matching_element"].match_fields["in_port"]
 
                 print curr_port.port_id, next_port.port_id
+                if curr_port.port_id == "openflow:4:2" and next_port.port_id == "openflow:1:2":
+                    print self.g.predecessors(curr_port.port_id)
+
+
 
                 if edge_data["modified_fields"] and edge_data["matching_element"]:
 
