@@ -75,6 +75,9 @@ class PortGraph:
                      "modified_fields": modified_fields}
 
         e = (port1.port_id, port2.port_id)
+        if port2.port_id == "openflow:1:3":
+            print e
+
         self.g.add_edge(*e, edge_data=edge_data)
 
     def remove_edge(self, port1, port2):
@@ -189,27 +192,27 @@ class PortGraph:
                 # TODO: This should really be passed down as part of the "flow"
                 m = Match()
                 m.match_elements.append(edge_data["matching_element"])
+                #print edge_data["matching_element"].match_fields["in_port"]
+
+                print curr_port.port_id, next_port.port_id
 
                 if edge_data["modified_fields"] and edge_data["matching_element"]:
 
                     # This is what the match would be before passing this match
                     transformed_match = next_port.admitted_match[dst]
-                    original_match = transformed_match.get_orig_match(edge_data["modified_fields"].keys(),
+                    original_match = transformed_match.get_orig_match(edge_data["modified_fields"],
                                                   edge_data["matching_element"])
 
                     # See if this hypothetical original_match (one that it would be if) actually passes the match
                     i = original_match.intersect(m)
                     if not i.is_empty():
-                        #curr_port.admitted_match[dst] = original_match
-                        #curr_port.admitted_match[dst] = m
+                        # i.fix_match(edge_data["modified_fields"], next_port.admitted_match[dst],
+                        #             # edge_data["matching_element"])
                         curr_port.admitted_match[dst] = i
 
                 elif edge_data["matching_element"]:
                     i = next_port.admitted_match[dst].intersect(m)
                     if not i.is_empty():
-                        #curr_port.admitted_match[dst] = next_port.admitted_match[dst]
-                        #curr_port.admitted_match[dst] = m
-
                         curr_port.admitted_match[dst] = i
                 else:
                     pass

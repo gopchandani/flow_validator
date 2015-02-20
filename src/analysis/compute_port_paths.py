@@ -15,6 +15,7 @@ class ComputePortPaths:
         added_host_ports = []
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
+
             print "Setting admitted_match:", host_id, "connected to switch:", \
                 host_obj.switch_id, "at port:", \
                 host_obj.switch_port_attached
@@ -28,6 +29,10 @@ class ComputePortPaths:
 
         # Let the port traffic bleed through to all other ports
         for host_port in added_host_ports:
+            host_obj = self.model.get_node_object(host_port.port_id)
+            if host_obj.switch_id == "openflow:3":
+                continue
+
             self.port_graph.compute_destination_edges(host_port.port_id)
 
         #  Test connectivity after flows have bled through the port graph
@@ -36,8 +41,14 @@ class ComputePortPaths:
 
                 src_port = self.port_graph.get_port(src_h_id)
                 dst_port = self.port_graph.get_port(dst_h_id)
+                src_host_obj = self.model.get_node_object(src_port.port_id)
+                dst_host_obj = self.model.get_node_object(dst_port.port_id)
+
 
                 if src_port == dst_port:
+                    continue
+
+                if src_host_obj.switch_id == "openflow:1":
                     continue
 
                 if dst_port.port_id in src_port.admitted_match:

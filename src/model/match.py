@@ -240,6 +240,28 @@ class MatchElement(DictMixin):
 
         return orig_match_element
 
+    def fix_match_element(self, modified_fields, next_port_match, matching_element):
+
+        # Go through the fields that this match element has resulted in modifying...
+        for field_name in modified_fields:
+
+            # Construct a dummy tree from the value
+            iv = Interval(int(modified_fields[field_name]), int(modified_fields[field_name]) + 1)
+            it = IntervalTree()
+            it.add(iv)
+
+            # For every one of the elements in the next_port match, check
+            # if you ever or check if you always
+            for next_port_match_element in next_port_match.match_elements:
+
+                x = self.get_matched_tree(it, next_port_match_element.match_fields[field_name])
+                if len(x) > 0:
+
+                    print field_name
+
+                    # Then fix my admitted match using
+                    self.match_fields[field_name] = matching_element.match_fields[field_name]
+
 
     def set_fields_with_match_json(self, match_json):
 
@@ -373,6 +395,7 @@ class Match():
             for me in self.match_elements:
                 me.set_fields_with_match_json(match_json)
 
+
     def intersect(self, in_match):
         im = Match()
         for e1 in self.match_elements:
@@ -388,6 +411,11 @@ class Match():
         for me in self.match_elements:
             orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
         return orig_match
+
+    def fix_match(self, modified_fields, next_port_match, matching_element):
+
+        for me in self.match_elements:
+            me.fix_match_element(modified_fields, next_port_match, matching_element)
 
 def main():
     m1 = Match()
