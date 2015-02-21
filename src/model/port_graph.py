@@ -186,21 +186,18 @@ class PortGraph:
         # Traverse in reverse.
         for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, dst, reverse=True):
 
-            # At curr_port, set up the admitted traffic for the destination_port, by examining
-            # admitted_matches at next_port
+            print curr_port.port_id, next_port.port_id
+
+            # This signifies crossing of traffic into switch 4
+            if curr_port.port_id == "openflow:4:2" and next_port.port_id == "openflow:1:2":
+                print self.g.predecessors(curr_port.port_id)
+
+            # This signifies crossing of traffic into switch 4's port that will finally deliver to switch 1
+            if curr_port.port_id == "openflow:4:1" and next_port.port_id == "openflow:4:table0":
+                print self.g.predecessors(curr_port.port_id)
+
+
             if dst in next_port.admitted_match:
-                print curr_port.port_id, next_port.port_id
-                if curr_port.port_id == "openflow:4:2" and next_port.port_id == "openflow:1:2":
-                    print self.g.predecessors(curr_port.port_id)
-
-                if curr_port.port_id == "openflow:3:2" and next_port.port_id == "openflow:4:1":
-                    print self.g.predecessors(curr_port.port_id)
-
-                if curr_port.port_id == "openflow:3:table3" and next_port.port_id == "openflow:3:2":
-                    print self.g.predecessors(curr_port.port_id)
-
-
-
                 admitted_at_next_port = deepcopy(next_port.admitted_match[dst])
 
                 # You enter the switch at "egress" edges. Yes... Eye-roll:
@@ -213,7 +210,7 @@ class PortGraph:
                 # If not, then make sure you are "exiting" the right port, otherwise no exit and match is not admitted
                 elif edge_data["edge_type"] == "ingress":
                     if not admitted_at_next_port.is_field_wildcard("in_port"):
-                        if curr_port.port_id != admitted_at_next_port.get_field_val("in_port"):
+                        if int(curr_port.port_number) != int(admitted_at_next_port.get_field_val("in_port")):
                             continue
 
                 if edge_data["modified_fields"] and edge_data["flow_match"]:
