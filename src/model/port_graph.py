@@ -71,13 +71,20 @@ class PortGraph:
         #TODO:
 
         if is_active:
+            edge_type = None
+            if port1.port_type == "table" and port2.port_type == "physical":
+                edge_type = "egress"
+            elif port1.port_type == "physical" and port2.port_type == "table":
+                edge_type = "ingress"
+            elif port1.port_type == "physical" and port2.port_type == "table":
+                edge_type = "transport"
 
             edge_data = {"matching_element": matching_element,
-                         "is_active": is_active,
-                         "modified_fields": modified_fields}
+                         "modified_fields": modified_fields,
+                         "edge_type": edge_type}
 
             e = (port1.port_id, port2.port_id)
-            print e, edge_data["is_active"]
+            print e
 
             self.g.add_edge(*e, edge_data=edge_data)
 
@@ -167,7 +174,8 @@ class PortGraph:
                 else:
                     edge_data = self.get_edge_data(parent, child)
 
-                if child not in visited and edge_data["is_active"]:
+#                if child not in visited and edge_data["is_active"]:
+                if child not in visited:
 
                     if reverse:
                         yield self.get_port(parent), self.get_port(child), edge_data
@@ -195,17 +203,37 @@ class PortGraph:
                 m.match_elements.append(edge_data["matching_element"])
                 #print edge_data["matching_element"].match_fields["in_port"]
 
+                admitted_at_next_port = deepcopy(next_port.admitted_match[dst])
+
                 print curr_port.port_id, next_port.port_id
                 if curr_port.port_id == "openflow:4:2" and next_port.port_id == "openflow:1:2":
                     print self.g.predecessors(curr_port.port_id)
+
+                if curr_port.port_id == "openflow:3:2" and next_port.port_id == "openflow:4:1":
+                    print self.g.predecessors(curr_port.port_id)
+
+                if curr_port.port_id == "openflow:3:table3" and next_port.port_id == "openflow:3:2":
+                    print self.g.predecessors(curr_port.port_id)
+
+                # You enter the switch at "egress" edges. Yes... Eye-roll:
+                # At egress edges, set the in_port of the admitted match for destination to wildcard
+                if edge_data["edge_type"] == "egress":
+                    admitted_at_next_port.set_field("in_port", is_wildcard=True)
+
+                # If you are exiting the switch at an "ingress" edge:
+                # Check if the in_port on the admitted match for destination  is not a wildcard,
+                # If not, then make sure you are "exiting" the right port, otherwise no exit and match is not admitted
+                elif edge_data["edge_type"] == "ingress":
+                    if not admitted_at_next_port.is_field_wildcard("in_port"):
+                        if curr_port.port_id != admitted_at_next_port.get_field_val("in_port"):
+                            continue
 
 
 
                 if edge_data["modified_fields"] and edge_data["matching_element"]:
 
                     # This is what the match would be before passing this match
-                    transformed_match = next_port.admitted_match[dst]
-                    original_match = transformed_match.get_orig_match(edge_data["modified_fields"],
+                    original_match = admitted_at_next_port.get_orig_match(edge_data["modified_fields"],
                                                   edge_data["matching_element"])
 
                     # See if this hypothetical original_match (one that it would be if) actually passes the match
@@ -214,10 +242,12 @@ class PortGraph:
                         # i.fix_match(edge_data["modified_fields"], next_port.admitted_match[dst],
                         #             # edge_data["matching_element"])
                         curr_port.admitted_match[dst] = i
+                        print "Passing"
 
                 elif edge_data["matching_element"]:
-                    i = next_port.admitted_match[dst].intersect(m)
+                    i = admitted_at_next_port.intersect(m)
                     if not i.is_empty():
                         curr_port.admitted_match[dst] = i
+                        print "Passing"
                 else:
                     pass

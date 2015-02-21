@@ -129,6 +129,10 @@ class MatchElement(DictMixin):
             self.match_fields[key].add(Interval(value, value + 1, tag))
             self.value_cache[key] = value
 
+    #TODO: Does not cover the cases of fragmented wildcard
+    def is_field_wildcard(self, field_name):
+        return Interval(0, sys.maxsize) in self.match_fields[field_name]
+
     def get_matched_tree(self, tree1, tree2):
 
         matched_tree = IntervalTree()
@@ -153,9 +157,9 @@ class MatchElement(DictMixin):
 
             # If the resulting tree has no intervals in it, then balk:
             if not intersection_element.match_fields[field_name]:
-                # print field_name, "failed to intersect"
-                # print "Traffic has:", in_match_element.match_fields[field_name]
-                # print "Flow has:", self.match_fields[field_name]
+                print field_name, "failed to intersect"
+                print "in_match has:", in_match_element.match_fields[field_name]
+                print "self has:", self.match_fields[field_name]
                 return None
 
         return intersection_element
@@ -385,11 +389,15 @@ class Match():
     def is_empty(self):
         return len(self.match_elements) == 0
 
-    def set_field(self, key=None, value=None, match_json=None):
+    def set_field(self, key, value=None, match_json=None, is_wildcard=False):
 
         if key and value:
             for me in self.match_elements:
                 me.set_match_field_element(key, value)
+
+        elif is_wildcard:
+            for me in self.match_elements:
+                me.set_match_field_element(key, is_wildcard=True)
 
         elif match_json:
             for me in self.match_elements:
@@ -416,6 +424,23 @@ class Match():
 
         for me in self.match_elements:
             me.fix_match_element(modified_fields, next_port_match, matching_element)
+
+    def is_field_wildcard(self, field_name):
+        retval = True
+
+        for me in self.match_elements:
+            retval = me.is_field_wildcard(field_name)
+            if not retval:
+                break
+
+        return retval
+
+    #TODO: Very hacky.
+    # Assumes that there is only a single element and for that element, in the given field,
+    # there is only a single interval present
+
+    def get_field_val(self, field_name):
+        return list(self.match_elements[0].match_fields[field_name].all_intervals)[0].begin
 
 def main():
     m1 = Match()
