@@ -411,6 +411,15 @@ class Match():
                     im.match_elements.append(ei)
         return im
 
+    def union(self, in_match):
+
+        self.match_elements.extend(in_match.match_elements)
+
+        return self
+
+
+
+
     def get_orig_match(self, modified_fields, matching_element):
 
         orig_match = Match()

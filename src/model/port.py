@@ -19,7 +19,7 @@ class Port():
         self.port_id = None
 
         # This dictionary is to hold a Match object per destination
-        self.admitted_match = {}
+        self.path_elements = {}
 
         # These apply specifically to physical ports
         self.mac_address = None
