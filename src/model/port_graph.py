@@ -190,24 +190,11 @@ class PortGraph:
         # TODO: But should you traverse everything, shouldn't traversal be a function of whether some goods were carried?
         for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, dst, reverse=True):
 
-            print curr_port.port_id, next_port.port_id
+            #print curr_port.port_id, next_port.port_id
 
-            # This signifies crossing of traffic into switch 4
-            if curr_port.port_id == "openflow:4:2" and next_port.port_id == "openflow:1:2":
-                print self.g.predecessors(curr_port.port_id)
-
-            # This signifies crossing of traffic into switch 4's port that will finally deliver to switch 3
-            if curr_port.port_id == "openflow:4:1" and next_port.port_id == "openflow:4:table0":
-                print self.g.predecessors(curr_port.port_id)
-
-            # This signifies crossing of traffic into switch 3's port that will finally deliver to host port
-            if curr_port.port_id == "openflow:3:table3" and next_port.port_id == "openflow:3:2":
-                print self.g.predecessors(curr_port.port_id)
-
-            # This is the port that is strip off the vlan tag
-            if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
-                print self.g.predecessors(curr_port.port_id)
-
+            # # This signifies crossing of traffic into switch 4
+            # if curr_port.port_id == "openflow:4:2" and next_port.port_id == "openflow:1:2":
+            #     print self.g.predecessors(curr_port.port_id)
 
             if dst in next_port.path_elements:
                 admitted_at_next_port = deepcopy(next_port.path_elements[dst].admitted_match)
@@ -241,6 +228,5 @@ class PortGraph:
                     i = admitted_at_next_port.intersect(edge_data["flow_match"])
                     if not i.is_empty():
                         curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
-                        print "Passing"
                 else:
                     pass
