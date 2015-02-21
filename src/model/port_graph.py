@@ -190,11 +190,11 @@ class PortGraph:
         # TODO: But should you traverse everything, shouldn't traversal be a function of whether some goods were carried?
         for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, dst, reverse=True):
 
-            #print curr_port.port_id, next_port.port_id
+            print curr_port.port_id, next_port.port_id
 
-            # # This signifies crossing of traffic into switch 4
-            # if curr_port.port_id == "openflow:4:2" and next_port.port_id == "openflow:1:2":
-            #     print self.g.predecessors(curr_port.port_id)
+            # This is another path which is being stopped by pure BFS way of doing this...
+            if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
+                print next_port.path_elements[dst].get_path_str()
 
             if dst in next_port.path_elements:
                 admitted_at_next_port = deepcopy(next_port.path_elements[dst].admitted_match)

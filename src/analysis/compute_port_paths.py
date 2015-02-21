@@ -44,7 +44,6 @@ class ComputePortPaths:
                 src_host_obj = self.model.get_node_object(src_port.port_id)
                 dst_host_obj = self.model.get_node_object(dst_port.port_id)
 
-
                 if src_port == dst_port:
                     continue
 
@@ -56,7 +55,6 @@ class ComputePortPaths:
                     print p.get_path_str()
                 else:
                     print "No admission for dst_host:", dst_h_id, "at src host:", src_h_id
-
 
 def main():
     bp = ComputePortPaths()
