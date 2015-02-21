@@ -83,9 +83,6 @@ class InstructionSet():
 
     def add_port_graph_edges(self):
 
-        # match_for_port is what matched and it will be modified by any apply-action instructions below
-        matching_element = self.flow.match_element
-
         # Initialize data structures to accumulate the effects of actions in the instructions that may result in
         # creation of port edges later.
 
@@ -96,7 +93,7 @@ class InstructionSet():
         for instruction in self.instruction_list:
 
             if instruction.instruction_type == "apply-actions":
-                applied_action_set.add_all_actions(instruction.actions_list, matching_element)
+                applied_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
             elif instruction.instruction_type == "write-actions":
                 pass
             elif instruction.instruction_type == "go-to-table":
@@ -115,14 +112,14 @@ class InstructionSet():
         for out_port, is_active in out_port_and_active_status_tuple_list:
             self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
                                             self.sw.ports[out_port],
-                                            matching_element,
+                                            self.flow.match,
                                             is_active,
                                             modified_fields)
 
         if goto_table:
             self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
                                             self.sw.flow_tables[goto_table].port,
-                                            matching_element,
+                                            self.flow.match,
                                             True,
                                             modified_fields)
 

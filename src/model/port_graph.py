@@ -62,13 +62,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, matching_element, is_active=True, modified_fields={}):
-
-
-        # There are two types of edges, ones that trigger applications of all written rules thus far
-        # and ones that don't. Only edges that are between two switches, trigger application of written actions
-        # Because that's when a packet leaves a switch (OF1.3 specification's time of applying rules)
-        #TODO:
+    def add_edge(self, port1, port2, flow_match, is_active=True, modified_fields={}):
 
         if is_active:
             edge_type = None
@@ -79,13 +73,11 @@ class PortGraph:
             elif port1.port_type == "physical" and port2.port_type == "table":
                 edge_type = "transport"
 
-            edge_data = {"matching_element": matching_element,
+            edge_data = {"flow_match": flow_match,
                          "modified_fields": modified_fields,
                          "edge_type": edge_type}
 
             e = (port1.port_id, port2.port_id)
-            print e
-
             self.g.add_edge(*e, edge_data=edge_data)
 
     def remove_edge(self, port1, port2):
@@ -128,8 +120,8 @@ class PortGraph:
                 port1 = self.get_port(node_edge[0] + ":" + edge_port_dict[node_edge[0]])
                 port2 = self.get_port(node_edge[1] + ":" + edge_port_dict[node_edge[1]])
 
-                self.add_edge(port1, port2, MatchElement(is_wildcard=True))
-                self.add_edge(port2, port1, MatchElement(is_wildcard=True))
+                self.add_edge(port1, port2, Match(init_wildcard=True))
+                self.add_edge(port2, port1, Match(init_wildcard=True))
 
     def update_edge_down(self):
         pass
@@ -145,8 +137,8 @@ class PortGraph:
         self.add_port(hp)
 
         # Add edges between host and switch in the port graph
-        self.add_edge(hp, host_obj.switch_port, MatchElement(is_wildcard=True))
-        self.add_edge(host_obj.switch_port, hp, MatchElement(is_wildcard=True))
+        self.add_edge(hp, host_obj.switch_port, Match(init_wildcard=True))
+        self.add_edge(host_obj.switch_port, hp, Match(init_wildcard=True))
 
         return hp
 
@@ -197,14 +189,6 @@ class PortGraph:
             # At curr_port, set up the admitted traffic for the destination_port, by examining
             # admitted_matches at next_port
             if dst in next_port.admitted_match:
-
-                # TODO: This should really be passed down as part of the "flow"
-                m = Match()
-                m.match_elements.append(edge_data["matching_element"])
-                #print edge_data["matching_element"].match_fields["in_port"]
-
-                admitted_at_next_port = deepcopy(next_port.admitted_match[dst])
-
                 print curr_port.port_id, next_port.port_id
                 if curr_port.port_id == "openflow:4:2" and next_port.port_id == "openflow:1:2":
                     print self.g.predecessors(curr_port.port_id)
@@ -214,6 +198,10 @@ class PortGraph:
 
                 if curr_port.port_id == "openflow:3:table3" and next_port.port_id == "openflow:3:2":
                     print self.g.predecessors(curr_port.port_id)
+
+
+
+                admitted_at_next_port = deepcopy(next_port.admitted_match[dst])
 
                 # You enter the switch at "egress" edges. Yes... Eye-roll:
                 # At egress edges, set the in_port of the admitted match for destination to wildcard
@@ -228,24 +216,22 @@ class PortGraph:
                         if curr_port.port_id != admitted_at_next_port.get_field_val("in_port"):
                             continue
 
-
-
-                if edge_data["modified_fields"] and edge_data["matching_element"]:
+                if edge_data["modified_fields"] and edge_data["flow_match"]:
 
                     # This is what the match would be before passing this match
                     original_match = admitted_at_next_port.get_orig_match(edge_data["modified_fields"],
-                                                  edge_data["matching_element"])
+                                                  edge_data["flow_match"].match_elements[0])
 
                     # See if this hypothetical original_match (one that it would be if) actually passes the match
-                    i = original_match.intersect(m)
+                    i = original_match.intersect(edge_data["flow_match"])
                     if not i.is_empty():
                         # i.fix_match(edge_data["modified_fields"], next_port.admitted_match[dst],
-                        #             # edge_data["matching_element"])
+                        #             # edge_data["flow_match"])
                         curr_port.admitted_match[dst] = i
                         print "Passing"
 
-                elif edge_data["matching_element"]:
-                    i = admitted_at_next_port.intersect(m)
+                elif edge_data["flow_match"]:
+                    i = admitted_at_next_port.intersect(edge_data["flow_match"])
                     if not i.is_empty():
                         curr_port.admitted_match[dst] = i
                         print "Passing"
