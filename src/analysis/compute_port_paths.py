@@ -51,9 +51,9 @@ class ComputePortPaths:
                 if src_host_obj.switch_id == "openflow:1":
                     continue
 
-                if dst_port.port_id in src_port.admitted_match:
-                    m =  src_port.admitted_match[dst_port.port_id]
-                    print m
+                if dst_port.port_id in src_port.path_elements:
+                    p =  src_port.path_elements[dst_port.port_id]
+                    print p.get_path_str()
                 else:
                     print "No admission for dst_host:", dst_h_id, "at src host:", src_h_id
 

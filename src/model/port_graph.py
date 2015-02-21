@@ -135,7 +135,8 @@ class PortGraph:
 
         # Add the port for host
         hp = Port(None, port_type="physical", port_id=host_obj.node_id)
-        hp.path_elements[host_obj.node_id] = FlowPathElement(admitted_match, host_obj.node_id)
+
+        hp.path_elements[host_obj.node_id] = FlowPathElement(host_obj.node_id, admitted_match, None)
         self.add_port(hp)
 
         # Add edges between host and switch in the port graph
@@ -234,12 +235,12 @@ class PortGraph:
 
                     i = original_match.intersect(edge_data["flow_match"])
                     if not i.is_empty():
-                        curr_port.path_elements[dst] = FlowPathElement(i, next_port.port_id)
+                        curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
 
                 elif edge_data["flow_match"]:
                     i = admitted_at_next_port.intersect(edge_data["flow_match"])
                     if not i.is_empty():
-                        curr_port.path_elements[dst] = FlowPathElement(i, next_port.port_id)
+                        curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
                         print "Passing"
                 else:
                     pass
