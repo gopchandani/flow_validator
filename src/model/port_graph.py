@@ -146,7 +146,7 @@ class PortGraph:
 
     def process_edge(self, dst, curr_port, next_port, edge_data):
 
-        # print curr_port.port_id, next_port.port_id
+        print curr_port.port_id, next_port.port_id
         #
         # This is another path which is being stopped by pure BFS way of doing this...
         if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
@@ -173,26 +173,22 @@ class PortGraph:
                 # This is what the match would be before passing this match
                 original_match = admitted_at_next_port.get_orig_match(edge_data["modified_fields"],
                                               edge_data["flow_match"].match_elements[0])
-
-                # See if this hypothetical original_match (one that it would be if) actually passes the match
-                i = original_match.intersect(edge_data["flow_match"])
-                if not i.is_empty():
-                    curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
-                    return curr_port.path_elements[dst]
-
             elif edge_data["flow_match"]:
-                i = admitted_at_next_port.intersect(edge_data["flow_match"])
-                if not i.is_empty():
+                original_match = admitted_at_next_port
+
+            i = original_match.intersect(edge_data["flow_match"])
+            if not i.is_empty():
+                if dst in [curr_port.port_id]:
+                    curr_port.path_elements[dst].accumulate_admitted_match(i)
+                else:
                     curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
-                    return curr_port.path_elements[dst]
+
+                return curr_port.path_elements[dst]
 
 
     def propagate_admitted_traffic(self, dst):
 
-        # This is the set of edges that have been visited:
-        visited = set()
-
-        # This is to enforce that nodes are iterated through in a BFS manner
+        visited = set([dst])
         queue = deque([(dst, self.g.predecessors_iter(dst))])
 
         while queue:
