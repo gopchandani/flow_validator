@@ -148,35 +148,31 @@ class PortGraph:
     def remove_destination_host(self, host_obj):
         pass
 
-    def bfs_active_edges(self, G, source, reverse=False):
+    def bfs_active_edges(self, dst):
 
-        if reverse and isinstance(G, nx.DiGraph):
-            neighbors = G.predecessors_iter
+        # Traverse in reverse.
+
+        neighbors = None
+        if isinstance(self.g, nx.DiGraph):
+            neighbors = self.g.predecessors_iter
         else:
-            neighbors = G.neighbors_iter
+            raise Exception("Must be a DiGraph")
 
-        visited = set([source])
-        queue = deque([(source, neighbors(source))])
+        visited = set([dst])
+        queue = deque([(dst, neighbors(dst))])
         edge_data = None
 
         while queue:
             parent, children = queue[0]
             try:
                 child = next(children)
+                edge_data = self.get_edge_data(child, parent)
 
-                if reverse:
-                    edge_data = self.get_edge_data(child, parent)
-                else:
-                    edge_data = self.get_edge_data(parent, child)
-
-#                if child not in visited and edge_data["is_active"]:
+                # TODO: But should you traverse everything, shouldn't traversal be a
+                # function of whether some goods were carried?
+                
                 if child not in visited:
-
-                    if reverse:
-                        yield self.get_port(parent), self.get_port(child), edge_data
-                    else:
-                        yield self.get_port(child), self.get_port(parent), edge_data
-
+                    yield self.get_port(parent), self.get_port(child), edge_data
                     visited.add(child)
                     queue.append((child, neighbors(child)))
 
@@ -184,11 +180,17 @@ class PortGraph:
                 queue.popleft()
 
 
+    def bfs_tree(self, dst):
+
+        T = nx.DiGraph()
+        T.add_node(dst)
+        T.add_edges_from(self.bfs_active_edges(dst))
+        return T
+
+
     def compute_destination_edges(self, dst):
 
-        # Traverse in reverse.
-        # TODO: But should you traverse everything, shouldn't traversal be a function of whether some goods were carried?
-        for next_port, curr_port, edge_data in self.bfs_active_edges(self.g, dst, reverse=True):
+        for next_port, curr_port, edge_data in self.bfs_active_edges(dst):
 
             print curr_port.port_id, next_port.port_id
 
