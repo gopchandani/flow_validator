@@ -187,17 +187,8 @@ class PortGraph:
                 child = next(children)
 
                 if child not in processed:
-                    #
-                    # # If all of the child's successors have been visited, then add child to processed set
-                    # all_successor_processed = True
-                    # for child_succesor in self.g.successors_iter(child):
-                    #     if child_succesor not in processed:
-                    #         all_successor_processed = False
-                    #         break
-                    #
-                    # if all_successor_processed:
-                    #     processed.add(child)
 
+                    # If all of the child's successors have been visited, then add child to processed set
                     processed.add(child)
 
                     explore_children = False
