@@ -151,16 +151,8 @@ class PortGraph:
     def bfs_active_edges(self, dst):
 
         # Traverse in reverse.
-
-        neighbors = None
-        if isinstance(self.g, nx.DiGraph):
-            neighbors = self.g.predecessors_iter
-        else:
-            raise Exception("Must be a DiGraph")
-
         visited = set([dst])
-        queue = deque([(dst, neighbors(dst))])
-        edge_data = None
+        queue = deque([(dst, self.g.predecessors_iter(dst))])
 
         while queue:
             parent, children = queue[0]
@@ -170,11 +162,10 @@ class PortGraph:
 
                 # TODO: But should you traverse everything, shouldn't traversal be a
                 # function of whether some goods were carried?
-                
                 if child not in visited:
                     yield self.get_port(parent), self.get_port(child), edge_data
                     visited.add(child)
-                    queue.append((child, neighbors(child)))
+                    queue.append((child, self.g.predecessors_iter(child)))
 
             except StopIteration:
                 queue.popleft()
@@ -230,5 +221,3 @@ class PortGraph:
                     i = admitted_at_next_port.intersect(edge_data["flow_match"])
                     if not i.is_empty():
                         curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
-                else:
-                    pass
