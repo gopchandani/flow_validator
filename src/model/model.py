@@ -270,7 +270,6 @@ class Model():
 
 def test_pygraphviz(networkx_graph):
 
-
     A = nx.to_agraph(networkx_graph)
     A.write("test.dot")
     A.layout()

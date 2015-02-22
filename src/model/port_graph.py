@@ -75,12 +75,8 @@ class PortGraph:
             elif port1.port_type == "physical" and port2.port_type == "table":
                 edge_type = "transport"
 
-            edge_data = {"flow_match": flow_match,
-                         "modified_fields": modified_fields,
-                         "edge_type": edge_type}
-
             e = (port1.port_id, port2.port_id)
-            self.g.add_edge(*e, edge_data=edge_data)
+            self.g.add_edge(*e, flow_match=flow_match, modified_fields=modified_fields, edge_type=edge_type)
 
     def remove_edge(self, port1, port2):
         pass
@@ -190,26 +186,36 @@ class PortGraph:
                     curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
                     return curr_port.path_elements[dst]
 
-    def propagate_initial_dst_flow(self, dst):
 
-        # Traverse in reverse.
-        visited = set([dst])
+    def propagate_admitted_traffic(self, dst):
+
+        # This is the set of edges that have been visited:
+        visited = set()
+
+        # This is to enforce that nodes are iterated through in a BFS manner
         queue = deque([(dst, self.g.predecessors_iter(dst))])
 
         while queue:
             parent, children = queue[0]
             try:
                 child = next(children)
-                edge_data = self.get_edge_data(child, parent)
 
                 if child not in visited:
 
                     visited.add(child)
 
-                    propagated_match = self.process_edge(dst, self.get_port(child), self.get_port(parent), edge_data)
+                    should_travel_its_children = False
+                    edge_data = self.g.get_edge_data(child, parent)
+                    for edge_data_key in edge_data:
+                        propagated_match = self.process_edge(dst, self.get_port(child),
+                                                             self.get_port(parent),
+                                                             edge_data[edge_data_key])
+
+                        if propagated_match:
+                            should_travel_its_children = True
 
                     # Check if there was actual propagation of traffic, only then visit the next guy's children
-                    if propagated_match:
+                    if should_travel_its_children:
                         queue.append((child, self.g.predecessors_iter(child)))
 
             except StopIteration:
