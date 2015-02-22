@@ -148,10 +148,10 @@ class PortGraph:
     def remove_destination_host(self, host_obj):
         pass
 
-    def process_edge(self, dst, next_port, curr_port, edge_data):
+    def process_edge(self, dst, curr_port, next_port, edge_data):
 
-        print curr_port.port_id, next_port.port_id
-
+        # print curr_port.port_id, next_port.port_id
+        #
         # This is another path which is being stopped by pure BFS way of doing this...
         if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
             print next_port.path_elements[dst].get_path_str()
@@ -170,7 +170,7 @@ class PortGraph:
             elif edge_data["edge_type"] == "ingress":
                 if not admitted_at_next_port.is_field_wildcard("in_port"):
                     if int(curr_port.port_number) != int(admitted_at_next_port.get_field_val("in_port")):
-                        return
+                        return None
 
             if edge_data["modified_fields"] and edge_data["flow_match"]:
 
@@ -179,15 +179,16 @@ class PortGraph:
                                               edge_data["flow_match"].match_elements[0])
 
                 # See if this hypothetical original_match (one that it would be if) actually passes the match
-
                 i = original_match.intersect(edge_data["flow_match"])
                 if not i.is_empty():
                     curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
+                    return curr_port.path_elements[dst]
 
             elif edge_data["flow_match"]:
                 i = admitted_at_next_port.intersect(edge_data["flow_match"])
                 if not i.is_empty():
                     curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
+                    return curr_port.path_elements[dst]
 
     def propagate_initial_dst_flow(self, dst):
 
@@ -201,13 +202,15 @@ class PortGraph:
                 child = next(children)
                 edge_data = self.get_edge_data(child, parent)
 
-                # TODO: But should you traverse everything, shouldn't traversal be a
-                # function of whether some goods were carried?
-
                 if child not in visited:
-                    self.process_edge(dst, self.get_port(parent), self.get_port(child), edge_data)
+
                     visited.add(child)
-                    queue.append((child, self.g.predecessors_iter(child)))
+
+                    propagated_match = self.process_edge(dst, self.get_port(child), self.get_port(parent), edge_data)
+
+                    # Check if there was actual propagation of traffic, only then visit the next guy's children
+                    if propagated_match:
+                        queue.append((child, self.g.predecessors_iter(child)))
 
             except StopIteration:
                 queue.popleft()
