@@ -33,7 +33,8 @@ class ComputePortPaths:
             if host_obj.switch_id == "openflow:3":
                 continue
 
-            self.port_graph.compute_destination_edges(host_port.port_id)
+            #self.port_graph.bleed_dst_flow(host_port.port_id)
+            self.port_graph.propagate_initial_dst_flow(host_port.port_id)
 
         #  Test connectivity after flows have bled through the port graph
         for src_h_id in self.model.get_host_ids():

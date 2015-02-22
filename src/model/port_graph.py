@@ -148,7 +148,48 @@ class PortGraph:
     def remove_destination_host(self, host_obj):
         pass
 
-    def bfs_active_edges(self, dst):
+    def process_edge(self, dst, next_port, curr_port, edge_data):
+
+        print curr_port.port_id, next_port.port_id
+
+        # This is another path which is being stopped by pure BFS way of doing this...
+        if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
+            print next_port.path_elements[dst].get_path_str()
+
+        if dst in next_port.path_elements:
+            admitted_at_next_port = deepcopy(next_port.path_elements[dst].admitted_match)
+
+            # You enter the switch at "egress" edges. Yes... Eye-roll:
+            # At egress edges, set the in_port of the admitted match for destination to wildcard
+            if edge_data["edge_type"] == "egress":
+                admitted_at_next_port.set_field("in_port", is_wildcard=True)
+
+            # If you are exiting the switch at an "ingress" edge:
+            # Check if the in_port on the admitted match for destination  is not a wildcard,
+            # If not, then make sure you are "exiting" the right port, otherwise no exit and match is not admitted
+            elif edge_data["edge_type"] == "ingress":
+                if not admitted_at_next_port.is_field_wildcard("in_port"):
+                    if int(curr_port.port_number) != int(admitted_at_next_port.get_field_val("in_port")):
+                        return
+
+            if edge_data["modified_fields"] and edge_data["flow_match"]:
+
+                # This is what the match would be before passing this match
+                original_match = admitted_at_next_port.get_orig_match(edge_data["modified_fields"],
+                                              edge_data["flow_match"].match_elements[0])
+
+                # See if this hypothetical original_match (one that it would be if) actually passes the match
+
+                i = original_match.intersect(edge_data["flow_match"])
+                if not i.is_empty():
+                    curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
+
+            elif edge_data["flow_match"]:
+                i = admitted_at_next_port.intersect(edge_data["flow_match"])
+                if not i.is_empty():
+                    curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
+
+    def propagate_initial_dst_flow(self, dst):
 
         # Traverse in reverse.
         visited = set([dst])
@@ -162,62 +203,11 @@ class PortGraph:
 
                 # TODO: But should you traverse everything, shouldn't traversal be a
                 # function of whether some goods were carried?
+
                 if child not in visited:
-                    yield self.get_port(parent), self.get_port(child), edge_data
+                    self.process_edge(dst, self.get_port(parent), self.get_port(child), edge_data)
                     visited.add(child)
                     queue.append((child, self.g.predecessors_iter(child)))
 
             except StopIteration:
                 queue.popleft()
-
-
-    def bfs_tree(self, dst):
-
-        T = nx.DiGraph()
-        T.add_node(dst)
-        T.add_edges_from(self.bfs_active_edges(dst))
-        return T
-
-
-    def compute_destination_edges(self, dst):
-
-        for next_port, curr_port, edge_data in self.bfs_active_edges(dst):
-
-            print curr_port.port_id, next_port.port_id
-
-            # This is another path which is being stopped by pure BFS way of doing this...
-            if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
-                print next_port.path_elements[dst].get_path_str()
-
-            if dst in next_port.path_elements:
-                admitted_at_next_port = deepcopy(next_port.path_elements[dst].admitted_match)
-
-                # You enter the switch at "egress" edges. Yes... Eye-roll:
-                # At egress edges, set the in_port of the admitted match for destination to wildcard
-                if edge_data["edge_type"] == "egress":
-                    admitted_at_next_port.set_field("in_port", is_wildcard=True)
-
-                # If you are exiting the switch at an "ingress" edge:
-                # Check if the in_port on the admitted match for destination  is not a wildcard,
-                # If not, then make sure you are "exiting" the right port, otherwise no exit and match is not admitted
-                elif edge_data["edge_type"] == "ingress":
-                    if not admitted_at_next_port.is_field_wildcard("in_port"):
-                        if int(curr_port.port_number) != int(admitted_at_next_port.get_field_val("in_port")):
-                            continue
-
-                if edge_data["modified_fields"] and edge_data["flow_match"]:
-
-                    # This is what the match would be before passing this match
-                    original_match = admitted_at_next_port.get_orig_match(edge_data["modified_fields"],
-                                                  edge_data["flow_match"].match_elements[0])
-
-                    # See if this hypothetical original_match (one that it would be if) actually passes the match
-
-                    i = original_match.intersect(edge_data["flow_match"])
-                    if not i.is_empty():
-                        curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
-
-                elif edge_data["flow_match"]:
-                    i = admitted_at_next_port.intersect(edge_data["flow_match"])
-                    if not i.is_empty():
-                        curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
