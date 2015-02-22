@@ -89,10 +89,6 @@ class PortGraph:
         # If the admitted matches chance (i,e. their content changes), everybody who relies on that edge needs to be
         # updated, so the change travels back in the bfs fashion
 
-    def get_edge_data(self, node1, node2):
-        a = self.g[node1][node2]
-        return a[0]['edge_data']
-
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")
         self.add_port(cp)
@@ -185,10 +181,11 @@ class PortGraph:
 
                 return curr_port.path_elements[dst]
 
-
     def propagate_admitted_traffic(self, dst):
 
-        visited = set([dst])
+        # A Node is not quite processed, until all of its successors are...
+
+        processed = set([dst])
         queue = deque([(dst, self.g.predecessors_iter(dst))])
 
         while queue:
@@ -196,9 +193,9 @@ class PortGraph:
             try:
                 child = next(children)
 
-                if child not in visited:
+                if child not in processed:
 
-                    visited.add(child)
+                    processed.add(child)
 
                     should_travel_its_children = False
                     edge_data = self.g.get_edge_data(child, parent)
