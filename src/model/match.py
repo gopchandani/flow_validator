@@ -414,13 +414,6 @@ class Match():
 
         return retval
 
-    #TODO: Very hacky.
-    # Assumes that there is only a single element and for that element, in the given field,
-    # there is only a single interval present
-
-    def get_field_val(self, field_name):
-        return list(self.match_elements[0].match_fields[field_name].all_intervals)[0].begin
-
 def main():
     m1 = Match()
     print m1

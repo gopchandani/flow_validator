@@ -72,6 +72,7 @@ class PortGraph:
                 edge_type = "egress"
             elif port1.port_type == "physical" and port2.port_type == "table":
                 edge_type = "ingress"
+                flow_match.set_field("in_port", int(port1.port_number))
             elif port1.port_type == "physical" and port2.port_type == "table":
                 edge_type = "transport"
 
@@ -156,25 +157,17 @@ class PortGraph:
             if edge_data["edge_type"] == "egress":
                 admitted_at_next_port.set_field("in_port", is_wildcard=True)
 
-            # If you are exiting the switch at an "ingress" edge:
-            # Check if the in_port on the admitted match for destination  is not a wildcard,
-            # If not, then make sure you are "exiting" the right port, otherwise no exit and match is not admitted
-            elif edge_data["edge_type"] == "ingress":
-                if not admitted_at_next_port.is_field_wildcard("in_port"):
-                    if int(curr_port.port_number) != int(admitted_at_next_port.get_field_val("in_port")):
-                        return None
-
             if edge_data["modified_fields"] and edge_data["flow_match"]:
 
                 # This is what the match would be before passing this match
                 original_match = admitted_at_next_port.get_orig_match(edge_data["modified_fields"],
-                                              edge_data["flow_match"].match_elements[0])
+                                                                      edge_data["flow_match"].match_elements[0])
             elif edge_data["flow_match"]:
                 original_match = admitted_at_next_port
 
             i = original_match.intersect(edge_data["flow_match"])
             if not i.is_empty():
-                if dst in [curr_port.port_id]:
+                if dst in curr_port.path_elements:
                     curr_port.path_elements[dst].accumulate_admitted_match(i)
                 else:
                     curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
@@ -183,8 +176,8 @@ class PortGraph:
 
     def propagate_admitted_traffic(self, dst):
 
-        # A Node is not quite processed, until all of its successors are...
-
+        # A Node is not quite processed, until all of its successors have brought back their admitted match information
+        # to it.
         processed = set([dst])
         queue = deque([(dst, self.g.predecessors_iter(dst))])
 
@@ -194,10 +187,20 @@ class PortGraph:
                 child = next(children)
 
                 if child not in processed:
+                    #
+                    # # If all of the child's successors have been visited, then add child to processed set
+                    # all_successor_processed = True
+                    # for child_succesor in self.g.successors_iter(child):
+                    #     if child_succesor not in processed:
+                    #         all_successor_processed = False
+                    #         break
+                    #
+                    # if all_successor_processed:
+                    #     processed.add(child)
 
                     processed.add(child)
 
-                    should_travel_its_children = False
+                    explore_children = False
                     edge_data = self.g.get_edge_data(child, parent)
                     for edge_data_key in edge_data:
                         propagated_match = self.process_edge(dst, self.get_port(child),
@@ -205,10 +208,10 @@ class PortGraph:
                                                              edge_data[edge_data_key])
 
                         if propagated_match:
-                            should_travel_its_children = True
+                            explore_children = True
 
                     # Check if there was actual propagation of traffic, only then visit the next guy's children
-                    if should_travel_its_children:
+                    if explore_children:
                         queue.append((child, self.g.predecessors_iter(child)))
 
             except StopIteration:
