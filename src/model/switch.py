@@ -87,7 +87,6 @@ class Switch():
         for flow_table in self.flow_tables:
 
             # Add a output node in port graph for each table
-
             p = Port(self,
                      port_type = "table",
                      port_id = self.model.port_graph.get_table_port_id(self.node_id, flow_table.table_id))

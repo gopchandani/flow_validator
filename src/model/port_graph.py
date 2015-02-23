@@ -189,7 +189,7 @@ class PortGraph:
         # A Node is not quite processed, until all of its successors have brought back their
         # admitted match information to it.
 
-        #processed = set([dst])
+        processed = set([dst])
 
         # start at the port specified
         queue = deque([(propagation_start_port, self.g.predecessors_iter(propagation_start_port))])
@@ -199,10 +199,9 @@ class PortGraph:
             try:
                 child = next(children)
 
-                if child != dst:
-                #if child not in processed:
+                if child not in processed:
 
-                    #processed.add(child)
+                    processed.add(child)
 
                     explore_children = False
                     edge_data = self.g.get_edge_data(child, parent)
