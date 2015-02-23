@@ -127,14 +127,21 @@ class PortGraph:
     def add_destination_host_port_traffic(self, host_obj, admitted_match):
 
         # Add the port for host
-        hp = Port(None, port_type="physical", port_id=host_obj.node_id)
 
+        hp = Port(None, port_type="physical", port_id=host_obj.node_id)
         hp.path_elements[host_obj.node_id] = FlowPathElement(host_obj.node_id, admitted_match, None)
+
         self.add_port(hp)
 
         # Add edges between host and switch in the port graph
         self.add_edge(hp, host_obj.switch_port, Match(init_wildcard=True))
         self.add_edge(host_obj.switch_port, hp, Match(init_wildcard=True))
+
+        # Propagate the traffic down to the switch port
+        host_obj.switch_port.path_elements[host_obj.node_id] = FlowPathElement(host_obj.switch_port.port_id,
+                                                                               admitted_match,
+                                                                               hp.path_elements[host_obj.node_id])
+
 
         return hp
 
@@ -174,12 +181,15 @@ class PortGraph:
 
                 return curr_port.path_elements[dst]
 
-    def propagate_admitted_traffic(self, dst):
+    def propagate_admitted_traffic(self, propagation_start_port, dst):
 
-        # A Node is not quite processed, until all of its successors have brought back their admitted match information
-        # to it.
+        # A Node is not quite processed, until all of its successors have brought back their
+        # admitted match information to it.
+
         processed = set([dst])
-        queue = deque([(dst, self.g.predecessors_iter(dst))])
+
+        # start at the port specified
+        queue = deque([(propagation_start_port, self.g.predecessors_iter(propagation_start_port))])
 
         while queue:
             parent, children = queue[0]
@@ -188,7 +198,6 @@ class PortGraph:
 
                 if child not in processed:
 
-                    # If all of the child's successors have been visited, then add child to processed set
                     processed.add(child)
 
                     explore_children = False
