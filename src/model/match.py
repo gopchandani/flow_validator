@@ -115,16 +115,22 @@ class MatchElement(DictMixin):
             for field_name in field_names:
                 self.set_match_field_element(field_name, is_wildcard=True)
 
-    def set_match_field_element(self, key, value=None, flow=None, tag=None, is_wildcard=False):
+    def set_match_field_element(self, key, value=None, flow=None, tag=None, is_wildcard=False, exception=False):
 
         # First remove all current intervals
         prev_intervals = list(self.match_fields[key])
         for iv in prev_intervals:
             self.match_fields[key].remove(iv)
 
-        if is_wildcard:
+        if exception:
+            self.match_fields[key].add(Interval(0, value, flow))
+            self.match_fields[key].add(Interval(value + 1, sys.maxsize, flow))
+            self.value_cache[key] = sys.maxsize
+
+        elif is_wildcard:
             self.match_fields[key].add(Interval(0, sys.maxsize, flow))
             self.value_cache[key] = sys.maxsize
+
         else:
             self.match_fields[key].add(Interval(value, value + 1, tag))
             self.value_cache[key] = value
@@ -364,9 +370,13 @@ class Match():
     def is_empty(self):
         return len(self.match_elements) == 0
 
-    def set_field(self, key, value=None, match_json=None, is_wildcard=False):
+    def set_field(self, key, value=None, match_json=None, is_wildcard=False, exception=False):
 
-        if key and value:
+        if key and value and exception:
+            for me in self.match_elements:
+                me.set_match_field_element(key, value, exception=True)
+
+        elif key and value:
             for me in self.match_elements:
                 me.set_match_field_element(key, value)
 

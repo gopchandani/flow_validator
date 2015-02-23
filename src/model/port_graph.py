@@ -151,9 +151,12 @@ class PortGraph:
     def process_edge(self, dst, curr_port, next_port, edge_data):
 
         print curr_port.port_id, next_port.port_id
-        #
+
         # This is another path which is being stopped by pure BFS way of doing this...
-        if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
+        #if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
+
+        # This is where the loop happens
+        if curr_port.port_id == "openflow:1:1" and next_port.port_id == "openflow:1:table0":
             print next_port.path_elements[dst].get_path_str()
 
         if dst in next_port.path_elements:
@@ -186,7 +189,7 @@ class PortGraph:
         # A Node is not quite processed, until all of its successors have brought back their
         # admitted match information to it.
 
-        processed = set([dst])
+        #processed = set([dst])
 
         # start at the port specified
         queue = deque([(propagation_start_port, self.g.predecessors_iter(propagation_start_port))])
@@ -196,9 +199,10 @@ class PortGraph:
             try:
                 child = next(children)
 
-                if child not in processed:
+                if child != dst:
+                #if child not in processed:
 
-                    processed.add(child)
+                    #processed.add(child)
 
                     explore_children = False
                     edge_data = self.g.get_edge_data(child, parent)

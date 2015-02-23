@@ -98,10 +98,13 @@ class Switch():
         # Add a node per physical port in port graph and connect it to table 0's port
         for port in self.ports:
             self.model.port_graph.add_port(self.ports[port])
+            input_match = Match(init_wildcard=True)
+
+            #input_match.set_field("in_port", int(port), exception=True)
 
             self.model.port_graph.add_edge(self.ports[port],
                                            self.flow_tables[0].port,
-                                           Match(init_wildcard=True))
+                                           input_match)
 
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:
