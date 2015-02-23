@@ -194,10 +194,7 @@ class PortGraph:
 
                 return curr_port.path_elements[dst]
 
-    def propagate_admitted_traffic(self, propagation_start_port, dst):
-
-        # A Node is not quite processed, until all of its successors have brought back their
-        # admitted match information to it.
+    def propagate_admitted_traffic_with_processed(self, propagation_start_port, dst):
 
         processed = set([dst])
 
@@ -219,6 +216,43 @@ class PortGraph:
                         propagated_match = self.process_edge(dst, self.get_port(child),
                                                              self.get_port(parent),
                                                              edge_data[edge_data_key])
+
+                        if propagated_match:
+                            explore_children = True
+
+                    # Check if there was actual propagation of traffic, only then visit the next guy's children
+                    if explore_children:
+                        queue.append((child, self.g.predecessors_iter(child)))
+
+            except StopIteration:
+                queue.popleft()
+
+    def propagate_admitted_traffic(self, propagation_start_port, dst):
+
+        # A Node is not quite processed, until all of its successors have brought back their
+        # admitted match information to it.
+
+        processed_edges = set([dst])
+
+        # start at the port specified
+        queue = deque([(propagation_start_port, self.g.predecessors_iter(propagation_start_port))])
+
+        while queue:
+            parent, children = queue[0]
+            try:
+                child = next(children)
+                explore_children = False
+                edge_data = self.g.get_edge_data(child, parent)
+
+                for edge_data_key in edge_data:
+
+                    if id(edge_data[edge_data_key]) not in processed_edges:
+
+                        propagated_match = self.process_edge(dst, self.get_port(child),
+                                                             self.get_port(parent),
+                                                             edge_data[edge_data_key])
+
+                        processed_edges.add(id(edge_data[edge_data_key]))
 
                         if propagated_match:
                             explore_children = True
