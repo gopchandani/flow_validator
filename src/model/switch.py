@@ -88,22 +88,35 @@ class Switch():
 
             # Add a output node in port graph for each table
             p = Port(self,
-                     port_type = "table",
-                     port_id = self.model.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
+                     port_type="table",
+                     port_id=self.model.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
 
             self.model.port_graph.g.add_node(p.port_id, p=p)
             flow_table.port = p
 
-        # Add a node per physical port in port graph and connect it to table 0's port
+        # Add two nodes per physical port in port graph one for incoming and outgoing direction
+        # Connect incoming direction port to table 0's port
         for port in self.ports:
-            self.model.port_graph.add_port(self.ports[port])
-            input_match = Match(init_wildcard=True)
 
-            #input_match.set_field("in_port", int(port), exception=True)
+            in_p = Port(self,
+                        port_type="incoming",
+                        port_id=self.model.port_graph.get_incoming_port_id(self.node_id, port))
 
-            self.model.port_graph.add_edge(self.ports[port],
+            out_p = Port(self,
+                         port_type="outgoing",
+                         port_id=self.model.port_graph.get_outgoing_port_id(self.node_id, port))
+
+
+            self.model.port_graph.add_port(in_p)
+            self.model.port_graph.add_port(out_p)
+
+            incoming_port_match = Match(init_wildcard=True)
+            incoming_port_match.set_field("in_port", int(port))
+            self.model.port_graph.add_edge(in_p,
                                            self.flow_tables[0].port,
-                                           input_match)
+                                           incoming_port_match)
+
+
 
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:

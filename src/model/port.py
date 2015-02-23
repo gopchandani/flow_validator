@@ -30,12 +30,18 @@ class Port():
 
         if port_type == "physical" and node_connector_json:
             self._populate_with_node_connector_json(node_connector_json)
+
         elif port_type == "physical":
             self.port_id = port_id
         elif port_type == "table":
             self.port_id = port_id
         elif port_type == "controller":
             self.port_id = port_id
+        elif port_type == "incoming":
+            self.port_id = port_id
+        elif port_type == "outgoing":
+            self.port_id = port_id
+
         else:
             raise Exception("Invalid port type specified.")
 

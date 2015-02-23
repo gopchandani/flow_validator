@@ -52,8 +52,11 @@ class PortGraph:
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
-    def get_table_port(self, switch_id, table_number):
-        return self.g.node[self._get_table_port_id(switch_id,table_number)]["p"]
+    def get_incoming_port_id(self, switch_id, port_number):
+        return switch_id + ":incoming" + str(port_number)
+
+    def get_outgoing_port_id(self, switch_id, port_number):
+        return switch_id + ":outgoing" + str(port_number)
 
     def add_port(self, port):
         self.g.add_node(port.port_id, p=port)
@@ -64,20 +67,18 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, flow_match, is_active=True, modified_fields={}):
+    def add_edge(self, port1, port2, flow_match, modified_fields={}):
 
-        if is_active:
-            edge_type = None
-            if port1.port_type == "table" and port2.port_type == "physical":
-                edge_type = "egress"
-            elif port1.port_type == "physical" and port2.port_type == "table":
-                edge_type = "ingress"
-                flow_match.set_field("in_port", int(port1.port_number))
-            elif port1.port_type == "physical" and port2.port_type == "table":
-                edge_type = "transport"
+        edge_type = None
+        if port1.port_type == "table" and port2.port_type == "outgoing":
+            edge_type = "egress"
+        elif port1.port_type == "incoming" and port2.port_type == "table":
+            edge_type = "ingress"
+        elif port1.port_type == "physical" and port2.port_type == "table":
+            edge_type = "transport"
 
-            e = (port1.port_id, port2.port_id)
-            self.g.add_edge(*e, flow_match=flow_match, modified_fields=modified_fields, edge_type=edge_type)
+        e = (port1.port_id, port2.port_id)
+        self.g.add_edge(*e, flow_match=flow_match, modified_fields=modified_fields, edge_type=edge_type)
 
     def remove_edge(self, port1, port2):
         pass
@@ -112,11 +113,14 @@ class PortGraph:
             if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
 
                 edge_port_dict = self.model.get_edge_port_dict(node_edge[0], node_edge[1])
-                port1 = self.get_port(node_edge[0] + ":" + edge_port_dict[node_edge[0]])
-                port2 = self.get_port(node_edge[1] + ":" + edge_port_dict[node_edge[1]])
 
-                self.add_edge(port1, port2, Match(init_wildcard=True))
-                self.add_edge(port2, port1, Match(init_wildcard=True))
+                from_port = self.get_port(self.get_outgoing_port_id(node_edge[0], edge_port_dict[node_edge[0]]))
+                to_port = self.get_port(self.get_incoming_port_id(node_edge[1], edge_port_dict[node_edge[1]]))
+                self.add_edge(from_port, to_port, Match(init_wildcard=True))
+
+                from_port = self.get_port(self.get_outgoing_port_id(node_edge[1], edge_port_dict[node_edge[1]]))
+                to_port = self.get_port(self.get_incoming_port_id(node_edge[0], edge_port_dict[node_edge[0]]))
+                self.add_edge(from_port, to_port, Match(init_wildcard=True))
 
     def update_edge_down(self):
         pass
@@ -134,14 +138,20 @@ class PortGraph:
         self.add_port(hp)
 
         # Add edges between host and switch in the port graph
-        self.add_edge(hp, host_obj.switch_port, Match(init_wildcard=True))
-        self.add_edge(host_obj.switch_port, hp, Match(init_wildcard=True))
 
-        # Propagate the traffic down to the switch port
-        host_obj.switch_port.path_elements[host_obj.node_id] = FlowPathElement(host_obj.switch_port.port_id,
-                                                                               admitted_match,
-                                                                               hp.path_elements[host_obj.node_id])
+        switch_incoming_port = self.get_port(self.get_incoming_port_id(host_obj.switch_id,
+                                                                       host_obj.switch_port_attached))
+        switch_outgoing_port = self.get_port(self.get_outgoing_port_id(host_obj.switch_id,
+                                                                      host_obj.switch_port_attached))
 
+        self.add_edge(hp, switch_incoming_port, Match(init_wildcard=True))
+        self.add_edge(switch_outgoing_port, hp, Match(init_wildcard=True))
+
+        # # Propagate the traffic down to the switch incoming port
+        # switch_incoming_port.path_elements[host_obj.node_id] = FlowPathElement(host_obj.switch_port.port_id,
+        #                                                                        admitted_match,
+        #                                                                        hp.path_elements[host_obj.node_id])
+        #
 
         return hp
 
