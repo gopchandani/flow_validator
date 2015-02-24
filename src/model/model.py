@@ -278,7 +278,7 @@ def test_pygraphviz(networkx_graph):
 def main():
 
     m = Model(init_port_graph=True)
-    #test_pygraphviz(m.port_graph.g)
+    test_pygraphviz(m.port_graph.g)
 
 if __name__ == "__main__":
     main()

@@ -134,6 +134,7 @@ class PortGraph:
 
         hp = Port(None, port_type="physical", port_id=host_obj.node_id)
         hp.path_elements[host_obj.node_id] = FlowPathElement(host_obj.node_id, admitted_match, None)
+        hp.admitted_match[host_obj.node_id] = admitted_match
 
         self.add_port(hp)
 
@@ -146,12 +147,6 @@ class PortGraph:
 
         self.add_edge(hp, switch_incoming_port, Match(init_wildcard=True))
         self.add_edge(switch_outgoing_port, hp, Match(init_wildcard=True))
-
-        # # Propagate the traffic down to the switch incoming port
-        # switch_incoming_port.path_elements[host_obj.node_id] = FlowPathElement(host_obj.switch_port.port_id,
-        #                                                                        admitted_match,
-        #                                                                        hp.path_elements[host_obj.node_id])
-        #
 
         return hp
 
@@ -194,7 +189,7 @@ class PortGraph:
 
                 return curr_port.path_elements[dst]
 
-    def propagate_admitted_traffic_with_processed(self, propagation_start_port, dst):
+    def propagate_admitted_traffic_with_processed_nodes(self, propagation_start_port, dst):
 
         processed = set([dst])
 
@@ -263,3 +258,74 @@ class PortGraph:
 
             except StopIteration:
                 queue.popleft()
+
+
+
+
+    # Answers what will be admitted by this edge for dst
+
+    def process_curr_port_to_successor_admitted_match(self, dst, curr_port, successor, edge_data):
+
+        print curr_port.port_id, successor.port_id
+
+        if dst in successor.admitted_match:
+            admitted_at_successor = deepcopy(successor.admitted_match[dst].admitted_match)
+
+            # You enter the switch at "egress" edges. Yes... Eye-roll:
+            # At egress edges, set the in_port of the admitted match for destination to wildcard
+            if edge_data["edge_type"] == "egress":
+                admitted_at_successor.set_field("in_port", is_wildcard=True)
+
+            if edge_data["modified_fields"] and edge_data["flow_match"]:
+
+                # This is what the match would be before passing this match
+                original_match = admitted_at_successor.get_orig_match(edge_data["modified_fields"],
+                                                                      edge_data["flow_match"].match_elements[0])
+            elif edge_data["flow_match"]:
+                original_match = admitted_at_successor
+
+            i = original_match.intersect(edge_data["flow_match"])
+            if not i.is_empty():
+                return i
+            else:
+                return None
+        else:
+            None
+
+    def compute_admitted_match(self, curr_port, dst_port):
+
+        # Base case
+        if curr_port == dst_port:
+            if dst_port.port_id in curr_port.admitted_match:
+                return curr_port.admitted_match[dst_port.port_id]
+            else:
+                raise Exception('This should have been set before calling this method')
+
+        else:
+            m = Match()
+
+            # Recursively call myself at each of my successors in the port graph
+            for successor_id in self.g.successors_iter(curr_port.port_id):
+
+                successor = self.get_port(successor_id)
+
+                # First compute recursively what arrived at successor
+                # This ensures that the data structures are available for process_edge call.
+                self.compute_admitted_match(successor, dst_port)
+
+                # Then via every edge from self to successor, try to pass what arrived at successor
+                edge_data = self.g.get_edge_data(curr_port.port_id, successor.port_id)
+                for edge_data_key in edge_data:
+
+                    resulting_match = self.process_curr_port_to_successor_admitted_match(dst_port.port_id,
+                                                                                         curr_port,
+                                                                                         successor,
+                                                                                         edge_data[edge_data_key])
+
+                    # If something is left after the passing, collect it
+                    if resulting_match:
+                        m.union(resulting_match)
+
+            curr_port.admitted_match[dst_port.port_id] = m
+
+            return m
