@@ -45,9 +45,21 @@ class ComputePortPaths:
                 src_host_obj = self.model.get_node_object(src_port.port_id)
                 dst_host_obj = self.model.get_node_object(dst_port.port_id)
 
+                # Test 1 trying to reach 3
+                if src_host_obj.switch_id == "openflow:3":
+                    continue
+
+
                 # Try the simple things first
                 if src_port != dst_port:
-                    admitted_match = self.port_graph.compute_admitted_match(src_port, dst_port)
+#                    admitted_match = self.port_graph.compute_admitted_match(src_port, dst_port)
+                    output_port_at_switch = self.port_graph.get_outgoing_port_id(dst_host_obj.switch_id,
+                                                                                 dst_host_obj.switch_port_attached)
+
+                    admitted_match = self.port_graph.compute_admitted_match(
+                        self.port_graph.get_port("openflow:3:table2"),
+                        self.port_graph.get_port(output_port_at_switch))
+
                     print admitted_match
 
 

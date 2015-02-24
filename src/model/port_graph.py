@@ -294,6 +294,8 @@ class PortGraph:
 
     def compute_admitted_match(self, curr_port, dst_port):
 
+        print curr_port.port_id, dst_port.port_id
+
         # Base case
         if curr_port == dst_port:
             if dst_port.port_id in curr_port.admitted_match:
@@ -304,8 +306,12 @@ class PortGraph:
         else:
             m = Match()
 
+            #TODO: Make this more efficient
+            all_successors = list(self.g.successors_iter(curr_port.port_id))
+            print all_successors
+
             # Recursively call myself at each of my successors in the port graph
-            for successor_id in self.g.successors_iter(curr_port.port_id):
+            for successor_id in all_successors:
 
                 successor = self.get_port(successor_id)
 
