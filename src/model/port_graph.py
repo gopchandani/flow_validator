@@ -187,7 +187,7 @@ class PortGraph:
         processed = set([dst])
 
         # start at the port specified
-        queue = deque([(propagation_start_port, self.g.predecessors_iter(propagation_start_port))])
+        queue = [(propagation_start_port, self.g.predecessors_iter(propagation_start_port))]
 
         while queue:
             parent, children = queue[0]
@@ -213,7 +213,7 @@ class PortGraph:
                         queue.append((child, self.g.predecessors_iter(child)))
 
             except StopIteration:
-                queue.popleft()
+                queue.pop(0)
 
     # Answers what will be admitted by this edge for dst
     def process_curr_port_to_successor_admitted_match(self, dst, curr_port, successor, edge_data):
