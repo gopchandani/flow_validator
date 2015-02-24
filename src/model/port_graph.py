@@ -153,56 +153,72 @@ class PortGraph:
     def remove_destination_host(self, host_obj):
         pass
 
-    def process_edge(self, dst, curr_port, next_port, edge_data):
 
-#        print curr_port.port_id, next_port.port_id
+    # Computes admitted match at this predecessor port
+    def process_edge(self, dst, predecessor_port, curr_port, edge_data):
 
-        if dst in next_port.path_elements:
-            admitted_at_next_port = deepcopy(next_port.path_elements[dst].admitted_match)
+#        print predecessor_port.port_id, curr_port.port_id
+
+        if dst in curr_port.path_elements:
+            admitted_at_curr_port = deepcopy(curr_port.path_elements[dst].admitted_match)
 
             # You enter the switch at "egress" edges. Yes... Eye-roll:
             # At egress edges, set the in_port of the admitted match for destination to wildcard
             if edge_data["edge_type"] == "egress":
-                admitted_at_next_port.set_field("in_port", is_wildcard=True)
+                admitted_at_curr_port.set_field("in_port", is_wildcard=True)
 
             if edge_data["modified_fields"] and edge_data["flow_match"]:
 
                 # This is what the match would be before passing this match
-                original_match = admitted_at_next_port.get_orig_match(edge_data["modified_fields"],
+                original_match = admitted_at_curr_port.get_orig_match(edge_data["modified_fields"],
                                                                       edge_data["flow_match"].match_elements[0])
             elif edge_data["flow_match"]:
-                original_match = admitted_at_next_port
+                original_match = admitted_at_curr_port
 
             i = original_match.intersect(edge_data["flow_match"])
             if not i.is_empty():
-                if dst in curr_port.path_elements:
-                    curr_port.path_elements[dst].accumulate_admitted_match(i)
+                if dst in predecessor_port.path_elements:
+                    predecessor_port.path_elements[dst].accumulate_admitted_match(i)
                 else:
-                    curr_port.path_elements[dst] = FlowPathElement(curr_port.port_id, i, next_port.path_elements[dst])
+                    predecessor_port.path_elements[dst] = FlowPathElement(predecessor_port.port_id, i, curr_port.path_elements[dst])
 
-                return curr_port.path_elements[dst]
+                return predecessor_port.path_elements[dst]
 
-    def propagate_admitted_traffic(self, propagation_start_port, dst):
 
-        processed = set([dst])
+    # Starts on a port and tries to carry admitted_traffic to left to everywhere it can reach
+    # Initially called with same start_port_id and dst_port_id
+
+    def propagate_admitted_traffic(self, start_port_id, dst_port_id):
+
+        processed = set([start_port_id])
 
         # start at the port specified
-        queue = [(propagation_start_port, self.g.predecessors_iter(propagation_start_port))]
+        queue = [(start_port_id, self.g.predecessors_iter(start_port_id))]
 
         while queue:
-            parent, children = queue[0]
+
+            # Scan the queue left to right
+            # For each potential next port, look at its successors,
+            # If it has a successor that lies in the same distance from starting point, then you ignore it
+            # This can of course lead to cases of circular dependency...
+
+            pop_i = 0
+            current, predecessor = queue[pop_i]
+
             try:
-                child = next(children)
+                predecessor = next(predecessor)
 
-                if child not in processed:
+                if predecessor not in processed:
 
-                    processed.add(child)
+                    processed.add(predecessor)
 
                     explore_children = False
-                    edge_data = self.g.get_edge_data(child, parent)
+                    edge_data = self.g.get_edge_data(predecessor, current)
+
                     for edge_data_key in edge_data:
-                        propagated_match = self.process_edge(dst, self.get_port(child),
-                                                             self.get_port(parent),
+                        propagated_match = self.process_edge(dst_port_id,
+                                                             self.get_port(predecessor),
+                                                             self.get_port(current),
                                                              edge_data[edge_data_key])
 
                         if propagated_match:
@@ -210,10 +226,10 @@ class PortGraph:
 
                     # Check if there was actual propagation of traffic, only then visit the next guy's children
                     if explore_children:
-                        queue.append((child, self.g.predecessors_iter(child)))
+                        queue.append((predecessor, self.g.predecessors_iter(predecessor)))
 
             except StopIteration:
-                queue.pop(0)
+                queue.pop(pop_i)
 
     # Answers what will be admitted by this edge for dst
     def process_curr_port_to_successor_admitted_match(self, dst, curr_port, successor, edge_data):
@@ -288,10 +304,3 @@ class PortGraph:
             curr_port.admitted_match[dst_port.port_id] = m
 
             return m
-
-    def compute_all_admitted_paths(self, curr_port, dst_port):
-
-        all_paths = nx.all_simple_paths(self.g, source=curr_port.port_id, target=dst_port.port_id)
-
-        for p in all_paths:
-            print p
