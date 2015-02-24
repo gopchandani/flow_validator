@@ -50,23 +50,28 @@ class ComputePortPaths:
 
                 if src_port != dst_port:
 
-# #                    admitted_match = self.port_graph.compute_admitted_match(src_port, dst_port)
-#                     output_port_at_switch = self.port_graph.get_outgoing_port_id(dst_host_obj.switch_id,
-#                                                                                  dst_host_obj.switch_port_attached)
-#
-#                     admitted_match = self.port_graph.compute_admitted_match(
-#                         self.port_graph.get_port("openflow:3:table2"),
-#                         self.port_graph.get_port(output_port_at_switch))
-#
-#                     print admitted_match
+                    self.port_graph.compute_all_admitted_paths(src_port, dst_port)
 
-                    if dst_port.port_id in src_port.path_elements:
-                        p =  src_port.path_elements[dst_port.port_id]
-                        print p.get_path_str()
-                    else:
-                        print "No admission for dst_host:", dst_h_id, "at src host:", src_h_id
+                    # admitted_match = self.port_graph.compute_admitted_match(src_port, dst_port)
+                    # output_port_at_switch = self.port_graph.get_outgoing_port_id(dst_host_obj.switch_id,
+                    #                                                              dst_host_obj.switch_port_attached)
+                    #
+                    # admitted_match = self.port_graph.compute_admitted_match(
+                    #     self.port_graph.get_port("openflow:3:table2"),
+                    #     self.port_graph.get_port(output_port_at_switch))
+                    #
+                    # print admitted_match
+
+
+                    #
+                    # if dst_port.port_id in src_port.path_elements:
+                    #     p =  src_port.path_elements[dst_port.port_id]
+                    #     print p.get_path_str()
+                    # else:
+                    #     print "No admission for dst_host:", dst_h_id, "at src host:", src_h_id
 
 def main():
+
     bp = ComputePortPaths()
     bp.analyze_all_node_pairs()
 

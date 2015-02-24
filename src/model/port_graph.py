@@ -288,3 +288,10 @@ class PortGraph:
             curr_port.admitted_match[dst_port.port_id] = m
 
             return m
+
+    def compute_all_admitted_paths(self, curr_port, dst_port):
+
+        all_paths = nx.all_simple_paths(self.g, source=curr_port.port_id, target=dst_port.port_id)
+
+        for p in all_paths:
+            print p
