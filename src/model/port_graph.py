@@ -155,14 +155,7 @@ class PortGraph:
 
     def process_edge(self, dst, curr_port, next_port, edge_data):
 
-        print curr_port.port_id, next_port.port_id
-
-        # This is another path which is being stopped by pure BFS way of doing this...
-        #if curr_port.port_id == "openflow:3:table1" and next_port.port_id == "openflow:3:table2":
-
-        # This is where the loop happens
-        if curr_port.port_id == "openflow:1:1" and next_port.port_id == "openflow:1:table0":
-            print next_port.path_elements[dst].get_path_str()
+#        print curr_port.port_id, next_port.port_id
 
         if dst in next_port.path_elements:
             admitted_at_next_port = deepcopy(next_port.path_elements[dst].admitted_match)
@@ -189,7 +182,7 @@ class PortGraph:
 
                 return curr_port.path_elements[dst]
 
-    def propagate_admitted_traffic_with_processed_nodes(self, propagation_start_port, dst):
+    def propagate_admitted_traffic(self, propagation_start_port, dst):
 
         processed = set([dst])
 
@@ -222,48 +215,7 @@ class PortGraph:
             except StopIteration:
                 queue.popleft()
 
-    def propagate_admitted_traffic(self, propagation_start_port, dst):
-
-        # A Node is not quite processed, until all of its successors have brought back their
-        # admitted match information to it.
-
-        processed_edges = set([dst])
-
-        # start at the port specified
-        queue = deque([(propagation_start_port, self.g.predecessors_iter(propagation_start_port))])
-
-        while queue:
-            parent, children = queue[0]
-            try:
-                child = next(children)
-                explore_children = False
-                edge_data = self.g.get_edge_data(child, parent)
-
-                for edge_data_key in edge_data:
-
-                    if id(edge_data[edge_data_key]) not in processed_edges:
-
-                        propagated_match = self.process_edge(dst, self.get_port(child),
-                                                             self.get_port(parent),
-                                                             edge_data[edge_data_key])
-
-                        processed_edges.add(id(edge_data[edge_data_key]))
-
-                        if propagated_match:
-                            explore_children = True
-
-                    # Check if there was actual propagation of traffic, only then visit the next guy's children
-                    if explore_children:
-                        queue.append((child, self.g.predecessors_iter(child)))
-
-            except StopIteration:
-                queue.popleft()
-
-
-
-
     # Answers what will be admitted by this edge for dst
-
     def process_curr_port_to_successor_admitted_match(self, dst, curr_port, successor, edge_data):
 
         print curr_port.port_id, successor.port_id
@@ -308,7 +260,8 @@ class PortGraph:
 
             #TODO: Make this more efficient
             all_successors = list(self.g.successors_iter(curr_port.port_id))
-            print all_successors
+            #print all_successors
+            #TODO: Successors seem to be something that need to be limited... not all of them are good to go...
 
             # Recursively call myself at each of my successors in the port graph
             for successor_id in all_successors:
