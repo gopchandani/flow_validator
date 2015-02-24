@@ -157,7 +157,7 @@ class PortGraph:
     # Computes admitted match at this predecessor port
     def process_edge(self, dst, predecessor_port, current_port, edge_data):
 
-#        print predecessor_port.port_id, current_port.port_id
+        print predecessor_port.port_id, current_port.port_id
 
         if dst in current_port.path_elements:
             admitted_at_current_port = deepcopy(current_port.path_elements[dst].admitted_match)
@@ -193,7 +193,6 @@ class PortGraph:
             try_id = queue[i][0]
             try_port = self.get_port(try_id)
 
-
             found_same_level_successor = False
             for successor_id in self.g.successors_iter(try_id):
                 successor_port = self.get_port(successor_id)
@@ -204,7 +203,6 @@ class PortGraph:
             # If not, then break here so that this i could be used for expansion of queue
             if not found_same_level_successor:
                 break
-
 
         # If all of them have successors in the queue, raise it
         if i > 0 and  i == len(queue) - 1:
@@ -225,8 +223,14 @@ class PortGraph:
         queue = [(start_port_id, self.g.predecessors_iter(start_port_id))]
         while queue:
 
-            pop_i =  self.next_to_pop(queue)
+            #pop_i = self.next_to_pop(queue)
+            pop_i = 0
             current, predecessors = queue[pop_i]
+
+            # This port beats the other to the punch
+            if current == "openflow:1:outgoing3":
+                pass
+
             try:
                 predecessor = next(predecessors)
 

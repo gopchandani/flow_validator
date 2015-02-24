@@ -63,8 +63,6 @@ class ComputePortPaths:
                     #
                     # print admitted_match
 
-
-
                     if dst_port.port_id in src_port.path_elements:
                         p =  src_port.path_elements[dst_port.port_id]
                         print p.get_path_str()
