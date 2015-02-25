@@ -154,35 +154,42 @@ class PortGraph:
         pass
 
 
-    # Computes admitted match at this predecessor port
-    def process_edge(self, dst, predecessor_port, current_port, edge_data):
+    def process_edges(self, dst_port_id, predecessor_port, current_port):
 
-        print predecessor_port.port_id, current_port.port_id
+        explore_children = False
+        edge_data = self.g.get_edge_data(predecessor_port.port_id, current_port.port_id)
 
-        if dst in current_port.path_elements:
-            admitted_at_current_port = deepcopy(current_port.path_elements[dst].admitted_match)
+        for edge_data_key in edge_data:
 
-            # You enter the switch at "egress" edges. Yes... Eye-roll:
-            # At egress edges, set the in_port of the admitted match for destination to wildcard
-            if edge_data["edge_type"] == "egress":
-                admitted_at_current_port.set_field("in_port", is_wildcard=True)
+            this_edge = edge_data[edge_data_key]
 
-            if edge_data["modified_fields"] and edge_data["flow_match"]:
+            if dst_port_id in current_port.path_elements:
+                admitted_at_current_port = deepcopy(current_port.path_elements[dst_port_id].admitted_match)
 
-                # This is what the match would be before passing this match
-                attempted_match = admitted_at_current_port.get_orig_match(edge_data["modified_fields"],
-                                                                       edge_data["flow_match"].match_elements[0])
-            elif edge_data["flow_match"]:
-                attempted_match = admitted_at_current_port
+                # You enter the switch at "egress" edges. Yes... Eye-roll:
+                # At egress edges, set the in_port of the admitted match for destination to wildcard
+                if this_edge["edge_type"] == "egress":
+                    admitted_at_current_port.set_field("in_port", is_wildcard=True)
 
-            i = attempted_match.intersect(edge_data["flow_match"])
-            if not i.is_empty():
-                if dst in predecessor_port.path_elements:
-                    predecessor_port.path_elements[dst].accumulate_admitted_match(i)
-                else:
-                    predecessor_port.path_elements[dst] = FlowPathElement(predecessor_port.port_id, i, current_port.path_elements[dst])
+                if this_edge["modified_fields"] and this_edge["flow_match"]:
 
-                return predecessor_port.path_elements[dst]
+                    # This is what the match would be before passing this match
+                    attempted_match = admitted_at_current_port.get_orig_match(this_edge["modified_fields"],
+                                                                           this_edge["flow_match"].match_elements[0])
+                elif this_edge["flow_match"]:
+                    attempted_match = admitted_at_current_port
+
+                i = attempted_match.intersect(this_edge["flow_match"])
+                if not i.is_empty():
+                    if dst_port_id in predecessor_port.path_elements:
+                        predecessor_port.path_elements[dst_port_id].accumulate_admitted_match(i)
+                    else:
+                        predecessor_port.path_elements[dst_port_id] = FlowPathElement(predecessor_port.port_id, i,
+                                                                                      current_port.path_elements[dst_port_id])
+
+                    explore_children = True
+
+        return explore_children
 
 
     def next_to_pop(self, queue):
@@ -209,7 +216,6 @@ class PortGraph:
             raise Exception('Everybody has successors in the queue')
 
         return i
-
 
     # Starts on a port and tries to carry admitted_traffic to left to everywhere it can reach
     # Initially called with same start_port_id and dst_port_id
@@ -240,16 +246,7 @@ class PortGraph:
 
                 if predecessor not in processed:
                     processed.add(predecessor)
-                    explore_children = False
-                    edge_data = self.g.get_edge_data(predecessor, current)
-                    for edge_data_key in edge_data:
-                        propagated_match = self.process_edge(dst_port_id,
-                                                             predecessor_port,
-                                                             current_port,
-                                                             edge_data[edge_data_key])
-
-                        if propagated_match:
-                            explore_children = True
+                    explore_children = self.process_edges(dst_port_id, predecessor_port, current_port)
 
                     # Check if there was actual propagation of traffic, only then visit the next guy's children
                     if explore_children:
