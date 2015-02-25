@@ -106,6 +106,8 @@ class Switch():
                          port_type="outgoing",
                          port_id=self.model.port_graph.get_outgoing_port_id(self.node_id, port))
 
+            in_p.port_number = int(port)
+            out_p.port_number = int(port)
 
             self.model.port_graph.add_port(in_p)
             self.model.port_graph.add_port(out_p)

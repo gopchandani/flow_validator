@@ -144,8 +144,12 @@ class PortGraph:
 
         switch_ingress_port = self.get_port(self.get_incoming_port_id(host_obj.switch_id,
                                                                        host_obj.switch_port_attached))
+
+        switch_ingress_port.port_number = int(host_obj.switch_port.port_number)
+
         switch_egress_port = self.get_port(self.get_outgoing_port_id(host_obj.switch_id,
                                                                       host_obj.switch_port_attached))
+        switch_egress_port.port_number = int(host_obj.switch_port.port_number)
 
         self.add_edge(hp, switch_ingress_port, Match(init_wildcard=True))
         self.add_edge(switch_egress_port, hp, Match(init_wildcard=True))
@@ -274,9 +278,11 @@ class PortGraph:
                 admitted_at_current_port = deepcopy(current_port.admitted_match[dst_port_id])
 
                 # You enter the switch at "egress" edges. Yes... Eye-roll:
-                # At egress edges, set the in_port of the admitted match for destination to wildcard
+                # At egress edges, set the in_port of the admitted match for destination to wildcard except for
+                # the specific port you entered on
                 if this_edge["edge_type"] == "egress":
-                    admitted_at_current_port.set_field("in_port", is_wildcard=True)
+                    admitted_at_current_port.set_field("in_port", int(current_port.port_number), exception=True)
+
 
                 if this_edge["modified_fields"] and this_edge["flow_match"]:
 
@@ -300,6 +306,8 @@ class PortGraph:
     def compute_admitted_match(self, curr, curr_admitted_match, dst_port):
 
         print curr.port_id, dst_port.port_id
+        if curr.port_id == "openflow:3:table2":
+            pass
 
         # First you gather the goods
         if dst_port.port_id not in curr.admitted_match:
