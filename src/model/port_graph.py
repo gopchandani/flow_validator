@@ -319,7 +319,7 @@ class PortGraph:
         if curr in self.added_host_ports:
             return
         else:
-            print list(self.g.predecessors_iter(curr.port_id))
+            print "At curr:", curr.port_id, "preds:",list(self.g.predecessors_iter(curr.port_id))
 
             # Recursively call myself at each of my predecessors in the port graph
             for pred_id in self.g.predecessors_iter(curr.port_id):

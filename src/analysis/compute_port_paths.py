@@ -40,8 +40,6 @@ class ComputePortPaths:
                                                    host_port)
 
 
-        return
-
         #  Test connectivity after flows have bled through the port graph
         for src_h_id in self.model.get_host_ids():
             for dst_h_id in self.model.get_host_ids():
@@ -57,11 +55,15 @@ class ComputePortPaths:
 
                 if src_port != dst_port:
 
-                    if dst_port.port_id in src_port.path_elements:
-                        p =  src_port.path_elements[dst_port.port_id]
-                        print p.get_path_str()
-                    else:
-                        print "No admission for dst_host:", dst_h_id, "at src host:", src_h_id
+                    am =  src_port.admitted_match[dst_port.port_id]
+                    print am
+
+
+                    # if dst_port.port_id in src_port.path_elements:
+                    #     p =  src_port.path_elements[dst_port.port_id]
+                    #     print p.get_path_str()
+                    # else:
+                    #     print "No admission for dst_host:", dst_h_id, "at src host:", src_h_id
 
 def main():
 
