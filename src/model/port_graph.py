@@ -262,34 +262,36 @@ class PortGraph:
                 queue.pop(pop_i)
 
 
-    # Answers what will be admitted by this edge for dst
-    def process_curr_port_to_successor_admitted_match(self, dst, curr_port, successor, edge_data):
 
-        print curr_port.port_id, successor.port_id
+    def process_edges_in_reverse(self, predecessor_port, current_port, dst_port_id):
 
-        if dst in successor.admitted_match:
-            admitted_at_successor = deepcopy(successor.admitted_match[dst].admitted_match)
+        admitted_match = Match()
+        edge_data = self.g.get_edge_data(predecessor_port.port_id, current_port.port_id)
 
-            # You enter the switch at "egress" edges. Yes... Eye-roll:
-            # At egress edges, set the in_port of the admitted match for destination to wildcard
-            if edge_data["edge_type"] == "egress":
-                admitted_at_successor.set_field("in_port", is_wildcard=True)
+        for edge_data_key in edge_data:
+            this_edge = edge_data[edge_data_key]
+            if dst_port_id in current_port.admitted_match:
+                admitted_at_current_port = deepcopy(current_port.admitted_match[dst_port_id])
 
-            if edge_data["modified_fields"] and edge_data["flow_match"]:
+                # You enter the switch at "egress" edges. Yes... Eye-roll:
+                # At egress edges, set the in_port of the admitted match for destination to wildcard
+                if this_edge["edge_type"] == "egress":
+                    admitted_at_current_port.set_field("in_port", is_wildcard=True)
 
-                # This is what the match would be before passing this match
-                original_match = admitted_at_successor.get_orig_match(edge_data["modified_fields"],
-                                                                      edge_data["flow_match"].match_elements[0])
-            elif edge_data["flow_match"]:
-                original_match = admitted_at_successor
+                if this_edge["modified_fields"] and this_edge["flow_match"]:
 
-            i = original_match.intersect(edge_data["flow_match"])
-            if not i.is_empty():
-                return i
-            else:
-                return None
-        else:
-            None
+                    # This is what the match would be before passing this match
+                    attempted_match = admitted_at_current_port.get_orig_match(this_edge["modified_fields"],
+                                                                           this_edge["flow_match"].match_elements[0])
+                elif this_edge["flow_match"]:
+                    attempted_match = admitted_at_current_port
+
+                i = attempted_match.intersect(this_edge["flow_match"])
+                if not i.is_empty():
+                    admitted_match.union(i)
+
+        return admitted_match
+
 
 
     # Takes a node, its admitted_match for destination and the destination
@@ -315,7 +317,7 @@ class PortGraph:
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
                 pred = self.get_port(pred_id)
-                pred_admitted_match = self.process_edges(pred, curr, dst_port.port_id)
+                pred_admitted_match = self.process_edges_in_reverse(pred, curr, dst_port.port_id)
 
                 if not pred_admitted_match.is_empty():
                     self.compute_admitted_match(pred, pred_admitted_match, dst_port)
