@@ -48,6 +48,7 @@ class PortGraph:
     def __init__(self, model):
         self.model = model
         self.g = nx.MultiDiGraph()
+        self.added_host_ports = []
 
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
@@ -137,6 +138,7 @@ class PortGraph:
         hp.admitted_match[host_obj.node_id] = admitted_match
 
         self.add_port(hp)
+        self.added_host_ports.append(hp)
 
         # Add edges between host and switch in the port graph
 
@@ -298,11 +300,7 @@ class PortGraph:
 
         else:
             m = Match()
-
-            #TODO: Make this more efficient
             all_successors = list(self.g.successors_iter(curr_port.port_id))
-            #print all_successors
-            #TODO: Successors seem to be something that need to be limited... not all of them are good to go...
 
             # Recursively call myself at each of my successors in the port graph
             for successor_id in all_successors:
