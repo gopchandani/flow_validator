@@ -142,13 +142,16 @@ class PortGraph:
 
         # Add edges between host and switch in the port graph
 
-        switch_incoming_port = self.get_port(self.get_incoming_port_id(host_obj.switch_id,
+        switch_ingress_port = self.get_port(self.get_incoming_port_id(host_obj.switch_id,
                                                                        host_obj.switch_port_attached))
-        switch_outgoing_port = self.get_port(self.get_outgoing_port_id(host_obj.switch_id,
+        switch_egress_port = self.get_port(self.get_outgoing_port_id(host_obj.switch_id,
                                                                       host_obj.switch_port_attached))
 
-        self.add_edge(hp, switch_incoming_port, Match(init_wildcard=True))
-        self.add_edge(switch_outgoing_port, hp, Match(init_wildcard=True))
+        self.add_edge(hp, switch_ingress_port, Match(init_wildcard=True))
+        self.add_edge(switch_egress_port, hp, Match(init_wildcard=True))
+
+        host_obj.switch_ingress_port = switch_ingress_port
+        host_obj.switch_egress_port = switch_egress_port
 
         return hp
 
@@ -156,9 +159,9 @@ class PortGraph:
         pass
 
 
-    def process_edges(self, dst_port_id, predecessor_port, current_port):
+    def process_edges(self, predecessor_port, current_port, dst_port_id):
 
-        explore_children = False
+        admitted_match = Match()
         edge_data = self.g.get_edge_data(predecessor_port.port_id, current_port.port_id)
 
         for edge_data_key in edge_data:
@@ -189,9 +192,10 @@ class PortGraph:
                         predecessor_port.path_elements[dst_port_id] = FlowPathElement(predecessor_port.port_id, i,
                                                                                       current_port.path_elements[dst_port_id])
 
-                    explore_children = True
+                    admitted_match.union(i)
 
-        return explore_children
+
+        return admitted_match
 
 
     def next_to_pop(self, queue):
@@ -248,10 +252,10 @@ class PortGraph:
 
                 if predecessor not in processed:
                     processed.add(predecessor)
-                    explore_children = self.process_edges(dst_port_id, predecessor_port, current_port)
+                    admitted_match = self.process_edges(predecessor_port, current_port, dst_port_id)
 
                     # Check if there was actual propagation of traffic, only then visit the next guy's children
-                    if explore_children:
+                    if not admitted_match.is_empty():
                         queue.append((predecessor, self.g.predecessors_iter(predecessor)))
 
             except StopIteration:
@@ -287,43 +291,31 @@ class PortGraph:
         else:
             None
 
-    def compute_admitted_match(self, curr_port, dst_port, admitted_match):
 
-        print curr_port.port_id, dst_port.port_id
+    # Takes a node, its admitted_match for destination and the destination
+    # Recursively sets up admitted match
 
-        # Base case. If it arrived one of the ports that is already added.
-        if curr_port in self.added_host_ports:
-            if dst_port.port_id in curr_port.admitted_match:
-                return curr_port.admitted_match[dst_port.port_id]
-            else:
-                raise Exception('This should have been set before calling this method')
+    def compute_admitted_match(self, curr, curr_admitted_match, dst_port):
 
+        print curr.port_id, dst_port.port_id
+
+        # First you gather the goods
+        if dst_port.port_id not in curr.admitted_match:
+            curr.admitted_match[dst_port.port_id] = curr_admitted_match
         else:
-            m = Match()
-            all_successors = list(self.g.successors_iter(curr_port.port_id))
+            curr.admitted_match[dst_port.port_id].union(curr_admitted_match)
 
-            # Recursively call myself at each of my successors in the port graph
-            for successor_id in all_successors:
+        # Base case: Stop at host ports.
+        if curr in self.added_host_ports:
+            return
+        else:
+            print list(self.g.predecessors_iter(curr.port_id))
 
-                successor = self.get_port(successor_id)
+            # Recursively call myself at each of my predecessors in the port graph
+            for pred_id in self.g.predecessors_iter(curr.port_id):
 
-                # First compute recursively what arrived at successor
-                # This ensures that the data structures are available for process_edge call.
-                self.compute_admitted_match(successor, dst_port)
+                pred = self.get_port(pred_id)
+                pred_admitted_match = self.process_edges(pred, curr, dst_port.port_id)
 
-                # Then via every edge from self to successor, try to pass what arrived at successor
-                edge_data = self.g.get_edge_data(curr_port.port_id, successor.port_id)
-                for edge_data_key in edge_data:
-
-                    resulting_match = self.process_curr_port_to_successor_admitted_match(dst_port.port_id,
-                                                                                         curr_port,
-                                                                                         successor,
-                                                                                         edge_data[edge_data_key])
-
-                    # If something is left after the passing, collect it
-                    if resulting_match:
-                        m.union(resulting_match)
-
-            curr_port.admitted_match[dst_port.port_id] = m
-
-            return m
+                if not pred_admitted_match.is_empty():
+                    self.compute_admitted_match(pred, pred_admitted_match, dst_port)
