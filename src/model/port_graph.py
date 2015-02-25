@@ -287,12 +287,12 @@ class PortGraph:
         else:
             None
 
-    def compute_admitted_match(self, curr_port, dst_port):
+    def compute_admitted_match(self, curr_port, dst_port, admitted_match):
 
         print curr_port.port_id, dst_port.port_id
 
-        # Base case
-        if curr_port == dst_port:
+        # Base case. If it arrived one of the ports that is already added.
+        if curr_port in self.added_host_ports:
             if dst_port.port_id in curr_port.admitted_match:
                 return curr_port.admitted_match[dst_port.port_id]
             else:
