@@ -55,7 +55,7 @@ class ComputePortPaths:
 
                 if src_port != dst_port:
 
-                    am =  src_port.admitted_match[dst_port.port_id]
+                    am = src_port.admitted_match[dst_port.port_id]
                     print am
 
 

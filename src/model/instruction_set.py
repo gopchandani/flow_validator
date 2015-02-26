@@ -94,13 +94,16 @@ class InstructionSet():
 
             if instruction.instruction_type == "apply-actions":
                 applied_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
+
             elif instruction.instruction_type == "write-actions":
                 pass
+
+            # TODO: Handle clear-actions case
+
             elif instruction.instruction_type == "go-to-table":
                 goto_table = instruction.go_to_table
 
             # TODO: Handle meter instruction
-            # TODO: Handle clear-actions case
             # TODO: Write meta-data case
 
 
@@ -117,7 +120,8 @@ class InstructionSet():
             self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
                                            outgoing_port,
                                            self.flow.match,
-                                           modified_fields)
+                                           modified_fields,
+                                           is_active=is_active)
 
         if goto_table:
             self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,

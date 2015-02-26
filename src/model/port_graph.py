@@ -68,7 +68,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, flow_match, modified_fields={}):
+    def add_edge(self, port1, port2, flow_match, modified_fields={}, is_active=True):
 
         edge_type = None
         if port1.port_type == "table" and port2.port_type == "outgoing":
@@ -78,8 +78,13 @@ class PortGraph:
         elif port1.port_type == "physical" and port2.port_type == "table":
             edge_type = "transport"
 
+        print is_active
         e = (port1.port_id, port2.port_id)
-        self.g.add_edge(*e, flow_match=flow_match, modified_fields=modified_fields, edge_type=edge_type)
+        self.g.add_edge(*e,
+                        flow_match=flow_match,
+                        modified_fields=modified_fields,
+                        edge_type=edge_type,
+                        is_active=is_active)
 
     def remove_edge(self, port1, port2):
         pass
@@ -274,6 +279,10 @@ class PortGraph:
 
         for edge_data_key in edge_data:
             this_edge = edge_data[edge_data_key]
+
+            if not this_edge["is_active"]:
+                continue
+
             if dst_port_id in current_port.admitted_match:
                 admitted_at_current_port = deepcopy(current_port.admitted_match[dst_port_id])
 
