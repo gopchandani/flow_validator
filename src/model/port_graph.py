@@ -275,7 +275,7 @@ class PortGraph:
 
     def process_edges_in_reverse(self, predecessor_port, curr_port, dst_port_id):
 
-        admitted_match = Match()
+        pred_admitted_match = Match()
         edge_data = self.g.get_edge_data(predecessor_port.port_id, curr_port.port_id)
 
         for edge_data_key in edge_data:
@@ -304,9 +304,9 @@ class PortGraph:
 
                 i = this_edge["flow_match"].intersect(attempted_match)
                 if not i.is_empty():
-                    admitted_match.union(i)
+                    pred_admitted_match.union(i)
 
-        return admitted_match
+        return pred_admitted_match
 
 
 

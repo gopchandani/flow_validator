@@ -242,6 +242,7 @@ class MatchElement(DictMixin):
     def get_orig_match_element(self, modified_fields, matching_element):
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
+        orig_match_element.path_ports = self.path_ports
 
         for field_name in field_names:
             if field_name in modified_fields:
