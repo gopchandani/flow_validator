@@ -19,7 +19,7 @@ class ComputePortPaths:
                 host_obj.switch_id, "at port:", \
                 host_obj.switch_port_attached
 
-            admitted_match = Match(init_wildcard=True, tag="flow")
+            admitted_match = Match(init_wildcard=True)
             admitted_match.set_field("ethernet_type", 0x0800)
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
             admitted_match.set_field("ethernet_destination", dst_mac_int)
