@@ -292,7 +292,6 @@ class MatchElement(DictMixin):
                     self.set_match_field_element("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
                     self.set_match_field_element("has_vlan_tag", int(True))
 
-
     def generate_match_json(self, match):
 
         if "in_port" in self and self["in_port"] != sys.maxsize:
