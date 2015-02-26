@@ -24,9 +24,9 @@ class Flow():
         self.go_to_table = None
 
         # Port Graph Stuff
-        self.match = Match(tag=self)
+        self.match = Match()
         self.match.match_elements.append(self.match_element)
-        self.complement_match = self.match_element.complement_match(self)
+        self.complement_match = self.match_element.complement_match()
         self.applied_match = None
         self.instructions = InstructionSet(self.sw, self, flow_json["instructions"]["instruction"])
 

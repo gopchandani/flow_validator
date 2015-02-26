@@ -121,7 +121,7 @@ class MatchElement(DictMixin):
     def add_path_port(self, port):
         self.path_ports.append(port)
 
-    def set_match_field_element(self, key, value=None, flow=None, tag=None, is_wildcard=False, exception=False):
+    def set_match_field_element(self, key, value=None, flow=None, is_wildcard=False, exception=False):
 
         # First remove all current intervals
         prev_intervals = list(self.match_fields[key])
@@ -138,7 +138,7 @@ class MatchElement(DictMixin):
             self.value_cache[key] = sys.maxsize
 
         else:
-            self.match_fields[key].add(Interval(value, value + 1, tag))
+            self.match_fields[key].add(Interval(value, value + 1))
             self.value_cache[key] = value
 
     #TODO: Does not cover the cases of fragmented wildcard
@@ -175,9 +175,9 @@ class MatchElement(DictMixin):
 
         return intersection_element
 
-    def complement_match(self, tag):
+    def complement_match(self):
 
-        match_complement = Match(tag)
+        match_complement = Match()
 
         for field_name in field_names:
 
@@ -364,9 +364,8 @@ class MatchElement(DictMixin):
 
 class Match():
 
-    def __init__(self, tag=None, init_wildcard=False):
+    def __init__(self, init_wildcard=False):
 
-        self.tag = tag
         self.match_elements = []
 
         # If initialized as wildcard, add one to the list
