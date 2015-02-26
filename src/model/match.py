@@ -101,6 +101,9 @@ class MatchElement(DictMixin):
 
     def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True):
 
+        # Contains a list of ports where the element has been before it arrives here
+        self.path_ports = []
+
         self.value_cache = {}
         self.match_fields = {}
 
@@ -114,6 +117,9 @@ class MatchElement(DictMixin):
         elif is_wildcard:
             for field_name in field_names:
                 self.set_match_field_element(field_name, is_wildcard=True)
+
+    def add_path_port(self, port):
+        self.path_ports.append(port)
 
     def set_match_field_element(self, key, value=None, flow=None, tag=None, is_wildcard=False, exception=False):
 
@@ -156,6 +162,7 @@ class MatchElement(DictMixin):
     def intersect(self, in_match_element):
 
         intersection_element = MatchElement()
+        intersection_element.path_ports = in_match_element.path_ports
 
         for field_name in field_names:
             intersection_element.match_fields[field_name] = self.get_matched_tree(
@@ -398,13 +405,8 @@ class Match():
         return im
 
     def union(self, in_match):
-
         self.match_elements.extend(in_match.match_elements)
-
         return self
-
-
-
 
     def get_orig_match(self, modified_fields, matching_element):
 
@@ -412,6 +414,10 @@ class Match():
         for me in self.match_elements:
             orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
         return orig_match
+
+    def add_path_port(self, port):
+        for me in self.match_elements:
+            me.add_path_port(port)
 
     def is_field_wildcard(self, field_name):
         retval = True

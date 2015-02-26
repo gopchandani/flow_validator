@@ -78,7 +78,6 @@ class PortGraph:
         elif port1.port_type == "physical" and port2.port_type == "table":
             edge_type = "transport"
 
-        print is_active
         e = (port1.port_id, port2.port_id)
         self.g.add_edge(*e,
                         flow_match=flow_match,
@@ -140,7 +139,9 @@ class PortGraph:
 
         hp = Port(None, port_type="physical", port_id=host_obj.node_id)
         hp.path_elements[host_obj.node_id] = FlowPathElement(host_obj.node_id, admitted_match, None)
+
         hp.admitted_match[host_obj.node_id] = admitted_match
+        hp.admitted_match[host_obj.node_id].add_path_port(hp)
 
         self.add_port(hp)
         self.added_host_ports.append(hp)
@@ -293,15 +294,15 @@ class PortGraph:
                     admitted_at_current_port.set_field("in_port", int(current_port.port_number), exception=True)
 
 
-                if this_edge["modified_fields"] and this_edge["flow_match"]:
+                if this_edge["modified_fields"]:
 
                     # This is what the match would be before passing this match
                     attempted_match = admitted_at_current_port.get_orig_match(this_edge["modified_fields"],
                                                                            this_edge["flow_match"].match_elements[0])
-                elif this_edge["flow_match"]:
+                else:
                     attempted_match = admitted_at_current_port
 
-                i = attempted_match.intersect(this_edge["flow_match"])
+                i = this_edge["flow_match"].intersect(attempted_match)
                 if not i.is_empty():
                     admitted_match.union(i)
 
