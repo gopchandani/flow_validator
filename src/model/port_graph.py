@@ -315,24 +315,18 @@ class PortGraph:
 
     def compute_admitted_match(self, curr, curr_admitted_match, dst_port):
 
-        print curr.port_id, dst_port.port_id
-        if curr.port_id == "openflow:3:table2":
-            pass
-
         # First you gather the goods
         if dst_port.port_id not in curr.admitted_match:
             curr.admitted_match[dst_port.port_id] = curr_admitted_match
         else:
             curr.admitted_match[dst_port.port_id].union(curr_admitted_match)
 
-        #Establish that curr is part of the path that the MatchElements are going to take
-        curr_admitted_match.add_port_to_path(curr)
-
         # Base case: Stop at host ports.
         if curr in self.added_host_ports:
             return
         else:
-            print "At curr:", curr.port_id, "preds:",list(self.g.predecessors_iter(curr.port_id))
+            #Establish that curr is part of the path that the MatchElements are going to take to pred
+            curr.admitted_match[dst_port.port_id].add_port_to_path(curr)
 
             # Recursively call myself at each of my predecessors in the port graph
             for pred_id in self.g.predecessors_iter(curr.port_id):

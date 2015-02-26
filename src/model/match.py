@@ -162,7 +162,7 @@ class MatchElement(DictMixin):
     def intersect(self, in_match_element):
 
         intersection_element = MatchElement()
-        intersection_element.path_ports = in_match_element.path_ports
+        intersection_element.path_ports = list(in_match_element.path_ports)
 
         for field_name in field_names:
             intersection_element.match_fields[field_name] = self.get_matched_tree(
@@ -242,7 +242,7 @@ class MatchElement(DictMixin):
     def get_orig_match_element(self, modified_fields, matching_element):
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
-        orig_match_element.path_ports = self.path_ports
+        orig_match_element.path_ports = list(self.path_ports)
 
         for field_name in field_names:
             if field_name in modified_fields:
