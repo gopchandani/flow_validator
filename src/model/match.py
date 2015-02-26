@@ -118,8 +118,8 @@ class MatchElement(DictMixin):
             for field_name in field_names:
                 self.set_match_field_element(field_name, is_wildcard=True)
 
-    def add_path_port(self, port):
-        self.path_ports.append(port)
+    def add_port_to_path(self, port):
+        self.path_ports.insert(0, port)
 
     def set_match_field_element(self, key, value=None, flow=None, is_wildcard=False, exception=False):
 
@@ -415,9 +415,9 @@ class Match():
             orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
         return orig_match
 
-    def add_path_port(self, port):
+    def add_port_to_path(self, port):
         for me in self.match_elements:
-            me.add_path_port(port)
+            me.add_port_to_path(port)
 
     def is_field_wildcard(self, field_name):
         retval = True

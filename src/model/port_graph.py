@@ -141,7 +141,7 @@ class PortGraph:
         hp.path_elements[host_obj.node_id] = FlowPathElement(host_obj.node_id, admitted_match, None)
 
         hp.admitted_match[host_obj.node_id] = admitted_match
-        hp.admitted_match[host_obj.node_id].add_path_port(hp)
+        hp.admitted_match[host_obj.node_id].add_port_to_path(hp)
 
         self.add_port(hp)
         self.added_host_ports.append(hp)
@@ -324,6 +324,9 @@ class PortGraph:
             curr.admitted_match[dst_port.port_id] = curr_admitted_match
         else:
             curr.admitted_match[dst_port.port_id].union(curr_admitted_match)
+
+        #Establish that curr is part of the path that the MatchElements are going to take
+        curr_admitted_match.add_port_to_path(curr)
 
         # Base case: Stop at host ports.
         if curr in self.added_host_ports:
