@@ -85,14 +85,13 @@ class PortGraph:
                         edge_type=edge_type,
                         is_active=is_active)
 
-    def remove_edge(self, port1, port2):
+    def update_edge_status(self, port1, port2):
 
         # Remove the edges from graph
         self.g.remove_edge(port1.port_id, port2.port_id)
 
         #self.update_edge_status(self.port1.sw)
         #self.update_edge_status(self.port2.sw)
-
 
         # Look at the source port and see what admitted_matches rely on this edge to be admitted
         # TODO: Store that information in the first place
@@ -103,8 +102,6 @@ class PortGraph:
         # If the admitted matches chance (i,e. their content changes), everybody who relies on that edge needs to be
         # updated, so the change travels back in the bfs fashion
 
-    def update_edge_status(self, sw, port):
-        pass
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")
@@ -128,11 +125,11 @@ class PortGraph:
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
-        self.remove_edge(from_port, to_port)
+        self.update_edge_status(from_port, to_port)
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
-        self.remove_edge(from_port, to_port)
+        self.update_edge_status(from_port, to_port)
 
     def init_port_graph(self):
 
