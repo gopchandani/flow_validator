@@ -52,6 +52,34 @@ class Flow():
             # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
 
+    def update_port_graph_edges(self):
+
+        # See the impact of all those instructions
+        modified_fields = self.instructions.applied_action_set.get_modified_fields_dict()
+        out_port_and_active_status_tuple_list = self.instructions.applied_action_set.get_out_port_and_active_status_tuple_list()
+
+        # Add port edges based on the impact of ActionSet and GotoTable
+        for out_port, is_active in out_port_and_active_status_tuple_list:
+
+            outgoing_port = self.model.port_graph.get_port(
+                self.model.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+
+            self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                                           outgoing_port,
+                                           self.match,
+                                           modified_fields,
+                                           is_active=is_active)
+
+
+        if self.instructions.goto_table:
+            self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                                           self.sw.flow_tables[self.instructions.goto_table].port,
+                                           self.match,
+                                           modified_fields=modified_fields)
+
+
+
+
 class FlowTable():
     def __init__(self, sw, table_id, flow_list):
 
@@ -96,9 +124,7 @@ class FlowTable():
                 flow.applied_match = intersection
 
                 # Add the edges in the portgraph
-                if self.sw.node_id == "openflow:4" and self.table_id == 3:
-                    pass
-                flow.instructions.add_port_graph_edges()
+                flow.update_port_graph_edges()
 
             else:
                 

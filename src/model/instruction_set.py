@@ -99,29 +99,3 @@ class InstructionSet():
             # TODO: Handle meter instruction
             # TODO: Write meta-data case
 
-
-    def add_port_graph_edges(self):
-
-        # See the impact of all those instructions
-        modified_fields = self.applied_action_set.get_modified_fields_dict()
-        out_port_and_active_status_tuple_list = self.applied_action_set.get_out_port_and_active_status_tuple_list()
-
-        # Add port edges based on the impact of ActionSet and GotoTable
-        for out_port, is_active in out_port_and_active_status_tuple_list:
-
-            outgoing_port = self.model.port_graph.get_port(
-                self.model.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
-
-            self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
-                                           outgoing_port,
-                                           self.flow.match,
-                                           modified_fields,
-                                           is_active=is_active)
-
-
-        if self.goto_table:
-            self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
-                                           self.sw.flow_tables[self.goto_table].port,
-                                           self.flow.match,
-                                           modified_fields=modified_fields)
-
