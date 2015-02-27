@@ -25,7 +25,6 @@ class ComputePortPaths:
             admitted_match.set_field("ethernet_destination", dst_mac_int)
             host_port = self.port_graph.add_destination_host_port_traffic(host_obj, admitted_match)
 
-
         # Let the port traffic bleed through to all other ports
         for host_port in self.port_graph.added_host_ports:
             host_obj = self.model.get_node_object(host_port.port_id)
@@ -35,7 +34,6 @@ class ComputePortPaths:
             self.port_graph.compute_admitted_match(host_obj.switch_egress_port,
                                                    host_port.admitted_match[host_port.port_id],
                                                    host_port)
-
 
         # Test connectivity after flows have bled through the port graph
         for src_h_id in self.model.get_host_ids():
@@ -53,6 +51,17 @@ class ComputePortPaths:
                 if src_port != dst_port:
                     am = src_port.admitted_match[dst_port.port_id]
                     print am
+
+                    # Break the edge between S4->S3
+                    sw1 = "openflow:3"
+                    sw2 = "openflow:4"
+                    edge_data = self.model.get_edge_port_dict(sw1, sw2)
+                    sw1_obj =self.model.get_node_object(sw1)
+                    sw1_port = sw1_obj.ports[edge_data[sw1]]
+                    sw2_obj =self.model.get_node_object(sw2)
+                    sw2_port = sw2_obj.ports[edge_data[sw2]]
+                    self.port_graph.remove_edge(sw1_port, sw2_port)
+
 
 
 def main():
