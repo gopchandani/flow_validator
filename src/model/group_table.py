@@ -83,13 +83,13 @@ class Group():
 
     def get_action_list(self):
 
-        all_action_list = []
+        action_list = []
 
         # If it is a _all_ group, collect all buckets
         if self.group_type == "group-all":
 
             for action_bucket in self.bucket_list:
-                all_action_list.extend(action_bucket.action_list)
+                action_list.extend(action_bucket.action_list)
 
         # If it is a fast-failover group, collect the bucket which is active
         elif self.group_type == "group-ff":
@@ -101,14 +101,14 @@ class Group():
             while i < len(self.bucket_list):
                 this_bucket = self.bucket_list[i]
                 if this_bucket.is_live():
-                    all_action_list.extend(this_bucket.action_list)
+                    action_list.extend(this_bucket.action_list)
                     i += 1
                     break
                 else:
                     # Also adding any non-live buckets encountered until then to be as such
                     for action in this_bucket.action_list:
                         action.is_active = False
-                    all_action_list.extend(this_bucket.action_list)
+                    action_list.extend(this_bucket.action_list)
                     i += 1
 
             # If there are any buckets left, we add them as inactive buckets
@@ -116,10 +116,10 @@ class Group():
                 this_bucket = self.bucket_list[i]
                 for action in this_bucket.action_list:
                     action.is_active = False
-                all_action_list.extend(this_bucket.action_list)
+                action_list.extend(this_bucket.action_list)
                 i += 1
 
-        return all_action_list
+        return action_list
 
     def get_active_action_list(self):
         active_action_list = []

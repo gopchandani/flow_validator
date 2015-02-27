@@ -86,38 +86,27 @@ class PortGraph:
                         edge_type=edge_type,
                         is_active=is_active)
 
+        return e
+
     def remove_edge(self, port1, port2):
 
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
-        
-        # Take the ports and see what their predecessor edges are, they need to be set inactive for sure
 
-        # But this could have consequences for edges that are having a failover property
-        # In the event that an edge has a failover, then just set the other one active
+        # But this could have consequences for edges that are having a failover property,
+        # So for all remaining predecessors of this port, recompute the impact on port graph edge status
 
         for pred_id in self.g.predecessors_iter(port1.port_id):
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
-            print edge_data
             for edge_data_key in edge_data:
                 this_edge = edge_data[edge_data_key]
-                this_edge["is_active"] = False
+                this_edge["flow"].update_port_graph_edges()
 
-
-
+        # Typically there should be no successors here, this is just a stub
         for succ_id in self.g.successors_iter(port2.port_id):
             succ = self.get_port(succ_id)
             pass
-                
-
-        # Ones that do, need to be found alternatives... This can be achieved by looking at other outgoing edges
-        # that may be active now...
-
-        # If the admitted matches change (i,e. their content changes), everybody who relies on that edge needs to be
-        # updated, so the change travels back recursively
-
-
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")
