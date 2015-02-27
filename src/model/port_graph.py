@@ -169,110 +169,6 @@ class PortGraph:
         pass
 
 
-    def process_edges(self, predecessor_port, curr_port, dst_port_id):
-
-        admitted_match = Match()
-        edge_data = self.g.get_edge_data(predecessor_port.port_id, curr_port.port_id)
-
-        for edge_data_key in edge_data:
-
-            this_edge = edge_data[edge_data_key]
-
-            if dst_port_id in curr_port.path_elements:
-                curr_admitted_match = deepcopy(curr_port.path_elements[dst_port_id].admitted_match)
-
-                # You enter the switch at "egress" edges. Yes... Eye-roll:
-                # At egress edges, set the in_port of the admitted match for destination to wildcard
-                if this_edge["edge_type"] == "egress":
-                    curr_admitted_match.set_field("in_port", is_wildcard=True)
-
-                if this_edge["modified_fields"] and this_edge["flow_match"]:
-
-                    # This is what the match would be before passing this match
-                    attempted_match = curr_admitted_match.get_orig_match(this_edge["modified_fields"],
-                                                                           this_edge["flow_match"].match_elements[0])
-                elif this_edge["flow_match"]:
-                    attempted_match = curr_admitted_match
-
-                i = attempted_match.intersect(this_edge["flow_match"])
-                if not i.is_empty():
-                    if dst_port_id in predecessor_port.path_elements:
-                        predecessor_port.path_elements[dst_port_id].accumulate_admitted_match(i)
-                    else:
-                        predecessor_port.path_elements[dst_port_id] = FlowPathElement(predecessor_port.port_id, i,
-                                                                                      curr_port.path_elements[dst_port_id])
-
-                    admitted_match.union(i)
-
-
-        return admitted_match
-
-
-    def next_to_pop(self, queue):
-
-        i = 0
-        while i < len(queue):
-
-            try_id = queue[i][0]
-            try_port = self.get_port(try_id)
-
-            found_same_level_successor = False
-            for successor_id in self.g.successors_iter(try_id):
-                successor_port = self.get_port(successor_id)
-                if successor_port.traversal_distance == try_port.traversal_distance:
-                    found_same_level_successor = True
-                    break
-
-            # If not, then break here so that this i could be used for expansion of queue
-            if not found_same_level_successor:
-                break
-
-        # If all of them have successors in the queue, raise it
-        if i > 0 and  i == len(queue) - 1:
-            raise Exception('Everybody has successors in the queue')
-
-        return i
-
-    # Starts on a port and tries to carry admitted_traffic to left to everywhere it can reach
-    # Initially called with same start_port_id and dst_port_id
-
-    def propagate_admitted_traffic(self, start_port_id, dst_port_id):
-
-        start_port = self.get_port(start_port_id)
-        start_port.traversal_distance = 0
-
-        processed = set([start_port_id])
-        queue = [(start_port_id, self.g.predecessors_iter(start_port_id))]
-        while queue:
-
-            #pop_i = self.next_to_pop(queue)
-            pop_i = 0
-            current, predecessors = queue[pop_i]
-
-            # This port beats the other to the punch
-            if current == "openflow:1:outgoing3":
-                pass
-
-            try:
-                predecessor = next(predecessors)
-
-                curr_port = self.get_port(current)
-                predecessor_port = self.get_port(predecessor)
-                predecessor_port.traversal_distance = curr_port.traversal_distance + 1
-
-                if predecessor not in processed:
-                    processed.add(predecessor)
-                    admitted_match = self.process_edges(predecessor_port, curr_port, dst_port_id)
-
-                    # Check if there was actual propagation of traffic, only then visit the next guy's children
-                    if not admitted_match.is_empty():
-                        queue.append((predecessor, self.g.predecessors_iter(predecessor)))
-
-            except StopIteration:
-                queue.pop(pop_i)
-
-
-
     def process_edges_in_reverse(self, predecessor_port, curr_port, dst_port_id):
 
         pred_admitted_match = Match()
@@ -307,11 +203,6 @@ class PortGraph:
                     pred_admitted_match.union(i)
 
         return pred_admitted_match
-
-
-
-    # Takes a node, its admitted_match for destination and the destination
-    # Recursively sets up admitted match
 
     def compute_admitted_match(self, curr, curr_admitted_match, dst_port):
 
