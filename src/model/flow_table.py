@@ -61,7 +61,7 @@ class Flow():
         port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
 
         # Add port edges based on the impact of ActionSet and GotoTable
-        for out_port, is_active in port_graph_edge_status:
+        for out_port, output_action in port_graph_edge_status:
 
             outgoing_port = self.model.port_graph.get_port(
                 self.model.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
@@ -70,7 +70,7 @@ class Flow():
                                            outgoing_port,
                                            self.match,
                                            flow=self,
-                                           is_active=is_active)
+                                           is_active=output_action.is_active, key=(self, output_action))
             
             self.port_graph_edges.append(e)
 
@@ -88,11 +88,12 @@ class Flow():
     def update_port_graph_edges(self):
         
         #TODO: Not proud of this
-
         # First remove all the port_graph_edges
         for e in self.port_graph_edges:
-            self.model.port_graph.g.remove_edge(e[0], e[1])
-            
+            self.model.port_graph.g.remove_edge(e[0], e[1], e[2])
+
+        del self.port_graph_edges[:]
+
         # Re-add everything with modified states
         self.add_port_graph_edges()
 
@@ -139,6 +140,9 @@ class FlowTable():
                 # See what is left after this rule is through
                 remaining_match = flow.complement_match.intersect(remaining_match)
                 flow.applied_match = intersection
+
+                if self.sw.node_id == "openflow:4" and self.table_id == 3:
+                    pass
 
                 # Add the edges in the portgraph
                 flow.add_port_graph_edges()

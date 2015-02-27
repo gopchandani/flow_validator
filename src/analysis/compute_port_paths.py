@@ -53,7 +53,7 @@ class ComputePortPaths:
                     am = src_port.admitted_match[dst_port.port_id]
                     print am
 
-                    node1 = "openflow:3"
+                    node1 = "openflow:1"
                     node2 = "openflow:4"
                     self.port_graph.remove_node_graph_edge(node1, node2)
                     edge_ports_dict = self.model.get_edge_port_dict(node1, node2)

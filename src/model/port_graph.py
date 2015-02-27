@@ -68,7 +68,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, edge_filter_match, flow={}, is_active=True):
+    def add_edge(self, port1, port2, edge_filter_match, flow=None, is_active=True, key=None):
 
         edge_type = None
         if port1.port_type == "table" and port2.port_type == "outgoing":
@@ -78,7 +78,7 @@ class PortGraph:
         elif port1.port_type == "physical" and port2.port_type == "table":
             edge_type = "transport"
 
-        e = (port1.port_id, port2.port_id)
+        e = (port1.port_id, port2.port_id, key)
 
         self.g.add_edge(*e,
                         edge_filter_match=edge_filter_match,
@@ -99,14 +99,14 @@ class PortGraph:
         for pred_id in self.g.predecessors_iter(port1.port_id):
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
-            for edge_data_key in edge_data:
-                this_edge = edge_data[edge_data_key]
+
+            edge_data_o = edge_data.values()
+            for this_edge in edge_data_o:
                 this_edge["flow"].update_port_graph_edges()
 
         # Typically there should be no successors here, this is just a stub
         for succ_id in self.g.successors_iter(port2.port_id):
             succ = self.get_port(succ_id)
-            pass
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")

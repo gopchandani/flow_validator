@@ -211,9 +211,9 @@ class ActionSet():
 
                 # Consider all possible ports...
                 for in_port in self.sw.ports:
-                    port_graph_edge_status.append((str(in_port), output_action.is_active))
+                    port_graph_edge_status.append((str(in_port), output_action))
             else:
-                port_graph_edge_status.append((str(output_action.out_port), output_action.is_active))
+                port_graph_edge_status.append((str(output_action.out_port), output_action))
 
         return port_graph_edge_status
 
