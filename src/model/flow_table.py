@@ -52,7 +52,7 @@ class Flow():
             # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
 
-    def update_port_graph_edges(self):
+    def add_port_graph_edges(self):
 
         # See the impact of all those instructions
         modified_fields = self.instructions.applied_action_set.get_modified_fields_dict()
@@ -124,7 +124,7 @@ class FlowTable():
                 flow.applied_match = intersection
 
                 # Add the edges in the portgraph
-                flow.update_port_graph_edges()
+                flow.add_port_graph_edges()
 
             else:
                 
