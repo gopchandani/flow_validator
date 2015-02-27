@@ -56,10 +56,10 @@ class Flow():
 
         # See the impact of all those instructions
         modified_fields = self.instructions.applied_action_set.get_modified_fields_dict()
-        out_port_and_active_status_tuple_list = self.instructions.applied_action_set.get_out_port_and_active_status_tuple_list()
+        get_port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
 
         # Add port edges based on the impact of ActionSet and GotoTable
-        for out_port, is_active in out_port_and_active_status_tuple_list:
+        for out_port, is_active in get_port_graph_edge_status:
 
             outgoing_port = self.model.port_graph.get_port(
                 self.model.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))

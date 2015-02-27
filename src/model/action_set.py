@@ -196,9 +196,9 @@ class ActionSet():
 
         return out_port_match
 
-    def get_out_port_and_active_status_tuple_list(self):
+    def get_port_graph_edge_status(self):
 
-        out_port_list = []
+        port_graph_edge_status = []
 
         #  For each output action, there is a corresponding out_port_match entry
         for output_action in self.action_dict["output"]:
@@ -211,11 +211,12 @@ class ActionSet():
 
                 # Consider all possible ports...
                 for in_port in self.sw.ports:
-                    out_port_list.append((str(in_port), output_action.is_active))
+                    port_graph_edge_status.append((str(in_port), output_action.is_active))
             else:
-                out_port_list.append((str(output_action.out_port), output_action.is_active))
+                port_graph_edge_status.append((str(output_action.out_port), output_action.is_active))
 
-        return out_port_list
+        return port_graph_edge_status
+
 
 
     def get_modified_fields_dict(self):
