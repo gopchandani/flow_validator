@@ -72,44 +72,39 @@ class InstructionSet():
         self.model = self.sw.model
         self.instruction_list = []
 
+        self.applied_action_set = ActionSet(self.sw)
+        self.written_action_set = ActionSet(self.sw)
+        self.goto_table = None
+
         for instruction_json in instructions_json:
             instruction = Instruction(sw, instruction_json)
 
             #Apply-Action has to be the first one, so reorganizing that...
-            if instruction.instruction_type == "":
+            if instruction.instruction_type == "apply-actions":
                 self.instruction_list.insert(0, instruction)
+
+                # Add all the actions to the applied_action_set
+                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
+
             else:
                 self.instruction_list.append(instruction)
 
-    def add_port_graph_edges(self):
-
-        # Initialize data structures to accumulate the effects of actions in the instructions that may result in
-        # creation of port edges later.
-
-        applied_action_set = ActionSet(self.sw)
-        written_action_set = ActionSet(self.sw)
-        goto_table = None
-
-        for instruction in self.instruction_list:
-
-            if instruction.instruction_type == "apply-actions":
-                applied_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
-
-            elif instruction.instruction_type == "write-actions":
-                pass
-
-            # TODO: Handle clear-actions case
+            if instruction.instruction_type == "write-actions":
+                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
 
             elif instruction.instruction_type == "go-to-table":
-                goto_table = instruction.go_to_table
+                self.goto_table = instruction.go_to_table
 
+            # TODO: Handle clear-actions case
             # TODO: Handle meter instruction
             # TODO: Write meta-data case
 
 
+    def add_port_graph_edges(self):
+
         # See the impact of all those instructions
-        modified_fields = applied_action_set.get_modified_fields_dict()
-        out_port_and_active_status_tuple_list = applied_action_set.get_out_port_and_active_status_tuple_list()
+        modified_fields = self.applied_action_set.get_modified_fields_dict()
+        out_port_and_active_status_tuple_list = self.applied_action_set.get_out_port_and_active_status_tuple_list()
 
         # Add port edges based on the impact of ActionSet and GotoTable
         for out_port, is_active in out_port_and_active_status_tuple_list:
@@ -123,9 +118,9 @@ class InstructionSet():
                                            modified_fields,
                                            is_active=is_active)
 
-        if goto_table:
+        if self.goto_table:
             self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
-                                           self.sw.flow_tables[goto_table].port,
+                                           self.sw.flow_tables[self.goto_table].port,
                                            self.flow.match,
                                            modified_fields=modified_fields)
 

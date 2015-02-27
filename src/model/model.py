@@ -88,19 +88,19 @@ class Model():
                     switch_ports[nc["flow-node-inventory:port-number"]] = Port(sw, nc)
             sw.ports = switch_ports
 
+            #  Get the group table
+            switch_group_table = self._prepare_group_table(sw)
+            sw.group_table = switch_group_table
+
             #  Get all the flow tables
             switch_flow_tables = []
             for flow_table in node["flow-node-inventory:table"]:
                 if "flow" in flow_table:
                     switch_flow_tables.append(FlowTable(sw, flow_table["id"], flow_table["flow"]))
 
-            #  Get the group table
-            switch_group_table = self._prepare_group_table(sw)
-
             #  Set the flow tables in the object instance while sorting them
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
-            sw.group_table = switch_group_table
 
 
     def add_edge(self, node1_id, node1_port, node2_id, node2_port):
