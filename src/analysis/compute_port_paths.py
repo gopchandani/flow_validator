@@ -51,17 +51,13 @@ class ComputePortPaths:
                 if src_port != dst_port:
                     am = src_port.admitted_match[dst_port.port_id]
                     print am
+                    self.port_graph.remove_node_graph_edge("openflow:3", "openflow:4")
 
-                    # Break the edge between S4->S3
-                    sw1 = "openflow:3"
-                    sw2 = "openflow:4"
-                    edge_data = self.model.get_edge_port_dict(sw1, sw2)
-                    sw1_obj =self.model.get_node_object(sw1)
-                    sw1_port = sw1_obj.ports[edge_data[sw1]]
-                    sw2_obj =self.model.get_node_object(sw2)
-                    sw2_port = sw2_obj.ports[edge_data[sw2]]
-                    self.port_graph.remove_edge(sw1_port, sw2_port)
 
+                    ## self.port_graph.remove_node_graph_edge("openflow:3", "openflow:2")
+
+                    am = src_port.admitted_match[dst_port.port_id]
+                    print am
 
 
 def main():

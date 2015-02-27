@@ -86,7 +86,11 @@ class PortGraph:
                         is_active=is_active)
 
     def remove_edge(self, port1, port2):
-        pass
+
+        # Remove the edges from graph
+        self.g.remove_edge(port1.port_id, port2.port_id)
+
+
         # Look at the source port and see what admitted_matches rely on this edge to be admitted
         # TODO: Store that information in the first place
 
@@ -100,8 +104,29 @@ class PortGraph:
         cp = Port(None, port_type="controller", port_id="4294967293")
         self.add_port(cp)
 
-    def remove_node_graph_edge(self, node1, node2):
-        pass
+    def add_node_graph_edge(self, node1_id, node2_id):
+
+        edge_data = self.model.get_edge_port_dict(node1_id, node2_id)
+
+        from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
+        to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
+        self.add_edge(from_port, to_port, Match(init_wildcard=True))
+
+        from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
+        to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
+        self.add_edge(from_port, to_port, Match(init_wildcard=True))
+
+    def remove_node_graph_edge(self, node1_id, node2_id):
+
+        edge_data = self.model.get_edge_port_dict(node1_id, node2_id)
+
+        from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
+        to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
+        self.remove_edge(from_port, to_port)
+
+        from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
+        to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
+        self.remove_edge(from_port, to_port)
 
     def init_port_graph(self):
 
@@ -116,16 +141,7 @@ class PortGraph:
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.model.graph.edges():
             if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
-
-                edge_port_dict = self.model.get_edge_port_dict(node_edge[0], node_edge[1])
-
-                from_port = self.get_port(self.get_outgoing_port_id(node_edge[0], edge_port_dict[node_edge[0]]))
-                to_port = self.get_port(self.get_incoming_port_id(node_edge[1], edge_port_dict[node_edge[1]]))
-                self.add_edge(from_port, to_port, Match(init_wildcard=True))
-
-                from_port = self.get_port(self.get_outgoing_port_id(node_edge[1], edge_port_dict[node_edge[1]]))
-                to_port = self.get_port(self.get_incoming_port_id(node_edge[0], edge_port_dict[node_edge[0]]))
-                self.add_edge(from_port, to_port, Match(init_wildcard=True))
+                self.add_node_graph_edge(node_edge[0], node_edge[1])
 
     def update_edge_down(self):
         pass
