@@ -68,7 +68,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, flow_match, modified_fields={}, is_active=True):
+    def add_edge(self, port1, port2, edge_filter_match, flow={}, is_active=True):
 
         edge_type = None
         if port1.port_type == "table" and port2.port_type == "outgoing":
@@ -79,28 +79,44 @@ class PortGraph:
             edge_type = "transport"
 
         e = (port1.port_id, port2.port_id)
+
         self.g.add_edge(*e,
-                        flow_match=flow_match,
-                        modified_fields=modified_fields,
+                        edge_filter_match=edge_filter_match,
+                        flow=flow,
                         edge_type=edge_type,
                         is_active=is_active)
 
-    def update_edge_status(self, port1, port2):
+    def remove_edge(self, port1, port2):
 
-        # Remove the edges from graph
+        # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
+        
+        # Take the ports and see what their predecessor edges are, they need to be set inactive for sure
 
-        #self.update_edge_status(self.port1.sw)
-        #self.update_edge_status(self.port2.sw)
+        # But this could have consequences for edges that are having a failover property
+        # In the event that an edge has a failover, then just set the other one active
 
-        # Look at the source port and see what admitted_matches rely on this edge to be admitted
-        # TODO: Store that information in the first place
+        for pred_id in self.g.predecessors_iter(port1.port_id):
+            pred = self.get_port(pred_id)
+            edge_data = self.g.get_edge_data(pred_id, port1.port_id)
+            print edge_data
+            for edge_data_key in edge_data:
+                this_edge = edge_data[edge_data_key]
+                this_edge["is_active"] = False
+
+
+
+        for succ_id in self.g.successors_iter(port2.port_id):
+            succ = self.get_port(succ_id)
+            pass
+                
 
         # Ones that do, need to be found alternatives... This can be achieved by looking at other outgoing edges
         # that may be active now...
 
-        # If the admitted matches chance (i,e. their content changes), everybody who relies on that edge needs to be
-        # updated, so the change travels back in the bfs fashion
+        # If the admitted matches change (i,e. their content changes), everybody who relies on that edge needs to be
+        # updated, so the change travels back recursively
+
 
 
     def init_global_controller_port(self):
@@ -125,11 +141,11 @@ class PortGraph:
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
-        self.update_edge_status(from_port, to_port)
+        self.remove_edge(from_port, to_port)
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
-        self.update_edge_status(from_port, to_port)
+        self.remove_edge(from_port, to_port)
 
     def init_port_graph(self):
 
@@ -203,15 +219,15 @@ class PortGraph:
                     curr_admitted_match.set_field("in_port", int(curr_port.port_number), exception=True)
 
 
-                if this_edge["modified_fields"]:
+                if this_edge["flow"]:
 
-                    # This is what the match would be before passing this match
-                    attempted_match = curr_admitted_match.get_orig_match(this_edge["modified_fields"],
-                                                                           this_edge["flow_match"].match_elements[0])
+                    # This is what the match would be before passing this flow
+                    attempted_match = curr_admitted_match.get_orig_match(this_edge["flow"].modified_fields,
+                                                                           this_edge["flow"].match_element)
                 else:
                     attempted_match = curr_admitted_match
 
-                i = this_edge["flow_match"].intersect(attempted_match)
+                i = this_edge["edge_filter_match"].intersect(attempted_match)
                 if not i.is_empty():
                     pred_admitted_match.union(i)
 

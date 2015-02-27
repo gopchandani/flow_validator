@@ -55,7 +55,7 @@ class Flow():
     def add_port_graph_edges(self):
 
         # See the impact of all those instructions
-        modified_fields = self.instructions.applied_action_set.get_modified_fields_dict()
+        self.modified_fields = self.instructions.applied_action_set.get_modified_fields_dict()
         get_port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
 
         # Add port edges based on the impact of ActionSet and GotoTable
@@ -67,7 +67,7 @@ class Flow():
             self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            outgoing_port,
                                            self.match,
-                                           modified_fields,
+                                           flow=self,
                                            is_active=is_active)
 
 
@@ -75,7 +75,7 @@ class Flow():
             self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            self.sw.flow_tables[self.instructions.goto_table].port,
                                            self.match,
-                                           modified_fields=modified_fields)
+                                           flow=self)
 
 
 
