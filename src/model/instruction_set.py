@@ -118,6 +118,7 @@ class InstructionSet():
                                            modified_fields,
                                            is_active=is_active)
 
+
         if self.goto_table:
             self.model.port_graph.add_edge(self.sw.flow_tables[self.flow.table_id].port,
                                            self.sw.flow_tables[self.goto_table].port,

@@ -138,7 +138,7 @@ class ActionSet():
 
             if action.action_type == "group":
                 if action.group_id in self.sw.group_table.groups:
-                    group_all_action_list =  self.sw.group_table.groups[action.group_id].get_all_action_list()
+                    group_all_action_list =  self.sw.group_table.groups[action.group_id].get_action_list()
                     self.add_all_actions(group_all_action_list, intersection)
                 else:
                     raise Exception("Odd that a group_id is not provided in a group action")
