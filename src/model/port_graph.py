@@ -95,18 +95,13 @@ class PortGraph:
 
         # But this could have consequences for edges that are having a failover property,
         # So for all remaining predecessors of this port, recompute the impact on port graph edge status
-
         for pred_id in self.g.predecessors_iter(port1.port_id):
-            pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
 
             edge_data_o = edge_data.values()
             for this_edge in edge_data_o:
                 this_edge["flow"].update_port_graph_edges()
 
-        # Typically there should be no successors here, this is just a stub
-        for succ_id in self.g.successors_iter(port2.port_id):
-            succ = self.get_port(succ_id)
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")

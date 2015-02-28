@@ -55,9 +55,8 @@ class ComputePortPaths:
 
                     node1 = "openflow:1"
                     node2 = "openflow:4"
+                    self.model.simulate_edge_removal(node1, node2)
                     self.port_graph.remove_node_graph_edge(node1, node2)
-                    edge_ports_dict = self.model.get_edge_port_dict(node1, node2)
-                    self.model.remove_edge(node1, edge_ports_dict[node1], node2, edge_ports_dict[node2])
 
                     am = src_port.admitted_match[dst_port.port_id]
                     print am
