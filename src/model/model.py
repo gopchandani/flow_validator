@@ -130,7 +130,7 @@ class Model():
 
     def simulate_edge_removal(self, node1_id, node2_id):
 
-        edge_ports_dict = self.model.get_edge_port_dict(node1_id, node2_id)
+        edge_ports_dict = self.get_edge_port_dict(node1_id, node2_id)
 
         node1_port = edge_ports_dict[node1_id]
         node2_port = edge_ports_dict[node2_id]
