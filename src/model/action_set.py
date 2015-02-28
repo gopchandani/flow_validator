@@ -209,9 +209,10 @@ class ActionSet():
 
             if self.sw.model.OFPP_IN == int(output_action.out_port):
 
-                # Consider all possible ports...
+                # Consider all possible ports if they are currently up
                 for in_port in self.sw.ports:
-                    port_graph_edge_status.append((str(in_port), output_action))
+                    if self.sw.ports[in_port].state == "up":
+                        port_graph_edge_status.append((str(in_port), output_action))
             else:
                 port_graph_edge_status.append((str(output_action.out_port), output_action))
 
