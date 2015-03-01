@@ -25,11 +25,11 @@ class ComputePortPaths:
             admitted_match.set_field("ethernet_destination", dst_mac_int)
             host_port = self.port_graph.add_destination_host_port_traffic(host_obj, admitted_match)
 
-
-        node1 = "openflow:4"
-        node2 = "openflow:3"
-        self.model.simulate_edge_removal(node1, node2)
-        self.port_graph.remove_node_graph_edge(node1, node2)
+        #
+        # node1 = "openflow:4"
+        # node2 = "openflow:3"
+        # self.model.simulate_edge_removal(node1, node2)
+        # self.port_graph.remove_node_graph_edge(node1, node2)
 
         # Let the port traffic bleed through to all other ports
         for host_port in self.port_graph.added_host_ports:
@@ -57,14 +57,8 @@ class ComputePortPaths:
 
                 if src_port != dst_port:
                     am = src_port.admitted_match[dst_port.port_id]
-                    print am
+                    am.print_traffic_paths()
 
-                    for me in am.match_elements:
-                        port_path = ""
-                        for port in me.path_ports:
-                            port_path += port.port_id + " -> "
-
-                        print port_path
 
                     node1 = "openflow:1"
                     node2 = "openflow:4"

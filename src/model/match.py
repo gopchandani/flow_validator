@@ -429,6 +429,15 @@ class Match():
 
         return retval
 
+    def print_traffic_paths(self):
+
+        for me in self.match_elements:
+            port_path = ""
+            for port in me.path_ports:
+                port_path += port.port_id + " -> "
+
+            print port_path
+
 def main():
     m1 = Match()
     print m1
