@@ -125,10 +125,15 @@ class PortGraph:
                 # Is the edge for this piece of admitted_match still active? It should not be...
                 print me.relies_on
 
-                ed = self.g.get_edge_data(curr, me.relies_on)
+                ed = self.g.get_edge_data(curr.port_id, me.relies_on.port_id)
                 print ed
+                print len(ed)
 
-                # Is there a fail-over to this edge then?
+                # Is there a fail-over at this edge for this particular me then?
+
+                # There are other outgoing edges at this port where me will be carried AND
+                # Those admitted matches have been propagated at those other ports...
+
 
                 # If not, update yourself and your predecessors are gonna wanna know...
 
