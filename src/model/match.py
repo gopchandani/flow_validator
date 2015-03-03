@@ -103,9 +103,11 @@ class MatchElement(DictMixin):
 
         # Contains a list of ports where the element has been before it arrives here
         self.path_ports = []
+        self.relies_on = None
 
         self.value_cache = {}
         self.match_fields = {}
+
 
         # Create one IntervalTree per field.
         if init_match_fields:

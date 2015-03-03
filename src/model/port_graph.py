@@ -90,17 +90,46 @@ class PortGraph:
 
     def remove_edge(self, port1, port2):
 
+        print "remove_edge_called"
+
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
 
-        # But this could have consequences for edges that are having a failover property,
+        # But this could have structural fail-over consequences for this port's predecessors
         # So for all remaining predecessors of this port, recompute the impact on port graph edge status
         for pred_id in self.g.predecessors_iter(port1.port_id):
+            pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
 
             edge_data_o = edge_data.values()
             for this_edge in edge_data_o:
                 this_edge["flow"].update_port_graph_edges()
+
+            # For each predecessor, they would either still be able to do their admitted_match,
+            # or things may have changed for worse, in which case their predecessor might want to know
+            # Either way, this needs to be done.
+
+            self.verify_and_correct_admitted_match(pred)
+
+    def verify_and_correct_admitted_match(self, curr):
+
+        print curr.port_id
+
+        for dst in curr.admitted_match:
+            print dst, curr.admitted_match[dst]
+
+            # For each match element in the admitted match
+            for me in curr.admitted_match[dst].match_elements:
+                pass
+
+                # Is the edge for this piece of admitted_match still active? It should not be...
+
+                # Is there a fail-over to this edge then?
+
+                # If not, update yourself and your predecessors are gonna wanna know...
+
+                # If so, no sweat, move on
+
 
 
     def init_global_controller_port(self):
@@ -207,7 +236,7 @@ class PortGraph:
 
                     # This is what the match would be before passing this flow
                     attempted_match = curr_admitted_match.get_orig_match(this_edge["flow"].modified_fields,
-                                                                           this_edge["flow"].match_element)
+                                                                         this_edge["flow"].match_element)
                 else:
                     attempted_match = curr_admitted_match
 
@@ -217,13 +246,26 @@ class PortGraph:
 
         return pred_admitted_match
 
+
+    # curr in this function below represents the port we assumed to have already reached
+    # and are either collecting goods and stopping or recursively trying to get to its predecessors
+
     def compute_admitted_match(self, curr, curr_admitted_match, dst_port):
 
         # First you gather the goods
+
+
+
+        # If curr has not seen destination at all, first get the curr_admitted_match account started
         if dst_port.port_id not in curr.admitted_match:
             curr.admitted_match[dst_port.port_id] = curr_admitted_match
+
+        # If you already know something about this destination, then keep accumulating
+        # this is for cases when recursion comes from multiple directions and accumulates here
         else:
             curr.admitted_match[dst_port.port_id].union(curr_admitted_match)
+
+
 
         # Base case: Stop at host ports.
         if curr in self.added_host_ports:

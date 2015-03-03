@@ -41,7 +41,6 @@ class ComputePortPaths:
                                                    host_port.admitted_match[host_port.port_id],
                                                    host_port)
 
-
         # Test connectivity after flows have bled through the port graph
         for src_h_id in self.model.get_host_ids():
             for dst_h_id in self.model.get_host_ids():
@@ -60,13 +59,16 @@ class ComputePortPaths:
                     am.print_traffic_paths()
 
 
-                    node1 = "openflow:1"
-                    node2 = "openflow:4"
+                    node1 = "openflow:4"
+                    node2 = "openflow:3"
+                    #
+                    # node1 = "openflow:1"
+                    # node2 = "openflow:4"
+
                     self.model.simulate_edge_removal(node1, node2)
                     self.port_graph.remove_node_graph_edge(node1, node2)
 
-                    am = src_port.admitted_match[dst_port.port_id]
-                    print am
+                    #am.print_traffic_paths()
 
 
 def main():
