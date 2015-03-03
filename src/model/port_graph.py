@@ -250,11 +250,11 @@ class PortGraph:
     # curr in this function below represents the port we assumed to have already reached
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
 
-    def compute_admitted_match(self, curr, curr_admitted_match, dst_port):
+    def compute_admitted_match(self, curr, curr_admitted_match, succ, dst_port):
 
         # First you gather the goods
 
-
+        # Whoever called me is what I rely on...
 
         # If curr has not seen destination at all, first get the curr_admitted_match account started
         if dst_port.port_id not in curr.admitted_match:
@@ -265,6 +265,7 @@ class PortGraph:
         else:
             curr.admitted_match[dst_port.port_id].union(curr_admitted_match)
 
+        curr_admitted_match.set_reliance(succ)
 
 
         # Base case: Stop at host ports.
@@ -281,4 +282,4 @@ class PortGraph:
                 pred_admitted_match = self.process_edges_in_reverse(pred, curr, dst_port.port_id)
 
                 if not pred_admitted_match.is_empty():
-                    self.compute_admitted_match(pred, pred_admitted_match, dst_port)
+                    self.compute_admitted_match(pred, pred_admitted_match, curr, dst_port)

@@ -37,9 +37,10 @@ class ComputePortPaths:
             if host_obj.switch_id == "openflow:1":
                 continue
 
-            self.port_graph.compute_admitted_match(host_obj.switch_egress_port,
-                                                   host_port.admitted_match[host_port.port_id],
-                                                   host_port)
+            self.port_graph.compute_admitted_match(curr=host_obj.switch_egress_port,
+                                                   curr_admitted_match=host_port.admitted_match[host_port.port_id],
+                                                   succ=host_port,
+                                                   dst_port=host_port)
 
         # Test connectivity after flows have bled through the port graph
         for src_h_id in self.model.get_host_ids():

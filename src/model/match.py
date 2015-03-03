@@ -123,6 +123,9 @@ class MatchElement(DictMixin):
     def add_port_to_path(self, port):
         self.path_ports.insert(0, port)
 
+    def set_reliance(self, port):
+        self.relies_on = port
+
     def set_match_field_element(self, key, value=None, flow=None, is_wildcard=False, exception=False):
 
         # First remove all current intervals
@@ -420,6 +423,10 @@ class Match():
     def add_port_to_path(self, port):
         for me in self.match_elements:
             me.add_port_to_path(port)
+
+    def set_reliance(self, port):
+        for me in self.match_elements:
+            me.set_reliance(port)
 
     def is_field_wildcard(self, field_name):
         retval = True
