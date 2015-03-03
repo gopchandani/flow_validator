@@ -119,24 +119,20 @@ class PortGraph:
 
             # For each match element in the admitted match
             for me in curr.admitted_match[dst].match_elements:
-                pass
 
-                # Is the edge for this piece of admitted_match still active? It should not be...
-                print me.relies_on
+                # Is this match_element still being admitted, may be not from the same successor, so
+                # so may have to update that too
+                somebody_took_it = False
 
-                ed = self.g.get_edge_data(curr.port_id, me.relies_on.port_id)
-                print ed
-                print len(ed)
+                for succ in self.g.successors_iter(curr.port_id):
+                    print succ
+                    now_admitted_match = self.process_edges_in_reverse(curr, succ, dst)
+                    if not now_admitted_match.is_empty():
+                        somebody_took_it = True
 
-                # Is there a fail-over at this edge for this particular me then?
-
-                # There are other outgoing edges at this port where me will be carried AND
-                # Those admitted matches have been propagated at those other ports...
-
-
-                # If not, update yourself and your predecessors are gonna wanna know...
-
-                # If so, no sweat, move on
+                # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
+                if not somebody_took_it:
+                    self.verify_and_correct_admitted_match(me.whoever_depends_on_it)
 
 
 
