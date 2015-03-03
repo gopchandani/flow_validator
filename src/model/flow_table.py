@@ -68,9 +68,8 @@ class Flow():
 
             e = self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            outgoing_port,
-                                           self.match,
-                                           flow=self,
-                                           is_active=output_action.is_active, key=(self, output_action))
+                                           (self, output_action),
+                                           self.match)
             
             self.port_graph_edges.append(e)
 
@@ -79,8 +78,8 @@ class Flow():
         if self.instructions.goto_table:
             e = self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            self.sw.flow_tables[self.instructions.goto_table].port,
-                                           self.match,
-                                           flow=self)
+                                           (self, None),
+                                           self.match)
 
             self.port_graph_edges.append(e)
 

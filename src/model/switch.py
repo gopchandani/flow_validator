@@ -115,7 +115,7 @@ class Switch():
             incoming_port_match = Match(init_wildcard=True)
             incoming_port_match.set_field("in_port", int(port))
             self.model.port_graph.add_edge(in_p,
-                                           self.flow_tables[0].port,
+                                           self.flow_tables[0].port, (None, None),
                                            incoming_port_match)
 
 

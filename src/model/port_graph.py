@@ -68,7 +68,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, edge_filter_match, flow=None, is_active=True, key=None):
+    def add_edge(self, port1, port2, key, edge_filter_match):
 
         edge_type = None
         if port1.port_type == "table" and port2.port_type == "outgoing":
@@ -82,9 +82,7 @@ class PortGraph:
 
         self.g.add_edge(*e,
                         edge_filter_match=edge_filter_match,
-                        flow=flow,
-                        edge_type=edge_type,
-                        is_active=is_active)
+                        edge_type=edge_type)
 
         return e
 
@@ -101,9 +99,10 @@ class PortGraph:
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
 
-            edge_data_o = edge_data.values()
-            for this_edge in edge_data_o:
-                this_edge["flow"].update_port_graph_edges()
+            edge_data_keys = edge_data.keys()
+            for edge_data_key in edge_data_keys:
+                if edge_data_key[0]:
+                    edge_data_key[0].update_port_graph_edges()
 
             # For each predecessor, they would either still be able to do their admitted_match,
             # or things may have changed for worse, in which case their predecessor might want to know
@@ -151,11 +150,11 @@ class PortGraph:
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
-        self.add_edge(from_port, to_port, Match(init_wildcard=True))
+        self.add_edge(from_port, to_port, (None, None), Match(init_wildcard=True))
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
-        self.add_edge(from_port, to_port, Match(init_wildcard=True))
+        self.add_edge(from_port, to_port, (None, None), Match(init_wildcard=True))
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -208,8 +207,8 @@ class PortGraph:
                                                                       host_obj.switch_port_attached))
         switch_egress_port.port_number = int(host_obj.switch_port.port_number)
 
-        self.add_edge(hp, switch_ingress_port, Match(init_wildcard=True))
-        self.add_edge(switch_egress_port, hp, Match(init_wildcard=True))
+        self.add_edge(hp, switch_ingress_port, (None, None), Match(init_wildcard=True))
+        self.add_edge(switch_egress_port, hp, (None, None), Match(init_wildcard=True))
 
         host_obj.switch_ingress_port = switch_ingress_port
         host_obj.switch_egress_port = switch_egress_port
@@ -228,8 +227,11 @@ class PortGraph:
         for edge_data_key in edge_data:
             this_edge = edge_data[edge_data_key]
 
-            if not this_edge["is_active"]:
-                continue
+            if edge_data_key[1]:
+                edge_action = edge_data_key[1]
+                if not edge_action.is_active:
+                    continue
+
 
             if dst_port_id in curr_port.admitted_match:
                 curr_admitted_match = curr_port.admitted_match[dst_port_id]
@@ -240,12 +242,10 @@ class PortGraph:
                 if this_edge["edge_type"] == "egress":
                     curr_admitted_match.set_field("in_port", int(curr_port.port_number), exception=True)
 
-
-                if this_edge["flow"]:
-
+                if edge_data_key[0]:
                     # This is what the match would be before passing this flow
-                    attempted_match = curr_admitted_match.get_orig_match(this_edge["flow"].modified_fields,
-                                                                         this_edge["flow"].match_element)
+                    attempted_match = curr_admitted_match.get_orig_match(edge_data_key[0].modified_fields,
+                                                                         edge_data_key[0].match_element)
                 else:
                     attempted_match = curr_admitted_match
 
