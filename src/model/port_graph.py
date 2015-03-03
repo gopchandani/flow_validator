@@ -123,6 +123,10 @@ class PortGraph:
                 pass
 
                 # Is the edge for this piece of admitted_match still active? It should not be...
+                print me.relies_on
+
+                ed = self.g.get_edge_data(curr, me.relies_on)
+                print ed
 
                 # Is there a fail-over to this edge then?
 
@@ -252,10 +256,6 @@ class PortGraph:
 
     def compute_admitted_match(self, curr, curr_admitted_match, succ, dst_port):
 
-        # First you gather the goods
-
-        # Whoever called me is what I rely on...
-
         # If curr has not seen destination at all, first get the curr_admitted_match account started
         if dst_port.port_id not in curr.admitted_match:
             curr.admitted_match[dst_port.port_id] = curr_admitted_match
@@ -265,6 +265,7 @@ class PortGraph:
         else:
             curr.admitted_match[dst_port.port_id].union(curr_admitted_match)
 
+        # Whoever called me is what I rely on...
         curr_admitted_match.set_reliance(succ)
 
 
