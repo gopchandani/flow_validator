@@ -114,24 +114,29 @@ class PortGraph:
         for dst in curr.admitted_match:
             print dst, curr.admitted_match[dst]
 
-            # For each match element in the admitted match
-            for me in curr.admitted_match[dst].match_elements:
+            #TODO: This does not cover partial cases when part of admitted_match is still
+            # taken by some and other part not. The focus here is on the whole
 
-                # Is this match_element still being admitted, may be not from the same successor, so
-                # so may have to update that too
-                somebody_took_it = False
+            # Is this match_element still being admitted, may be not from the same successor, so
+            # so may have to update that too
+            somebody_took_it = False
 
-                for succ_id in self.g.successors_iter(curr.port_id):
-                    succ = self.get_port(succ_id)
-                    now_admitted_match = self.process_edges_in_reverse(curr, succ, dst)
-                    if not now_admitted_match.is_empty():
-                        somebody_took_it = True
+            for succ_id in self.g.successors_iter(curr.port_id):
+                succ = self.get_port(succ_id)
+                now_admitted_match = self.process_edges_in_reverse(curr, succ, dst)
+                if not now_admitted_match.is_empty():
+                    somebody_took_it = True
 
-                # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
-                if not somebody_took_it:
-                    for pred_id in self.g.predecessors_iter(curr.port_id):
-                        pred = self.get_port(pred_id)
-                        self.verify_and_correct_admitted_match(pred)
+                    # Adjust the relies_on and admitted_match
+                    #Maybe port paths is a bad idea
+
+
+
+            # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
+            if not somebody_took_it:
+                for pred_id in self.g.predecessors_iter(curr.port_id):
+                    pred = self.get_port(pred_id)
+                    self.verify_and_correct_admitted_match(pred)
 
 
     def init_global_controller_port(self):

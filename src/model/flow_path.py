@@ -6,10 +6,10 @@ __author__ = 'Rakesh Kumar'
 
 class FlowPathElement:
 
-    def __init__(self, port_id, admitted_match, relies_on):
+    def __init__(self, port_id, admitted_match, next_element):
 
         self.admitted_match = admitted_match
-        self.relies_on = relies_on
+        self.next_element = next_element
         self.port_id = port_id
 
     def accumulate_admitted_match(self, match):
@@ -18,11 +18,11 @@ class FlowPathElement:
     def get_path_str(self):
 
         path_str = self.port_id
-        next = self.relies_on
+        next = self.next_element
 
         while next:
             path_str += " -> " + next.port_id
-            next = next.relies_on
+            next = next.next_element
 
         return path_str
 

@@ -108,7 +108,6 @@ class MatchElement(DictMixin):
         self.value_cache = {}
         self.match_fields = {}
 
-
         # Create one IntervalTree per field.
         if init_match_fields:
             for field_name in field_names:
@@ -175,9 +174,9 @@ class MatchElement(DictMixin):
 
             # If the resulting tree has no intervals in it, then balk:
             if not intersection_element.match_fields[field_name]:
-                print field_name, \
-                    "self:", self.match_fields[field_name], \
-                    "in_match:", in_match_element.match_fields[field_name]
+                #print field_name, \
+                #    "self:", self.match_fields[field_name], \
+                #    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
         return intersection_element
