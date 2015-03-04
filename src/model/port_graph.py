@@ -93,8 +93,7 @@ class PortGraph:
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
 
-        # But this could have structural fail-over consequences for this port's predecessors
-        # So for all remaining predecessors of this port, recompute the impact on port graph edge status
+        # But removal could have fail-over consequences for this port's predecessors' flows...
         for pred_id in self.g.predecessors_iter(port1.port_id):
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
@@ -104,16 +103,14 @@ class PortGraph:
                 if flow:
                     flow.update_port_graph_edges()
 
-            # For each predecessor, they would either still be able to do their admitted_match,
-            # or things may have changed for worse, in which case their predecessor might want to know
-            # Either way, this needs to be done.
-
+            # But now the admitted_match needs to be ensured to reflect the reality
             self.verify_and_correct_admitted_match(pred)
 
     def verify_and_correct_admitted_match(self, curr):
 
         print curr.port_id
 
+        # This needs to be done for each destination for which curr holds admitted_match
         for dst in curr.admitted_match:
             print dst, curr.admitted_match[dst]
 
@@ -124,15 +121,17 @@ class PortGraph:
                 # so may have to update that too
                 somebody_took_it = False
 
-                for succ in self.g.successors_iter(curr.port_id):
-                    print succ
+                for succ_id in self.g.successors_iter(curr.port_id):
+                    succ = self.get_port(succ_id)
                     now_admitted_match = self.process_edges_in_reverse(curr, succ, dst)
                     if not now_admitted_match.is_empty():
                         somebody_took_it = True
 
                 # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
                 if not somebody_took_it:
-                    self.verify_and_correct_admitted_match(me.whoever_depends_on_it)
+                    for pred_id in self.g.predecessors_iter(curr.port_id):
+                        pred = self.get_port(pred_id)
+                        self.verify_and_correct_admitted_match(pred)
 
 
     def init_global_controller_port(self):
@@ -234,7 +233,8 @@ class PortGraph:
                 # At egress edges, set the in_port of the admitted match for destination to wildcard except for
                 # the specific port you entered on
                 if this_edge["edge_type"] == "egress":
-                    curr_admitted_match.set_field("in_port", int(curr_port.port_number), exception=True)
+#                    curr_admitted_match.set_field("in_port", int(curr_port.port_number), exception=True)
+                    curr_admitted_match.set_field("in_port", is_wildcard=True)
 
                 if flow:
                     # This is what the match would be before passing this flow

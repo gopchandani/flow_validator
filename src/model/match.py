@@ -175,7 +175,9 @@ class MatchElement(DictMixin):
 
             # If the resulting tree has no intervals in it, then balk:
             if not intersection_element.match_fields[field_name]:
-                #print "in_match:", in_match_element.match_fields[field_name], "self:", self.match_fields[field_name]
+                print field_name, \
+                    "self:", self.match_fields[field_name], \
+                    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
         return intersection_element
