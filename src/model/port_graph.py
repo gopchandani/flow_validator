@@ -100,9 +100,9 @@ class PortGraph:
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
 
             edge_data_keys = edge_data.keys()
-            for edge_data_key in edge_data_keys:
-                if edge_data_key[0]:
-                    edge_data_key[0].update_port_graph_edges()
+            for flow, edge_action in edge_data_keys:
+                if flow:
+                    flow.update_port_graph_edges()
 
             # For each predecessor, they would either still be able to do their admitted_match,
             # or things may have changed for worse, in which case their predecessor might want to know
@@ -133,7 +133,6 @@ class PortGraph:
                 # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
                 if not somebody_took_it:
                     self.verify_and_correct_admitted_match(me.whoever_depends_on_it)
-
 
 
     def init_global_controller_port(self):
@@ -220,11 +219,10 @@ class PortGraph:
         pred_admitted_match = Match()
         edge_data = self.g.get_edge_data(predecessor_port.port_id, curr_port.port_id)
 
-        for edge_data_key in edge_data:
-            this_edge = edge_data[edge_data_key]
+        for flow, edge_action in edge_data:
+            this_edge = edge_data[(flow, edge_action)]
 
-            if edge_data_key[1]:
-                edge_action = edge_data_key[1]
+            if edge_action:
                 if not edge_action.is_active:
                     continue
 
@@ -238,10 +236,10 @@ class PortGraph:
                 if this_edge["edge_type"] == "egress":
                     curr_admitted_match.set_field("in_port", int(curr_port.port_number), exception=True)
 
-                if edge_data_key[0]:
+                if flow:
                     # This is what the match would be before passing this flow
-                    attempted_match = curr_admitted_match.get_orig_match(edge_data_key[0].modified_fields,
-                                                                         edge_data_key[0].match_element)
+                    attempted_match = curr_admitted_match.get_orig_match(flow.modified_fields,
+                                                                         flow.match_element)
                 else:
                     attempted_match = curr_admitted_match
 
