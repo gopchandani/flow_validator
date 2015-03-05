@@ -59,6 +59,8 @@ class ComputePortPaths:
                     am = src_port.admitted_match[dst_port.port_id]
                     am.print_traffic_paths()
 
+                    am.print_port_paths()
+
 
                     node1 = "openflow:4"
                     node2 = "openflow:3"

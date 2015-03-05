@@ -10,7 +10,6 @@ from copy import deepcopy
 
 from port import Port
 from match import Match
-from flow_path import FlowPathElement
 
 
 class PortGraph:
@@ -130,8 +129,8 @@ class PortGraph:
                 if not now_admitted_match.is_empty():
                     match_passed = True
 
-                    # Adjust the relies_on and admitted_match
-                    #Maybe port paths is a bad idea
+                    # Adjust the relies_on, and path_ports in admitted_match
+                    # b
 
             # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
             if not match_passed:
@@ -188,9 +187,12 @@ class PortGraph:
         # Add the port for host
 
         hp = Port(None, port_type="physical", port_id=host_obj.node_id)
-        hp.path_elements[host_obj.node_id] = FlowPathElement(host_obj.node_id, admitted_match, None)
+
+        admitted_match.set_port(hp)
 
         hp.admitted_match[host_obj.node_id] = admitted_match
+
+
         hp.admitted_match[host_obj.node_id].add_port_to_path(hp)
 
         self.add_port(hp)
@@ -245,10 +247,12 @@ class PortGraph:
                 else:
                     attempted_match = curr_admitted_match
 
-                pred_admitted_match.union(this_edge["edge_filter_match"].intersect(attempted_match))
+                i = this_edge["edge_filter_match"].intersect(attempted_match)
+                pred_admitted_match.union(i)
 
                 #Establish that curr is part of the path that the MatchElements are going to take to pred
                 pred_admitted_match.add_port_to_path(curr)
+                pred_admitted_match.set_port(pred)
 
         return pred_admitted_match
 

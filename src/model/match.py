@@ -103,7 +103,9 @@ class MatchElement(DictMixin):
 
         # Contains a list of ports where the element has been before it arrives here
         self.path_ports = []
-        self.relies_on = None
+        
+        self.port = None
+        self.succ_match_element = None
 
         self.value_cache = {}
         self.match_fields = {}
@@ -122,8 +124,6 @@ class MatchElement(DictMixin):
     def add_port_to_path(self, port):
         self.path_ports.insert(0, port)
 
-    def set_reliance(self, port):
-        self.relies_on = port
 
     def set_match_field_element(self, key, value=None, flow=None, is_wildcard=False, exception=False):
 
@@ -168,6 +168,7 @@ class MatchElement(DictMixin):
         intersection_element = MatchElement()
         intersection_element.path_ports = list(in_match_element.path_ports)
 
+
         for field_name in field_names:
             intersection_element.match_fields[field_name] = self.get_matched_tree(
                 in_match_element.match_fields[field_name], self.match_fields[field_name])
@@ -178,6 +179,11 @@ class MatchElement(DictMixin):
                 #    "self:", self.match_fields[field_name], \
                 #    "in_match:", in_match_element.match_fields[field_name]
                 return None
+
+            # Otherwise establish that the resulting intersection_element is based on in_match_element
+            else:
+                intersection_element.succ_match_element = in_match_element
+
 
         return intersection_element
 
@@ -425,9 +431,9 @@ class Match():
         for me in self.match_elements:
             me.add_port_to_path(port)
 
-    def set_reliance(self, port):
+    def set_port(self, port):
         for me in self.match_elements:
-            me.set_reliance(port)
+            me.port = port
 
     def is_field_wildcard(self, field_name):
         retval = True
@@ -447,6 +453,19 @@ class Match():
                 port_path += port.port_id + " -> "
 
             print port_path
+
+    def print_port_paths(self):
+
+        for me in self.match_elements:
+            port_path_str = me.port.port_id
+
+            trav = me.succ_match_element
+
+            while trav:
+                port_path_str += ("->" + trav.port.port_id)
+                trav = trav.succ_match_element
+
+            print port_path_str
 
 def main():
     m1 = Match()
