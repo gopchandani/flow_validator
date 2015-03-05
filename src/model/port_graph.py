@@ -234,23 +234,18 @@ class PortGraph:
             if dst_port_id in curr_port.admitted_match:
                 curr_admitted_match = curr_port.admitted_match[dst_port_id]
 
-                # You enter the switch at "egress" edges. Yes... Eye-roll:
-                # At egress edges, set the in_port of the admitted match for destination to wildcard except for
-                # the specific port you entered on
+                # At egress edges, set the in_port of the admitted match for destination to wildcard
                 if this_edge["edge_type"] == "egress":
-#                    curr_admitted_match.set_field("in_port", int(curr_port.port_number), exception=True)
                     curr_admitted_match.set_field("in_port", is_wildcard=True)
 
-                if flow:
+                if flow and flow.modified_fields:
                     # This is what the match would be before passing this flow
                     attempted_match = curr_admitted_match.get_orig_match(flow.modified_fields,
                                                                          flow.match_element)
                 else:
                     attempted_match = curr_admitted_match
 
-                i = this_edge["edge_filter_match"].intersect(attempted_match)
-                if not i.is_empty():
-                    pred_admitted_match.union(i)
+                pred_admitted_match.union(this_edge["edge_filter_match"].intersect(attempted_match))
 
         return pred_admitted_match
 
