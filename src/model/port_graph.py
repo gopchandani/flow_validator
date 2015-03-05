@@ -117,23 +117,24 @@ class PortGraph:
             #TODO: This does not cover partial cases when part of admitted_match is still
             # taken by some and other part not. The focus here is on the whole
 
+            # for me in curr.admitted_match[dst]:
+            # Change what me relies on now...
+
             # Is this match_element still being admitted, may be not from the same successor, so
             # so may have to update that too
-            somebody_took_it = False
+            match_passed = False
 
             for succ_id in self.g.successors_iter(curr.port_id):
                 succ = self.get_port(succ_id)
-                now_admitted_match = self.process_edges_in_reverse(curr, succ, dst)
+                now_admitted_match = self.compute_pred_admitted_match(curr, succ, dst)
                 if not now_admitted_match.is_empty():
-                    somebody_took_it = True
+                    match_passed = True
 
                     # Adjust the relies_on and admitted_match
                     #Maybe port paths is a bad idea
 
-
-
             # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
-            if not somebody_took_it:
+            if not match_passed:
                 for pred_id in self.g.predecessors_iter(curr.port_id):
                     pred = self.get_port(pred_id)
                     self.verify_and_correct_admitted_match(pred)
@@ -218,7 +219,7 @@ class PortGraph:
         pass
 
 
-    def process_edges_in_reverse(self, predecessor_port, curr_port, dst_port_id):
+    def compute_pred_admitted_match(self, predecessor_port, curr_port, dst_port_id):
 
         pred_admitted_match = Match()
         edge_data = self.g.get_edge_data(predecessor_port.port_id, curr_port.port_id)
@@ -229,7 +230,6 @@ class PortGraph:
             if edge_action:
                 if not edge_action.is_active:
                     continue
-
 
             if dst_port_id in curr_port.admitted_match:
                 curr_admitted_match = curr_port.admitted_match[dst_port_id]
@@ -284,7 +284,7 @@ class PortGraph:
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
                 pred = self.get_port(pred_id)
-                pred_admitted_match = self.process_edges_in_reverse(pred, curr, dst_port.port_id)
+                pred_admitted_match = self.compute_pred_admitted_match(pred, curr, dst_port.port_id)
 
                 if not pred_admitted_match.is_empty():
                     self.compute_admitted_match(pred, pred_admitted_match, curr, dst_port)
