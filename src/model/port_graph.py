@@ -219,10 +219,10 @@ class PortGraph:
         pass
 
 
-    def compute_pred_admitted_match(self, predecessor_port, curr_port, dst_port_id):
+    def compute_pred_admitted_match(self, pred, curr, dst_port_id):
 
         pred_admitted_match = Match()
-        edge_data = self.g.get_edge_data(predecessor_port.port_id, curr_port.port_id)
+        edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)
 
         for flow, edge_action in edge_data:
             this_edge = edge_data[(flow, edge_action)]
@@ -231,8 +231,8 @@ class PortGraph:
                 if not edge_action.is_active:
                     continue
 
-            if dst_port_id in curr_port.admitted_match:
-                curr_admitted_match = curr_port.admitted_match[dst_port_id]
+            if dst_port_id in curr.admitted_match:
+                curr_admitted_match = curr.admitted_match[dst_port_id]
 
                 # At egress edges, set the in_port of the admitted match for destination to wildcard
                 if this_edge["edge_type"] == "egress":
@@ -246,6 +246,9 @@ class PortGraph:
                     attempted_match = curr_admitted_match
 
                 pred_admitted_match.union(this_edge["edge_filter_match"].intersect(attempted_match))
+
+                #Establish that curr is part of the path that the MatchElements are going to take to pred
+                pred_admitted_match.add_port_to_path(curr)
 
         return pred_admitted_match
 
@@ -264,16 +267,10 @@ class PortGraph:
         else:
             curr.admitted_match[dst_port.port_id].union(curr_admitted_match)
 
-        # Whoever called me is what I rely on...
-        curr_admitted_match.set_reliance(succ)
-
-
         # Base case: Stop at host ports.
         if curr in self.added_host_ports:
             return
         else:
-            #Establish that curr is part of the path that the MatchElements are going to take to pred
-            curr.admitted_match[dst_port.port_id].add_port_to_path(curr)
 
             # Recursively call myself at each of my predecessors in the port graph
             for pred_id in self.g.predecessors_iter(curr.port_id):
