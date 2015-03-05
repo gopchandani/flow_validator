@@ -256,6 +256,9 @@ class MatchElement(DictMixin):
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
         orig_match_element.path_ports = list(self.path_ports)
 
+        orig_match_element.succ_match_element = self.succ_match_element
+        orig_match_element.port = self.port
+
         for field_name in field_names:
             if field_name in modified_fields:
 
@@ -461,8 +464,8 @@ class Match():
 
             trav = me.succ_match_element
 
-            while trav:
-                port_path_str += ("->" + trav.port.port_id)
+            while trav != None:
+                port_path_str += (" -> " + trav.port.port_id)
                 trav = trav.succ_match_element
 
             print port_path_str

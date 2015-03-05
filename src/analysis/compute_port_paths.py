@@ -57,8 +57,6 @@ class ComputePortPaths:
 
                 if src_port != dst_port:
                     am = src_port.admitted_match[dst_port.port_id]
-                    am.print_traffic_paths()
-
                     am.print_port_paths()
 
 
@@ -71,7 +69,7 @@ class ComputePortPaths:
                     self.model.simulate_edge_removal(node1, node2)
                     self.port_graph.remove_node_graph_edge(node1, node2)
 
-                    #am.print_traffic_paths()
+                    #am.print_port_paths()
 
 
 def main():
