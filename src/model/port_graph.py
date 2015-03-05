@@ -113,12 +113,6 @@ class PortGraph:
         for dst in curr.admitted_match:
             print dst, curr.admitted_match[dst]
 
-            #TODO: This does not cover partial cases when part of admitted_match is still
-            # taken by some and other part not. The focus here is on the whole
-
-            # for me in curr.admitted_match[dst]:
-            # Change what me relies on now...
-
             # Is this match_element still being admitted, may be not from the same successor, so
             # so may have to update that too
             match_passed = False
@@ -127,6 +121,7 @@ class PortGraph:
                 succ = self.get_port(succ_id)
                 now_admitted_match = self.compute_pred_admitted_match(curr, succ, dst)
                 if not now_admitted_match.is_empty():
+                    curr.admitted_match[dst] = now_admitted_match
                     match_passed = True
 
                     # Adjust the relies_on, and path_ports in admitted_match
