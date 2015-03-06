@@ -193,6 +193,7 @@ class MatchElement(DictMixin):
 
         new_me = MatchElement()
         new_me.path_ports = list(candidate_me.path_ports)
+        new_me.port = self.port
 
 
         for field_name in field_names:
@@ -479,19 +480,20 @@ class Match():
         # TODO:  For now will connect all  when one existing_me is taken by multiple candidate_me?
         # TODO: What about is_active flag on the edge_data_key, does that matter?
 
-        for existing_me in now_admitted_match.match_elements:
+        for existing_me in self.match_elements:
 
             print existing_me.port.port_id,  \
                 existing_me.succ_match_element.port.port_id, \
                 existing_me.edge_data_key[1].is_active, \
                 existing_me.pred_match_elements
 
-            for candidate_me in self.match_elements:
+            for candidate_me in now_admitted_match.match_elements:
 
                 new_me = existing_me.pipe_welding(candidate_me)
 
                 if new_me:
                     new_m.match_elements.append(new_me)
+                    break
                 else:
                     #TODO: Delete everybody who dependent on existing_me, the whole chain...
                     raise Exception("Haven't worked out this case")

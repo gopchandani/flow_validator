@@ -120,8 +120,8 @@ class PortGraph:
                 succ = self.get_port(succ_id)
                 now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
 
-                # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this
-                curr.admitted_match[dst] = curr.admitted_match[dst].pipe_welding(now_admitted_match)
+            # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this
+            curr.admitted_match[dst] = curr.admitted_match[dst].pipe_welding(now_admitted_match)
 
 
 
