@@ -222,6 +222,13 @@ class PortGraph:
                                                                       host_obj.switch_port_attached))
         switch_egress_port.port_number = int(host_obj.switch_port.port_number)
 
+        # Assume that switch_egress_port can admit whatever host port can admit
+        admitted_match_at_egress_port = deepcopy(admitted_match)
+        admitted_match_at_egress_port.set_succ_match_element(admitted_match.match_elements[0])
+        admitted_match_at_egress_port.set_port(switch_egress_port)
+        switch_egress_port.admitted_match[host_obj.node_id] = admitted_match_at_egress_port
+
+
         self.add_edge(hp, switch_ingress_port, (None, None), Match(init_wildcard=True))
         self.add_edge(switch_egress_port, hp, (None, None), Match(init_wildcard=True))
 

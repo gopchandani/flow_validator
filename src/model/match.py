@@ -477,6 +477,10 @@ class Match():
         for me in self.match_elements:
             me.port = port
 
+    def set_succ_match_element(self, succ_match_element):
+        for me in self.match_elements:
+            me.succ_match_element = succ_match_element
+
     def set_edge_data_key(self, edge_data_key):
         for me in self.match_elements:
             me.edge_data_key = edge_data_key
