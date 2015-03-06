@@ -182,23 +182,22 @@ class MatchElement(DictMixin):
                 #    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
-            # Otherwise establish that the resulting intersection_element is based on in_match_element
-            else:
-                intersection_element.succ_match_element = in_match_element
-                in_match_element.pred_match_elements.append(intersection_element)
+        # Establish that the resulting intersection_element is based on in_match_element
+        intersection_element.succ_match_element = in_match_element
+        in_match_element.pred_match_elements.append(intersection_element)
 
 
         return intersection_element
 
-    def pipe_welding(self, in_match_element):
+    def pipe_welding(self, candidate_me):
 
         intersection_element = MatchElement()
-        intersection_element.path_ports = list(in_match_element.path_ports)
+        intersection_element.path_ports = list(candidate_me.path_ports)
 
 
         for field_name in field_names:
             intersection_element.match_fields[field_name] = self.get_matched_tree(
-                in_match_element.match_fields[field_name], self.match_fields[field_name])
+                candidate_me.match_fields[field_name], self.match_fields[field_name])
 
             # If the resulting tree has no intervals in it, then balk:
             if not intersection_element.match_fields[field_name]:
@@ -209,8 +208,8 @@ class MatchElement(DictMixin):
 
             # Otherwise establish that the resulting intersection_element is based on in_match_element
             else:
-                intersection_element.succ_match_element = in_match_element
-                in_match_element.pred_match_elements.append(intersection_element)
+                intersection_element.succ_match_element = candidate_me
+                candidate_me.pred_match_elements.append(intersection_element)
 
 
         return intersection_element
@@ -456,20 +455,28 @@ class Match():
         # The successors will be taken by now_admitted_match
 
         im = Match()
-        for candidate_me in now_admitted_match.match_elements:
+
+        # Check if this existing_me can be taken entirely by any of the candidates
+        # TODO: This does not handle partial cases when parts of the existing_me are taken by multiple candidate_me
+
+        for existing_me in now_admitted_match.match_elements:
+
             print existing_me.edge_data_key, \
                 existing_me.port.port_id,  \
                 existing_me.succ_match_element.port.port_id, \
                 existing_me.edge_data_key[1].is_active, \
                 existing_me.pred_match_elements
 
-            for existing_me in self.match_elements:
+            for candidate_me in self.match_elements:
+
                 new_me = existing_me.pipe_welding(candidate_me)
+
                 if new_me:
                     im.match_elements.append(new_me)
                 else:
-                    #TODO: Delete everybody who dependent on existing_me, like the whole chain...
+                    #TODO: Delete everybody who dependent on existing_me, the whole chain...
                     raise Exception("Haven't worked out this case")
+
         return im
 
 

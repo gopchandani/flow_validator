@@ -109,6 +109,7 @@ class PortGraph:
     def update_match_elements(self, curr):
 
         print curr.port_id
+        return
 
         # This needs to be done for each destination for which curr holds admitted_match
         for dst in curr.admitted_match:
@@ -120,17 +121,8 @@ class PortGraph:
                 succ = self.get_port(succ_id)
                 now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
 
-                # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this new stuff.
-
-                #curr.admitted_match[dst] = curr.admitted_match[dst].pipe_welding(now_admitted_match)
-
-                # Need to check if I what I had admitted before can still be admitted by what I have now
-                # And need to modify the 'links' inside what I am connecting to this new stuff
-
-                # For the resulting match
-
-                #
-                # So either me got through or it didn't. Right now considering it on one-by-one basis.
+                # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this
+                curr.admitted_match[dst] = curr.admitted_match[dst].pipe_welding(now_admitted_match)
 
 
 
