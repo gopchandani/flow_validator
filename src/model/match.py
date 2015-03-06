@@ -107,6 +107,7 @@ class MatchElement(DictMixin):
         self.port = None
         self.edge_data_key = None
         self.succ_match_element = None
+        self.pred_match_elements = []
 
         self.value_cache = {}
         self.match_fields = {}
@@ -184,6 +185,7 @@ class MatchElement(DictMixin):
             # Otherwise establish that the resulting intersection_element is based on in_match_element
             else:
                 intersection_element.succ_match_element = in_match_element
+                in_match_element.pred_match_elements.append(intersection_element)
 
 
         return intersection_element
@@ -285,6 +287,7 @@ class MatchElement(DictMixin):
 
         orig_match_element.succ_match_element = self.succ_match_element
         orig_match_element.port = self.port
+        orig_match_element.pred_match_elements = self.pred_match_elements
 
         for field_name in field_names:
             if field_name in modified_fields:

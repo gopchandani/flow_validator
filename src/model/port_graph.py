@@ -103,9 +103,9 @@ class PortGraph:
                     flow.update_port_graph_edges()
 
             # But now the admitted_match on this port and its predecessor(s) needs to be modified to reflect the reality
-            self.verify_and_correct_admitted_match(pred)
+            self.update_match_elements(pred)
 
-    def verify_and_correct_admitted_match(self, curr):
+    def update_match_elements(self, curr):
 
         print curr.port_id
 
@@ -113,19 +113,27 @@ class PortGraph:
         for dst in curr.admitted_match:
             print dst, curr.admitted_match[dst]
 
-            now_admitted_match = Match()
+            for me in curr.admitted_match[dst].match_elements:
+                print me.edge_data_key, \
+                    me.port.port_id,  \
+                    me.succ_match_element.port.port_id, \
+                    me.edge_data_key[1].is_active, \
+                    me.pred_match_elements
 
 
-            # First compute what the admitted_match for this dst looks like right now after edge status changes...
-            for succ_id in self.g.successors_iter(curr.port_id):
-                succ = self.get_port(succ_id)
-                now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
 
+
+
+            # now_admitted_match = Match()
+            #
+            #
+            # # First compute what the admitted_match for this dst looks like right now after edge status changes...
+            # for succ_id in self.g.successors_iter(curr.port_id):
+            #     succ = self.get_port(succ_id)
+            #     now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
+            #
 
             # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this new stuff.
-
-            for me in curr.admitted_match[dst].match_elements:
-                print me.edge_data_key, me.port.port_id,  me.succ_match_element.port.port_id, me.edge_data_key[1].is_active
 
 
                 # Need to check if I what I had admitted before can still be admitted by what I have now
@@ -239,18 +247,17 @@ class PortGraph:
                     continue
 
             if dst_port_id in curr.admitted_match:
-                curr_admitted_match = curr.admitted_match[dst_port_id]
 
                 # At egress edges, set the in_port of the admitted match for destination to wildcard
                 if this_edge["edge_type"] == "egress":
-                    curr_admitted_match.set_field("in_port", is_wildcard=True)
+                    curr.admitted_match[dst_port_id].set_field("in_port", is_wildcard=True)
 
+                # attempted_match: is what the match would be before passing this flow
                 if flow and flow.modified_fields:
-                    # This is what the match would be before passing this flow
-                    attempted_match = curr_admitted_match.get_orig_match(flow.modified_fields,
-                                                                         flow.match_element)
+                    attempted_match = curr.admitted_match[dst_port_id].get_orig_match(flow.modified_fields,
+                                                                                      flow.match_element)
                 else:
-                    attempted_match = curr_admitted_match
+                    attempted_match = curr.admitted_match[dst_port_id]
 
                 i = this_edge["edge_filter_match"].intersect(attempted_match)
                 pred_admitted_match.union(i)
