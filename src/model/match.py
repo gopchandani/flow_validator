@@ -210,11 +210,10 @@ class MatchElement(DictMixin):
 
         # -- Set up what self depended on
 
-        # The resulting new_me would have same successor as self
-        new_me.succ_match_element = self.succ_match_element
+        # The resulting new_me would have same successor as candidate_me
+        new_me.succ_match_element = candidate_me.succ_match_element
 
-        # Remove self from the successor predecessor list
-
+        # Remove self from the successor predecessor list, if it exists
         while self in new_me.succ_match_element.pred_match_elements:
             new_me.succ_match_element.pred_match_elements.remove(self)
 
@@ -482,16 +481,14 @@ class Match():
 
         for existing_me in self.match_elements:
 
-            print existing_me.port.port_id,  \
-                existing_me.succ_match_element.port.port_id, \
-                existing_me.edge_data_key[1].is_active, \
-                existing_me.pred_match_elements
-
+            print existing_me.succ_match_element.port.port_id, existing_me.pred_match_elements
             for candidate_me in now_admitted_match.match_elements:
 
+                print candidate_me.succ_match_element.port.port_id, candidate_me.pred_match_elements
                 new_me = existing_me.pipe_welding(candidate_me)
 
                 if new_me:
+                    print new_me.succ_match_element.port.port_id, new_me.pred_match_elements
                     new_m.match_elements.append(new_me)
                     break
                 else:
