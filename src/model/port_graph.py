@@ -102,7 +102,7 @@ class PortGraph:
                 if flow:
                     flow.update_port_graph_edges()
 
-            # But now the admitted_match needs to be ensured to reflect the reality
+            # But now the admitted_match on this port and its predecessor(s) needs to be modified to reflect the reality
             self.verify_and_correct_admitted_match(pred)
 
     def verify_and_correct_admitted_match(self, curr):
@@ -113,25 +113,35 @@ class PortGraph:
         for dst in curr.admitted_match:
             print dst, curr.admitted_match[dst]
 
-            # Is this match_element still being admitted, may be not from the same successor, so
-            # so may have to update that too
-            match_passed = False
+            now_admitted_match = Match()
 
+
+            # First compute what the admitted_match for this dst looks like right now after edge status changes...
             for succ_id in self.g.successors_iter(curr.port_id):
                 succ = self.get_port(succ_id)
-                now_admitted_match = self.compute_pred_admitted_match(curr, succ, dst)
-                if not now_admitted_match.is_empty():
-                    curr.admitted_match[dst] = now_admitted_match
-                    match_passed = True
+                now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
 
-                    # Adjust the relies_on, and path_ports in admitted_match
-                    # b
 
-            # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
-            if not match_passed:
-                for pred_id in self.g.predecessors_iter(curr.port_id):
-                    pred = self.get_port(pred_id)
-                    self.verify_and_correct_admitted_match(pred)
+            # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this new stuff.
+
+            for me in curr.admitted_match[dst].match_elements:
+                print me.edge_data_key, me.port.port_id,  me.succ_match_element.port.port_id, me.edge_data_key[1].is_active
+
+
+                # Need to check if I what I had admitted before can still be admitted by what I have now
+                # And need to modify the 'links' inside what I am connecting to this new stuff
+
+                # For the resulting match
+                # The predecessor will be taken by curr.admitted_match[dst] and those predecessor need to be told too
+                # The successors will be taken by now_admitted_match
+                # curr.admitted_match[dst] = curr.admitted_match[dst].pipe_welding(now_admitted_match)
+
+            #
+            # # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
+            # if not now_admitted_match.match_elements:
+            #     for pred_id in self.g.predecessors_iter(curr.port_id):
+            #         pred = self.get_port(pred_id)
+            #         self.verify_and_correct_admitted_match(pred)
 
 
     def init_global_controller_port(self):
@@ -248,6 +258,7 @@ class PortGraph:
                 #Establish that curr is part of the path that the MatchElements are going to take to pred
                 pred_admitted_match.add_port_to_path(curr)
                 pred_admitted_match.set_port(pred)
+                pred_admitted_match.set_edge_data_key((flow, edge_action))
 
         return pred_admitted_match
 

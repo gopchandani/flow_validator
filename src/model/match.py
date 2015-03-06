@@ -105,6 +105,7 @@ class MatchElement(DictMixin):
         self.path_ports = []
         
         self.port = None
+        self.edge_data_key = None
         self.succ_match_element = None
 
         self.value_cache = {}
@@ -186,6 +187,32 @@ class MatchElement(DictMixin):
 
 
         return intersection_element
+
+    def pipe_welding(self, in_match_element):
+
+        intersection_element = MatchElement()
+        intersection_element.path_ports = list(in_match_element.path_ports)
+
+
+        for field_name in field_names:
+            intersection_element.match_fields[field_name] = self.get_matched_tree(
+                in_match_element.match_fields[field_name], self.match_fields[field_name])
+
+            # If the resulting tree has no intervals in it, then balk:
+            if not intersection_element.match_fields[field_name]:
+                #print field_name, \
+                #    "self:", self.match_fields[field_name], \
+                #    "in_match:", in_match_element.match_fields[field_name]
+                return None
+
+            # Otherwise establish that the resulting intersection_element is based on in_match_element
+            else:
+                intersection_element.succ_match_element = in_match_element
+
+
+        return intersection_element
+
+
 
     def complement_match(self):
 
@@ -419,6 +446,15 @@ class Match():
                     im.match_elements.append(ei)
         return im
 
+    def pipe_welding(self, in_match):
+        im = Match()
+        for e1 in self.match_elements:
+            for e2 in in_match.match_elements:
+                ei = e1.intersect(e2)
+                if ei:
+                    im.match_elements.append(ei)
+        return im
+
     def union(self, in_match):
         self.match_elements.extend(in_match.match_elements)
         return self
@@ -437,6 +473,10 @@ class Match():
     def set_port(self, port):
         for me in self.match_elements:
             me.port = port
+
+    def set_edge_data_key(self, edge_data_key):
+        for me in self.match_elements:
+            me.edge_data_key = edge_data_key
 
     def is_field_wildcard(self, field_name):
         retval = True
