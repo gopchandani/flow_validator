@@ -210,6 +210,7 @@ class MatchElement(DictMixin):
             # Otherwise establish that the resulting intersection_element is based on in_match_element
             else:
                 intersection_element.succ_match_element = in_match_element
+                in_match_element.pred_match_elements.append(intersection_element)
 
 
         return intersection_element
@@ -449,14 +450,28 @@ class Match():
                     im.match_elements.append(ei)
         return im
 
-    def pipe_welding(self, in_match):
+    def pipe_welding(self, now_admitted_match):
+
+        # The predecessor will be taken from self and those predecessor need to be told too
+        # The successors will be taken by now_admitted_match
+
         im = Match()
-        for e1 in self.match_elements:
-            for e2 in in_match.match_elements:
-                ei = e1.intersect(e2)
-                if ei:
-                    im.match_elements.append(ei)
+        for candidate_me in now_admitted_match.match_elements:
+            print existing_me.edge_data_key, \
+                existing_me.port.port_id,  \
+                existing_me.succ_match_element.port.port_id, \
+                existing_me.edge_data_key[1].is_active, \
+                existing_me.pred_match_elements
+
+            for existing_me in self.match_elements:
+                new_me = existing_me.pipe_welding(candidate_me)
+                if new_me:
+                    im.match_elements.append(new_me)
+                else:
+                    #TODO: Delete everybody who dependent on existing_me, like the whole chain...
+                    raise Exception("Haven't worked out this case")
         return im
+
 
     def union(self, in_match):
         self.match_elements.extend(in_match.match_elements)

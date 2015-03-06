@@ -97,12 +97,13 @@ class PortGraph:
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
 
+            # This looks silly, but this dictionary is being modified as we go, so is necessary
             edge_data_keys = edge_data.keys()
             for flow, edge_action in edge_data_keys:
                 if flow:
                     flow.update_port_graph_edges()
 
-            # But now the admitted_match on this port and its predecessor(s) needs to be modified to reflect the reality
+            # But now the admitted_match on this port and its dependents needs to be modified to reflect the reality
             self.update_match_elements(pred)
 
     def update_match_elements(self, curr):
@@ -113,43 +114,24 @@ class PortGraph:
         for dst in curr.admitted_match:
             print dst, curr.admitted_match[dst]
 
-            for me in curr.admitted_match[dst].match_elements:
-                print me.edge_data_key, \
-                    me.port.port_id,  \
-                    me.succ_match_element.port.port_id, \
-                    me.edge_data_key[1].is_active, \
-                    me.pred_match_elements
+            # First compute what the admitted_match for this dst looks like right now after edge status changes...
+            now_admitted_match = Match()
+            for succ_id in self.g.successors_iter(curr.port_id):
+                succ = self.get_port(succ_id)
+                now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
 
+                # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this new stuff.
 
-
-
-
-            # now_admitted_match = Match()
-            #
-            #
-            # # First compute what the admitted_match for this dst looks like right now after edge status changes...
-            # for succ_id in self.g.successors_iter(curr.port_id):
-            #     succ = self.get_port(succ_id)
-            #     now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
-            #
-
-            # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this new stuff.
-
+                #curr.admitted_match[dst] = curr.admitted_match[dst].pipe_welding(now_admitted_match)
 
                 # Need to check if I what I had admitted before can still be admitted by what I have now
                 # And need to modify the 'links' inside what I am connecting to this new stuff
 
                 # For the resulting match
-                # The predecessor will be taken by curr.admitted_match[dst] and those predecessor need to be told too
-                # The successors will be taken by now_admitted_match
-                # curr.admitted_match[dst] = curr.admitted_match[dst].pipe_welding(now_admitted_match)
 
-            #
-            # # If so, no sweat, move on, If not, update yourself and your predecessors are gonna wanna know...
-            # if not now_admitted_match.match_elements:
-            #     for pred_id in self.g.predecessors_iter(curr.port_id):
-            #         pred = self.get_port(pred_id)
-            #         self.verify_and_correct_admitted_match(pred)
+                #
+                # So either me got through or it didn't. Right now considering it on one-by-one basis.
+
 
 
     def init_global_controller_port(self):
