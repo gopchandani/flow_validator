@@ -206,11 +206,29 @@ class MatchElement(DictMixin):
                 #    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
-        # Establish that the resulting intersection_element is based on in_match_element
-        new_me.succ_match_element = candidate_me
-        candidate_me.pred_match_elements.append(new_me)
+
+        # -- Set up what self depended on
+
+        # The resulting new_me would have same successor as self
+        new_me.succ_match_element = self.succ_match_element
+
+        # Remove self from the successor predecessor list
+
+        while self in new_me.succ_match_element.pred_match_elements:
+            new_me.succ_match_element.pred_match_elements.remove(self)
+
+        # Add new_me to successor's predecessor list
+        new_me.succ_match_element.pred_match_elements.append(new_me)
 
 
+        # -- Set up what depended on self
+
+        # new_me's predecessors are all of self's predecessors
+        new_me.pred_match_elements = self.pred_match_elements
+
+        # new_me would have to tell self's predecessors that they depend on new_me now
+        for me in new_me.pred_match_elements:
+            me.succ_match_element = new_me
 
         return new_me
 
@@ -454,7 +472,7 @@ class Match():
         # The predecessor will be taken from self and those predecessor need to be told too
         # The successors will be taken by now_admitted_match
 
-        im = Match()
+        new_m = Match()
 
         # Check if this existing_me can be taken entirely by any of the candidates
         # TODO: This does not handle partial cases when parts of the existing_me are taken by multiple candidate_me
@@ -473,12 +491,12 @@ class Match():
                 new_me = existing_me.pipe_welding(candidate_me)
 
                 if new_me:
-                    im.match_elements.append(new_me)
+                    new_m.match_elements.append(new_me)
                 else:
                     #TODO: Delete everybody who dependent on existing_me, the whole chain...
                     raise Exception("Haven't worked out this case")
 
-        return im
+        return new_m
 
 
     def union(self, in_match):
