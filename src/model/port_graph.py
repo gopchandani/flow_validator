@@ -109,7 +109,6 @@ class PortGraph:
     def update_match_elements(self, curr):
 
         print curr.port_id
-        return
 
         # This needs to be done for each destination for which curr holds admitted_match
         for dst in curr.admitted_match:

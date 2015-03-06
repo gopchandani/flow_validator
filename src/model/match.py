@@ -191,28 +191,28 @@ class MatchElement(DictMixin):
 
     def pipe_welding(self, candidate_me):
 
-        intersection_element = MatchElement()
-        intersection_element.path_ports = list(candidate_me.path_ports)
+        new_me = MatchElement()
+        new_me.path_ports = list(candidate_me.path_ports)
 
 
         for field_name in field_names:
-            intersection_element.match_fields[field_name] = self.get_matched_tree(
+            new_me.match_fields[field_name] = self.get_matched_tree(
                 candidate_me.match_fields[field_name], self.match_fields[field_name])
 
             # If the resulting tree has no intervals in it, then balk:
-            if not intersection_element.match_fields[field_name]:
+            if not new_me.match_fields[field_name]:
                 #print field_name, \
                 #    "self:", self.match_fields[field_name], \
                 #    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
-            # Otherwise establish that the resulting intersection_element is based on in_match_element
-            else:
-                intersection_element.succ_match_element = candidate_me
-                candidate_me.pred_match_elements.append(intersection_element)
+        # Establish that the resulting intersection_element is based on in_match_element
+        new_me.succ_match_element = candidate_me
+        candidate_me.pred_match_elements.append(new_me)
 
 
-        return intersection_element
+
+        return new_me
 
 
 
@@ -458,11 +458,12 @@ class Match():
 
         # Check if this existing_me can be taken entirely by any of the candidates
         # TODO: This does not handle partial cases when parts of the existing_me are taken by multiple candidate_me
+        # TODO:  For now will connect all  when one existing_me is taken by multiple candidate_me?
+        # TODO: What about is_active flag on the edge_data_key, does that matter?
 
         for existing_me in now_admitted_match.match_elements:
 
-            print existing_me.edge_data_key, \
-                existing_me.port.port_id,  \
+            print existing_me.port.port_id,  \
                 existing_me.succ_match_element.port.port_id, \
                 existing_me.edge_data_key[1].is_active, \
                 existing_me.pred_match_elements
