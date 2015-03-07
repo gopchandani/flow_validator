@@ -200,9 +200,9 @@ class MatchElement(DictMixin):
 
             # If the resulting tree has no intervals in it, then balk:
             if not new_me.match_fields[field_name]:
-                #print field_name, \
-                #    "self:", self.match_fields[field_name], \
-                #    "in_match:", in_match_element.match_fields[field_name]
+                print field_name, \
+                    "self:", self.match_fields[field_name], \
+                    "candidate_me:", candidate_me.match_fields[field_name]
                 return None
 
 
@@ -477,10 +477,8 @@ class Match():
 
         new_m = Match()
 
-        # Check if this existing_me can be taken entirely by any of the candidates
-        # TODO: This does not handle partial cases when parts of the existing_me are taken by multiple candidate_me
-        # TODO:  For now will connect all  when one existing_me is taken by multiple candidate_me?
-        # TODO: What about is_active flag on the edge_data_key, does that matter?
+        # Check if this existing_me can be taken even partially by any of the candidates
+        # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
 
         for existing_me in self.match_elements:
             for candidate_me in now_admitted_match.match_elements:
@@ -490,7 +488,7 @@ class Match():
                     break
                 else:
                     #TODO: Delete everybody who dependent on existing_me, the whole chain...
-                    raise Exception("Haven't worked out this case")
+                    print "****** Haven't worked out this case *******"
 
         return new_m
 
@@ -545,13 +543,13 @@ class Match():
     def print_port_paths(self):
 
         for me in self.match_elements:
-            port_path_str = me.port.port_id + "(" + str(id(me)) + ")"
+            port_path_str = me.port.port_id# + "(" + str(id(me)) + ")"
 
             trav = me.succ_match_element
 
             while trav != None:
 
-                port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
+                port_path_str += (" -> " + trav.port.port_id)# + "(" + str(id(trav)) + ")")
 
                 trav = trav.succ_match_element
 
