@@ -185,8 +185,6 @@ class MatchElement(DictMixin):
         # Establish that the resulting intersection_element is based on in_match_element
         intersection_element.succ_match_element = in_match_element
         in_match_element.pred_match_elements.append(intersection_element)
-
-
         return intersection_element
 
     def pipe_welding(self, candidate_me):
@@ -208,12 +206,12 @@ class MatchElement(DictMixin):
                 return None
 
 
-        # -- Set up what self depended on
+        # -- Set up what self depended on, in new_me
 
         # The resulting new_me would have same successor as candidate_me
         new_me.succ_match_element = candidate_me.succ_match_element
 
-        # Remove self from the successor predecessor list, if it exists
+        # Remove self from the successor's predecessor list, if it exists
         while self in new_me.succ_match_element.pred_match_elements:
             new_me.succ_match_element.pred_match_elements.remove(self)
 
@@ -221,12 +219,12 @@ class MatchElement(DictMixin):
         new_me.succ_match_element.pred_match_elements.append(new_me)
 
 
-        # -- Set up what depended on self
+        # -- Set up what depended on self, in new_me
 
         # new_me's predecessors are all of self's predecessors
         new_me.pred_match_elements = self.pred_match_elements
 
-        # new_me would have to tell self's predecessors that they depend on new_me now
+        # new_me would have to tell its predecessors that they depend on new_me now
         for me in new_me.pred_match_elements:
             me.succ_match_element = new_me
 
@@ -303,7 +301,12 @@ class MatchElement(DictMixin):
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
         orig_match_element.path_ports = list(self.path_ports)
 
+        # This newly minted ME depends on the succ_match_element
         orig_match_element.succ_match_element = self.succ_match_element
+
+        # This also means that succ_match_element.pred_match_elements also need to carry around orig_match_element
+        self.succ_match_element.pred_match_elements.append(orig_match_element)
+
         orig_match_element.port = self.port
         orig_match_element.pred_match_elements = self.pred_match_elements
 
@@ -480,15 +483,9 @@ class Match():
         # TODO: What about is_active flag on the edge_data_key, does that matter?
 
         for existing_me in self.match_elements:
-
-            print existing_me.succ_match_element.port.port_id, existing_me.pred_match_elements
             for candidate_me in now_admitted_match.match_elements:
-
-                print candidate_me.succ_match_element.port.port_id, candidate_me.pred_match_elements
                 new_me = existing_me.pipe_welding(candidate_me)
-
                 if new_me:
-                    print new_me.succ_match_element.port.port_id, new_me.pred_match_elements
                     new_m.match_elements.append(new_me)
                     break
                 else:
@@ -520,6 +517,7 @@ class Match():
     def set_succ_match_element(self, succ_match_element):
         for me in self.match_elements:
             me.succ_match_element = succ_match_element
+            succ_match_element.pred_match_elements.append(me)
 
     def set_edge_data_key(self, edge_data_key):
         for me in self.match_elements:
@@ -547,12 +545,14 @@ class Match():
     def print_port_paths(self):
 
         for me in self.match_elements:
-            port_path_str = me.port.port_id
+            port_path_str = me.port.port_id + "(" + str(id(me)) + ")"
 
             trav = me.succ_match_element
 
             while trav != None:
-                port_path_str += (" -> " + trav.port.port_id)
+
+                port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
+
                 trav = trav.succ_match_element
 
             print port_path_str

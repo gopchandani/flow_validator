@@ -61,9 +61,9 @@ class ComputePortPaths:
 
                     node1 = "openflow:4"
                     node2 = "openflow:3"
-                    #
-                    # node1 = "openflow:1"
-                    # node2 = "openflow:4"
+
+                    #node1 = "openflow:1"
+                    #node2 = "openflow:4"
 
                     self.model.simulate_edge_removal(node1, node2)
                     self.port_graph.remove_node_graph_edge(node1, node2)

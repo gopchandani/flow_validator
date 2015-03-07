@@ -112,7 +112,6 @@ class PortGraph:
 
         # This needs to be done for each destination for which curr holds admitted_match
         for dst in curr.admitted_match:
-            print dst, curr.admitted_match[dst]
 
             # First compute what the admitted_match for this dst looks like right now after edge status changes...
             now_admitted_match = Match()
