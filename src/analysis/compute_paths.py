@@ -70,7 +70,7 @@ class ComputePaths:
 
                 print "Setting accepted destination at switch:", dst_h_obj.switch_obj, "connected to host", dst_h_id
 
-                accepted_match = Match(init_wildcard=True, tag="flow")
+                accepted_match = Match(init_wildcard=True)
                 accepted_match.set_field("ethernet_type", 0x0800)
 
                 src_mac_int = int(src_h_obj.mac_addr.replace(":", ""), 16)

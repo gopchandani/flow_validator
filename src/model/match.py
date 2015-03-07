@@ -99,6 +99,9 @@ class MatchElement(DictMixin):
     def keys(self):
         return self.value_cache.keys()
 
+    def __str__(self):
+        return str(id(self))
+
     def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True):
 
         # Contains a list of ports where the element has been before it arrives here

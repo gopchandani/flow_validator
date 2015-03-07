@@ -168,17 +168,13 @@ class PortGraph:
 
         # Add the port for host
 
-        hp = Port(None, port_type="physical", port_id=host_obj.node_id)
+        host_obj.port = Port(None, port_type="physical", port_id=host_obj.node_id)
+        admitted_match.set_port(host_obj.port)
+        host_obj.port.admitted_match[host_obj.node_id] = admitted_match
+        host_obj.port.admitted_match[host_obj.node_id].add_port_to_path(host_obj.port)
 
-        admitted_match.set_port(hp)
-
-        hp.admitted_match[host_obj.node_id] = admitted_match
-
-
-        hp.admitted_match[host_obj.node_id].add_port_to_path(hp)
-
-        self.add_port(hp)
-        self.added_host_ports.append(hp)
+        self.add_port(host_obj.port)
+        self.added_host_ports.append(host_obj.port)
 
         # Add edges between host and switch in the port graph
 
@@ -191,20 +187,13 @@ class PortGraph:
                                                                       host_obj.switch_port_attached))
         switch_egress_port.port_number = int(host_obj.switch_port.port_number)
 
-        # Assume that switch_egress_port can admit whatever host port can admit
-        admitted_match_at_egress_port = deepcopy(admitted_match)
-        admitted_match_at_egress_port.set_succ_match_element(admitted_match.match_elements[0])
-        admitted_match_at_egress_port.set_port(switch_egress_port)
-        switch_egress_port.admitted_match[host_obj.node_id] = admitted_match_at_egress_port
-
-
-        self.add_edge(hp, switch_ingress_port, (None, None), Match(init_wildcard=True))
-        self.add_edge(switch_egress_port, hp, (None, None), Match(init_wildcard=True))
+        self.add_edge(host_obj.port, switch_ingress_port, (None, None), Match(init_wildcard=True))
+        self.add_edge(switch_egress_port, host_obj.port, (None, None), Match(init_wildcard=True))
 
         host_obj.switch_ingress_port = switch_ingress_port
         host_obj.switch_egress_port = switch_egress_port
 
-        return hp
+        return host_obj.port
 
     def remove_destination_host(self, host_obj):
         pass

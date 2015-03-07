@@ -13,26 +13,11 @@ class Host():
 
         self.switch_id = switch_id
         self.switch_obj = switch_obj
+
+        # Don't know if I am even using these next two...
         self.switch_port_attached = switch_port_attached
+        self.switch_port = switch_obj.ports[self.switch_port_attached]
 
         self.switch_ingress_port  = None
         self.switch_egress_port = None
-
-        self.switch_port = switch_obj.ports[self.switch_port_attached]
-
-        #Analysis stuff
-        self.in_port_match = None
-
-
-    def transfer_function(self, in_port_match):
-        # Dont know the port on the host side, using 0
-        return {0: in_port_match}
-
-
-    def transfer_function_2(self, in_port_match):
-        # Dont know the port on the host side, using 0
-        return {0: in_port_match}
-
-    def transfer_function_3(self, in_port_match):
-        # Dont know the port on the host side, using 0
-        return {0: in_port_match}
+        self.port = None
