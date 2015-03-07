@@ -481,14 +481,20 @@ class Match():
         # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
 
         for existing_me in self.match_elements:
+
+            existing_me_welded = False
+
             for candidate_me in now_admitted_match.match_elements:
                 new_me = existing_me.pipe_welding(candidate_me)
                 if new_me:
                     new_m.match_elements.append(new_me)
+                    existing_me_welded = True
                     break
-                else:
-                    #TODO: Delete everybody who dependent on existing_me, the whole chain...
-                    print "****** Haven't worked out this case *******"
+
+            # If none of the candidate_me took existing_me:
+            #TODO: Delete everybody who dependent on existing_me, the whole chain...
+            if not existing_me_welded:
+                print "****** Haven't worked out this case *******"
 
         return new_m
 

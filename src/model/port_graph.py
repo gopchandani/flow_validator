@@ -87,8 +87,6 @@ class PortGraph:
 
     def remove_edge(self, port1, port2):
 
-        print "remove_edge_called"
-
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
 
@@ -108,7 +106,7 @@ class PortGraph:
 
     def update_match_elements(self, curr):
 
-        print curr.port_id
+        print "update_match_elements at port:", curr.port_id
 
         # This needs to be done for each destination for which curr holds admitted_match
         for dst in curr.admitted_match:
@@ -121,7 +119,6 @@ class PortGraph:
 
             # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this
             curr.admitted_match[dst] = curr.admitted_match[dst].pipe_welding(now_admitted_match)
-
 
 
     def init_global_controller_port(self):
