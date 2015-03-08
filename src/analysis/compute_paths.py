@@ -1,95 +1,76 @@
 __author__ = 'Rakesh Kumar'
 
-import networkx as nx
-import sys
 
 from model.model import Model
 from model.match import Match
 
-from netaddr import IPNetwork
-
 class ComputePaths:
     def __init__(self):
-        self.model = Model()
-
-    def check_switch_crossing(self, neighbor_obj, node_obj, destination):
-
-        print "At switch:", node_obj.node_id, "Neighbor Switch:", neighbor_obj.node_id
-
-        edge_port_dict = self.model.get_edge_port_dict(neighbor_obj.node_id, node_obj.node_id)
-
-        #Check to see if the requirped destination match can get from neighbor to node
-        out_port_match = neighbor_obj.transfer_function(node_obj.accepted_destination_match[destination])
-
-        if edge_port_dict[neighbor_obj.node_id] in out_port_match:
-
-            # compute what traffic will arrive from neighbor
-            passing_match = out_port_match[edge_port_dict[neighbor_obj.node_id]]
-
-            # Set the match in the neighbor, indicating what passes
-            neighbor_obj.accepted_destination_match[destination] = passing_match
-
-            return True
-        else:
-            return False
-
-    def bfs_paths(self, start_node_obj, destination_node_obj, destination):
-
-        queue = [(destination_node_obj, [destination_node_obj])]
-
-        while queue:
-            node_obj, path = queue.pop(0)
-
-            for neighbor in self.model.graph.neighbors(node_obj.node_id):
-                neighbor_obj = self.model.get_node_object(neighbor)
-
-                # Consider only nodes that are not in the path accumulated so far
-                if neighbor_obj not in path:
-
-                    # If arrived at the source already, stop
-                    if neighbor_obj == start_node_obj:
-                        yield [neighbor_obj] + path
-
-                    # Otherwise, can I come from neighbor to here
-                    else:
-                        if self.check_switch_crossing(neighbor_obj, node_obj, destination):
-                            queue.append((neighbor_obj, [neighbor_obj] + path))
+        self.model = Model(init_port_graph=True)
+        self.port_graph = self.model.port_graph
 
     def analyze_all_node_pairs(self):
 
-        # For each host, start a graph search at the switch it is connected to
-        for src_h_id in self.model.get_host_ids():
+        # Attach a destination port for each host.
+        for host_id in self.model.get_host_ids():
+            host_obj = self.model.get_node_object(host_id)
 
+            admitted_match = Match(init_wildcard=True)
+            admitted_match.set_field("ethernet_type", 0x0800)
+            dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
+            admitted_match.set_field("ethernet_destination", dst_mac_int)
+
+            self.port_graph.add_destination_host_port_traffic(host_obj, admitted_match)
+
+
+
+        for host_id in self.model.get_host_ids():
+            host_obj = self.model.get_node_object(host_id)
+
+            # Test 1 trying to reach 3 only, so don't propagate admitted_match from openflow:1
+            if host_obj.switch_id == "openflow:1":
+                continue
+
+            print "Computing admitted_match:", host_id, "connected to switch:", \
+                host_obj.switch_id, "at port:", \
+                host_obj.switch_port_attached
+
+            self.port_graph.compute_admitted_match(host_obj.switch_egress_port,
+                                                   host_obj.port.admitted_match[host_obj.port.port_id],
+                                                   host_obj.port,
+                                                   host_obj.port)
+
+
+        # Test connectivity after flows have bled through the port graph
+        for src_h_id in self.model.get_host_ids():
             for dst_h_id in self.model.get_host_ids():
 
-                src_h_obj = self.model.get_node_object(src_h_id)
-                dst_h_obj = self.model.get_node_object(dst_h_id)
+                src_port = self.port_graph.get_port(src_h_id)
+                dst_port = self.port_graph.get_port(dst_h_id)
+                src_host_obj = self.model.get_node_object(src_port.port_id)
+                dst_host_obj = self.model.get_node_object(dst_port.port_id)
 
-                if src_h_id == dst_h_id:
+                # Test 1 trying to reach 3 only
+                if src_host_obj.switch_id == "openflow:3":
                     continue
 
-                print "Setting accepted destination at switch:", dst_h_obj.switch_obj, "connected to host", dst_h_id
+                if src_port != dst_port:
+                    am = src_port.admitted_match[dst_port.port_id]
+                    am.print_port_paths()
 
-                accepted_match = Match(init_wildcard=True)
-                accepted_match.set_field("ethernet_type", 0x0800)
+                    #node1 = "openflow:4"
+                    #node2 = "openflow:3"
 
-                src_mac_int = int(src_h_obj.mac_addr.replace(":", ""), 16)
-                accepted_match.set_field("ethernet_source", src_mac_int)
+                    node1 = "openflow:1"
+                    node2 = "openflow:4"
 
-                dst_mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
-                accepted_match.set_field("ethernet_destination", dst_mac_int)
+                    self.model.simulate_edge_removal(node1, node2)
+                    self.port_graph.remove_node_graph_edge(node1, node2)
 
-                dst_h_obj.switch_obj.accepted_destination_match[dst_h_obj.node_id] = accepted_match
-
-                print "--"
-                print list(self.bfs_paths(src_h_obj.switch_obj, dst_h_obj.switch_obj, dst_h_id))
-
-    def tf_driver(self):
-        for sw in self.model.get_switches():
-            print sw.node_id
-            sw.compute_transfer_function()
+                    am.print_port_paths()
 
 def main():
+
     bp = ComputePaths()
     bp.analyze_all_node_pairs()
 

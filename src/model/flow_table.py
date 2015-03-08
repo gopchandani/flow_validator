@@ -73,7 +73,6 @@ class Flow():
             
             self.port_graph_edges.append(e)
 
-
         # See the edge impact of any go-to-table instruction
         if self.instructions.goto_table:
             e = self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
