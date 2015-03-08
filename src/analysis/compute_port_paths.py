@@ -15,10 +15,6 @@ class ComputePortPaths:
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
 
-            print "Setting admitted_match:", host_id, "connected to switch:", \
-                host_obj.switch_id, "at port:", \
-                host_obj.switch_port_attached
-
             admitted_match = Match(init_wildcard=True)
             admitted_match.set_field("ethernet_type", 0x0800)
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
@@ -26,13 +22,24 @@ class ComputePortPaths:
 
             self.port_graph.add_destination_host_port_traffic(host_obj, admitted_match)
 
+
+
+        for host_id in self.model.get_host_ids():
+            host_obj = self.model.get_node_object(host_id)
+
+            # Test 1 trying to reach 3 only, so don't propagate admitted_match from openflow:1
             if host_obj.switch_id == "openflow:1":
                 continue
+
+            print "Computing admitted_match:", host_id, "connected to switch:", \
+                host_obj.switch_id, "at port:", \
+                host_obj.switch_port_attached
 
             self.port_graph.compute_admitted_match(host_obj.switch_egress_port,
                                                    host_obj.port.admitted_match[host_obj.port.port_id],
                                                    host_obj.port,
                                                    host_obj.port)
+
 
         # Test connectivity after flows have bled through the port graph
         for src_h_id in self.model.get_host_ids():
@@ -43,7 +50,7 @@ class ComputePortPaths:
                 src_host_obj = self.model.get_node_object(src_port.port_id)
                 dst_host_obj = self.model.get_node_object(dst_port.port_id)
 
-                # Test 1 trying to reach 3
+                # Test 1 trying to reach 3 only
                 if src_host_obj.switch_id == "openflow:3":
                     continue
 
