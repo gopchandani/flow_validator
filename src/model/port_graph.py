@@ -217,20 +217,35 @@ class PortGraph:
                 if this_edge["edge_type"] == "egress":
                     curr.admitted_match[dst_port_id].set_field("in_port", is_wildcard=True)
 
-                # attempted_match: is what the match would be before passing this flow
-                if flow and flow.modified_fields:
-                    attempted_match = curr.admitted_match[dst_port_id].get_orig_match(flow.modified_fields,
+                if flow and flow.applied_field_modifications:
+                    curr_admitted_match = curr.admitted_match[dst_port_id].get_orig_match(flow.applied_field_modifications,
                                                                                       flow.match_element)
                 else:
-                    attempted_match = curr.admitted_match[dst_port_id]
+                    curr_admitted_match = curr.admitted_match[dst_port_id]
 
-                i = this_edge["edge_filter_match"].intersect(attempted_match)
-                pred_admitted_match.union(i)
+                i = this_edge["edge_filter_match"].intersect(curr_admitted_match)
 
-                #Establish that curr is part of the path that the MatchElements are going to take to pred
-                pred_admitted_match.add_port_to_path(curr)
-                pred_admitted_match.set_port(pred)
-                pred_admitted_match.set_edge_data_key((flow, edge_action))
+                if not i.is_empty():
+                    if this_edge["edge_type"] == "ingress":
+                        #TODO:
+                        # This is where written_field_modifications get applied and hence affect attempted match
+                        pass
+
+                    # For non-ingress edges, accumulate written_field_modifications in the pred_admitted_match
+                    
+                    # Accumulate from the flow
+                    if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
+                        i.accumulate_written_field_modifications(flow.written_field_modifications)
+                        
+                    # Accumulate from the admitted_match at curr.
+                    i.accumulate_written_field_modifications(curr_admitted_match.written_field_modifications)
+
+                    pred_admitted_match.union(i)
+
+                    #Establish that curr is part of the path that the MatchElements are going to take to pred
+                    pred_admitted_match.add_port_to_path(curr)
+                    pred_admitted_match.set_port(pred)
+                    pred_admitted_match.set_edge_data_key((flow, edge_action))
 
         return pred_admitted_match
 

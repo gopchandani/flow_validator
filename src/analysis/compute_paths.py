@@ -22,8 +22,6 @@ class ComputePaths:
 
             self.port_graph.add_destination_host_port_traffic(host_obj, admitted_match)
 
-
-
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
 
@@ -39,7 +37,6 @@ class ComputePaths:
                                                    host_obj.port.admitted_match[host_obj.port.port_id],
                                                    host_obj.port,
                                                    host_obj.port)
-
 
         # Test connectivity after flows have bled through the port graph
         for src_h_id in self.model.get_host_ids():

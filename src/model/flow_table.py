@@ -52,13 +52,15 @@ class Flow():
             # TODO: Write meta-data case
             # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
-
     def add_port_graph_edges(self):
 
         self.instructions = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
-        self.modified_fields = self.instructions.applied_action_set.get_modified_fields_dict()
+        self.applied_field_modifications = self.instructions.applied_action_set.get_modified_fields_dict()
         port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
+
+        self.written_field_modifications = self.instructions.written_action_set.get_modified_fields_dict()
+        port_graph_edge_status_2 = self.instructions.written_action_set.get_port_graph_edge_status()
 
         # Add port edges based on the impact of ActionSet and GotoTable
         for out_port, output_action in port_graph_edge_status:
@@ -72,6 +74,21 @@ class Flow():
                                            self.match)
             
             self.port_graph_edges.append(e)
+
+
+        # Add port edges based on the impact of ActionSet and GotoTable
+        for out_port, output_action in port_graph_edge_status_2:
+
+            outgoing_port = self.model.port_graph.get_port(
+                self.model.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+
+            e = self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                                           outgoing_port,
+                                           (self, output_action),
+                                           self.match)
+
+            self.port_graph_edges.append(e)
+
 
         # See the edge impact of any go-to-table instruction
         if self.instructions.goto_table:

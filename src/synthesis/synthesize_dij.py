@@ -24,6 +24,8 @@ class SynthesizeDij():
         # affected as a result of flow synthesis
         self.s = set()
 
+        self.apply_immediately = False
+
     def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
 
         edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])
@@ -40,7 +42,7 @@ class SynthesizeDij():
             if not (i == 0 and intent_type == "primary"):
                 fwd_flow_match.set_match_field_element("vlan_id", int(dst_switch_tag))
 
-            intent = Intent(intent_type, fwd_flow_match, in_port, out_port, False)
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port, self.apply_immediately)
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
@@ -137,7 +139,7 @@ class SynthesizeDij():
         host_mac_match = deepcopy(flow_match)
         mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
         host_mac_match.set_match_field_element("ethernet_destination", int(mac_int))
-        host_mac_intent = Intent("mac", host_mac_match, "all", out_port, False)
+        host_mac_intent = Intent("mac", host_mac_match, "all", out_port, self.apply_immediately)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
         # by using its mac address as the key
@@ -147,7 +149,7 @@ class SynthesizeDij():
 
         push_vlan_match= deepcopy(flow_match)
         push_vlan_match.set_match_field_element("in_port", int(h_obj.switch_port_attached))
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", False)
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", self.apply_immediately)
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         # Avoiding adding a new intent for every departing flow for this switch,
@@ -159,7 +161,7 @@ class SynthesizeDij():
 
         pop_vlan_match = deepcopy(flow_match)
         pop_vlan_match.set_match_field_element("vlan_id", int(matching_tag))
-        pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all", False)
+        pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all", self.apply_immediately)
 
         # Avoiding adding a new intent for every arriving flow for this switch
         #  at destination by using the tag as the key

@@ -218,8 +218,6 @@ class ActionSet():
 
         return port_graph_edge_status
 
-
-
     def get_modified_fields_dict(self):
         modified_fields_dict = {}
 

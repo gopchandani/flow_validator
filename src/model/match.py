@@ -437,6 +437,7 @@ class Match():
     def __init__(self, init_wildcard=False):
 
         self.match_elements = []
+        self.written_field_modifications = {}
 
         # If initialized as wildcard, add one to the list
         if init_wildcard:
@@ -509,6 +510,7 @@ class Match():
     def get_orig_match(self, modified_fields, matching_element):
 
         orig_match = Match()
+        orig_match.written_field_modifications = self.written_field_modifications
         for me in self.match_elements:
             orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
         return orig_match
@@ -529,6 +531,10 @@ class Match():
     def set_edge_data_key(self, edge_data_key):
         for me in self.match_elements:
             me.edge_data_key = edge_data_key
+
+    def accumulate_written_field_modifications(self, in_written_field_modifications):
+        self.written_field_modifications.update(in_written_field_modifications)
+
 
     def is_field_wildcard(self, field_name):
         retval = True
