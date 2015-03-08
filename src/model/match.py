@@ -505,6 +505,8 @@ class Match():
 
     def union(self, in_match):
         self.match_elements.extend(in_match.match_elements)
+        self.accumulate_written_field_modifications(in_match.written_field_modifications)
+
         return self
 
     def get_orig_match(self, modified_fields, matching_element):
@@ -534,7 +536,6 @@ class Match():
 
     def accumulate_written_field_modifications(self, in_written_field_modifications):
         self.written_field_modifications.update(in_written_field_modifications)
-
 
     def is_field_wildcard(self, field_name):
         retval = True
