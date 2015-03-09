@@ -232,13 +232,8 @@ class PortGraph:
                         pass
 
                     # For non-ingress edges, accumulate written_field_modifications in the pred_admitted_match
-                    
-                    # Accumulate from the flow
                     if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
                         i.accumulate_written_field_modifications(flow.written_field_modifications)
-                        
-                    # Accumulate from the admitted_match at curr.
-                    i.accumulate_written_field_modifications(curr_admitted_match.written_field_modifications)
 
                     pred_admitted_match.union(i)
 

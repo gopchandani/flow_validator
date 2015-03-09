@@ -111,6 +111,7 @@ class MatchElement(DictMixin):
         self.edge_data_key = None
         self.succ_match_element = None
         self.pred_match_elements = []
+        self.written_field_modifications = {}
 
         self.value_cache = {}
         self.match_fields = {}
@@ -171,7 +172,6 @@ class MatchElement(DictMixin):
     def intersect(self, in_match_element):
 
         intersection_element = MatchElement()
-        intersection_element.path_ports = list(in_match_element.path_ports)
 
 
         for field_name in field_names:
@@ -185,16 +185,19 @@ class MatchElement(DictMixin):
                 #    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
+        intersection_element.path_ports = list(in_match_element.path_ports)
+        intersection_element.written_field_modifications.update(in_match_element.written_field_modifications)
+
         # Establish that the resulting intersection_element is based on in_match_element
         intersection_element.succ_match_element = in_match_element
         in_match_element.pred_match_elements.append(intersection_element)
+
+
         return intersection_element
 
     def pipe_welding(self, candidate_me):
 
         new_me = MatchElement()
-        new_me.path_ports = list(candidate_me.path_ports)
-        new_me.port = self.port
 
 
         for field_name in field_names:
@@ -207,6 +210,11 @@ class MatchElement(DictMixin):
                     "self:", self.match_fields[field_name], \
                     "candidate_me:", candidate_me.match_fields[field_name]
                 return None
+
+
+        new_me.port = self.port
+        new_me.path_ports = list(candidate_me.path_ports)
+        new_me.written_field_modifications.update(candidate_me.written_field_modifications)
 
 
         # -- Set up what self depended on, in new_me
@@ -303,6 +311,7 @@ class MatchElement(DictMixin):
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
         orig_match_element.path_ports = list(self.path_ports)
+        orig_match_element.written_field_modifications.update(self.written_field_modifications)
 
         # This newly minted ME depends on the succ_match_element
         orig_match_element.succ_match_element = self.succ_match_element
@@ -437,7 +446,6 @@ class Match():
     def __init__(self, init_wildcard=False):
 
         self.match_elements = []
-        self.written_field_modifications = {}
 
         # If initialized as wildcard, add one to the list
         if init_wildcard:
@@ -505,14 +513,11 @@ class Match():
 
     def union(self, in_match):
         self.match_elements.extend(in_match.match_elements)
-        self.accumulate_written_field_modifications(in_match.written_field_modifications)
-
         return self
 
     def get_orig_match(self, modified_fields, matching_element):
 
         orig_match = Match()
-        orig_match.written_field_modifications = self.written_field_modifications
         for me in self.match_elements:
             orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
         return orig_match
@@ -535,7 +540,8 @@ class Match():
             me.edge_data_key = edge_data_key
 
     def accumulate_written_field_modifications(self, in_written_field_modifications):
-        self.written_field_modifications.update(in_written_field_modifications)
+        for me in self.match_elements:
+            me.written_field_modifications.update(in_written_field_modifications)
 
     def is_field_wildcard(self, field_name):
         retval = True
