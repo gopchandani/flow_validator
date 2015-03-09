@@ -128,7 +128,21 @@ class Model():
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
 
-    def simulate_edge_removal(self, node1_id, node2_id):
+    def simulate_add_edge(self, node1_id, node2_id):
+
+        edge_ports_dict = self.get_edge_port_dict(node1_id, node2_id)
+
+        node1_port = edge_ports_dict[node1_id]
+        node2_port = edge_ports_dict[node2_id]
+
+        if self.graph.node[node1_id]["node_type"] == "switch":
+            self.graph.node[node1_id]["sw"].ports[node1_port].state = "up"
+
+        if self.graph.node[node2_id]["node_type"] == "switch":
+            self.graph.node[node2_id]["sw"].ports[node2_port].state = "up"
+
+
+    def simulate_remove_edge(self, node1_id, node2_id):
 
         edge_ports_dict = self.get_edge_port_dict(node1_id, node2_id)
 
@@ -140,6 +154,7 @@ class Model():
 
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
+
 
 
     def get_edge_port_dict(self, node1_id, node2_id):

@@ -67,7 +67,7 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
-    def add_edge(self, port1, port2, key, edge_filter_match):
+    def add_edge(self, port1, port2, key, edge_filter_match, update_flag=False):
 
         edge_type = None
         if port1.port_type == "table" and port2.port_type == "outgoing":
@@ -83,14 +83,22 @@ class PortGraph:
                         edge_filter_match=edge_filter_match,
                         edge_type=edge_type)
 
+        if update_flag:
+            self.update_predecessors(port1)
+
         return e
+
 
     def remove_edge(self, port1, port2):
 
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
 
-        # But removal could have fail-over consequences for this port's predecessors' flows...
+        self.update_predecessors(port1)
+
+    def update_predecessors(self, port1):
+
+        # But this could have fail-over consequences for this port's predecessors' flows...
         for pred_id in self.g.predecessors_iter(port1.port_id):
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
@@ -125,17 +133,17 @@ class PortGraph:
         cp = Port(None, port_type="controller", port_id="4294967293")
         self.add_port(cp)
 
-    def add_node_graph_edge(self, node1_id, node2_id):
+    def add_node_graph_edge(self, node1_id, node2_id, update_flag=False):
 
         edge_data = self.model.get_edge_port_dict(node1_id, node2_id)
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
-        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
+        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True), update_flag)
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
-        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
+        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True), update_flag)
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -175,6 +183,7 @@ class PortGraph:
 
         self.add_port(host_obj.port)
         self.added_host_ports.append(host_obj.port)
+
 
         # Add edges between host and switch in the port graph
 
