@@ -249,11 +249,11 @@ class MatchElement(DictMixin):
 
     def complement_match(self):
 
-        match_complement = Match()
+        match_complement = Traffic()
 
         for field_name in field_names:
 
-            #If the field is not a wildcard, then chop it from the wildcard initialized Match
+            #If the field is not a wildcard, then chop it from the wildcard initialized Traffic
             if not (Interval(0, sys.maxsize) in self.match_fields[field_name]):
                 me = MatchElement(is_wildcard=True)
 
@@ -457,7 +457,7 @@ class MatchElement(DictMixin):
 
         return match
 
-class Match():
+class Traffic():
 
     def __init__(self, init_wildcard=False):
 
@@ -490,7 +490,7 @@ class Match():
 
 
     def intersect(self, in_match):
-        im = Match()
+        im = Traffic()
         for e1 in self.match_elements:
             for e2 in in_match.match_elements:
                 ei = e1.intersect(e2)
@@ -503,7 +503,7 @@ class Match():
         # The predecessor will be taken from self and those predecessor need to be told too
         # The successors will be taken by now_admitted_match
 
-        new_m = Match()
+        new_m = Traffic()
 
         # Check if this existing_me can be taken even partially by any of the candidates
         # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
@@ -533,13 +533,13 @@ class Match():
 
     def get_orig_match(self, modified_fields, matching_element):
 
-        orig_match = Match()
+        orig_match = Traffic()
         for me in self.match_elements:
             orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
         return orig_match
 
     def get_orig_match_2(self):
-        orig_match = Match()
+        orig_match = Traffic()
         for me in self.match_elements:
             orig_match.match_elements.append(me.get_orig_match_element())
         return orig_match
@@ -602,10 +602,10 @@ class Match():
             print port_path_str
 
 def main():
-    m1 = Match()
+    m1 = Traffic()
     print m1
 
-    m2 = Match()
+    m2 = Traffic()
     m3 = m1.intersect(m2)
     print m3
 

@@ -7,7 +7,6 @@ import httplib2
 import json
 
 from model.model import Model
-from model.match import Match
 
 
 class SynthesisLib():

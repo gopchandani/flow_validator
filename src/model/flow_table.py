@@ -2,7 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 
 from action_set import Action, ActionSet
-from match import MatchElement, Match
+from match import MatchElement, Traffic
 from instruction_set import InstructionSet
 
 class Flow():
@@ -25,7 +25,7 @@ class Flow():
         self.go_to_table = None
 
         # Port Graph Stuff
-        self.match = Match()
+        self.match = Traffic()
         self.match.match_elements.append(self.match_element)
         self.complement_match = self.match_element.complement_match()
         self.applied_match = None
@@ -144,7 +144,7 @@ class FlowTable():
 
     def compute_applied_matches_and_actions(self):
 
-        remaining_match = Match(init_wildcard=True)
+        remaining_match = Traffic(init_wildcard=True)
 
         for flow in self.flows:
             intersection = flow.match.intersect(remaining_match)

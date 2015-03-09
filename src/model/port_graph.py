@@ -9,7 +9,7 @@ from netaddr import IPNetwork
 from copy import deepcopy
 
 from port import Port
-from match import Match
+from match import Traffic
 
 
 class PortGraph:
@@ -112,7 +112,7 @@ class PortGraph:
         for dst in curr.admitted_match:
 
             # First compute what the admitted_match for this dst looks like right now after edge status changes...
-            now_admitted_match = Match()
+            now_admitted_match = Traffic()
             for succ_id in self.g.successors_iter(curr.port_id):
                 succ = self.get_port(succ_id)
                 now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
@@ -131,11 +131,11 @@ class PortGraph:
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
-        self.add_edge(from_port, to_port, (None, None), Match(init_wildcard=True))
+        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
-        self.add_edge(from_port, to_port, (None, None), Match(init_wildcard=True))
+        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -187,8 +187,8 @@ class PortGraph:
                                                                       host_obj.switch_port_attached))
         switch_egress_port.port_number = int(host_obj.switch_port.port_number)
 
-        self.add_edge(host_obj.port, switch_ingress_port, (None, None), Match(init_wildcard=True))
-        self.add_edge(switch_egress_port, host_obj.port, (None, None), Match(init_wildcard=True))
+        self.add_edge(host_obj.port, switch_ingress_port, (None, None), Traffic(init_wildcard=True))
+        self.add_edge(switch_egress_port, host_obj.port, (None, None), Traffic(init_wildcard=True))
 
         host_obj.switch_ingress_port = switch_ingress_port
         host_obj.switch_egress_port = switch_egress_port
@@ -201,7 +201,7 @@ class PortGraph:
 
     def compute_pred_admitted_match(self, pred, curr, dst_port_id):
 
-        pred_admitted_match = Match()
+        pred_admitted_match = Traffic()
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)
 
         for flow, edge_action in edge_data:

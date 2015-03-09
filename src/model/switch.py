@@ -3,7 +3,7 @@ __author__ = 'Rakesh Kumar'
 from collections import defaultdict
 
 from action_set import ActionSet
-from match import Match, MatchElement
+from match import Traffic, MatchElement
 from port import Port
 
 
@@ -112,7 +112,7 @@ class Switch():
             self.model.port_graph.add_port(in_p)
             self.model.port_graph.add_port(out_p)
 
-            incoming_port_match = Match(init_wildcard=True)
+            incoming_port_match = Traffic(init_wildcard=True)
             incoming_port_match.set_field("in_port", int(port))
             self.model.port_graph.add_edge(in_p,
                                            self.flow_tables[0].port, (None, None),

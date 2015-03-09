@@ -2,7 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 
 from model.model import Model
-from model.match import Match
+from model.match import Traffic
 
 class ComputePaths:
     def __init__(self):
@@ -15,7 +15,7 @@ class ComputePaths:
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
 
-            admitted_match = Match(init_wildcard=True)
+            admitted_match = Traffic(init_wildcard=True)
             admitted_match.set_field("ethernet_type", 0x0800)
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
             admitted_match.set_field("ethernet_destination", dst_mac_int)

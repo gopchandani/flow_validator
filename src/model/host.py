@@ -1,6 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-from match import Match
 
 class Host():
 
