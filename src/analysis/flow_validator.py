@@ -4,7 +4,7 @@ __author__ = 'Rakesh Kumar'
 from model.model import Model
 from model.traffic import Traffic
 
-class ComputePaths:
+class FlowValidator:
     def __init__(self):
         self.model = Model(init_port_graph=True)
         self.port_graph = self.model.port_graph
@@ -68,7 +68,7 @@ class ComputePaths:
 
 def main():
 
-    bp = ComputePaths()
+    bp = FlowValidator()
     bp.analyze_all_node_pairs()
 
 if __name__ == "__main__":
