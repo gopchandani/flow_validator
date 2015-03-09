@@ -3,7 +3,7 @@ __author__ = 'Rakesh Kumar'
 from collections import defaultdict
 
 from action_set import ActionSet
-from match import Traffic, MatchElement
+from traffic import Traffic
 from port import Port
 
 

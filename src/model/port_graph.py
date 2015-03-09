@@ -9,7 +9,7 @@ from netaddr import IPNetwork
 from copy import deepcopy
 
 from port import Port
-from match import Traffic
+from traffic import Traffic
 
 
 class PortGraph:

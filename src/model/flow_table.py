@@ -2,7 +2,8 @@ __author__ = 'Rakesh Kumar'
 
 
 from action_set import Action, ActionSet
-from match import MatchElement, Traffic
+from match import MatchElement
+from traffic import Traffic
 from instruction_set import InstructionSet
 
 class Flow():

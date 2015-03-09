@@ -2,7 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 
 from model.model import Model
-from model.match import Traffic
+from model.traffic import Traffic
 
 class ComputePaths:
     def __init__(self):
