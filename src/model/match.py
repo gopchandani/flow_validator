@@ -112,6 +112,7 @@ class MatchElement(DictMixin):
         self.succ_match_element = None
         self.pred_match_elements = []
         self.written_field_modifications = {}
+        self.causing_match_element = None
 
         self.value_cache = {}
         self.match_fields = {}
@@ -185,6 +186,8 @@ class MatchElement(DictMixin):
                 #    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
+        intersection_element.port = in_match_element.port
+        intersection_element.causing_match_element = in_match_element.causing_match_element
         intersection_element.path_ports = list(in_match_element.path_ports)
         intersection_element.written_field_modifications.update(in_match_element.written_field_modifications)
 
@@ -213,6 +216,7 @@ class MatchElement(DictMixin):
 
 
         new_me.port = self.port
+        new_me.causing_match_element = self.causing_match_element
         new_me.path_ports = list(candidate_me.path_ports)
         new_me.written_field_modifications.update(candidate_me.written_field_modifications)
 
@@ -320,6 +324,7 @@ class MatchElement(DictMixin):
         self.succ_match_element.pred_match_elements.append(orig_match_element)
 
         orig_match_element.port = self.port
+        orig_match_element.causing_match_element = self.causing_match_element
         orig_match_element.pred_match_elements = self.pred_match_elements
 
         for field_name in field_names:
@@ -522,6 +527,14 @@ class Match():
             orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
         return orig_match
 
+    def get_orig_match_2(self):
+        orig_match = Match()
+        for me in self.match_elements:
+            orig_match.match_elements.append(me.get_orig_match_element(me.written_field_modifications,
+                                                                       matching_element))
+        return orig_match
+
+
     def add_port_to_path(self, port):
         for me in self.match_elements:
             me.add_port_to_path(port)
@@ -539,9 +552,10 @@ class Match():
         for me in self.match_elements:
             me.edge_data_key = edge_data_key
 
-    def accumulate_written_field_modifications(self, in_written_field_modifications):
+    def accumulate_written_field_modifications(self, in_written_field_modifications, in_match_element):
         for me in self.match_elements:
             me.written_field_modifications.update(in_written_field_modifications)
+            me.causing_match_element = in_match_element
 
     def is_field_wildcard(self, field_name):
         retval = True

@@ -217,6 +217,12 @@ class PortGraph:
                 if this_edge["edge_type"] == "egress":
                     curr.admitted_match[dst_port_id].set_field("in_port", is_wildcard=True)
 
+                if this_edge["edge_type"] == "ingress":
+                    # This is where written_field_modifications get applied and hence affect admitted_match
+                    # This should also essentially empty out written_field_modifications on each ME
+                    #curr_admitted_match = curr.admitted_match[dst_port_id].get_orig_match_2()
+                    pass
+
                 if flow and flow.applied_field_modifications:
                     curr_admitted_match = curr.admitted_match[dst_port_id].get_orig_match(flow.applied_field_modifications,
                                                                                       flow.match_element)
@@ -226,14 +232,11 @@ class PortGraph:
                 i = this_edge["edge_filter_match"].intersect(curr_admitted_match)
 
                 if not i.is_empty():
-                    if this_edge["edge_type"] == "ingress":
-                        #TODO:
-                        # This is where written_field_modifications get applied and hence affect attempted match
-                        pass
+
 
                     # For non-ingress edges, accumulate written_field_modifications in the pred_admitted_match
                     if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
-                        i.accumulate_written_field_modifications(flow.written_field_modifications)
+                        i.accumulate_written_field_modifications(flow.written_field_modifications, flow.match_element)
 
                     pred_admitted_match.union(i)
 
