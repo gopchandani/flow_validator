@@ -217,17 +217,20 @@ class PortGraph:
                 if this_edge["edge_type"] == "egress":
                     curr.admitted_match[dst_port_id].set_field("in_port", is_wildcard=True)
 
-                if this_edge["edge_type"] == "ingress":
-                    # This is where written_field_modifications get applied and hence affect admitted_match
-                    # This should also essentially empty out written_field_modifications on each ME
-                    #curr_admitted_match = curr.admitted_match[dst_port_id].get_orig_match_2()
-                    pass
 
+
+                # This check takes care of any applied actions
                 if flow and flow.applied_field_modifications:
                     curr_admitted_match = curr.admitted_match[dst_port_id].get_orig_match(flow.applied_field_modifications,
                                                                                       flow.match_element)
                 else:
                     curr_admitted_match = curr.admitted_match[dst_port_id]
+
+
+                # At ingress edge compute the effect of written-actions
+                if this_edge["edge_type"] == "ingress":
+                    curr_admitted_match = curr_admitted_match.get_orig_match_2()
+
 
                 i = this_edge["edge_filter_match"].intersect(curr_admitted_match)
 
