@@ -41,6 +41,7 @@ class FlowValidator:
             if host_obj.switch_id == "openflow:1":
                 continue
 
+            self.model.simulate_remove_edge(host_id, host_obj.switch_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
     def initialize_admitted_match(self):
@@ -66,16 +67,16 @@ class FlowValidator:
         for src_h_id in self.model.get_host_ids():
             for dst_h_id in self.model.get_host_ids():
 
-                src_port = self.port_graph.get_port(src_h_id)
-                dst_port = self.port_graph.get_port(dst_h_id)
-                src_host_obj = self.model.get_node_object(src_port.port_id)
+                src_host_obj = self.model.get_node_object(src_h_id)
+                dst_host_obj = self.model.get_node_object(dst_h_id)
 
-                if src_port != dst_port:
+                if src_h_id != dst_h_id:
 
                     print "Port Paths from:", src_h_id, "to:", dst_h_id
+                    at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
-                    am = src_port.admitted_traffic[dst_port.port_id]
-                    am.print_port_paths()
+                    # Baseline
+                    at.print_port_paths()
 
 
     def validate_all_host_pair_backup_reachability(self):
@@ -129,7 +130,7 @@ def main():
 
     bp.remove_hosts()
 
-    bp.validate_all_host_pair_backup_reachability()
+    bp.validate_all_host_pair_basic_reachability()
 
 
 if __name__ == "__main__":

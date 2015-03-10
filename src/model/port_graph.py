@@ -36,6 +36,22 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
+    def init_port_graph(self):
+
+        #Add a port for controller
+        #TODO: Nothing gets added to this for now.
+        self.init_global_controller_port()
+
+        # Iterate through switches and add the ports and relevant abstract analysis
+        for sw in self.model.get_switches():
+            sw.compute_switch_port_graph()
+
+        # Add edges between ports on node edges, where nodes are only switches.
+        for node_edge in self.model.graph.edges():
+            if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
+                self.add_node_graph_edge(node_edge[0], node_edge[1])
+
+
     def add_edge(self, port1, port2, key, edge_filter_match, update_flag=False):
 
         edge_type = None
@@ -69,7 +85,7 @@ class PortGraph:
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
 
-            # This looks silly, but this dictionary is being modified as we go, so is necessary
+            # This is to avoid modifying the dictionary during iteration
             edge_data_keys = edge_data.keys()
             for flow, edge_action in edge_data_keys:
                 if flow:
@@ -123,20 +139,6 @@ class PortGraph:
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
         self.remove_edge(from_port, to_port)
 
-    def init_port_graph(self):
-
-        #Add a port for controller
-        #TODO: Nothing gets added to this for now.
-        self.init_global_controller_port()
-
-        # Iterate through switches and add the ports and relevant abstract analysis
-        for sw in self.model.get_switches():
-            sw.compute_switch_port_graph()
-
-        # Add edges between ports on node edges, where nodes are only switches.
-        for node_edge in self.model.graph.edges():
-            if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
-                self.add_node_graph_edge(node_edge[0], node_edge[1])
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
