@@ -89,11 +89,6 @@ class Traffic():
             orig_match.match_elements.append(me.get_orig_match_element())
         return orig_match
 
-
-    def add_port_to_path(self, port):
-        for me in self.match_elements:
-            me.add_port_to_path(port)
-
     def set_port(self, port):
         for me in self.match_elements:
             me.port = port
@@ -121,15 +116,6 @@ class Traffic():
                 break
 
         return retval
-
-    def print_traffic_paths(self):
-
-        for me in self.match_elements:
-            port_path = ""
-            for port in me.path_ports:
-                port_path += port.port_id + " -> "
-
-            print port_path
 
     def print_port_paths(self):
 

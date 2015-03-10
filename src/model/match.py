@@ -103,9 +103,6 @@ class MatchElement(DictMixin):
 
     def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True):
 
-        # Contains a list of ports where the element has been before it arrives here
-        self.path_ports = []
-        
         self.port = None
         self.edge_data_key = None
         self.succ_match_element = None
@@ -126,10 +123,6 @@ class MatchElement(DictMixin):
         elif is_wildcard:
             for field_name in field_names:
                 self.set_match_field_element(field_name, is_wildcard=True)
-
-    def add_port_to_path(self, port):
-        self.path_ports.insert(0, port)
-
 
     def set_match_field_element(self, key, value=None, flow=None, is_wildcard=False, exception=False):
 
@@ -187,7 +180,6 @@ class MatchElement(DictMixin):
 
         intersection_element.port = in_match_element.port
         intersection_element.causing_match_element = in_match_element.causing_match_element
-        intersection_element.path_ports = list(in_match_element.path_ports)
         intersection_element.written_field_modifications.update(in_match_element.written_field_modifications)
 
         # Establish that the resulting intersection_element is based on in_match_element
@@ -216,7 +208,6 @@ class MatchElement(DictMixin):
 
         new_me.port = self.port
         new_me.causing_match_element = self.causing_match_element
-        new_me.path_ports = list(candidate_me.path_ports)
         new_me.written_field_modifications.update(candidate_me.written_field_modifications)
 
 
@@ -323,7 +314,6 @@ class MatchElement(DictMixin):
 
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
-        orig_match_element.path_ports = list(self.path_ports)
         orig_match_element.written_field_modifications.update(self.written_field_modifications)
 
         # This newly minted ME depends on the succ_match_element

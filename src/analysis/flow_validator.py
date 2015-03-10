@@ -10,8 +10,6 @@ class FlowValidator:
         self.model = Model(init_port_graph=True)
         self.port_graph = self.model.port_graph
 
-        self.add_hosts()
-        self.initialize_admitted_match()
 
     def add_hosts(self):
 
@@ -24,7 +22,13 @@ class FlowValidator:
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
             admitted_match.set_field("ethernet_destination", dst_mac_int)
 
-            self.port_graph.add_destination_host_port_traffic(host_obj, admitted_match)
+            self.port_graph.add_host_port_and_traffic(host_obj, admitted_match)
+
+    def remove_hosts(self):
+
+        for host_id in self.model.get_host_ids():
+            host_obj = self.model.get_node_object(host_id)
+            self.port_graph.remove_host_and_port_traffic(host_obj.port)
 
     def initialize_admitted_match(self):
 
@@ -98,8 +102,18 @@ class FlowValidator:
 def main():
 
     bp = FlowValidator()
+
+    bp.add_hosts()
+    bp.initialize_admitted_match()
+
     #bp.validate_all_host_pair_basic_reachability()
+
     bp.validate_all_host_pair_backup_reachability()
+
+    #bp.remove_hosts()
+
+    #bp.validate_all_host_pair_backup_reachability()
+
 
 if __name__ == "__main__":
     main()

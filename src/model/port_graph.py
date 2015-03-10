@@ -142,18 +142,15 @@ class PortGraph:
             if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
                 self.add_node_graph_edge(node_edge[0], node_edge[1])
 
-    def add_destination_host_port_traffic(self, host_obj, admitted_traffic):
+    def add_host_port_and_traffic(self, host_obj, admitted_traffic):
 
         # Add the port for host
-
         host_obj.port = Port(None, port_type="physical", port_id=host_obj.node_id)
         admitted_traffic.set_port(host_obj.port)
         host_obj.port.admitted_traffic[host_obj.node_id] = admitted_traffic
-        host_obj.port.admitted_traffic[host_obj.node_id].add_port_to_path(host_obj.port)
 
         self.add_port(host_obj.port)
         self.added_host_ports.append(host_obj.port)
-
 
         # Add edges between host and switch in the port graph
 
@@ -174,7 +171,7 @@ class PortGraph:
 
         return host_obj.port
 
-    def remove_destination_host(self, host_obj):
+    def remove_host_and_port_traffic(self, host_obj):
         pass
 
 
@@ -223,7 +220,6 @@ class PortGraph:
                     pred_admitted_traffic.union(i)
 
                     #Establish that curr is part of the path that the MatchElements are going to take to pred
-                    pred_admitted_traffic.add_port_to_path(curr)
                     pred_admitted_traffic.set_port(pred)
                     pred_admitted_traffic.set_edge_data_key((flow, edge_action))
 
