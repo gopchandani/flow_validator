@@ -41,7 +41,7 @@ class FlowValidator:
             if host_obj.switch_id == "openflow:1":
                 continue
 
-            self.port_graph.remove_host_port_edges(host_obj)
+            self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
     def initialize_admitted_match(self):
 
@@ -52,7 +52,7 @@ class FlowValidator:
                 host_obj.switch_id, "at port:", \
                 host_obj.switch_port_attached
 
-            switch_egress_port = self.port_graph.g.predecessors(host_obj.ingress_port.port_id)[0]
+            switch_egress_port = self.port_graph.get_port(self.port_graph.g.predecessors(host_obj.ingress_port.port_id)[0])
 
 
             self.port_graph.compute_admitted_traffic(switch_egress_port,
@@ -85,16 +85,16 @@ class FlowValidator:
             for dst_h_id in self.model.get_host_ids():
 
                 src_host_obj = self.model.get_node_object(src_h_id)
+                dst_host_obj = self.model.get_node_object(dst_h_id)
 
                 if src_host_obj.switch_id == "openflow:3":
                     continue
 
-                src_port = self.port_graph.get_port(src_h_id)
 
                 if src_h_id != dst_h_id:
 
                     print "Port Paths from:", src_h_id, "to:", dst_h_id
-                    at = src_port.admitted_traffic[dst_h_id]
+                    at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                     # Baseline
                     at.print_port_paths()

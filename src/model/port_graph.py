@@ -138,36 +138,6 @@ class PortGraph:
             if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
                 self.add_node_graph_edge(node_edge[0], node_edge[1])
 
-    def add_host_port_edges(self, host_obj):
-
-        # Add edges between host and switch in the port graph
-        switch_ingress_port = self.get_port(self.get_incoming_port_id(host_obj.switch_id,
-                                                                       host_obj.switch_port_attached))
-
-        switch_egress_port = self.get_port(self.get_outgoing_port_id(host_obj.switch_id,
-                                                                      host_obj.switch_port_attached))
-
-        self.add_edge(host_obj.port, switch_ingress_port, (None, None), Traffic(init_wildcard=True))
-        self.add_edge(switch_egress_port, host_obj.port, (None, None), Traffic(init_wildcard=True))
-
-        host_obj.switch_ingress_port = switch_ingress_port
-        host_obj.switch_egress_port = switch_egress_port
-
-    def remove_host_port_edges(self, host_obj):
-
-        switch_ingress_port = self.get_port(self.get_incoming_port_id(host_obj.switch_id,
-                                                                       host_obj.switch_port_attached))
-
-        switch_egress_port = self.get_port(self.get_outgoing_port_id(host_obj.switch_id,
-                                                                      host_obj.switch_port_attached))
-
-        # Remove edges
-        self.remove_edge(host_obj.port, switch_ingress_port)
-        self.remove_edge(switch_egress_port, host_obj.port)
-
-        # Remove port
-        self.remove_port(host_obj.port)
-
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
         pred_admitted_traffic = Traffic()
