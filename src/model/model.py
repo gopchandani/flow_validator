@@ -192,8 +192,16 @@ class Model():
 
         for link in topology_links:
 
-            node1_port = link["source"]["source-tp"].split(":")[2]
-            node2_port = link["destination"]["dest-tp"].split(":")[2]
+            if self.graph.node[link["source"]["source-node"]]["node_type"] == "switch":
+                node1_port = link["source"]["source-tp"].split(":")[2]
+            else:
+                node1_port = "0"
+
+            if self.graph.node[link["destination"]["dest-node"]]["node_type"] == "switch":
+                node2_port = link["destination"]["dest-tp"].split(":")[2]
+            else:
+                node2_port = "0"
+
 
             self.add_edge(link["source"]["source-node"], node1_port, link["destination"]["dest-node"], node2_port)
 

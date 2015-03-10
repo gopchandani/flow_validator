@@ -14,25 +14,34 @@ class FlowValidator:
 
         # Attach a destination port for each host.
         for host_id in self.model.get_host_ids():
+
             host_obj = self.model.get_node_object(host_id)
+
+            self.port_graph.add_port(host_obj.ingress_port)
+            self.port_graph.add_port(host_obj.egress_port)
+
+            self.port_graph.add_host_port_edges(host_obj)
 
             admitted_traffic = Traffic(init_wildcard=True)
             admitted_traffic.set_field("ethernet_type", 0x0800)
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
             admitted_traffic.set_field("ethernet_destination", dst_mac_int)
 
-            admitted_traffic.set_port(host_obj.port)
+            admitted_traffic.set_port(host_obj.ingress_port)
 
-            host_obj.port.admitted_traffic[host_obj.node_id] = admitted_traffic
+            host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id] = admitted_traffic
 
-            self.port_graph.add_host_port_edges(host_obj)
 
 
     def remove_hosts(self):
 
         for host_id in self.model.get_host_ids():
+
             host_obj = self.model.get_node_object(host_id)
-            self.port_graph.remove_host_port_and_edges(host_obj.port)
+            if host_obj.switch_id == "openflow:1":
+                continue
+
+            self.port_graph.remove_host_port_edges(host_obj)
 
     def initialize_admitted_match(self):
 
@@ -72,18 +81,20 @@ class FlowValidator:
         for src_h_id in self.model.get_host_ids():
             for dst_h_id in self.model.get_host_ids():
 
-                src_port = self.port_graph.get_port(src_h_id)
-                dst_port = self.port_graph.get_port(dst_h_id)
-                src_host_obj = self.model.get_node_object(src_port.port_id)
+                src_host_obj = self.model.get_node_object(src_h_id)
 
-                if src_port != dst_port:
+                if src_host_obj.switch_id == "openflow:3":
+                    continue
+
+                src_port = self.port_graph.get_port(src_h_id)
+
+                if src_h_id != dst_h_id:
 
                     print "Port Paths from:", src_h_id, "to:", dst_h_id
-                    at = src_port.admitted_traffic[dst_port.port_id]
+                    at = src_port.admitted_traffic[dst_h_id]
 
                     # Baseline
                     at.print_port_paths()
-
 
                     # First remove the edge
 
@@ -111,11 +122,11 @@ def main():
 
     #bp.validate_all_host_pair_basic_reachability()
 
-    bp.validate_all_host_pair_backup_reachability()
-
-    #bp.remove_hosts()
-
     #bp.validate_all_host_pair_backup_reachability()
+
+    bp.remove_hosts()
+
+    bp.validate_all_host_pair_backup_reachability()
 
 
 if __name__ == "__main__":
