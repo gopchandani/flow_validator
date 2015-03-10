@@ -20,7 +20,7 @@ class Port():
 
         # This dictionary is to hold a Match object per destination
         self.path_elements = {}
-        self.admitted_match = {}
+        self.admitted_traffic = {}
         self.traversal_distance = None
 
         # These apply specifically to physical ports

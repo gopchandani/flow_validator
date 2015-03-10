@@ -36,7 +36,7 @@ class FlowValidator:
                 host_obj.switch_port_attached
 
             self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
-                                                   host_obj.port.admitted_match[host_obj.port.port_id],
+                                                   host_obj.port.admitted_traffic[host_obj.port.port_id],
                                                    host_obj.port,
                                                    host_obj.port)
 
@@ -71,10 +71,10 @@ class FlowValidator:
                 if src_port != dst_port:
 
                     print "Port Paths from:", src_h_id, "to:", dst_h_id
-                    am = src_port.admitted_match[dst_port.port_id]
+                    at = src_port.admitted_traffic[dst_port.port_id]
 
                     # Baseline
-                    am.print_port_paths()
+                    at.print_port_paths()
 
 
                     # First remove the edge
@@ -86,12 +86,12 @@ class FlowValidator:
 
                     self.model.simulate_remove_edge(node1, node2)
                     self.port_graph.remove_node_graph_edge(node1, node2)
-                    am.print_port_paths()
+                    at.print_port_paths()
 
                     # Add it back
                     self.model.simulate_add_edge(node1, node2)
                     self.port_graph.add_node_graph_edge(node1, node2, True)
-                    am.print_port_paths()
+                    at.print_port_paths()
 
 
 
