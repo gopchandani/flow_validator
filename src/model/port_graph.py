@@ -21,11 +21,11 @@ class PortGraph:
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
-    def get_incoming_port_id(self, switch_id, port_number):
-        return switch_id + ":ingress" + str(port_number)
+    def get_incoming_port_id(self, node_id, port_number):
+        return node_id + ":ingress" + str(port_number)
 
-    def get_outgoing_port_id(self, switch_id, port_number):
-        return switch_id + ":egress" + str(port_number)
+    def get_outgoing_port_id(self, node_id, port_number):
+        return node_id + ":egress" + str(port_number)
 
     def add_port(self, port):
         self.g.add_node(port.port_id, p=port)

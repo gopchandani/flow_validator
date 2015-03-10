@@ -20,7 +20,7 @@ class FlowValidator:
             self.port_graph.add_port(host_obj.ingress_port)
             self.port_graph.add_port(host_obj.egress_port)
 
-            self.port_graph.add_host_port_edges(host_obj)
+            self.port_graph.add_node_graph_edge(host_id, host_obj.switch_id)
 
             admitted_traffic = Traffic(init_wildcard=True)
             admitted_traffic.set_field("ethernet_type", 0x0800)
@@ -52,10 +52,13 @@ class FlowValidator:
                 host_obj.switch_id, "at port:", \
                 host_obj.switch_port_attached
 
-            self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
-                                                   host_obj.port.admitted_traffic[host_obj.port.port_id],
-                                                   host_obj.port,
-                                                   host_obj.port)
+            switch_egress_port = self.port_graph.g.predecessors(host_obj.ingress_port.port_id)[0]
+
+
+            self.port_graph.compute_admitted_traffic(switch_egress_port,
+                                                   host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id],
+                                                   host_obj.ingress_port,
+                                                   host_obj.ingress_port)
 
     def validate_all_host_pair_basic_reachability(self):
 

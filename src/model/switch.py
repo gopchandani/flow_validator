@@ -99,11 +99,11 @@ class Switch():
         for port in self.ports:
 
             in_p = Port(self,
-                        port_type="incoming",
+                        port_type="ingress",
                         port_id=self.model.port_graph.get_incoming_port_id(self.node_id, port))
 
             out_p = Port(self,
-                         port_type="outgoing",
+                         port_type="egress",
                          port_id=self.model.port_graph.get_outgoing_port_id(self.node_id, port))
 
             in_p.port_number = int(port)
