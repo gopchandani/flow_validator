@@ -120,13 +120,13 @@ class PortGraph:
         for dst in curr.admitted_traffic:
 
             # First compute what the admitted_traffic for this dst looks like right now after edge status changes...
-            now_admitted_match = Traffic()
+            now_admitted_traffic = Traffic()
             for succ_id in self.g.successors_iter(curr.port_id):
                 succ = self.get_port(succ_id)
-                now_admitted_match.union(self.compute_pred_admitted_match(curr, succ, dst))
+                now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
 
-            # Now do the welding job, i.e. connect past admitted_matches and dependencies on them with this
-            curr.admitted_traffic[dst] = curr.admitted_traffic[dst].pipe_welding(now_admitted_match)
+            # Now do the welding job, i.e. connect past admitted_traffices and dependencies on them with this
+            curr.admitted_traffic[dst] = curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
 
 
     def init_global_controller_port(self):
@@ -208,9 +208,9 @@ class PortGraph:
         pass
 
 
-    def compute_pred_admitted_match(self, pred, curr, dst_port_id):
+    def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
-        pred_admitted_match = Traffic()
+        pred_admitted_traffic = Traffic()
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)
 
         for flow, edge_action in edge_data:
@@ -230,49 +230,49 @@ class PortGraph:
 
                 # This check takes care of any applied actions
                 if flow and flow.applied_field_modifications:
-                    curr_admitted_match = curr.admitted_traffic[dst_port_id].get_orig_match(flow.applied_field_modifications,
+                    curr_admitted_traffic = curr.admitted_traffic[dst_port_id].get_orig_match(flow.applied_field_modifications,
                                                                                       flow.match_element)
                 else:
-                    curr_admitted_match = curr.admitted_traffic[dst_port_id]
+                    curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
 
 
                 # At ingress edge compute the effect of written-actions
                 if this_edge["edge_type"] == "ingress":
-                    curr_admitted_match = curr_admitted_match.get_orig_match_2()
+                    curr_admitted_traffic = curr_admitted_traffic.get_orig_match_2()
 
 
-                i = this_edge["edge_filter_match"].intersect(curr_admitted_match)
+                i = this_edge["edge_filter_match"].intersect(curr_admitted_traffic)
 
                 if not i.is_empty():
 
 
-                    # For non-ingress edges, accumulate written_field_modifications in the pred_admitted_match
+                    # For non-ingress edges, accumulate written_field_modifications in the pred_admitted_traffic
                     if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
                         i.accumulate_written_field_modifications(flow.written_field_modifications, flow.match_element)
 
-                    pred_admitted_match.union(i)
+                    pred_admitted_traffic.union(i)
 
                     #Establish that curr is part of the path that the MatchElements are going to take to pred
-                    pred_admitted_match.add_port_to_path(curr)
-                    pred_admitted_match.set_port(pred)
-                    pred_admitted_match.set_edge_data_key((flow, edge_action))
+                    pred_admitted_traffic.add_port_to_path(curr)
+                    pred_admitted_traffic.set_port(pred)
+                    pred_admitted_traffic.set_edge_data_key((flow, edge_action))
 
-        return pred_admitted_match
+        return pred_admitted_traffic
 
 
     # curr in this function below represents the port we assumed to have already reached
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
 
-    def compute_admitted_traffic(self, curr, curr_admitted_match, succ, dst_port):
+    def compute_admitted_traffic(self, curr, curr_admitted_traffic, succ, dst_port):
 
-        # If curr has not seen destination at all, first get the curr_admitted_match account started
+        # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
-            curr.admitted_traffic[dst_port.port_id] = curr_admitted_match
+            curr.admitted_traffic[dst_port.port_id] = curr_admitted_traffic
 
         # If you already know something about this destination, then keep accumulating
         # this is for cases when recursion comes from multiple directions and accumulates here
         else:
-            curr.admitted_traffic[dst_port.port_id].union(curr_admitted_match)
+            curr.admitted_traffic[dst_port.port_id].union(curr_admitted_traffic)
 
         # Base case: Stop at host ports.
         if curr in self.added_host_ports:
@@ -283,7 +283,7 @@ class PortGraph:
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
                 pred = self.get_port(pred_id)
-                pred_admitted_match = self.compute_pred_admitted_match(pred, curr, dst_port.port_id)
+                pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
 
-                if not pred_admitted_match.is_empty():
-                    self.compute_admitted_traffic(pred, pred_admitted_match, curr, dst_port)
+                if not pred_admitted_traffic.is_empty():
+                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst_port)
