@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+from port import Port
 
 class Host():
 
@@ -17,5 +18,8 @@ class Host():
         self.switch_port = switch_obj.ports[self.switch_port_attached]
 
         self.switch_ingress_port  = None
+
         self.switch_egress_port = None
-        self.port = None
+
+        self.port = Port(None, port_type="host", port_id=self.node_id)
+

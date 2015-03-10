@@ -16,25 +16,30 @@ class FlowValidator:
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
 
-            admitted_match = Traffic(init_wildcard=True)
-            admitted_match.set_field("ethernet_type", 0x0800)
+            admitted_traffic = Traffic(init_wildcard=True)
+            admitted_traffic.set_field("ethernet_type", 0x0800)
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
-            admitted_match.set_field("ethernet_destination", dst_mac_int)
+            admitted_traffic.set_field("ethernet_destination", dst_mac_int)
 
-            self.port_graph.add_host_port_and_traffic(host_obj, admitted_match)
+            admitted_traffic.set_port(host_obj.port)
+
+            host_obj.port.admitted_traffic[host_obj.node_id] = admitted_traffic
+
+            self.port_graph.add_host_port_edges(host_obj)
+
 
     def remove_hosts(self):
 
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
-            self.port_graph.remove_host_and_port_traffic(host_obj.port)
+            self.port_graph.remove_host_port_and_edges(host_obj.port)
 
     def initialize_admitted_match(self):
 
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
 
-            print "Computing admitted_match:", host_id, "connected to switch:", \
+            print "Computing admitted_traffic:", host_id, "connected to switch:", \
                 host_obj.switch_id, "at port:", \
                 host_obj.switch_port_attached
 
@@ -57,7 +62,7 @@ class FlowValidator:
 
                     print "Port Paths from:", src_h_id, "to:", dst_h_id
 
-                    am = src_port.admitted_match[dst_port.port_id]
+                    am = src_port.admitted_traffic[dst_port.port_id]
                     am.print_port_paths()
 
 
@@ -95,7 +100,6 @@ class FlowValidator:
                     self.model.simulate_add_edge(node1, node2)
                     self.port_graph.add_node_graph_edge(node1, node2, True)
                     at.print_port_paths()
-
 
 
 def main():

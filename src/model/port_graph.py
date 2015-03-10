@@ -138,12 +138,7 @@ class PortGraph:
             if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
                 self.add_node_graph_edge(node_edge[0], node_edge[1])
 
-    def add_host_port_and_traffic(self, host_obj, admitted_traffic):
-
-        # Add the port for host
-        host_obj.port = Port(None, port_type="host", port_id=host_obj.node_id)
-        admitted_traffic.set_port(host_obj.port)
-        host_obj.port.admitted_traffic[host_obj.node_id] = admitted_traffic
+    def add_host_port_edges(self, host_obj):
 
         self.add_port(host_obj.port)
 
@@ -161,9 +156,8 @@ class PortGraph:
         host_obj.switch_ingress_port = switch_ingress_port
         host_obj.switch_egress_port = switch_egress_port
 
-        return host_obj.port
 
-    def remove_host_and_port_traffic(self, host_obj):
+    def remove_host_port_edges(self, host_obj):
         pass
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
