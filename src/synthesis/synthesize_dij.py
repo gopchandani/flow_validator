@@ -27,6 +27,7 @@ class SynthesizeDij():
         self.apply_tag_intents_immediately = True
         self.apply_other_intents_immediately = False
 
+
     def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
 
         edge_ports_dict = self.model.get_edge_port_dict(p[0], p[1])

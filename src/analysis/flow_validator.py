@@ -35,7 +35,7 @@ class FlowValidator:
                 host_obj.switch_id, "at port:", \
                 host_obj.switch_port_attached
 
-            self.port_graph.compute_admitted_match(host_obj.switch_egress_port,
+            self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
                                                    host_obj.port.admitted_match[host_obj.port.port_id],
                                                    host_obj.port,
                                                    host_obj.port)
