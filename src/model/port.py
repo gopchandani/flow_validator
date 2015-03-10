@@ -33,7 +33,7 @@ class Port():
         if port_type == "physical" and node_connector_json:
             self._populate_with_node_connector_json(node_connector_json)
 
-        elif port_type == "physical":
+        elif port_type == "host":
             self.port_id = port_id
         elif port_type == "table":
             self.port_id = port_id

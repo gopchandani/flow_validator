@@ -10,7 +10,6 @@ class FlowValidator:
         self.model = Model(init_port_graph=True)
         self.port_graph = self.model.port_graph
 
-
     def add_hosts(self):
 
         # Attach a destination port for each host.

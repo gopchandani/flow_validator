@@ -17,7 +17,6 @@ class PortGraph:
     def __init__(self, model):
         self.model = model
         self.g = nx.MultiDiGraph()
-        self.added_host_ports = []
 
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
@@ -44,8 +43,6 @@ class PortGraph:
             edge_type = "egress"
         elif port1.port_type == "incoming" and port2.port_type == "table":
             edge_type = "ingress"
-        elif port1.port_type == "physical" and port2.port_type == "table":
-            edge_type = "transport"
 
         e = (port1.port_id, port2.port_id, key)
 
@@ -57,7 +54,6 @@ class PortGraph:
             self.update_predecessors(port1)
 
         return e
-
 
     def remove_edge(self, port1, port2):
 
@@ -145,12 +141,11 @@ class PortGraph:
     def add_host_port_and_traffic(self, host_obj, admitted_traffic):
 
         # Add the port for host
-        host_obj.port = Port(None, port_type="physical", port_id=host_obj.node_id)
+        host_obj.port = Port(None, port_type="host", port_id=host_obj.node_id)
         admitted_traffic.set_port(host_obj.port)
         host_obj.port.admitted_traffic[host_obj.node_id] = admitted_traffic
 
         self.add_port(host_obj.port)
-        self.added_host_ports.append(host_obj.port)
 
         # Add edges between host and switch in the port graph
 
@@ -173,7 +168,6 @@ class PortGraph:
 
     def remove_host_and_port_traffic(self, host_obj):
         pass
-
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
@@ -225,7 +219,6 @@ class PortGraph:
 
         return pred_admitted_traffic
 
-
     # curr in this function below represents the port we assumed to have already reached
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
 
@@ -241,10 +234,9 @@ class PortGraph:
             curr.admitted_traffic[dst_port.port_id].union(curr_admitted_traffic)
 
         # Base case: Stop at host ports.
-        if curr in self.added_host_ports:
+        if curr.port_type == "host":
             return
         else:
-
             # Recursively call myself at each of my predecessors in the port graph
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
