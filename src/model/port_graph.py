@@ -13,36 +13,6 @@ from traffic import Traffic
 
 
 class PortGraph:
-    '''
-
-    This function populates the port graph with edges and match state
-    Before this function gets triggered for a specific destination host, we need some
-    abstract, generic analysis prepared that applies to more than this host. This pre-analysis need to consider
-    how a wildcard flow moves from one port to another in the switch through all the tables.
-
-    What I just described above is essentially what a transfer function does right now. If we keep that inside it,
-    Then the transfer function essentially needs to be pre-computed once and then queried by ports as hosts for analysis
-    get added
-
-    Capture the action_list for ports before and after a table for a wildcard match,
-    The path from one external facing port to another goes through a sequence of action lists
-    This breaks when the next action depends on changes that have already been made to the header
-    aka apply-action
-    The same nature of things also applies when we are traversing switch boundaries, except the action_list
-    is empty
-    Each switch port has entries for all the destination switches +
-    hosts that are directly to the switch as destinations
-    Takes a destination port, and source port and computes precisely just that.
-
-    Go a level higher, i.e. Go to the ports that are physically
-    connected to ports in this switch from other switches and then compute the same from there.
-    This sounds _eerily_ recursive. :)
-
-    These other ports can not be things that we have already seen though
-
-    This whole thing terminates at ports that are connected to other switches.
-    This sounds eerily like the end case of recursion
-    '''
 
     def __init__(self, model):
         self.model = model
