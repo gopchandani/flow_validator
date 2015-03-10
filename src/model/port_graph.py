@@ -152,11 +152,8 @@ class PortGraph:
         switch_ingress_port = self.get_port(self.get_incoming_port_id(host_obj.switch_id,
                                                                        host_obj.switch_port_attached))
 
-        switch_ingress_port.port_number = int(host_obj.switch_port.port_number)
-
         switch_egress_port = self.get_port(self.get_outgoing_port_id(host_obj.switch_id,
                                                                       host_obj.switch_port_attached))
-        switch_egress_port.port_number = int(host_obj.switch_port.port_number)
 
         self.add_edge(host_obj.port, switch_ingress_port, (None, None), Traffic(init_wildcard=True))
         self.add_edge(switch_egress_port, host_obj.port, (None, None), Traffic(init_wildcard=True))
