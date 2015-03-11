@@ -236,12 +236,13 @@ class MatchElement(DictMixin):
         for pred in self.pred_match_elements:
             pred.remove_with_predecessors()
 
+
+        self.succ_match_element = None
+
         # Remove this one from its traffic's list of Match Elements
         if self in self.traffic.match_elements:
 
             self.traffic.match_elements.remove(self)
-            self.succ_match_element = None
-
             print "Removed:", str(id(self))
         else:
             print "Already removed, self:", str(id(self))

@@ -58,7 +58,6 @@ class FlowValidator:
 
             self.port_graph.compute_admitted_traffic(switch_egress_port,
                                                    host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id],
-                                                   host_obj.ingress_port,
                                                    host_obj.ingress_port)
 
     def validate_all_host_pair_basic_reachability(self):

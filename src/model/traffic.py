@@ -56,9 +56,7 @@ class Traffic():
         # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
 
         for existing_me in self.match_elements:
-
             existing_me_welded = False
-
             for candidate_me in now_admitted_match.match_elements:
                 new_me = existing_me.pipe_welding(candidate_me)
                 if new_me:
@@ -72,9 +70,7 @@ class Traffic():
             if not existing_me_welded:
                 existing_me.remove_with_predecessors()
                 print "****** Haven't worked out this case *******"
-
         return new_m
-
 
     def union(self, in_match):
 

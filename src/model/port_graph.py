@@ -179,7 +179,7 @@ class PortGraph:
     # curr in this function below represents the port we assumed to have already reached
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
 
-    def compute_admitted_traffic(self, curr, curr_admitted_traffic, succ, dst_port):
+    def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
@@ -201,4 +201,4 @@ class PortGraph:
                 pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
 
                 if not pred_admitted_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst_port)
+                    self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
