@@ -171,16 +171,12 @@ class PortGraph:
                     i.set_port(pred)
                     pred_admitted_traffic.union(i)
 
-
         return pred_admitted_traffic
 
     # curr in this function below represents the port we assumed to have already reached
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
-
-        if curr.port_id == "openflow:1:table0":
-            pass
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
@@ -200,6 +196,3 @@ class PortGraph:
 
             if not pred_admitted_traffic.is_empty():
                 self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
-
-        if curr.port_id == "openflow:1:table0":
-            print "exiting"

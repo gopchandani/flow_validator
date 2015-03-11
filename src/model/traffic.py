@@ -66,18 +66,16 @@ class Traffic():
                     break
 
             # If none of the candidate_me took existing_me:
-            #TODO: Delete everybody who dependent on existing_me, the whole chain...
+            #Delete everybody who dependent on existing_me, the whole chain...
             if not existing_me_welded:
                 existing_me.remove_with_predecessors()
-                print "****** Haven't worked out this case *******"
         return new_m
 
     def union(self, in_match):
 
         for union_me in in_match.match_elements:
-            union_me_copy = copy(union_me)
-            union_me_copy.traffic = self
-            self.match_elements.append(union_me_copy)
+            union_me.traffic = self
+            self.match_elements.append(union_me)
 
         return self
 

@@ -231,9 +231,6 @@ class MatchElement(DictMixin):
 
     def remove_with_predecessors(self):
 
-        if self.port.port_id == "openflow:1:table0":
-            print len(self.pred_match_elements)
-
         # if there are any predecessors, go take care of them first
         while self.pred_match_elements:
             pred = self.pred_match_elements.pop()
@@ -246,7 +243,6 @@ class MatchElement(DictMixin):
             self.traffic.match_elements.remove(self)
         else:
             print "Already removed, self:", str(id(self))
-
 
     def complement_match(self):
 
