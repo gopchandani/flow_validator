@@ -232,7 +232,7 @@ class MatchElement(DictMixin):
     def remove_with_predecessors(self):
 
         if self.port.port_id == "openflow:1:table0":
-            pass
+            print len(self.pred_match_elements)
 
         # if there are any predecessors, go take care of them first
         while self.pred_match_elements:
@@ -326,6 +326,16 @@ class MatchElement(DictMixin):
             me = self.causing_match_element
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
+
+        for field_name in field_names:
+            if field_name in mf:
+                # If the field was modified, make it what it was (in abstract) before being modified
+                orig_match_element.match_fields[field_name] = me.match_fields[field_name]
+            else:
+                # Otherwise, just keep the field same as it was
+                orig_match_element.match_fields[field_name] = self.match_fields[field_name]
+
+        # Accumulate field modifications
         orig_match_element.written_field_modifications.update(self.written_field_modifications)
 
         # This newly minted ME depends on the succ_match_element
@@ -334,19 +344,12 @@ class MatchElement(DictMixin):
         # This also means that succ_match_element.pred_match_elements also need to carry around orig_match_element
         self.succ_match_element.pred_match_elements.append(orig_match_element)
 
+        # Copy these from self
         orig_match_element.port = self.port
         orig_match_element.causing_match_element = self.causing_match_element
         orig_match_element.pred_match_elements = self.pred_match_elements
 
-        for field_name in field_names:
-            if field_name in mf:
 
-                # If the field was modified, make it what it was (in abstract) before being modified
-                orig_match_element.match_fields[field_name] = me.match_fields[field_name]
-            else:
-
-                # Otherwise, just keep the field same as it was
-                orig_match_element.match_fields[field_name] = self.match_fields[field_name]
 
         return orig_match_element
 
