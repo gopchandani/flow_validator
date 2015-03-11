@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 from match import MatchElement
+from copy import copy
 
 class Traffic():
 
@@ -40,6 +41,7 @@ class Traffic():
             for e2 in in_match.match_elements:
                 ei = e1.intersect(e2)
                 if ei:
+                    ei.traffic = im
                     im.match_elements.append(ei)
         return im
 
@@ -60,6 +62,7 @@ class Traffic():
             for candidate_me in now_admitted_match.match_elements:
                 new_me = existing_me.pipe_welding(candidate_me)
                 if new_me:
+                    new_me.traffic = new_m
                     new_m.match_elements.append(new_me)
                     existing_me_welded = True
                     break
@@ -73,14 +76,21 @@ class Traffic():
 
 
     def union(self, in_match):
-        self.match_elements.extend(in_match.match_elements)
+
+        for union_me in in_match.match_elements:
+            union_me_copy = copy(union_me)
+            union_me_copy.traffic = self
+            self.match_elements.append(union_me_copy)
+
         return self
 
     def get_orig_match(self, modified_fields, matching_element):
 
         orig_match = Traffic()
         for me in self.match_elements:
-            orig_match.match_elements.append(me.get_orig_match_element(modified_fields, matching_element))
+            orig_me = me.get_orig_match_element(modified_fields, matching_element)
+            orig_me.traffic = orig_match
+            orig_match.match_elements.append(orig_me)
         return orig_match
 
     def get_orig_match_2(self):

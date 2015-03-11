@@ -101,8 +101,9 @@ class MatchElement(DictMixin):
     def __str__(self):
         return str(id(self))
 
-    def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True):
+    def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
 
+        self.traffic = traffic
         self.port = None
         self.edge_data_key = None
         self.succ_match_element = None
@@ -166,7 +167,6 @@ class MatchElement(DictMixin):
 
         intersection_element = MatchElement()
 
-
         for field_name in field_names:
             intersection_element.match_fields[field_name] = self.get_matched_tree(
                 in_match_element.match_fields[field_name], self.match_fields[field_name])
@@ -186,13 +186,11 @@ class MatchElement(DictMixin):
         intersection_element.succ_match_element = in_match_element
         in_match_element.pred_match_elements.append(intersection_element)
 
-
         return intersection_element
 
     def pipe_welding(self, candidate_me):
 
         new_me = MatchElement()
-
 
         for field_name in field_names:
             new_me.match_fields[field_name] = self.get_matched_tree(
@@ -205,11 +203,9 @@ class MatchElement(DictMixin):
                     "candidate_me:", candidate_me.match_fields[field_name]
                 return None
 
-
         new_me.port = self.port
         new_me.causing_match_element = self.causing_match_element
         new_me.written_field_modifications.update(candidate_me.written_field_modifications)
-
 
         # -- Set up what self depended on, in new_me
 
@@ -238,21 +234,21 @@ class MatchElement(DictMixin):
     def complement_match(self):
 
         from traffic import Traffic
-        match_complement = Traffic()
+        traffic_complement = Traffic()
 
         for field_name in field_names:
 
             #If the field is not a wildcard, then chop it from the wildcard initialized Traffic
             if not (Interval(0, sys.maxsize) in self.match_fields[field_name]):
-                me = MatchElement(is_wildcard=True)
+                me = MatchElement(traffic=traffic_complement, is_wildcard=True)
 
                 # Chop out each interval from me[field_name]
                 for interval in self.match_fields[field_name]:
                     me.match_fields[field_name].chop(interval.begin, interval.end)
 
-                match_complement.match_elements.append(me)
+                traffic_complement.match_elements.append(me)
 
-        return match_complement
+        return traffic_complement
 
     def add_element_from_match_json(self, match_json, flow):
 
