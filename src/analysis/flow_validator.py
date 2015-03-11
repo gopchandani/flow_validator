@@ -70,6 +70,9 @@ class FlowValidator:
                 src_host_obj = self.model.get_node_object(src_h_id)
                 dst_host_obj = self.model.get_node_object(dst_h_id)
 
+                if src_host_obj.switch_id == "openflow:3":
+                    continue
+
                 if src_h_id != dst_h_id:
 
                     print "Port Paths from:", src_h_id, "to:", dst_h_id

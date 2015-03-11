@@ -1,16 +1,8 @@
 __author__ = 'Rakesh Kumar'
 
 import networkx as nx
-from collections import deque
-
-import sys
-
-from netaddr import IPNetwork
-from copy import deepcopy
-
 from port import Port
 from traffic import Traffic
-
 
 class PortGraph:
 
@@ -169,11 +161,8 @@ class PortGraph:
                 if this_edge["edge_type"] == "ingress":
                     curr_admitted_traffic = curr_admitted_traffic.get_orig_match_2()
 
-
                 i = this_edge["edge_filter_match"].intersect(curr_admitted_traffic)
-
                 if not i.is_empty():
-
 
                     # For non-ingress edges, accumulate written_field_modifications in the pred_admitted_traffic
                     if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:

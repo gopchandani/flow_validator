@@ -70,8 +70,8 @@ class Traffic():
             # If none of the candidate_me took existing_me:
             #TODO: Delete everybody who dependent on existing_me, the whole chain...
             if not existing_me_welded:
-                print "****** Haven't worked out this case *******"
                 existing_me.remove_with_predecessors()
+                print "****** Haven't worked out this case *******"
 
         return new_m
 
