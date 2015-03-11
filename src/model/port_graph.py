@@ -156,7 +156,6 @@ class PortGraph:
                 else:
                     curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
 
-
                 # At ingress edge compute the effect of written-actions
                 if this_edge["edge_type"] == "ingress":
                     curr_admitted_traffic = curr_admitted_traffic.get_orig_match_2()
@@ -168,11 +167,11 @@ class PortGraph:
                     if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
                         i.accumulate_written_field_modifications(flow.written_field_modifications, flow.match_element)
 
+                    i.set_edge_data_key((flow, edge_action))
                     pred_admitted_traffic.union(i)
 
-                    #Establish that curr is part of the path that the MatchElements are going to take to pred
-                    pred_admitted_traffic.set_port(pred)
-                    pred_admitted_traffic.set_edge_data_key((flow, edge_action))
+
+        pred_admitted_traffic.set_port(pred)
 
         return pred_admitted_traffic
 
@@ -190,15 +189,12 @@ class PortGraph:
         else:
             curr.admitted_traffic[dst_port.port_id].union(curr_admitted_traffic)
 
-        # Base case: Stop at host ports.
-        if curr.port_type == "host":
-            return
-        else:
-            # Recursively call myself at each of my predecessors in the port graph
-            for pred_id in self.g.predecessors_iter(curr.port_id):
+        # Implicit Base case: Host Ingress Ports better not have any predecessor
+        # Recursively call myself at each of my predecessors in the port graph
+        for pred_id in self.g.predecessors_iter(curr.port_id):
 
-                pred = self.get_port(pred_id)
-                pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
+            pred = self.get_port(pred_id)
+            pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
 
-                if not pred_admitted_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
+            if not pred_admitted_traffic.is_empty():
+                self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)

@@ -126,10 +126,11 @@ def main():
     bp.add_hosts()
     bp.initialize_admitted_match()
 
-    #bp.validate_all_host_pair_basic_reachability()
+    bp.validate_all_host_pair_basic_reachability()
 
     #bp.validate_all_host_pair_backup_reachability()
 
+    return
     bp.remove_hosts()
 
     bp.validate_all_host_pair_basic_reachability()

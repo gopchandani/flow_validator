@@ -232,6 +232,9 @@ class MatchElement(DictMixin):
 
     def remove_with_predecessors(self):
 
+        if self.port.port_id == "openflow:1:table0":
+            pass
+
         # if there are any predecessors, go take care of them first
         for pred in self.pred_match_elements:
             pred.remove_with_predecessors()
