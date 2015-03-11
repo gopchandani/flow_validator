@@ -168,10 +168,9 @@ class PortGraph:
                         i.accumulate_written_field_modifications(flow.written_field_modifications, flow.match_element)
 
                     i.set_edge_data_key((flow, edge_action))
+                    i.set_port(pred)
                     pred_admitted_traffic.union(i)
 
-
-        pred_admitted_traffic.set_port(pred)
 
         return pred_admitted_traffic
 
@@ -179,6 +178,9 @@ class PortGraph:
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
+
+        if curr.port_id == "openflow:1:table0":
+            pass
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:

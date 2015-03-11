@@ -61,5 +61,4 @@ class Port():
 
     def __str__(self):
 
-        return "Port -- " + \
-               " Id: " + str(self.port_id)
+        return " Id: " + str(self.port_id)

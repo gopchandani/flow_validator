@@ -99,7 +99,7 @@ class MatchElement(DictMixin):
         return self.value_cache.keys()
 
     def __str__(self):
-        return str(id(self))
+        return str(id(self)) + "@" + self.port.port_id
 
     def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
 
@@ -178,7 +178,6 @@ class MatchElement(DictMixin):
                 #    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
-        intersection_element.port = in_match_element.port
         intersection_element.causing_match_element = in_match_element.causing_match_element
         intersection_element.written_field_modifications.update(in_match_element.written_field_modifications)
 
@@ -238,7 +237,6 @@ class MatchElement(DictMixin):
         # if there are any predecessors, go take care of them first
         for pred in self.pred_match_elements:
             pred.remove_with_predecessors()
-
 
         self.succ_match_element = None
 
