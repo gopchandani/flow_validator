@@ -139,7 +139,6 @@ class PortGraph:
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
         self.remove_edge(from_port, to_port)
 
-
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
         pred_admitted_traffic = Traffic()
@@ -157,8 +156,6 @@ class PortGraph:
                 # At egress edges, set the in_port of the admitted match for destination to wildcard
                 if this_edge["edge_type"] == "egress":
                     curr.admitted_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
-
-
 
                 # This check takes care of any applied actions
                 if flow and flow.applied_field_modifications:

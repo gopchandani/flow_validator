@@ -71,6 +71,7 @@ class Traffic():
             #TODO: Delete everybody who dependent on existing_me, the whole chain...
             if not existing_me_welded:
                 print "****** Haven't worked out this case *******"
+                existing_me.remove_with_predecessors()
 
         return new_m
 
@@ -96,7 +97,9 @@ class Traffic():
     def get_orig_match_2(self):
         orig_match = Traffic()
         for me in self.match_elements:
-            orig_match.match_elements.append(me.get_orig_match_element())
+            orig_me = me.get_orig_match_element()
+            orig_me.traffic = orig_match
+            orig_match.match_elements.append(orig_me)
         return orig_match
 
     def set_port(self, port):

@@ -219,7 +219,6 @@ class MatchElement(DictMixin):
         # Add new_me to successor's predecessor list
         new_me.succ_match_element.pred_match_elements.append(new_me)
 
-
         # -- Set up what depended on self, in new_me
 
         # new_me's predecessors are all of self's predecessors
@@ -230,6 +229,16 @@ class MatchElement(DictMixin):
             me.succ_match_element = new_me
 
         return new_me
+
+    def remove_with_predecessors(self):
+
+        # if there are any predecessors, go take care of them first
+        for pred in self.pred_match_elements:
+            pred.remove_with_predecessors()
+
+        # Remove this one from its traffic's list of Match Elements
+        self.traffic.match_elements.remove(self)
+
 
     def complement_match(self):
 
@@ -307,7 +316,6 @@ class MatchElement(DictMixin):
             me = matching_element
         else:
             me = self.causing_match_element
-
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
         orig_match_element.written_field_modifications.update(self.written_field_modifications)
