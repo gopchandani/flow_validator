@@ -81,7 +81,7 @@ class PortGraph:
     def update_predecessors(self, port1):
 
         # But this could have fail-over consequences for this port's predecessors' flows...
-        for pred_id in self.g.predecessors_iter(port1.port_id):
+        for pred_id in self.g.predecessors(port1.port_id):
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, port1.port_id)
 
