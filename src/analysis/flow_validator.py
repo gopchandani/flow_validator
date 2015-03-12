@@ -46,9 +46,9 @@ class FlowValidator:
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
 
-            print "Computing admitted_traffic:", host_id, "connected to switch:", \
-                host_obj.switch_id, "at port:", \
-                host_obj.switch_port_attached
+            #print "Computing admitted_traffic:", host_id, "connected to switch:", \
+            #    host_obj.switch_id, "at port:", \
+            #    host_obj.switch_port_attached
 
             switch_egress_port = self.port_graph.get_port(self.port_graph.g.predecessors(host_obj.ingress_port.port_id)[0])
 
@@ -68,11 +68,11 @@ class FlowValidator:
 
                 if src_h_id != dst_h_id:
 
-                    print "Port Paths from:", src_h_id, "to:", dst_h_id
+                    #print "Port Paths from:", src_h_id, "to:", dst_h_id
                     at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                     # Baseline
-                    at.print_port_paths()
+                    #at.print_port_paths()
 
 
     def validate_all_host_pair_backup_reachability(self):
@@ -116,11 +116,12 @@ def main():
     bp = FlowValidator()
 
     bp.add_hosts()
+
     bp.initialize_admitted_match()
 
-    #bp.validate_all_host_pair_basic_reachability()
+    bp.validate_all_host_pair_basic_reachability()
 
-    bp.validate_all_host_pair_backup_reachability()
+    #bp.validate_all_host_pair_backup_reachability()
 
     #bp.remove_hosts()
 
