@@ -2,8 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 from timer import Timer
 from analysis.flow_validator import FlowValidator
-
-
+from topology.controller_man import ControllerMan
 
 def init_time():
 
@@ -22,8 +21,19 @@ def init_time():
 
     print init_times
 
+
+def put_together_network():
+    cm = ControllerMan(5)
+
+	for i in range (num_cons):
+		print "Container with port number",
+		print ports[i],
+		print "has container id",
+		print data[i]
+
 def main():
-    init_time()
+    put_together_network()
+    #init_time()
 
 if __name__ == "__main__":
     main()
