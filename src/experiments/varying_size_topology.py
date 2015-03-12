@@ -4,6 +4,7 @@ import sys
 sys.path.append("./")
 
 import json
+import time
 
 from timer import Timer
 from analysis.flow_validator import FlowValidator
@@ -35,9 +36,7 @@ class VaryingSizeTopology():
         for topology_size in self.topology_sizes:
 
             self.setup_network(topology_size)
-
             print "Here"
-
             self.init_times[topology_size] = []
 
             for i in range(self.num_iterations):
@@ -54,7 +53,7 @@ class VaryingSizeTopology():
 
         print self.init_times
 
-        with open(self.init_times, "w") as outfile:
+        with open("init_times" + time.strftime("%Y%m%d-%H%M%S"), "w") as outfile:
             json.dumps(self.init_times, outfile)
 
 def main():

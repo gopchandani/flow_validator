@@ -30,7 +30,7 @@ class ControllerMan():
             new_port = int(6630 + i)
             self.ports.append(new_port)
 
-            start_command = 'sudo docker run -d -t -i -p=%s:6633 -p=8181:8181 controller distribution-karaf-0.2.1-Helium-SR1/bin/karaf' % str(
+            start_command = 'sudo docker run -d -t -i -p=%s:6633 -p=8181:8181 opendaylight distribution-karaf-0.2.1-Helium-SR1/bin/karaf' % str(
                 new_port)
 
             os.system(start_command)
