@@ -32,26 +32,28 @@ class Flow():
         self.applied_match = None
         self.port_graph_edges = []
 
-        # Go through instructions
-        for instruction_json in flow_json["instructions"]["instruction"]:
+        if "instructions" in flow_json:
 
-            if "write-actions" in instruction_json:
-                write_actions_json = instruction_json["write-actions"]
-                for action_json in write_actions_json["action"]:
-                    self.written_actions.append(Action(sw, action_json))
+            # Go through instructions
+            for instruction_json in flow_json["instructions"]["instruction"]:
 
-            if "apply-actions" in instruction_json:
-                apply_actions_json = instruction_json["apply-actions"]
-                for action_json in apply_actions_json["action"]:
-                    self.applied_actions.append(Action(sw, action_json))
+                if "write-actions" in instruction_json:
+                    write_actions_json = instruction_json["write-actions"]
+                    for action_json in write_actions_json["action"]:
+                        self.written_actions.append(Action(sw, action_json))
 
-            if "go-to-table" in instruction_json:
-                self.go_to_table = instruction_json["go-to-table"]["table_id"]
+                if "apply-actions" in instruction_json:
+                    apply_actions_json = instruction_json["apply-actions"]
+                    for action_json in apply_actions_json["action"]:
+                        self.applied_actions.append(Action(sw, action_json))
 
-            # TODO: Handle meter instruction
-            # TODO: Handle clear-actions case
-            # TODO: Write meta-data case
-            # TODO: Handle apply-actions case (SEL however, does not support this yet)
+                if "go-to-table" in instruction_json:
+                    self.go_to_table = instruction_json["go-to-table"]["table_id"]
+
+                # TODO: Handle meter instruction
+                # TODO: Handle clear-actions case
+                # TODO: Write meta-data case
+                # TODO: Handle apply-actions case (SEL however, does not support this yet)
 
     def add_port_graph_edges(self):
 

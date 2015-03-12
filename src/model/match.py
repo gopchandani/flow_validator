@@ -99,7 +99,10 @@ class MatchElement(DictMixin):
         return self.value_cache.keys()
 
     def __str__(self):
-        return str(id(self)) + "@" + self.port.port_id
+        if self.port:
+            return str(id(self)) + "@" + self.port.port_id
+        else:
+            return str(id(self)) + "@NONE"
 
     def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
 
@@ -269,7 +272,12 @@ class MatchElement(DictMixin):
 
             try:
                 if field_name == "in_port":
-                     self.set_match_field_element(field_name, int(match_json["in-port"]), flow)
+                    try:
+                        self.set_match_field_element(field_name, int(match_json["in-port"]), flow)
+                    except ValueError:
+                        parsed_in_port = match_json["in-port"].split(":")[2]
+                        self.set_match_field_element(field_name, int(parsed_in_port), flow)
+
                 elif field_name == "ethernet_type":
                     self.set_match_field_element(field_name, int(match_json["ethernet-match"]["ethernet-type"]["type"]), flow)
                 elif field_name == "ethernet_source":

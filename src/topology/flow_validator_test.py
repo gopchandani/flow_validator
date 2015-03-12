@@ -17,8 +17,7 @@ from line_topo import LineTopo
 from model.match import Match
 from synthesis.synthensize_dij import SynthesizeDij
 from analysis.backup_paths import BackupPaths
-#below added by shane to pass command to linux bash
-import os 
+import os
 
 class FlowValidatorTest():
 

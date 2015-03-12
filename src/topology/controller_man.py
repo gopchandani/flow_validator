@@ -17,11 +17,12 @@ __author__ = 'Shane Rogers'
 
 
 class ControllerMan():
-    def __init__(self, num_cons):
+    def __init__(self, num_cons, verbose=False):
         self.num_cons = num_cons
         self.data = []
         self.ports = []
         self.a_container_is_running = False
+        self.verbose = False
 
         print "Initializing, number of containers:", self.num_cons
 
@@ -29,7 +30,7 @@ class ControllerMan():
             new_port = int(6630 + i)
             self.ports.append(new_port)
 
-            start_command = 'sudo docker run -d -t -i -p=%s:6633 controller distribution-karaf-0.2.1-Helium-SR1/bin/karaf' % str(
+            start_command = 'sudo docker run -d -t -i -p=%s:6633 -p=8181:8181 controller distribution-karaf-0.2.1-Helium-SR1/bin/karaf' % str(
                 new_port)
 
             os.system(start_command)
@@ -37,7 +38,10 @@ class ControllerMan():
             while True:
                 this_id = proc.stdout.readline()
                 if this_id != '':
-                    #print this_id
+
+                    if verbose:
+                        print this_id
+
                     self.data.append(this_id)
                     stop_command = 'sudo docker stop %s' % str(this_id)
                     os.system(stop_command)
