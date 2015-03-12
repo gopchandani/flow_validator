@@ -3,6 +3,8 @@ __author__ = 'Rakesh Kumar'
 import sys
 sys.path.append("./")
 
+import json
+
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from topology.controller_man import ControllerMan
@@ -51,6 +53,9 @@ class VaryingSizeTopology():
             print topology_size, self.init_times[topology_size]
 
         print self.init_times
+
+        with open(self.init_times, "w") as outfile:
+            json.dumps(self.init_times, outfile)
 
 def main():
 
