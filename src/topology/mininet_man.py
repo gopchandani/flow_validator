@@ -69,7 +69,7 @@ class MininetMan():
     def setup_mininet(self):
 
         print "Waiting for the controller to boot completely..."
-        time.sleep(150)
+        time.sleep(120)
 
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
