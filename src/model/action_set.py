@@ -2,6 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 from match import MatchJsonParser
 from collections import defaultdict
+from copy import copy
 
 class Action():
     '''
@@ -226,16 +227,19 @@ class ActionSet():
                     #if output_action.bucket and output_action.bucket.watch_port == in_port:
                     #    continue
 
+
                     if self.sw.ports[in_port].state != "up":
                         continue
 
-                    port_graph_edge_status.append((str(in_port), output_action))
+                    action_copy = copy(output_action)
+                    port_graph_edge_status.append((str(in_port), action_copy))
 
             else:
 
                 # Add an edge, only if the output_port is currently up
                 if self.sw.ports[output_action.out_port].state == "up":
-                    port_graph_edge_status.append((str(output_action.out_port), output_action))
+                    action_copy = output_action
+                    port_graph_edge_status.append((str(output_action.out_port), action_copy))
 
         return port_graph_edge_status
 

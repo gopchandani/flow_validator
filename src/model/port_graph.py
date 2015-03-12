@@ -99,15 +99,7 @@ class PortGraph:
                 succ = self.get_port(succ_id)
                 now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
 
-            for me in now_admitted_traffic.match_elements:
-                print me.succ_match_element
-
             curr.admitted_traffic[dst] = curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
-
-            print "After Welding:"
-
-            for me in curr.admitted_traffic[dst].match_elements:
-                print me.succ_match_element
 
 
     def init_global_controller_port(self):
@@ -120,10 +112,14 @@ class PortGraph:
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
+        from_port.state = "up"
+        to_port.state = "up"
         self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True), update_flag)
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
+        from_port.state = "up"
+        to_port.state = "up"
         self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True), update_flag)
 
     def remove_node_graph_edge(self, node1_id, node2_id):
@@ -132,10 +128,14 @@ class PortGraph:
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
+        from_port.state = "down"
+        to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
+        from_port.state = "down"
+        to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):

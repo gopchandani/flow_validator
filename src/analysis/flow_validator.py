@@ -38,9 +38,6 @@ class FlowValidator:
         for host_id in self.model.get_host_ids():
 
             host_obj = self.model.get_node_object(host_id)
-            if host_obj.switch_id == "openflow:1":
-                continue
-
             self.model.simulate_remove_edge(host_id, host_obj.switch_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
@@ -48,9 +45,6 @@ class FlowValidator:
 
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
-
-            if host_obj.switch_id == "openflow:1":
-                continue
 
             print "Computing admitted_traffic:", host_id, "connected to switch:", \
                 host_obj.switch_id, "at port:", \
@@ -72,9 +66,6 @@ class FlowValidator:
                 src_host_obj = self.model.get_node_object(src_h_id)
                 dst_host_obj = self.model.get_node_object(dst_h_id)
 
-                if src_host_obj.switch_id == "openflow:3":
-                    continue
-
                 if src_h_id != dst_h_id:
 
                     print "Port Paths from:", src_h_id, "to:", dst_h_id
@@ -92,9 +83,6 @@ class FlowValidator:
 
                 src_host_obj = self.model.get_node_object(src_h_id)
                 dst_host_obj = self.model.get_node_object(dst_h_id)
-
-                if src_host_obj.switch_id == "openflow:3":
-                    continue
 
                 if src_h_id != dst_h_id:
 
@@ -115,11 +103,7 @@ class FlowValidator:
                     self.port_graph.remove_node_graph_edge(node1, node2)
                     at.print_port_paths()
 
-
-                    continue
-
                     # Add it back
-
                     print "Adding the edge back..."
 
                     self.model.simulate_add_edge(node1, node2)
