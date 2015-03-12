@@ -12,23 +12,30 @@ print type(y1)
 
 #Assuming that x-axis are keys to the data_dict
 
+def get_x_y_err(data_dict):
+
+    x = sorted(data_dict.keys())
+
+    data_means = []
+    data_sems = []
+
+    for p in x:
+        mean = np.mean(data_dict[p])
+        sem = ss.sem(data_dict[p])
+        data_means.append(mean)
+        data_sems.append(sem)
+
+    return x, data_means, data_sems
+
+
 def plot_varying_size_topology(init_times, failover_fix_times):
 
-    x1 = init_times.keys()
-    x2 = failover_fix_times.keys()
+    x1, init_times_mean, init_times_sem = get_x_y_err(init_times)
+    x2, failover_fix_times_mean, failover_fix_times_sem = get_x_y_err(init_times)
 
-    init_times_mean = []
-    init_times_sem = []
-    for x in x1:
-        init_times_mean.append(np.mean(init_times[x]))
-        init_times_sem.append(ss.sem(init_times[x]))
-
-#    for x in x2:
-#        y2 = np.mean(failover_fix_times[x])
-#        y2_err = ss.sem(failover_fix_times[x])
 
     plt.errorbar(x1, init_times_mean, init_times_sem)
-#    plt.errorbar(x2, y2, y2_err)
+    #plt.errorbar(x2, failover_fix_times_mean, failover_fix_times_sem)
 
     plt.xlabel("Number of switches in the ring")
     plt.ylabel("Computation Time(ms)")
