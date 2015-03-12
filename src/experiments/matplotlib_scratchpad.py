@@ -34,9 +34,13 @@ def plot_varying_size_topology(init_times, failover_fix_times):
     x2, failover_fix_times_mean, failover_fix_times_sem = get_x_y_err(failover_fix_times)
 
 
-    plt.errorbar(x1, init_times_mean, init_times_sem)
-    plt.errorbar(x2, failover_fix_times_mean, failover_fix_times_sem)
+    l_init_times = plt.errorbar(x1, init_times_mean, init_times_sem,
+                                label="Initialization")
+    l_failover_fix_times = plt.errorbar(x2, failover_fix_times_mean, failover_fix_times_sem,
+                                        label="Singe Link Failover")
 
+    plt.legend(handles=[l_init_times, l_failover_fix_times], loc="upper left")
+    plt.xlim((3, 11))
     plt.xlabel("Number of switches in the ring")
     plt.ylabel("Computation Time(ms)")
     plt.show()

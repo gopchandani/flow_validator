@@ -93,7 +93,7 @@ class MininetMan():
         s.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(30)
+        time.sleep(60)
 
     def __del__(self):
         self.net.stop()

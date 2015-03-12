@@ -33,6 +33,9 @@ class VaryingSizeTopology():
         for topology_size in self.topology_sizes:
 
             self.setup_network(topology_size)
+
+            print "Here"
+
             self.init_times[topology_size] = []
 
             for i in range(self.num_iterations):
