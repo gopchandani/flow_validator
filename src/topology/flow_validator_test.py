@@ -47,7 +47,7 @@ class FlowValidatorTest():
 
         can_ping = False
 
-        # Go over all the links between switches in the mininet
+        # Go over all the links between switches in the topology
         for n1, n2 in self.topo.links():
 
             if n1.startswith("h") or n2.startswith("h"):
