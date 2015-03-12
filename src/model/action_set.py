@@ -220,10 +220,16 @@ class ActionSet():
 
             if int(self.sw.model.OFPP_IN) == int(output_action.out_port):
 
-                # Consider all possible ports if they are currently up
+                # Consider all possible ports if they are currently up and are not the watch port
                 for in_port in self.sw.ports:
-                    if self.sw.ports[in_port].state == "up":
-                        port_graph_edge_status.append((str(in_port), output_action))
+
+                    #if output_action.bucket and output_action.bucket.watch_port == in_port:
+                    #    continue
+
+                    if self.sw.ports[in_port].state != "up":
+                        continue
+
+                    port_graph_edge_status.append((str(in_port), output_action))
 
             else:
 

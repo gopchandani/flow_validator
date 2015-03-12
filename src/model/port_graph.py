@@ -99,7 +99,15 @@ class PortGraph:
                 succ = self.get_port(succ_id)
                 now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
 
+            for me in now_admitted_traffic.match_elements:
+                print me.succ_match_element
+
             curr.admitted_traffic[dst] = curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
+
+            print "After Welding:"
+
+            for me in curr.admitted_traffic[dst].match_elements:
+                print me.succ_match_element
 
 
     def init_global_controller_port(self):
