@@ -115,7 +115,9 @@ class Flow():
 
         for src_port_id, dst_port_id, key in self.port_graph_edges:
             action = key[1]
+            print src_port_id, "->", dst_port_id, "was:", action.is_active,
             action.update_active_status()
+            print "now:", action.is_active
 
 class FlowTable():
     def __init__(self, sw, table_id, flow_list):
