@@ -72,7 +72,6 @@ class MininetMan():
         time.sleep(120)
 
         self.net = Mininet(topo=self.topo,
-                           cleanup=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
                            switch=OVSSwitch)
 
