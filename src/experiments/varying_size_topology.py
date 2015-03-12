@@ -18,7 +18,8 @@ class VaryingSizeTopology():
 
 
         # Get the dockers ready
-        self.cm = ControllerMan(len(topology_sizes))
+        #self.cm = ControllerMan(len(topology_sizes))
+        self.cm = ControllerMan(3)
 
 
     def setup_network(self, topology_size):

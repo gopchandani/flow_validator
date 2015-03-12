@@ -75,7 +75,7 @@ class ControllerMan():
 
         print "Killing all containers..."
 
-        os.system("docker stop $(docker ps -a -q)")
+        os.system("docker stop --time=3 $(docker ps -a -q)")
         os.system("docker rm $(docker ps -a -q)")
 
     def __del__(self):
