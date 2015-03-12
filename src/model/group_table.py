@@ -5,12 +5,13 @@ from action_set import Action
 import pprint
 
 class Bucket():
-    def __init__(self, sw, bucket_json):
+    def __init__(self, sw, bucket_json, group):
 
         self.sw = sw
         self.action_list = []
         self.watch_port = None
         self.weight = None
+        self.group = group
 
         for action_json in bucket_json["action"]:
             self.action_list.append(Action(sw, action_json))
@@ -76,13 +77,16 @@ class Group():
         self.bucket_list = []
 
         for bucket_json in group_json["buckets"]["bucket"]:
-            self.bucket_list.append(Bucket(sw, bucket_json))
+            self.bucket_list.append(Bucket(sw, bucket_json, self))
 
         #  Sort the bucket_list by bucket-id
         self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
 
-    def get_action_list(self):
+        for bucket in self.bucket_list:
+            for action in bucket.action_list:
+                action.bucket = bucket
 
+    def get_action_list(self):
         action_list = []
 
         # If it is a _all_ group, collect all buckets
@@ -124,6 +128,14 @@ class Group():
                 i += 1
 
         return action_list
+
+    def get_first_live_bucket(self):
+
+        for bucket in self.bucket_list:
+            if bucket.is_live():
+                return bucket
+
+        return None
 
     def get_active_action_list(self):
         active_action_list = []

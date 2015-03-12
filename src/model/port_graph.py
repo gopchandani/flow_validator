@@ -99,7 +99,6 @@ class PortGraph:
                 succ = self.get_port(succ_id)
                 now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
 
-            # Now do the welding job, i.e. connect past admitted_traffices and dependencies on them with this
             curr.admitted_traffic[dst] = curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
 
 

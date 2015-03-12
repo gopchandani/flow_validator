@@ -35,6 +35,7 @@ class Action():
         self.order = action_json["order"]
         self.action_type = None
         self.is_active = is_active
+        self.bucket = None
 
         # Captures what the action is doing.
         self.modified_field = None
@@ -66,6 +67,18 @@ class Action():
             if mjp.keys():
                 self.modified_field = mjp.keys()[0]
                 self.field_modified_to = mjp[self.modified_field]
+
+    def update_active_status(self):
+
+        # If the action has a bucket that means, it belongs to one of the groups and its being active
+        # depends on whether its bucket is still the first live bucket for that group
+
+        if self.bucket:
+            if self.bucket.group.get_first_live_bucket() == self.bucket:
+                self.is_active = True
+            else:
+                self.is_active = False
+
 
 class ActionSet():
 
@@ -200,19 +213,18 @@ class ActionSet():
 
         port_graph_edge_status = []
 
-        #  For each output action, there is a corresponding out_port_match entry
         for output_action in self.action_dict["output"]:
 
-            # Ignore outputs to controller
-            if output_action.out_port == 4294967293:
+            if int(output_action.out_port) == 4294967293:
                 continue
 
-            if self.sw.model.OFPP_IN == int(output_action.out_port):
+            if int(self.sw.model.OFPP_IN) == int(output_action.out_port):
 
                 # Consider all possible ports if they are currently up
                 for in_port in self.sw.ports:
                     if self.sw.ports[in_port].state == "up":
                         port_graph_edge_status.append((str(in_port), output_action))
+
             else:
 
                 # Add an edge, only if the output_port is currently up

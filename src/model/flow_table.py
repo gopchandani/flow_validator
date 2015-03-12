@@ -101,18 +101,21 @@ class Flow():
             self.port_graph_edges.append(e)
 
 
+    def remove_port_graph_edges(self):
+        pass
+
+        # # First remove all the port_graph_edges
+        # for e in self.port_graph_edges:
+        #     self.model.port_graph.g.remove_edge(e[0], e[1], e[2])
+        #
+        # del self.port_graph_edges[:]
+
+
     def update_port_graph_edges(self):
-        
-        #TODO: Not proud of this
-        # First remove all the port_graph_edges
-        for e in self.port_graph_edges:
-            self.model.port_graph.g.remove_edge(e[0], e[1], e[2])
 
-        del self.port_graph_edges[:]
-
-        # Re-add everything with modified states
-        self.add_port_graph_edges()
-
+        for src_port_id, dst_port_id, key in self.port_graph_edges:
+            action = key[1]
+            action.update_active_status()
 
 class FlowTable():
     def __init__(self, sw, table_id, flow_list):
