@@ -4,35 +4,40 @@ from timer import Timer
 from analysis.flow_validator import FlowValidator
 from topology.controller_man import ControllerMan
 
-def init_time():
+class VaryingSizeTopology():
 
-    num_iterations = 10
-    init_times = []
+    def __init__(self):
 
-    for i in range(num_iterations):
+        # Get the docker ready
+        self.cm = ControllerMan(3)
 
-        bp = FlowValidator()
-        bp.add_hosts()
+    def init_time(self):
 
-        with Timer(verbose=True) as t:
-            bp.initialize_admitted_match()
+        num_iterations = 10
+        init_times = []
 
-        init_times.append(t.msecs)
+        for i in range(num_iterations):
 
-    print init_times
+            bp = FlowValidator()
+            bp.add_hosts()
 
+            with Timer(verbose=True) as t:
+                bp.initialize_admitted_match()
 
-def put_together_network():
-    cm = ControllerMan(5)
+            init_times.append(t.msecs)
 
-	for i in range (num_cons):
-		print "Container with port number",
-		print ports[i],
-		print "has container id",
-		print data[i]
+        print init_times
+
+    def setup_network(self):
+
+        # First get a docker for controller
+        controller_port = self.cm.get_next()
 
 def main():
-    put_together_network()
+
+    exp = VaryingSizeTopology()
+    exp.setup_network()
+
     #init_time()
 
 if __name__ == "__main__":

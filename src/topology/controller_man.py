@@ -23,6 +23,8 @@ class ControllerMan():
         self.ports = []
         self.a_container_is_running = False
 
+        print "Initializing, number of containers:", self.num_cons
+
         for i in range(self.num_cons):
             new_port = int(6630 + i)
             self.ports.append(new_port)
@@ -35,7 +37,7 @@ class ControllerMan():
             while True:
                 this_id = proc.stdout.readline()
                 if this_id != '':
-                    print this_id
+                    #print this_id
                     self.data.append(this_id)
                     stop_command = 'sudo docker stop %s' % str(this_id)
                     os.system(stop_command)
@@ -66,8 +68,14 @@ class ControllerMan():
             return this_port
 
     def kill_all(self):
+
+        print "Killing all containers..."
+
         os.system("docker stop $(docker ps -a -q)")
         os.system("docker rm $(docker ps -a -q)")
+
+    def __del__(self):
+        self.kill_all()
 
 def main():
 
@@ -83,7 +91,7 @@ def main():
     new_port = cm.get_next()
     print "This thing says there is a controller with port %s open!" % str(new_port)
 
-    cm.kill_all()
+    #cm.kill_all()
 
 if __name__ == "__main__":
     main()
