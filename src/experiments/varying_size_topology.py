@@ -11,8 +11,8 @@ from pprint import pprint
 
 from timer import Timer
 from analysis.flow_validator import FlowValidator
-from topology.controller_man import ControllerMan
-from topology.mininet_man import MininetMan
+from controller_man import ControllerMan
+from mininet_man import MininetMan
 
 class VaryingSizeTopology():
 
@@ -40,6 +40,8 @@ class VaryingSizeTopology():
 
     def trigger(self):
 
+        print "Starting experiment..."
+
         for topology_size in self.topology_sizes:
 
             self.setup_network(topology_size)
@@ -66,6 +68,7 @@ class VaryingSizeTopology():
 
                 self.data["failover_update_times"][topology_size].append(t.msecs)
 
+        print "Done..."
         self.dump_data()
 
     def dump_data(self):
@@ -78,7 +81,7 @@ class VaryingSizeTopology():
 
 def main():
 
-    exp = VaryingSizeTopology(20, [4])
+    exp = VaryingSizeTopology(50, [4, 6, 8, 10, 12, 14, 16, 18, 20])
     exp.trigger()
 
 if __name__ == "__main__":

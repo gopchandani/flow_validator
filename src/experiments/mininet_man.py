@@ -69,7 +69,7 @@ class MininetMan():
     def setup_mininet(self):
 
         print "Waiting for the controller to boot completely..."
-        time.sleep(100)
+        time.sleep(150)
 
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
@@ -94,9 +94,10 @@ class MininetMan():
         s.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(30)
+        time.sleep(20*self.num_switches)
 
     def cleanup_mininet(self):
+        print "Mininet cleanup..."
         self.net.stop()
         self.net.cleanup()
 

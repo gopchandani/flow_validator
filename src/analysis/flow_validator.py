@@ -31,8 +31,6 @@ class FlowValidator:
 
             host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id] = admitted_traffic
 
-
-
     def remove_hosts(self):
 
         for host_id in self.model.get_host_ids():

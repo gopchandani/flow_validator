@@ -49,24 +49,26 @@ def plot_varying_size_topology(init_times, failover_update_times):
         x1, init_times_mean, init_times_sem = get_x_y_err(init_times)
 
         l_init_times = plt.errorbar(x1, init_times_mean, init_times_sem,
-                                    label="Initialization")
+                                    label="Initialization", fmt="o")
         h.append(l_init_times)
 
     if failover_update_times:
         x2, failover_update_times_mean, failover_update_times_sem = get_x_y_err(failover_update_times)
 
         l_failover_update_times = plt.errorbar(x2, failover_update_times_mean, failover_update_times_sem,
-                                            label="Singe Link Failover")
+                                            label="Single Link Failover", fmt="o")
         h.append(l_failover_update_times)
 
-    plt.legend(handles=h, loc="upper right")
-    plt.xlim((3, 11))
+
+    plt.legend(handles=h, loc="upper left")
+    plt.xlim((3, 20))
     plt.xlabel("Number of switches in the ring")
     plt.ylabel("Computation Time(ms)")
     plt.show()
 
-
-with open("data/data_20150312_210127.json", "r") as infile:
+with open("data/data_20150313_134840.json", "r") as infile:
+#with open("data/data_20150313_114437.json", "r") as infile:
+#with open("data/data_20150312_224744.json", "r") as infile:
     data = json.load(infile)
 
 

@@ -54,17 +54,17 @@ class ControllerMan():
         os.system("docker start %s" % next_container)
         return self.ports[0]
 
-    def kill_container(self):
+    def stop_container(self):
         this_id = self.data.pop(0)
         self.ports.pop(0)
-        os.system("docker stop --time=3 %s" % str(this_id))
+        os.system("docker stop --time=30 %s" % str(this_id))
         os.system("docker rm %s" % str(this_id))
 
     def get_next(self):
         this_port = 0
 
         if self.a_container_is_running:
-            self.kill_container()
+            self.stop_container()
             this_port = self.start_container()
             return this_port
         else:
@@ -75,10 +75,11 @@ class ControllerMan():
 
         print "Killing all containers..."
 
-        os.system("docker stop --time=3 $(docker ps -a -q)")
+        os.system("docker stop --time=30 $(docker ps -a -q)")
         os.system("docker rm $(docker ps -a -q)")
 
     def __del__(self):
+        print "Docker cleanup..."
         self.kill_all()
 
 def main():
