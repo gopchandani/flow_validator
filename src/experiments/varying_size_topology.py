@@ -6,6 +6,9 @@ sys.path.append("./")
 import json
 import time
 
+from collections import defaultdict
+from pprint import pprint
+
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from topology.controller_man import ControllerMan
@@ -17,7 +20,11 @@ class VaryingSizeTopology():
 
         self.num_iterations = sample_size
         self.topology_sizes = topology_sizes
-        self.init_times = {}
+
+        self.data = {
+            "init_times": defaultdict(list),
+            "failover_update_times": defaultdict(list)
+        }
 
         # Get the dockers ready
         self.cm = ControllerMan(len(topology_sizes))
@@ -36,29 +43,42 @@ class VaryingSizeTopology():
         for topology_size in self.topology_sizes:
 
             self.setup_network(topology_size)
-            print "Here"
-            self.init_times[topology_size] = []
-
             for i in range(self.num_iterations):
 
-                bp = FlowValidator()
-                bp.add_hosts()
+                fv = FlowValidator()
+                fv.add_hosts()
 
                 with Timer(verbose=True) as t:
-                    bp.initialize_admitted_match()
+                    fv.initialize_admitted_match()
 
-                self.init_times[topology_size].append(t.msecs)
+                self.data["init_times"][topology_size].append(t.msecs)
 
-            print topology_size, self.init_times[topology_size]
+                with Timer(verbose=True) as t:
 
-        print self.init_times
+                    # First remove the edge
+                    node1 = "openflow:4"
+                    node2 = "openflow:3"
 
-        with open("init_times" + time.strftime("%Y%m%d-%H%M%S"), "w") as outfile:
-            json.dumps(self.init_times, outfile)
+                    fv.model.simulate_remove_edge(node1, node2)
+                    fv.port_graph.remove_node_graph_edge(node1, node2)
+                    fv.model.simulate_add_edge(node1, node2)
+                    fv.port_graph.add_node_graph_edge(node1, node2, True)
+
+                self.data["failover_update_times"][topology_size].append(t.msecs)
+
+        self.dump_data()
+
+    def dump_data(self):
+        pprint(self.data)
+        with open("data/data_" + time.strftime("%Y%m%d_%H%M%S")+".json", "w") as outfile:
+            json.dump(self.data, outfile)
+
+    def __del__(self):
+        self.dump_data()
 
 def main():
 
-    exp = VaryingSizeTopology(10, [4])
+    exp = VaryingSizeTopology(20, [4])
     exp.trigger()
 
 if __name__ == "__main__":

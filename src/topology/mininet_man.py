@@ -69,7 +69,7 @@ class MininetMan():
     def setup_mininet(self):
 
         print "Waiting for the controller to boot completely..."
-        #time.sleep(120)
+        time.sleep(100)
 
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
@@ -85,7 +85,7 @@ class MininetMan():
         self._ping_experiment_hosts()
 
         print "Waiting for hosts to be detected by controller..."
-        #time.sleep(120)
+        time.sleep(20)
 
         print "Synthesizing..."
 
@@ -94,8 +94,11 @@ class MininetMan():
         s.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        #time.sleep(60)
+        time.sleep(30)
 
-    def __del__(self):
+    def cleanup_mininet(self):
         self.net.stop()
         self.net.cleanup()
+
+    def __del__(self):
+        self.cleanup_mininet()

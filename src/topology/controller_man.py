@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-
+import time
 __author__ = 'Shane Rogers'
 
 # controllerMan will spin up the number of containers you pass as a parameter.
@@ -57,8 +57,8 @@ class ControllerMan():
     def kill_container(self):
         this_id = self.data.pop(0)
         self.ports.pop(0)
-        os.system("docker stop %s" % str(this_id))
-        os.system("docker remove %s" % str(this_id))
+        os.system("docker stop --time=3 %s" % str(this_id))
+        os.system("docker rm %s" % str(this_id))
 
     def get_next(self):
         this_port = 0
@@ -94,8 +94,6 @@ def main():
 
     new_port = cm.get_next()
     print "This thing says there is a controller with port %s open!" % str(new_port)
-
-    #cm.kill_all()
 
 if __name__ == "__main__":
     main()

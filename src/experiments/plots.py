@@ -1,25 +1,26 @@
+import json
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as ss
 
 # example data
-
-init_times = {
+data = {
+"init_times" :{
     4:  [0.5, 0.6, 0.4],
     6:  [1.5, 1.6, 1.4],
     8:  [2.5, 2.6, 2.4],
     10: [3.5, 3.6, 3.4],
     12: [5.5, 5.6, 5.7]
-}
-
-failover_fix_times = {
+},
+"failover_update_times" : {
     4:  [5.5, 5.6, 5.4],
     6:  [6.5, 6.6, 6.4],
     8:  [7.5, 7.6, 7.4],
     10: [8.5, 8.6, 8.4],
     12: [9.5, 9.6, 9.7]
 }
-
+}
 
 #Assuming that x-axis are keys to the data_dict
 
@@ -39,7 +40,7 @@ def get_x_y_err(data_dict):
     return x, data_means, data_sems
 
 
-def plot_varying_size_topology(init_times, failover_fix_times):
+def plot_varying_size_topology(init_times, failover_update_times):
 
     h = []
 
@@ -51,20 +52,22 @@ def plot_varying_size_topology(init_times, failover_fix_times):
                                     label="Initialization")
         h.append(l_init_times)
 
-    if failover_fix_times:
-        x2, failover_fix_times_mean, failover_fix_times_sem = get_x_y_err(failover_fix_times)
+    if failover_update_times:
+        x2, failover_update_times_mean, failover_update_times_sem = get_x_y_err(failover_update_times)
 
-        l_failover_fix_times = plt.errorbar(x2, failover_fix_times_mean, failover_fix_times_sem,
+        l_failover_update_times = plt.errorbar(x2, failover_update_times_mean, failover_update_times_sem,
                                             label="Singe Link Failover")
-        h.append(l_failover_fix_times)
+        h.append(l_failover_update_times)
 
-
-    plt.legend(handles=h, loc="upper left")
+    plt.legend(handles=h, loc="upper right")
     plt.xlim((3, 11))
     plt.xlabel("Number of switches in the ring")
     plt.ylabel("Computation Time(ms)")
     plt.show()
 
 
-#plot_varying_size_topology(init_times, failover_fix_times)
-plot_varying_size_topology(init_times, None)
+with open("data/data_20150312_210127.json", "r") as infile:
+    data = json.load(infile)
+
+
+plot_varying_size_topology(data["init_times"], data["failover_update_times"])

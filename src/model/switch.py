@@ -118,8 +118,6 @@ class Switch():
                                            self.flow_tables[0].port, (None, None),
                                            incoming_port_match)
 
-
-
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:
 

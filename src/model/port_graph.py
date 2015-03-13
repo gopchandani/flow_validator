@@ -43,7 +43,6 @@ class PortGraph:
             if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
                 self.add_node_graph_edge(node_edge[0], node_edge[1])
 
-
     def add_edge(self, port1, port2, key, edge_filter_match, update_flag=False):
 
         edge_type = None
@@ -88,7 +87,7 @@ class PortGraph:
 
     def update_match_elements(self, curr):
 
-        print "update_match_elements at port:", curr.port_id
+        #print "update_match_elements at port:", curr.port_id
 
         # This needs to be done for each destination for which curr holds admitted_traffic
         for dst in curr.admitted_traffic:
@@ -100,7 +99,6 @@ class PortGraph:
                 now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
 
             curr.admitted_traffic[dst] = curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
-
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")

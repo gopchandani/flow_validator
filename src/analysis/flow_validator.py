@@ -93,7 +93,6 @@ class FlowValidator:
                     at.print_port_paths()
 
                     # First remove the edge
-
                     node1 = "openflow:4"
                     node2 = "openflow:3"
                     #node1 = "openflow:1"
@@ -113,21 +112,21 @@ class FlowValidator:
 
 def main():
 
-    bp = FlowValidator()
+    fv = FlowValidator()
 
-    bp.add_hosts()
+    fv.add_hosts()
 
-    bp.initialize_admitted_match()
+    fv.initialize_admitted_match()
 
-    bp.validate_all_host_pair_basic_reachability()
+    fv.validate_all_host_pair_basic_reachability()
 
-    #bp.validate_all_host_pair_backup_reachability()
+    #fv.validate_all_host_pair_backup_reachability()
 
-    #bp.remove_hosts()
+    #fv.remove_hosts()
 
-    #bp.validate_all_host_pair_backup_reachability()
+    #fv.validate_all_host_pair_backup_reachability()
 
-    #bp.validate_all_host_pair_basic_reachability()
+    #fv.validate_all_host_pair_basic_reachability()
 
 
 if __name__ == "__main__":

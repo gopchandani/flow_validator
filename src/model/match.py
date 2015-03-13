@@ -200,9 +200,9 @@ class MatchElement(DictMixin):
 
             # If the resulting tree has no intervals in it, then balk:
             if not new_me.match_fields[field_name]:
-                print field_name, \
-                    "self:", self.match_fields[field_name], \
-                    "candidate_me:", candidate_me.match_fields[field_name]
+                #print field_name, \
+                #    "self:", self.match_fields[field_name], \
+                #    "candidate_me:", candidate_me.match_fields[field_name]
                 return None
 
         new_me.port = self.port
@@ -245,7 +245,7 @@ class MatchElement(DictMixin):
         if self in self.traffic.match_elements:
             self.traffic.match_elements.remove(self)
         else:
-            print "Already removed, self:", str(id(self))
+            raise Exception("Removing something that is already removed.")
 
     def complement_match(self):
 
