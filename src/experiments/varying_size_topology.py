@@ -80,8 +80,8 @@ class VaryingSizeTopology():
 
 def main():
 
-#    exp = VaryingSizeTopology("ring", 50, [4, 6, 8, 10, 12, 14, 16, 18, 20])
-    exp = VaryingSizeTopology("fat_tree", 5, [3])#, 6, 8, 10, 12, 14, 16, 18, 20])
+    exp = VaryingSizeTopology("ring", 5, [4])#, 6, 8, 10, 12, 14, 16, 18, 20])
+#    exp = VaryingSizeTopology("fat_tree", 5, [3])#, 6, 8, 10, 12, 14, 16, 18, 20])
     exp.trigger()
 
 if __name__ == "__main__":
