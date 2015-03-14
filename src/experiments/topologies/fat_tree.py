@@ -71,4 +71,7 @@ class FatTree(Topo):
             if bottoms_attached_to_middles[first_open_index] >= max_bottoms_per_middle:
                 first_open_index += 1
 
+        self.total_switches = len(top_switches) + len(middle_switches) + len(bottom_switches)
+        print "Total Switches: ", self.total_switches
+
 topos = {"fattreetopo": (lambda: FatTree())}

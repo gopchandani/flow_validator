@@ -17,7 +17,13 @@ from synthesis.synthesize_dij import SynthesizeDij
 
 class MininetMan():
 
-    def __init__(self, controller_port, topo, num_switches, num_hosts_per_switch, verbose=False):
+    def __init__(self,
+                 controller_port,
+                 topo,
+                 num_switches,
+                 num_hosts_per_switch,
+                 verbose=False,
+                 experiment_switches=["s1", "s3"]):
 
         self.ping_interval = 3
         self.num_switches = num_switches
@@ -25,7 +31,10 @@ class MininetMan():
         self.verbose = verbose
         self.controller_port = int(controller_port)
 
-        self.experiment_switches = ["s1", "s3"]
+        #Stores the synthesis object
+        self.synthesis_dij = None
+
+        self.experiment_switches = experiment_switches
 
         if topo == "ring":
             self.topo = RingTopo(self.num_switches, self.num_hosts_per_switch)
@@ -90,11 +99,12 @@ class MininetMan():
         print "Synthesizing..."
 
         # Synthesize rules in the switches
-        s = SynthesizeDij()
-        s.synthesize_all_node_pairs()
+        self.synthesis_dij = SynthesizeDij()
+        self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(20*self.num_switches)
+        time.sleep(30*self.topo.total_switches)
+
 
     def cleanup_mininet(self):
         print "Mininet cleanup..."

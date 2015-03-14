@@ -49,27 +49,45 @@ def plot_varying_size_topology(init_times, failover_update_times):
         x1, init_times_mean, init_times_sem = get_x_y_err(init_times)
 
         l_init_times = plt.errorbar(x1, init_times_mean, init_times_sem,
-                                    label="Initialization", fmt="o")
+                                    label="Initial", fmt="x", color="black")
         h.append(l_init_times)
 
     if failover_update_times:
         x2, failover_update_times_mean, failover_update_times_sem = get_x_y_err(failover_update_times)
 
         l_failover_update_times = plt.errorbar(x2, failover_update_times_mean, failover_update_times_sem,
-                                            label="Single Link Failover", fmt="o")
+                                            label="Incremental", fmt="o", color="black")
         h.append(l_failover_update_times)
 
 
     plt.legend(handles=h, loc="upper left")
-    plt.xlim((3, 20))
+    plt.xlim((2, 22))
+    plt.xticks(range(2, 22, 2))
+
     plt.xlabel("Number of switches in the ring")
     plt.ylabel("Computation Time(ms)")
     plt.show()
 
+
+# Merge data2 into data1 and return data1
+def merge_data_sets(data1, data2):
+    data = data1
+
+    for topo_size in data2["init_times"]:
+        data["init_times"][topo_size].extend(data2["init_times"][topo_size])
+
+    for topo_size in data2["failover_update_times"]:
+        data["failover_update_times"][topo_size].extend(data2["failover_update_times"][topo_size])
+
+    return data
+
 with open("data/data_20150313_134840.json", "r") as infile:
-#with open("data/data_20150313_114437.json", "r") as infile:
-#with open("data/data_20150312_224744.json", "r") as infile:
-    data = json.load(infile)
+    data1 = json.load(infile)
+
+with open("data/data_20150313_155810.json", "r") as infile:
+    data2 = json.load(infile)
+
+data =merge_data_sets(data1, data2)
 
 
 plot_varying_size_topology(data["init_times"], data["failover_update_times"])

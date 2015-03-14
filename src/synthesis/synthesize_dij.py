@@ -23,6 +23,8 @@ class SynthesizeDij():
         # s represents the set of all switches that are
         # affected as a result of flow synthesis
         self.s = set()
+        
+        self.primary_path_edges = set()
 
         self.apply_tag_intents_immediately = True
         self.apply_other_intents_immediately = False
@@ -192,6 +194,9 @@ class SynthesizeDij():
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host.switch_id, target=dst_host.switch_id)
         print "Primary Path:", p
+        
+        for i in range(len(p)-1):
+            self.primary_path_edges.add((p[i], p[i+1]))
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
