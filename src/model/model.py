@@ -58,8 +58,8 @@ class Model():
             else:
                 print "No groups configured in node:", node_id
         else:
-            print "Could not fetch any groups via the API, status:", resp["status"]
-
+#            print "Could not fetch any groups via the API, status:", resp["status"]
+            pass
         return group_table
 
     def _prepare_switch_nodes(self):

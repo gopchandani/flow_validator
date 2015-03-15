@@ -78,9 +78,6 @@ class MininetMan():
 
     def setup_mininet(self):
 
-        print "Waiting for the controller to boot completely..."
-        time.sleep(150)
-
         print "Waiting after mininet cleanup..."
         time.sleep(10)
         os.system("sudo mn -c")
@@ -95,6 +92,10 @@ class MininetMan():
 
         # Start
         self.net.start()
+
+
+        print "Waiting for the controller to boot completely..."
+        time.sleep(150)
 
 
         print "Running a ping before synthesis..."
