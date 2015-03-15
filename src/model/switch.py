@@ -114,9 +114,15 @@ class Switch():
 
             incoming_port_match = Traffic(init_wildcard=True)
             incoming_port_match.set_field("in_port", int(port))
-            self.model.port_graph.add_edge(in_p,
-                                           self.flow_tables[0].port, (None, None),
-                                           incoming_port_match)
+
+            # None of this happens if there are no flow tables
+            if self.flow_tables:
+
+                self.model.port_graph.add_edge(in_p,
+                                               self.flow_tables[0].port, (None, None),
+                                               incoming_port_match)
+            else:
+                print "No flow tables in switch:", self.node_id
 
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:

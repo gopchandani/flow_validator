@@ -2,6 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 
 import time
+import os
 
 from mininet.net import Mininet
 from mininet.node import RemoteController
@@ -80,6 +81,13 @@ class MininetMan():
         print "Waiting for the controller to boot completely..."
         time.sleep(150)
 
+        print "Waiting after mininet cleanup..."
+        time.sleep(10)
+        os.system("sudo mn -c")
+        time.sleep(10)
+        os.system("sudo mn -c")
+
+
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
@@ -94,7 +102,7 @@ class MininetMan():
         self._ping_experiment_hosts()
 
         print "Waiting for hosts to be detected by controller..."
-        time.sleep(20)
+        time.sleep(60)
 
         print "Synthesizing..."
 
@@ -105,11 +113,15 @@ class MininetMan():
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(30*self.topo.total_switches)
 
+        # Taking this for a test-ride
+        self._ping_experiment_hosts()
 
     def cleanup_mininet(self):
         print "Mininet cleanup..."
         self.net.stop()
         self.net.cleanup()
+        os.system("sudo mn -c")
+
 
     def __del__(self):
         self.cleanup_mininet()

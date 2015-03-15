@@ -28,25 +28,25 @@ class FixedSizeTopology():
         # Get the dockers ready
         self.cm = ControllerMan(1)
 
-    def setup_network(self, topology_size):
+    def setup_network(self):
 
         # First get a docker for controller
         controller_port = self.cm.get_next()
         print "Controller Port", controller_port
 
-        self.mm = MininetMan(controller_port, "ring", topology_size, 1, experiment_switches=["s1", "s6"])
+        self.mm = MininetMan(controller_port, "ring", 10, 1, experiment_switches=["s1", "s6"])
         self.mm.setup_mininet()
 
     def trigger(self):
 
         print "Starting experiment..."
 
-        self.setup_network(10)
+        self.setup_network()
 
         for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
             s1 = node1.split(":")[1]
             s2 = node2.split(":")[1]
-            self.data["edges_broken"][s1 + "->" + s2] = []
+            self.data["edges_broken"][s1 + "<->" + s2] = []
 
         for i in range(self.num_iterations):
 
@@ -64,7 +64,7 @@ class FixedSizeTopology():
 
                 s1 = node1.split(":")[1]
                 s2 = node2.split(":")[1]
-                self.data["edges_broken"][s1 + "->" + s2].append(t.msecs)
+                self.data["edges_broken"][s1 + "<->" + s2].append(t.msecs)
 
         print "Done..."
         self.dump_data()
@@ -79,7 +79,7 @@ class FixedSizeTopology():
 
 def main():
 
-    exp = FixedSizeTopology(100)
+    exp = FixedSizeTopology(500)
     exp.trigger()
 
 if __name__ == "__main__":

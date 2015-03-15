@@ -39,6 +39,27 @@ class VaryingSizeTopology():
         self.mm = MininetMan(controller_port, self.topo, topology_size, 1)
         self.mm.setup_mininet()
 
+    # returns list of length of admitted matches
+    def admitted_lengths(self, fv):
+
+        admitted_lengths = []
+
+        for src_h_id in fv.model.get_host_ids():
+            for dst_h_id in fv.model.get_host_ids():
+
+                src_host_obj = fv.model.get_node_object(src_h_id)
+                dst_host_obj = fv.model.get_node_object(dst_h_id)
+
+                if src_h_id != dst_h_id:
+                    if dst_host_obj.ingress_port.port_id in src_host_obj.egress_port.admitted_traffic:
+                        at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+                        admitted_lengths.append(len(at.match_elements))
+                    else:
+                        admitted_lengths.append(0)
+
+        return admitted_lengths
+
+
     def trigger(self):
 
         print "Starting experiment..."
@@ -54,10 +75,14 @@ class VaryingSizeTopology():
                 with Timer(verbose=True) as t:
                     fv.initialize_admitted_match()
 
+                admitted_lengths = self.admitted_lengths(fv)
+                print admitted_lengths
+
                 self.data["init_times"][topology_size].append(t.msecs)
 
                 # Take the first edge in the primary path and try to break it
                 node1, node2 = self.mm.synthesis_dij.primary_path_edges[0]
+
                 with Timer(verbose=True) as t:
 
                     fv.model.simulate_remove_edge(node1, node2)
@@ -77,11 +102,12 @@ class VaryingSizeTopology():
 
     def __del__(self):
         self.dump_data()
+        self.mm.cleanup_mininet()
 
 def main():
 
-    exp = VaryingSizeTopology("ring", 5, [4])#, 6, 8, 10, 12, 14, 16, 18, 20])
-#    exp = VaryingSizeTopology("fat_tree", 5, [3])#, 6, 8, 10, 12, 14, 16, 18, 20])
+    exp = VaryingSizeTopology("ring", 100, [4])#, 6, 8, 10, 12, 14, 16, 18, 20])
+#    exp = VaryingSizeTopology("fat_tree", 100, [3])#, 4, 5, 6])
     exp.trigger()
 
 if __name__ == "__main__":
