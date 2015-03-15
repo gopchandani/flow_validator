@@ -39,7 +39,7 @@ class FlowValidator:
             self.model.simulate_remove_edge(host_id, host_obj.switch_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
-    def initialize_admitted_match(self):
+    def initialize_admitted_traffic(self):
 
         for host_id in self.model.get_host_ids():
             host_obj = self.model.get_node_object(host_id)
@@ -54,6 +54,26 @@ class FlowValidator:
             self.port_graph.compute_admitted_traffic(switch_egress_port,
                                                    host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id],
                                                    host_obj.ingress_port)
+
+    # returns list of length of admitted matches
+    def admitted_traffic_lengths(self):
+
+        admitted_lengths = []
+
+        for src_h_id in self.model.get_host_ids():
+            for dst_h_id in self.model.get_host_ids():
+
+                src_host_obj = self.model.get_node_object(src_h_id)
+                dst_host_obj = self.model.get_node_object(dst_h_id)
+
+                if src_h_id != dst_h_id:
+                    if dst_host_obj.ingress_port.port_id in src_host_obj.egress_port.admitted_traffic:
+                        at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+                        admitted_lengths.append(len(at.match_elements))
+                    else:
+                        admitted_lengths.append(0)
+
+        return admitted_lengths
 
 
     def validate_all_host_pair_basic_reachability(self):
@@ -115,7 +135,7 @@ def main():
 
     fv.add_hosts()
 
-    fv.initialize_admitted_match()
+    fv.initialize_admitted_traffic()
 
     fv.validate_all_host_pair_basic_reachability()
 
