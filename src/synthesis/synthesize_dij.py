@@ -25,6 +25,7 @@ class SynthesizeDij():
         self.s = set()
         
         self.primary_path_edges = []
+        self.primary_path_edge_dict = {}
 
         self.apply_tag_intents_immediately = True
         self.apply_other_intents_immediately = False
@@ -194,11 +195,16 @@ class SynthesizeDij():
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.model.graph, source=src_host.switch_id, target=dst_host.switch_id)
         print "Primary Path:", p
-        
+
+        self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)] = []
+
         for i in range(len(p)-1):
 
             if (p[i], p[i+1]) not in self.primary_path_edges and (p[i+1], p[i]) not in self.primary_path_edges:
                 self.primary_path_edges.append((p[i], p[i+1]))
+
+            self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
+
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)

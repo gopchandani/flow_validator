@@ -23,13 +23,11 @@ class MininetMan():
                  topo,
                  num_switches,
                  num_hosts_per_switch,
-                 verbose=False,
-                 experiment_switches=["s1", "s3"]):
+                 experiment_switches):
 
         self.ping_interval = 3
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
-        self.verbose = verbose
         self.controller_port = int(controller_port)
 
         #Stores the synthesis object
@@ -112,7 +110,7 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(60*self.topo.total_switches)
+        time.sleep(20*self.topo.total_switches)
 
         # Taking this for a test-ride
         self._ping_experiment_hosts()

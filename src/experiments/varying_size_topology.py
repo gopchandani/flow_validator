@@ -36,7 +36,12 @@ class VaryingSizeTopology():
         controller_port = self.cm.get_next()
         print "Controller Port", controller_port
 
-        self.mm = MininetMan(controller_port, self.topo, topology_size, 1)
+        if self.topo == "ring":
+            self.mm = MininetMan(controller_port, self.topo, topology_size, 1, ["s1", "s3"])
+        elif self.topo == "fat_tree":
+            dst_sw = "s" + str(topology_size)
+            self.mm = MininetMan(controller_port, self.topo, topology_size, 1, ["s1", dst_sw])
+
         self.mm.setup_mininet()
 
     def trigger(self):
@@ -55,19 +60,14 @@ class VaryingSizeTopology():
                     fv.initialize_admitted_traffic()
 
                 admitted_lengths = fv.admitted_traffic_lengths()
-                print admitted_lengths
+
+                if 0 in admitted_lengths:
+                    print "Admitted Lengths: ", admitted_lengths
 
                 self.data["init_times"][topology_size].append(t.msecs)
 
-                # Take the first edge in the primary path and try to break it
-                node1, node2 = self.mm.synthesis_dij.primary_path_edges[0]
-
                 with Timer(verbose=True) as t:
-
-                    fv.model.simulate_remove_edge(node1, node2)
-                    fv.port_graph.remove_node_graph_edge(node1, node2)
-                    fv.model.simulate_add_edge(node1, node2)
-                    fv.port_graph.add_node_graph_edge(node1, node2, True)
+                    fv.validate_all_host_pair_backup_reachability(self.mm.synthesis_dij.primary_path_edge_dict)
 
                 self.data["failover_update_times"][topology_size].append(t.msecs)
 
@@ -85,8 +85,8 @@ class VaryingSizeTopology():
 
 def main():
 
-#    exp = VaryingSizeTopology("ring", 100, [4])#, 6, 8, 10, 12, 14, 16, 18, 20])
-    exp = VaryingSizeTopology("fat_tree", 100, [3])#, 4, 5, 6])
+#    exp = VaryingSizeTopology("ring", 100, [4, 6, 8, 10, 12, 14, 16, 18, 20])
+    exp = VaryingSizeTopology("fat_tree", 5, [3])#, 4, 5, 6])
     exp.trigger()
 
 if __name__ == "__main__":

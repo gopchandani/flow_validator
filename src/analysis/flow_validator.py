@@ -75,7 +75,6 @@ class FlowValidator:
 
         return admitted_lengths
 
-
     def validate_all_host_pair_basic_reachability(self):
 
         # Test connectivity after flows have bled through the port graph
@@ -93,41 +92,36 @@ class FlowValidator:
                     # Baseline
                     #at.print_port_paths()
 
+    def validate_all_host_pair_backup_reachability(self, primary_path_edge_dict):
 
-    def validate_all_host_pair_backup_reachability(self):
+        for host_pair in primary_path_edge_dict:
 
-        # Test connectivity after flows have bled through the port graph
-        for src_h_id in self.model.get_host_ids():
-            for dst_h_id in self.model.get_host_ids():
+            src_host_obj = self.model.get_node_object(host_pair[0])
+            dst_host_obj = self.model.get_node_object(host_pair[1])
 
-                src_host_obj = self.model.get_node_object(src_h_id)
-                dst_host_obj = self.model.get_node_object(dst_h_id)
+            at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
-                if src_h_id != dst_h_id:
+            # Baseline
+            baseline_num_elements = len(at.match_elements)
 
-                    print "Port Paths from:", src_h_id, "to:", dst_h_id
-                    at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+            # Now break the edges in the primary path in this host-pair, one-by-one
+            for primary_edge in primary_path_edge_dict[host_pair]:
 
-                    # Baseline
-                    at.print_port_paths()
+                self.model.simulate_remove_edge(primary_edge[0], primary_edge[1])
+                self.port_graph.remove_node_graph_edge(primary_edge[0], primary_edge[1])
+                at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+                edge_removed_num_elements = len(at.match_elements)
 
-                    # First remove the edge
-                    node1 = "openflow:4"
-                    node2 = "openflow:3"
-                    #node1 = "openflow:1"
-                    #node2 = "openflow:4"
+                # Add it back
+                self.model.simulate_add_edge(primary_edge[0], primary_edge[1])
+                self.port_graph.add_node_graph_edge(primary_edge[0], primary_edge[1], True)
+                at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+                edge_added_back_num_elements = len(at.match_elements)
 
-                    self.model.simulate_remove_edge(node1, node2)
-                    self.port_graph.remove_node_graph_edge(node1, node2)
-                    at.print_port_paths()
-
-                    # Add it back
-                    print "Adding the edge back..."
-
-                    self.model.simulate_add_edge(node1, node2)
-                    self.port_graph.add_node_graph_edge(node1, node2, True)
-                    at.print_port_paths()
-
+                # the number of elements should be same in three scenarios for each edge
+                if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
+                    print "Backup doesn't quite exist between pair:", host_pair, "due to edge:", primary_edge
+                    return
 
 def main():
 
@@ -138,13 +132,7 @@ def main():
     fv.initialize_admitted_traffic()
 
     fv.validate_all_host_pair_basic_reachability()
-
-    #fv.validate_all_host_pair_backup_reachability()
-
     #fv.remove_hosts()
-
-    #fv.validate_all_host_pair_backup_reachability()
-
     #fv.validate_all_host_pair_basic_reachability()
 
 
