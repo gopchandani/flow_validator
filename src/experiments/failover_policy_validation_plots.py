@@ -33,7 +33,7 @@ def plot_varying_size_topology(initial_traffic_set_propagation_time, failover_pr
 
         l_initial_traffic_set_propagation_time = plt.errorbar(x1, initial_traffic_set_propagation_time_mean,
                                                               initial_traffic_set_propagation_time_sem,
-                                                              label="Initial", fmt="x", color="black")
+                                                              label="Initial Traffic Set", fmt="x", color="black")
         h.append(l_initial_traffic_set_propagation_time)
 
     if failover_property_verification_time:
@@ -41,7 +41,7 @@ def plot_varying_size_topology(initial_traffic_set_propagation_time, failover_pr
 
         l_failover_property_verification_time = plt.errorbar(x2, failover_property_verification_time_mean,
                                                              failover_property_verification_time_sem,
-                                                             label="Incremental", fmt="o", color="black")
+                                                             label="Failover Property Validation", fmt="o", color="black")
         h.append(l_failover_property_verification_time)
 
 

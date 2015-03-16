@@ -34,7 +34,7 @@ class FixedSizeTopology():
         controller_port = self.cm.get_next()
         print "Controller Port", controller_port
 
-        self.mm = MininetMan(controller_port, "ring", 10, 1, experiment_switches=["s1", "s6"])
+        self.mm = MininetMan(controller_port, "ring", 6, 1, experiment_switches=["s1", "s4"])
         self.mm.setup_mininet()
 
     def trigger(self):
@@ -51,15 +51,16 @@ class FixedSizeTopology():
         for i in range(self.num_iterations):
 
             fv = FlowValidator()
+            fv.init_port_graph()
             fv.add_hosts()
-            fv.initialize_admitted_match()
+            fv.initialize_admitted_traffic()
 
             for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
 
                 with Timer(verbose=True) as t:
-                    fv.model.simulate_remove_edge(node1, node2)
+                    fv.port_graph.network_graph.simulate_remove_edge(node1, node2)
                     fv.port_graph.remove_node_graph_edge(node1, node2)
-                    fv.model.simulate_add_edge(node1, node2)
+                    fv.port_graph.network_graph.simulate_add_edge(node1, node2)
                     fv.port_graph.add_node_graph_edge(node1, node2, True)
 
                 s1 = node1.split(":")[1]
@@ -71,7 +72,7 @@ class FixedSizeTopology():
 
     def dump_data(self):
         pprint(self.data)
-        with open("data/fixed_size_topology_data_" + time.strftime("%Y%m%d_%H%M%S")+".json", "w") as outfile:
+        with open("data/different_edge_failure_data_" + time.strftime("%Y%m%d_%H%M%S")+".json", "w") as outfile:
             json.dump(self.data, outfile)
 
     def __del__(self):
@@ -79,7 +80,7 @@ class FixedSizeTopology():
 
 def main():
 
-    exp = FixedSizeTopology(500)
+    exp = FixedSizeTopology(100)
     exp.trigger()
 
 if __name__ == "__main__":

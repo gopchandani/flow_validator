@@ -61,6 +61,7 @@ class VaryingSizeTopology():
             for i in range(self.num_iterations):
 
                 fv = FlowValidator()
+                fv.init_port_graph()
                 fv.add_hosts()
 
                 with Timer(verbose=True) as t:

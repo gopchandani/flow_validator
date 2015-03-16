@@ -53,11 +53,10 @@ class MininetMan():
                 if src_switch == dst_switch:
                     continue
 
-                # Assume that at least one host per switch exists
-                src_host = "h" + src_switch[1:] + "1"
-                dst_host = "h" + dst_switch[1:] + "1"
-
-                yield (self.net.get(src_host), self.net.get(dst_host))
+                for i in range(1, self.num_hosts_per_switch + 1):
+                    src_host = "h" + src_switch[1:] + str(i)
+                    dst_host = "h" + dst_switch[1:] + str(i)
+                    yield (self.net.get(src_host), self.net.get(dst_host))
 
     def _ping_host_pair(self, src_host, dst_host):
         hosts = [src_host, dst_host]
@@ -70,8 +69,7 @@ class MininetMan():
             return False
 
     def _ping_experiment_hosts(self):
-        experiment_host_pairs = self._get_experiment_host_pair()
-        for (src_host, dst_host) in experiment_host_pairs:
+        for (src_host, dst_host) in self._get_experiment_host_pair():
             self._ping_host_pair(src_host, dst_host)
 
     def setup_mininet(self):
