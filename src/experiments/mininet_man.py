@@ -82,7 +82,6 @@ class MininetMan():
         time.sleep(10)
         os.system("sudo mn -c")
 
-
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
@@ -94,7 +93,6 @@ class MininetMan():
 
         print "Waiting for the controller to boot completely..."
         time.sleep(150)
-
 
         print "Running a ping before synthesis..."
         # Activate Hosts
@@ -110,7 +108,7 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(20*self.topo.total_switches)
+        time.sleep(30*self.topo.total_switches)
 
         # Taking this for a test-ride
         self._ping_experiment_hosts()

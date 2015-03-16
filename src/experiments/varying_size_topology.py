@@ -51,6 +51,13 @@ class VaryingSizeTopology():
         for topology_size in self.topology_sizes:
 
             self.setup_network(topology_size)
+            
+            num_switches = 0
+            if self.topo == "fat_tree":
+                num_switches = topology_size + 3
+            else:
+                num_switches = topology_size
+
             for i in range(self.num_iterations):
 
                 fv = FlowValidator()
@@ -64,12 +71,12 @@ class VaryingSizeTopology():
                 if 0 in admitted_lengths:
                     print "Admitted Lengths: ", admitted_lengths
 
-                self.data["init_times"][topology_size].append(t.msecs)
+                self.data["init_times"][num_switches].append(t.msecs)
 
                 with Timer(verbose=True) as t:
                     fv.validate_all_host_pair_backup_reachability(self.mm.synthesis_dij.primary_path_edge_dict)
 
-                self.data["failover_update_times"][topology_size].append(t.msecs)
+                self.data["failover_update_times"][num_switches].append(t.msecs)
 
         print "Done..."
         self.dump_data()
@@ -86,7 +93,7 @@ class VaryingSizeTopology():
 def main():
 
 #    exp = VaryingSizeTopology("ring", 100, [4, 6, 8, 10, 12, 14, 16, 18, 20])
-    exp = VaryingSizeTopology("fat_tree", 5, [3])#, 4, 5, 6])
+    exp = VaryingSizeTopology("fat_tree", 100, [3, 4, 5])#, 5, 6])
     exp.trigger()
 
 if __name__ == "__main__":
