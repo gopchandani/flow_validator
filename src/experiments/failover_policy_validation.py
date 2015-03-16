@@ -66,12 +66,10 @@ class VaryingSizeTopology():
                 with Timer(verbose=True) as t:
                     fv.initialize_admitted_traffic()
 
-                admitted_lengths = fv.admitted_traffic_lengths()
-
-                if 0 in admitted_lengths:
-                    print "Admitted Lengths: ", admitted_lengths
-
                 self.data["initial_traffic_set_propagation_time"][num_switches].append(t.msecs)
+
+                # Just for debugging
+                fv.validate_all_host_pair_basic_reachability()
 
                 with Timer(verbose=True) as t:
                     fv.validate_all_host_pair_backup_reachability(self.mm.synthesis_dij.primary_path_edge_dict)
