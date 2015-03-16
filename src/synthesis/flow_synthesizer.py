@@ -1,7 +1,7 @@
 import requests 
 from create_xml import create_group, create_flow_rule_group, create_simple_flow_rule, create_flow_with_inport
 from create_url import create_group_url, create_flow_url
-from model.model import Model
+from model.network_graph import NetworkGraph
 import networkx as nx
 import time
 
@@ -17,7 +17,7 @@ class Flow_Synthesizer:
         self.priority_down_link_break = '102'
         self.header = {'Content-Type':'application/xml', 'Accept':'application/xml'}
 
-        self.model = Model()
+        self.model = NetworkGraph()
         self.graph = self.model.get_node_graph()
         self.host_ids = self.model.get_host_ids()
         self.switch_ids = self.model.get_switch_ids()

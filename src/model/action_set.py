@@ -46,7 +46,7 @@ class Action():
             self.action_type = "output"
 
             if action_json["output-action"]["output-node-connector"] == "CONTROLLER":
-                self.out_port = self.sw.model.OFPP_CONTROLLER
+                self.out_port = self.sw.network_graph.OFPP_CONTROLLER
             else:
                 self.out_port = action_json["output-action"]["output-node-connector"]
 
@@ -122,7 +122,7 @@ class ActionSet():
 
     def __init__(self, sw):
 
-        # Modelling the ActionSet as a dictionary of lists, keyed by various actions.
+        # network_graphling the ActionSet as a dictionary of lists, keyed by various actions.
         # These actions may be tucked away inside a group too and the type might be group
 
         self.action_dict = defaultdict(list)
@@ -203,7 +203,7 @@ class ActionSet():
 
             output_match = self.get_resulting_match_element(output_action.matched_flow)
 
-            if self.sw.model.OFPP_IN == int(output_action.out_port):
+            if self.sw.network_graph.OFPP_IN == int(output_action.out_port):
                 out_port_match[int(in_port)] = output_match
             else:
                 out_port_match[int(output_action.out_port)] = output_match
@@ -219,7 +219,7 @@ class ActionSet():
             if int(output_action.out_port) == 4294967293:
                 continue
 
-            if int(self.sw.model.OFPP_IN) == int(output_action.out_port):
+            if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):
 
                 # Consider all possible ports if they are currently up and are not the watch port
                 for in_port in self.sw.ports:

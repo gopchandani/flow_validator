@@ -3,13 +3,13 @@ __author__ = 'Rakesh Kumar'
 import networkx as nx
 import sys
 
-from model.model import Model
+from model.network_graph import NetworkGraph
 from model.match import MatchElement
 from netaddr import IPNetwork
 
 class BackupPaths:
     def __init__(self):
-        self.model = Model()
+        self.model = NetworkGraph()
 
     def check_flow_reachability(self, src, dst, node_path, path_type, in_port_match, switch_in_port=None):
 

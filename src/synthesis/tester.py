@@ -1,7 +1,7 @@
 import requests 
 # from create_xml import create_group, create_flow_rule_group, create_simple_flow_rule, create_flow_with_inport
 # from create_url import create_group_url, create_flow_url
-from model.model import Model
+from model.network_graph import NetworkGraph
 import networkx as nx
 
 
@@ -13,7 +13,7 @@ class Tester:
 # link.node_id_1 link.node_id_1	
     def __init__(self):
         self.flow_id = 10
-        # self.model = Model()
+        # self.model = NetworkGraph()
         # self.graph = self.model.get_node_graph()
         # self.host_ids = self.model.get_host_ids()
         # self.switch_ids = self.model.get_switch_ids()

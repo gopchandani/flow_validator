@@ -1,21 +1,21 @@
 __author__ = 'Rakesh Kumar'
 
 
-from model.model import Model
+from model.network_graph import NetworkGraph
 from model.traffic import Traffic
 
 class FlowValidator:
 
     def __init__(self):
-        self.model = Model(init_port_graph=True)
-        self.port_graph = self.model.port_graph
+        self.network_graph = NetworkGraph(init_port_graph=True)
+        self.port_graph = self.network_graph.port_graph
 
     def add_hosts(self):
 
         # Attach a destination port for each host.
-        for host_id in self.model.get_host_ids():
+        for host_id in self.network_graph.get_host_ids():
 
-            host_obj = self.model.get_node_object(host_id)
+            host_obj = self.network_graph.get_node_object(host_id)
 
             self.port_graph.add_port(host_obj.ingress_port)
             self.port_graph.add_port(host_obj.egress_port)
@@ -33,16 +33,16 @@ class FlowValidator:
 
     def remove_hosts(self):
 
-        for host_id in self.model.get_host_ids():
+        for host_id in self.network_graph.get_host_ids():
 
-            host_obj = self.model.get_node_object(host_id)
-            self.model.simulate_remove_edge(host_id, host_obj.switch_id)
+            host_obj = self.network_graph.get_node_object(host_id)
+            self.network_graph.simulate_remove_edge(host_id, host_obj.switch_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
     def initialize_admitted_traffic(self):
 
-        for host_id in self.model.get_host_ids():
-            host_obj = self.model.get_node_object(host_id)
+        for host_id in self.network_graph.get_host_ids():
+            host_obj = self.network_graph.get_node_object(host_id)
 
             #print "Computing admitted_traffic:", host_id, "connected to switch:", \
             #    host_obj.switch_id, "at port:", \
@@ -59,11 +59,11 @@ class FlowValidator:
     def validate_all_host_pair_basic_reachability(self):
 
         # Test connectivity after flows have bled through the port graph
-        for src_h_id in self.model.get_host_ids():
-            for dst_h_id in self.model.get_host_ids():
+        for src_h_id in self.network_graph.get_host_ids():
+            for dst_h_id in self.network_graph.get_host_ids():
 
-                src_host_obj = self.model.get_node_object(src_h_id)
-                dst_host_obj = self.model.get_node_object(dst_h_id)
+                src_host_obj = self.network_graph.get_node_object(src_h_id)
+                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
                 if src_h_id != dst_h_id:
 
@@ -77,8 +77,8 @@ class FlowValidator:
 
         for host_pair in primary_path_edge_dict:
 
-            src_host_obj = self.model.get_node_object(host_pair[0])
-            dst_host_obj = self.model.get_node_object(host_pair[1])
+            src_host_obj = self.network_graph.get_node_object(host_pair[0])
+            dst_host_obj = self.network_graph.get_node_object(host_pair[1])
 
             at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
@@ -88,14 +88,14 @@ class FlowValidator:
             # Now break the edges in the primary path in this host-pair, one-by-one
             for primary_edge in primary_path_edge_dict[host_pair]:
 
-                self.model.simulate_remove_edge(primary_edge[0], primary_edge[1])
+                self.network_graph.simulate_remove_edge(primary_edge[0], primary_edge[1])
                 self.port_graph.remove_node_graph_edge(primary_edge[0], primary_edge[1])
                 at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                 edge_removed_num_elements = len(at.match_elements)
 
                 # Add it back
-                self.model.simulate_add_edge(primary_edge[0], primary_edge[1])
+                self.network_graph.simulate_add_edge(primary_edge[0], primary_edge[1])
                 self.port_graph.add_node_graph_edge(primary_edge[0], primary_edge[1], True)
                 at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
                 edge_added_back_num_elements = len(at.match_elements)

@@ -6,8 +6,8 @@ from traffic import Traffic
 
 class PortGraph:
 
-    def __init__(self, model):
-        self.model = model
+    def __init__(self, network_graph):
+        self.network_graph = network_graph
         self.g = nx.MultiDiGraph()
 
     def get_table_port_id(self, switch_id, table_number):
@@ -35,11 +35,11 @@ class PortGraph:
         self.init_global_controller_port()
 
         # Iterate through switches and add the ports and relevant abstract analysis
-        for sw in self.model.get_switches():
+        for sw in self.network_graph.get_switches():
             sw.compute_switch_port_graph()
 
         # Add edges between ports on node edges, where nodes are only switches.
-        for node_edge in self.model.graph.edges():
+        for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
                 self.add_node_graph_edge(node_edge[0], node_edge[1])
 
@@ -106,7 +106,7 @@ class PortGraph:
 
     def add_node_graph_edge(self, node1_id, node2_id, update_flag=False):
 
-        edge_data = self.model.get_edge_port_dict(node1_id, node2_id)
+        edge_data = self.network_graph.get_edge_port_dict(node1_id, node2_id)
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
@@ -122,7 +122,7 @@ class PortGraph:
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
-        edge_data = self.model.get_edge_port_dict(node1_id, node2_id)
+        edge_data = self.network_graph.get_edge_port_dict(node1_id, node2_id)
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))

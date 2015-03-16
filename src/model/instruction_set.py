@@ -69,7 +69,7 @@ class InstructionSet():
 
         self.sw = sw
         self.flow = flow
-        self.model = self.sw.model
+        self.network_graph = self.sw.network_graph
         self.instruction_list = []
 
         self.applied_action_set = ActionSet(self.sw)

@@ -14,7 +14,7 @@ class Flow():
     def __init__(self, sw, flow_json):
 
         self.sw = sw
-        self.model = sw.model
+        self.network_graph = sw.network_graph
         self.flow_json = flow_json
         self.table_id = flow_json["table_id"]
         self.id = flow_json["id"]
@@ -68,10 +68,10 @@ class Flow():
         # Add port edges based on the impact of ActionSet and GotoTable
         for out_port, output_action in port_graph_edge_status:
 
-            outgoing_port = self.model.port_graph.get_port(
-                self.model.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+            outgoing_port = self.network_graph.port_graph.get_port(
+                self.network_graph.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
-            e = self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+            e = self.network_graph.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            outgoing_port,
                                            (self, output_action),
                                            self.applied_match)
@@ -82,10 +82,10 @@ class Flow():
         # Add port edges based on the impact of ActionSet and GotoTable
         for out_port, output_action in port_graph_edge_status_2:
 
-            outgoing_port = self.model.port_graph.get_port(
-                self.model.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+            outgoing_port = self.network_graph.port_graph.get_port(
+                self.network_graph.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
-            e = self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+            e = self.network_graph.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            outgoing_port,
                                            (self, output_action),
                                            self.applied_match)
@@ -95,7 +95,7 @@ class Flow():
 
         # See the edge impact of any go-to-table instruction
         if self.instructions.goto_table:
-            e = self.model.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+            e = self.network_graph.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            self.sw.flow_tables[self.instructions.goto_table].port,
                                            (self, None),
                                            self.match)
@@ -108,7 +108,7 @@ class Flow():
 
         # # First remove all the port_graph_edges
         # for e in self.port_graph_edges:
-        #     self.model.port_graph.g.remove_edge(e[0], e[1], e[2])
+        #     self.network_graph.port_graph.g.remove_edge(e[0], e[1], e[2])
         #
         # del self.port_graph_edges[:]
 
@@ -118,7 +118,7 @@ class Flow():
 
         for src_port_id, dst_port_id, key in self.port_graph_edges:
             action = key[1]
-            if self.sw.model.port_graph.get_port(dst_port_id).state != "down":
+            if self.sw.network_graph.port_graph.get_port(dst_port_id).state != "down":
                 action.update_active_status()
             else:
                 action.is_active = False
@@ -127,7 +127,7 @@ class FlowTable():
     def __init__(self, sw, table_id, flow_list):
 
         self.sw = sw
-        self.model = sw.model
+        self.network_graph = sw.network_graph
         self.table_id = table_id
         self.flows = []
         self.input_port = None

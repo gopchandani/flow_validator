@@ -5,7 +5,7 @@ from copy import deepcopy
 
 import networkx as nx
 
-from model.model import Model
+from model.network_graph import NetworkGraph
 
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
@@ -17,7 +17,7 @@ class SynthesizeDij():
 
     def __init__(self):
 
-        self.model = Model()
+        self.model = NetworkGraph()
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.model)
 
         # s represents the set of all switches that are

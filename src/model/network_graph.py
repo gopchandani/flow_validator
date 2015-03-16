@@ -14,7 +14,7 @@ from group_table import Group
 from port import Port
 from port_graph import PortGraph
 
-class Model():
+class NetworkGraph():
 
     def __init__(self, init_port_graph=False):
 
@@ -316,7 +316,7 @@ def test_pygraphviz(networkx_graph):
 
 def main():
 
-    m = Model(init_port_graph=True)
+    m = NetworkGraph(init_port_graph=True)
     test_pygraphviz(m.port_graph.g)
 
 if __name__ == "__main__":

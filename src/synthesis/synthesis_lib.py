@@ -6,7 +6,7 @@ import time
 import httplib2
 import json
 
-from model.model import Model
+from model.network_graph import NetworkGraph
 
 
 class SynthesisLib():
@@ -14,7 +14,7 @@ class SynthesisLib():
     def __init__(self, controller_host, controller_port, model=None):
 
         if not model:
-            self.model = Model()
+            self.model = NetworkGraph()
         else:
             self.model = model
 
