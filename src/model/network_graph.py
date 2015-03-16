@@ -1,8 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
 import json
-import sys
-import pprint
 import httplib2
 import networkx as nx
 
@@ -10,13 +8,11 @@ from switch import Switch
 from host import Host
 from flow_table import FlowTable
 from group_table import GroupTable
-from group_table import Group
 from port import Port
-from port_graph import PortGraph
 
 class NetworkGraph():
 
-    def __init__(self, init_port_graph=False):
+    def __init__(self):
 
         self.OFPP_CONTROLLER = 0xfffffffd
         self.OFPP_ALL = 0xfffffffc
@@ -35,7 +31,6 @@ class NetworkGraph():
         self.switch_ids = []
 
         #  Load up everything
-        self.init_port_graph = init_port_graph
         self._load_model()
 
     def _prepare_group_table(self, sw):
@@ -235,25 +230,10 @@ class NetworkGraph():
             for port in self.graph.node[sw]["sw"].ports:
                 print self.graph.node[sw]["sw"].ports[port]
 
-    def dump_node_graph(self):
-
-        for node in self.port_graph.g.nodes():
-            print node
-        for edge in self.port_graph.g.edges():
-            print edge
-
-    def _prepare_port_graph(self):
-        self.port_graph = PortGraph(self)
-        self.port_graph.init_port_graph()
-        #self.dump_node_graph()
-
     def _load_model(self):
 
         self._prepare_switch_nodes()
         self._prepare_node_edges()
-
-        if self.init_port_graph:
-            self._prepare_port_graph()
 
         #self.dump_model()
 
@@ -307,17 +287,9 @@ class NetworkGraph():
 
         return node_type
 
-def test_pygraphviz(networkx_graph):
-
-    A = nx.to_agraph(networkx_graph)
-    A.write("test.dot")
-    A.layout()
-    A.draw("test.png")
-
 def main():
 
-    m = NetworkGraph(init_port_graph=True)
-    test_pygraphviz(m.port_graph.g)
+    m = NetworkGraph()
 
 if __name__ == "__main__":
     main()

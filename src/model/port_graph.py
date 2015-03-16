@@ -3,11 +3,12 @@ __author__ = 'Rakesh Kumar'
 import networkx as nx
 from port import Port
 from traffic import Traffic
+from network_graph import NetworkGraph
 
 class PortGraph:
 
-    def __init__(self, network_graph):
-        self.network_graph = network_graph
+    def __init__(self):
+        self.network_graph = NetworkGraph()
         self.g = nx.MultiDiGraph()
 
     def get_table_port_id(self, switch_id, table_number):
@@ -36,7 +37,7 @@ class PortGraph:
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
-            sw.compute_switch_port_graph()
+            sw.prepare_switch_port_graph(self)
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():

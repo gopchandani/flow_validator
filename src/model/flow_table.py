@@ -26,6 +26,7 @@ class Flow():
         self.go_to_table = None
 
         # Port Graph Stuff
+        self.port_graph = None
         self.match = Traffic()
         self.match.match_elements.append(self.match_element)
         self.complement_match = self.match_element.complement_match()
@@ -68,10 +69,10 @@ class Flow():
         # Add port edges based on the impact of ActionSet and GotoTable
         for out_port, output_action in port_graph_edge_status:
 
-            outgoing_port = self.network_graph.port_graph.get_port(
-                self.network_graph.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+            outgoing_port = self.port_graph.get_port(
+                self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
-            e = self.network_graph.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+            e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            outgoing_port,
                                            (self, output_action),
                                            self.applied_match)
@@ -82,10 +83,10 @@ class Flow():
         # Add port edges based on the impact of ActionSet and GotoTable
         for out_port, output_action in port_graph_edge_status_2:
 
-            outgoing_port = self.network_graph.port_graph.get_port(
-                self.network_graph.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+            outgoing_port = self.port_graph.get_port(
+                self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
-            e = self.network_graph.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+            e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            outgoing_port,
                                            (self, output_action),
                                            self.applied_match)
@@ -95,7 +96,7 @@ class Flow():
 
         # See the edge impact of any go-to-table instruction
         if self.instructions.goto_table:
-            e = self.network_graph.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+            e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                            self.sw.flow_tables[self.instructions.goto_table].port,
                                            (self, None),
                                            self.match)
@@ -108,7 +109,7 @@ class Flow():
 
         # # First remove all the port_graph_edges
         # for e in self.port_graph_edges:
-        #     self.network_graph.port_graph.g.remove_edge(e[0], e[1], e[2])
+        #     self.port_graph.g.remove_edge(e[0], e[1], e[2])
         #
         # del self.port_graph_edges[:]
 
@@ -118,7 +119,7 @@ class Flow():
 
         for src_port_id, dst_port_id, key in self.port_graph_edges:
             action = key[1]
-            if self.sw.network_graph.port_graph.get_port(dst_port_id).state != "down":
+            if self.sw.port_graph.get_port(dst_port_id).state != "down":
                 action.update_active_status()
             else:
                 action.is_active = False
@@ -131,6 +132,7 @@ class FlowTable():
         self.table_id = table_id
         self.flows = []
         self.input_port = None
+        self.port_graph = None
 
         for f in flow_list:
             f = Flow(sw, f)
@@ -158,6 +160,7 @@ class FlowTable():
 
         for flow in self.flows:
             intersection = flow.match.intersect(remaining_match)
+            flow.port_graph = self.port_graph
 
             # Don't care about matches that have full empty fields
             if not intersection.is_empty():

@@ -23,8 +23,9 @@ class Switch():
 
         #Analysis stuff
         self.in_port_match = None
-
         self.accepted_destination_match = {}
+
+        self.port_graph = None
 
     def transfer_function(self, in_port_match, in_port):
 
@@ -81,7 +82,9 @@ class Switch():
 
         return out_port_match
 
-    def compute_switch_port_graph(self):
+    def prepare_switch_port_graph(self, port_graph):
+
+        self.port_graph = port_graph
 
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
@@ -89,10 +92,11 @@ class Switch():
             # Add a output node in port graph for each table
             p = Port(self,
                      port_type="table",
-                     port_id=self.network_graph.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
+                     port_id=self.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
 
-            self.network_graph.port_graph.g.add_node(p.port_id, p=p)
+            self.port_graph.g.add_node(p.port_id, p=p)
             flow_table.port = p
+            flow_table.port_graph = self.port_graph
 
         # Add two nodes per physical port in port graph one for incoming and outgoing direction
         # Connect incoming direction port to table 0's port
@@ -100,17 +104,17 @@ class Switch():
 
             in_p = Port(self,
                         port_type="ingress",
-                        port_id=self.network_graph.port_graph.get_incoming_port_id(self.node_id, port))
+                        port_id=self.port_graph.get_incoming_port_id(self.node_id, port))
 
             out_p = Port(self,
                          port_type="egress",
-                         port_id=self.network_graph.port_graph.get_outgoing_port_id(self.node_id, port))
+                         port_id=self.port_graph.get_outgoing_port_id(self.node_id, port))
 
             in_p.port_number = int(port)
             out_p.port_number = int(port)
 
-            self.network_graph.port_graph.add_port(in_p)
-            self.network_graph.port_graph.add_port(out_p)
+            self.port_graph.add_port(in_p)
+            self.port_graph.add_port(out_p)
 
             incoming_port_match = Traffic(init_wildcard=True)
             incoming_port_match.set_field("in_port", int(port))
@@ -118,11 +122,12 @@ class Switch():
             # None of this happens if there are no flow tables
             if self.flow_tables:
 
-                self.network_graph.port_graph.add_edge(in_p,
+                self.port_graph.add_edge(in_p,
                                                self.flow_tables[0].port, (None, None),
                                                incoming_port_match)
             else:
                 print "No flow tables in switch:", self.node_id
+
 
         # Find out what else can happen when traffic comes to this switch.
         for flow_table in self.flow_tables:
