@@ -23,8 +23,8 @@ class VaryingSizeTopology():
         self.topo = topo
 
         self.data = {
-            "init_times": defaultdict(list),
-            "failover_update_times": defaultdict(list)
+            "initial_traffic_set_propagation_time": defaultdict(list),
+            "failover_property_verification_time": defaultdict(list)
         }
 
         # Get the dockers ready
@@ -71,12 +71,12 @@ class VaryingSizeTopology():
                 if 0 in admitted_lengths:
                     print "Admitted Lengths: ", admitted_lengths
 
-                self.data["init_times"][num_switches].append(t.msecs)
+                self.data["initial_traffic_set_propagation_time"][num_switches].append(t.msecs)
 
                 with Timer(verbose=True) as t:
                     fv.validate_all_host_pair_backup_reachability(self.mm.synthesis_dij.primary_path_edge_dict)
 
-                self.data["failover_update_times"][num_switches].append(t.msecs)
+                self.data["failover_property_verification_time"][num_switches].append(t.msecs)
 
         print "Done..."
         self.dump_data()
@@ -92,8 +92,8 @@ class VaryingSizeTopology():
 
 def main():
 
-#    exp = VaryingSizeTopology("ring", 100, [4, 6, 8, 10, 12, 14, 16, 18, 20])
-    exp = VaryingSizeTopology("fat_tree", 100, [3, 4, 5])#, 5, 6])
+    exp = VaryingSizeTopology("ring", 100, [4])#, 6, 8, 10, 12, 14, 16, 18, 20])
+#    exp = VaryingSizeTopology("fat_tree", 100, [3, 4, 5])#, 5, 6])
     exp.trigger()
 
 if __name__ == "__main__":

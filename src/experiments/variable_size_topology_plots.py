@@ -23,24 +23,26 @@ def get_x_y_err(data_dict):
     return x, data_means, data_sems
 
 
-def plot_varying_size_topology(init_times, failover_update_times):
+def plot_varying_size_topology(initial_traffic_set_propagation_time, failover_property_verification_time):
 
     h = []
 
-    if init_times:
+    if initial_traffic_set_propagation_time:
 
-        x1, init_times_mean, init_times_sem = get_x_y_err(init_times)
+        x1, initial_traffic_set_propagation_time_mean, initial_traffic_set_propagation_time_sem = get_x_y_err(initial_traffic_set_propagation_time)
 
-        l_init_times = plt.errorbar(x1, init_times_mean, init_times_sem,
-                                    label="Initial", fmt="x", color="black")
-        h.append(l_init_times)
+        l_initial_traffic_set_propagation_time = plt.errorbar(x1, initial_traffic_set_propagation_time_mean,
+                                                              initial_traffic_set_propagation_time_sem,
+                                                              label="Initial", fmt="x", color="black")
+        h.append(l_initial_traffic_set_propagation_time)
 
-    if failover_update_times:
-        x2, failover_update_times_mean, failover_update_times_sem = get_x_y_err(failover_update_times)
+    if failover_property_verification_time:
+        x2, failover_property_verification_time_mean, failover_property_verification_time_sem = get_x_y_err(failover_property_verification_time)
 
-        l_failover_update_times = plt.errorbar(x2, failover_update_times_mean, failover_update_times_sem,
-                                            label="Incremental", fmt="o", color="black")
-        h.append(l_failover_update_times)
+        l_failover_property_verification_time = plt.errorbar(x2, failover_property_verification_time_mean,
+                                                             failover_property_verification_time_sem,
+                                                             label="Incremental", fmt="o", color="black")
+        h.append(l_failover_property_verification_time)
 
 
     plt.legend(handles=h, loc="upper right")
@@ -53,12 +55,12 @@ def plot_varying_size_topology(init_times, failover_update_times):
     plt.show()
 
 
-#with open("data/variable_size_topology_ring_data_20150315_143422.json", "r") as infile:
-#    data = json.load(infile)
-
-
-with open("data/variable_size_topology_fat_tree_data_20150316_111603.json", "r") as infile:
+with open("data/variable_size_topology_ring_data_20150315_143422.json", "r") as infile:
     data = json.load(infile)
 
 
-plot_varying_size_topology(data["init_times"], data["failover_update_times"])
+#with open("data/variable_size_topology_fat_tree_data_20150316_111603.json", "r") as infile:
+#    data = json.load(infile)
+
+
+plot_varying_size_topology(data["initial_traffic_set_propagation_time"], data["failover_property_verification_time"])
