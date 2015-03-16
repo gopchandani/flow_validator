@@ -1,66 +1,100 @@
+__author__ = 'Rakesh Kumar'
+
+import sys
+sys.path.append("./")
+
 import json
 import time
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.stats as ss
 
+from collections import defaultdict
+from pprint import pprint
 
-#Assuming that x-axis are keys to the data_dict
+from timer import Timer
+from analysis.flow_validator import FlowValidator
+from controller_man import ControllerMan
+from mininet_man import MininetMan
 
-def get_x_y_err(data_dict):
+class VaryingSizeTopology():
 
-    x = sorted(data_dict.keys())
+    def __init__(self, topo, sample_size, topology_sizes):
 
-    data_means = []
-    data_sems = []
+        self.num_iterations = sample_size
+        self.topology_sizes = topology_sizes
+        self.topo = topo
 
-    for p in x:
-        mean = np.mean(data_dict[p])
-        sem = ss.sem(data_dict[p])
-        data_means.append(mean)
-        data_sems.append(sem)
+        self.data = {
+            "initial_traffic_set_propagation_time": defaultdict(list),
+            "failover_property_verification_time": defaultdict(list)
+        }
 
-    return x, data_means, data_sems
+        # Get the dockers ready
+        self.cm = ControllerMan(len(topology_sizes))
 
+    def setup_network(self, topology_size):
 
-def plot_varying_size_topology(initial_traffic_set_propagation_time, failover_property_verification_time):
+        # First get a docker for controller
+        controller_port = self.cm.get_next()
+        print "Controller Port", controller_port
 
-    h = []
+        if self.topo == "ring":
+            self.mm = MininetMan(controller_port, self.topo, topology_size, 1, ["s1", "s3"])
+        elif self.topo == "fat_tree":
+            dst_sw = "s" + str(topology_size)
+            self.mm = MininetMan(controller_port, self.topo, topology_size, 1, ["s1", dst_sw])
 
-    if initial_traffic_set_propagation_time:
+        self.mm.setup_mininet()
 
-        x1, initial_traffic_set_propagation_time_mean, initial_traffic_set_propagation_time_sem = get_x_y_err(initial_traffic_set_propagation_time)
+    def trigger(self):
 
-        l_initial_traffic_set_propagation_time = plt.errorbar(x1, initial_traffic_set_propagation_time_mean,
-                                                              initial_traffic_set_propagation_time_sem,
-                                                              label="Initial", fmt="x", color="black")
-        h.append(l_initial_traffic_set_propagation_time)
+        print "Starting experiment..."
 
-    if failover_property_verification_time:
-        x2, failover_property_verification_time_mean, failover_property_verification_time_sem = get_x_y_err(failover_property_verification_time)
+        for topology_size in self.topology_sizes:
 
-        l_failover_property_verification_time = plt.errorbar(x2, failover_property_verification_time_mean,
-                                                             failover_property_verification_time_sem,
-                                                             label="Incremental", fmt="o", color="black")
-        h.append(l_failover_property_verification_time)
+            self.setup_network(topology_size)
+            
+            num_switches = 0
+            if self.topo == "fat_tree":
+                num_switches = topology_size + 3
+            else:
+                num_switches = topology_size
 
+            for i in range(self.num_iterations):
 
-    plt.legend(handles=h, loc="upper right")
-    plt.xlim((2, 22))
-    plt.xticks(range(2, 22, 2), fontsize=16)
-    plt.yticks(fontsize=16)
+                fv = FlowValidator()
+                fv.add_hosts()
 
-    plt.xlabel("Number of switches in the tree", fontsize=18)
-    plt.ylabel("Computation Time(ms)", fontsize=18)
-    plt.show()
+                with Timer(verbose=True) as t:
+                    fv.initialize_admitted_traffic()
 
+                admitted_lengths = fv.admitted_traffic_lengths()
 
-with open("data/variable_size_topology_ring_data_20150315_143422.json", "r") as infile:
-    data = json.load(infile)
+                if 0 in admitted_lengths:
+                    print "Admitted Lengths: ", admitted_lengths
 
+                self.data["initial_traffic_set_propagation_time"][num_switches].append(t.msecs)
 
-#with open("data/variable_size_topology_fat_tree_data_20150316_111603.json", "r") as infile:
-#    data = json.load(infile)
+                with Timer(verbose=True) as t:
+                    fv.validate_all_host_pair_backup_reachability(self.mm.synthesis_dij.primary_path_edge_dict)
 
+                self.data["failover_property_verification_time"][num_switches].append(t.msecs)
 
-plot_varying_size_topology(data["initial_traffic_set_propagation_time"], data["failover_property_verification_time"])
+        print "Done..."
+        self.dump_data()
+
+    def dump_data(self):
+        pprint(self.data)
+        with open("data/variable_size_topology_" + self.topo + "_data_" + time.strftime("%Y%m%d_%H%M%S")+".json", "w") as outfile:
+            json.dump(self.data, outfile)
+
+    def __del__(self):
+        self.dump_data()
+        self.mm.cleanup_mininet()
+
+def main():
+
+    exp = VaryingSizeTopology("ring", 100, [4])#, 6, 8, 10, 12, 14, 16, 18, 20])
+#    exp = VaryingSizeTopology("fat_tree", 100, [3, 4, 5])#, 5, 6])
+    exp.trigger()
+
+if __name__ == "__main__":
+    main()
