@@ -184,6 +184,8 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
+        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
+
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
             curr.admitted_traffic[dst_port.port_id] = curr_admitted_traffic
@@ -196,6 +198,8 @@ class PortGraph:
         # Implicit Base case: Host Ingress Ports better not have any predecessor
         # Recursively call myself at each of my predecessors in the port graph
         for pred_id in self.g.predecessors_iter(curr.port_id):
+
+            print ""
 
             pred = self.get_port(pred_id)
             pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)

@@ -60,6 +60,9 @@ class NumberOfHosts():
 
                 self.data["initial_traffic_set_propagation_time"][total_number_of_hosts].append(t.msecs)
 
+                #fv.validate_all_host_pair_basic_reachability()
+
+
         print "Done..."
         self.dump_data()
 
@@ -73,7 +76,7 @@ class NumberOfHosts():
 
 def main():
 
-    exp = NumberOfHosts(100, [2, 4, 6])#, 4])#, 6, 8, 10, 12])
+    exp = NumberOfHosts(100, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
     exp.trigger()
 
 if __name__ == "__main__":
