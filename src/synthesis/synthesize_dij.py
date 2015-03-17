@@ -15,10 +15,12 @@ import pprint
 
 class SynthesizeDij():
 
-    def __init__(self):
+    def __init__(self, master_switch=False):
 
         self.model = NetworkGraph()
-        self.synthesis_lib = SynthesisLib("localhost", "8181", self.model)
+        self.master_switch = master_switch
+
+        self.synthesis_lib = SynthesisLib("localhost", "8181", self.model, master_switch=master_switch)
 
         # s represents the set of all switches that are
         # affected as a result of flow synthesis

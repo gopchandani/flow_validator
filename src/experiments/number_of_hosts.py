@@ -6,6 +6,8 @@ import time
 
 sys.path.append("./")
 
+import gc
+
 from collections import defaultdict
 from pprint import pprint
 
@@ -60,6 +62,10 @@ class NumberOfHosts():
 
                 self.data["initial_traffic_set_propagation_time"][total_number_of_hosts].append(t.msecs)
 
+                del fv
+
+                gc.collect()
+
         print "Done..."
         self.dump_data()
 
@@ -73,7 +79,7 @@ class NumberOfHosts():
 
 def main():
 
-    exp = NumberOfHosts(100, [4])#, 4])#, 6, 8, 10, 12])
+    exp = NumberOfHosts(2, [4])#, 4])#, 6, 8, 10, 12])
     exp.trigger()
 
 if __name__ == "__main__":

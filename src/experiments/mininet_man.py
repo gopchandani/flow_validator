@@ -20,7 +20,7 @@ class MininetMan():
 
     def __init__(self,
                  controller_port,
-                 topo,
+                 topo_name,
                  num_switches,
                  num_hosts_per_switch,
                  experiment_switches):
@@ -30,18 +30,16 @@ class MininetMan():
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
 
-        #Stores the synthesis object
-        self.synthesis_dij = None
-
         self.experiment_switches = experiment_switches
+        self.topo_name = topo_name
 
-        if topo == "ring":
+        if self.topo_name == "ring":
             self.topo = RingTopo(self.num_switches, self.num_hosts_per_switch)
-        elif topo == "line":
+        elif self.topo_name == "line":
             self.topo = LineTopo(self.num_switches, self.num_hosts_per_switch)
-        elif topo == "two_ring":
+        elif self.topo_name == "two_ring":
             self.topo = TwoRingTopo(self.num_switches, self.num_hosts_per_switch)
-        elif topo == "fat_tree":
+        elif self.topo_name == "fat_tree":
             self.topo = FatTree(self.num_switches, self.num_hosts_per_switch)
         else:
             raise Exception("Invalid, unknown topology type: " % topo)
@@ -103,7 +101,11 @@ class MininetMan():
         print "Synthesizing..."
 
         # Synthesize rules in the switches
-        self.synthesis_dij = SynthesizeDij()
+        if self.topo_name == "line":
+            self.synthesis_dij = SynthesizeDij(master_switch=True)
+        else:
+            self.synthesis_dij = SynthesizeDij()
+
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."

@@ -11,7 +11,7 @@ from model.network_graph import NetworkGraph
 
 class SynthesisLib():
 
-    def __init__(self, controller_host, controller_port, model=None):
+    def __init__(self, controller_host, controller_port, model=None, master_switch=False):
 
         if not model:
             self.model = NetworkGraph()
@@ -21,6 +21,7 @@ class SynthesisLib():
         self.controller_host = controller_host
         self.controller_port = controller_port
 
+        self.master_switch = master_switch
 
         self.group_id_cntr = 0
         self.flow_id_cntr = 0
@@ -271,8 +272,10 @@ class SynthesisLib():
         if mac_intents:
 
             if len(mac_intents) > 1:
-                print "There are more than one mac intents for a single dst, will install only one"
-                #raise Exception("Odd that there are more than one mac intents for a single dst")
+                if self.master_switch:
+                    print "There are more than one mac intents for a single dst, will install only one"
+                else:
+                    raise Exception("Odd that there are more than one mac intents for a single dst")
 
             self._push_mac_intent_flow(sw, mac_intents[0], self.mac_forwarding_table_id, 1)
 
@@ -372,7 +375,8 @@ class SynthesisLib():
 
                     group = self._push_select_all_group(sw, [primary_intent])
 
-                    primary_intent.flow_match.set_match_field_element("in_port", int(primary_intent.in_port))
+                    if not self.master_switch:
+                        primary_intent.flow_match.set_match_field_element("in_port", int(primary_intent.in_port))
 
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
