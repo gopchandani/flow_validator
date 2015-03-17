@@ -95,7 +95,7 @@ class MininetMan():
         print "Running a ping before synthesis..."
         # Activate Hosts
         #self._ping_experiment_hosts()
-        self.net.pingAll()
+        self.net.pingAll(timeout=3)
 
         print "Waiting for hosts to be detected by controller..."
         time.sleep(60)
@@ -111,7 +111,7 @@ class MininetMan():
 
         # Taking this for a test-ride
 #        self._ping_experiment_hosts()
-        self.net.pingAll()
+        self.net.pingAll(timeout=3)
 
 
     def cleanup_mininet(self):

@@ -271,9 +271,10 @@ class SynthesisLib():
         if mac_intents:
 
             if len(mac_intents) > 1:
-                raise Exception("Odd that there are more than one mac intents for a single dst")
-            else:
-                self._push_mac_intent_flow(sw, mac_intents[0], self.mac_forwarding_table_id, 1)
+                print "There are more than one mac intents for a single dst, will install only one"
+                #raise Exception("Odd that there are more than one mac intents for a single dst")
+
+            self._push_mac_intent_flow(sw, mac_intents[0], self.mac_forwarding_table_id, 1)
 
     def push_vlan_push_pop_intents(self, sw, dst_intents):
 

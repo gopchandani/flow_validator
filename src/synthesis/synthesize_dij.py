@@ -28,7 +28,7 @@ class SynthesizeDij():
         self.primary_path_edge_dict = {}
 
         self.apply_tag_intents_immediately = True
-        self.apply_other_intents_immediately = False
+        self.apply_other_intents_immediately = True
 
 
     def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
@@ -249,6 +249,13 @@ class SynthesizeDij():
                 if src == dst:
                     continue
 
+                src_h_obj = self.model.get_node_object(src)
+                dst_h_obj = self.model.get_node_object(dst)
+
+                #Ignore installation of paths between switches on the same switch
+                if src_h_obj.switch_id == dst_h_obj.switch_id:
+                    continue
+
                 print "-----------------------------------------------------------------------------------------------"
                 print 'Synthesizing primary and backup paths from', src, 'to', dst
                 print "-----------------------------------------------------------------------------------------------"
@@ -256,7 +263,7 @@ class SynthesizeDij():
                 flow_match = MatchElement(is_wildcard=True)
                 flow_match["ethernet_type"] = 0x0800
 
-                self.synthesize_flow(self.model.get_node_object(src), self.model.get_node_object(dst), flow_match)
+                self.synthesize_flow(src_h_obj, dst_h_obj, flow_match)
                 print "-----------------------------------------------------------------------------------------------"
 
 

@@ -54,7 +54,6 @@ class NumberOfHosts():
                 self.data["initial_port_graph_construction_time"][total_number_of_hosts].append(t.msecs)
 
                 fv.add_hosts()
-                fv.validate_all_host_pair_basic_reachability()
 
                 with Timer(verbose=True) as t:
                     fv.initialize_admitted_traffic()
@@ -74,7 +73,7 @@ class NumberOfHosts():
 
 def main():
 
-    exp = NumberOfHosts(100, [2]) #,4, 6, 8, 10, 12])
+    exp = NumberOfHosts(100, [4])#, 4])#, 6, 8, 10, 12])
     exp.trigger()
 
 if __name__ == "__main__":
