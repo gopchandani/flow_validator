@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as ss
 
-
 #Assuming that x-axis are keys to the data_dict
 
 def get_x_y_err(data_dict):

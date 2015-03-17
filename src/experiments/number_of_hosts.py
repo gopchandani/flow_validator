@@ -73,7 +73,7 @@ class NumberOfHosts():
 
 def main():
 
-    exp = NumberOfHosts(10, [4])#, 4])#, 6, 8, 10, 12])
+    exp = NumberOfHosts(100, [2, 4, 6])#, 4])#, 6, 8, 10, 12])
     exp.trigger()
 
 if __name__ == "__main__":
