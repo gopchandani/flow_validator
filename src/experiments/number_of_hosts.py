@@ -28,7 +28,7 @@ class NumberOfHosts():
         }
 
         # Get the dockers ready
-        self.cm = ControllerMan(1)
+        self.cm = ControllerMan(len(self.total_number_of_hosts))
 
     def setup_network(self, total_number_of_hosts):
 
@@ -54,6 +54,8 @@ class NumberOfHosts():
                 self.data["initial_port_graph_construction_time"][total_number_of_hosts].append(t.msecs)
 
                 fv.add_hosts()
+                fv.validate_all_host_pair_basic_reachability()
+
                 with Timer(verbose=True) as t:
                     fv.initialize_admitted_traffic()
 

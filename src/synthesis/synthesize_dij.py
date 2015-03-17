@@ -223,10 +223,13 @@ class SynthesizeDij():
 
             # Find the shortest path that results when the link breaks
             # and compute forwarding intents for that
-            bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host.switch_id)
-            print "Backup Path", bp
+            try:
+                bp = nx.shortest_path(self.model.graph, source=p[i], target=dst_host.switch_id)
+                print "Backup Path", bp
 
-            self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
+                self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
+            except nx.exception.NetworkXNoPath:
+                print "No backup path between:", p[i], "to:", dst_host.switch_id
 
             # Add the edge back and the data that goes along with it
             self.model.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)

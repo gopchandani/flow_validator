@@ -53,10 +53,10 @@ class MininetMan():
                 if src_switch == dst_switch:
                     continue
 
-                for i in range(1, self.num_hosts_per_switch + 1):
-                    src_host = "h" + src_switch[1:] + str(i)
-                    dst_host = "h" + dst_switch[1:] + str(i)
-                    yield (self.net.get(src_host), self.net.get(dst_host))
+                # Assume one host per switch
+                src_host = "h" + src_switch[1:]
+                dst_host = "h" + dst_switch[1:]
+                yield (self.net.get(src_host), self.net.get(dst_host))
 
     def _ping_host_pair(self, src_host, dst_host):
         hosts = [src_host, dst_host]
@@ -80,8 +80,11 @@ class MininetMan():
         time.sleep(10)
         os.system("sudo mn -c")
 
+        print "Waiting for the controller to boot completely..."
+        time.sleep(150)
+
+
         self.net = Mininet(topo=self.topo,
-                           cleanup=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
                            switch=OVSSwitch)
 
@@ -89,12 +92,10 @@ class MininetMan():
         self.net.start()
 
 
-        print "Waiting for the controller to boot completely..."
-        time.sleep(150)
-
         print "Running a ping before synthesis..."
         # Activate Hosts
-        self._ping_experiment_hosts()
+        #self._ping_experiment_hosts()
+        self.net.pingAll()
 
         print "Waiting for hosts to be detected by controller..."
         time.sleep(60)
@@ -106,10 +107,12 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(30*self.topo.total_switches)
+        time.sleep(40*self.topo.total_switches)
 
         # Taking this for a test-ride
-        self._ping_experiment_hosts()
+#        self._ping_experiment_hosts()
+        self.net.pingAll()
+
 
     def cleanup_mininet(self):
         print "Mininet cleanup..."

@@ -45,7 +45,7 @@ def plot_varying_size_topology(initial_traffic_set_propagation_time, failover_pr
         h.append(l_failover_property_verification_time)
 
 
-    plt.legend(handles=h, loc="upper right")
+    plt.legend(handles=h, loc="upper left")
     plt.xlim((2, 22))
     plt.xticks(range(2, 22, 2), fontsize=16)
     plt.yticks(fontsize=16)
@@ -62,5 +62,6 @@ with open("data/variable_size_topology_ring_data_20150315_143422.json", "r") as 
 #with open("data/variable_size_topology_fat_tree_data_20150316_111603.json", "r") as infile:
 #    data = json.load(infile)
 
+#plot_varying_size_topology(data["initial_traffic_set_propagation_time"], data["failover_property_verification_time"])
 
-plot_varying_size_topology(data["initial_traffic_set_propagation_time"], data["failover_property_verification_time"])
+plot_varying_size_topology(data["init_times"], data["failover_update_times"])

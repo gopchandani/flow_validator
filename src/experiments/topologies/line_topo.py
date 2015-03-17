@@ -9,6 +9,7 @@ class LineTopo(Topo):
         Topo.__init__(self)
         
         self.num_switches = num_switches
+        self.total_switches = self.num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         switches = []
 
