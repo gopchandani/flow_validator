@@ -42,7 +42,7 @@ class MininetMan():
         elif self.topo_name == "fat_tree":
             self.topo = FatTree(self.num_switches, self.num_hosts_per_switch)
         else:
-            raise Exception("Invalid, unknown topology type: " % topo)
+            raise Exception("Invalid, unknown topology type: " % topo_name)
 
     def _get_experiment_host_pair(self):
 
@@ -52,8 +52,8 @@ class MininetMan():
                     continue
 
                 # Assume one host per switch
-                src_host = "h" + src_switch[1:]
-                dst_host = "h" + dst_switch[1:]
+                src_host = "h" + src_switch[1:] + "1"
+                dst_host = "h" + dst_switch[1:] + "1"
                 yield (self.net.get(src_host), self.net.get(dst_host))
 
     def _ping_host_pair(self, src_host, dst_host):
@@ -92,8 +92,11 @@ class MininetMan():
 
         print "Running a ping before synthesis..."
         # Activate Hosts
-        #self._ping_experiment_hosts()
-        self.net.pingAll(timeout=3)
+
+        if self.topo_name == "line":
+            self.net.pingAll(timeout=3)
+        else:
+            self._ping_experiment_hosts()
 
         print "Waiting for hosts to be detected by controller..."
         time.sleep(60)
@@ -112,8 +115,10 @@ class MininetMan():
         time.sleep(60*self.topo.total_switches)
 
         # Taking this for a test-ride
-#        self._ping_experiment_hosts()
-        self.net.pingAll(timeout=3)
+        if self.topo_name == "line":
+            self.net.pingAll(timeout=3)
+        else:
+            self._ping_experiment_hosts()
 
 
     def cleanup_mininet(self):

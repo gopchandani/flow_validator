@@ -408,7 +408,7 @@ class SynthesisLib():
                         1, primary_intent.flow_match, primary_intent.apply_immediately)
 
                     if len(failover_intents) > 1:
-                        raise Exception ("Hitting an unexpected case.")
+#                        raise Exception ("Hitting an unexpected case.")
                         failover_intents = failover_intents[1:]
 
                 #  Handle the case when switch only participates in carrying the failover traffic in-transit

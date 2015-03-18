@@ -34,7 +34,7 @@ class FixedSizeTopology():
         controller_port = self.cm.get_next()
         print "Controller Port", controller_port
 
-        self.mm = MininetMan(controller_port, "ring", 10, 1, experiment_switches=["s1", "s6"])
+        self.mm = MininetMan(controller_port, "ring", 4, 1, experiment_switches=["s1", "s3"])
         self.mm.setup_mininet()
 
     def trigger(self):
