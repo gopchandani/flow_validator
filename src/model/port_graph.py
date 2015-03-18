@@ -70,12 +70,12 @@ class PortGraph:
 
         self.update_predecessors(port1)
 
-    def update_predecessors(self, port1):
+    def update_predecessors(self, node):
 
         # But this could have fail-over consequences for this port's predecessors' flows...
-        for pred_id in self.g.predecessors(port1.port_id):
+        for pred_id in self.g.predecessors(node.port_id):
             pred = self.get_port(pred_id)
-            edge_data = self.g.get_edge_data(pred_id, port1.port_id)
+            edge_data = self.g.get_edge_data(pred_id, node.port_id)
 
             # This is to avoid modifying the dictionary during iteration
             edge_data_keys = edge_data.keys()

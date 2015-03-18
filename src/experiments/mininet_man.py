@@ -109,7 +109,7 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(40*self.topo.total_switches)
+        time.sleep(60*self.topo.total_switches)
 
         # Taking this for a test-ride
 #        self._ping_experiment_hosts()
