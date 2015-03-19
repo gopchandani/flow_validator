@@ -25,7 +25,7 @@ class MininetMan():
                  num_hosts_per_switch,
                  experiment_switches):
 
-        self.ping_timeout = 3
+        self.ping_timeout = 5
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
@@ -80,10 +80,11 @@ class MininetMan():
     def setup_mininet(self):
 
         print "Waiting for the controller to boot completely..."
-        time.sleep(200)
+        time.sleep(120)
 
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
+                           autoStaticArp=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
                            switch=OVSSwitch)
 
@@ -96,7 +97,7 @@ class MininetMan():
         self._ping_experiment_hosts()
 
         print "Waiting for hosts to be settle in controller..."
-        time.sleep(60)
+        time.sleep(120)
 
         print "Synthesizing..."
 
