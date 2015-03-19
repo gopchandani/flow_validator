@@ -199,8 +199,6 @@ class PortGraph:
         # Recursively call myself at each of my predecessors in the port graph
         for pred_id in self.g.predecessors_iter(curr.port_id):
 
-            print ""
-
             pred = self.get_port(pred_id)
             pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
 

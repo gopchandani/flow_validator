@@ -14,9 +14,9 @@ class SynthesisLib():
     def __init__(self, controller_host, controller_port, model=None, master_switch=False):
 
         if not model:
-            self.model = NetworkGraph()
+            self.network_graph = NetworkGraph()
         else:
-            self.model = model
+            self.network_graph = model
 
         self.controller_host = controller_host
         self.controller_port = controller_port
@@ -173,7 +173,7 @@ class SynthesisLib():
         watch_port = None
 
         if intent.in_port == intent.out_port:
-            out_port = self.model.OFPP_IN
+            out_port = self.network_graph.OFPP_IN
             watch_port = intent.out_port
         else:
             out_port = intent.out_port
@@ -272,10 +272,7 @@ class SynthesisLib():
         if mac_intents:
 
             if len(mac_intents) > 1:
-                if self.master_switch:
-                    print "There are more than one mac intents for a single dst, will install only one"
-                else:
-                    raise Exception("Odd that there are more than one mac intents for a single dst")
+                print "There are more than one mac intents for a single dst, will install only one"
 
             self._push_mac_intent_flow(sw, mac_intents[0], self.mac_forwarding_table_id, 1)
 
@@ -339,7 +336,7 @@ class SynthesisLib():
             self._push_table_miss_goto_next_table_flow(sw, 1)
             self._push_table_miss_goto_next_table_flow(sw, 2)
 
-            intents = self.model.graph.node[sw]["sw"].intents
+            intents = self.network_graph.graph.node[sw]["sw"].intents
 
             for dst in intents:
                 dst_intents = intents[dst]
@@ -396,7 +393,8 @@ class SynthesisLib():
                     #Sanity check
                     if primary_intent.in_port != failover_intent.in_port:
                         #  This can only happen if the host is directly connected to the switch, so check that.
-                        if not self.model.graph.has_edge(dst, sw):
+                        sw_obj = self.network_graph.get_node_object(sw)
+                        if not int(sw_obj.synthesis_tag) == int(dst):
                             raise Exception("Primary and failover intents' src port mismatch")
                     else:
                         in_port = primary_intent.in_port
@@ -408,7 +406,7 @@ class SynthesisLib():
                         1, primary_intent.flow_match, primary_intent.apply_immediately)
 
                     if len(failover_intents) > 1:
-#                        raise Exception ("Hitting an unexpected case.")
+                        #raise Exception ("Hitting an unexpected case.")
                         failover_intents = failover_intents[1:]
 
                 #  Handle the case when switch only participates in carrying the failover traffic in-transit
@@ -428,11 +426,13 @@ class SynthesisLib():
                     group = self._push_fast_failover_group(sw, primary_intent, balking_intent)
 
                     in_port = None
+
                     #Sanity check
                     if primary_intent.in_port != balking_intent.in_port:
                         #  This can only happen if the host is directly connected to the switch, so check that.
-                        if not self.model.graph.has_edge(dst, sw):
-                            raise Exception("Primary and failover intents' src port mismatch")
+                        sw_obj = self.network_graph.get_node_object(sw)
+                        if not int(sw_obj.synthesis_tag) == int(dst):
+                            raise Exception("Primary and balking intents' src port mismatch")
                     else:
                         in_port = primary_intent.in_port
 

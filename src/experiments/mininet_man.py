@@ -25,7 +25,7 @@ class MininetMan():
                  num_hosts_per_switch,
                  experiment_switches):
 
-        self.ping_interval = 3
+        self.ping_timeout = 3
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
@@ -58,7 +58,7 @@ class MininetMan():
 
     def _ping_host_pair(self, src_host, dst_host):
         hosts = [src_host, dst_host]
-        ping_loss_rate = self.net.ping(hosts, self.ping_interval)
+        ping_loss_rate = self.net.ping(hosts, self.ping_timeout)
         print "Ping Loss Rate:", ping_loss_rate
 
         if ping_loss_rate < 100.0:
@@ -67,66 +67,53 @@ class MininetMan():
             return False
 
     def _ping_experiment_hosts(self):
-        for (src_host, dst_host) in self._get_experiment_host_pair():
-            self._ping_host_pair(src_host, dst_host)
+
+        #self.net.pingAll(timeout=self.ping_timeout)
+        #return
+
+        if self.topo_name == "line":
+            self.net.pingAll(timeout=self.ping_timeout)
+        else:
+            for (src_host, dst_host) in self._get_experiment_host_pair():
+                self._ping_host_pair(src_host, dst_host)
 
     def setup_mininet(self):
 
-        print "Waiting after mininet cleanup..."
-        time.sleep(10)
-        os.system("sudo mn -c")
-        time.sleep(10)
-        os.system("sudo mn -c")
-
         print "Waiting for the controller to boot completely..."
-        time.sleep(150)
-
+        time.sleep(200)
 
         self.net = Mininet(topo=self.topo,
+                           cleanup=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
                            switch=OVSSwitch)
 
         # Start
         self.net.start()
 
+        print "Running a ping before synthesis so that hosts can be detected via ARP..."
 
-        print "Running a ping before synthesis..."
         # Activate Hosts
+        self._ping_experiment_hosts()
 
-        if self.topo_name == "line":
-            self.net.pingAll(timeout=3)
-        else:
-            self._ping_experiment_hosts()
-
-        print "Waiting for hosts to be detected by controller..."
+        print "Waiting for hosts to be settle in controller..."
         time.sleep(60)
 
         print "Synthesizing..."
 
         # Synthesize rules in the switches
-        if self.topo_name == "line":
-            self.synthesis_dij = SynthesizeDij(master_switch=True)
-        else:
-            self.synthesis_dij = SynthesizeDij()
-
+        self.synthesis_dij = SynthesizeDij(master_switch=self.topo_name == "line")
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(60*self.topo.total_switches)
 
-        # Taking this for a test-ride
-        if self.topo_name == "line":
-            self.net.pingAll(timeout=3)
-        else:
-            self._ping_experiment_hosts()
-
+        self._ping_experiment_hosts()
 
     def cleanup_mininet(self):
         print "Mininet cleanup..."
         self.net.stop()
         self.net.cleanup()
         os.system("sudo mn -c")
-
 
     def __del__(self):
         self.cleanup_mininet()
