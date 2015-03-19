@@ -54,6 +54,13 @@ class MininetMan():
                 # Assume one host per switch
                 src_host = "h" + src_switch[1:] + "1"
                 dst_host = "h" + dst_switch[1:] + "1"
+
+                src_host_node = self.net.get(src_host)
+                dst_host_node = self.net.get(dst_host)
+
+                print src_host_node.MAC()
+                print dst_host_node.MAC()
+
                 yield (self.net.get(src_host), self.net.get(dst_host))
 
     def _ping_host_pair(self, src_host, dst_host):
@@ -80,7 +87,7 @@ class MininetMan():
     def setup_mininet(self):
 
         print "Waiting for the controller to boot completely..."
-        time.sleep(120)
+        time.sleep(10)
 
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
@@ -97,7 +104,7 @@ class MininetMan():
         self._ping_experiment_hosts()
 
         print "Waiting for hosts to be settle in controller..."
-        time.sleep(120)
+        time.sleep(10)
 
         print "Synthesizing..."
 
@@ -106,7 +113,7 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(60*self.topo.total_switches)
+        time.sleep(10*self.topo.total_switches)
 
         self._ping_experiment_hosts()
 
