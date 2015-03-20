@@ -241,6 +241,7 @@ class SynthesizeDij():
 
         self.synthesis_lib.trigger(self.s)
 
+
     def synthesize_all_node_pairs(self):
 
         print "Synthesizing backup paths between all possible host pairs..."
@@ -271,6 +272,7 @@ class SynthesizeDij():
 
         self._identify_reverse_and_balking_intents()
         self.push_switch_changes()
+
 
 def main():
     sm = SynthesizeDij()

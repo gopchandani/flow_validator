@@ -91,7 +91,7 @@ class MininetMan():
 
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
-                           autoStaticArp=True,
+                           #autoStaticArp=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
                            switch=OVSSwitch)
 
@@ -104,7 +104,7 @@ class MininetMan():
         self._ping_experiment_hosts()
 
         print "Waiting for hosts to be settle in controller..."
-        time.sleep(10)
+        time.sleep(30)
 
         print "Synthesizing..."
 
