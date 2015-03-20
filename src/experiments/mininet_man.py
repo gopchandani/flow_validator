@@ -90,30 +90,20 @@ class MininetMan():
     def setup_mininet(self):
 
         print "Waiting for the controller to boot completely..."
-        time.sleep(120)
+        time.sleep(150)
 
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
-                           #autoStaticArp=True,
+                           autoStaticArp=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
                            switch=OVSSwitch)
 
         # Start
         self.net.start()
 
-        print "Running a ping before synthesis so that hosts can be detected via ARP..."
-
-        # Activate Hosts
-        self._ping_experiment_hosts()
-
-        print "Waiting for hosts to be settle in controller..."
-        time.sleep(30)
-
         print "Synthesizing..."
 
         self.ng = NetworkGraph(mininet_man=self)
-
-        # Synthesize rules in the switches
         self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "line")
         self.synthesis_dij.synthesize_all_node_pairs()
 

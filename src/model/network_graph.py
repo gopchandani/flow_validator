@@ -179,27 +179,26 @@ class NetworkGraph():
 
             # For every host
             for h in self.mininet_man.get_switch_hosts(sw):
-                print h.MAC()
-                print h.IP()
                 host_switch_id = "openflow:" + sw[1:]
                 host_switch_obj = self.get_node_object(host_switch_id)
 
-
                 # Add the host to the graph
                 self.host_ids.append(h.name)
-                h = Host(h.name, self,
-                         h.IP(),
-                         h.MAC(),
-                         host_switch_id,
-                         host_switch_obj,
-                         self.mininet_man.topo.ports[sw][h.name])
+                h_obj = Host(h.name,
+                             self,
+                             h.IP(),
+                             h.MAC(),
+                             host_switch_id,
+                             host_switch_obj,
+                             str(self.mininet_man.topo.ports[sw][h.name]))
 
-                self.graph.add_node(h.name, node_type="host", h=h)
+                self.graph.add_node(h.name, node_type="host", h=h_obj)
 
                 # Add the edge from host to switch
-                self.add_edge(h.name, self.mininet_man.topo.ports[h.name][sw],
-                              host_switch_id, self.mininet_man.topo.ports[sw][h.name])
-
+                self.add_edge(h.name,
+                              str(self.mininet_man.topo.ports[h.name][sw]),
+                              host_switch_id,
+                              str(self.mininet_man.topo.ports[sw][h.name]))
 
     def _parse_odl_node_edges(self, topology):
 
