@@ -15,9 +15,9 @@ import pprint
 
 class SynthesizeDij():
 
-    def __init__(self, master_switch=False):
+    def __init__(self, network_graph, master_switch=False):
 
-        self.network_graph = NetworkGraph()
+        self.network_graph = network_graph
         self.master_switch = master_switch
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph, master_switch=master_switch)
@@ -275,8 +275,9 @@ class SynthesizeDij():
 
 
 def main():
-    sm = SynthesizeDij()
-    sm.synthesize_all_node_pairs()
+    ng = NetworkGraph()
+    s = SynthesizeDij(ng)
+    s.synthesize_all_node_pairs()
 
 if __name__ == "__main__":
     main()

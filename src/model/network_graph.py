@@ -12,7 +12,9 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self):
+    def __init__(self, mininet=None):
+
+        self.mininet = mininet
 
         self.OFPP_CONTROLLER = 0xfffffffd
         self.OFPP_ALL = 0xfffffffc
@@ -228,16 +230,17 @@ class NetworkGraph():
         remaining_url = 'operational/opendaylight-inventory:nodes'
         resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
         inventory_nodes = json.loads(content)
-        
+
         self._parse_switch_nodes(inventory_nodes)
-        
-        
-        # Get all the hosts and edges from the topology API        
+
+
+        # Get all the hosts and edges from the topology API
         remaining_url = 'operational/network-topology:network-topology'
         resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
         topology = json.loads(content)
-        
+
         self._parse_host_nodes(topology)
+
         self._parse_node_edges(topology)
 
 

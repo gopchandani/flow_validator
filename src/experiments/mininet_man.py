@@ -4,9 +4,12 @@ __author__ = 'Rakesh Kumar'
 import time
 import os
 
+
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
+
+from model.network_graph import NetworkGraph
 
 from experiments.topologies.fat_tree import FatTree
 from experiments.topologies.two_ring_topo import TwoRingTopo
@@ -107,6 +110,8 @@ class MininetMan():
         time.sleep(30)
 
         print "Synthesizing..."
+
+        self.ng = NetworkGraph(mininet=self.net)
 
         # Synthesize rules in the switches
         self.synthesis_dij = SynthesizeDij(master_switch=self.topo_name == "line")
