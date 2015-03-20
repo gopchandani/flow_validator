@@ -1,16 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 
-from netaddr import IPAddress
-
 class Port():
-    """
-    Class representing a port on a switch.
-    Captures the ip address assigned to the switch,
-    the type of node it faces on the other side (switch/host/internal) and
-    the current state (up/down) of the port
-
-    """
 
     def __init__(self, sw, node_connector_json=None, port_type="physical", port_id=None):
 
@@ -26,8 +17,6 @@ class Port():
         # These apply specifically to physical ports
         self.mac_address = None
         self.port_number = None
-        self.faces = None
-        self.facing_node_id = None
         self.state = None
 
         if port_type == "physical" and node_connector_json:
@@ -49,10 +38,6 @@ class Port():
         self.port_id = node_connector_json["id"]
         self.port_number = node_connector_json["flow-node-inventory:port-number"]
         self.mac_address = node_connector_json["flow-node-inventory:hardware-address"]
-
-        if node_connector_json["flow-node-inventory:port-number"] == "LOCAL":
-            self.faces = "internal"
-            self.facing_node_id = self.port_id
 
         if node_connector_json["flow-node-inventory:state"]["link-down"]:
             self.state = "down"

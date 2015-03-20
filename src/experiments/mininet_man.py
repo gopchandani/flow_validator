@@ -47,6 +47,12 @@ class MininetMan():
         else:
             raise Exception("Invalid, unknown topology type: " % topo_name)
 
+    def get_switch_hosts(self, switch_id):
+
+        for i in range(0, self.num_hosts_per_switch):
+            host_name = "h" + switch_id[1:] + str(i+1)
+            yield self.net.get(host_name)
+
     def _get_experiment_host_pair(self):
 
         for src_switch in self.experiment_switches:
@@ -61,10 +67,7 @@ class MininetMan():
                 src_host_node = self.net.get(src_host)
                 dst_host_node = self.net.get(dst_host)
 
-                print src_host_node.MAC()
-                print dst_host_node.MAC()
-
-                yield (self.net.get(src_host), self.net.get(dst_host))
+                yield (src_host_node, dst_host_node)
 
     def _ping_host_pair(self, src_host, dst_host):
         hosts = [src_host, dst_host]
@@ -77,9 +80,6 @@ class MininetMan():
             return False
 
     def _ping_experiment_hosts(self):
-
-        #self.net.pingAll(timeout=self.ping_timeout)
-        #return
 
         if self.topo_name == "line":
             self.net.pingAll(timeout=self.ping_timeout)
@@ -111,10 +111,10 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.ng = NetworkGraph(mininet=self.net)
+        self.ng = NetworkGraph(mininet_man=self)
 
         # Synthesize rules in the switches
-        self.synthesis_dij = SynthesizeDij(master_switch=self.topo_name == "line")
+        self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "line")
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."

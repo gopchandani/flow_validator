@@ -24,6 +24,7 @@ class FatTree(Topo):
         top_switches = []
         middle_switches = []
         bottom_switches = []
+        self.switches = []
 
         bottoms_attached_to_middles = [0] * self.num_middle_switches # max = bottoms_per_middle
 
@@ -72,6 +73,8 @@ class FatTree(Topo):
                 first_open_index += 1
 
         self.total_switches = len(top_switches) + len(middle_switches) + len(bottom_switches)
+        self.switches = top_switches + middle_switches + bottom_switches
+
         print "Total Switches: ", self.total_switches
 
 topos = {"fattreetopo": (lambda: FatTree())}
