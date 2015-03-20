@@ -14,7 +14,7 @@ from analysis.flow_validator import FlowValidator
 from controller_man import ControllerMan
 from mininet_man import MininetMan
 
-class FixedSizeTopology():
+class DifferentEdgeFailure():
 
     def __init__(self, sample_size):
 
@@ -80,7 +80,7 @@ class FixedSizeTopology():
 
 def main():
 
-    exp = FixedSizeTopology(100)
+    exp = DifferentEdgeFailure(100)
     exp.trigger()
 
 if __name__ == "__main__":
