@@ -57,16 +57,10 @@ class NetworkGraph():
             pass
         return group_table
 
-    def _prepare_switch_nodes(self):
-
-        # Get all the nodes/switches from the inventory API
-        remaining_url = 'operational/opendaylight-inventory:nodes'
-
-        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
-        nodes = json.loads(content)
+    def _parse_switch_nodes(self, inventory_nodes):
 
         #  Go through each node and grab the switches and the corresponding hosts associated with the switch
-        for node in nodes["nodes"]["node"]:
+        for node in inventory_nodes["nodes"]["node"]:
 
             #  Add an instance for Switch in the graph
             switch_id = node["id"]
@@ -155,16 +149,7 @@ class NetworkGraph():
     def get_edge_port_dict(self, node1_id, node2_id):
         return self.graph[node1_id][node2_id]['edge_ports_dict']
 
-    def _prepare_node_edges(self):
-
-        # Go through the topology API
-        remaining_url = 'operational/network-topology:network-topology'
-        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
-        topology = json.loads(content)
-
-        topology_links = dict()
-        if "link" in topology["network-topology"]["topology"][0]:
-            topology_links = topology["network-topology"]["topology"][0]["link"]
+    def _parse_host_nodes(self, topology):
 
         topology_nodes = dict()
         if "node" in topology["network-topology"]["topology"][0]:
@@ -184,6 +169,13 @@ class NetworkGraph():
                 self.host_ids.append(host_id)
                 h = Host(host_id, self, host_ip, host_mac, host_switch_id, host_switch_obj, switch_attachment_point[2])
                 self.graph.add_node(host_id, node_type="host", h=h)
+
+
+    def _parse_node_edges(self, topology):
+
+        topology_links = dict()
+        if "link" in topology["network-topology"]["topology"][0]:
+            topology_links = topology["network-topology"]["topology"][0]["link"]
 
         for link in topology_links:
 
@@ -232,8 +224,22 @@ class NetworkGraph():
 
     def _load_model(self):
 
-        self._prepare_switch_nodes()
-        self._prepare_node_edges()
+        # Get all the switches from the inventory API
+        remaining_url = 'operational/opendaylight-inventory:nodes'
+        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
+        inventory_nodes = json.loads(content)
+        
+        self._parse_switch_nodes(inventory_nodes)
+        
+        
+        # Get all the hosts and edges from the topology API        
+        remaining_url = 'operational/network-topology:network-topology'
+        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
+        topology = json.loads(content)
+        
+        self._parse_host_nodes(topology)
+        self._parse_node_edges(topology)
+
 
         #self.dump_model()
 
