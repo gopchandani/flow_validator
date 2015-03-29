@@ -55,7 +55,7 @@ class NetworkGraph():
             else:
                 print "No groups configured in node:", node_id
         else:
-#            print "Could not fetch any groups via the API, status:", resp["status"]
+            #print "Could not fetch any groups via the API, status:", resp["status"]
             pass
         return group_table
 
@@ -97,6 +97,7 @@ class NetworkGraph():
     def add_edge(self, node1_id, node1_port, node2_id, node2_port):
 
         edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
+        #print "Adding edge:", edge_port_dict
 
         e = (node1_id, node2_id)
         self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
@@ -174,12 +175,15 @@ class NetworkGraph():
 
     def _parse_mininet_man_host_nodes_edges(self):
 
+        l = self.mininet_man.net.topo.links()
+
         # From all the switches
         for sw in self.mininet_man.topo.switch_names:
 
             # For every host
             for h in self.mininet_man.get_switch_hosts(sw):
                 host_switch_id = "openflow:" + sw[1:]
+                #print "Adding host:", h.name, "at switch:", host_switch_id
                 host_switch_obj = self.get_node_object(host_switch_id)
 
                 # Add the host to the graph
@@ -190,15 +194,15 @@ class NetworkGraph():
                              h.MAC(),
                              host_switch_id,
                              host_switch_obj,
-                             str(self.mininet_man.topo.ports[sw][h.name]))
+                             str(self.mininet_man.topo.ports[h.name][0][1]))
 
                 self.graph.add_node(h.name, node_type="host", h=h_obj)
 
                 # Add the edge from host to switch
                 self.add_edge(h.name,
-                              str(self.mininet_man.topo.ports[h.name][sw]),
+                              str(0),
                               host_switch_id,
-                              str(self.mininet_man.topo.ports[sw][h.name]))
+                              str(self.mininet_man.topo.ports[h.name][0][1]))
 
     def _parse_odl_node_edges(self, topology):
 

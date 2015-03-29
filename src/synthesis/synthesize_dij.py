@@ -49,6 +49,9 @@ class SynthesizeDij():
             if not (i == 0 and intent_type == "primary"):
                 fwd_flow_match.set_match_field_element("vlan_id", int(dst_switch_tag))
 
+            if in_port == out_port:
+                pass
+
             intent = Intent(intent_type, fwd_flow_match, in_port, out_port, self.apply_other_intents_immediately)
 
             # Using dst_switch_tag as key here to
@@ -238,9 +241,7 @@ class SynthesizeDij():
             in_port = edge_ports_dict[p[i+1]]
 
     def push_switch_changes(self):
-
         self.synthesis_lib.trigger(self.s)
-
 
     def synthesize_all_node_pairs(self):
 
@@ -269,10 +270,8 @@ class SynthesizeDij():
                 self.synthesize_flow(src_h_obj, dst_h_obj, flow_match)
                 print "-----------------------------------------------------------------------------------------------"
 
-
         self._identify_reverse_and_balking_intents()
         self.push_switch_changes()
-
 
 def main():
     ng = NetworkGraph()

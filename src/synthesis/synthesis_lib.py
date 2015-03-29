@@ -424,15 +424,16 @@ class SynthesisLib():
                 if primary_intent and balking_intent:
 
                     group = self._push_fast_failover_group(sw, primary_intent, balking_intent)
-
                     in_port = None
 
                     #Sanity check
                     if primary_intent.in_port != balking_intent.in_port:
+
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         sw_obj = self.network_graph.get_node_object(sw)
                         if not int(sw_obj.synthesis_tag) == int(dst):
                             raise Exception("Primary and balking intents' src port mismatch")
+
                     else:
                         in_port = primary_intent.in_port
 

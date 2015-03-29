@@ -62,6 +62,7 @@ class NumberOfHosts():
 
                 #fv.validate_all_host_pair_basic_reachability()
 
+            self.mm.cleanup_mininet()
 
         print "Done..."
         self.dump_data()
@@ -76,7 +77,7 @@ class NumberOfHosts():
 
 def main():
 
-    exp = NumberOfHosts(100, [2])#, 4, 6, 8, 10, 12, 14, 16, 18, 20])
+    exp = NumberOfHosts(100, [4])# [2, 4, 6, 8, 10])#, 12, 14, 16, 18, 20])
     exp.trigger()
 
 if __name__ == "__main__":

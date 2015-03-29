@@ -89,9 +89,6 @@ class MininetMan():
 
     def setup_mininet(self):
 
-        print "Waiting for the controller to boot completely..."
-        time.sleep(150)
-
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
                            autoStaticArp=True,
@@ -100,6 +97,9 @@ class MininetMan():
 
         # Start
         self.net.start()
+
+        print "Waiting for the controller to get ready for synthesis"
+        time.sleep(200)
 
         print "Synthesizing..."
 
@@ -115,7 +115,6 @@ class MininetMan():
     def cleanup_mininet(self):
         print "Mininet cleanup..."
         self.net.stop()
-        self.net.cleanup()
         os.system("sudo mn -c")
 
     def __del__(self):
