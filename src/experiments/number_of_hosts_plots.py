@@ -22,7 +22,7 @@ def get_x_y_err(data_dict):
     return x, data_means, data_sems
 
 
-def plot_number_of_hosts(initial_port_graph_construction_time, initial_traffic_set_propagation_time):
+def plot_number_of_hosts(initial_port_graph_construction_time):
 
     h = []
 
@@ -40,22 +40,6 @@ def plot_number_of_hosts(initial_port_graph_construction_time, initial_traffic_s
                                                               color="black")
         h.append(l_initial_port_graph_construction_time)
 
-
-    # if initial_traffic_set_propagation_time:
-    #
-    #     x1, \
-    #     initial_traffic_set_propagation_time_mean, \
-    #     initial_traffic_set_propagation_time_sem = get_x_y_err(initial_traffic_set_propagation_time)
-    #
-    #     l_initial_traffic_set_propagation_time = plt.errorbar(x1,
-    #                                                           initial_traffic_set_propagation_time_mean,
-    #                                                           initial_traffic_set_propagation_time_sem,
-    #                                                           label="Initial Traffic Set",
-    #                                                           fmt="x",
-    #                                                           color="black")
-    #    h.append(l_initial_traffic_set_propagation_time)
-
-    #plt.legend(handles=h, loc="upper left")
     plt.xlim((0, 22))
     plt.xticks(range(2, 22, 2), fontsize=16)
     plt.yticks(fontsize=16)
@@ -81,10 +65,14 @@ def merge_data(data1, data2):
     return data
 
 
+
 with open("data/number_of_hosts_data_20150317_174602.json", "r") as infile:
     data = json.load(infile)
 
-plot_number_of_hosts(data["initial_port_graph_construction_time"], data["initial_traffic_set_propagation_time"])
+plot_number_of_hosts(data["initial_port_graph_construction_time"])
+
+
+
 
 
 with open("data/number_of_hosts_data_20150317_143425.json", "r") as infile:
@@ -100,5 +88,15 @@ for key in ipgct:
     if key in ipgct1:
         ipgct[key].extend(ipgct1[key])
 
+plot_number_of_hosts(ipgct)
 
-plot_number_of_hosts(ipgct, data["initial_traffic_set_propagation_time"])
+
+
+
+
+
+with open("data/number_of_hosts_data_20150329_152612.json", "r") as infile:
+    ipgct = json.load(infile)["initial_port_graph_construction_time"]
+
+
+plot_number_of_hosts(ipgct)
