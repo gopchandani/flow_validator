@@ -1,4 +1,4 @@
-__author__ = 'Rakesh Kumar'
+s__author__ = 'Rakesh Kumar'
 
 from mininet.topo import Topo
 
@@ -9,7 +9,7 @@ class QosTopo(Topo):
         Topo.__init__(self)
     
         self.num_switches = 2
-        self.num_hosts_per_switch =2
+        self.num_hosts_per_switch = 1
         switches = []
 
         #  Add switches and hosts under them
