@@ -65,37 +65,37 @@ def merge_data(data1, data2):
     return data
 
 
-
-with open("data/number_of_hosts_data_20150317_174602.json", "r") as infile:
-    data = json.load(infile)
-
-plot_number_of_hosts(data["initial_port_graph_construction_time"])
-
-
-
-
-
-with open("data/number_of_hosts_data_20150317_143425.json", "r") as infile:
-    data1 = json.load(infile)
-
-with open("data/number_of_hosts_data_20150317_174602.json", "r") as infile:
-    data = json.load(infile)
-
-ipgct1 = data1["initial_port_graph_construction_time"]
-ipgct = data["initial_port_graph_construction_time"]
-
-for key in ipgct:
-    if key in ipgct1:
-        ipgct[key].extend(ipgct1[key])
-
-plot_number_of_hosts(ipgct)
-
-
+#
+# with open("data/number_of_hosts_data_20150317_174602.json", "r") as infile:
+#     data = json.load(infile)
+#
+# plot_number_of_hosts(data["initial_port_graph_construction_time"])
+#
+#
+#
+#
+#
+# with open("data/number_of_hosts_data_20150317_143425.json", "r") as infile:
+#     data1 = json.load(infile)
+#
+# with open("data/number_of_hosts_data_20150317_174602.json", "r") as infile:
+#     data = json.load(infile)
+#
+# ipgct1 = data1["initial_port_graph_construction_time"]
+# ipgct = data["initial_port_graph_construction_time"]
+#
+# for key in ipgct:
+#     if key in ipgct1:
+#         ipgct[key].extend(ipgct1[key])
+#
+# plot_number_of_hosts(ipgct)
 
 
 
 
-with open("data/number_of_hosts_data_20150329_152612.json", "r") as infile:
+
+
+with open("data/number_of_hosts_data_20150330_131129.json", "r") as infile:
     ipgct = json.load(infile)["initial_port_graph_construction_time"]
 
 
