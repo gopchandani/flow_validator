@@ -43,3 +43,10 @@ with open("data/different_edge_failure_data_20150331_154743.json", "r") as infil
     data = json.load(infile)
 
 plot_fixed_size_topology(data["edges_broken"])
+
+
+
+with open("data/different_edge_failure_data_20150331_155949.json", "r") as infile:
+    data = json.load(infile)
+
+plot_fixed_size_topology(data["edges_broken"])
