@@ -49,9 +49,12 @@ class MininetMan():
 
     def get_switch_hosts(self, switch_id):
 
-        for i in range(0, self.num_hosts_per_switch):
-            host_name = "h" + switch_id[1:] + str(i+1)
-            yield self.net.get(host_name)
+        if switch_id in self.experiment_switches:
+            for i in range(0, self.num_hosts_per_switch):
+                host_name = "h" + switch_id[1:] + str(i+1)
+                yield self.net.get(host_name)
+        else:
+            return
 
     def _get_experiment_host_pair(self):
 
@@ -109,6 +112,8 @@ class MininetMan():
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(20 * self.topo.num_hosts_per_switch * self.topo.total_switches)
+
+        self.net.pingAll(timeout=self.ping_timeout)
 
     def cleanup_mininet(self):
         print "Mininet cleanup..."

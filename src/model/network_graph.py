@@ -92,8 +92,6 @@ class NetworkGraph():
             #  Set the flow tables in the object instance while sorting them
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
-
-
     def add_edge(self, node1_id, node1_port, node2_id, node2_port):
 
         edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
