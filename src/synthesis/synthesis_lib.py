@@ -347,70 +347,58 @@ class SynthesisLib():
                 # Take care of vlan tag push/pop intents for this destination
                 self.push_vlan_push_pop_intents(sw, dst_intents)
 
-                primary_intent = None
                 primary_intents = self._get_intents(dst_intents, "primary")
-                if primary_intents:
-                    primary_intent = primary_intents[0]
-
-                reverse_intent = None
                 reverse_intents = self._get_intents(dst_intents, "reverse")
-                if reverse_intents:
-                    reverse_intent = reverse_intents[0]
-
-                balking_intent = None
                 balking_intents = self._get_intents(dst_intents, "balking")
-                if balking_intents:
-                    balking_intent = balking_intents[0]
-
-                failover_intent = None
                 failover_intents = self._get_intents(dst_intents, "failover")
-                if failover_intents:
-                    failover_intent = failover_intents[0]
+
 
                 #  Handle the case when the switch does not have to carry any failover traffic
-                if primary_intent and not failover_intent:
+                if primary_intents and not failover_intents:
 
-                    group = self._push_select_all_group(sw, [primary_intent])
+                    group = self._push_select_all_group(sw, [primary_intents[0]])
 
                     if not self.master_switch:
-                        primary_intent.flow_match.set_match_field_element("in_port", int(primary_intent.in_port))
+                        primary_intents[0].flow_match.set_match_field_element("in_port", int(primary_intents[0].in_port))
 
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],
-                        1, primary_intent.flow_match, primary_intent.apply_immediately)
+                        1,
+                        primary_intents[0].flow_match,
+                        primary_intents[0].apply_immediately)
 
-                if primary_intent and failover_intents:
+                if primary_intents and failover_intents:
 
                     #  See if both want same destination
-                    if primary_intent.out_port != failover_intent.out_port:
-                        group = self._push_fast_failover_group(sw, primary_intent, failover_intent)
+                    if primary_intents[0].out_port != failover_intents[0].out_port:
+                        group = self._push_fast_failover_group(sw, primary_intents[0], failover_intents[0])
                     else:
-                        group = self._push_select_all_group(sw, [primary_intent])
+                        group = self._push_select_all_group(sw, [primary_intents[0]])
 
                     # Push the rule that refers to the group
                     in_port = None
                     #Sanity check
-                    if primary_intent.in_port != failover_intent.in_port:
+                    if primary_intents[0].in_port != failover_intents[0].in_port:
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         sw_obj = self.network_graph.get_node_object(sw)
                         if not int(sw_obj.synthesis_tag) == int(dst):
                             raise Exception("Primary and failover intents' src port mismatch")
                     else:
-                        in_port = primary_intent.in_port
+                        in_port = primary_intents[0].in_port
 
-                    primary_intent.flow_match.set_match_field_element("in_port", int(in_port))
+                    primary_intents[0].flow_match.set_match_field_element("in_port", int(in_port))
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],
-                        1, primary_intent.flow_match, primary_intent.apply_immediately)
+                        1, primary_intents[0].flow_match, primary_intents[0].apply_immediately)
 
                     if len(failover_intents) > 1:
                         #raise Exception ("Hitting an unexpected case.")
                         failover_intents = failover_intents[1:]
 
                 #  Handle the case when switch only participates in carrying the failover traffic in-transit
-                if not primary_intent and failover_intents:
+                if not primary_intents and failover_intents:
 
                     for failover_intent in failover_intents:
 
@@ -421,13 +409,13 @@ class SynthesisLib():
                             group["flow-node-inventory:group"]["group-id"],
                             1, failover_intent.flow_match, failover_intent.apply_immediately)
 
-                if primary_intent and balking_intent:
+                if primary_intents and balking_intents:
 
-                    group = self._push_fast_failover_group(sw, primary_intent, balking_intent)
+                    group = self._push_fast_failover_group(sw, primary_intents[0], balking_intents[0])
                     in_port = None
 
                     #Sanity check
-                    if primary_intent.in_port != balking_intent.in_port:
+                    if primary_intents[0].in_port != balking_intents[0].in_port:
 
                         #  This can only happen if the host is directly connected to the switch, so check that.
                         sw_obj = self.network_graph.get_node_object(sw)
@@ -435,18 +423,18 @@ class SynthesisLib():
                             raise Exception("Primary and balking intents' src port mismatch")
 
                     else:
-                        in_port = primary_intent.in_port
+                        in_port = primary_intents[0].in_port
 
-                    primary_intent.flow_match.set_match_field_element("in_port", int(in_port))
+                    primary_intents[0].flow_match.set_match_field_element("in_port", int(in_port))
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.ip_forwarding_table_id,
                         group["flow-node-inventory:group"]["group-id"],
-                        1, primary_intent.flow_match, primary_intent.apply_immediately)
+                        1, primary_intents[0].flow_match, primary_intents[0].apply_immediately)
 
-                if reverse_intent:
+                if reverse_intents:
 
-                    group = self._push_select_all_group(sw, [reverse_intent])
+                    group = self._push_select_all_group(sw, [reverse_intents[0]])
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.reverse_rules_table_id,
                         group["flow-node-inventory:group"]["group-id"],
-                        1, reverse_intent.flow_match, reverse_intent.apply_immediately)
+                        1, reverse_intents[0].flow_match, reverse_intents[0].apply_immediately)
