@@ -6,8 +6,8 @@ from model.traffic import Traffic
 
 class FlowValidator:
 
-    def __init__(self):
-        self.port_graph = PortGraph()
+    def __init__(self, mininet_man=None):
+        self.port_graph = PortGraph(mininet_man)
 
     def init_port_graph(self):
         self.port_graph.init_port_graph()
@@ -73,7 +73,7 @@ class FlowValidator:
                     at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                     # Baseline
-                    at.print_port_paths()
+                    #at.print_port_paths()
 
     def validate_all_host_pair_backup_reachability(self, primary_path_edge_dict):
 

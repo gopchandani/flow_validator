@@ -60,7 +60,7 @@ class VaryingSizeTopology():
 
             for i in range(self.num_iterations):
 
-                fv = FlowValidator()
+                fv = FlowValidator(self.mm)
                 fv.init_port_graph()
                 fv.add_hosts()
 
@@ -91,7 +91,9 @@ class VaryingSizeTopology():
 
 def main():
 
-    exp = VaryingSizeTopology("ring", 100, [4])#, 6, 8, 10, 12, 14, 16, 18, 20])
+
+    exp = VaryingSizeTopology("ring", 100, [4, 6, 8, 10])#, 12, 14, 16, 18, 20])
+#    exp = VaryingSizeTopology("ring", 100, [4])#, 6, 8, 10, 12, 14, 16, 18, 20])
 #    exp = VaryingSizeTopology("fat_tree", 100, [3, 4, 5])#, 5, 6])
     exp.trigger()
 

@@ -34,7 +34,7 @@ class DifferentEdgeFailure():
         controller_port = self.cm.get_next()
         print "Controller Port", controller_port
 
-        self.mm = MininetMan(controller_port, "ring", 6, 1, experiment_switches=["s1", "s4"])
+        self.mm = MininetMan(controller_port, "ring", 10, 1, experiment_switches=["s1", "s6"])
         self.mm.setup_mininet()
 
     def trigger(self):
@@ -50,7 +50,7 @@ class DifferentEdgeFailure():
 
         for i in range(self.num_iterations):
 
-            fv = FlowValidator()
+            fv = FlowValidator(self.mm)
             fv.init_port_graph()
             fv.add_hosts()
             fv.initialize_admitted_traffic()
@@ -66,6 +66,8 @@ class DifferentEdgeFailure():
                 s1 = node1.split(":")[1]
                 s2 = node2.split(":")[1]
                 self.data["edges_broken"][s1 + "<->" + s2].append(t.msecs)
+
+            del fv
 
         print "Done..."
         self.dump_data()

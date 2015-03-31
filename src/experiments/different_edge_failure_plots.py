@@ -33,7 +33,25 @@ def plot_fixed_size_topology(edges_broken):
     plt.show()
 
 with open("data/different_edge_failure_data_20150316_141450.json", "r") as infile:
-#with open("data/fixed_size_topology_data_20150314_122548.json", "r") as infile:
+    data = json.load(infile)
+
+plot_fixed_size_topology(data["edges_broken"])
+
+
+
+with open("data/different_edge_failure_data_20150331_093924.json", "r") as infile:
+    data = json.load(infile)
+
+plot_fixed_size_topology(data["edges_broken"])
+
+
+with open("data/different_edge_failure_data_20150331_102119.json", "r") as infile:
+    data = json.load(infile)
+
+plot_fixed_size_topology(data["edges_broken"])
+
+
+with open("data/different_edge_failure_data_20150331_105723.json", "r") as infile:
     data = json.load(infile)
 
 plot_fixed_size_topology(data["edges_broken"])

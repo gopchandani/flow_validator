@@ -7,8 +7,8 @@ from network_graph import NetworkGraph
 
 class PortGraph:
 
-    def __init__(self):
-        self.network_graph = NetworkGraph()
+    def __init__(self, mininet_man=None):
+        self.network_graph = NetworkGraph(mininet_man)
         self.g = nx.MultiDiGraph()
 
     def get_table_port_id(self, switch_id, table_number):
@@ -41,7 +41,7 @@ class PortGraph:
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
-            if not node_edge[0].startswith("host") and not node_edge[1].startswith("host"):
+            if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
                 self.add_node_graph_edge(node_edge[0], node_edge[1])
 
     def add_edge(self, port1, port2, key, edge_filter_match, update_flag=False):

@@ -48,7 +48,7 @@ class NumberOfHosts():
 
             for i in range(self.num_iterations):
 
-                fv = FlowValidator()
+                fv = FlowValidator(self.mm)
                 with Timer(verbose=True) as t:
                     fv.init_port_graph()
                 self.data["initial_port_graph_construction_time"][total_number_of_hosts].append(t.msecs)
