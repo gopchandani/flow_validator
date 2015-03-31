@@ -434,6 +434,8 @@ class SynthesisLib():
                 if reverse_intents:
 
                     group = self._push_select_all_group(sw, [reverse_intents[0]])
+
+                    reverse_intents[0].flow_match.set_match_field_element("in_port", int(reverse_intents[0].in_port))
                     flow = self._push_match_per_in_port_destination_instruct_group_flow(
                         sw, self.reverse_rules_table_id,
                         group["flow-node-inventory:group"]["group-id"],
