@@ -67,8 +67,6 @@ class DifferentEdgeFailure():
                 s2 = node2.split(":")[1]
                 self.data["edges_broken"][s1 + "<->" + s2].append(t.msecs)
 
-            del fv
-
         print "Done..."
         self.dump_data()
 
@@ -82,7 +80,7 @@ class DifferentEdgeFailure():
 
 def main():
 
-    exp = DifferentEdgeFailure(100)
+    exp = DifferentEdgeFailure(10)
     exp.trigger()
 
 if __name__ == "__main__":
