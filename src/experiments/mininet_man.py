@@ -113,7 +113,7 @@ class MininetMan():
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(20 * self.topo.num_hosts_per_switch * self.topo.total_switches)
 
-        self.net.pingAll(timeout=self.ping_timeout)
+        #self.net.pingAll(timeout=self.ping_timeout)
 
     def cleanup_mininet(self):
         print "Mininet cleanup..."

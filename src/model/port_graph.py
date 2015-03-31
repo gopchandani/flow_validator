@@ -7,8 +7,9 @@ from network_graph import NetworkGraph
 
 class PortGraph:
 
-    def __init__(self, mininet_man=None):
-        self.network_graph = NetworkGraph(mininet_man)
+    def __init__(self, network_graph):
+
+        self.network_graph = network_graph
         self.g = nx.MultiDiGraph()
 
     def get_table_port_id(self, switch_id, table_number):

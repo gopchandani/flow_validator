@@ -50,7 +50,7 @@ class DifferentEdgeFailure():
 
         for i in range(self.num_iterations):
 
-            fv = FlowValidator(self.mm)
+            fv = FlowValidator(self.mm.ng)
             fv.init_port_graph()
             fv.add_hosts()
             fv.initialize_admitted_traffic()
@@ -80,7 +80,7 @@ class DifferentEdgeFailure():
 
 def main():
 
-    exp = DifferentEdgeFailure(10)
+    exp = DifferentEdgeFailure(100)
     exp.trigger()
 
 if __name__ == "__main__":

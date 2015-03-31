@@ -6,8 +6,8 @@ from model.traffic import Traffic
 
 class FlowValidator:
 
-    def __init__(self, mininet_man=None):
-        self.port_graph = PortGraph(mininet_man)
+    def __init__(self, network_graph):
+        self.port_graph = PortGraph(network_graph)
 
     def init_port_graph(self):
         self.port_graph.init_port_graph()

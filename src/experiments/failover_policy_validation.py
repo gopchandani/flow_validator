@@ -60,7 +60,7 @@ class VaryingSizeTopology():
 
             for i in range(self.num_iterations):
 
-                fv = FlowValidator(self.mm)
+                fv = FlowValidator(self.mm.ng)
                 fv.init_port_graph()
                 fv.add_hosts()
 
