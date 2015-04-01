@@ -9,10 +9,13 @@ sys.path.append("./")
 from collections import defaultdict
 from pprint import pprint
 
+from memory_profiler import profile
+
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from controller_man import ControllerMan
 from mininet_man import MininetMan
+from model.network_graph import NetworkGraph
 
 class NumberOfHosts():
 
@@ -39,16 +42,18 @@ class NumberOfHosts():
         self.mm = MininetMan(controller_port, "line", 2, total_number_of_hosts / 2, experiment_switches=["s1", "s2"])
         self.mm.setup_mininet()
 
+    @profile
     def trigger(self):
 
         print "Starting experiment..."
         for total_number_of_hosts in self.total_number_of_hosts:
 
             self.setup_network(total_number_of_hosts)
+            ng = NetworkGraph(mininet_man=self.mm)
 
-            for i in range(self.num_iterations):
+            for i in xrange(self.num_iterations):
 
-                fv = FlowValidator(self.mm.ng)
+                fv = FlowValidator(ng)
                 with Timer(verbose=True) as t:
                     fv.init_port_graph()
                 self.data["initial_port_graph_construction_time"][total_number_of_hosts].append(t.msecs)
@@ -60,7 +65,11 @@ class NumberOfHosts():
 
                 self.data["initial_traffic_set_propagation_time"][total_number_of_hosts].append(t.msecs)
 
-                #fv.validate_all_host_pair_basic_reachability()
+                fv.validate_all_host_pair_basic_reachability()
+
+                del fv
+
+            del ng
 
             self.mm.cleanup_mininet()
 
@@ -76,7 +85,7 @@ class NumberOfHosts():
 
 def main():
 
-    exp = NumberOfHosts(100, [2, 4])#, 6, 8, 10, 12, 14, 16])#, 18, 20])
+    exp = NumberOfHosts(100, [2])#, 4, 6])#, 8, 10, 12, 14, 16])#, 18, 20])
     exp.trigger()
 
 if __name__ == "__main__":

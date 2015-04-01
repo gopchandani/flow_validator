@@ -102,6 +102,7 @@ class PortGraph:
 
             curr.admitted_traffic[dst] = curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
 
+
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")
         self.add_port(cp)

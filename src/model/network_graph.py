@@ -33,7 +33,7 @@ class NetworkGraph():
         self.switch_ids = []
 
         #  Load up everything
-        self._parse_network_graph()
+        self.parse_network_graph()
 
     def _prepare_group_table(self, sw):
 
@@ -131,7 +131,6 @@ class NetworkGraph():
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "up"
 
-
     def simulate_remove_edge(self, node1_id, node2_id):
 
         edge_ports_dict = self.get_edge_port_dict(node1_id, node2_id)
@@ -144,8 +143,6 @@ class NetworkGraph():
 
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
-
-
 
     def get_edge_port_dict(self, node1_id, node2_id):
         return self.graph[node1_id][node2_id]['edge_ports_dict']
@@ -237,7 +234,7 @@ class NetworkGraph():
             for port in self.graph.node[sw]["sw"].ports:
                 print self.graph.node[sw]["sw"].ports[port]
 
-    def _parse_network_graph(self):
+    def parse_network_graph(self):
 
         # Get all the switches from the inventory API
         remaining_url = 'operational/opendaylight-inventory:nodes'

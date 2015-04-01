@@ -7,6 +7,7 @@ from model.traffic import Traffic
 class FlowValidator:
 
     def __init__(self, network_graph):
+        self.network_graph = network_graph
         self.port_graph = PortGraph(network_graph)
 
     def init_port_graph(self):
@@ -15,9 +16,9 @@ class FlowValidator:
     def add_hosts(self):
 
         # Attach a destination port for each host.
-        for host_id in self.port_graph.network_graph.get_host_ids():
+        for host_id in self.network_graph.get_host_ids():
 
-            host_obj = self.port_graph.network_graph.get_node_object(host_id)
+            host_obj = self.network_graph.get_node_object(host_id)
 
             self.port_graph.add_port(host_obj.ingress_port)
             self.port_graph.add_port(host_obj.egress_port)
@@ -35,23 +36,22 @@ class FlowValidator:
 
     def remove_hosts(self):
 
-        for host_id in self.port_graph.network_graph.get_host_ids():
+        for host_id in self.network_graph.get_host_ids():
 
-            host_obj = self.port_graph.network_graph.get_node_object(host_id)
-            self.port_graph.network_graph.simulate_remove_edge(host_id, host_obj.switch_id)
+            host_obj = self.network_graph.get_node_object(host_id)
+            self.network_graph.simulate_remove_edge(host_id, host_obj.switch_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
     def initialize_admitted_traffic(self):
 
-        for host_id in self.port_graph.network_graph.get_host_ids():
-            host_obj = self.port_graph.network_graph.get_node_object(host_id)
+        for host_id in self.network_graph.get_host_ids():
+            host_obj = self.network_graph.get_node_object(host_id)
 
             #print "Computing admitted_traffic:", host_id, "connected to switch:", \
             #    host_obj.switch_id, "at port:", \
             #    host_obj.switch_port_attached
 
             switch_egress_port = self.port_graph.get_port(self.port_graph.g.predecessors(host_obj.ingress_port.port_id)[0])
-
 
             self.port_graph.compute_admitted_traffic(switch_egress_port,
                                                    host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id],
@@ -61,26 +61,31 @@ class FlowValidator:
     def validate_all_host_pair_basic_reachability(self):
 
         # Test connectivity after flows have bled through the port graph
-        for src_h_id in self.port_graph.network_graph.get_host_ids():
-            for dst_h_id in self.port_graph.network_graph.get_host_ids():
+        for src_h_id in self.network_graph.get_host_ids():
+            for dst_h_id in self.network_graph.get_host_ids():
 
-                src_host_obj = self.port_graph.network_graph.get_node_object(src_h_id)
-                dst_host_obj = self.port_graph.network_graph.get_node_object(dst_h_id)
+                src_host_obj = self.network_graph.get_node_object(src_h_id)
+                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
                 if src_h_id != dst_h_id:
 
-                    #print "Port Paths from:", src_h_id, "to:", dst_h_id
+                    if dst_host_obj.ingress_port.port_id not in src_host_obj.egress_port.admitted_traffic:
+                        print "No Port Paths from:", src_h_id, "to:", dst_h_id
+                        continue
+
                     at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                     # Baseline
                     #at.print_port_paths()
 
+
+
     def validate_all_host_pair_backup_reachability(self, primary_path_edge_dict):
 
         for host_pair in primary_path_edge_dict:
 
-            src_host_obj = self.port_graph.network_graph.get_node_object(host_pair[0])
-            dst_host_obj = self.port_graph.network_graph.get_node_object(host_pair[1])
+            src_host_obj = self.network_graph.get_node_object(host_pair[0])
+            dst_host_obj = self.network_graph.get_node_object(host_pair[1])
 
             at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
@@ -90,14 +95,14 @@ class FlowValidator:
             # Now break the edges in the primary path in this host-pair, one-by-one
             for primary_edge in primary_path_edge_dict[host_pair]:
 
-                self.port_graph.network_graph.simulate_remove_edge(primary_edge[0], primary_edge[1])
+                self.network_graph.simulate_remove_edge(primary_edge[0], primary_edge[1])
                 self.port_graph.remove_node_graph_edge(primary_edge[0], primary_edge[1])
                 at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                 edge_removed_num_elements = len(at.match_elements)
 
                 # Add it back
-                self.port_graph.network_graph.simulate_add_edge(primary_edge[0], primary_edge[1])
+                self.network_graph.simulate_add_edge(primary_edge[0], primary_edge[1])
                 self.port_graph.add_node_graph_edge(primary_edge[0], primary_edge[1], True)
                 at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
                 edge_added_back_num_elements = len(at.match_elements)

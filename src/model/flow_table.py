@@ -170,9 +170,6 @@ class FlowTable():
                 remaining_match = flow.complement_match.intersect(remaining_match)
                 flow.applied_match = intersection
 
-                if self.sw.node_id == "openflow:4" and self.table_id == 3:
-                    pass
-
                 # Add the edges in the portgraph
                 flow.add_port_graph_edges()
 

@@ -227,7 +227,6 @@ class ActionSet():
                     #if output_action.bucket and output_action.bucket.watch_port == in_port:
                     #    continue
 
-
                     if self.sw.ports[in_port].state != "up":
                         continue
 
