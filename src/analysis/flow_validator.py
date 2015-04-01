@@ -1,6 +1,13 @@
 __author__ = 'Rakesh Kumar'
 
 
+
+from memory_profiler import profile
+
+from experiments.controller_man import ControllerMan
+from experiments.mininet_man import MininetMan
+
+from model.network_graph import NetworkGraph
 from model.port_graph import PortGraph
 from model.traffic import Traffic
 
@@ -10,9 +17,11 @@ class FlowValidator:
         self.network_graph = network_graph
         self.port_graph = PortGraph(network_graph)
 
+    @profile
     def init_port_graph(self):
         self.port_graph.init_port_graph()
 
+    @profile
     def add_hosts(self):
 
         # Attach a destination port for each host.
@@ -34,6 +43,7 @@ class FlowValidator:
 
             host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id] = admitted_traffic
 
+    @profile
     def remove_hosts(self):
 
         for host_id in self.network_graph.get_host_ids():
@@ -42,6 +52,7 @@ class FlowValidator:
             self.network_graph.simulate_remove_edge(host_id, host_obj.switch_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
+    @profile
     def initialize_admitted_traffic(self):
 
         for host_id in self.network_graph.get_host_ids():
@@ -76,7 +87,7 @@ class FlowValidator:
                     at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                     # Baseline
-                    #at.print_port_paths()
+                    at.print_port_paths()
 
 
 
@@ -114,7 +125,17 @@ class FlowValidator:
 
 def main():
 
-    fv = FlowValidator()
+    # Get a controller
+    cm = ControllerMan(1)
+    controller_port = cm.get_next()
+
+    # Get a mininet instance
+    mm = MininetMan(controller_port, "line", 2, 1, experiment_switches=["s1", "s2"])
+    mm.setup_mininet()
+
+    # Get a flow validator instance
+    ng = NetworkGraph(mininet_man=mm)
+    fv = FlowValidator(ng)
 
     # Three steps to happy living:
     fv.init_port_graph()
@@ -122,8 +143,8 @@ def main():
     fv.initialize_admitted_traffic()
 
     fv.validate_all_host_pair_basic_reachability()
-    #fv.remove_hosts()
-    #fv.validate_all_host_pair_basic_reachability()
+    fv.remove_hosts()
+    fv.validate_all_host_pair_basic_reachability()
 
 
 if __name__ == "__main__":
