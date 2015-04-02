@@ -12,6 +12,7 @@ class PortGraph:
         self.network_graph = network_graph
         self.g = nx.MultiDiGraph()
 
+
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
@@ -33,17 +34,31 @@ class PortGraph:
     def init_port_graph(self):
 
         #Add a port for controller
-        #TODO: Nothing gets added to this for now.
         self.init_global_controller_port()
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
-            sw.prepare_switch_port_graph(self)
+            sw.init_switch_port_graph(self)
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
                 self.add_node_graph_edge(node_edge[0], node_edge[1])
+
+    def de_init_port_graph(self):
+
+        # First get rid of the controller port
+        self.de_init_controller_port()
+
+        # Then get rid of the edges in the port graph
+        for node_edge in self.network_graph.graph.edges():
+            if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
+                self.remove_node_graph_edge(node_edge[0], node_edge[1])
+
+        # Then de-initialize switch port graph
+        for sw in self.network_graph.get_switches():
+            sw.de_init_switch_port_graph(self)
+
 
     def add_edge(self, port1, port2, key, edge_filter_match, update_flag=False):
 
@@ -106,6 +121,11 @@ class PortGraph:
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")
         self.add_port(cp)
+
+    def de_init_controller_port(self):
+        cp = self.get_port("4294967293")
+        self.remove_port(cp)
+        del cp
 
     def add_node_graph_edge(self, node1_id, node2_id, update_flag=False):
 

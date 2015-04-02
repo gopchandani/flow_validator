@@ -82,20 +82,19 @@ class Switch():
 
         return out_port_match
 
-    def prepare_switch_port_graph(self, port_graph):
+    def init_switch_port_graph(self, port_graph):
 
         self.port_graph = port_graph
 
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
 
-            # Add a output node in port graph for each table
-            p = Port(self,
-                     port_type="table",
-                     port_id=self.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
+            tp = Port(self,
+                      port_type="table",
+                      port_id=self.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
 
-            self.port_graph.g.add_node(p.port_id, p=p)
-            flow_table.port = p
+            self.port_graph.add_port(tp)
+            flow_table.port = tp
             flow_table.port_graph = self.port_graph
 
         # Add two nodes per physical port in port graph one for incoming and outgoing direction
@@ -135,3 +134,17 @@ class Switch():
             # Try passing a wildcard through the flow table
             flow_table.compute_applied_matches_and_actions()
 
+    def de_init_switch_port_graph(self, port_graph):
+
+        # Remove table ports
+        # Add a node per table in the port graph
+        for flow_table in self.flow_tables:
+
+            tp = Port(self,
+                      port_type="table",
+                      port_id=self.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
+
+            self.port_graph.remove_port(tp)
+            flow_table.port = None
+            flow_table.port_graph = None
+            del tp

@@ -22,6 +22,10 @@ class FlowValidator:
         self.port_graph.init_port_graph()
 
     @profile
+    def de_init_port_graph(self):
+        self.port_graph.de_init_port_graph()
+
+    @profile
     def add_hosts(self):
 
         # Attach a destination port for each host.
@@ -68,7 +72,6 @@ class FlowValidator:
                                                    host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id],
                                                    host_obj.ingress_port)
 
-
     def validate_all_host_pair_basic_reachability(self):
 
         # Test connectivity after flows have bled through the port graph
@@ -87,9 +90,7 @@ class FlowValidator:
                     at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                     # Baseline
-                    at.print_port_paths()
-
-
+                    #at.print_port_paths()
 
     def validate_all_host_pair_backup_reachability(self, primary_path_edge_dict):
 
@@ -145,6 +146,8 @@ def main():
     fv.validate_all_host_pair_basic_reachability()
     fv.remove_hosts()
     fv.validate_all_host_pair_basic_reachability()
+
+    fv.de_init_port_graph()
 
 
 if __name__ == "__main__":

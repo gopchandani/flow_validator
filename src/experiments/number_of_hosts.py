@@ -3,6 +3,7 @@ __author__ = 'Rakesh Kumar'
 import sys
 import json
 import time
+import gc
 
 sys.path.append("./")
 
@@ -42,7 +43,7 @@ class NumberOfHosts():
         self.mm = MininetMan(controller_port, "line", 2, total_number_of_hosts / 2, experiment_switches=["s1", "s2"])
         self.mm.setup_mininet()
 
-    @profile
+    #@profile
     def trigger(self):
 
         print "Starting experiment..."
@@ -68,6 +69,7 @@ class NumberOfHosts():
                 fv.validate_all_host_pair_basic_reachability()
 
                 del fv
+                gc.collect()
 
             del ng
 
