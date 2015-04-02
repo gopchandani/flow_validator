@@ -118,32 +118,42 @@ class Switch():
             incoming_port_match = Traffic(init_wildcard=True)
             incoming_port_match.set_field("in_port", int(port))
 
-            # None of this happens if there are no flow tables
-            if self.flow_tables:
 
-                self.port_graph.add_edge(in_p,
-                                               self.flow_tables[0].port, (None, None),
-                                               incoming_port_match)
-            else:
-                print "No flow tables in switch:", self.node_id
+            self.port_graph.add_edge(in_p,
+                                     self.flow_tables[0].port,
+                                     (None, None),
+                                     incoming_port_match)
 
-
-        # Find out what else can happen when traffic comes to this switch.
+        # Try passing a wildcard through the flow table
         for flow_table in self.flow_tables:
+            flow_table.init_flow_table_port_graph()
 
-            # Try passing a wildcard through the flow table
-            flow_table.compute_applied_matches_and_actions()
 
     def de_init_switch_port_graph(self, port_graph):
+
+        # Try passing a wildcard through the flow table
+        for flow_table in self.flow_tables:
+            flow_table.de_init_flow_table_port_graph()
+
+        # Remove nodes for physical ports
+        for port in self.ports:
+
+            in_p = self.port_graph.get_port(self.port_graph.get_incoming_port_id(self.node_id, port))
+            out_p = self.port_graph.get_port(self.port_graph.get_outgoing_port_id(self.node_id, port))
+
+            self.port_graph.remove_edge(in_p, self.flow_tables[0].port)
+
+            self.port_graph.remove_port(in_p)
+            self.port_graph.remove_port(out_p)
+
+            del in_p
+            del out_p
 
         # Remove table ports
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
 
-            tp = Port(self,
-                      port_type="table",
-                      port_id=self.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
-
+            tp = self.port_graph.get_port(self.port_graph.get_table_port_id(self.node_id, flow_table.table_id))
             self.port_graph.remove_port(tp)
             flow_table.port = None
             flow_table.port_graph = None

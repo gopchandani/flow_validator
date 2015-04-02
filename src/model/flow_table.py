@@ -155,7 +155,7 @@ class FlowTable():
 
         return hpm_flow, intersection
 
-    def compute_applied_matches_and_actions(self):
+    def init_flow_table_port_graph(self):
 
         remaining_match = Traffic(init_wildcard=True)
 
@@ -172,8 +172,9 @@ class FlowTable():
 
                 # Add the edges in the portgraph
                 flow.add_port_graph_edges()
-
             else:
-                
                 # Say that this flow does not matter
                 flow.applied_match = None
+
+    def de_init_flow_table_port_graph(self):
+        pass
