@@ -1,5 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
+import gc
+
 import networkx as nx
 from port import Port
 from traffic import Traffic
@@ -59,6 +61,7 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph(self)
 
+        gc.collect()
 
     def add_edge(self, port1, port2, key, edge_filter_match, update_flag=False):
 
@@ -88,8 +91,10 @@ class PortGraph:
 
     def update_predecessors(self, node):
 
+        node_preds = self.g.predecessors(node.port_id)
+
         # But this could have fail-over consequences for this port's predecessors' flows...
-        for pred_id in self.g.predecessors(node.port_id):
+        for pred_id in node_preds:
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, node.port_id)
 
