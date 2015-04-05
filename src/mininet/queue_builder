@@ -1,0 +1,31 @@
+import os
+import sys
+import subprocess
+__author__ = 'Shane Rogers'
+
+
+def queue_maker(S,rate,src_port, dst_port, src_mac, dest_mac):
+
+	switch = S
+	rate_limit = rate
+	source_port = src_port
+	destination_port = dst_port
+	source_mac = src_mac
+	destination_mac = dest_mac
+
+	start_command = '       add-br br0 -- \
+       add-port br0 desination_port -- \
+       add-port br0 vif1.0 -- set interface vif1.0 ofport_request=5 -- \
+       add-port br0 vif2.0 -- set interface vif2.0 ofport_request=6 -- \
+       set port eth0 qos=@newqos -- \
+       --id=@newqos create qos type=linux-htb \
+           other-config:max-rate=1000000000 \
+           queues:123=@vif10queue \
+           queues:234=@vif20queue -- \
+       --id=@vif10queue create queue other-config:max-rate=10000000 -- \
+       --id=@vif20queue create queue other-config:max-rate=20000000'%str(Switch, )
+
+    os.system(start_command)
+
+
+
