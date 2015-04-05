@@ -66,6 +66,9 @@ class FlowValidator:
         for host_id in self.network_graph.get_host_ids():
             host_obj = self.network_graph.get_node_object(host_id)
 
+            if host_id == "h21":
+                pass
+
             #print "Computing admitted_traffic:", host_id, "connected to switch:", \
             #    host_obj.switch_id, "at port:", \
             #    host_obj.switch_port_attached
@@ -94,7 +97,7 @@ class FlowValidator:
                     at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
                     # Baseline
-                    #at.print_port_paths()
+                    at.print_port_paths()
 
     def validate_all_host_pair_backup_reachability(self, primary_path_edge_dict):
 
@@ -142,25 +145,25 @@ def main():
     ng = NetworkGraph(mininet_man=mm)
     fv = FlowValidator(ng)
 
-    hp = hpy()
-    before = hp.heap()
+#    hp = hpy()
+#    before = hp.heap()
 
     # Three steps to happy living:
     fv.init_port_graph()
     fv.add_hosts()
     fv.initialize_admitted_traffic()
     #
-    # fv.validate_all_host_pair_basic_reachability()
+    fv.validate_all_host_pair_basic_reachability()
     # fv.remove_hosts()
     # fv.validate_all_host_pair_basic_reachability()
 
     fv.de_init_port_graph()
 
-    after = hp.heap()
-    leftover = after - before
+#    after = hp.heap()
+#    leftover = after - before
 
-    print leftover
-    pdb.set_trace()
+#    print leftover
+#    pdb.set_trace()
 
 if __name__ == "__main__":
     main()
