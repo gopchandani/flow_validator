@@ -12,18 +12,22 @@ def queue_maker(S,rate,src_port, dst_port, src_mac, dest_mac):
 	destination_port = dst_port
 	source_mac = src_mac
 	destination_mac = dest_mac
+	bridge = "%s-br0" % switch
+	queue1 = "%s-vif1.0" % switch
+	queue2 = "%s-vif2.0" % switch
 
-	start_command = '       add-br br0 -- \
-       add-port br0 desination_port -- \
-       add-port br0 vif1.0 -- set interface vif1.0 ofport_request=5 -- \
-       add-port br0 vif2.0 -- set interface vif2.0 ofport_request=6 -- \
+	start_command = 'ovs-vsctl -- \
+       add-br %s -- \
+       add-port %s $s -- \
+       add-port %s vif1.0 -- set interface vif1.0 ofport_request=5 -- \
+       add-port %s vif2.0 -- set interface vif2.0 ofport_request=6 -- \
        set port destination_port qos=@newqos -- \
        --id=@newqos create qos type=linux-htb \
            other-config:max-rate=1000000000 \
            queues:123=@vif10queue \
            queues:234=@vif20queue -- \
        --id=@vif10queue create queue other-config:max-rate=10000000 -- \
-       --id=@vif20queue create queue other-config:max-rate=20000000'% (string(destination_port), )
+       --id=@vif20queue create queue other-config:max-rate=20000000'% (string(bridge), string(bridge), string(destination_port), string(bridge), string(queue1),string(bridge), string(queue2),)
 
     os.system(start_command)
 
