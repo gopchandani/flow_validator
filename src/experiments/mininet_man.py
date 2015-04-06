@@ -102,7 +102,7 @@ class MininetMan():
         self.net.start()
 
         print "Waiting for the controller to get ready for synthesis"
-        time.sleep(120)
+        time.sleep(150)
 
         print "Synthesizing..."
 

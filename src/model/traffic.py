@@ -55,7 +55,12 @@ class Traffic():
         # Check if this existing_me can be taken even partially by any of the candidates
         # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
 
-        for existing_me in self.match_elements:
+        print "pipe_welding has:", len(self.match_elements), "existing match elements to take care of..."
+
+        copy_match_elements = copy(self.match_elements)
+
+        for existing_me in copy_match_elements:
+            print "..."
             existing_me_welded = False
             for candidate_me in now_admitted_match.match_elements:
                 new_me = existing_me.pipe_welding(candidate_me)
@@ -68,7 +73,6 @@ class Traffic():
             # If none of the candidate_me took existing_me:
             #Delete everybody who dependent on existing_me, the whole chain...
             if not existing_me_welded:
-                print "..."
                 existing_me.remove_with_predecessors()
         return new_m
 
