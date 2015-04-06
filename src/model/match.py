@@ -104,6 +104,17 @@ class MatchElement(DictMixin):
         else:
             return str(id(self)) + "@NONE"
 
+    def get_port_path_str(self):
+
+        port_path_str = self.port.port_id + "(" + str(id(self)) + ")"
+        trav = self.succ_match_element
+
+        while trav != None:
+            port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
+            trav = trav.succ_match_element
+
+        return port_path_str
+
     def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
 
         self.traffic = traffic
@@ -235,6 +246,7 @@ class MatchElement(DictMixin):
     def remove_with_predecessors(self):
 
         print "remove_with_predecessors at:", self.port
+        print self.get_port_path_str()
 
         # if there are any predecessors, go take care of them first
         while self.pred_match_elements:

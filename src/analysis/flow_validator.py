@@ -66,9 +66,6 @@ class FlowValidator:
         for host_id in self.network_graph.get_host_ids():
             host_obj = self.network_graph.get_node_object(host_id)
 
-            if host_id == "h21":
-                pass
-
             #print "Computing admitted_traffic:", host_id, "connected to switch:", \
             #    host_obj.switch_id, "at port:", \
             #    host_obj.switch_port_attached

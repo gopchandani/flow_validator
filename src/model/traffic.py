@@ -129,17 +129,8 @@ class Traffic():
     def print_port_paths(self):
 
         for me in self.match_elements:
-            port_path_str = me.port.port_id + "(" + str(id(me)) + ")"
+            print me.get_port_path_str()
 
-            trav = me.succ_match_element
-
-            while trav != None:
-
-                port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
-
-                trav = trav.succ_match_element
-
-            print port_path_str
 
 def main():
     m1 = Traffic()
