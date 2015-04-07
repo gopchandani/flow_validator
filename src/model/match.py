@@ -258,7 +258,8 @@ class MatchElement(DictMixin):
         if self in self.traffic.match_elements:
             self.traffic.match_elements.remove(self)
         else:
-            raise Exception("Removing something that is already removed.")
+            print "Removing something that is already removed."
+            #raise Exception("Removing something that is already removed.")
 
     def complement_match(self):
 

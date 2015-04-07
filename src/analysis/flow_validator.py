@@ -21,15 +21,15 @@ class FlowValidator:
         self.network_graph = network_graph
         self.port_graph = PortGraph(network_graph)
 
-    #@profile
+    @profile
     def init_port_graph(self):
         self.port_graph.init_port_graph()
 
-    #@profile
+    @profile
     def de_init_port_graph(self):
         self.port_graph.de_init_port_graph()
 
-    #@profile
+    @profile
     def add_hosts(self):
 
         # Attach a destination port for each host.
@@ -51,7 +51,7 @@ class FlowValidator:
 
             host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id] = admitted_traffic
 
-    #@profile
+    @profile
     def remove_hosts(self):
 
         for host_id in self.network_graph.get_host_ids():
@@ -60,7 +60,7 @@ class FlowValidator:
             self.network_graph.simulate_remove_edge(host_id, host_obj.switch_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
-    #@profile
+    @profile
     def initialize_admitted_traffic(self):
 
         for host_id in self.network_graph.get_host_ids():
@@ -142,25 +142,17 @@ def main():
     ng = NetworkGraph(mininet_man=mm)
     fv = FlowValidator(ng)
 
-#    hp = hpy()
-#    before = hp.heap()
-
     # Three steps to happy living:
     fv.init_port_graph()
     fv.add_hosts()
     fv.initialize_admitted_traffic()
     #
+    
     fv.validate_all_host_pair_basic_reachability()
     # fv.remove_hosts()
     # fv.validate_all_host_pair_basic_reachability()
 
     fv.de_init_port_graph()
-
-#    after = hp.heap()
-#    leftover = after - before
-
-#    print leftover
-#    pdb.set_trace()
 
 if __name__ == "__main__":
     main()
