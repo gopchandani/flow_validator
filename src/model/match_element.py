@@ -263,24 +263,30 @@ class MatchElement(DictMixin):
             #print "Removing something that is already removed."
             #raise Exception("Removing something that is already removed.")
 
-    def complement_traffic(self):
+    def get_complement_match_elements(self):
 
-        from traffic import Traffic
-        traffic_complement = Traffic()
+        complement_match_elements = []
 
         for field_name in field_names:
 
             #If the field is not a wildcard, then chop it from the wildcard initialized Traffic
             if not (Interval(0, sys.maxsize) in self.match_fields[field_name]):
-                me = MatchElement(traffic=traffic_complement, is_wildcard=True)
+                me = MatchElement(is_wildcard=True)
 
                 # Chop out each interval from me[field_name]
                 for interval in self.match_fields[field_name]:
                     me.match_fields[field_name].chop(interval.begin, interval.end)
 
-                traffic_complement.match_elements.append(me)
+                complement_match_elements.append(me)
 
-        return traffic_complement
+        return complement_match_elements
+
+
+
+    def is_subset(self, in_match_element):
+        complement_match_elements = self.complement_match_elements()
+
+        # Return True/False
 
 
     def add_element_from_match_json(self, match_json, flow):

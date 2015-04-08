@@ -29,7 +29,11 @@ class Flow():
         self.port_graph = None
         self.match = Traffic()
         self.match.match_elements.append(self.match_element)
-        self.complement_traffic = self.match_element.complement_traffic()
+
+        complement_match_elements = self.match_element.get_complement_match_elements()
+        self.complement_traffic = Traffic()
+        self.complement_traffic.add_match_elements(complement_match_elements)
+
         self.applied_match = None
         self.port_graph_edges = []
 

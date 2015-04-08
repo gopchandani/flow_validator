@@ -13,6 +13,11 @@ class Traffic():
         if init_wildcard:
             self.match_elements.append(MatchElement(is_wildcard=True))
 
+    def add_match_elements(self, me_list):
+        for me in me_list:
+            self.match_elements.append(me)
+            me.traffic = self
+
     def is_empty(self):
         return len(self.match_elements) == 0
 
