@@ -92,7 +92,7 @@ class PortGraph:
     def update_predecessors(self, node):
 
         node_preds = self.g.predecessors(node.port_id)
-        print "node_preds:", node_preds
+        #print "node_preds:", node_preds
 
         # But this could have fail-over consequences for this port's predecessors' flows...
         for pred_id in node_preds:
@@ -110,12 +110,12 @@ class PortGraph:
 
     def update_match_elements(self, curr):
 
-        print "update_match_elements at port:", curr.port_id
+        #print "update_match_elements at port:", curr.port_id
 
         # This needs to be done for each destination for which curr holds admitted_traffic
         for dst in curr.admitted_traffic:
 
-            print "update_match_elements dst:", dst
+            #print "update_match_elements dst:", dst
 
             # First compute what the admitted_traffic for this dst looks like right now after edge status changes...
             now_admitted_traffic = Traffic()
@@ -213,7 +213,7 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
-        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
+        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:

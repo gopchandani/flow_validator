@@ -21,6 +21,7 @@ field_names = ["in_port",
               "vlan_id",
               "has_vlan_tag"]
 
+
 class MatchJsonParser():
 
     def __init__(self, match_json=None):
@@ -258,10 +259,11 @@ class MatchElement(DictMixin):
         if self in self.traffic.match_elements:
             self.traffic.match_elements.remove(self)
         else:
-            print "Removing something that is already removed."
+            pass
+            #print "Removing something that is already removed."
             #raise Exception("Removing something that is already removed.")
 
-    def complement_match(self):
+    def complement_traffic(self):
 
         from traffic import Traffic
         traffic_complement = Traffic()
@@ -279,6 +281,7 @@ class MatchElement(DictMixin):
                 traffic_complement.match_elements.append(me)
 
         return traffic_complement
+
 
     def add_element_from_match_json(self, match_json, flow):
 

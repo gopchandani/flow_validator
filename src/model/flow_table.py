@@ -29,7 +29,7 @@ class Flow():
         self.port_graph = None
         self.match = Traffic()
         self.match.match_elements.append(self.match_element)
-        self.complement_match = self.match_element.complement_match()
+        self.complement_traffic = self.match_element.complement_traffic()
         self.applied_match = None
         self.port_graph_edges = []
 
@@ -167,7 +167,7 @@ class FlowTable():
             if not intersection.is_empty():
 
                 # See what is left after this rule is through
-                remaining_match = flow.complement_match.intersect(remaining_match)
+                remaining_match = flow.complement_traffic.intersect(remaining_match)
                 flow.applied_match = intersection
 
                 # Add the edges in the portgraph
