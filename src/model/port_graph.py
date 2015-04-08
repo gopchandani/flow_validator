@@ -186,14 +186,15 @@ class PortGraph:
 
                 # This check takes care of any applied actions
                 if flow and flow.applied_field_modifications:
-                    curr_admitted_traffic = curr.admitted_traffic[dst_port_id].get_orig_match(flow.applied_field_modifications,
-                                                                                      flow.match_element)
+                    curr_admitted_traffic = curr.admitted_traffic[dst_port_id].get_orig_traffic(
+                        flow.applied_field_modifications,
+                        flow.match_element)
                 else:
                     curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
 
                 # At ingress edge compute the effect of written-actions
                 if this_edge["edge_type"] == "ingress":
-                    curr_admitted_traffic = curr_admitted_traffic.get_orig_match_2()
+                    curr_admitted_traffic = curr_admitted_traffic.get_orig_traffic_2()
 
                 i = this_edge["edge_filter_match"].intersect(curr_admitted_traffic)
                 if not i.is_empty():

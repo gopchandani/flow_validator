@@ -34,16 +34,26 @@ class Traffic():
             for me in self.match_elements:
                 me.set_fields_with_match_json(match_json)
 
-
-    def intersect(self, in_match):
+    def intersect(self, in_traffic):
         im = Traffic()
         for e1 in self.match_elements:
-            for e2 in in_match.match_elements:
+            for e2 in in_traffic.match_elements:
                 ei = e1.intersect(e2)
                 if ei:
                     ei.traffic = im
                     im.match_elements.append(ei)
         return im
+
+    def union(self, in_traffic):
+
+        for union_me in in_traffic.match_elements:
+            union_me.traffic = self
+            self.match_elements.append(union_me)
+
+        return self
+
+    def is_subset(self, in_traffic):
+        pass
 
     def pipe_welding(self, now_admitted_match):
 
@@ -75,31 +85,23 @@ class Traffic():
                 existing_me.remove_with_predecessors()
         return new_m
 
-    def union(self, in_match):
 
-        for union_me in in_match.match_elements:
+    def get_orig_traffic(self, modified_fields, matching_element):
 
-            union_me.traffic = self
-            self.match_elements.append(union_me)
-
-        return self
-
-    def get_orig_match(self, modified_fields, matching_element):
-
-        orig_match = Traffic()
+        orig_traffic = Traffic()
         for me in self.match_elements:
             orig_me = me.get_orig_match_element(modified_fields, matching_element)
-            orig_me.traffic = orig_match
-            orig_match.match_elements.append(orig_me)
-        return orig_match
+            orig_me.traffic = orig_traffic
+            orig_traffic.match_elements.append(orig_me)
+        return orig_traffic
 
-    def get_orig_match_2(self):
-        orig_match = Traffic()
+    def get_orig_traffic_2(self):
+        orig_traffic = Traffic()
         for me in self.match_elements:
             orig_me = me.get_orig_match_element()
-            orig_me.traffic = orig_match
-            orig_match.match_elements.append(orig_me)
-        return orig_match
+            orig_me.traffic = orig_traffic
+            orig_traffic.match_elements.append(orig_me)
+        return orig_traffic
 
     def set_port(self, port):
         for me in self.match_elements:
