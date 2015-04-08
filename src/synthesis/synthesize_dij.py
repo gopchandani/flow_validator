@@ -9,7 +9,7 @@ from model.network_graph import NetworkGraph
 
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
-from model.match import MatchElement
+from model.match_element import MatchElement
 
 import pprint
 

@@ -6,7 +6,7 @@ from copy import deepcopy
 import networkx as nx
 
 from model.network_graph import NetworkGraph
-from model.match import Match
+from model.match_element import Match
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 

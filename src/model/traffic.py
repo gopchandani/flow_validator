@@ -1,6 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-from match import MatchElement
+from match_element import MatchElement
 from copy import copy
 
 class Traffic():

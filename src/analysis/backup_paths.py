@@ -4,7 +4,7 @@ import networkx as nx
 import sys
 
 from model.network_graph import NetworkGraph
-from model.match import MatchElement
+from model.match_element import MatchElement
 from netaddr import IPNetwork
 
 class BackupPaths:

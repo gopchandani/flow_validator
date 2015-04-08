@@ -1,6 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-from match import MatchJsonParser
+from match_element import MatchJsonParser
 from collections import defaultdict
 from copy import copy
 
