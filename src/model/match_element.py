@@ -282,11 +282,27 @@ class MatchElement(DictMixin):
         return complement_match_elements
 
 
+    # A is_subset of B if A - B == NullSet
+    # A is in_match_element
+    # B here is self
 
     def is_subset(self, in_match_element):
+
+        # find B'
         complement_match_elements = self.complement_match_elements()
 
-        # Return True/False
+        # Intersect in_match_element with B' to get A-B by doing A Int B'
+        diff_match_elements = []
+        for cme in complement_match_elements:
+            i = in_match_element.intersect(cme)
+            if i:
+                diff_match_elements.append(i)
+
+        # Return True/False based on if there was anything found in A Int B'
+        if diff_match_elements:
+            return False
+        else:
+            return True
 
 
     def add_element_from_match_json(self, match_json, flow):

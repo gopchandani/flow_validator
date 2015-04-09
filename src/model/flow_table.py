@@ -121,13 +121,15 @@ class Flow():
 
     def update_port_graph_edges(self):
 
-
         for src_port_id, dst_port_id, key in self.port_graph_edges:
             action = key[1]
-            if self.sw.port_graph.get_port(dst_port_id).state != "down":
-                action.update_active_status()
-            else:
-                action.is_active = False
+
+            # TODO: If there is no action here (why isn't there one)
+            if action:
+                if self.sw.port_graph.get_port(dst_port_id).state != "down":
+                    action.update_active_status()
+                else:
+                    action.is_active = False
 
 class FlowTable():
     def __init__(self, sw, table_id, flow_list):

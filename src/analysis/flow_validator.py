@@ -119,7 +119,7 @@ class FlowValidator:
 
                 # Add it back
                 self.network_graph.simulate_add_edge(primary_edge[0], primary_edge[1])
-                self.port_graph.add_node_graph_edge(primary_edge[0], primary_edge[1], True)
+                self.port_graph.add_node_graph_edge(primary_edge[0], primary_edge[1])
                 at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
                 edge_added_back_num_elements = len(at.match_elements)
 

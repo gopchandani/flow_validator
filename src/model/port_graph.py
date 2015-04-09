@@ -63,7 +63,7 @@ class PortGraph:
 
         gc.collect()
 
-    def add_edge(self, port1, port2, key, edge_filter_match, update_flag=False):
+    def add_edge(self, port1, port2, key, edge_filter_match):
 
         edge_type = None
         if port1.port_type == "table" and port2.port_type == "egress":
@@ -77,8 +77,9 @@ class PortGraph:
                         edge_filter_match=edge_filter_match,
                         edge_type=edge_type)
 
-        if update_flag:
-            self.update_predecessors(port1)
+        # Take care of any changes that need to be made to the predecessors of port1
+        # due to addition of this edge
+        self.update_predecessors(port1)
 
         return e
 
@@ -134,7 +135,7 @@ class PortGraph:
         self.remove_port(cp)
         del cp
 
-    def add_node_graph_edge(self, node1_id, node2_id, update_flag=False):
+    def add_node_graph_edge(self, node1_id, node2_id):
 
         edge_data = self.network_graph.get_edge_port_dict(node1_id, node2_id)
 
@@ -142,13 +143,13 @@ class PortGraph:
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
         from_port.state = "up"
         to_port.state = "up"
-        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True), update_flag)
+        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
         from_port.state = "up"
         to_port.state = "up"
-        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True), update_flag)
+        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
