@@ -85,16 +85,16 @@ class FlowValidator:
                 src_host_obj = self.network_graph.get_node_object(src_h_id)
                 dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
-                if src_h_id != dst_h_id:
+                print "Paths from:", src_h_id, "to:", dst_h_id
 
-                    if dst_host_obj.ingress_port.port_id not in src_host_obj.egress_port.admitted_traffic:
-                        print "No Port Paths from:", src_h_id, "to:", dst_h_id
-                        continue
+                if dst_host_obj.ingress_port.port_id not in src_host_obj.egress_port.admitted_traffic:
+                    print "None found."
+                    continue
 
-                    at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+                at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
-                    # Baseline
-                    at.print_port_paths()
+                # Baseline
+                at.print_port_paths()
 
     def validate_all_host_pair_backup_reachability(self, primary_path_edge_dict):
 
