@@ -64,10 +64,10 @@ class Flow():
 
         self.instructions = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
-        self.applied_field_modifications = self.instructions.applied_action_set.get_modified_fields_dict()
+        self.applied_field_modifications = self.instructions.applied_action_set.get_modified_fields_list()
         port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
 
-        self.written_field_modifications = self.instructions.written_action_set.get_modified_fields_dict()
+        self.written_field_modifications = self.instructions.written_action_set.get_modified_fields_list()
         port_graph_edge_status_2 = self.instructions.written_action_set.get_port_graph_edge_status()
 
         # Add port edges based on the impact of ActionSet and GotoTable

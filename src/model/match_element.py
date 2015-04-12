@@ -18,9 +18,7 @@ field_names = ["in_port",
               "tcp_source_port",
               "udp_destination_port",
               "udp_source_port",
-              "vlan_id",
-              "has_vlan_tag"]
-
+              "vlan_id"]
 
 class MatchJsonParser():
 
@@ -128,6 +126,7 @@ class MatchElement(DictMixin):
 
         self.value_cache = {}
         self.match_fields = {}
+        self.has_vlan_tag = False
 
         # Create one IntervalTree per field.
         if init_match_fields:
@@ -343,17 +342,11 @@ class MatchElement(DictMixin):
                     self.set_match_field_element(field_name, int(match_json["udp-destination-port"]), flow)
                 elif field_name == "udp_source_port":
                     self.set_match_field_element(field_name, int(match_json["udp-source-port"]), flow)
-
                 elif field_name == "vlan_id":
                     self.set_match_field_element(field_name, int(match_json["vlan-match"]["vlan-id"]["vlan-id"]), flow)
-                    self.set_match_field_element("has_vlan_tag", 1, flow)
 
             except KeyError:
                 self.set_match_field_element(field_name, is_wildcard=True)
-                # Special case
-                if field_name == "vlan_id":
-                    self.set_match_field_element("has_vlan_tag", is_wildcard=True)
-
                 continue
 
     def get_orig_match_element(self, modified_fields=None, matching_element=None):
@@ -391,8 +384,6 @@ class MatchElement(DictMixin):
         orig_match_element.port = self.port
         orig_match_element.causing_match_element = self.causing_match_element
         orig_match_element.pred_match_elements = self.pred_match_elements
-
-
 
         return orig_match_element
 
@@ -438,7 +429,6 @@ class MatchElement(DictMixin):
             elif match_field == "vlan-match":
                 if "vlan-id" in match_json[match_field]:
                     self.set_match_field_element("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
-                    self.set_match_field_element("has_vlan_tag", int(True))
 
     def generate_match_json(self, match):
 

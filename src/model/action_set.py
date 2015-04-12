@@ -160,39 +160,36 @@ class ActionSet():
                 action.matched_flow = intersection
                 self.action_dict[action.action_type].append(action)
 
-    def get_resulting_match_element(self, input_match):
+    def get_resulting_match_element(self, input_match_element):
 
-        output_match = input_match
+        output_match_element = input_match_element
 
-        # Go through the operations that are performed to the match before the packet is sent out
         if "pop_vlan" in self.action_dict:
-            output_match.set_match_field_element("has_vlan_tag", int(False))
+            output_match_element.has_vlan_tag = False
 
         if "push_vlan" in self.action_dict:
-            output_match.set_match_field_element("has_vlan_tag", int(True))
+            output_match_element.has_vlan_tag = True
 
         if "set_field" in self.action_dict:
-            for action in self.action_dict["set_field"]:
-                output_match.set_fields_with_match_json(action.set_field_match_json)
+            if output_match_element.has_vlan_tag:
+                for action in self.action_dict["set_field"]:
+                    output_match_element.set_fields_with_match_json(action.set_field_match_json)
+            else:
+                print "Odd. Setting vlan-id when there is no vlan-tag on the traffic."
 
-        return output_match
+        return output_match_element
 
-    def get_resulting_match(self, input_match):
+    def get_modified_fields_list(self):
+        modified_fields_list = []
 
-        output_match = input_match
+        for set_action in self.action_dict["set_field"]:
+            modified_fields_list.append(set_action.modified_field)
 
-        # Go through the operations that are performed to the match before the packet is sent out
-        if "pop_vlan" in self.action_dict:
-            output_match.set_field("has_vlan_tag", int(False))
+        # The impact of push/pop vlan actions appears on vlan_id field
+        if "push_vlan" in self.action_dict or "pop_vlan" in self.action_dict:
+            modified_fields_list.append("vlan_id")
 
-        if "push_vlan" in self.action_dict:
-            output_match.set_field("has_vlan_tag", int(True))
-
-        if "set_field" in self.action_dict:
-            for action in self.action_dict["set_field"]:
-                output_match.set_field(action.set_field_match_json)
-
-        return output_match
+        return modified_fields_list
 
     def get_out_port_matches(self, in_port_match, in_port):
 
@@ -241,18 +238,3 @@ class ActionSet():
                     port_graph_edge_status.append((str(output_action.out_port), action_copy))
 
         return port_graph_edge_status
-
-    def get_modified_fields_dict(self):
-        modified_fields_dict = {}
-
-        for set_action in self.action_dict["set_field"]:
-            modified_fields_dict[set_action.modified_field] = set_action.field_modified_to
-
-        if "push_vlan" in self.action_dict:
-            modified_fields_dict["has_vlan_tag"] = 1
-
-        if "pop_vlan" in self.action_dict:
-            modified_fields_dict["has_vlan_tag"] = 0
-
-
-        return modified_fields_dict
