@@ -150,7 +150,6 @@ def main():
     
     fv.validate_all_host_pair_basic_reachability()
     # fv.remove_hosts()
-    # fv.validate_all_host_pair_basic_reachability()
 
     fv.de_init_port_graph()
 
