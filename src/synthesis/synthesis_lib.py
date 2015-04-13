@@ -29,17 +29,21 @@ class SynthesisLib():
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
-        # Table 0 contains the reverse rules (they should be examined first)
-        self.reverse_rules_table_id = 0
 
-        # Table 1 contains any rules that have to do with vlan tag push/pop
-        self.vlan_rules_table_id = 1
+        # Table contains the rules that drop packets destined to the same MAC address as host of origin
+        self.loop_preventing_drop_table = 0
 
-        # Table 2 contains any rules associated with forwarding host traffic
-        self.mac_forwarding_table_id = 2
+        # Table contains the reverse rules (they should be examined first)
+        self.reverse_rules_table_id = 1
 
-        # Table 3 contains the actual forwarding rules
-        self.ip_forwarding_table_id = 3
+        # Table contains any rules that have to do with vlan tag push/pop
+        self.vlan_rules_table_id = 2
+
+        # Table contains any rules associated with forwarding host traffic
+        self.mac_forwarding_table_id = 3
+
+        # Table contains the actual forwarding rules
+        self.ip_forwarding_table_id = 4
 
 
     def _push_change(self, url, pushed_content):
@@ -325,16 +329,53 @@ class SynthesisLib():
 
             self._push_flow(sw, flow)
 
+    def _push_loop_preventing_drop_rules(self, sw):
+
+        for h_id in self.network_graph.get_host_ids():
+
+            # Get concerned only with hosts that are directly connected to this sw
+            h_obj = self.network_graph.get_node_object(h_id)
+            if h_obj.switch_id != sw:
+                continue
+
+            # Get a vanilla flow
+            flow = self._create_base_flow(self.loop_preventing_drop_table, 0)
+
+            #Compile match with in_port and destination mac address
+            host_flow_match = flow["flow-node-inventory:flow"]["match"]
+            host_flow_match["in-port"] = str(h_obj.switch_port_attached)
+
+            ethernet_match = {}
+            ethernet_match["ethernet-destination"] = {"address": h_obj.mac_addr}
+            host_flow_match["ethernet-match"] = ethernet_match
+
+            # Drop is the action
+            action_list = ["DROP"]
+
+            drop_action = {}
+            action_list = [{"drop-action": drop_action, "order": 0}]
+
+            # Make and push the flow
+            self._populate_flow_action_instruction(flow, action_list, True)
+            self._push_flow(sw, flow)
+
+
+
     def trigger(self, affected_switches):
 
         for sw in affected_switches:
 
             print "-- Pushing at Switch:", sw
 
-            # Push table miss entries at Table 0, 1, 2
+            # Push rules at the switch that drop packets from hosts that are connected to the switch
+            # and have the same MAC address as originating hosts
+            self._push_loop_preventing_drop_rules(sw)
+
+            # Push table miss entries at all Tables
             self._push_table_miss_goto_next_table_flow(sw, 0)
             self._push_table_miss_goto_next_table_flow(sw, 1)
             self._push_table_miss_goto_next_table_flow(sw, 2)
+            self._push_table_miss_goto_next_table_flow(sw, 3)
 
             intents = self.network_graph.graph.node[sw]["sw"].intents
 

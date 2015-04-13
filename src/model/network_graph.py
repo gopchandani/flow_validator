@@ -131,7 +131,6 @@ class NetworkGraph():
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "up"
 
-
     def simulate_remove_edge(self, node1_id, node2_id):
 
         edge_ports_dict = self.get_edge_port_dict(node1_id, node2_id)
@@ -144,8 +143,6 @@ class NetworkGraph():
 
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
-
-
 
     def get_edge_port_dict(self, node1_id, node2_id):
         return self.graph[node1_id][node2_id]['edge_ports_dict']
