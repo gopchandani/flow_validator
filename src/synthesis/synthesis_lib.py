@@ -339,7 +339,7 @@ class SynthesisLib():
                 continue
 
             # Get a vanilla flow
-            flow = self._create_base_flow(self.loop_preventing_drop_table, 0)
+            flow = self._create_base_flow(self.loop_preventing_drop_table, 100)
 
             #Compile match with in_port and destination mac address
             host_flow_match = flow["flow-node-inventory:flow"]["match"]

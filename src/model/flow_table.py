@@ -59,54 +59,60 @@ class Flow():
                 # TODO: Handle clear-actions case
                 # TODO: Write meta-data case
                 # TODO: Handle apply-actions case (SEL however, does not support this yet)
+        else:
+            # Interpreting Lack of instructions as Drop
+            self.drop = True
 
     def add_port_graph_edges(self):
 
-        self.instructions = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
+        if not "instructions" in self.flow_json:
+            print "Assuming this means to drop."
+        else:
+            self.instructions = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
-        self.applied_field_modifications = self.instructions.applied_action_set.get_modified_fields_list()
-        port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
+            self.applied_field_modifications = self.instructions.applied_action_set.get_modified_fields_list()
+            port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
 
-        self.written_field_modifications = self.instructions.written_action_set.get_modified_fields_list()
-        port_graph_edge_status_2 = self.instructions.written_action_set.get_port_graph_edge_status()
+            self.written_field_modifications = self.instructions.written_action_set.get_modified_fields_list()
+            port_graph_edge_status_2 = self.instructions.written_action_set.get_port_graph_edge_status()
 
-        # Add port edges based on the impact of ActionSet and GotoTable
-        for out_port, output_action in port_graph_edge_status:
+            # Add port edges based on the impact of ActionSet and GotoTable
+            for out_port, output_action in port_graph_edge_status:
 
-            outgoing_port = self.port_graph.get_port(
-                self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+                outgoing_port = self.port_graph.get_port(
+                    self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
-            e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
-                                           outgoing_port,
-                                           (self, output_action),
-                                           self.applied_match)
-            
-            self.port_graph_edges.append(e)
+                e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                                               outgoing_port,
+                                               (self, output_action),
+                                               self.applied_match)
 
-
-        # Add port edges based on the impact of ActionSet and GotoTable
-        for out_port, output_action in port_graph_edge_status_2:
-
-            outgoing_port = self.port_graph.get_port(
-                self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
-
-            e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
-                                           outgoing_port,
-                                           (self, output_action),
-                                           self.applied_match)
-
-            self.port_graph_edges.append(e)
+                self.port_graph_edges.append(e)
 
 
-        # See the edge impact of any go-to-table instruction
-        if self.instructions.goto_table:
+            # Add port edges based on the impact of ActionSet and GotoTable
+            for out_port, output_action in port_graph_edge_status_2:
 
-            e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
-                                           self.sw.flow_tables[self.instructions.goto_table].port,
-                                           (self, None),
-                                           self.applied_match)
+                outgoing_port = self.port_graph.get_port(
+                    self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
-            self.port_graph_edges.append(e)
+                e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                                               outgoing_port,
+                                               (self, output_action),
+                                               self.applied_match)
+
+                self.port_graph_edges.append(e)
+
+
+            # See the edge impact of any go-to-table instruction
+            if self.instructions.goto_table:
+
+                e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                                               self.sw.flow_tables[self.instructions.goto_table].port,
+                                               (self, None),
+                                               self.applied_match)
+
+                self.port_graph_edges.append(e)
 
 
     def remove_port_graph_edges(self):
