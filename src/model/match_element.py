@@ -378,7 +378,8 @@ class MatchElement(DictMixin):
         orig_match_element.succ_match_element = self.succ_match_element
 
         # This also means that succ_match_element.pred_match_elements also need to carry around orig_match_element
-        self.succ_match_element.pred_match_elements.append(orig_match_element)
+        if self.succ_match_element:
+            self.succ_match_element.pred_match_elements.append(orig_match_element)
 
         # Copy these from self
         orig_match_element.port = self.port
