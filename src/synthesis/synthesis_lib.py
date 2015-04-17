@@ -36,8 +36,8 @@ class SynthesisLib():
         # Table contains the reverse rules (they should be examined first)
         self.reverse_rules_table_id = 1
 
-        # Table contains any rules that have to do with vlan tag push/pop
-        self.vlan_rules_table_id = 2
+        # Table contains any rules that have to do with vlan tag push
+        self.vlan_tag_push_rules_table_id = 2
 
         # Table contains any rules associated with forwarding host traffic
         self.mac_forwarding_table_id = 3
@@ -250,7 +250,7 @@ class SynthesisLib():
 
         return return_intent
 
-    def _push_mac_intent_flow(self, sw, mac_intent, table_id, priority):
+    def _push_destination_host_mac_intent_flow(self, sw, mac_intent, table_id, priority):
 
         #sw, flow_match
         flow = self._create_base_flow(table_id, priority)
@@ -262,15 +262,17 @@ class SynthesisLib():
         #Compile instruction
 
         #  Assert that group is executed upon match
-        output_action = {"output-node-connector": mac_intent.out_port}
-        action_list = [{"output-action": output_action, "order": 0}]
+        pop_vlan_action = {'order': 0, 'pop-vlan-action': {}}
+        output_action = [{'order': 1, "output-action": {"output-node-connector": mac_intent.out_port}}]
+
+        action_list = [pop_vlan_action, output_action]
 
         self._populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
         self._push_flow(sw, flow)
 
         return flow
 
-    def push_host_mac_intents(self, sw, dst_intents):
+    def push_destination_host_mac_intents(self, sw, dst_intents):
 
         mac_intents = self._get_intents(dst_intents, "mac")
         if mac_intents:
@@ -278,13 +280,13 @@ class SynthesisLib():
             if len(mac_intents) > 1:
                 print "There are more than one mac intents for a single dst, will install only one"
 
-            self._push_mac_intent_flow(sw, mac_intents[0], self.mac_forwarding_table_id, 1)
+            self._push_destination_host_mac_intent_flow(sw, mac_intents[0], self.mac_forwarding_table_id, 1)
 
-    def push_vlan_push_pop_intents(self, sw, dst_intents):
+    def push_vlan_push_intents(self, sw, dst_intents):
 
         push_vlan_intents = self._get_intents(dst_intents, "push_vlan")
         for push_vlan_intent in push_vlan_intents:
-            flow = self._create_base_flow(self.vlan_rules_table_id, 1)
+            flow = self._create_base_flow(self.vlan_tag_push_rules_table_id, 1)
 
             #Compile match
             flow["flow-node-inventory:flow"]["match"] = push_vlan_intent.flow_match.generate_match_json(
@@ -304,30 +306,11 @@ class SynthesisLib():
             self._populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
             # Also, punt such packets to the next table
-            go_to_table_instruction = {"go-to-table": {"table_id": self.vlan_rules_table_id + 1}, "order": 1}
+            go_to_table_instruction = {"go-to-table": {"table_id": self.vlan_tag_push_rules_table_id + 1}, "order": 1}
             flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
 
             self._push_flow(sw, flow)
 
-        pop_vlan_intents = self._get_intents(dst_intents, "pop_vlan")
-        for pop_vlan_intent in pop_vlan_intents:
-            flow = self._create_base_flow(self.vlan_rules_table_id, 1)
-
-            #Compile match
-            flow["flow-node-inventory:flow"]["match"] = pop_vlan_intent.flow_match.generate_match_json(
-                flow["flow-node-inventory:flow"]["match"])
-
-            #Compile instruction
-            pop_vlan_action = {}
-            action_list = [{'order': 0, 'pop-vlan-action': pop_vlan_action}]
-
-            self._populate_flow_action_instruction(flow, action_list, pop_vlan_intent.apply_immediately)
-
-            # Also, punt such packets to the next table
-            go_to_table_instruction = {"go-to-table": {"table_id": self.vlan_rules_table_id + 1}, "order": 1}
-            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
-
-            self._push_flow(sw, flow)
 
     def _push_loop_preventing_drop_rules(self, sw):
 
@@ -383,10 +366,10 @@ class SynthesisLib():
                 dst_intents = intents[dst]
 
                 # Take care of mac intents for this destination
-                self.push_host_mac_intents(sw, dst_intents)
+                self.push_destination_host_mac_intents(sw, dst_intents)
 
-                # Take care of vlan tag push/pop intents for this destination
-                self.push_vlan_push_pop_intents(sw, dst_intents)
+                # Take care of vlan tag push intents for this destination
+                self.push_vlan_push_intents(sw, dst_intents)
 
                 primary_intents = self._get_intents(dst_intents, "primary")
                 reverse_intents = self._get_intents(dst_intents, "reverse")

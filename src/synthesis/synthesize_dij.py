@@ -99,7 +99,7 @@ class SynthesizeDij():
                         continue
 
                     # Nothing needs to be done for vlan intents either
-                    if intent.intent_type == "push_vlan" or intent.intent_type == "pop_vlan":
+                    if intent.intent_type == "push_vlan":
                         continue
 
                     # A balking intent happens on the switch where reversal begins,
@@ -141,7 +141,7 @@ class SynthesizeDij():
             intents[key][intent] = 1
 
 
-    def _compute_destination_host_mac_intents(self, h_obj, flow_match):
+    def _compute_destination_host_mac_intents(self, h_obj, flow_match, matching_tag):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(h_obj.switch_id, h_obj.node_id)
         out_port = edge_ports_dict[h_obj.switch_id]
@@ -149,6 +149,8 @@ class SynthesizeDij():
         host_mac_match = deepcopy(flow_match)
         mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
         host_mac_match.set_match_field_element("ethernet_destination", int(mac_int))
+        host_mac_match.set_match_field_element("vlan_id", int(matching_tag))
+
         host_mac_intent = Intent("mac", host_mac_match, "all", out_port, self.apply_other_intents_immediately)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
@@ -167,18 +169,6 @@ class SynthesizeDij():
         
         self._add_intent(h_obj.switch_id, required_tag, push_vlan_tag_intent)
 
-    def _compute_pop_vlan_tag_intents(self, h_obj, flow_match, matching_tag):
-
-        pop_vlan_match = deepcopy(flow_match)
-        pop_vlan_match.set_match_field_element("vlan_id", int(matching_tag))
-        pop_vlan_tag_intent = Intent("pop_vlan", pop_vlan_match, "all", "all", self.apply_tag_intents_immediately)
-
-        # Avoiding adding a new intent for every arriving flow for this switch
-        #  at destination by using the tag as the key
-
-        self._add_intent(h_obj.switch_id, matching_tag, pop_vlan_tag_intent)
-
-
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         # Handy info
@@ -192,10 +182,7 @@ class SynthesizeDij():
 
         ## Things at destination
         # Add a MAC based forwarding rule for the destination host at the last hop
-        self._compute_destination_host_mac_intents(dst_host, flow_match)
-        
-        # Untag packets if they belong to a host connected to the dst switch AND then match its tag
-        self._compute_pop_vlan_tag_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
+        self._compute_destination_host_mac_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
 
         #  First find the shortest path between src and dst.
         p = nx.shortest_path(self.network_graph.graph, source=src_host.switch_id, target=dst_host.switch_id)
