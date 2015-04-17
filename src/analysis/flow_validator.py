@@ -135,7 +135,7 @@ def main():
     controller_port = cm.get_next()
 
     # Get a mininet instance
-    mm = MininetMan(controller_port, "line", 2, 1, experiment_switches=["s1", "s2"])
+    mm = MininetMan(controller_port, "line", 2, 2, experiment_switches=["s1", "s2"])
     mm.setup_mininet()
     mm.net.pingAll(timeout=mm.ping_timeout)
 
