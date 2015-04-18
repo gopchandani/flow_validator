@@ -41,12 +41,17 @@ class Traffic():
 
     def intersect(self, in_traffic):
         im = Traffic()
-        for e1 in self.match_elements:
-            for e2 in in_traffic.match_elements:
-                ei = e1.intersect(e2)
+        for e_in in in_traffic.match_elements:
+            for e_self in self.match_elements:
+                ei = e_self.intersect(e_in)
                 if ei:
                     ei.traffic = im
                     im.match_elements.append(ei)
+
+                # If e_in is completely contained in the intersection, no need to go on to other e_selfs...
+                if ei.is_subset(e_in):
+                    continue
+
         return im
 
     def union(self, in_traffic):

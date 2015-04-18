@@ -76,7 +76,6 @@ class Flow():
             self.written_field_modifications = self.instructions.written_action_set.get_modified_fields_list()
             port_graph_edge_status_2 = self.instructions.written_action_set.get_port_graph_edge_status()
 
-            # Add port edges based on the impact of ActionSet and GotoTable
             for out_port, output_action in port_graph_edge_status:
 
                 outgoing_port = self.port_graph.get_port(
@@ -89,8 +88,6 @@ class Flow():
 
                 self.port_graph_edges.append(e)
 
-
-            # Add port edges based on the impact of ActionSet and GotoTable
             for out_port, output_action in port_graph_edge_status_2:
 
                 outgoing_port = self.port_graph.get_port(
