@@ -288,7 +288,7 @@ class MatchElement(DictMixin):
     def is_subset(self, in_match_element):
 
         # find B'
-        complement_match_elements = self.complement_match_elements()
+        complement_match_elements = self.get_complement_match_elements()
 
         # Intersect in_match_element with B' to get A-B by doing A Int B'
         diff_match_elements = []

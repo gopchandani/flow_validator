@@ -48,9 +48,9 @@ class Traffic():
                     ei.traffic = im
                     im.match_elements.append(ei)
 
-                # If e_in is completely contained in the intersection, no need to go on to other e_selfs...
-                if ei.is_subset(e_in):
-                    continue
+                    # If e_in is completely contained in the intersection, no need to go on to other e_selfs...
+                    if ei.is_subset(e_in):
+                        continue
 
         return im
 
