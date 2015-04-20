@@ -169,11 +169,20 @@ class MatchElement(DictMixin):
         for iv in tree1:
             for matched_iv in tree2.search(iv.begin, iv.end):
 
-                #Take the smaller interval of the two and put it in the matched_tree
+                # Take the smaller interval of the two and put it in the matched_tree
                 if matched_iv.contains_interval(iv):
                     matched_tree.add(iv)
+
                 elif iv.contains_interval(matched_iv):
                     matched_tree.add(matched_iv)
+
+                elif iv.overlaps(matched_iv.begin, matched_iv.end):
+                    overlapping_interval = Interval(max(matched_iv.begin, iv.begin), min(matched_iv.end, iv.end))
+                    matched_tree.append(overlapping_interval)
+                else:
+                    raise Exception("Probably should never get here")
+
+                #TODO: Take the smallest overlap between two intervals and put it in
 
         return matched_tree
 
