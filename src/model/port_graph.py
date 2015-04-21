@@ -215,7 +215,7 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
-        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
+        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
@@ -224,6 +224,8 @@ class PortGraph:
         # If you already know something about this destination, then keep accumulating
         # this is for cases when recursion comes from multiple directions and accumulates here
         else:
+            if curr.port_id == "h11:egress0":
+                pass
             curr.admitted_traffic[dst_port.port_id].union(curr_admitted_traffic)
 
         # Implicit Base case: Host Ingress Ports better not have any predecessor

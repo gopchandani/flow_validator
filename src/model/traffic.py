@@ -39,6 +39,26 @@ class Traffic():
             for me in self.match_elements:
                 me.set_fields_with_match_json(match_json)
 
+    def is_subset_me(self, in_me):
+
+        is_subset = False
+        for self_me in self.match_elements:
+            if self_me.is_subset(in_me):
+                is_subset = True
+                break
+
+        return is_subset
+
+    def is_redundant_me(self, in_me):
+
+        is_redundant = False
+        for self_me in self.match_elements:
+            if self_me.is_subset(in_me) and self_me.succ_match_element == in_me.succ_match_element:
+                is_redundant = True
+                break
+
+        return is_redundant
+
     def intersect(self, in_traffic):
         im = Traffic()
         for e_in in in_traffic.match_elements:
@@ -48,14 +68,10 @@ class Traffic():
 
                     # Check to see if this intersection can be expressed as subset of any of the previous
                     # me's that are already collected
-                    already_covered = False
-                    for already_intersected_me in im.match_elements:
-                        if already_intersected_me.is_subset(ei):
-                            already_covered = True
-                            break
+                    is_subset = im.is_subset_me(ei)
 
                     # If so, no need to add this one to the mix
-                    if already_covered:
+                    if is_subset:
                         continue
 
                     # Add this and do the necessary book-keeping...
@@ -74,13 +90,15 @@ class Traffic():
     def union(self, in_traffic):
 
         for union_me in in_traffic.match_elements:
+
+            # Check to see if this needs to be added at all
+            if self.is_redundant_me(union_me):
+                continue
+
             union_me.traffic = self
             self.match_elements.append(union_me)
 
         return self
-
-    def is_subset(self, in_traffic):
-        pass
 
     def pipe_welding(self, now_admitted_match):
 
