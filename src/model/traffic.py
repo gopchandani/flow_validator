@@ -58,9 +58,16 @@ class Traffic():
                     if already_covered:
                         continue
 
+                    # Add this and do the necessary book-keeping...
                     ei.traffic = im
                     im.match_elements.append(ei)
 
+                    ei.causing_match_element = e_in.causing_match_element
+                    ei.written_field_modifications.update(e_in.written_field_modifications)
+
+                    # Establish that the resulting ei is based on e_in
+                    ei.succ_match_element = e_in
+                    e_in.pred_match_elements.append(ei)
 
         return im
 

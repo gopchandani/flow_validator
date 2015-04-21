@@ -201,13 +201,6 @@ class MatchElement(DictMixin):
                 #    "in_match:", in_match_element.match_fields[field_name]
                 return None
 
-        intersection_element.causing_match_element = in_match_element.causing_match_element
-        intersection_element.written_field_modifications.update(in_match_element.written_field_modifications)
-
-        # Establish that the resulting intersection_element is based on in_match_element
-        intersection_element.succ_match_element = in_match_element
-        in_match_element.pred_match_elements.append(intersection_element)
-
         return intersection_element
 
     def pipe_welding(self, candidate_me):
@@ -257,14 +250,16 @@ class MatchElement(DictMixin):
         #print "remove_with_predecessors at:", self.port, "--", self.get_port_path_str()
 
         # if there are any predecessors, go take care of them first
+        print "At:", self
+        for pred in self.pred_match_elements:
+            print "-", pred
+
         while self.pred_match_elements:
             pred = self.pred_match_elements.pop()
+            print "At:", self, "Going to predecessor:", pred
             pred.remove_with_predecessors()
 
         self.succ_match_element = None
-
-        if not self.traffic:
-            return
 
         # Remove this one from its traffic's list of Match Elements
         if self in self.traffic.match_elements:

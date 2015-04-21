@@ -230,9 +230,6 @@ class PortGraph:
         # Recursively call myself at each of my predecessors in the port graph
         for pred_id in self.g.predecessors_iter(curr.port_id):
 
-            if pred_id == "openflow:1:table3" and curr.port_id == "openflow:1:table4":
-                pass
-
             pred = self.get_port(pred_id)
             pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
 
