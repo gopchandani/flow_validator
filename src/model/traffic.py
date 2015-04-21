@@ -45,12 +45,22 @@ class Traffic():
             for e_self in self.match_elements:
                 ei = e_self.intersect(e_in)
                 if ei:
+
+                    # Check to see if this intersection can be expressed as subset of any of the previous
+                    # me's that are already collected
+                    already_covered = False
+                    for already_intersected_me in im.match_elements:
+                        if already_intersected_me.is_subset(ei):
+                            already_covered = True
+                            break
+
+                    # If so, no need to add this one to the mix
+                    if already_covered:
+                        continue
+
                     ei.traffic = im
                     im.match_elements.append(ei)
 
-                    # If e_in is completely contained in the intersection, no need to go on to other e_selfs...
-                    if ei.is_subset(e_in):
-                        continue
 
         return im
 

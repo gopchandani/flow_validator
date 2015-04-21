@@ -263,6 +263,9 @@ class MatchElement(DictMixin):
 
         self.succ_match_element = None
 
+        if not self.traffic:
+            return
+
         # Remove this one from its traffic's list of Match Elements
         if self in self.traffic.match_elements:
             self.traffic.match_elements.remove(self)
