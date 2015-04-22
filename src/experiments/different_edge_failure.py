@@ -58,10 +58,8 @@ class DifferentEdgeFailure():
             for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
 
                 with Timer(verbose=True) as t:
-                    fv.port_graph.network_graph.simulate_remove_edge(node1, node2)
                     fv.port_graph.remove_node_graph_edge(node1, node2)
-                    fv.port_graph.network_graph.simulate_add_edge(node1, node2)
-                    fv.port_graph.add_node_graph_edge(node1, node2, True)
+                    fv.port_graph.add_node_graph_edge(node1, node2)
 
                 s1 = node1.split(":")[1]
                 s2 = node2.split(":")[1]

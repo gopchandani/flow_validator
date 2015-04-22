@@ -109,6 +109,9 @@ class Switch():
                          port_type="egress",
                          port_id=self.port_graph.get_outgoing_port_id(self.node_id, port))
 
+            in_p.state = "up"
+            out_p.state = "up"
+
             in_p.port_number = int(port)
             out_p.port_number = int(port)
 

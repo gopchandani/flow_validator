@@ -30,7 +30,10 @@ class Bucket():
 
         # Check if the watch port is up.
         if self.watch_port:
-             return self.sw.ports[self.watch_port].state == "up"
+
+            watch_port_obj = self.sw.port_graph.get_port(self.sw.port_graph.get_outgoing_port_id(self.sw.node_id,
+                                                                                                 str(self.watch_port)))
+            return watch_port_obj.state == "up"
 
         # If no watch_port was specified, then assume the bucket is always live
         else:

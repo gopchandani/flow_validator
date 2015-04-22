@@ -55,9 +55,7 @@ class FlowValidator:
     def remove_hosts(self):
 
         for host_id in self.network_graph.get_host_ids():
-
             host_obj = self.network_graph.get_node_object(host_id)
-            self.network_graph.simulate_remove_edge(host_id, host_obj.switch_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
     #@profile
@@ -116,12 +114,10 @@ class FlowValidator:
                     if edge[0].startswith("h") or edge[1].startswith("h"):
                         continue
 
-                    self.network_graph.simulate_remove_edge(edge[0], edge[1])
                     self.port_graph.remove_node_graph_edge(edge[0], edge[1])
                     edge_removed_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
                     # Add it back
-                    self.network_graph.simulate_add_edge(edge[0], edge[1])
                     self.port_graph.add_node_graph_edge(edge[0], edge[1])
                     edge_added_back_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
