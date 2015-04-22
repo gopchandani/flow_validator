@@ -76,64 +76,59 @@ class FlowValidator:
                                                    host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id],
                                                    host_obj.ingress_port)
 
+    def validate_host_pair_reachability(self, src_h_id, dst_h_id):
 
-    def validate_all_host_pair_basic_reachability(self):
+        src_host_obj = self.network_graph.get_node_object(src_h_id)
+        dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
-        # Test connectivity after flows have bled through the port graph
+        print "Paths from:", src_h_id, "to:", dst_h_id
+
+        if dst_host_obj.ingress_port.port_id not in src_host_obj.egress_port.admitted_traffic:
+            print "None found."
+            return
+
+        at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+
+        # Baseline
+        at.print_port_paths()
+
+        return len(at.match_elements)
+
+    def validate_all_host_pair_reachability(self):
+
         for src_h_id in self.network_graph.get_host_ids():
             for dst_h_id in self.network_graph.get_host_ids():
+                self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
-                src_host_obj = self.network_graph.get_node_object(src_h_id)
-                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
-                print "Paths from:", src_h_id, "to:", dst_h_id
+    def validate_all_host_pair_backup(self):
 
-                if dst_host_obj.ingress_port.port_id not in src_host_obj.egress_port.admitted_traffic:
-                    print "None found."
+        for src_h_id in self.network_graph.get_host_ids():
+            for dst_h_id in self.network_graph.get_host_ids():
+                baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
+
+                if src_h_id == dst_h_id:
                     continue
 
-                at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+                # Now break the edges in the primary path in this host-pair, one-by-one
+                for edge in self.network_graph.graph.edges():
 
-                # Baseline
-                at.print_port_paths()
+                    if edge[0].startswith("h") or edge[1].startswith("h"):
+                        continue
 
-    def validate_all_host_pair_backup_reachability(self, primary_path_edge_dict):
+                    self.network_graph.simulate_remove_edge(edge[0], edge[1])
+                    self.port_graph.remove_node_graph_edge(edge[0], edge[1])
+                    edge_removed_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
-        for host_pair in primary_path_edge_dict:
+                    # Add it back
+                    self.network_graph.simulate_add_edge(edge[0], edge[1])
+                    self.port_graph.add_node_graph_edge(edge[0], edge[1])
+                    edge_added_back_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
-            src_host_obj = self.network_graph.get_node_object(host_pair[0])
-            dst_host_obj = self.network_graph.get_node_object(host_pair[1])
-
-            at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
-            print "Basic."
-            at.print_port_paths()
-
-            # Baseline
-            baseline_num_elements = len(at.match_elements)
-
-            # Now break the edges in the primary path in this host-pair, one-by-one
-            for primary_edge in primary_path_edge_dict[host_pair]:
-
-                self.network_graph.simulate_remove_edge(primary_edge[0], primary_edge[1])
-                self.port_graph.remove_node_graph_edge(primary_edge[0], primary_edge[1])
-                at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
-                print "Edge Removed."
-                at.print_port_paths()
-
-                edge_removed_num_elements = len(at.match_elements)
-
-                # Add it back
-                self.network_graph.simulate_add_edge(primary_edge[0], primary_edge[1])
-                self.port_graph.add_node_graph_edge(primary_edge[0], primary_edge[1])
-                at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
-                edge_added_back_num_elements = len(at.match_elements)
-                print "Basic again."
-                at.print_port_paths()
-
-                # the number of elements should be same in three scenarios for each edge
-                if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
-                    print "Backup doesn't quite exist between pair:", host_pair, "due to edge:", primary_edge
-                    return
+                    # the number of elements should be same in three scenarios for each edge
+                    if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
+                        print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
+                        return
 
 def main():
 
@@ -156,10 +151,10 @@ def main():
     fv.initialize_admitted_traffic()
     #
     
-    fv.validate_all_host_pair_basic_reachability()
+    #fv.validate_all_host_pair_reachability()
     # fv.remove_hosts()
 
-    #fv.validate_all_host_pair_backup_reachability()
+    fv.validate_all_host_pair_backup()
 
     fv.de_init_port_graph()
 

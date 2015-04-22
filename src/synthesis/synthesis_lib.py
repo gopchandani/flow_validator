@@ -342,8 +342,6 @@ class SynthesisLib():
             self._populate_flow_action_instruction(flow, action_list, True)
             self._push_flow(sw, flow)
 
-
-
     def trigger(self, affected_switches):
 
         for sw in affected_switches:
