@@ -76,6 +76,7 @@ class FlowValidator:
                                                    host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id],
                                                    host_obj.ingress_port)
 
+
     def validate_all_host_pair_basic_reachability(self):
 
         # Test connectivity after flows have bled through the port graph
@@ -104,6 +105,8 @@ class FlowValidator:
             dst_host_obj = self.network_graph.get_node_object(host_pair[1])
 
             at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+            print "Basic."
+            at.print_port_paths()
 
             # Baseline
             baseline_num_elements = len(at.match_elements)
@@ -114,6 +117,8 @@ class FlowValidator:
                 self.network_graph.simulate_remove_edge(primary_edge[0], primary_edge[1])
                 self.port_graph.remove_node_graph_edge(primary_edge[0], primary_edge[1])
                 at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+                print "Edge Removed."
+                at.print_port_paths()
 
                 edge_removed_num_elements = len(at.match_elements)
 
@@ -122,6 +127,8 @@ class FlowValidator:
                 self.port_graph.add_node_graph_edge(primary_edge[0], primary_edge[1])
                 at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
                 edge_added_back_num_elements = len(at.match_elements)
+                print "Basic again."
+                at.print_port_paths()
 
                 # the number of elements should be same in three scenarios for each edge
                 if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
@@ -151,6 +158,8 @@ def main():
     
     fv.validate_all_host_pair_basic_reachability()
     # fv.remove_hosts()
+
+    #fv.validate_all_host_pair_backup_reachability()
 
     fv.de_init_port_graph()
 

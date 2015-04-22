@@ -224,8 +224,6 @@ class PortGraph:
         # If you already know something about this destination, then keep accumulating
         # this is for cases when recursion comes from multiple directions and accumulates here
         else:
-            if curr.port_id == "h11:egress0":
-                pass
             curr.admitted_traffic[dst_port.port_id].union(curr_admitted_traffic)
 
         # Implicit Base case: Host Ingress Ports better not have any predecessor
