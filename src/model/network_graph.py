@@ -144,8 +144,6 @@ class NetworkGraph():
 
     def _parse_mininet_man_host_nodes_edges(self):
 
-        l = self.mininet_man.net.topo.links()
-
         # From all the switches
         for sw in self.mininet_man.topo.switch_names:
 
