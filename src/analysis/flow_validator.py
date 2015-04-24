@@ -115,9 +115,9 @@ class FlowValidator:
                         continue
 
                     if (edge[0] == "openflow:1" and edge[1] == "openflow:2")\
-                            or (edge[0] == "openflow:2" and edge[1] == "openflow:1"):
-                            #or (edge[0] == "openflow:1" and edge[1] == "openflow:4")\
-                            #or (edge[0] == "openflow:4" and edge[1] == "openflow:1"):
+                            or (edge[0] == "openflow:2" and edge[1] == "openflow:1")\
+                            or (edge[0] == "openflow:1" and edge[1] == "openflow:4")\
+                            or (edge[0] == "openflow:4" and edge[1] == "openflow:1"):
 
                         print "Failing edge:", edge
 
