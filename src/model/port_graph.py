@@ -194,7 +194,7 @@ class PortGraph:
 
                 # At ingress edge compute the effect of written-actions
                 if this_edge["edge_type"] == "ingress":
-                    curr_admitted_traffic = curr_admitted_traffic.get_orig_traffic_2()
+                    curr_admitted_traffic = curr_admitted_traffic.get_orig_traffic()
 
                 i = this_edge["edge_filter_match"].intersect(curr_admitted_traffic)
                 if not i.is_empty():

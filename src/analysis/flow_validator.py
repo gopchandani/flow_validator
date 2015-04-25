@@ -154,10 +154,10 @@ def main():
     fv.initialize_admitted_traffic()
     #
     
-    #fv.validate_all_host_pair_reachability()
+    fv.validate_all_host_pair_reachability()
     # fv.remove_hosts()
 
-    fv.validate_all_host_pair_backup()
+    #fv.validate_all_host_pair_backup()
 
     fv.de_init_port_graph()
 

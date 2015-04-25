@@ -130,20 +130,11 @@ class Traffic():
                 existing_me.remove_with_predecessors()
         return new_m
 
-
-    def get_orig_traffic(self, modified_fields, matching_element):
+    def get_orig_traffic(self, modified_fields=None, matching_element=None):
 
         orig_traffic = Traffic()
         for me in self.match_elements:
             orig_me = me.get_orig_match_element(modified_fields, matching_element)
-            orig_me.traffic = orig_traffic
-            orig_traffic.match_elements.append(orig_me)
-        return orig_traffic
-
-    def get_orig_traffic_2(self):
-        orig_traffic = Traffic()
-        for me in self.match_elements:
-            orig_me = me.get_orig_match_element()
             orig_me.traffic = orig_traffic
             orig_traffic.match_elements.append(orig_me)
         return orig_traffic
