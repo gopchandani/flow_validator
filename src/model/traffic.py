@@ -148,10 +148,6 @@ class Traffic():
             me.succ_match_element = succ_match_element
             succ_match_element.pred_match_elements.append(me)
 
-    def set_edge_data_key(self, edge_data_key):
-        for me in self.match_elements:
-            me.edge_data_key = edge_data_key
-
     def accumulate_written_field_modifications(self, in_written_field_modifications, in_match_element):
         for me in self.match_elements:
             me.written_field_modifications.update(in_written_field_modifications)

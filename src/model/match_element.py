@@ -118,7 +118,6 @@ class MatchElement(DictMixin):
 
         self.traffic = traffic
         self.port = None
-        self.edge_data_key = None
         self.succ_match_element = None
         self.pred_match_elements = []
         self.written_field_modifications = {}

@@ -203,7 +203,6 @@ class PortGraph:
                     if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
                         i.accumulate_written_field_modifications(flow.written_field_modifications, flow.match_element)
 
-                    i.set_edge_data_key((flow, edge_action))
                     i.set_port(pred)
                     pred_admitted_traffic.union(i)
 
