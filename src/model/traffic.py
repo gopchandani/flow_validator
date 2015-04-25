@@ -148,11 +148,6 @@ class Traffic():
             me.succ_match_element = succ_match_element
             succ_match_element.pred_match_elements.append(me)
 
-    def accumulate_written_field_modifications(self, in_written_field_modifications, in_match_element):
-        for me in self.match_elements:
-            me.written_field_modifications.update(in_written_field_modifications)
-            me.causing_match_element = in_match_element
-
     def is_field_wildcard(self, field_name):
         retval = True
 

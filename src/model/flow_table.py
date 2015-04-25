@@ -70,10 +70,12 @@ class Flow():
         else:
             self.instructions = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
-            self.applied_field_modifications = self.instructions.applied_action_set.get_modified_fields_list()
+            applied_modified_fields_list = self.instructions.applied_action_set.get_modified_fields_list()
+            self.applied_field_modifications = applied_modified_fields_list
             port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
 
-            self.written_field_modifications = self.instructions.written_action_set.get_modified_fields_list()
+            written_modified_fields_list = self.instructions.written_action_set.get_modified_fields_list()
+            self.written_field_modifications = written_modified_fields_list
             port_graph_edge_status_2 = self.instructions.written_action_set.get_port_graph_edge_status()
 
             for out_port, output_action in port_graph_edge_status:
