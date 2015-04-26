@@ -63,27 +63,16 @@ class Flow():
             # Interpreting Lack of instructions as Drop
             self.drop = True
 
-    # Prepares a dictionary keyed by field_name with the value from the match element of flow to indicate
-    # what it is supposed to have been before it got modified (not what it is set to)
-
-    def prepare_field_modifications(self, modified_fields_list):
-        field_modifications = {}
-
-        for field in modified_fields_list:
-            field_modifications[field] = self.match_element.match_fields[field]
-
-        return field_modifications
-
     def add_port_graph_edges(self):
 
         if not "instructions" in self.flow_json:
             print "Assuming this means to drop."
         else:
-            self.instructions = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
+            self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
-            applied_modified_fields_list = self.instructions.applied_action_set.get_modified_fields_list()
-            self.applied_field_modifications = self.prepare_field_modifications(applied_modified_fields_list)
-            port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
+            self.applied_field_modifications = \
+                self.instruction_set.applied_action_set.get_modified_fields_dict(self.match_element)
+            port_graph_edge_status = self.instruction_set.applied_action_set.get_port_graph_edge_status()
 
             for out_port, output_action in port_graph_edge_status:
 
@@ -97,10 +86,9 @@ class Flow():
 
                 self.port_graph_edges.append(e)
 
-
-            written_modified_fields_list = self.instructions.written_action_set.get_modified_fields_list()
-            self.written_field_modifications = self.prepare_field_modifications(written_modified_fields_list)
-            port_graph_edge_status = self.instructions.written_action_set.get_port_graph_edge_status()
+            self.written_field_modifications = \
+                self.instruction_set.written_action_set.get_modified_fields_dict(self.match_element)
+            port_graph_edge_status = self.instruction_set.written_action_set.get_port_graph_edge_status()
 
             for out_port, output_action in port_graph_edge_status:
 
@@ -118,10 +106,10 @@ class Flow():
 
 
             # See the edge impact of any go-to-table instruction
-            if self.instructions.goto_table:
+            if self.instruction_set.goto_table:
 
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
-                                               self.sw.flow_tables[self.instructions.goto_table].port,
+                                               self.sw.flow_tables[self.instruction_set.goto_table].port,
                                                (self, None),
                                                self.applied_match)
 

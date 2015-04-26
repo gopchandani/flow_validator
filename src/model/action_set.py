@@ -179,17 +179,17 @@ class ActionSet():
 
         return output_match_element
 
-    def get_modified_fields_list(self):
-        modified_fields_list = []
+    def get_modified_fields_dict(self, flow_match_element):
+        modified_fields_dict = {}
 
         for set_action in self.action_dict["set_field"]:
-            modified_fields_list.append(set_action.modified_field)
+            modified_fields_dict[set_action.modified_field] = flow_match_element.match_fields[set_action.modified_field]
 
         # The impact of push/pop vlan actions appears on vlan_id field
         if "push_vlan" in self.action_dict or "pop_vlan" in self.action_dict:
-            modified_fields_list.append("vlan_id")
+            modified_fields_dict["vlan_id"] = flow_match_element.match_fields["vlan_id"]
 
-        return modified_fields_list
+        return modified_fields_dict
 
     def get_out_port_matches(self, in_port_match, in_port):
 

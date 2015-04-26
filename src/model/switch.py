@@ -121,7 +121,6 @@ class Switch():
             incoming_port_match = Traffic(init_wildcard=True)
             incoming_port_match.set_field("in_port", int(port))
 
-
             self.port_graph.add_edge(in_p,
                                      self.flow_tables[0].port,
                                      (None, None),
