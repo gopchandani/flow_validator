@@ -63,6 +63,17 @@ class Flow():
             # Interpreting Lack of instructions as Drop
             self.drop = True
 
+    # Prepares a dictionary keyed by field_name with the value from the match element of flow to indicate
+    # what it is supposed to have been before it got modified (not what it is set to)
+
+    def prepare_field_modifications(self, modified_fields_list):
+        field_modifications = {}
+
+        for field in modified_fields_list:
+            field_modifications[field] = self.match_element.match_fields[field]
+
+        return field_modifications
+
     def add_port_graph_edges(self):
 
         if not "instructions" in self.flow_json:
@@ -71,12 +82,8 @@ class Flow():
             self.instructions = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
             applied_modified_fields_list = self.instructions.applied_action_set.get_modified_fields_list()
-            self.applied_field_modifications = applied_modified_fields_list
+            self.applied_field_modifications = self.prepare_field_modifications(applied_modified_fields_list)
             port_graph_edge_status = self.instructions.applied_action_set.get_port_graph_edge_status()
-
-            written_modified_fields_list = self.instructions.written_action_set.get_modified_fields_list()
-            self.written_field_modifications = written_modified_fields_list
-            port_graph_edge_status_2 = self.instructions.written_action_set.get_port_graph_edge_status()
 
             for out_port, output_action in port_graph_edge_status:
 
@@ -90,7 +97,12 @@ class Flow():
 
                 self.port_graph_edges.append(e)
 
-            for out_port, output_action in port_graph_edge_status_2:
+
+            written_modified_fields_list = self.instructions.written_action_set.get_modified_fields_list()
+            self.written_field_modifications = self.prepare_field_modifications(written_modified_fields_list)
+            port_graph_edge_status = self.instructions.written_action_set.get_port_graph_edge_status()
+
+            for out_port, output_action in port_graph_edge_status:
 
                 outgoing_port = self.port_graph.get_port(
                     self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
@@ -101,6 +113,8 @@ class Flow():
                                                self.applied_match)
 
                 self.port_graph_edges.append(e)
+
+
 
 
             # See the edge impact of any go-to-table instruction

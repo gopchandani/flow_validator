@@ -78,7 +78,6 @@ class Traffic():
                     ei.traffic = im
                     im.match_elements.append(ei)
 
-                    ei.causing_match_element = e_in.causing_match_element
                     ei.written_field_modifications.update(e_in.written_field_modifications)
 
                     # Establish that the resulting ei is based on e_in
@@ -130,11 +129,11 @@ class Traffic():
                 existing_me.remove_with_predecessors()
         return new_m
 
-    def get_orig_traffic(self, modified_fields=None, matching_element=None):
+    def get_orig_traffic(self, modified_fields=None):
 
         orig_traffic = Traffic()
         for me in self.match_elements:
-            orig_me = me.get_orig_match_element(modified_fields, matching_element)
+            orig_me = me.get_orig_match_element(modified_fields)
             orig_me.traffic = orig_traffic
             orig_traffic.match_elements.append(orig_me)
         return orig_traffic

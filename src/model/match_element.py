@@ -121,7 +121,6 @@ class MatchElement(DictMixin):
         self.succ_match_element = None
         self.pred_match_elements = []
         self.written_field_modifications = {}
-        self.causing_match_element = None
 
         self.value_cache = {}
         self.match_fields = {}
@@ -218,7 +217,6 @@ class MatchElement(DictMixin):
                 return None
 
         new_me.port = self.port
-        new_me.causing_match_element = self.causing_match_element
         new_me.written_field_modifications.update(candidate_me.written_field_modifications)
 
         # -- Set up what self depended on, in new_me
@@ -355,24 +353,19 @@ class MatchElement(DictMixin):
                 self.set_match_field_element(field_name, is_wildcard=True)
                 continue
 
-    def get_orig_match_element(self, modified_fields=None, matching_element=None):
+    def get_orig_match_element(self, field_modifications=None):
 
-        if modified_fields:
-            mf = modified_fields
+        if field_modifications:
+            mf = field_modifications
         else:
             mf = self.written_field_modifications
-
-        if matching_element:
-            me = matching_element
-        else:
-            me = self.causing_match_element
 
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
 
         for field_name in field_names:
             if field_name in mf:
                 # If the field was modified, make it what it was (in abstract) before being modified
-                orig_match_element.match_fields[field_name] = me.match_fields[field_name]
+                orig_match_element.match_fields[field_name] = mf[field_name]
             else:
                 # Otherwise, just keep the field same as it was
                 orig_match_element.match_fields[field_name] = self.match_fields[field_name]
@@ -389,7 +382,6 @@ class MatchElement(DictMixin):
 
         # Copy these from self
         orig_match_element.port = self.port
-        orig_match_element.causing_match_element = self.causing_match_element
         orig_match_element.pred_match_elements = self.pred_match_elements
 
         return orig_match_element

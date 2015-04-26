@@ -187,8 +187,7 @@ class PortGraph:
                 # This check takes care of any applied actions
                 if flow and flow.applied_field_modifications:
                     curr_admitted_traffic = \
-                        curr.admitted_traffic[dst_port_id].get_orig_traffic(flow.applied_field_modifications,
-                                                                            flow.match_element)
+                        curr.admitted_traffic[dst_port_id].get_orig_traffic(flow.applied_field_modifications)
                 else:
                     curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
 
@@ -205,7 +204,6 @@ class PortGraph:
                         # Accumulate modifications
                         for me in i.match_elements:
                             me.written_field_modifications.update(flow.written_field_modifications)
-                            me.causing_match_element = flow.match_element
 
                     i.set_port(pred)
                     pred_admitted_traffic.union(i)
