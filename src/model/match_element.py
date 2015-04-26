@@ -307,7 +307,6 @@ class MatchElement(DictMixin):
         else:
             return True
 
-
     def add_element_from_match_json(self, match_json, flow):
 
         for field_name in field_names:

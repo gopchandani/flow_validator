@@ -127,17 +127,6 @@ class Flow():
 
                 self.port_graph_edges.append(e)
 
-
-    def remove_port_graph_edges(self):
-        pass
-
-        # # First remove all the port_graph_edges
-        # for e in self.port_graph_edges:
-        #     self.port_graph.g.remove_edge(e[0], e[1], e[2])
-        #
-        # del self.port_graph_edges[:]
-
-
     def update_port_graph_edges(self):
 
         for src_port_id, dst_port_id, key in self.port_graph_edges:

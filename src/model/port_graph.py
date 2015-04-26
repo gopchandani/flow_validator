@@ -14,7 +14,6 @@ class PortGraph:
         self.network_graph = network_graph
         self.g = nx.MultiDiGraph()
 
-
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
