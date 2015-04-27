@@ -111,7 +111,7 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(60 * self.topo.num_hosts_per_switch * self.topo.total_switches)
+        time.sleep(30 * self.topo.num_hosts_per_switch * self.topo.total_switches)
 
     def cleanup_mininet(self):
         print "Mininet cleanup..."

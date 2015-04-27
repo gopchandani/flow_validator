@@ -44,11 +44,32 @@ class NetworkGraph():
         resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
         switches = json.loads(content)
 
+        group_tables = {}
+
+        #  Go through each node and grab the switches and the corresponding hosts associated with the switch
+        for node in switches["nodes"]["node"]:
+
+            #  Add an instance for Switch in the graph
+            switch_id = node["id"]
+            remaining_url = "config/opendaylight-inventory:nodes/node/" + str(switch_id)
+            resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
+
+            if resp["status"] == "200":
+                switch_node = json.loads(content)
+
+                if "flow-node-inventory:group" in switch_node['node'][0]:
+                    group_tables[node["id"]] = switch_node['node'][0]["flow-node-inventory:group"]
+
+
+
         if self.save_config:
             with open("experiments/configurations/switches.json", "w") as outfile:
                 json.dump(switches, outfile)
 
-        return switches
+            with open("experiments/configurations/group_tables.json", "w") as outfile:
+                json.dump(group_tables, outfile)
+
+        return switches, group_tables
 
     def _get_odl_topology(self):
 
@@ -86,7 +107,7 @@ class NetworkGraph():
 
         return mininet_switch_hosts_dict, mininet_topo_ports
 
-    def _parse_odl_switch_nodes_and_groups(self, switches):
+    def parse_odl_switches(self, switches, group_tables):
 
         #  Go through each node and grab the switches and the corresponding hosts associated with the switch
         for node in switches["nodes"]["node"]:
@@ -107,9 +128,8 @@ class NetworkGraph():
             sw.ports = switch_ports
 
             #  Get the group table
-            if "flow-node-inventory:group" in node:
-                group_table = node["flow-node-inventory:group"]
-                sw.group_table = GroupTable(sw, group_table)
+            if switch_id in group_tables:
+                sw.group_table = GroupTable(sw, group_tables[switch_id])
 
             #  Get all the flow tables
             switch_flow_tables = []
@@ -233,8 +253,8 @@ class NetworkGraph():
 
     def _parse_network_graph(self):
 
-        switches = self._get_odl_switches()
-        self._parse_odl_switch_nodes_and_groups(switches)
+        switches, group_tables = self._get_odl_switches()
+        self.parse_odl_switches(switches, group_tables)
 
         topology = self._get_odl_topology()
 
