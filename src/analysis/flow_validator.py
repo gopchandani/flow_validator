@@ -145,7 +145,7 @@ def main():
     mm.net.pingAll(timeout=mm.ping_timeout)
 
     # Get a flow validator instance
-    ng = NetworkGraph(mininet_man=mm)
+    ng = NetworkGraph(mininet_man=mm, save_config=False)
     fv = FlowValidator(ng)
 
     # Three steps to happy living:

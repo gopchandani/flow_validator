@@ -21,7 +21,8 @@ class Bucket():
         self.bucket_id = bucket_json["bucket-id"]
 
         if "watch_port" in bucket_json:
-            self.watch_port = str(bucket_json["watch_port"])
+            if bucket_json["watch_port"] != 4294967295:
+                self.watch_port = str(bucket_json["watch_port"])
 
         if "weight" in bucket_json:
             self.weight = str(bucket_json["weight"])
@@ -31,8 +32,9 @@ class Bucket():
         # Check if the watch port is up.
         if self.watch_port:
 
-            watch_port_obj = self.sw.port_graph.get_port(self.sw.port_graph.get_outgoing_port_id(self.sw.node_id,
-                                                                                                 str(self.watch_port)))
+            watch_port_obj = self.sw.port_graph.get_port(\
+                self.sw.port_graph.get_outgoing_port_id(self.sw.node_id, str(self.watch_port)))
+
             return watch_port_obj.state == "up"
 
         # If no watch_port was specified, then assume the bucket is always live
@@ -74,7 +76,6 @@ class Group():
     def __init__(self, sw, group_json):
 
         self.sw = sw
-        self.barrier = group_json["barrier"]
         self.group_id = group_json["group-id"]
         self.group_type = group_json["group-type"]
         self.bucket_list = []
