@@ -28,6 +28,7 @@ class MininetMan():
                  num_hosts_per_switch,
                  experiment_switches):
 
+        self.net = None
         self.ping_timeout = 5
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
@@ -111,14 +112,14 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(20 * self.topo.num_hosts_per_switch * self.topo.total_switches)
-
-        #self.net.pingAll(timeout=self.ping_timeout)
+        time.sleep(30 * self.topo.num_hosts_per_switch * self.topo.total_switches)
 
     def cleanup_mininet(self):
-        print "Mininet cleanup..."
-        self.net.stop()
-        os.system("sudo mn -c")
+
+        if self.net:
+            print "Mininet cleanup..."
+            self.net.stop()
+            os.system("sudo mn -c")
 
     def __del__(self):
         self.cleanup_mininet()

@@ -45,8 +45,10 @@ class Action():
         if "output-action" in action_json:
             self.action_type = "output"
 
-            if action_json["output-action"]["output-node-connector"] == "CONTROLLER":
+            if action_json["output-action"]["output-node-connector"] == u"CONTROLLER":
                 self.out_port = self.sw.network_graph.OFPP_CONTROLLER
+            elif action_json["output-action"]["output-node-connector"] == u"INPORT":
+                self.out_port = self.sw.network_graph.OFPP_IN
             else:
                 self.out_port = action_json["output-action"]["output-node-connector"]
 
