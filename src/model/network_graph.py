@@ -12,7 +12,7 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self, mininet_man=None, save_config=False):
+    def __init__(self, mininet_man=None, load_config=False, save_config=False):
 
         self.mininet_man = mininet_man
 
@@ -32,54 +32,70 @@ class NetworkGraph():
         self.host_ids = []
         self.switch_ids = []
 
+        self.load_config = load_config
         self.save_config = save_config
 
         #  Load up everything
         self._parse_network_graph()
 
     def _get_odl_switches(self):
-        
-        # Get all the switches from the inventory API
-        remaining_url = 'operational/opendaylight-inventory:nodes'
-        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
-        switches = json.loads(content)
 
+        switches = {}
         group_tables = {}
 
-        #  Go through each node and grab the switches and the corresponding hosts associated with the switch
-        for node in switches["nodes"]["node"]:
+        if self.load_config:
 
-            #  Add an instance for Switch in the graph
-            switch_id = node["id"]
-            remaining_url = "config/opendaylight-inventory:nodes/node/" + str(switch_id)
+            with open("../experiments/configurations/switches.json", "r") as in_file:
+                switches = json.loads(in_file.read())
+
+            with open("../experiments/configurations/group_tables.json", "r") as in_file:
+                group_tables = json.loads(in_file.read())
+
+        else:
+            # Get all the switches from the inventory API
+            remaining_url = 'operational/opendaylight-inventory:nodes'
             resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
+            switches = json.loads(content)
 
-            if resp["status"] == "200":
-                switch_node = json.loads(content)
+            #  Go through each node and grab the switches and the corresponding hosts associated with the switch
+            for node in switches["nodes"]["node"]:
 
-                if "flow-node-inventory:group" in switch_node['node'][0]:
-                    group_tables[node["id"]] = switch_node['node'][0]["flow-node-inventory:group"]
+                #  Add an instance for Switch in the graph
+                switch_id = node["id"]
+                remaining_url = "config/opendaylight-inventory:nodes/node/" + str(switch_id)
+                resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
 
+                if resp["status"] == "200":
+                    switch_node = json.loads(content)
+
+                    if "flow-node-inventory:group" in switch_node['node'][0]:
+                        group_tables[node["id"]] = switch_node['node'][0]["flow-node-inventory:group"]
 
 
         if self.save_config:
-            with open("experiments/configurations/switches.json", "w") as outfile:
+            with open("../experiments/configurations/switches.json", "w") as outfile:
                 json.dump(switches, outfile)
 
-            with open("experiments/configurations/group_tables.json", "w") as outfile:
+            with open("../experiments/configurations/group_tables.json", "w") as outfile:
                 json.dump(group_tables, outfile)
 
         return switches, group_tables
 
     def _get_odl_topology(self):
 
-        # Get all the hosts and edges from the topology API
-        remaining_url = 'operational/network-topology:network-topology'
-        resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
-        topology = json.loads(content)
+        topology = {}
+
+        if self.load_config:
+            with open("../experiments/configurations/topology.json", "r") as in_file:
+                topology = json.loads(in_file.read())
+        else:
+            # Get all the hosts and edges from the topology API
+            remaining_url = 'operational/network-topology:network-topology'
+            resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
+            topology = json.loads(content)
 
         if self.save_config:
-            with open("experiments/configurations/topology.json", "w") as outfile:
+            with open("../experiments/configurations/topology.json", "w") as outfile:
                 json.dump(topology, outfile)
 
         return topology
@@ -87,22 +103,30 @@ class NetworkGraph():
     def _get_mininet_host_nodes_edges(self):
 
         mininet_switch_hosts_dict = {}
-        for sw in self.mininet_man.topo.switch_names:
-            mininet_switch_hosts_dict[sw] = []
-            for h in self.mininet_man.get_switch_hosts(sw):
-                mininet_host_dict = {"host_switch_id": "openflow:" + sw[1:],
-                                     "host_name": h.name,
-                                     "host_IP": h.IP(),
-                                     "host_MAC": h.MAC()}
+        mininet_topo_ports = {}
 
-                mininet_switch_hosts_dict[sw].append(mininet_host_dict)
+        if self.load_config:
+            with open("../experiments/configurations/mininet_switch_hosts_dict.json", "r") as in_file:
+                mininet_switch_hosts_dict = json.loads(in_file.read())
+            with open("../experiments/configurations/mininet_topo_ports.json", "r") as in_file:
+                mininet_topo_ports = json.loads(in_file.read())
+        else:
+            for sw in self.mininet_man.topo.switch_names:
+                mininet_switch_hosts_dict[sw] = []
+                for h in self.mininet_man.get_switch_hosts(sw):
+                    mininet_host_dict = {"host_switch_id": "openflow:" + sw[1:],
+                                         "host_name": h.name,
+                                         "host_IP": h.IP(),
+                                         "host_MAC": h.MAC()}
 
-        mininet_topo_ports = self.mininet_man.topo.ports
+                    mininet_switch_hosts_dict[sw].append(mininet_host_dict)
+
+            mininet_topo_ports = self.mininet_man.topo.ports
 
         if self.save_config:
-            with open("experiments/configurations/mininet_switch_hosts_dict.json", "w") as outfile:
+            with open("../experiments/configurations/mininet_switch_hosts_dict.json", "w") as outfile:
                 json.dump(mininet_switch_hosts_dict, outfile)
-            with open("experiments/configurations/mininet_topo_ports.json", "w") as outfile:
+            with open("../experiments/configurations/mininet_topo_ports.json", "w") as outfile:
                 json.dump(mininet_topo_ports, outfile)
 
         return mininet_switch_hosts_dict, mininet_topo_ports
@@ -177,7 +201,7 @@ class NetworkGraph():
                              mininet_host_dict["host_MAC"],
                              mininet_host_dict["host_switch_id"],
                              host_switch_obj,
-                             str(mininet_topo_ports[mininet_host_dict["host_name"]][0][1]))
+                             str(mininet_topo_ports[mininet_host_dict["host_name"]]['0'][1]))
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
@@ -185,7 +209,7 @@ class NetworkGraph():
                 self.add_edge(mininet_host_dict["host_name"],
                               str(0),
                               mininet_host_dict["host_switch_id"],
-                              str(mininet_topo_ports[mininet_host_dict["host_name"]][0][1]))
+                              str(mininet_topo_ports[mininet_host_dict["host_name"]]['0'][1]))
 
     def _parse_odl_node_edges(self, topology):
 
