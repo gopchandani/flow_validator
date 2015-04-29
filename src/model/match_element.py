@@ -242,30 +242,6 @@ class MatchElement(DictMixin):
 
         return new_me
 
-    def remove_with_predecessors(self):
-
-        # print "remove_with_predecessors at:", self.port, "--", self.get_port_path_str()
-        #
-        # #If there are any predecessors, go take care of them first
-        # print "At:", self
-        # for pred in self.pred_match_elements:
-        #   print "-", pred
-
-        while self.pred_match_elements:
-            pred = self.pred_match_elements.pop()
-            #print "At:", self, "Going to predecessor:", pred
-            pred.remove_with_predecessors()
-
-        self.succ_match_element = None
-
-        # Remove this one from its traffic's list of Match Elements
-        if self in self.traffic.match_elements:
-            self.traffic.match_elements.remove(self)
-        else:
-            pass
-            #print "Removing something that is already removed."
-            #raise Exception("Removing something that is already removed.")
-
     def get_complement_match_elements(self):
 
         complement_match_elements = []

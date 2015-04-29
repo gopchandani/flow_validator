@@ -124,7 +124,7 @@ class Traffic():
             # If none of the candidate_me took existing_me:
             #Delete everybody who dependent on existing_me, the whole chain...
             if not existing_me_welded:
-                existing_me.remove_with_predecessors()
+                existing_me.succ_match_element = None
 
         return new_m
 
