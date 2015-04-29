@@ -244,11 +244,11 @@ class MatchElement(DictMixin):
 
     def remove_with_predecessors(self):
 
-        #print "remove_with_predecessors at:", self.port, "--", self.get_port_path_str()
-
-        #If there are any predecessors, go take care of them first
-        #print "At:", self
-        #for pred in self.pred_match_elements:
+        # print "remove_with_predecessors at:", self.port, "--", self.get_port_path_str()
+        #
+        # #If there are any predecessors, go take care of them first
+        # print "At:", self
+        # for pred in self.pred_match_elements:
         #   print "-", pred
 
         while self.pred_match_elements:

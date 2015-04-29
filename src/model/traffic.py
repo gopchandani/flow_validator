@@ -127,6 +127,7 @@ class Traffic():
             #Delete everybody who dependent on existing_me, the whole chain...
             if not existing_me_welded:
                 existing_me.remove_with_predecessors()
+
         return new_m
 
     def get_orig_traffic(self, modified_fields=None):

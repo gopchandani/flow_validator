@@ -103,10 +103,15 @@ class FlowValidator:
 
         for src_h_id in self.network_graph.get_host_ids():
             for dst_h_id in self.network_graph.get_host_ids():
-                baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
                 if src_h_id == dst_h_id:
                     continue
+
+                if src_h_id == "h31":
+                    continue
+
+                baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
+
 
                 # Now break the edges in the primary path in this host-pair, one-by-one
                 for edge in self.network_graph.graph.edges():
@@ -115,9 +120,9 @@ class FlowValidator:
                         continue
 
                     if (edge[0] == "openflow:1" and edge[1] == "openflow:2")\
-                            or (edge[0] == "openflow:2" and edge[1] == "openflow:1")\
-                            or (edge[0] == "openflow:1" and edge[1] == "openflow:4")\
-                            or (edge[0] == "openflow:4" and edge[1] == "openflow:1"):
+                            or (edge[0] == "openflow:2" and edge[1] == "openflow:1"):
+                            #or (edge[0] == "openflow:1" and edge[1] == "openflow:4")\
+                            #or (edge[0] == "openflow:4" and edge[1] == "openflow:1"):
 
                         print "Failing edge:", edge
 
@@ -154,10 +159,10 @@ def main():
     fv.initialize_admitted_traffic()
     #
     
-    fv.validate_all_host_pair_reachability()
+    #fv.validate_all_host_pair_reachability()
     # fv.remove_hosts()
 
-    #fv.validate_all_host_pair_backup()
+    fv.validate_all_host_pair_backup()
 
     fv.de_init_port_graph()
 
