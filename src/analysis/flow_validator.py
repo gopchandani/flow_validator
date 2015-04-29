@@ -138,9 +138,9 @@ def main():
     # # Get a controller
     # cm = ControllerMan(1)
     # controller_port = cm.get_next()
-    # # #
-    # # # Get a mininet instance
-    mm = MininetMan(6633, "ring", 4, 1, experiment_switches=["s1", "s3"])
+    # # # #
+    # # # # Get a mininet instance
+    mm = MininetMan(6633, "line", 2, 1, experiment_switches=["s1", "s2"])
     # mm.setup_mininet()
     # mm.net.pingAll(timeout=mm.ping_timeout)
 

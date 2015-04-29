@@ -1,0 +1,1 @@
+{"s3": [{"host_switch_id": "openflow:3", "host_name": "h31", "host_MAC": "8a:37:d8:49:39:c5", "host_IP": "10.0.0.3"}], "s2": [], "s1": [{"host_switch_id": "openflow:1", "host_name": "h11", "host_MAC": "7a:fe:89:50:cd:c7", "host_IP": "10.0.0.1"}], "s4": []}
