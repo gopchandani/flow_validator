@@ -111,9 +111,7 @@ class Traffic():
 
         #print "pipe_welding has:", len(self.match_elements), "existing match elements to take care of..."
 
-        copy_match_elements = copy(self.match_elements)
-
-        for existing_me in copy_match_elements:
+        for existing_me in self.match_elements:
             existing_me_welded = False
             for candidate_me in now_admitted_match.match_elements:
                 new_me = existing_me.pipe_welding(candidate_me)
