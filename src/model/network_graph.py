@@ -32,6 +32,7 @@ class NetworkGraph():
         self.host_ids = []
         self.switch_ids = []
 
+        self.config_path_prefix = "../experiments/configurations/"
         self.load_config = load_config
         self.save_config = save_config
 
@@ -45,10 +46,10 @@ class NetworkGraph():
 
         if self.load_config:
 
-            with open("../experiments/configurations/switches.json", "r") as in_file:
+            with open(self.config_path_prefix + "switches.json", "r") as in_file:
                 switches = json.loads(in_file.read())
 
-            with open("../experiments/configurations/group_tables.json", "r") as in_file:
+            with open(self.config_path_prefix + "group_tables.json", "r") as in_file:
                 group_tables = json.loads(in_file.read())
 
         else:
@@ -73,10 +74,10 @@ class NetworkGraph():
 
 
         if self.save_config:
-            with open("../experiments/configurations/switches.json", "w") as outfile:
+            with open(self.config_path_prefix + "switches.json", "w") as outfile:
                 json.dump(switches, outfile)
 
-            with open("../experiments/configurations/group_tables.json", "w") as outfile:
+            with open(self.config_path_prefix + "group_tables.json", "w") as outfile:
                 json.dump(group_tables, outfile)
 
         return switches, group_tables
@@ -86,7 +87,7 @@ class NetworkGraph():
         topology = {}
 
         if self.load_config:
-            with open("../experiments/configurations/topology.json", "r") as in_file:
+            with open(self.config_path_prefix + "topology.json", "r") as in_file:
                 topology = json.loads(in_file.read())
         else:
             # Get all the hosts and edges from the topology API
@@ -95,7 +96,7 @@ class NetworkGraph():
             topology = json.loads(content)
 
         if self.save_config:
-            with open("../experiments/configurations/topology.json", "w") as outfile:
+            with open(self.config_path_prefix + "topology.json", "w") as outfile:
                 json.dump(topology, outfile)
 
         return topology
@@ -106,9 +107,9 @@ class NetworkGraph():
         mininet_topo_ports = {}
 
         if self.load_config:
-            with open("../experiments/configurations/mininet_switch_hosts_dict.json", "r") as in_file:
+            with open(self.config_path_prefix + "mininet_switch_hosts_dict.json", "r") as in_file:
                 mininet_switch_hosts_dict = json.loads(in_file.read())
-            with open("../experiments/configurations/mininet_topo_ports.json", "r") as in_file:
+            with open(self.config_path_prefix + "mininet_topo_ports.json", "r") as in_file:
                 mininet_topo_ports = json.loads(in_file.read())
         else:
             for sw in self.mininet_man.topo.switch_names:
@@ -124,9 +125,9 @@ class NetworkGraph():
             mininet_topo_ports = self.mininet_man.topo.ports
 
         if self.save_config:
-            with open("../experiments/configurations/mininet_switch_hosts_dict.json", "w") as outfile:
+            with open(self.config_path_prefix + "mininet_switch_hosts_dict.json", "w") as outfile:
                 json.dump(mininet_switch_hosts_dict, outfile)
-            with open("../experiments/configurations/mininet_topo_ports.json", "w") as outfile:
+            with open(self.config_path_prefix + "mininet_topo_ports.json", "w") as outfile:
                 json.dump(mininet_topo_ports, outfile)
 
         return mininet_switch_hosts_dict, mininet_topo_ports
