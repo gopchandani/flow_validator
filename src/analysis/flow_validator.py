@@ -119,25 +119,19 @@ class FlowValidator:
                     if edge[0].startswith("h") or edge[1].startswith("h"):
                         continue
 
-                    # if (edge[0] == "openflow:4" and edge[1] == "openflow:3")\
-                    #         or (edge[0] == "openflow:3" and edge[1] == "openflow:4")\
-                    #         or (edge[0] == "openflow:1" and edge[1] == "openflow:4")\
-                    #         or (edge[0] == "openflow:4" and edge[1] == "openflow:1"):
+                    print "Failing edge:", edge
 
-                    if True:
-                        print "Failing edge:", edge
+                    self.port_graph.remove_node_graph_edge(edge[0], edge[1])
+                    edge_removed_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
-                        self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-                        edge_removed_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
+                    # Add it back
+                    self.port_graph.add_node_graph_edge(edge[0], edge[1])
+                    edge_added_back_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
-                        # Add it back
-                        self.port_graph.add_node_graph_edge(edge[0], edge[1])
-                        edge_added_back_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
-
-                        # the number of elements should be same in three scenarios for each edge
-                        if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
-                            print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
-                            return
+                    # the number of elements should be same in three scenarios for each edge
+                    if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
+                        print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
+                        return
 
 def main():
 
