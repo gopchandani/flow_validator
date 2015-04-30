@@ -1,8 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
 from collections import defaultdict
-
-from action_set import ActionSet
 from traffic import Traffic
 from port import Port
 
@@ -19,7 +17,7 @@ class Switch():
 
         #Synthesis stuff
         self.intents = defaultdict(dict)
-        self.synthesis_tag = int(self.node_id.split(":")[1])
+        self.synthesis_tag = int(self.node_id[1:])
 
         #Analysis stuff
         self.in_port_match = None

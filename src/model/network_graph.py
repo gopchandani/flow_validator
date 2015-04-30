@@ -140,7 +140,7 @@ class NetworkGraph():
         for node in switches["nodes"]["node"]:
 
             #  Add an instance for Switch in the graph
-            switch_id = node["id"]
+            switch_id = "s" + node["id"].split(":")[1]
             sw = Switch(switch_id, self)
             self.graph.add_node(switch_id, node_type="switch", sw=sw)
             self.switch_ids.append(switch_id)
@@ -208,11 +208,26 @@ class NetworkGraph():
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
-                # Add the edge from host to switch
-                self.add_edge(mininet_host_dict["host_name"],
-                              str(0),
-                              mininet_host_dict["host_switch_id"],
-                              str(mininet_topo_ports[mininet_host_dict["host_name"]]['0'][1]))
+                # # Add the edge from host to switch
+                # self.add_edge(mininet_host_dict["host_name"],
+                #               str(0),
+                #               mininet_host_dict["host_switch_id"],
+                #               str(mininet_topo_ports[mininet_host_dict["host_name"]]['0'][1]))
+
+    def _parse_mininet_port_edges(self, mininet_topo_ports):
+        for src_node in mininet_topo_ports:
+            for src_node_port in mininet_topo_ports[src_node]:
+                dst_list = mininet_topo_ports[src_node][src_node_port]
+                dst_node = dst_list[0]
+                dst_node_port = dst_list[1]
+
+                print src_node, src_node_port, dst_node, dst_node_port
+
+                self.add_edge(src_node,
+                              src_node_port,
+                              dst_node,
+                              dst_node_port)
+
 
     def _parse_odl_node_edges(self, topology):
 
@@ -239,13 +254,14 @@ class NetworkGraph():
 
     def add_edge(self, node1_id, node1_port, node2_id, node2_port):
 
-        edge_port_dict = {node1_id: node1_port, node2_id: node2_port}
-        #print "Adding edge:", edge_port_dict
+        self.graph.add_edge(node1_id,
+                            node2_id,
+                            edge_ports_dict={node1_id: node1_port,
+                                             node2_id: node2_port})
 
-        e = (node1_id, node2_id)
-        self.graph.add_edge(*e, edge_ports_dict=edge_port_dict)
+        a = self.graph.node[node1_id]
+
         # Ensure that the ports are set up
-
         if self.graph.node[node1_id]["node_type"] == "switch":
             self.graph.node[node1_id]["sw"].ports[node1_port].state = "up"
 
@@ -283,15 +299,17 @@ class NetworkGraph():
         switches, group_tables = self._get_odl_switches()
         self.parse_odl_switches(switches, group_tables)
 
-        topology = self._get_odl_topology()
+        #topology = self._get_odl_topology()
+        #self._parse_odl_node_edges(topology)
 
-        if not self.mininet_man:
-            self._parse_odl_host_nodes(topology)
-        else:
-            mininet_switch_hosts_dict, mininet_topo_ports = self._get_mininet_host_nodes_edges()
-            self._parse_mininet_host_nodes_edges(mininet_switch_hosts_dict, mininet_topo_ports)
 
-        self._parse_odl_node_edges(topology)
+        mininet_switch_hosts_dict, mininet_topo_ports = self._get_mininet_host_nodes_edges()
+
+        self._parse_mininet_host_nodes_edges(mininet_switch_hosts_dict, mininet_topo_ports)
+
+        self._parse_mininet_port_edges(mininet_topo_ports)
+
+
 
         #self.dump_model()
 
