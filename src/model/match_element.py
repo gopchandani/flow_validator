@@ -105,11 +105,11 @@ class MatchElement(DictMixin):
 
     def get_port_path_str(self):
 
-        port_path_str = self.port.port_id + "(" + str(id(self)) + ")"
+        port_path_str = self.port.port_id #+ "(" + str(id(self)) + ")"
         trav = self.succ_match_element
 
         while trav != None:
-            port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
+            port_path_str += (" -> " + trav.port.port_id )#+ "(" + str(id(trav)) + ")")
             trav = trav.succ_match_element
 
         return port_path_str
@@ -200,71 +200,6 @@ class MatchElement(DictMixin):
                 return None
 
         return intersection_element
-
-    def pipe_welding(self, candidate_me):
-
-        new_me = MatchElement()
-
-        for field_name in field_names:
-            new_me.match_fields[field_name] = self.get_matched_tree(
-                candidate_me.match_fields[field_name], self.match_fields[field_name])
-
-            # If the resulting tree has no intervals in it, then balk:
-            if not new_me.match_fields[field_name]:
-                #print field_name, \
-                #    "self:", self.match_fields[field_name], \
-                #    "candidate_me:", candidate_me.match_fields[field_name]
-                return None
-
-        new_me.port = self.port
-        new_me.written_field_modifications.update(candidate_me.written_field_modifications)
-
-        # -- Set up what self depended on, in new_me
-
-        # The resulting new_me would have same successor as candidate_me
-        new_me.succ_match_element = candidate_me.succ_match_element
-
-        # Remove self from the successor's predecessor list, if it exists
-        while self in new_me.succ_match_element.pred_match_elements:
-            new_me.succ_match_element.pred_match_elements.remove(self)
-
-        # Add new_me to successor's predecessor list
-        new_me.succ_match_element.pred_match_elements.append(new_me)
-
-        # -- Set up what depended on self, in new_me
-
-        # new_me's predecessors are all of self's predecessors
-        new_me.pred_match_elements = self.pred_match_elements
-
-        # new_me would have to tell its predecessors that they depend on new_me now
-        for me in new_me.pred_match_elements:
-            me.succ_match_element = new_me
-
-        return new_me
-
-    def remove_with_predecessors(self):
-
-        #print "remove_with_predecessors at:", self.port, "--", self.get_port_path_str()
-
-        #If there are any predecessors, go take care of them first
-        #print "At:", self
-        #for pred in self.pred_match_elements:
-        #   print "-", pred
-
-        while self.pred_match_elements:
-            pred = self.pred_match_elements.pop()
-            #print "At:", self, "Going to predecessor:", pred
-            pred.remove_with_predecessors()
-
-        self.succ_match_element = None
-
-        # Remove this one from its traffic's list of Match Elements
-        if self in self.traffic.match_elements:
-            self.traffic.match_elements.remove(self)
-        else:
-            pass
-            #print "Removing something that is already removed."
-            #raise Exception("Removing something that is already removed.")
 
     def get_complement_match_elements(self):
 

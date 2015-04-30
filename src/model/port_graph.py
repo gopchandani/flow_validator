@@ -122,7 +122,8 @@ class PortGraph:
                 succ = self.get_port(succ_id)
                 now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
 
-            curr.admitted_traffic[dst] = curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
+            curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
+
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")

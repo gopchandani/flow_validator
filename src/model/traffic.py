@@ -101,33 +101,26 @@ class Traffic():
 
     def pipe_welding(self, now_admitted_match):
 
-        # The predecessor will be taken from self and those predecessor need to be told too
-        # The successors will be taken by now_admitted_match
-
-        new_m = Traffic()
-
         # Check if this existing_me can be taken even partially by any of the candidates
         # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
 
         #print "pipe_welding has:", len(self.match_elements), "existing match elements to take care of..."
 
-        copy_match_elements = copy(self.match_elements)
-
-        for existing_me in copy_match_elements:
+        for existing_me in self.match_elements:
             existing_me_welded = False
             for candidate_me in now_admitted_match.match_elements:
-                new_me = existing_me.pipe_welding(candidate_me)
-                if new_me:
-                    new_me.traffic = new_m
-                    new_m.match_elements.append(new_me)
+
+                if candidate_me.is_subset(existing_me):
+                    existing_me.written_field_modifications.update(candidate_me.written_field_modifications)
+                    existing_me.succ_match_element = candidate_me.succ_match_element
                     existing_me_welded = True
                     break
 
             # If none of the candidate_me took existing_me:
             #Delete everybody who dependent on existing_me, the whole chain...
             if not existing_me_welded:
-                existing_me.remove_with_predecessors()
-        return new_m
+                existing_me.succ_match_element = None
+
 
     def get_orig_traffic(self, modified_fields=None):
 

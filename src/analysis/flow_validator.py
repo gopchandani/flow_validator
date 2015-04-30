@@ -103,10 +103,12 @@ class FlowValidator:
 
         for src_h_id in self.network_graph.get_host_ids():
             for dst_h_id in self.network_graph.get_host_ids():
-                baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
                 if src_h_id == dst_h_id:
                     continue
+
+                baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
+
 
                 # Now break the edges in the primary path in this host-pair, one-by-one
                 for edge in self.network_graph.graph.edges():
@@ -114,33 +116,28 @@ class FlowValidator:
                     if edge[0].startswith("h") or edge[1].startswith("h"):
                         continue
 
-                    if (edge[0] == "openflow:1" and edge[1] == "openflow:2")\
-                            or (edge[0] == "openflow:2" and edge[1] == "openflow:1")\
-                            or (edge[0] == "openflow:1" and edge[1] == "openflow:4")\
-                            or (edge[0] == "openflow:4" and edge[1] == "openflow:1"):
+                    print "Failing edge:", edge
 
-                        print "Failing edge:", edge
+                    self.port_graph.remove_node_graph_edge(edge[0], edge[1])
+                    edge_removed_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
-                        self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-                        edge_removed_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
+                    # Add it back
+                    self.port_graph.add_node_graph_edge(edge[0], edge[1])
+                    edge_added_back_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
-                        # Add it back
-                        self.port_graph.add_node_graph_edge(edge[0], edge[1])
-                        edge_added_back_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
-
-                        # the number of elements should be same in three scenarios for each edge
-                        if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
-                            print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
-                            return
+                    # the number of elements should be same in three scenarios for each edge
+                    if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
+                        print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
+                        return
 
 def main():
 
     # # Get a controller
     # cm = ControllerMan(1)
     # controller_port = cm.get_next()
-    # # #
-    # # # Get a mininet instance
-    mm = MininetMan(6633, "ring", 4, 1, experiment_switches=["s1", "s3"])
+    # #
+    # # Get a mininet instance
+    mm = MininetMan(6633, "line", 2, 1, experiment_switches=["s1", "s2"])
     # mm.setup_mininet()
     # mm.net.pingAll(timeout=mm.ping_timeout)
 
@@ -154,10 +151,10 @@ def main():
     fv.initialize_admitted_traffic()
     #
     
-    fv.validate_all_host_pair_reachability()
+    #fv.validate_all_host_pair_reachability()
     # fv.remove_hosts()
 
-    #fv.validate_all_host_pair_backup()
+    fv.validate_all_host_pair_backup()
 
     fv.de_init_port_graph()
 
