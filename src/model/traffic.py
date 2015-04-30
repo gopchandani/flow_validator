@@ -121,7 +121,6 @@ class Traffic():
             if not existing_me_welded:
                 existing_me.succ_match_element = None
 
-
     def get_orig_traffic(self, modified_fields=None):
 
         orig_traffic = Traffic()
