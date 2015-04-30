@@ -101,8 +101,6 @@ class Traffic():
 
     def pipe_welding(self, now_admitted_match):
 
-        new_m = Traffic()
-
         # Check if this existing_me can be taken even partially by any of the candidates
         # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
 
