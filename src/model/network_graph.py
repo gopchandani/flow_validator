@@ -12,7 +12,7 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self, mininet_man=None, load_config=False, save_config=False):
+    def __init__(self, mininet_man, load_config=False, save_config=False):
 
         self.mininet_man = mininet_man
 

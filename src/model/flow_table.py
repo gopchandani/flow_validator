@@ -144,19 +144,6 @@ class FlowTable():
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
-    def get_highest_priority_matching_flow(self, table_matches_on):
-
-        hpm_flow = None
-        intersection = None
-
-        for flow in self.flows:
-            intersection = flow.match_element.intersect(table_matches_on)
-            if intersection:
-                hpm_flow = flow
-                break
-
-        return hpm_flow, intersection
-
     def init_flow_table_port_graph(self):
 
         remaining_match = Traffic(init_wildcard=True)

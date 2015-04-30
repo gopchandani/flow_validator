@@ -130,24 +130,6 @@ class ActionSet():
         self.action_dict = defaultdict(list)
         self.sw = sw
 
-    # These  essentially turn the nested action_list which may contain group actions in it,
-    # into a simple dictionary keyed by type and values containing the action itself
-    # This is a way to essentially sort actions from being in groups into being categorized by their type
-
-    def add_active_actions(self, action_list, intersection):
-
-        for action in action_list:
-
-            if action.action_type == "group":
-                if action.group_id in self.sw.group_table.groups:
-                    group_active_action_list =  self.sw.group_table.groups[action.group_id].get_active_action_list()
-                    self.add_active_actions(group_active_action_list, intersection)
-                else:
-                    raise Exception("Odd that a group_id is not provided in a group action")
-            else:
-                action.matched_flow = intersection
-                self.action_dict[action.action_type].append(action)
-
     def add_all_actions(self, action_list, intersection):
 
         for action in action_list:
@@ -193,21 +175,6 @@ class ActionSet():
 
         return modified_fields_dict
 
-    def get_out_port_matches(self, in_port_match, in_port):
-
-        out_port_match = {}
-
-        #  For each output action, there is a corresponding out_port_match entry
-        for output_action in self.action_dict["output"]:
-
-            output_match = self.get_resulting_match_element(output_action.matched_flow)
-
-            if self.sw.network_graph.OFPP_IN == int(output_action.out_port):
-                out_port_match[int(in_port)] = output_match
-            else:
-                out_port_match[int(output_action.out_port)] = output_match
-
-        return out_port_match
 
     def get_port_graph_edge_status(self):
 
