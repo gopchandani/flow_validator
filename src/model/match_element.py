@@ -216,31 +216,10 @@ class MatchElement(DictMixin):
                 #    "candidate_me:", candidate_me.match_fields[field_name]
                 return None
 
-        new_me.port = self.port
-        new_me.written_field_modifications.update(candidate_me.written_field_modifications)
+        self.written_field_modifications.update(candidate_me.written_field_modifications)
+        self.succ_match_element = candidate_me.succ_match_element
 
-        # -- Set up what self depended on, in new_me
-
-        # The resulting new_me would have same successor as candidate_me
-        new_me.succ_match_element = candidate_me.succ_match_element
-
-        # Remove self from the successor's predecessor list, if it exists
-        while self in new_me.succ_match_element.pred_match_elements:
-            new_me.succ_match_element.pred_match_elements.remove(self)
-
-        # Add new_me to successor's predecessor list
-        new_me.succ_match_element.pred_match_elements.append(new_me)
-
-        # -- Set up what depended on self, in new_me
-
-        # new_me's predecessors are all of self's predecessors
-        new_me.pred_match_elements = self.pred_match_elements
-
-        # new_me would have to tell its predecessors that they depend on new_me now
-        for me in new_me.pred_match_elements:
-            me.succ_match_element = new_me
-
-        return new_me
+        return self
 
     def get_complement_match_elements(self):
 

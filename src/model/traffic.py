@@ -101,9 +101,6 @@ class Traffic():
 
     def pipe_welding(self, now_admitted_match):
 
-        # The predecessor will be taken from self and those predecessor need to be told too
-        # The successors will be taken by now_admitted_match
-
         new_m = Traffic()
 
         # Check if this existing_me can be taken even partially by any of the candidates
@@ -116,8 +113,6 @@ class Traffic():
             for candidate_me in now_admitted_match.match_elements:
                 new_me = existing_me.pipe_welding(candidate_me)
                 if new_me:
-                    new_me.traffic = new_m
-                    new_m.match_elements.append(new_me)
                     existing_me_welded = True
                     break
 
@@ -126,7 +121,6 @@ class Traffic():
             if not existing_me_welded:
                 existing_me.succ_match_element = None
 
-        return new_m
 
     def get_orig_traffic(self, modified_fields=None):
 
