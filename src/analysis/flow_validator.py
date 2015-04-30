@@ -107,9 +107,6 @@ class FlowValidator:
                 if src_h_id == dst_h_id:
                     continue
 
-                if src_h_id == "h21":
-                    continue
-
                 baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
 
