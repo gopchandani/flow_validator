@@ -201,26 +201,6 @@ class MatchElement(DictMixin):
 
         return intersection_element
 
-    def pipe_welding(self, candidate_me):
-
-        new_me = MatchElement()
-
-        for field_name in field_names:
-            new_me.match_fields[field_name] = self.get_matched_tree(
-                candidate_me.match_fields[field_name], self.match_fields[field_name])
-
-            # If the resulting tree has no intervals in it, then balk:
-            if not new_me.match_fields[field_name]:
-                #print field_name, \
-                #    "self:", self.match_fields[field_name], \
-                #    "candidate_me:", candidate_me.match_fields[field_name]
-                return None
-
-        self.written_field_modifications.update(candidate_me.written_field_modifications)
-        self.succ_match_element = candidate_me.succ_match_element
-
-        return self
-
     def get_complement_match_elements(self):
 
         complement_match_elements = []

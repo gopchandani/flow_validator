@@ -111,8 +111,10 @@ class Traffic():
         for existing_me in self.match_elements:
             existing_me_welded = False
             for candidate_me in now_admitted_match.match_elements:
-                new_me = existing_me.pipe_welding(candidate_me)
-                if new_me:
+
+                if candidate_me.is_subset(existing_me):
+                    existing_me.written_field_modifications.update(candidate_me.written_field_modifications)
+                    existing_me.succ_match_element = candidate_me.succ_match_element
                     existing_me_welded = True
                     break
 
