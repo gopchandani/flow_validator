@@ -132,17 +132,27 @@ class FlowValidator:
 
 def main():
 
-    # # Get a controller
-    # cm = ControllerMan(1)
-    # controller_port = cm.get_next()
-    # #
-    # # Get a mininet instance
-    mm = MininetMan(6633, "line", 2, 1, experiment_switches=["s1", "s2"])
-    # mm.setup_mininet()
-    # mm.net.pingAll(timeout=mm.ping_timeout)
+    load_config = False
+    save_config = True
+    mm = None
+
+    if not load_config and save_config:
+
+        # Get a controller
+        cm = ControllerMan(1)
+        controller_port = cm.get_next()
+
+        # Get a mininet instance
+        mm = MininetMan(controller_port, "line", 2, 1, experiment_switches=["s1", "s2"])
+        mm.setup_mininet()
+        mm.net.pingAll(timeout=mm.ping_timeout)
+
+    elif load_config and not save_config:
+
+        mm = MininetMan(6633, "line", 2, 1, experiment_switches=["s1", "s2"])
 
     # Get a flow validator instance
-    ng = NetworkGraph(mininet_man=mm, save_config=False, load_config=True)
+    ng = NetworkGraph(mininet_man=mm, save_config=save_config, load_config=load_config)
     fv = FlowValidator(ng)
 
     # Three steps to happy living:

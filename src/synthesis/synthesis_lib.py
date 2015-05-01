@@ -67,14 +67,18 @@ class SynthesisLib():
 
 
     def create_group_url(self, node_id,  group_id):
+
+        odl_node_id = "openflow:" + node_id[1]
         return "http://" + self.controller_host + ":" + self.controller_port + \
                "/restconf/config/opendaylight-inventory:nodes/node/" + \
-               str(node_id) + '/group/' + str(group_id)
+               odl_node_id + '/group/' + str(group_id)
 
     def create_flow_url(self, node_id, table_id, flow_id):
+
+        odl_node_id = "openflow:" + node_id[1]
         return "http://" + self.controller_host + ":" + self.controller_port + \
                "/restconf/config/opendaylight-inventory:nodes/node/" + \
-               str(node_id) + "/table/" + str(table_id) + '/flow/' + str(flow_id)
+               odl_node_id + "/table/" + str(table_id) + '/flow/' + str(flow_id)
 
     def _push_flow(self, sw, flow):
 

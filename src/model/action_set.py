@@ -50,7 +50,7 @@ class Action():
             elif action_json["output-action"]["output-node-connector"] == u"INPORT":
                 self.out_port = self.sw.network_graph.OFPP_IN
             else:
-                self.out_port = action_json["output-action"]["output-node-connector"]
+                self.out_port = int(action_json["output-action"]["output-node-connector"])
 
         if "group-action" in action_json:
             self.action_type = "group"
