@@ -143,13 +143,13 @@ def main():
         controller_port = cm.get_next()
 
         # Get a mininet instance
-        mm = MininetMan(controller_port, "line", 2, 1, experiment_switches=["s1", "s2"])
+        mm = MininetMan(controller_port, "ring", 4, 1, experiment_switches=["s1", "s3"])
         mm.setup_mininet()
         mm.net.pingAll(timeout=mm.ping_timeout)
 
     elif load_config and not save_config:
 
-        mm = MininetMan(6633, "line", 2, 1, experiment_switches=["s1", "s2"])
+        mm = MininetMan(6633, "ring", 4, 1, experiment_switches=["s1", "s3"])
 
     # Get a flow validator instance
     ng = NetworkGraph(mininet_man=mm, save_config=save_config, load_config=load_config)

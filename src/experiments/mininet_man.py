@@ -48,7 +48,14 @@ class MininetMan():
         else:
             raise Exception("Invalid, unknown topology type: " % topo_name)
 
-    def get_switch_hosts(self, switch_id):
+    def get_all_switch_hosts(self, switch_id):
+
+        for i in range(0, self.num_hosts_per_switch):
+            host_name = "h" + switch_id[1:] + str(i+1)
+            yield self.net.get(host_name)
+
+
+    def get_experiment_switch_hosts(self, switch_id):
 
         if switch_id in self.experiment_switches:
             for i in range(0, self.num_hosts_per_switch):
