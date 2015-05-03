@@ -196,7 +196,7 @@ class NetworkGraph():
                              mininet_host_dict["host_MAC"],
                              mininet_host_dict["host_switch_id"],
                              host_switch_obj,
-                             mininet_port_edges[mininet_host_dict["host_name"]]['0'][1])
+                             mininet_port_edges[mininet_host_dict["host_name"]][0][1])
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
@@ -353,7 +353,6 @@ class NetworkGraph():
         return node_type
 
 def main():
-
     m = NetworkGraph()
 
 if __name__ == "__main__":

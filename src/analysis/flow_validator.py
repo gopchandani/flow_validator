@@ -3,11 +3,6 @@ __author__ = 'Rakesh Kumar'
 import sys
 sys.path.append("./")
 
-import pdb
-
-from memory_profiler import profile
-from guppy import hpy
-
 from experiments.controller_man import ControllerMan
 from experiments.mininet_man import MininetMan
 
@@ -109,7 +104,6 @@ class FlowValidator:
 
                 baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
-
                 # Now break the edges in the primary path in this host-pair, one-by-one
                 for edge in self.network_graph.graph.edges():
 
@@ -133,8 +127,8 @@ class FlowValidator:
 def main():
 
     mm = None
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     topo_description = ("ring", 4, 1)
 
     if not load_config and save_config:

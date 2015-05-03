@@ -47,6 +47,13 @@ class MininetMan():
         else:
             raise Exception("Invalid, unknown topology type: " % topo_name)
 
+        self.net = Mininet(topo=self.topo,
+                           cleanup=True,
+                           autoStaticArp=True,
+                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
+                           switch=OVSSwitch)
+
+
     def get_all_switch_hosts(self, switch_id):
 
         for i in range(0, self.num_hosts_per_switch):
@@ -98,12 +105,6 @@ class MininetMan():
                 self._ping_host_pair(src_host, dst_host)
 
     def setup_mininet(self):
-
-        self.net = Mininet(topo=self.topo,
-                           cleanup=True,
-                           autoStaticArp=True,
-                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
-                           switch=OVSSwitch)
 
         # Start
         self.net.start()
