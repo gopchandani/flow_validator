@@ -318,7 +318,7 @@ class SynthesisLib():
 
     def _push_loop_preventing_drop_rules(self, sw):
 
-        for h_id in self.network_graph.get_host_ids():
+        for h_id in self.network_graph.get_experiment_host_ids():
 
             # Get concerned only with hosts that are directly connected to this sw
             h_obj = self.network_graph.get_node_object(h_id)

@@ -12,7 +12,7 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self, mininet_man, load_config=False, save_config=False):
+    def __init__(self, mininet_man, experiment_switches, load_config=False, save_config=False):
 
         self.mininet_man = mininet_man
 
@@ -31,6 +31,7 @@ class NetworkGraph():
         # Initialize lists of host and switch ids
         self.host_ids = []
         self.switch_ids = []
+        self.experiment_switches = experiment_switches
 
         self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
         #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
@@ -279,12 +280,25 @@ class NetworkGraph():
     def get_node_graph(self):
         return self.graph
 
-    def get_host_ids(self):
-        return self.host_ids
+    def get_experiment_host_ids(self):
+
+        switch_host_ids = []
+
+        for host_id in self.host_ids:
+            host_obj = self.get_node_object(host_id)
+            if host_obj.switch_id in self.experiment_switches:
+                switch_host_ids.append(host_id)
+
+        return switch_host_ids
 
     def get_hosts(self):
         for host_id in self.host_ids:
-            yield self.get_node_object(host_id)
+
+            host_obj = self.get_node_object(host_id)
+            if host_obj.switch_id in self.experiment_switches:
+                yield host_obj
+            else:
+                return
 
     def get_switch_ids(self):
         return self.switch_ids
@@ -296,7 +310,7 @@ class NetworkGraph():
     def get_host_id_node_with_ip(self, req_ip):
         host_node_id = None
 
-        for host_id in self.get_host_ids():
+        for host_id in self.get_experiment_host_ids():
 
             if self.graph.node[host_id]["h"].ip_addr == req_ip:
                 host_node_id = host_id

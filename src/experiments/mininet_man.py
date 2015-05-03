@@ -25,8 +25,7 @@ class MininetMan():
                  controller_port,
                  topo_name,
                  num_switches,
-                 num_hosts_per_switch,
-                 experiment_switches):
+                 num_hosts_per_switch):
 
         self.net = None
         self.ping_timeout = 5
@@ -34,7 +33,7 @@ class MininetMan():
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
 
-        self.experiment_switches = experiment_switches
+        self.experiment_switches = None
         self.topo_name = topo_name
 
         if self.topo_name == "ring":
@@ -114,7 +113,7 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.ng = NetworkGraph(mininet_man=self)
+        self.ng = NetworkGraph(mininet_man=self, experiment_switches=["s1", "s2"])
         self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "line")
         self.synthesis_dij.synthesize_all_node_pairs()
 
