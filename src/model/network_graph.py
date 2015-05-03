@@ -104,36 +104,46 @@ class NetworkGraph():
 
         return topology
 
-    def _get_mininet_host_nodes_edges(self):
+    def _get_mininet_host_nodes(self):
 
-        mininet_switch_hosts_dict = {}
-        mininet_topo = {}
+        mininet_host_nodes = {}
 
         if self.load_config:
-            with open(self.config_path_prefix + "mininet_switch_hosts_dict.json", "r") as in_file:
-                mininet_switch_hosts_dict = json.loads(in_file.read())
-            with open(self.config_path_prefix + "mininet_topo.json", "r") as in_file:
-                mininet_topo = json.loads(in_file.read())
+            with open(self.config_path_prefix + "mininet_host_nodes.json", "r") as in_file:
+                mininet_host_nodes = json.loads(in_file.read())
         else:
             for sw in self.mininet_man.topo.switch_names:
-                mininet_switch_hosts_dict[sw] = []
+                mininet_host_nodes[sw] = []
                 for h in self.mininet_man.get_all_switch_hosts(sw):
                     mininet_host_dict = {"host_switch_id": "s" + sw[1:],
                                          "host_name": h.name,
                                          "host_IP": h.IP(),
                                          "host_MAC": h.MAC()}
 
-                    mininet_switch_hosts_dict[sw].append(mininet_host_dict)
-
-            mininet_topo = self.mininet_man.topo.ports
+                    mininet_host_nodes[sw].append(mininet_host_dict)
 
         if self.save_config:
-            with open(self.config_path_prefix + "mininet_switch_hosts_dict.json", "w") as outfile:
-                json.dump(mininet_switch_hosts_dict, outfile)
-            with open(self.config_path_prefix + "mininet_topo.json", "w") as outfile:
-                json.dump(mininet_topo, outfile)
+            with open(self.config_path_prefix + "mininet_host_nodes.json", "w") as outfile:
+                json.dump(mininet_host_nodes, outfile)
 
-        return mininet_switch_hosts_dict, mininet_topo
+        return mininet_host_nodes
+
+
+    def _get_mininet_port_edges(self):
+
+        mininet_port_edges = {}
+
+        if self.load_config:
+            with open(self.config_path_prefix + "mininet_port_edges.json", "r") as in_file:
+                mininet_port_edges = json.loads(in_file.read())
+        else:
+            mininet_port_edges = self.mininet_man.topo.ports
+
+        if self.save_config:
+            with open(self.config_path_prefix + "mininet_port_edges.json", "w") as outfile:
+                json.dump(mininet_port_edges, outfile)
+
+        return mininet_port_edges
 
     def parse_odl_switches(self, odl_switches, odl_group_tables):
 
@@ -168,12 +178,12 @@ class NetworkGraph():
             #  Set the flow tables in the object instance while sorting them
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
-    def _parse_mininet_host_nodes(self, mininet_switch_hosts_dict, mininet_topo):
+    def _parse_mininet_host_nodes(self, mininet_host_nodes, mininet_port_edges):
 
         # From all the switches
-        for sw in mininet_switch_hosts_dict:
+        for sw in mininet_host_nodes:
             # For every host
-            for mininet_host_dict in mininet_switch_hosts_dict[sw]:
+            for mininet_host_dict in mininet_host_nodes[sw]:
                 host_switch_obj = self.get_node_object(mininet_host_dict["host_switch_id"])
 
                 # Add the host to the graph
@@ -184,15 +194,15 @@ class NetworkGraph():
                              mininet_host_dict["host_MAC"],
                              mininet_host_dict["host_switch_id"],
                              host_switch_obj,
-                             mininet_topo[mininet_host_dict["host_name"]][0][1])
+                             mininet_port_edges[mininet_host_dict["host_name"]][0][1])
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
 
-    def _parse_mininet_port_edges(self, mininet_topo):
-        for src_node in mininet_topo:
-            for src_node_port in mininet_topo[src_node]:
-                dst_list = mininet_topo[src_node][src_node_port]
+    def _parse_mininet_port_edges(self, mininet_port_edges):
+        for src_node in mininet_port_edges:
+            for src_node_port in mininet_port_edges[src_node]:
+                dst_list = mininet_port_edges[src_node][src_node_port]
                 dst_node = dst_list[0]
                 dst_node_port = dst_list[1]
 
@@ -269,11 +279,11 @@ class NetworkGraph():
         odl_switches, odl_group_tables = self._get_odl_switches()
         self.parse_odl_switches(odl_switches, odl_group_tables)
 
-        mininet_switch_hosts_dict, mininet_topo = self._get_mininet_host_nodes_edges()
+        mininet_host_nodes = self._get_mininet_host_nodes()
+        mininet_port_edges = self._get_mininet_port_edges()
 
-        self._parse_mininet_host_nodes(mininet_switch_hosts_dict, mininet_topo)
-
-        self._parse_mininet_port_edges(mininet_topo)
+        self._parse_mininet_host_nodes(mininet_host_nodes, mininet_port_edges)
+        self._parse_mininet_port_edges(mininet_port_edges)
 
         #self.dump_model()
 
