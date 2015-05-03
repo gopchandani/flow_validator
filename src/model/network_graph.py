@@ -12,7 +12,7 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self, mininet_man, experiment_switches, load_config=False, save_config=False):
+    def __init__(self, mininet_man, load_config=False, save_config=False):
 
         self.mininet_man = mininet_man
 
@@ -31,7 +31,8 @@ class NetworkGraph():
         # Initialize lists of host and switch ids
         self.host_ids = []
         self.switch_ids = []
-        self.experiment_switches = experiment_switches
+
+        self.experiment_switches = ["s1", "s3"]
 
         self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
         #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
@@ -153,6 +154,7 @@ class NetworkGraph():
             #  Add an instance for Switch in the graph
             switch_id = "s" + node["id"].split(":")[1]
             sw = Switch(switch_id, self)
+
             self.graph.add_node(switch_id, node_type="switch", sw=sw)
             self.switch_ids.append(switch_id)
 
@@ -194,7 +196,7 @@ class NetworkGraph():
                              mininet_host_dict["host_MAC"],
                              mininet_host_dict["host_switch_id"],
                              host_switch_obj,
-                             mininet_port_edges[mininet_host_dict["host_name"]][0][1])
+                             mininet_port_edges[mininet_host_dict["host_name"]]['0'][1])
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 

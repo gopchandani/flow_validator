@@ -113,7 +113,7 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.ng = NetworkGraph(mininet_man=self, experiment_switches=["s1", "s2"])
+        self.ng = NetworkGraph(mininet_man=self)
         self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "line")
         self.synthesis_dij.synthesize_all_node_pairs()
 

@@ -132,9 +132,10 @@ class FlowValidator:
 
 def main():
 
-    load_config = False
-    save_config = True
     mm = None
+    load_config = True
+    save_config = False
+    topo_description = ("ring", 4, 1)
 
     if not load_config and save_config:
 
@@ -143,17 +144,15 @@ def main():
         controller_port = cm.get_next()
 
         # Get a mininet instance
-        mm = MininetMan(controller_port, "line", 2, 1)
+        mm = MininetMan(controller_port, *topo_description)
         mm.setup_mininet()
         mm.net.pingAll(timeout=mm.ping_timeout)
 
     elif load_config and not save_config:
-
-        mm = MininetMan(6633, "line", 2, 1)
+        mm = MininetMan(6633, *topo_description)
 
     # Get a flow validator instance
-    ng = NetworkGraph(mininet_man=mm, experiment_switches=["s1", "s2"],
-                      save_config=save_config, load_config=load_config)
+    ng = NetworkGraph(mininet_man=mm, save_config=save_config, load_config=load_config)
 
     fv = FlowValidator(ng)
 
