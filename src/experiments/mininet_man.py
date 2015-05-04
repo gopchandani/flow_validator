@@ -71,10 +71,6 @@ class MininetMan():
                 if dst_node.startswith("h"):
                     yield self.net.get(dst_node)
 
-
-
-
-
     def get_experiment_switch_hosts(self, switch_id):
 
         if switch_id in self.experiment_switches:
@@ -129,14 +125,20 @@ class MininetMan():
         print "Synthesizing..."
 
         self.ng = NetworkGraph(mininet_man=self)
-        self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "line")
+        self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "linear")
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
 
-    def setup_mininet_with_ryu(self):
-        pass
+    def setup_mininet_with_ryu_router(self):
+
+        self.net = Mininet(topo=self.topo,
+                           cleanup=True,
+                           autoStaticArp=True,
+                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
+                           switch=self.switch)
+
 
     def cleanup_mininet(self):
 
@@ -150,7 +152,7 @@ class MininetMan():
 
 def main():
 
-    topo_description = ("ring", 4, 1)
+    topo_description = ("linear", 3, 1)
     mm = MininetMan(6633, *topo_description)
     mm.net.start()
     mm.net.pingAll()

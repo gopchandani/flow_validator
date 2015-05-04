@@ -127,8 +127,8 @@ class FlowValidator:
 def main():
 
     mm = None
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     topo_description = ("linear", 2, 1)
 
     if not load_config and save_config:
