@@ -129,7 +129,7 @@ def main():
     mm = None
     load_config = False
     save_config = True
-    topo_description = ("ring", 4, 1)
+    topo_description = ("linear", 2, 1)
 
     if not load_config and save_config:
 
@@ -139,7 +139,7 @@ def main():
 
         # Get a mininet instance
         mm = MininetMan(controller_port, *topo_description)
-        mm.setup_mininet()
+        mm.setup_mininet_with_odl()
         mm.net.pingAll(timeout=mm.ping_timeout)
 
     elif load_config and not save_config:

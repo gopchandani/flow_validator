@@ -32,10 +32,10 @@ class NetworkGraph():
         self.host_ids = []
         self.switch_ids = []
 
-        self.experiment_switches = ["s1", "s3"]
+        self.experiment_switches = ["s1", "s2"]
 
-        self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
-        #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
+        #self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
+        self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
 
         self.load_config = load_config
         self.save_config = save_config
@@ -113,7 +113,7 @@ class NetworkGraph():
             with open(self.config_path_prefix + "mininet_host_nodes.json", "r") as in_file:
                 mininet_host_nodes = json.loads(in_file.read())
         else:
-            for sw in self.mininet_man.topo.switch_names:
+            for sw in self.mininet_man.topo.switches():
                 mininet_host_nodes[sw] = []
                 for h in self.mininet_man.get_all_switch_hosts(sw):
                     mininet_host_dict = {"host_switch_id": "s" + sw[1:],

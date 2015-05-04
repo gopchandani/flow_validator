@@ -35,7 +35,7 @@ class DifferentEdgeFailure():
         print "Controller Port", controller_port
 
         self.mm = MininetMan(controller_port, "ring", 10, 1, experiment_switches=["s1", "s6"])
-        self.mm.setup_mininet()
+        self.mm.setup_mininet_with_odl()
 
     def trigger(self):
 

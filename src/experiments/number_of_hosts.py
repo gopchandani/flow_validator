@@ -41,7 +41,7 @@ class NumberOfHosts():
         print "Controller Port", controller_port
 
         self.mm = MininetMan(controller_port, "line", 2, total_number_of_hosts / 2, experiment_switches=["s1", "s2"])
-        self.mm.setup_mininet()
+        self.mm.setup_mininet_with_odl()
 
     #@profile
     def trigger(self):

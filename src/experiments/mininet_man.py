@@ -3,18 +3,18 @@ __author__ = 'Rakesh Kumar'
 
 import time
 import os
+from functools import partial
 
 
+from mininet.topo import LinearTopo
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
-
 from model.network_graph import NetworkGraph
 
 from experiments.topologies.fat_tree import FatTree
 from experiments.topologies.two_ring_topo import TwoRingTopo
 from experiments.topologies.ring_topo import RingTopo
-from experiments.topologies.line_topo import LineTopo
 
 from synthesis.synthesize_dij import SynthesizeDij
 
@@ -38,8 +38,8 @@ class MininetMan():
 
         if self.topo_name == "ring":
             self.topo = RingTopo(self.num_switches, self.num_hosts_per_switch)
-        elif self.topo_name == "line":
-            self.topo = LineTopo(self.num_switches, self.num_hosts_per_switch)
+        elif self.topo_name == "linear":
+            self.topo = LinearTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "two_ring":
             self.topo = TwoRingTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "fat_tree":
@@ -47,18 +47,32 @@ class MininetMan():
         else:
             raise Exception("Invalid, unknown topology type: " % topo_name)
 
+        self.switch = partial(OVSSwitch, protocols='OpenFlow13')
+
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
                            autoStaticArp=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
-                           switch=OVSSwitch)
-
+                           switch=self.switch)
 
     def get_all_switch_hosts(self, switch_id):
 
-        for i in range(0, self.num_hosts_per_switch):
-            host_name = "h" + switch_id[1:] + str(i+1)
-            yield self.net.get(host_name)
+        p = self.topo.ports
+
+        for node in p:
+
+            # Only look for this switch's hosts
+            if node != switch_id:
+                continue
+
+            for switch_port in p[node]:
+                dst_list = p[node][switch_port]
+                dst_node = dst_list[0]
+                if dst_node.startswith("h"):
+                    yield self.net.get(dst_node)
+
+
+
 
 
     def get_experiment_switch_hosts(self, switch_id):
@@ -104,7 +118,7 @@ class MininetMan():
             for (src_host, dst_host) in self._get_experiment_host_pair():
                 self._ping_host_pair(src_host, dst_host)
 
-    def setup_mininet(self):
+    def setup_mininet_with_odl(self):
 
         # Start
         self.net.start()
@@ -119,7 +133,10 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(30 * self.topo.num_hosts_per_switch * self.topo.total_switches)
+        time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
+
+    def setup_mininet_with_ryu(self):
+        pass
 
     def cleanup_mininet(self):
 
@@ -130,3 +147,13 @@ class MininetMan():
 
     def __del__(self):
         self.cleanup_mininet()
+
+def main():
+
+    topo_description = ("ring", 4, 1)
+    mm = MininetMan(6633, *topo_description)
+    mm.net.start()
+    mm.net.pingAll()
+
+if __name__ == "__main__":
+    main()
