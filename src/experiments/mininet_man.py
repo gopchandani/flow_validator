@@ -1,10 +1,12 @@
 __author__ = 'Rakesh Kumar'
 
 
+import json
 import time
 import os
-from functools import partial
+import httplib2
 
+from functools import partial
 
 from mininet.topo import LinearTopo
 from mininet.net import Mininet
@@ -133,12 +135,74 @@ class MininetMan():
 
     def setup_mininet_with_ryu_router(self):
 
-        self.net = Mininet(topo=self.topo,
-                           cleanup=True,
-                           autoStaticArp=True,
-                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
-                           switch=self.switch)
+        # Start the mininet
+        self.net.start()
 
+        # Get all the nodes
+        h1 = self.net.getNodeByName("h1")
+        h2 = self.net.getNodeByName("h2")
+        h3 = self.net.getNodeByName("h3")
+
+        h1.cmd("ip addr del 10.0.0.1/8 dev h1-eth0")
+        h1.cmd("ip addr add 172.16.20.10/24 dev h1-eth0")
+        h1.cmd("ip route add default via 172.16.20.1")
+
+        h2.cmd("ip addr del 10.0.0.2/8 dev h2-eth0")
+        h2.cmd("ip addr add 172.16.10.10/24 dev h2-eth0")
+        h2.cmd("ip route add default via 172.16.10.1")
+
+        h3.cmd("ip addr del 10.0.0.3/8 dev h3-eth0")
+        h3.cmd("ip addr add 192.168.30.10/24 dev h3-eth0")
+        h3.cmd("ip route add default via 192.168.30.1")
+
+    def setup_mininet_with_ryu_router_2(self):
+
+        self.net.pingAll()
+        self.h = httplib2.Http(".cache")
+        self.baseUrl = "http://localhost:8080"
+
+        router_conf_requests = []
+        router_conf_requests.append(({"address": "172.16.20.1/24"},
+                                     "/router/0000000000000001"))
+        router_conf_requests.append(({"address": "172.16.30.30/24"},
+                                     "/router/0000000000000001"))
+        router_conf_requests.append(({"gateway": "172.16.30.1"},
+                                     "/router/0000000000000001"))
+
+        router_conf_requests.append(({"address": "172.16.10.1/24"},
+                                     "/router/0000000000000002"))
+        router_conf_requests.append(({"address": "172.16.30.1/24"},
+                                     "/router/0000000000000002"))
+        router_conf_requests.append(({"address": "192.168.10.1/24"},
+                                     "/router/0000000000000002"))
+        router_conf_requests.append(({"gateway": "172.16.30.30"},
+                                     "/router/0000000000000002"))
+        router_conf_requests.append(({"destination": "192.168.30.0/24", "gateway": "192.168.10.20"},
+                                     "/router/0000000000000002"))
+
+
+        router_conf_requests.append(({"address": "192.168.30.1/24"},
+                                     "/router/0000000000000003"))
+        router_conf_requests.append(({"address": "192.168.10.20/24"},
+                                     "/router/0000000000000003"))
+        router_conf_requests.append(({"gateway": "192.168.10.1"},
+                                     "/router/0000000000000003"))
+
+
+        for data, remainingUrl in router_conf_requests:
+
+            resp, content = self.h.request(uri=self.baseUrl + remainingUrl,
+                                           method="POST",
+                                           headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                           body=json.dumps(data))
+
+            time.sleep(0.1)
+
+            if resp["status"] != "200":
+                print "Problem Resp:", resp
+
+
+        self.net.pingAll()
 
     def cleanup_mininet(self):
 
@@ -154,8 +218,9 @@ def main():
 
     topo_description = ("linear", 3, 1)
     mm = MininetMan(6633, *topo_description)
-    mm.net.start()
-    mm.net.pingAll()
+    mm.setup_mininet_with_ryu_router()
+    mm.setup_mininet_with_ryu_router_2()
+
 
 if __name__ == "__main__":
     main()
