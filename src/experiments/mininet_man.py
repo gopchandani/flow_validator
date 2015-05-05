@@ -139,25 +139,24 @@ class MininetMan():
         self.net.start()
 
         # Get all the nodes
-        h1 = self.net.getNodeByName("h1")
-        h2 = self.net.getNodeByName("h2")
-        h3 = self.net.getNodeByName("h3")
+        self.h1 = self.net.getNodeByName("h1")
+        self.h2 = self.net.getNodeByName("h2")
+        self.h3 = self.net.getNodeByName("h3")
 
-        h1.cmd("ip addr del 10.0.0.1/8 dev h1-eth0")
-        h1.cmd("ip addr add 172.16.20.10/24 dev h1-eth0")
-        h1.cmd("ip route add default via 172.16.20.1")
+        self.h1.cmd("ip addr del 10.0.0.1/8 dev h1-eth0")
+        self.h1.cmd("ip addr add 172.16.20.10/24 dev h1-eth0")
+        self.h1.cmd("ip route add default via 172.16.20.1")
 
-        h2.cmd("ip addr del 10.0.0.2/8 dev h2-eth0")
-        h2.cmd("ip addr add 172.16.10.10/24 dev h2-eth0")
-        h2.cmd("ip route add default via 172.16.10.1")
+        self.h2.cmd("ip addr del 10.0.0.2/8 dev h2-eth0")
+        self.h2.cmd("ip addr add 172.16.10.10/24 dev h2-eth0")
+        self.h2.cmd("ip route add default via 172.16.10.1")
 
-        h3.cmd("ip addr del 10.0.0.3/8 dev h3-eth0")
-        h3.cmd("ip addr add 192.168.30.10/24 dev h3-eth0")
-        h3.cmd("ip route add default via 192.168.30.1")
+        self.h3.cmd("ip addr del 10.0.0.3/8 dev h3-eth0")
+        self.h3.cmd("ip addr add 192.168.30.10/24 dev h3-eth0")
+        self.h3.cmd("ip route add default via 192.168.30.1")
 
     def setup_mininet_with_ryu_router_2(self):
 
-        self.net.pingAll()
         self.h = httplib2.Http(".cache")
         self.baseUrl = "http://localhost:8080"
 
@@ -196,13 +195,15 @@ class MininetMan():
                                            headers={'Content-Type': 'application/json; charset=UTF-8'},
                                            body=json.dumps(data))
 
-            time.sleep(0.1)
+            time.sleep(0.2)
 
             if resp["status"] != "200":
                 print "Problem Resp:", resp
 
 
-        self.net.pingAll()
+
+        print self.h3.cmd("ping -c3 192.168.30.10")
+        print self.h2.cmd("ping -c3 172.16.20.10")
 
     def cleanup_mininet(self):
 
