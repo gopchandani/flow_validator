@@ -32,10 +32,10 @@ class NetworkGraph():
         self.host_ids = []
         self.switch_ids = []
 
-        self.experiment_switches = ["s1", "s2"]
+        self.experiment_switches = ["s1", "s3"]
 
-        #self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
-        self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
+        self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
+        #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
 
         self.load_config = load_config
         self.save_config = save_config
@@ -184,13 +184,23 @@ class NetworkGraph():
 
                 # Add the host to the graph
                 self.host_ids.append(mininet_host_dict["host_name"])
-                h_obj = Host(mininet_host_dict["host_name"],
-                             self,
-                             mininet_host_dict["host_IP"],
-                             mininet_host_dict["host_MAC"],
-                             mininet_host_dict["host_switch_id"],
-                             host_switch_obj,
-                             mininet_port_edges[mininet_host_dict["host_name"]][0][1])
+
+                if self.load_config:
+                    h_obj = Host(mininet_host_dict["host_name"],
+                                 self,
+                                 mininet_host_dict["host_IP"],
+                                 mininet_host_dict["host_MAC"],
+                                 mininet_host_dict["host_switch_id"],
+                                 host_switch_obj,
+                                 mininet_port_edges[mininet_host_dict["host_name"]]['0'][1])
+                else:
+                    h_obj = Host(mininet_host_dict["host_name"],
+                                 self,
+                                 mininet_host_dict["host_IP"],
+                                 mininet_host_dict["host_MAC"],
+                                 mininet_host_dict["host_switch_id"],
+                                 host_switch_obj,
+                                 mininet_port_edges[mininet_host_dict["host_name"]][0][1])
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
