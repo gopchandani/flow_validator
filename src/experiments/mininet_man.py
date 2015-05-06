@@ -129,6 +129,8 @@ class MininetMan():
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
 
+        self.net.pingAll(self.ping_timeout)
+
     def setup_mininet_with_ryu_router(self):
 
         # Get all the nodes

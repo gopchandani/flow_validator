@@ -17,12 +17,21 @@ __author__ = 'Shane Rogers'
 
 
 class ControllerMan():
-    def __init__(self, num_cons, verbose=False):
+    def __init__(self, num_cons, verbose=False, controller="odl"):
         self.num_cons = num_cons
         self.data = []
         self.ports = []
         self.a_container_is_running = False
         self.verbose = False
+        self.controller = controller
+
+        if controller == "odl":
+            self.initialize_odl_containers()
+
+        elif controller == "ryu":
+            self.ryu_proc = None
+
+    def initialize_odl_containers(self):
 
         print "Initializing, number of containers:", self.num_cons
 
@@ -39,7 +48,7 @@ class ControllerMan():
                 this_id = proc.stdout.readline()
                 if this_id != '':
 
-                    if verbose:
+                    if self.verbose:
                         print this_id
 
                     self.data.append(this_id)
@@ -60,16 +69,32 @@ class ControllerMan():
         os.system("docker stop --time=30 %s" % str(this_id))
         os.system("docker rm %s" % str(this_id))
 
-    def get_next(self):
+    def get_next_odl(self):
         this_port = 0
 
         if self.a_container_is_running:
             self.stop_container()
             this_port = self.start_container()
-            return this_port
         else:
             this_port = self.start_container()
-            return this_port
+
+        print "Waiting for the controller to get ready for synthesis"
+        time.sleep(180)
+
+        return this_port
+
+    def get_next_ryu(self):
+        #topo_apps = "ryu.app.rest_topology ryu.app.ws_topology"
+        ryu_cmd = ["ryu-manager", "--observe-links", "ryu.app.rest_router", "ryu.app.ofctl_rest"]
+        self.ryu_proc = subprocess.Popen(ryu_cmd, stdout=subprocess.PIPE)
+        return 6633
+
+
+    def get_next(self):
+        if self.controller == "odl":
+            return self.get_next_odl()
+        elif self.controller == "ryu":
+            return self.get_next_ryu()
 
     def kill_all(self):
 
@@ -81,6 +106,9 @@ class ControllerMan():
     def __del__(self):
         print "Docker cleanup..."
         self.kill_all()
+
+        if self.ryu_proc:
+            self.ryu_proc.kill()
 
 def main():
 

@@ -128,27 +128,28 @@ class FlowValidator:
 def main():
 
     mm = None
-    load_config = True
-    save_config = False
-    topo_description = ("linear", 2, 1)
-    controller = "odl"
+    load_config = False
+    save_config = True
+#    topo_description = ("linear", 2, 1)
+#    topo_description = ("ring", 4, 1)
+    topo_description = ("linear", 3, 1)
+
+#    controller = "odl"
+    controller = "ryu"
 
     if not load_config and save_config:
-        cm = ControllerMan(1)
+        cm = ControllerMan(1, controller=controller)
         controller_port = cm.get_next()
         mm = MininetMan(controller_port, *topo_description)
-        print "Waiting for the controller to get ready for synthesis"
-        time.sleep(180)
-
-    elif load_config and not save_config:
-        mm = MininetMan(6633, *topo_description)
 
     # Get a flow validator instance
     ng = NetworkGraph(mininet_man=mm, controller=controller, save_config=save_config, load_config=load_config)
 
     if not load_config and save_config:
-        mm.setup_mininet_with_odl(ng)
-        mm.net.pingAll(timeout=mm.ping_timeout)
+        if controller == "odl":
+            mm.setup_mininet_with_odl(ng)
+        elif controller == "ryu":
+            mm.setup_mininet_with_ryu_router()
 
     # Refresh the network_graph
     ng.parse_switches()
