@@ -32,10 +32,10 @@ class NetworkGraph():
         self.host_ids = []
         self.switch_ids = []
 
-        self.experiment_switches = ["s1", "s3"]
+        self.experiment_switches = ["s1", "s2"]
 
-        self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
-        #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
+        #self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
+        self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
 
         self.load_config = load_config
         self.save_config = save_config
