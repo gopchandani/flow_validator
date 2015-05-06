@@ -1,7 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
 from match_element import MatchElement
-from copy import copy
 
 class Traffic():
 
@@ -120,7 +119,6 @@ class Traffic():
             #Delete everybody who dependent on existing_me, the whole chain...
             if not existing_me_welded:
                 existing_me.succ_match_element = None
-
 
     def get_orig_traffic(self, modified_fields=None):
 

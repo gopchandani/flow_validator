@@ -233,8 +233,8 @@ class SynthesizeDij():
     def synthesize_all_node_pairs(self):
 
         print "Synthesizing backup paths between all possible host pairs..."
-        for src in self.network_graph.get_host_ids():
-            for dst in self.network_graph.get_host_ids():
+        for src in self.network_graph.get_experiment_host_ids():
+            for dst in self.network_graph.get_experiment_host_ids():
 
                 # Ignore paths with same src/dst
                 if src == dst:
@@ -243,7 +243,7 @@ class SynthesizeDij():
                 src_h_obj = self.network_graph.get_node_object(src)
                 dst_h_obj = self.network_graph.get_node_object(dst)
 
-                #Ignore installation of paths between switches on the same switch
+                # Ignore installation of paths between switches on the same switch
                 if src_h_obj.switch_id == dst_h_obj.switch_id:
                     continue
 

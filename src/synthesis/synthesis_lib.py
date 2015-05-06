@@ -67,14 +67,18 @@ class SynthesisLib():
 
 
     def create_group_url(self, node_id,  group_id):
+
+        odl_node_id = "openflow:" + node_id[1]
         return "http://" + self.controller_host + ":" + self.controller_port + \
                "/restconf/config/opendaylight-inventory:nodes/node/" + \
-               str(node_id) + '/group/' + str(group_id)
+               odl_node_id + '/group/' + str(group_id)
 
     def create_flow_url(self, node_id, table_id, flow_id):
+
+        odl_node_id = "openflow:" + node_id[1]
         return "http://" + self.controller_host + ":" + self.controller_port + \
                "/restconf/config/opendaylight-inventory:nodes/node/" + \
-               str(node_id) + "/table/" + str(table_id) + '/flow/' + str(flow_id)
+               odl_node_id + "/table/" + str(table_id) + '/flow/' + str(flow_id)
 
     def _push_flow(self, sw, flow):
 
@@ -314,7 +318,7 @@ class SynthesisLib():
 
     def _push_loop_preventing_drop_rules(self, sw):
 
-        for h_id in self.network_graph.get_host_ids():
+        for h_id in self.network_graph.get_experiment_host_ids():
 
             # Get concerned only with hosts that are directly connected to this sw
             h_obj = self.network_graph.get_node_object(h_id)

@@ -42,7 +42,7 @@ class VaryingSizeTopology():
             dst_sw = "s" + str(topology_size)
             self.mm = MininetMan(controller_port, self.topo, topology_size, 1, ["s1", dst_sw])
 
-        self.mm.setup_mininet()
+        self.mm.setup_mininet_with_odl()
 
     def trigger(self):
 

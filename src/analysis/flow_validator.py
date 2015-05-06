@@ -1,12 +1,8 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
+import time
 sys.path.append("./")
-
-import pdb
-
-from memory_profiler import profile
-from guppy import hpy
 
 from experiments.controller_man import ControllerMan
 from experiments.mininet_man import MininetMan
@@ -33,7 +29,7 @@ class FlowValidator:
     def add_hosts(self):
 
         # Attach a destination port for each host.
-        for host_id in self.network_graph.get_host_ids():
+        for host_id in self.network_graph.get_experiment_host_ids():
 
             host_obj = self.network_graph.get_node_object(host_id)
 
@@ -54,14 +50,14 @@ class FlowValidator:
     #@profile
     def remove_hosts(self):
 
-        for host_id in self.network_graph.get_host_ids():
+        for host_id in self.network_graph.get_experiment_host_ids():
             host_obj = self.network_graph.get_node_object(host_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
     #@profile
     def initialize_admitted_traffic(self):
 
-        for host_id in self.network_graph.get_host_ids():
+        for host_id in self.network_graph.get_experiment_host_ids():
             host_obj = self.network_graph.get_node_object(host_id)
 
             #print "Computing admitted_traffic:", host_id, "connected to switch:", \
@@ -94,21 +90,20 @@ class FlowValidator:
 
     def validate_all_host_pair_reachability(self):
 
-        for src_h_id in self.network_graph.get_host_ids():
-            for dst_h_id in self.network_graph.get_host_ids():
+        for src_h_id in self.network_graph.get_experiment_host_ids():
+            for dst_h_id in self.network_graph.get_experiment_host_ids():
                 self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
 
     def validate_all_host_pair_backup(self):
 
-        for src_h_id in self.network_graph.get_host_ids():
-            for dst_h_id in self.network_graph.get_host_ids():
+        for src_h_id in self.network_graph.get_experiment_host_ids():
+            for dst_h_id in self.network_graph.get_experiment_host_ids():
 
                 if src_h_id == dst_h_id:
                     continue
 
                 baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
-
 
                 # Now break the edges in the primary path in this host-pair, one-by-one
                 for edge in self.network_graph.graph.edges():
@@ -132,25 +127,38 @@ class FlowValidator:
 
 def main():
 
-    # # Get a controller
-    # cm = ControllerMan(1)
-    # controller_port = cm.get_next()
-    # #
-    # # Get a mininet instance
-    mm = MininetMan(6633, "line", 2, 1, experiment_switches=["s1", "s2"])
-    # mm.setup_mininet()
-    # mm.net.pingAll(timeout=mm.ping_timeout)
+    mm = None
+    load_config = True
+    save_config = False
+    topo_description = ("linear", 2, 1)
+    controller = "odl"
+
+    if not load_config and save_config:
+        cm = ControllerMan(1)
+        controller_port = cm.get_next()
+        mm = MininetMan(controller_port, *topo_description)
+        print "Waiting for the controller to get ready for synthesis"
+        time.sleep(180)
+
+    elif load_config and not save_config:
+        mm = MininetMan(6633, *topo_description)
 
     # Get a flow validator instance
-    ng = NetworkGraph(mininet_man=mm, save_config=False, load_config=True)
+    ng = NetworkGraph(mininet_man=mm, controller=controller, save_config=save_config, load_config=load_config)
+
+    if not load_config and save_config:
+        mm.setup_mininet_with_odl(ng)
+        mm.net.pingAll(timeout=mm.ping_timeout)
+
+    # Refresh the network_graph
+    ng.parse_switches()
     fv = FlowValidator(ng)
 
     # Three steps to happy living:
     fv.init_port_graph()
     fv.add_hosts()
     fv.initialize_admitted_traffic()
-    #
-    
+
     #fv.validate_all_host_pair_reachability()
     # fv.remove_hosts()
 

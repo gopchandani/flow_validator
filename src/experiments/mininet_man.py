@@ -1,20 +1,22 @@
 __author__ = 'Rakesh Kumar'
 
 
+import json
 import time
 import os
+import httplib2
 
+from functools import partial
 
+from mininet.topo import LinearTopo
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
-
 from model.network_graph import NetworkGraph
 
 from experiments.topologies.fat_tree import FatTree
 from experiments.topologies.two_ring_topo import TwoRingTopo
 from experiments.topologies.ring_topo import RingTopo
-from experiments.topologies.line_topo import LineTopo
 
 from synthesis.synthesize_dij import SynthesizeDij
 
@@ -25,8 +27,7 @@ class MininetMan():
                  controller_port,
                  topo_name,
                  num_switches,
-                 num_hosts_per_switch,
-                 experiment_switches):
+                 num_hosts_per_switch):
 
         self.net = None
         self.ping_timeout = 5
@@ -34,13 +35,13 @@ class MininetMan():
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
 
-        self.experiment_switches = experiment_switches
+        self.experiment_switches = None
         self.topo_name = topo_name
 
         if self.topo_name == "ring":
             self.topo = RingTopo(self.num_switches, self.num_hosts_per_switch)
-        elif self.topo_name == "line":
-            self.topo = LineTopo(self.num_switches, self.num_hosts_per_switch)
+        elif self.topo_name == "linear":
+            self.topo = LinearTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "two_ring":
             self.topo = TwoRingTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "fat_tree":
@@ -48,7 +49,34 @@ class MininetMan():
         else:
             raise Exception("Invalid, unknown topology type: " % topo_name)
 
-    def get_switch_hosts(self, switch_id):
+        self.switch = partial(OVSSwitch, protocols='OpenFlow13')
+
+        self.net = Mininet(topo=self.topo,
+                           cleanup=True,
+                           autoStaticArp=True,
+                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
+                           switch=self.switch)
+
+        self.net.start()
+
+
+    def get_all_switch_hosts(self, switch_id):
+
+        p = self.topo.ports
+
+        for node in p:
+
+            # Only look for this switch's hosts
+            if node != switch_id:
+                continue
+
+            for switch_port in p[node]:
+                dst_list = p[node][switch_port]
+                dst_node = dst_list[0]
+                if dst_node.startswith("h"):
+                    yield self.net.get(dst_node)
+
+    def get_experiment_switch_hosts(self, switch_id):
 
         if switch_id in self.experiment_switches:
             for i in range(0, self.num_hosts_per_switch):
@@ -91,28 +119,82 @@ class MininetMan():
             for (src_host, dst_host) in self._get_experiment_host_pair():
                 self._ping_host_pair(src_host, dst_host)
 
-    def setup_mininet(self):
-
-        self.net = Mininet(topo=self.topo,
-                           cleanup=True,
-                           autoStaticArp=True,
-                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
-                           switch=OVSSwitch)
-
-        # Start
-        self.net.start()
-
-        print "Waiting for the controller to get ready for synthesis"
-        time.sleep(180)
+    def setup_mininet_with_odl(self, ng):
 
         print "Synthesizing..."
 
-        self.ng = NetworkGraph(mininet_man=self)
-        self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "line")
+        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(30 * self.topo.num_hosts_per_switch * self.topo.total_switches)
+        time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
+
+    def setup_mininet_with_ryu_router(self):
+
+        # Get all the nodes
+        self.h1 = self.net.getNodeByName("h1")
+        self.h2 = self.net.getNodeByName("h2")
+        self.h3 = self.net.getNodeByName("h3")
+
+        self.h1.cmd("ip addr del 10.0.0.1/8 dev h1-eth0")
+        self.h1.cmd("ip addr add 172.16.20.10/24 dev h1-eth0")
+        self.h1.cmd("ip route add default via 172.16.20.1")
+
+        self.h2.cmd("ip addr del 10.0.0.2/8 dev h2-eth0")
+        self.h2.cmd("ip addr add 172.16.10.10/24 dev h2-eth0")
+        self.h2.cmd("ip route add default via 172.16.10.1")
+
+        self.h3.cmd("ip addr del 10.0.0.3/8 dev h3-eth0")
+        self.h3.cmd("ip addr add 192.168.30.10/24 dev h3-eth0")
+        self.h3.cmd("ip route add default via 192.168.30.1")
+
+        self.h = httplib2.Http(".cache")
+        self.baseUrl = "http://localhost:8080"
+
+        router_conf_requests = []
+        router_conf_requests.append(({"address": "172.16.20.1/24"},
+                                     "/router/0000000000000001"))
+        router_conf_requests.append(({"address": "172.16.30.30/24"},
+                                     "/router/0000000000000001"))
+        router_conf_requests.append(({"gateway": "172.16.30.1"},
+                                     "/router/0000000000000001"))
+
+        router_conf_requests.append(({"address": "172.16.10.1/24"},
+                                     "/router/0000000000000002"))
+        router_conf_requests.append(({"address": "172.16.30.1/24"},
+                                     "/router/0000000000000002"))
+        router_conf_requests.append(({"address": "192.168.10.1/24"},
+                                     "/router/0000000000000002"))
+        router_conf_requests.append(({"gateway": "172.16.30.30"},
+                                     "/router/0000000000000002"))
+        router_conf_requests.append(({"destination": "192.168.30.0/24", "gateway": "192.168.10.20"},
+                                     "/router/0000000000000002"))
+
+
+        router_conf_requests.append(({"address": "192.168.30.1/24"},
+                                     "/router/0000000000000003"))
+        router_conf_requests.append(({"address": "192.168.10.20/24"},
+                                     "/router/0000000000000003"))
+        router_conf_requests.append(({"gateway": "192.168.10.1"},
+                                     "/router/0000000000000003"))
+
+
+        for data, remainingUrl in router_conf_requests:
+
+            resp, content = self.h.request(uri=self.baseUrl + remainingUrl,
+                                           method="POST",
+                                           headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                           body=json.dumps(data))
+
+            time.sleep(0.2)
+
+            if resp["status"] != "200":
+                print "Problem Resp:", resp
+
+
+
+        print self.h3.cmd("ping -c3 192.168.30.10")
+        print self.h2.cmd("ping -c3 172.16.20.10")
 
     def cleanup_mininet(self):
 
@@ -123,3 +205,12 @@ class MininetMan():
 
     def __del__(self):
         self.cleanup_mininet()
+
+def main():
+
+    topo_description = ("linear", 3, 1)
+    mm = MininetMan(6633, *topo_description)
+    mm.setup_mininet_with_ryu_router()
+
+if __name__ == "__main__":
+    main()
