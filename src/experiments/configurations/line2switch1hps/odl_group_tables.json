@@ -1,1 +1,0 @@
-{"s2": [{"buckets": {"bucket": [{"action": [{"output-action": {"output-node-connector": "2"}, "order": 0}], "bucket-id": 1}]}, "group-type": "group-all", "group-id": 1, "barrier": false}], "s1": [{"buckets": {"bucket": [{"action": [{"output-action": {"output-node-connector": "2"}, "order": 0}], "bucket-id": 1}]}, "group-type": "group-all", "group-id": 2, "barrier": false}]}

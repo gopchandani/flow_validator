@@ -127,9 +127,10 @@ class FlowValidator:
 def main():
 
     mm = None
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     topo_description = ("linear", 2, 1)
+    controller = "odl"
 
     if not load_config and save_config:
 
@@ -146,7 +147,7 @@ def main():
         mm = MininetMan(6633, *topo_description)
 
     # Get a flow validator instance
-    ng = NetworkGraph(mininet_man=mm, save_config=save_config, load_config=load_config)
+    ng = NetworkGraph(mininet_man=mm, controller=controller, save_config=save_config, load_config=load_config)
 
     fv = FlowValidator(ng)
 

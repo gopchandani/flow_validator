@@ -126,7 +126,7 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.ng = NetworkGraph(mininet_man=self)
+        self.ng = NetworkGraph(mininet_man=self, controller="odl")
         self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "linear")
         self.synthesis_dij.synthesize_all_node_pairs()
 
@@ -218,8 +218,6 @@ def main():
     topo_description = ("linear", 3, 1)
     mm = MininetMan(6633, *topo_description)
     mm.setup_mininet_with_ryu_router()
-
-    pass
 
 if __name__ == "__main__":
     main()
