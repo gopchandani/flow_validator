@@ -155,8 +155,6 @@ class MininetMan():
         self.h3.cmd("ip addr add 192.168.30.10/24 dev h3-eth0")
         self.h3.cmd("ip route add default via 192.168.30.1")
 
-    def setup_mininet_with_ryu_router_2(self):
-
         self.h = httplib2.Http(".cache")
         self.baseUrl = "http://localhost:8080"
 
@@ -220,8 +218,8 @@ def main():
     topo_description = ("linear", 3, 1)
     mm = MininetMan(6633, *topo_description)
     mm.setup_mininet_with_ryu_router()
-    mm.setup_mininet_with_ryu_router_2()
 
+    pass
 
 if __name__ == "__main__":
     main()
