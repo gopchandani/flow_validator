@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
+import time
 sys.path.append("./")
 
 from experiments.controller_man import ControllerMan
@@ -133,15 +134,11 @@ def main():
     controller = "odl"
 
     if not load_config and save_config:
-
-        # Get a controller
         cm = ControllerMan(1)
         controller_port = cm.get_next()
-
-        # Get a mininet instance
         mm = MininetMan(controller_port, *topo_description)
-        mm.setup_mininet_with_odl()
-        mm.net.pingAll(timeout=mm.ping_timeout)
+        print "Waiting for the controller to get ready for synthesis"
+        time.sleep(180)
 
     elif load_config and not save_config:
         mm = MininetMan(6633, *topo_description)
@@ -149,14 +146,19 @@ def main():
     # Get a flow validator instance
     ng = NetworkGraph(mininet_man=mm, controller=controller, save_config=save_config, load_config=load_config)
 
+    if not load_config and save_config:
+        mm.setup_mininet_with_odl(ng)
+        mm.net.pingAll(timeout=mm.ping_timeout)
+
+    # Refresh the network_graph
+    ng.parse_switches()
     fv = FlowValidator(ng)
 
     # Three steps to happy living:
     fv.init_port_graph()
     fv.add_hosts()
     fv.initialize_admitted_traffic()
-    #
-    
+
     #fv.validate_all_host_pair_reachability()
     # fv.remove_hosts()
 

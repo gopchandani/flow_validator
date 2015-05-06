@@ -42,9 +42,9 @@ class NetworkGraph():
         self.controller = controller
 
         #  Load up everything
-        self._parse_network_graph()
+        self.parse_network_graph()
 
-    def _get_odl_switches(self):
+    def get_odl_switches(self):
 
         odl_switches = {}
 
@@ -72,14 +72,13 @@ class NetworkGraph():
                     if "flow-node-inventory:group" in switch_node['node'][0]:
                         node["flow-node-inventory:group"] = switch_node['node'][0]["flow-node-inventory:group"]
 
-
         if self.save_config:
             with open(self.config_path_prefix + "odl_switches.json", "w") as outfile:
                 json.dump(odl_switches, outfile)
 
         return odl_switches
 
-    def _get_odl_topology(self):
+    def get_odl_topology(self):
 
         topology = {}
 
@@ -98,7 +97,7 @@ class NetworkGraph():
 
         return topology
 
-    def _get_mininet_host_nodes(self):
+    def get_mininet_host_nodes(self):
 
         mininet_host_nodes = {}
 
@@ -123,7 +122,7 @@ class NetworkGraph():
         return mininet_host_nodes
 
 
-    def _get_mininet_port_edges(self):
+    def get_mininet_port_edges(self):
 
         mininet_port_edges = {}
 
@@ -146,10 +145,15 @@ class NetworkGraph():
 
             #  Add an instance for Switch in the graph
             switch_id = "s" + node["id"].split(":")[1]
-            sw = Switch(switch_id, self)
 
-            self.graph.add_node(switch_id, node_type="switch", sw=sw)
-            self.switch_ids.append(switch_id)
+            # Check to see if a switch with this id already exists in the graph,
+            # if so grab it, otherwise create it
+
+            sw = self.get_node_object(switch_id)
+            if not sw:
+                sw = Switch(switch_id, self)
+                self.graph.add_node(switch_id, node_type="switch", sw=sw)
+                self.switch_ids.append(switch_id)
 
             # Parse out the information about all the ports in the switch
             switch_ports = {}
@@ -170,7 +174,7 @@ class NetworkGraph():
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
 
-    def _parse_mininet_host_nodes(self, mininet_host_nodes, mininet_port_edges):
+    def parse_mininet_host_nodes(self, mininet_host_nodes, mininet_port_edges):
 
         # From all the switches
         for sw in mininet_host_nodes:
@@ -191,7 +195,7 @@ class NetworkGraph():
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
 
-    def _parse_mininet_port_edges(self, mininet_port_edges):
+    def parse_mininet_port_edges(self, mininet_port_edges):
         for src_node in mininet_port_edges:
             for src_node_port in mininet_port_edges[src_node]:
                 dst_list = mininet_port_edges[src_node][src_node_port]
@@ -203,7 +207,7 @@ class NetworkGraph():
                               dst_node,
                               int(dst_node_port))
 
-    def _parse_odl_node_edges(self, topology):
+    def parse_odl_node_edges(self, topology):
 
         topology_links = dict()
         if "link" in topology["network-topology"]["topology"][0]:
@@ -266,19 +270,23 @@ class NetworkGraph():
             for port in self.graph.node[sw]["sw"].ports:
                 print self.graph.node[sw]["sw"].ports[port]
 
-    def _parse_network_graph(self):
-
+    def parse_switches(self):
+        
         if self.controller == "odl":
-            odl_switches = self._get_odl_switches()
+            odl_switches = self.get_odl_switches()
             self.parse_odl_switches(odl_switches)
         elif self.controller == "ryu":
-            pass
+            pass        
 
-        mininet_host_nodes = self._get_mininet_host_nodes()
-        mininet_port_edges = self._get_mininet_port_edges()
+    def parse_network_graph(self):
+        
+        self.parse_switches()
 
-        self._parse_mininet_host_nodes(mininet_host_nodes, mininet_port_edges)
-        self._parse_mininet_port_edges(mininet_port_edges)
+        mininet_host_nodes = self.get_mininet_host_nodes()
+        mininet_port_edges = self.get_mininet_port_edges()
+
+        self.parse_mininet_host_nodes(mininet_host_nodes, mininet_port_edges)
+        self.parse_mininet_port_edges(mininet_port_edges)
 
         #self.dump_model()
 

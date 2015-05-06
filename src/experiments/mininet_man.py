@@ -57,6 +57,9 @@ class MininetMan():
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
                            switch=self.switch)
 
+        self.net.start()
+
+
     def get_all_switch_hosts(self, switch_id):
 
         p = self.topo.ports
@@ -116,27 +119,17 @@ class MininetMan():
             for (src_host, dst_host) in self._get_experiment_host_pair():
                 self._ping_host_pair(src_host, dst_host)
 
-    def setup_mininet_with_odl(self):
-
-        # Start
-        self.net.start()
-
-        print "Waiting for the controller to get ready for synthesis"
-        time.sleep(180)
+    def setup_mininet_with_odl(self, ng):
 
         print "Synthesizing..."
 
-        self.ng = NetworkGraph(mininet_man=self, controller="odl")
-        self.synthesis_dij = SynthesizeDij(self.ng, master_switch=self.topo_name == "linear")
+        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
         self.synthesis_dij.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
 
     def setup_mininet_with_ryu_router(self):
-
-        # Start the mininet
-        self.net.start()
 
         # Get all the nodes
         self.h1 = self.net.getNodeByName("h1")
