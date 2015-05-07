@@ -39,8 +39,8 @@ class NetworkGraph():
         self.experiment_switches = ["s1", "s2"]
 
         #self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
-        #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
-        self.config_path_prefix = "../experiments/configurations/line3switch1hps/"
+        self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
+        #self.config_path_prefix = "../experiments/configurations/line3switch1hps/"
 
         self.load_config = load_config
         self.save_config = save_config
@@ -163,7 +163,7 @@ class NetworkGraph():
             switch_ports = {}
             for nc in node["node-connector"]:
                 if nc["flow-node-inventory:port-number"] != "LOCAL":
-                    switch_ports[int(nc["flow-node-inventory:port-number"])] = Port(sw, odl_port_json=nc)
+                    switch_ports[int(nc["flow-node-inventory:port-number"])] = Port(sw, port_json=nc)
             sw.ports = switch_ports
 
             # Parse group table if one is available
@@ -366,7 +366,7 @@ class NetworkGraph():
             # Parse out the information about all the ports in the switch
             switch_ports = {}
             for port in ryu_switches[dpid]["ports"]:
-                switch_ports[int(port["port_no"])] = Port(sw, ryu_port_json=port)
+                switch_ports[int(port["port_no"])] = Port(sw, port_json=port)
 
             sw.ports = switch_ports
 

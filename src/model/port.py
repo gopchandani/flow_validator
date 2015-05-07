@@ -3,7 +3,7 @@ __author__ = 'Rakesh Kumar'
 
 class Port():
 
-    def __init__(self, sw, odl_port_json=None, ryu_port_json=None, port_type="physical", port_id=None):
+    def __init__(self, sw, port_json=None, port_type="physical", port_id=None):
 
         self.sw = sw
         self.port_type = port_type
@@ -19,11 +19,11 @@ class Port():
         self.port_number = None
         self.state = None
 
-        if port_type == "physical" and odl_port_json:
-            self._populate_with_odl_port_json(odl_port_json)
+        if port_type == "physical" and self.sw.network_graph.controller == "odl":
+            self.parse_odl_port_json(port_json)
 
-        elif port_type == "physical" and ryu_port_json:
-            self._populate_with_ryu_port_json(ryu_port_json)
+        elif port_type == "physical" and self.sw.network_graph.controller == "ryu":
+            self.parse_ryu_port_json(port_json)
 
         elif port_type == "ingress":
             self.port_id = port_id
@@ -37,24 +37,24 @@ class Port():
         else:
             raise Exception("Invalid port type specified.")
 
-    def _populate_with_odl_port_json(self, odl_port_json):
+    def parse_odl_port_json(self, port_json):
 
-        self.port_id = str(self.sw.node_id) + ":" + str(odl_port_json["flow-node-inventory:port-number"])
-        self.port_number = odl_port_json["flow-node-inventory:port-number"]
-        self.mac_address = odl_port_json["flow-node-inventory:hardware-address"]
+        self.port_id = str(self.sw.node_id) + ":" + str(port_json["flow-node-inventory:port-number"])
+        self.port_number = port_json["flow-node-inventory:port-number"]
+        self.mac_address = port_json["flow-node-inventory:hardware-address"]
 
-        if odl_port_json["flow-node-inventory:state"]["link-down"]:
+        if port_json["flow-node-inventory:state"]["link-down"]:
             self.state = "down"
         else:
             self.state = "up"
 
-    def _populate_with_ryu_port_json(self, ryu_port_json):
+    def parse_ryu_port_json(self, port_json):
 
-        self.port_id = str(self.sw.node_id) + ":" + str(ryu_port_json["port_no"])
-        self.port_number = ryu_port_json["port_no"]
-        self.mac_address = ryu_port_json["hw_addr"]
+        self.port_id = str(self.sw.node_id) + ":" + str(port_json["port_no"])
+        self.port_number = port_json["port_no"]
+        self.mac_address = port_json["hw_addr"]
 
-        #TODO: Peep into ryu_port_json["state"]
+        #TODO: Peep into port_json["state"]
         self.state = "up"
 
     def __str__(self):

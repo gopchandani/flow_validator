@@ -14,19 +14,28 @@ class Flow():
     def __init__(self, sw, flow_json):
 
         self.sw = sw
-        self.network_graph = sw.network_graph
         self.flow_json = flow_json
-        self.table_id = flow_json["table_id"]
-        self.id = flow_json["id"]
-        self.priority = int(flow_json["priority"])
-        self.match_element = MatchElement(flow_json["match"], self)
+        self.network_graph = sw.network_graph
+        self.port_graph = None
+
+        if self.sw.network_graph.controller == "odl":
+            self.parse_odl_flow()
+
+        elif self.sw.network_graph.controller == "ryu":
+            self.parse_odl_flow()
+
+    def parse_odl_flow(self):
+
+        self.table_id = self.flow_json["table_id"]
+        self.id = self.flow_json["id"]
+        self.priority = int(self.flow_json["priority"])
+        self.match_element = MatchElement(self.flow_json["match"], self)
 
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
 
         # Port Graph Stuff
-        self.port_graph = None
         self.match = Traffic()
         self.match.match_elements.append(self.match_element)
 
@@ -37,20 +46,20 @@ class Flow():
         self.applied_match = None
         self.port_graph_edges = []
 
-        if "instructions" in flow_json:
+        if "instructions" in self.flow_json:
 
             # Go through instructions
-            for instruction_json in flow_json["instructions"]["instruction"]:
+            for instruction_json in self.flow_json["instructions"]["instruction"]:
 
                 if "write-actions" in instruction_json:
                     write_actions_json = instruction_json["write-actions"]
                     for action_json in write_actions_json["action"]:
-                        self.written_actions.append(Action(sw, action_json))
+                        self.written_actions.append(Action(self.sw, action_json))
 
                 if "apply-actions" in instruction_json:
                     apply_actions_json = instruction_json["apply-actions"]
                     for action_json in apply_actions_json["action"]:
-                        self.applied_actions.append(Action(sw, action_json))
+                        self.applied_actions.append(Action(self.sw, action_json))
 
                 if "go-to-table" in instruction_json:
                     self.go_to_table = instruction_json["go-to-table"]["table_id"]
