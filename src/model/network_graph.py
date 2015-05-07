@@ -21,6 +21,7 @@ class NetworkGraph():
         self.OFPP_CONTROLLER = 0xfffffffd
         self.OFPP_ALL = 0xfffffffc
         self.OFPP_IN = 0xfffffff8
+        self.OFPP_NORMAL = 0xfffffffa
 
         # Initialize the self.graph
         self.graph = nx.Graph()

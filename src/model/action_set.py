@@ -220,7 +220,10 @@ class ActionSet():
 
         for output_action in self.action_dict["output"]:
 
-            if int(output_action.out_port) == 4294967293:
+            if int(output_action.out_port) == self.sw.network_graph.OFPP_CONTROLLER:
+                continue
+
+            if int(output_action.out_port) == self.sw.network_graph.OFPP_NORMAL:
                 continue
 
             if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):
