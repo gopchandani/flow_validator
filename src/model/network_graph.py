@@ -4,6 +4,8 @@ import json
 import httplib2
 import networkx as nx
 
+from collections import defaultdict
+
 from switch import Switch
 from host import Host
 from flow_table import FlowTable
@@ -24,7 +26,9 @@ class NetworkGraph():
         self.graph = nx.Graph()
 
         # Initialize things to talk to controller
-        self.baseUrl = 'http://localhost:8181/restconf/'
+        self.baseUrlOdl = "http://localhost:8181/restconf/"
+        self.baseUrlRyu = "http://localhost:8080/"
+
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
 
@@ -35,7 +39,8 @@ class NetworkGraph():
         self.experiment_switches = ["s1", "s2"]
 
         #self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
-        self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
+        #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
+        self.config_path_prefix = "../experiments/configurations/line3switch1hps/"
 
         self.load_config = load_config
         self.save_config = save_config
@@ -56,7 +61,7 @@ class NetworkGraph():
         else:
             # Get all the odl_switches from the inventory API
             remaining_url = 'operational/opendaylight-inventory:nodes'
-            resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
+            resp, content = self.h.request(self.baseUrlOdl + remaining_url, "GET")
             odl_switches = json.loads(content)
 
             # Grab each switch's group table with a separate GET request
@@ -64,7 +69,7 @@ class NetworkGraph():
 
                 #  Add an instance for Switch in the graph
                 remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node["id"])
-                resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
+                resp, content = self.h.request(self.baseUrlOdl + remaining_url, "GET")
 
                 if resp["status"] == "200":
                     switch_node = json.loads(content)
@@ -88,7 +93,7 @@ class NetworkGraph():
         else:
             # Get all the hosts and edges from the topology API
             remaining_url = 'operational/network-topology:network-topology'
-            resp, content = self.h.request(self.baseUrl + remaining_url, "GET")
+            resp, content = self.h.request(self.baseUrlOdl + remaining_url, "GET")
             topology = json.loads(content)
 
         if self.save_config:
@@ -121,7 +126,6 @@ class NetworkGraph():
 
         return mininet_host_nodes
 
-
     def get_mininet_port_edges(self):
 
         mininet_port_edges = {}
@@ -143,7 +147,7 @@ class NetworkGraph():
         #  Go through each node and grab the odl_switches and the corresponding hosts associated with the switch
         for node in odl_switches["nodes"]["node"]:
 
-            #  Add an instance for Switch in the graph
+            #  prepare a switch id
             switch_id = "s" + node["id"].split(":")[1]
 
             # Check to see if a switch with this id already exists in the graph,
@@ -159,7 +163,7 @@ class NetworkGraph():
             switch_ports = {}
             for nc in node["node-connector"]:
                 if nc["flow-node-inventory:port-number"] != "LOCAL":
-                    switch_ports[int(nc["flow-node-inventory:port-number"])] = Port(sw, nc)
+                    switch_ports[int(nc["flow-node-inventory:port-number"])] = Port(sw, odl_port_json=nc)
             sw.ports = switch_ports
 
             # Parse group table if one is available
@@ -280,13 +284,114 @@ class NetworkGraph():
             for port in self.graph.node[sw]["sw"].ports:
                 print self.graph.node[sw]["sw"].ports[port]
 
+    def get_ryu_switches(self):
+        ryu_switches = {}
+
+        if self.load_config:
+
+            with open(self.config_path_prefix + "ryu_switches.json", "r") as in_file:
+                ryu_switches = json.loads(in_file.read())
+
+        else:
+            # Get all the ryu_switches from the inventory API
+            remaining_url = 'stats/switches'
+            resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+
+            ryu_switch_numbers = json.loads(content)
+
+            for dpid in ryu_switch_numbers:
+
+                this_ryu_switch = {}
+
+                # Get the flows
+                remaining_url = 'stats/flow' + "/" + str(dpid)
+                resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+
+                if resp["status"] == "200":
+                    switch_flows = json.loads(content)
+                    switch_flow_tables = defaultdict(list)
+                    for flow_rule in switch_flows[str(dpid)]:
+                        switch_flow_tables[flow_rule["table_id"]].append(flow_rule)
+                    this_ryu_switch["flow_tables"] = switch_flow_tables
+                else:
+                    print "Error pulling switch flows from RYU."
+
+                # Get the ports
+                remaining_url = 'stats/portdesc' + "/" + str(dpid)
+                resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+
+                if resp["status"] == "200":
+                    switch_ports = json.loads(content)
+                    this_ryu_switch["ports"] = switch_ports[str(dpid)]
+                else:
+                    print "Error pulling switch ports from RYU."
+
+                # Get the groups
+                remaining_url = 'stats/group' + "/" + str(dpid)
+                resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+
+                if resp["status"] == "200":
+                    switch_groups = json.loads(content)
+                    this_ryu_switch["groups"] = switch_groups[str(dpid)]
+                else:
+                    print "Error pulling switch ports from RYU."
+
+                ryu_switches[dpid] = this_ryu_switch
+
+        if self.save_config:
+            with open(self.config_path_prefix + "ryu_switches.json", "w") as outfile:
+                json.dump(ryu_switches, outfile)
+
+        return ryu_switches
+
+    def parse_ryu_switches(self, ryu_switches):
+
+        #  Go through each node and grab the odl_switches and the corresponding hosts associated with the switch
+        for dpid in ryu_switches:
+
+            #  prepare a switch id
+            switch_id = "s" + str(dpid)
+
+            # Check to see if a switch with this id already exists in the graph,
+            # if so grab it, otherwise create it
+            sw = self.get_node_object(switch_id)
+            if not sw:
+                sw = Switch(switch_id, self)
+                self.graph.add_node(switch_id, node_type="switch", sw=sw)
+                self.switch_ids.append(switch_id)
+
+            import pprint
+            pprint.pprint(ryu_switches[dpid])
+
+            # Parse out the information about all the ports in the switch
+            switch_ports = {}
+            for port in ryu_switches[dpid]["ports"]:
+                switch_ports[int(port["port_no"])] = Port(sw, ryu_port_json=port)
+
+            sw.ports = switch_ports
+
+            # Parse group table if one is available
+            #if ryu_switches[dpid]["groups"]:
+                #sw.group_table = GroupTable(sw, node["flow-node-inventory:group"])
+
+            # Parse all the flow tables and sort them by table_id in the list
+            switch_flow_tables = []
+            for table_id in ryu_switches[dpid]["flow_tables"]:
+                pass
+
+#                switch_flow_tables.append(FlowTable(sw, flow_table["id"], flow_table["flow"]))
+#                sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+
+
     def parse_switches(self):
         
         if self.controller == "odl":
             odl_switches = self.get_odl_switches()
             self.parse_odl_switches(odl_switches)
+            
         elif self.controller == "ryu":
-            pass        
+            ryu_switches = self.get_ryu_switches()
+            self.parse_ryu_switches(ryu_switches)
 
     def parse_network_graph(self):
         
