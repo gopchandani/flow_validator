@@ -9,7 +9,7 @@ from instruction_set import InstructionSet
 class Flow():
 
     def __hash__(self):
-        return hash(str(self.sw.node_id) + str(self.table_id) + str(self.id))
+        return hash(str(self.sw.node_id) + str(self.table_id) + str(id(self)))
 
     def __init__(self, sw, flow_json):
 
@@ -17,34 +17,31 @@ class Flow():
         self.flow_json = flow_json
         self.network_graph = sw.network_graph
         self.port_graph = None
+        self.written_actions = []
+        self.applied_actions = []
+        self.go_to_table = None
+
+        self.applied_match = None
+        self.port_graph_edges = []
+
+        self.match = Traffic()
+        self.complement_traffic = Traffic()
 
         if self.sw.network_graph.controller == "odl":
             self.parse_odl_flow()
 
         elif self.sw.network_graph.controller == "ryu":
-            self.parse_odl_flow()
+            self.parse_ryu_flow()
 
     def parse_odl_flow(self):
 
         self.table_id = self.flow_json["table_id"]
-        self.id = self.flow_json["id"]
         self.priority = int(self.flow_json["priority"])
-        self.match_element = MatchElement(self.flow_json["match"], self)
+        self.match_element = MatchElement(match_json=self.flow_json["match"], controller="odl", flow=self)
 
-        self.written_actions = []
-        self.applied_actions = []
-        self.go_to_table = None
-
-        # Port Graph Stuff
-        self.match = Traffic()
         self.match.match_elements.append(self.match_element)
-
         complement_match_elements = self.match_element.get_complement_match_elements()
-        self.complement_traffic = Traffic()
         self.complement_traffic.add_match_elements(complement_match_elements)
-
-        self.applied_match = None
-        self.port_graph_edges = []
 
         if "instructions" in self.flow_json:
 
@@ -71,6 +68,13 @@ class Flow():
         else:
             # Interpreting Lack of instructions as Drop
             self.drop = True
+
+    def parse_ryu_flow(self):
+
+        self.table_id = self.flow_json["table_id"]
+        self.priority = int(self.flow_json["priority"])
+        self.match_element = MatchElement(match_json=self.flow_json["match"], controller="ryu", flow=self)
+
 
     def add_port_graph_edges(self):
 

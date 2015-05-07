@@ -130,12 +130,12 @@ def main():
     mm = None
     load_config = False
     save_config = True
-    topo_description = ("linear", 2, 1)
+#    topo_description = ("linear", 2, 1)
 #    topo_description = ("ring", 4, 1)
-#    topo_description = ("linear", 3, 1)
+    topo_description = ("linear", 3, 1)
 
-    controller = "odl"
-#    controller = "ryu"
+#    controller = "odl"
+    controller = "ryu"
 
     if not load_config and save_config:
         cm = ControllerMan(1, controller=controller)

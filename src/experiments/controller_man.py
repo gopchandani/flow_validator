@@ -104,11 +104,13 @@ class ControllerMan():
         os.system("docker rm $(docker ps -a -q)")
 
     def __del__(self):
-        print "Docker cleanup..."
-        self.kill_all()
 
-        if self.ryu_proc:
+        if self.controller == "ryu":
             self.ryu_proc.kill()
+        else:
+            print "Docker cleanup..."
+            self.kill_all()
+
 
 def main():
 

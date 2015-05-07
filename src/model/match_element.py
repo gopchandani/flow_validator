@@ -114,7 +114,7 @@ class MatchElement(DictMixin):
 
         return port_path_str
 
-    def __init__(self, match_json=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
+    def __init__(self, match_json=None, controller=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
 
         self.traffic = traffic
         self.port = None
@@ -131,8 +131,10 @@ class MatchElement(DictMixin):
             for field_name in field_names:
                 self.match_fields[field_name] = IntervalTree()
 
-        if match_json and flow:
-            self.add_element_from_match_json(match_json, flow)
+        if match_json and flow and controller == "odl":
+            self.add_element_from_odl_match_json(match_json, flow)
+        elif match_json and flow and controller == "ryu":
+            self.add_element_from_ryu_match_json(match_json, flow)
         elif is_wildcard:
             for field_name in field_names:
                 self.set_match_field_element(field_name, is_wildcard=True)
@@ -154,8 +156,11 @@ class MatchElement(DictMixin):
             self.value_cache[key] = sys.maxsize
 
         else:
-            self.match_fields[key].add(Interval(value, value + 1))
-            self.value_cache[key] = value
+            if isinstance(value, IPNetwork):
+                self.match_fields[key].add(Interval(value.first, value.last + 1))
+            else:
+                self.match_fields[key].add(Interval(value, value + 1))
+                self.value_cache[key] = value
 
     #TODO: Does not cover the cases of fragmented wildcard
     def is_field_wildcard(self, field_name):
@@ -242,7 +247,7 @@ class MatchElement(DictMixin):
         else:
             return True
 
-    def add_element_from_match_json(self, match_json, flow):
+    def add_element_from_odl_match_json(self, match_json, flow):
 
         for field_name in field_names:
 
@@ -286,6 +291,55 @@ class MatchElement(DictMixin):
             except KeyError:
                 self.set_match_field_element(field_name, is_wildcard=True)
                 continue
+
+    def add_element_from_ryu_match_json(self, match_json, flow):
+
+        for field_name in field_names:
+
+            try:
+                if field_name == "in_port":
+                    try:
+                        self.set_match_field_element(field_name, int(match_json["in_port"]), flow)
+
+                    except ValueError:
+                        parsed_in_port = match_json["in-port"].split(":")[2]
+                        self.set_match_field_element(field_name, int(parsed_in_port), flow)
+
+                elif field_name == "ethernet_type":
+                    self.set_match_field_element(field_name, int(match_json["dl_type"]), flow)
+
+                elif field_name == "ethernet_source":
+                    mac_int = int(match_json["ethernet-match"]["ethernet-source"]["address"].replace(":", ""), 16)
+                    self.set_match_field_element(field_name, mac_int, flow)
+
+                elif field_name == "ethernet_destination":
+                    mac_int = int(match_json["ethernet-match"]["ethernet-destination"]["address"].replace(":", ""), 16)
+                    self.set_match_field_element(field_name, mac_int, flow)
+
+                #TODO: Add graceful handling of IP addresses
+                elif field_name == "src_ip_addr":
+                    self.set_match_field_element(field_name, IPNetwork(match_json["nw_src"]))
+                elif field_name == "dst_ip_addr":
+                    self.set_match_field_element(field_name, IPNetwork(match_json["nw_dst"]))
+
+                elif field_name == "ip_protocol":
+                    self.set_match_field_element(field_name, int(match_json["ip-match"]["ip-protocol"]), flow)
+                elif field_name == "tcp_destination_port":
+                    self.set_match_field_element(field_name, int(match_json["tcp-destination-port"]), flow)
+                elif field_name == "tcp_source_port":
+                    self.set_match_field_element(field_name, int(match_json["tcp-source-port"]), flow)
+                elif field_name == "udp_destination_port":
+                    self.set_match_field_element(field_name, int(match_json["udp-destination-port"]), flow)
+                elif field_name == "udp_source_port":
+                    self.set_match_field_element(field_name, int(match_json["udp-source-port"]), flow)
+                elif field_name == "vlan_id":
+                    self.set_match_field_element(field_name, int(match_json["vlan-match"]["vlan-id"]["vlan-id"]), flow)
+
+            except KeyError:
+                self.set_match_field_element(field_name, is_wildcard=True)
+                continue
+
+
 
     def get_orig_match_element(self, field_modifications=None):
 

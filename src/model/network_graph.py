@@ -39,8 +39,8 @@ class NetworkGraph():
         self.experiment_switches = ["s1", "s2"]
 
         #self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
-        self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
-        #self.config_path_prefix = "../experiments/configurations/line3switch1hps/"
+        #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
+        self.config_path_prefix = "../experiments/configurations/line3switch1hps/"
 
         self.load_config = load_config
         self.save_config = save_config
@@ -210,6 +210,7 @@ class NetworkGraph():
 
 
     def parse_mininet_port_edges(self, mininet_port_edges):
+
         for src_node in mininet_port_edges:
             for src_node_port in mininet_port_edges[src_node]:
                 dst_list = mininet_port_edges[src_node][src_node_port]
@@ -360,9 +361,6 @@ class NetworkGraph():
                 self.graph.add_node(switch_id, node_type="switch", sw=sw)
                 self.switch_ids.append(switch_id)
 
-            import pprint
-            pprint.pprint(ryu_switches[dpid])
-
             # Parse out the information about all the ports in the switch
             switch_ports = {}
             for port in ryu_switches[dpid]["ports"]:
@@ -377,10 +375,8 @@ class NetworkGraph():
             # Parse all the flow tables and sort them by table_id in the list
             switch_flow_tables = []
             for table_id in ryu_switches[dpid]["flow_tables"]:
-                pass
-
-#                switch_flow_tables.append(FlowTable(sw, flow_table["id"], flow_table["flow"]))
-#                sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+                switch_flow_tables.append(FlowTable(sw, table_id, ryu_switches[dpid]["flow_tables"][table_id]))
+                sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
 
     def parse_switches(self):
