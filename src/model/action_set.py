@@ -31,9 +31,9 @@ class Action():
 
     def __init__(self, sw, action_json, is_active=True):
 
+        self.action_json = action_json
         self.sw = sw
         self.matched_flow = None
-        self.order = action_json["order"]
         self.action_type = None
         self.is_active = is_active
         self.bucket = None
@@ -42,34 +42,72 @@ class Action():
         self.modified_field = None
         self.field_modified_to = None
 
-        if "output-action" in action_json:
+        if self.sw.network_graph.controller == "odl":
+            self.parse_odl_action_json()
+
+        elif self.sw.network_graph.controller == "ryu":
+            self.parse_ryu_action_json()
+
+
+    def parse_odl_action_json(self):
+
+        self.order = self.action_json["order"]
+
+        if "output-action" in self.action_json:
             self.action_type = "output"
 
-            if action_json["output-action"]["output-node-connector"] == u"CONTROLLER":
+            if self.action_json["output-action"]["output-node-connector"] == u"CONTROLLER":
                 self.out_port = self.sw.network_graph.OFPP_CONTROLLER
-            elif action_json["output-action"]["output-node-connector"] == u"INPORT":
+            elif self.action_json["output-action"]["output-node-connector"] == u"INPORT":
                 self.out_port = self.sw.network_graph.OFPP_IN
             else:
-                self.out_port = int(action_json["output-action"]["output-node-connector"])
+                self.out_port = int(self.action_json["output-action"]["output-node-connector"])
 
-        if "group-action" in action_json:
+        if "group-action" in self.action_json:
             self.action_type = "group"
-            self.group_id = action_json["group-action"]["group-id"]
+            self.group_id = self.action_json["group-action"]["group-id"]
 
-        if "push-vlan-action" in action_json:
+        if "push-vlan-action" in self.action_json:
             self.action_type = "push_vlan"
-            self.vlan_ethernet_type = action_json["push-vlan-action"]["ethernet-type"]
+            self.vlan_ethernet_type = self.action_json["push-vlan-action"]["ethernet-type"]
 
-        if "pop-vlan-action" in action_json:
+        if "pop-vlan-action" in self.action_json:
             self.action_type = "pop_vlan"
 
-        if "set-field" in action_json:
+        if "set-field" in self.action_json:
             self.action_type = "set_field"
-            self.set_field_match_json = action_json["set-field"]
-            mjp = MatchJsonParser(action_json["set-field"])
+            self.set_field_match_json = self.action_json["set-field"]
+            mjp = MatchJsonParser(self.action_json["set-field"])
             if mjp.keys():
                 self.modified_field = mjp.keys()[0]
                 self.field_modified_to = mjp[self.modified_field]
+
+    def parse_ryu_action_json(self):
+
+        if self.action_json.startswith("OUTPUT"):
+            self.action_type = "output"
+            output_port = self.action_json.split(":")[1]
+            self.out_port = int(output_port)
+
+        # if "group-action" in self.action_json:
+        #     self.action_type = "group"
+        #     self.group_id = self.action_json["group-action"]["group-id"]
+        #
+        # if "push-vlan-action" in self.action_json:
+        #     self.action_type = "push_vlan"
+        #     self.vlan_ethernet_type = self.action_json["push-vlan-action"]["ethernet-type"]
+        #
+        # if "pop-vlan-action" in self.action_json:
+        #     self.action_type = "pop_vlan"
+        #
+        # if "set-field" in self.action_json:
+        #     self.action_type = "set_field"
+        #     self.set_field_match_json = self.action_json["set-field"]
+        #     mjp = MatchJsonParser(self.action_json["set-field"])
+        #     if mjp.keys():
+        #         self.modified_field = mjp.keys()[0]
+        #         self.field_modified_to = mjp[self.modified_field]
+
 
     def update_active_status(self):
 

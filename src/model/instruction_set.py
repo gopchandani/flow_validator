@@ -6,26 +6,56 @@ from action_set import Action
 class Instruction():
 
     def __init__(self, sw, instruction_json):
+
+        self.instruction_json = instruction_json
         self.instruction_type = None
         self.sw = sw
         self.actions_list = []
         self.go_to_table = None
 
-        if "write-actions" in instruction_json:
+        if self.sw.network_graph.controller == "odl":
+            self.parse_odl_instruction()
+
+        elif self.sw.network_graph.controller == "ryu":
+            self.parse_ryu_instruction()
+
+    def parse_odl_instruction(self):
+
+        if "write-actions" in self.instruction_json:
             self.instruction_type = "write-actions"
-            write_actions_json = instruction_json["write-actions"]
+            write_actions_json = self.instruction_json["write-actions"]
             for action_json in write_actions_json["action"]:
-                self.actions_list.append(Action(sw, action_json))
+                self.actions_list.append(Action(self.sw, action_json))
 
-        elif "apply-actions" in instruction_json:
+        elif "apply-actions" in self.instruction_json:
             self.instruction_type = "apply-actions"
-            apply_actions_json = instruction_json["apply-actions"]
+            apply_actions_json = self.instruction_json["apply-actions"]
             for action_json in apply_actions_json["action"]:
-                self.actions_list.append(Action(sw, action_json))
+                self.actions_list.append(Action(self.sw, action_json))
 
-        elif "go-to-table" in instruction_json:
+        elif "go-to-table" in self.instruction_json:
             self.instruction_type = "go-to-table"
-            self.go_to_table = instruction_json["go-to-table"]["table_id"]
+            self.go_to_table = self.instruction_json["go-to-table"]["table_id"]
+
+    def parse_ryu_instruction(self):
+
+        instruction_name, instruction_actions = self.instruction_json
+
+        if instruction_name.startswith("WRITE_ACTIONS"):
+            self.instruction_type = "write-actions"
+            for action_json in instruction_actions:
+                self.actions_list.append(Action(self.sw, action_json))
+
+        elif instruction_name.startswith("APPLY_ACTIONS"):
+            self.instruction_type = "apply-actions"
+            for action_json in instruction_actions:
+                self.actions_list.append(Action(self.sw, action_json))
+
+        elif instruction_name.startswith("GOTO_TABLE"):
+            self.instruction_type = "go-to-table"
+            self.go_to_table = self.instruction_json["go-to-table"]["table_id"]
+
+        #TODO: Other instructions...
 
 class InstructionSet():
 
@@ -67,6 +97,7 @@ class InstructionSet():
 
     def __init__(self, sw, flow, instructions_json):
 
+        self.instructions_json = instructions_json
         self.sw = sw
         self.flow = flow
         self.network_graph = self.sw.network_graph
@@ -76,8 +107,16 @@ class InstructionSet():
         self.written_action_set = ActionSet(self.sw)
         self.goto_table = None
 
-        for instruction_json in instructions_json:
-            instruction = Instruction(sw, instruction_json)
+        if self.sw.network_graph.controller == "odl":
+            self.parse_odl_instruction_set()
+
+        elif self.sw.network_graph.controller == "ryu":
+            self.parse_ryu_instruction_set()
+
+    def parse_odl_instruction_set(self):
+
+        for instruction_json in self.instructions_json:
+            instruction = Instruction(self.sw, instruction_json)
 
             #Apply-Action has to be the first one, so reorganizing that...
             if instruction.instruction_type == "apply-actions":
@@ -99,3 +138,27 @@ class InstructionSet():
             # TODO: Handle meter instruction
             # TODO: Write meta-data case
 
+    def parse_ryu_instruction_set(self):
+
+        for instruction_name in self.instructions_json:
+            instruction = Instruction(self.sw, (instruction_name, self.instructions_json[instruction_name]))
+
+            #Apply-Action has to be the first one, so reorganizing that...
+            if instruction.instruction_type == "apply-actions":
+                self.instruction_list.insert(0, instruction)
+
+                # Add all the actions to the applied_action_set
+                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
+
+            else:
+                self.instruction_list.append(instruction)
+
+            if instruction.instruction_type == "write-actions":
+                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
+
+            elif instruction.instruction_type == "go-to-table":
+                self.goto_table = instruction.go_to_table
+
+            # TODO: Handle clear-actions case
+            # TODO: Handle meter instruction
+            # TODO: Write meta-data case

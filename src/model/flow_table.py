@@ -33,15 +33,15 @@ class Flow():
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_flow()
 
+        self.match.match_elements.append(self.match_element)
+        complement_match_elements = self.match_element.get_complement_match_elements()
+        self.complement_traffic.add_match_elements(complement_match_elements)
+
     def parse_odl_flow(self):
 
         self.table_id = self.flow_json["table_id"]
         self.priority = int(self.flow_json["priority"])
         self.match_element = MatchElement(match_json=self.flow_json["match"], controller="odl", flow=self)
-
-        self.match.match_elements.append(self.match_element)
-        complement_match_elements = self.match_element.get_complement_match_elements()
-        self.complement_traffic.add_match_elements(complement_match_elements)
 
         if "instructions" in self.flow_json:
 
@@ -75,13 +75,43 @@ class Flow():
         self.priority = int(self.flow_json["priority"])
         self.match_element = MatchElement(match_json=self.flow_json["match"], controller="ryu", flow=self)
 
+        if "instructions" in self.flow_json:
+
+            # Go through instructions
+            for instruction in self.flow_json["instructions"]:
+                #
+                # if "write-actions" in instruction_json:
+                #     write_actions_json = instruction_json["write-actions"]
+                #     for action_json in write_actions_json["action"]:
+                #         self.written_actions.append(Action(self.sw, action_json))
+
+                if "APPLY_ACTIONS" == instruction:
+                    for action_json in self.flow_json["instructions"]["APPLY_ACTIONS"]:
+                        self.applied_actions.append(Action(self.sw, action_json))
+
+                # if "go-to-table" in instruction_json:
+                #     self.go_to_table = instruction_json["go-to-table"]["table_id"]
+
+                # TODO: Handle meter instruction
+                # TODO: Handle clear-actions case
+                # TODO: Write meta-data case
+                # TODO: Handle apply-actions case (SEL however, does not support this yet)
+        else:
+            # Interpreting Lack of instructions as Drop
+            self.drop = True
+
+
 
     def add_port_graph_edges(self):
 
         if not "instructions" in self.flow_json:
             print "Assuming this means to drop."
         else:
-            self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
+            if self.sw.network_graph.controller == "odl":
+                self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
+
+            elif self.sw.network_graph.controller == "ryu":
+                self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
             self.applied_field_modifications = \
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.match_element)
