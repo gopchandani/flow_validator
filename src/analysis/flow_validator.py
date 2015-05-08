@@ -130,8 +130,8 @@ def main():
     mm = None
     load_config = False
     save_config = True
-    #topo_description = ("linear", 2, 1)
-    topo_description = ("ring", 4, 1)
+    topo_description = ("linear", 2, 1)
+#    topo_description = ("ring", 4, 1)
 
 #    topo_description = ("linear", 3, 1)
 

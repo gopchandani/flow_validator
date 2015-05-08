@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+import os
 import json
 import httplib2
 import networkx as nx
@@ -39,9 +40,11 @@ class NetworkGraph():
 
         self.experiment_switches = ["s1", "s2"]
 
-        self.config_path_prefix = "../experiments/configurations/ring4switch1hps/"
-        #self.config_path_prefix = "../experiments/configurations/line2switch1hps/"
-        #self.config_path_prefix = "../experiments/configurations/line3switch1hps/"
+        dir_name = str(self.mininet_man.topo_name) + str(self.mininet_man.num_switches) + str(self.mininet_man.num_hosts_per_switch)
+        self.config_path_prefix = "../experiments/configurations/" + dir_name + "/"
+
+        if not os.path.exists(self.config_path_prefix):
+            os.makedirs(self.config_path_prefix)
 
         self.load_config = load_config
         self.save_config = save_config
