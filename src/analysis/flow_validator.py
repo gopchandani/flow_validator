@@ -12,16 +12,26 @@ from model.port_graph import PortGraph
 from model.traffic import Traffic
 
 mm = None
+#
+# load_config = True
+# save_config = False
+# controller = "odl"
+# topo_description = ("linear", 2, 1)
+# experiment_switches = ["s1", "s2"]
+
+
 load_config = True
 save_config = False
-
 controller = "odl"
 topo_description = ("ring", 4, 1)
 experiment_switches = ["s1", "s3"]
 
-#controller = "ryu"
-#topo_description = ("linear", 3, 1)
-#experiment_switches = ["s1", "s2", "s3"]
+#
+# load_config = False
+# save_config = True
+# controller = "ryu"
+# topo_description = ("linear", 3, 1)
+# experiment_switches = ["s1", "s2", "s3"]
 
 
 class FlowValidator:
@@ -107,10 +117,12 @@ class FlowValidator:
             for dst_h_id in self.network_graph.get_experiment_host_ids():
 
                 if controller == "ryu":
-                    if src_h_id != "h2":
-                        continue
+                    if (src_h_id == "h2" and dst_h_id == "h1") or \
+                            (src_h_id == "h1" and dst_h_id == "h2") or \
+                            (src_h_id == "h2" and dst_h_id == "h3") or \
+                            (src_h_id == "h3" and dst_h_id == "h2"):
 
-                    self.validate_host_pair_reachability(src_h_id, dst_h_id)
+                        self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
                 elif controller == "odl":
                     self.validate_host_pair_reachability(src_h_id, dst_h_id)
@@ -137,6 +149,8 @@ class FlowValidator:
 
                     self.port_graph.remove_node_graph_edge(edge[0], edge[1])
                     edge_removed_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
+
+                    print "Restoring edge:", edge
 
                     # Add it back
                     self.port_graph.add_node_graph_edge(edge[0], edge[1])
@@ -178,10 +192,10 @@ def main():
     fv.add_hosts()
     fv.initialize_admitted_traffic()
 
-    fv.validate_all_host_pair_reachability()
+    #fv.validate_all_host_pair_reachability()
     # fv.remove_hosts()
 
-    #fv.validate_all_host_pair_backup()
+    fv.validate_all_host_pair_backup()
 
     fv.de_init_port_graph()
 
