@@ -43,64 +43,11 @@ class Flow():
         self.priority = int(self.flow_json["priority"])
         self.match_element = MatchElement(match_json=self.flow_json["match"], controller="odl", flow=self)
 
-        if "instructions" in self.flow_json:
-
-            # Go through instructions
-            for instruction_json in self.flow_json["instructions"]["instruction"]:
-
-                if "write-actions" in instruction_json:
-                    write_actions_json = instruction_json["write-actions"]
-                    for action_json in write_actions_json["action"]:
-                        self.written_actions.append(Action(self.sw, action_json))
-
-                if "apply-actions" in instruction_json:
-                    apply_actions_json = instruction_json["apply-actions"]
-                    for action_json in apply_actions_json["action"]:
-                        self.applied_actions.append(Action(self.sw, action_json))
-
-                if "go-to-table" in instruction_json:
-                    self.go_to_table = instruction_json["go-to-table"]["table_id"]
-
-                # TODO: Handle meter instruction
-                # TODO: Handle clear-actions case
-                # TODO: Write meta-data case
-                # TODO: Handle apply-actions case (SEL however, does not support this yet)
-        else:
-            # Interpreting Lack of instructions as Drop
-            self.drop = True
-
     def parse_ryu_flow(self):
 
         self.table_id = self.flow_json["table_id"]
         self.priority = int(self.flow_json["priority"])
         self.match_element = MatchElement(match_json=self.flow_json["match"], controller="ryu", flow=self)
-
-        if "instructions" in self.flow_json:
-
-            # Go through instructions
-            for instruction in self.flow_json["instructions"]:
-                #
-                # if "write-actions" in instruction_json:
-                #     write_actions_json = instruction_json["write-actions"]
-                #     for action_json in write_actions_json["action"]:
-                #         self.written_actions.append(Action(self.sw, action_json))
-
-                if "APPLY_ACTIONS" == instruction:
-                    for action_json in self.flow_json["instructions"]["APPLY_ACTIONS"]:
-                        self.applied_actions.append(Action(self.sw, action_json))
-
-                # if "go-to-table" in instruction_json:
-                #     self.go_to_table = instruction_json["go-to-table"]["table_id"]
-
-                # TODO: Handle meter instruction
-                # TODO: Handle clear-actions case
-                # TODO: Write meta-data case
-                # TODO: Handle apply-actions case (SEL however, does not support this yet)
-        else:
-            # Interpreting Lack of instructions as Drop
-            self.drop = True
-
-
 
     def add_port_graph_edges(self):
 

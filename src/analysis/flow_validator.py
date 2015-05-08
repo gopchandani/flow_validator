@@ -25,10 +25,10 @@ save_config = False
 controller = "odl"
 topo_description = ("ring", 4, 1)
 experiment_switches = ["s1", "s3"]
-
 #
-# load_config = False
-# save_config = True
+#
+# load_config = True
+# save_config = False
 # controller = "ryu"
 # topo_description = ("linear", 3, 1)
 # experiment_switches = ["s1", "s2", "s3"]
@@ -192,10 +192,10 @@ def main():
     fv.add_hosts()
     fv.initialize_admitted_traffic()
 
-    #fv.validate_all_host_pair_reachability()
+    fv.validate_all_host_pair_reachability()
     # fv.remove_hosts()
 
-    fv.validate_all_host_pair_backup()
+    #fv.validate_all_host_pair_backup()
 
     fv.de_init_port_graph()
 
