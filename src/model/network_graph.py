@@ -15,7 +15,7 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self, mininet_man, controller, load_config=False, save_config=False):
+    def __init__(self, mininet_man, controller, experiment_switches, load_config=False, save_config=False, ):
 
         self.mininet_man = mininet_man
 
@@ -38,7 +38,7 @@ class NetworkGraph():
         self.host_ids = []
         self.switch_ids = []
 
-        self.experiment_switches = ["s1", "s2"]
+        self.experiment_switches = experiment_switches
 
         dir_name = str(self.mininet_man.topo_name) + str(self.mininet_man.num_switches) + str(self.mininet_man.num_hosts_per_switch)
         self.config_path_prefix = "../experiments/configurations/" + dir_name + "/"

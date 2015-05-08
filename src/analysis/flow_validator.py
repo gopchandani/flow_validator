@@ -11,6 +11,19 @@ from model.network_graph import NetworkGraph
 from model.port_graph import PortGraph
 from model.traffic import Traffic
 
+mm = None
+load_config = True
+save_config = False
+
+controller = "odl"
+topo_description = ("ring", 4, 1)
+experiment_switches = ["s1", "s3"]
+
+#controller = "ryu"
+#topo_description = ("linear", 3, 1)
+#experiment_switches = ["s1", "s2", "s3"]
+
+
 class FlowValidator:
 
     def __init__(self, network_graph):
@@ -92,7 +105,16 @@ class FlowValidator:
 
         for src_h_id in self.network_graph.get_experiment_host_ids():
             for dst_h_id in self.network_graph.get_experiment_host_ids():
-                self.validate_host_pair_reachability(src_h_id, dst_h_id)
+
+                if controller == "ryu":
+                    if src_h_id != "h2":
+                        continue
+
+                    self.validate_host_pair_reachability(src_h_id, dst_h_id)
+
+                elif controller == "odl":
+                    self.validate_host_pair_reachability(src_h_id, dst_h_id)
+
 
 
     def validate_all_host_pair_backup(self):
@@ -125,26 +147,21 @@ class FlowValidator:
                         print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
                         return
 
+
+
 def main():
 
-    mm = None
-    load_config = False
-    save_config = True
-    topo_description = ("linear", 2, 1)
-#    topo_description = ("ring", 4, 1)
-
-#    topo_description = ("linear", 3, 1)
-
-    controller = "odl"
-#    controller = "ryu"
+    controller_port = 6633
 
     if not load_config and save_config:
         cm = ControllerMan(1, controller=controller)
         controller_port = cm.get_next()
-        mm = MininetMan(controller_port, *topo_description)
+
+    mm = MininetMan(controller_port, *topo_description)
 
     # Get a flow validator instance
-    ng = NetworkGraph(mininet_man=mm, controller=controller, save_config=save_config, load_config=load_config)
+    ng = NetworkGraph(mininet_man=mm, controller=controller, experiment_switches=experiment_switches,
+                      save_config=save_config, load_config=load_config)
 
     if not load_config and save_config:
         if controller == "odl":
