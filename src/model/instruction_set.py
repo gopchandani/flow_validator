@@ -39,6 +39,7 @@ class Instruction():
 
     def parse_ryu_instruction(self):
 
+
         instruction_name, instruction_actions = self.instruction_json
 
         if instruction_name.startswith("WRITE_ACTIONS"):

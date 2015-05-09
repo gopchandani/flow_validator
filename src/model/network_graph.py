@@ -378,9 +378,6 @@ class NetworkGraph():
 
             # Parse all the flow tables and sort them by table_id in the list
 
-            if switch_id == "s3":
-                pass
-
             switch_flow_tables = []
             for table_id in ryu_switches[dpid]["flow_tables"]:
                 switch_flow_tables.append(FlowTable(sw, table_id, ryu_switches[dpid]["flow_tables"][table_id]))

@@ -18,20 +18,20 @@ mm = None
 # controller = "odl"
 # topo_description = ("linear", 2, 1)
 # experiment_switches = ["s1", "s2"]
-
-
-load_config = True
-save_config = False
-controller = "odl"
-topo_description = ("ring", 4, 1)
-experiment_switches = ["s1", "s3"]
 #
 #
 # load_config = True
 # save_config = False
-# controller = "ryu"
-# topo_description = ("linear", 3, 1)
-# experiment_switches = ["s1", "s2", "s3"]
+# controller = "odl"
+# topo_description = ("ring", 4, 1)
+# experiment_switches = ["s1", "s3"]
+# #
+
+load_config = True
+save_config = False
+controller = "ryu"
+topo_description = ("linear", 3, 1)
+experiment_switches = ["s1", "s2", "s3"]
 
 
 class FlowValidator:

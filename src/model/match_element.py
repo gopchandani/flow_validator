@@ -20,7 +20,20 @@ field_names = ["in_port",
               "udp_source_port",
               "vlan_id"]
 
-class MatchJsonParser():
+ryu_field_names_mapping = {"in_port": "in_port",
+                           "eth_type": "ethernet_type",
+                           "eth_src": "ethernet_source",
+                           "eth_dst":"ethernet_destination",
+                           "nw_src": "src_ip_addr",
+                           "nw_dst":"dst_ip_addr",
+                           "nw_proto": "ip_protocol",
+                           "tcp_dst": "tcp_destination_port",
+                           "tcp_src": "tcp_source_port",
+                           "udp_dst": "udp_destination_port",
+                           "udp_src": "udp_source_port",
+                           "dl_vlan": "vlan_id"}
+
+class OdlMatchJsonParser():
 
     def __init__(self, match_json=None):
         self.field_values = {}

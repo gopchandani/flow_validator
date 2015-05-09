@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
-from match_element import MatchJsonParser
+from match_element import OdlMatchJsonParser
+from match_element import ryu_field_names_mapping
 from collections import defaultdict
 from copy import copy
 
@@ -77,7 +78,7 @@ class Action():
         if "set-field" in self.action_json:
             self.action_type = "set_field"
             self.set_field_match_json = self.action_json["set-field"]
-            mjp = MatchJsonParser(self.action_json["set-field"])
+            mjp = OdlMatchJsonParser(self.action_json["set-field"])
             if mjp.keys():
                 self.modified_field = mjp.keys()[0]
                 self.field_modified_to = mjp[self.modified_field]
@@ -89,6 +90,12 @@ class Action():
             output_port = self.action_json.split(":")[1]
             self.out_port = int(output_port)
 
+        if self.action_json.startswith("SET_FIELD"):
+            self.action_type = "set_field"
+            field_mod = self.action_json[self.action_json.find("{") + 1:]
+            self.modified_field = ryu_field_names_mapping[field_mod[0:field_mod.find(":")]]
+            self.field_modified_to = field_mod[field_mod.find(":") + 1:field_mod.find("}") - 1]
+
         # if "group-action" in self.action_json:
         #     self.action_type = "group"
         #     self.group_id = self.action_json["group-action"]["group-id"]
@@ -99,15 +106,6 @@ class Action():
         #
         # if "pop-vlan-action" in self.action_json:
         #     self.action_type = "pop_vlan"
-        #
-        # if "set-field" in self.action_json:
-        #     self.action_type = "set_field"
-        #     self.set_field_match_json = self.action_json["set-field"]
-        #     mjp = MatchJsonParser(self.action_json["set-field"])
-        #     if mjp.keys():
-        #         self.modified_field = mjp.keys()[0]
-        #         self.field_modified_to = mjp[self.modified_field]
-
 
     def update_active_status(self):
 
