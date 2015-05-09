@@ -41,6 +41,7 @@ class Flow():
         self.priority = int(self.flow_json["priority"])
         self.match_element = MatchElement(match_json=self.flow_json["match"], controller="odl", flow=self)
 
+
     def parse_ryu_flow(self):
 
         self.table_id = self.flow_json["table_id"]
@@ -61,6 +62,9 @@ class Flow():
             self.applied_field_modifications = \
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.match_element)
             port_graph_edge_status = self.instruction_set.applied_action_set.get_port_graph_edge_status()
+
+            if self.sw.node_id == "s3":
+                pass
 
             for out_port, output_action in port_graph_edge_status:
 
