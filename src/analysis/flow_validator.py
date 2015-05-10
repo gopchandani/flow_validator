@@ -1,7 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
-import time
 sys.path.append("./")
 
 from experiments.controller_man import ControllerMan
@@ -12,7 +11,7 @@ from model.port_graph import PortGraph
 from model.traffic import Traffic
 
 mm = None
-#
+
 # load_config = True
 # save_config = False
 # controller = "odl"
@@ -20,18 +19,18 @@ mm = None
 # experiment_switches = ["s1", "s2"]
 
 #
-load_config = True
-save_config = False
-controller = "odl"
-topo_description = ("ring", 4, 1)
-experiment_switches = ["s1", "s3"]
-# #
+# load_config = True
+# save_config = False
+# controller = "odl"
+# topo_description = ("ring", 4, 1)
+# experiment_switches = ["s1", "s3"]
 #
-# load_config = False
-# save_config = True
-# controller = "ryu"
-# topo_description = ("linear", 3, 1)
-# experiment_switches = ["s1", "s2", "s3"]
+
+load_config = False
+save_config = True
+controller = "ryu"
+topo_description = ("linear", 3, 1)
+experiment_switches = ["s1", "s2", "s3"]
 
 class FlowValidator:
 
@@ -120,8 +119,11 @@ class FlowValidator:
                     #         (src_h_id == "h1" and dst_h_id == "h2") or \
                     #         (src_h_id == "h2" and dst_h_id == "h3") or \
                     #         (src_h_id == "h3" and dst_h_id == "h2"):
-                    if (src_h_id == "h2" and dst_h_id == "h3") or \
-                            (src_h_id == "h3" and dst_h_id == "h2"):
+
+                    # if (src_h_id == "h2" and dst_h_id == "h3") or \
+                    #         (src_h_id == "h3" and dst_h_id == "h2"):
+
+                    if True:
                         self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
                 elif controller == "odl":

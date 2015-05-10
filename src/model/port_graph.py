@@ -60,8 +60,6 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph(self)
 
-        gc.collect()
-
     def add_edge(self, port1, port2, key, edge_filter_match):
 
         edge_type = None
