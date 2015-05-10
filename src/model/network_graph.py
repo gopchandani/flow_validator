@@ -39,8 +39,13 @@ class NetworkGraph():
         self.switch_ids = []
 
         self.experiment_switches = experiment_switches
+        self.controller = controller
 
-        dir_name = str(self.mininet_man.topo_name) + str(self.mininet_man.num_switches) + str(self.mininet_man.num_hosts_per_switch)
+        dir_name = self.controller + \
+                   str(self.mininet_man.topo_name) + \
+                   str(self.mininet_man.num_switches) + \
+                   str(self.mininet_man.num_hosts_per_switch)
+
         self.config_path_prefix = "../experiments/configurations/" + dir_name + "/"
 
         if not os.path.exists(self.config_path_prefix):
@@ -48,7 +53,6 @@ class NetworkGraph():
 
         self.load_config = load_config
         self.save_config = save_config
-        self.controller = controller
 
         #  Load up everything
         self.parse_network_graph()

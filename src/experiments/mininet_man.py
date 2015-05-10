@@ -131,6 +131,15 @@ class MininetMan():
 
         self.net.pingAll(self.ping_timeout)
 
+    def setup_mininet_with_ryu(self, ng):
+
+        print "Synthesizing..."
+
+        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
+        self.synthesis_dij.synthesize_all_node_pairs()
+        self.net.pingAll(self.ping_timeout)
+
+
     def setup_mininet_with_ryu_router(self):
 
         # Get all the nodes

@@ -12,11 +12,11 @@ from model.traffic import Traffic
 
 mm = None
 
-# load_config = True
-# save_config = False
-# controller = "odl"
-# topo_description = ("linear", 2, 1)
-# experiment_switches = ["s1", "s2"]
+load_config = False
+save_config = True
+controller = "odl"
+topo_description = ("linear", 2, 1)
+experiment_switches = ["s1", "s2"]
 
 #
 # load_config = True
@@ -25,12 +25,12 @@ mm = None
 # topo_description = ("ring", 4, 1)
 # experiment_switches = ["s1", "s3"]
 #
-
-load_config = False
-save_config = True
-controller = "ryu"
-topo_description = ("linear", 3, 1)
-experiment_switches = ["s1", "s2", "s3"]
+#
+# load_config = False
+# save_config = True
+# controller = "ryu"
+# topo_description = ("linear", 3, 1)
+# experiment_switches = ["s1", "s2", "s3"]
 
 class FlowValidator:
 
@@ -181,7 +181,8 @@ def main():
         if controller == "odl":
             mm.setup_mininet_with_odl(ng)
         elif controller == "ryu":
-            mm.setup_mininet_with_ryu_router()
+#            mm.setup_mininet_with_ryu_router()
+            mm.setup_mininet_with_ryu(ng)
 
     # Refresh the network_graph
     ng.parse_switches()
