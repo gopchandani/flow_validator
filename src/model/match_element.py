@@ -118,11 +118,11 @@ class MatchElement(DictMixin):
 
     def get_port_path_str(self):
 
-        port_path_str = self.port.port_id #+ "(" + str(id(self)) + ")"
+        port_path_str = self.port.port_id + "(" + str(id(self)) + ")"
         trav = self.succ_match_element
 
         while trav != None:
-            port_path_str += (" -> " + trav.port.port_id )#+ "(" + str(id(trav)) + ")")
+            port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
             trav = trav.succ_match_element
 
         return port_path_str

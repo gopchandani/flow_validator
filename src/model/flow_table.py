@@ -63,9 +63,6 @@ class Flow():
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.match_element)
             port_graph_edge_status = self.instruction_set.applied_action_set.get_port_graph_edge_status()
 
-            if self.sw.node_id == "s3":
-                pass
-
             for out_port, output_action in port_graph_edge_status:
 
                 outgoing_port = self.port_graph.get_port(
@@ -141,6 +138,10 @@ class FlowTable():
         remaining_match = Traffic(init_wildcard=True)
 
         for flow in self.flows:
+
+            if self.sw.node_id == "s3":
+                pass
+
             intersection = flow.match.intersect(remaining_match)
             flow.port_graph = self.port_graph
 

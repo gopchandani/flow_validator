@@ -193,10 +193,9 @@ class MininetMan():
             if resp["status"] != "200":
                 print "Problem Resp:", resp
 
+        print self.h2.cmd("ping -c3 192.168.30.10")
 
-
-        print self.h3.cmd("ping -c3 192.168.30.10")
-        print self.h2.cmd("ping -c3 172.16.20.10")
+#        print self.h2.cmd("ping -c3 172.16.20.10")
 
     def cleanup_mininet(self):
 
