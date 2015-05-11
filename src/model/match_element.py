@@ -512,7 +512,13 @@ class MatchElement(DictMixin):
         for field_name in field_names:
 
             if field_name in self and self[field_name] != sys.maxsize:
-                match_json[ryu_field_names_mapping_reverse[field_name]] = self[field_name]
+
+                if field_name == "ethernet_source" or field_name == "ethernet_destination":
+                    mac_hex_str = hex(self[field_name])[2:]
+                    mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
+                    match_json[ryu_field_names_mapping_reverse[field_name]] = mac_hex_str
+                else:
+                    match_json[ryu_field_names_mapping_reverse[field_name]] = self[field_name]
 
         return match_json
 

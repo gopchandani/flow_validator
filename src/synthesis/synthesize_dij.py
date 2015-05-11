@@ -282,14 +282,15 @@ class SynthesizeDij():
                 #  Handle the case when the switch does not have to carry any failover traffic
                 if primary_intents and not failover_intents:
 
-                    group = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+                    group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
 
                     if not self.master_switch:
                         primary_intents[0].flow_match.set_match_field_element("in_port", int(primary_intents[0].in_port))
 
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw, self.ip_forwarding_table_id,
-                        group["flow-node-inventory:group"]["group-id"],
+                        sw,
+                        self.ip_forwarding_table_id,
+                        group_id,
                         1,
                         primary_intents[0].flow_match,
                         primary_intents[0].apply_immediately)
@@ -298,9 +299,9 @@ class SynthesizeDij():
 
                     #  See if both want same destination
                     if primary_intents[0].out_port != failover_intents[0].out_port:
-                        group = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], failover_intents[0])
+                        group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], failover_intents[0])
                     else:
-                        group = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+                        group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
 
                     # Push the rule that refers to the group
                     in_port = None
@@ -315,9 +316,12 @@ class SynthesizeDij():
 
                     primary_intents[0].flow_match.set_match_field_element("in_port", int(in_port))
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw, self.ip_forwarding_table_id,
-                        group["flow-node-inventory:group"]["group-id"],
-                        1, primary_intents[0].flow_match, primary_intents[0].apply_immediately)
+                        sw,
+                        self.ip_forwarding_table_id,
+                        group_id,
+                        1,
+                        primary_intents[0].flow_match,
+                        primary_intents[0].apply_immediately)
 
                     if len(failover_intents) > 1:
                         #raise Exception ("Hitting an unexpected case.")
@@ -328,16 +332,19 @@ class SynthesizeDij():
 
                     for failover_intent in failover_intents:
 
-                        group = self.synthesis_lib.push_select_all_group(sw, [failover_intent])
+                        group_id = self.synthesis_lib.push_select_all_group(sw, [failover_intent])
                         failover_intent.flow_match.set_match_field_element("in_port", int(failover_intent.in_port))
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                            sw, self.ip_forwarding_table_id,
-                            group["flow-node-inventory:group"]["group-id"],
-                            1, failover_intent.flow_match, failover_intent.apply_immediately)
+                            sw,
+                            self.ip_forwarding_table_id,
+                            group_id,
+                            1,
+                            failover_intent.flow_match,
+                            failover_intent.apply_immediately)
 
                 if primary_intents and balking_intents:
 
-                    group = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], balking_intents[0])
+                    group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], balking_intents[0])
                     in_port = None
 
                     #Sanity check
@@ -353,19 +360,25 @@ class SynthesizeDij():
 
                     primary_intents[0].flow_match.set_match_field_element("in_port", int(in_port))
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw, self.ip_forwarding_table_id,
-                        group["flow-node-inventory:group"]["group-id"],
-                        1, primary_intents[0].flow_match, primary_intents[0].apply_immediately)
+                        sw,
+                        self.ip_forwarding_table_id,
+                        group_id,
+                        1,
+                        primary_intents[0].flow_match,
+                        primary_intents[0].apply_immediately)
 
                 if reverse_intents:
 
-                    group = self.synthesis_lib.push_select_all_group(sw, [reverse_intents[0]])
+                    group_id = self.synthesis_lib.push_select_all_group(sw, [reverse_intents[0]])
 
                     reverse_intents[0].flow_match.set_match_field_element("in_port", int(reverse_intents[0].in_port))
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw, self.reverse_rules_table_id,
-                        group["flow-node-inventory:group"]["group-id"],
-                        1, reverse_intents[0].flow_match, reverse_intents[0].apply_immediately)
+                        sw,
+                        self.reverse_rules_table_id,
+                        group_id,
+                        1,
+                        reverse_intents[0].flow_match,
+                        reverse_intents[0].apply_immediately)
 
 
     def synthesize_all_node_pairs(self):

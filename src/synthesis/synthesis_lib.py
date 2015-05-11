@@ -212,17 +212,20 @@ class SynthesisLib():
 
         flow = self.create_base_flow(sw, table_id, priority)
 
-        #Compile match
-        flow["flow-node-inventory:flow"]["match"] = \
-            flow_match.generate_match_json(self.network_graph.controller, flow["flow-node-inventory:flow"]["match"])
+        if self.network_graph.controller == "odl":
 
-        #Compile instruction
+            flow["flow-node-inventory:flow"]["match"] = \
+                flow_match.generate_match_json(self.network_graph.controller,
+                                               flow["flow-node-inventory:flow"]["match"])
 
-        #  Assert that group is executed upon match
-        group_action = {"group-id": group_id}
-        action_list = [{"group-action": group_action, "order": 0}]
+            action_list = [{"group-action": {"group-id": group_id}, "order": 0}]
+            self.populate_flow_action_instruction(flow, action_list, apply_immediately)
 
-        self.populate_flow_action_instruction(flow, action_list, apply_immediately)
+        elif self.network_graph.controller == "ryu":
+                flow["match"] = flow_match.generate_match_json(self.network_graph.controller, flow["match"])
+                action_list = [{"type": "GROUP", "group_id": group_id}]
+                self.populate_flow_action_instruction(flow, action_list, apply_immediately)
+
         self.push_flow(sw, flow)
 
         return flow
@@ -245,36 +248,42 @@ class SynthesisLib():
     def push_fast_failover_group(self, sw, primary_intent, failover_intent):
 
         group = self.create_base_group(sw)
-        # if self.network_graph.controller == "odl":
-        # elif self.network_graph.controller == "ryu":
+        group_id = None
 
-        bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
-        group["flow-node-inventory:group"]["group-type"] = "group-ff"
+        if self.network_graph.controller == "odl":
 
-        out_port, watch_port = self.get_out_and_watch_port(primary_intent)
+            bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
+            group["flow-node-inventory:group"]["group-type"] = "group-ff"
 
-        bucket_primary = {
-            "action":[{'order': 0,
-                       'output-action': {'output-node-connector': out_port}}],
-            "bucket-id": 0,
-            "watch_port": watch_port,
-            "weight": 20}
+            out_port, watch_port = self.get_out_and_watch_port(primary_intent)
 
-        out_port, watch_port = self.get_out_and_watch_port(failover_intent)
+            bucket_primary = {
+                "action":[{'order': 0,
+                           'output-action': {'output-node-connector': out_port}}],
+                "bucket-id": 0,
+                "watch_port": watch_port,
+                "weight": 20}
 
-        bucket_failover = {
-            "action":[{'order': 0,
-                       'output-action': {'output-node-connector': out_port}}],
-            "bucket-id": 1,
-            "watch_port": watch_port,
-            "weight": 20}
+            out_port, watch_port = self.get_out_and_watch_port(failover_intent)
 
-        bucket_list.append(bucket_primary)
-        bucket_list.append(bucket_failover)
+            bucket_failover = {
+                "action":[{'order': 0,
+                           'output-action': {'output-node-connector': out_port}}],
+                "bucket-id": 1,
+                "watch_port": watch_port,
+                "weight": 20}
+
+            bucket_list.append(bucket_primary)
+            bucket_list.append(bucket_failover)
+
+            group_id = group["flow-node-inventory:group"]["group-id"]
+
+        elif self.network_graph.controller == "ryu":
+            pass
 
         self.push_group(sw, group)
 
-        return group
+        return group_id
 
     def push_select_all_group(self, sw, intent_list):
 
@@ -282,6 +291,7 @@ class SynthesisLib():
             raise Exception("Need to have either one or two forwarding intents")
 
         group = self.create_base_group(sw)
+        group_id = None
 
         if self.network_graph.controller == "odl":
 
@@ -298,6 +308,8 @@ class SynthesisLib():
 
                 bucket_list.append(bucket)
 
+            group_id = group["flow-node-inventory:group"]["group-id"]
+
         elif self.network_graph.controller == "ryu":
             group["type"] = "ALL"
             group["buckets"] = []
@@ -308,27 +320,31 @@ class SynthesisLib():
                 this_bucket["actions"] = [{"type": "OUTPUT", "port": out_port}]
                 group["buckets"].append(this_bucket)
 
+            group_id = group["group_id"]
+
         self.push_group(sw, group)
 
-        return group
+        return group_id
 
     def push_destination_host_mac_intent_flow(self, sw, mac_intent, table_id, priority):
 
         flow = self.create_base_flow(sw, table_id, priority)
 
-        #Compile match
-        flow["flow-node-inventory:flow"]["match"] = \
-            mac_intent.flow_match.generate_match_json(self.network_graph.controller,
-                                                      flow["flow-node-inventory:flow"]["match"])
-
         pop_vlan_action = None
         output_action = None
 
         if self.network_graph.controller == "odl":
+
+            flow["flow-node-inventory:flow"]["match"] = \
+                mac_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                          flow["flow-node-inventory:flow"]["match"])
+
             pop_vlan_action = {'order': 0, 'pop-vlan-action': {}}
             output_action = [{'order': 1, "output-action": {"output-node-connector": mac_intent.out_port}}]
 
         elif self.network_graph.controller == "ryu":
+
+            flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"])
             pop_vlan_action = {"type": "POP_VLAN"}
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
