@@ -319,28 +319,44 @@ class SynthesisLib():
         for push_vlan_intent in push_vlan_intents:
             flow = self.create_base_flow(sw, vlan_tag_push_rules_table_id, 1)
 
-            # Compile match
-            flow["flow-node-inventory:flow"]["match"] = \
-                push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
-                                                                flow["flow-node-inventory:flow"]["match"])
 
-            # Compile instruction
-            action1 = {'order': 0, 'push-vlan-action': {"ethernet-type": 0x8100,
-                                                        "vlan-id": push_vlan_intent.required_vlan_id}}
+            # Compile instructions
+            if self.network_graph.controller == "odl":
 
-            set_vlan_id_action = {'vlan-match': {"vlan-id": {"vlan-id": push_vlan_intent.required_vlan_id,
-                                                             "vlan-id-present": True}}}
+                # Compile match
+                flow["flow-node-inventory:flow"]["match"] = \
+                    push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                    flow["flow-node-inventory:flow"]["match"])
 
-            action2 = {'order': 1, 'set-field': set_vlan_id_action}
 
-            action_list = [action1, action2]
+                action1 = {'order': 0, 'push-vlan-action': {"ethernet-type": 0x8100,
+                                                            "vlan-id": push_vlan_intent.required_vlan_id}}
 
-            self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
+                set_vlan_id_action = {'vlan-match': {"vlan-id": {"vlan-id": push_vlan_intent.required_vlan_id,
+                                                                 "vlan-id-present": True}}}
 
-            # Also, punt such packets to the next table
-            go_to_table_instruction = {"go-to-table": {"table_id": vlan_tag_push_rules_table_id + 1}, "order": 1}
+                action2 = {'order': 1, 'set-field': set_vlan_id_action}
 
-            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
+                action_list = [action1, action2]
+
+                self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
+
+                # Also, punt such packets to the next table
+                go_to_table_instruction = {"go-to-table": {"table_id": vlan_tag_push_rules_table_id + 1}, "order": 1}
+
+                flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
+
+            elif self.network_graph.controller == "ryu":
+
+                # Compile match
+                flow["match"] = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                                flow["match"])
+
+                action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
+                               {"type": "SET_FIELD", "field": "vlan_vid", "value": push_vlan_intent.required_vlan_id},
+                               {"type": "GOTO_TABLE",  "table_id": str(vlan_tag_push_rules_table_id + 1)}]
+
+                self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
             self.push_flow(sw, flow)
 
