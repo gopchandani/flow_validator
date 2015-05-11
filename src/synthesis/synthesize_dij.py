@@ -20,6 +20,7 @@ class SynthesizeDij():
         self.network_graph = network_graph
         self.master_switch = master_switch
 
+
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph, master_switch=master_switch)
 
         # s represents the set of all switches that are

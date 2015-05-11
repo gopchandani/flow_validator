@@ -33,9 +33,17 @@ class SynthesisLib():
 
         time.sleep(0.1)
 
-        resp, content = self.h.request(url, "PUT",
-                                       headers={'Content-Type': 'application/json; charset=UTF-8'},
-                                       body=json.dumps(pushed_content))
+        if self.network_graph.controller == "odl":
+
+            resp, content = self.h.request(url, "PUT",
+                                           headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                           body=json.dumps(pushed_content))
+
+        elif self.network_graph.controller == "ryu":
+
+            resp, content = self.h.request(url, "POST",
+                                           headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                           body=json.dumps(pushed_content))
 
         #resp = {"status": "200"}
         #pprint.pprint(pushed_content)
@@ -49,71 +57,110 @@ class SynthesisLib():
             pprint.pprint(pushed_content)
 
 
-    def create_group_url(self, node_id,  group_id):
+    def create_odl_group_url(self, node_id,  group_id):
 
         odl_node_id = "openflow:" + node_id[1]
         return "http://" + self.controller_host + ":" + self.controller_port + \
                "/restconf/config/opendaylight-inventory:nodes/node/" + \
                odl_node_id + '/group/' + str(group_id)
 
-    def create_flow_url(self, node_id, table_id, flow_id):
+    def create_odl_flow_url(self, node_id, table_id, flow_id):
 
         odl_node_id = "openflow:" + node_id[1]
         return "http://" + self.controller_host + ":" + self.controller_port + \
                "/restconf/config/opendaylight-inventory:nodes/node/" + \
                odl_node_id + "/table/" + str(table_id) + '/flow/' + str(flow_id)
 
+    def create_ryu_flow_url(self):
+        return "http://localhost:8080/stats/flowentry/add"
+
     def push_flow(self, sw, flow):
 
-        flow_id = flow["flow-node-inventory:flow"]["id"]
-        table_id = flow["flow-node-inventory:flow"]["table_id"]
-        url = self.create_flow_url(sw, table_id, flow_id)
+        url = None
+
+        if self.network_graph.controller == "odl":
+            flow_id = flow["flow-node-inventory:flow"]["id"]
+            table_id = flow["flow-node-inventory:flow"]["table_id"]
+            url = self.create_odl_flow_url(sw, table_id, flow_id)
+
+        elif self.network_graph.controller == "ryu":
+            url = self.create_ryu_flow_url()
+
         self.push_change(url, flow)
 
     def push_group(self, sw, group):
 
         group_id = group["flow-node-inventory:group"]["group-id"]
-        url = self.create_group_url(sw, group_id)
+        url = self.create_odl_group_url(sw, group_id)
         self.push_change(url, group)
 
-    def create_base_flow(self, table_id, priority):
+    def create_base_flow(self, sw, table_id, priority):
 
-        flow = dict()
+        if self.network_graph.controller == "odl":
 
-        flow["flags"] = ""
-        flow["table_id"] = table_id
-        self.flow_id_cntr +=  1
-        flow["id"] = self.flow_id_cntr
-        flow["priority"] = priority
-        flow["idle-timeout"] = 0
-        flow["hard-timeout"] = 0
-        flow["cookie"] = self.flow_id_cntr
-        flow["cookie_mask"] = 255
+            flow = dict()
 
-        #Empty match
-        flow["match"] = {}
+            flow["flags"] = ""
+            flow["table_id"] = table_id
+            self.flow_id_cntr +=  1
+            flow["id"] = self.flow_id_cntr
+            flow["priority"] = priority
+            flow["idle-timeout"] = 0
+            flow["hard-timeout"] = 0
+            flow["cookie"] = self.flow_id_cntr
+            flow["cookie_mask"] = 255
 
-        #Empty instructions
-        flow["instructions"] = {"instruction": []}
+            # Empty match
+            flow["match"] = {}
 
-        #  Wrap it in inventory
-        flow = {"flow-node-inventory:flow": flow}
+            # Empty instructions
+            flow["instructions"] = {"instruction": []}
 
-        return flow
+            #  Wrap it in inventory
+            flow = {"flow-node-inventory:flow": flow}
+
+            return flow
+
+        elif self.network_graph.controller == "ryu":
+
+            flow = {"dpid": sw[1:],
+                    "cookie": self.flow_id_cntr,
+                    "cookie_mask": 1,
+                    "table_id": table_id,
+                    "idle_timeout": 0,
+                    "hard_timeout": 0,
+                    "priority": priority,
+                    "flags": 1,
+                    "match": {},
+                    "actions": []}
+
+            return flow
 
     def populate_flow_action_instruction(self, flow, action_list, apply_immediately):
 
-        if apply_immediately:
-            apply_actions_instruction = {"apply-actions": {"action": action_list}, "order": 0}
-            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_actions_instruction)
-        else:
-            write_actions_instruction = {"write-actions": {"action": action_list}, "order": 0}
-            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+        if self.network_graph.controller == "odl":
+
+            if apply_immediately:
+                apply_actions_instruction = {"apply-actions": {"action": action_list}, "order": 0}
+                flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(apply_actions_instruction)
+            else:
+                write_actions_instruction = {"write-actions": {"action": action_list}, "order": 0}
+                flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(write_actions_instruction)
+
+        elif self.network_graph.controller == "ryu":
+
+            flow["actions"] = action_list
+
+            if apply_immediately:
+                pass
+            else:
+                pass
+
 
     def push_table_miss_goto_next_table_flow(self, sw, table_id):
 
         # Create a lowest possible flow
-        flow = self.create_base_flow(table_id, 0)
+        flow = self.create_base_flow(sw, table_id, 0)
 
         #Compile instruction
         #  Assert that packet be sent to table with this table_id + 1
@@ -126,11 +173,11 @@ class SynthesisLib():
     def push_match_per_in_port_destination_instruct_group_flow(self, sw, table_id, group_id, priority,
                                                                 flow_match, apply_immediately):
 
-        flow = self.create_base_flow(table_id, priority)
+        flow = self.create_base_flow(sw, table_id, priority)
 
         #Compile match
-        flow["flow-node-inventory:flow"]["match"] = flow_match.generate_match_json(
-            flow["flow-node-inventory:flow"]["match"])
+        flow["flow-node-inventory:flow"]["match"] = \
+            flow_match.generate_match_json(self.network_graph.controller, flow["flow-node-inventory:flow"]["match"])
 
         #Compile instruction
 
@@ -227,18 +274,23 @@ class SynthesisLib():
 
     def push_destination_host_mac_intent_flow(self, sw, mac_intent, table_id, priority):
 
-        #sw, flow_match
-        flow = self.create_base_flow(table_id, priority)
+        flow = self.create_base_flow(sw, table_id, priority)
 
         #Compile match
-        flow["flow-node-inventory:flow"]["match"] = mac_intent.flow_match.generate_match_json(
-            flow["flow-node-inventory:flow"]["match"])
+        flow["flow-node-inventory:flow"]["match"] = \
+            mac_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                      flow["flow-node-inventory:flow"]["match"])
 
-        #Compile instruction
+        pop_vlan_action = None
+        output_action = None
 
-        #  Assert that group is executed upon match
-        pop_vlan_action = {'order': 0, 'pop-vlan-action': {}}
-        output_action = [{'order': 1, "output-action": {"output-node-connector": mac_intent.out_port}}]
+        if self.network_graph.controller == "odl":
+            pop_vlan_action = {'order': 0, 'pop-vlan-action': {}}
+            output_action = [{'order': 1, "output-action": {"output-node-connector": mac_intent.out_port}}]
+
+        elif self.network_graph.controller == "ryu":
+            pop_vlan_action = {"type": "POP_VLAN"}
+            output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
         action_list = [pop_vlan_action, output_action]
 
@@ -260,13 +312,14 @@ class SynthesisLib():
     def push_vlan_push_intents(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):
 
         for push_vlan_intent in push_vlan_intents:
-            flow = self.create_base_flow(vlan_tag_push_rules_table_id, 1)
+            flow = self.create_base_flow(sw, vlan_tag_push_rules_table_id, 1)
 
-            #Compile match
-            flow["flow-node-inventory:flow"]["match"] = push_vlan_intent.flow_match.generate_match_json(
-                flow["flow-node-inventory:flow"]["match"])
+            # Compile match
+            flow["flow-node-inventory:flow"]["match"] = \
+                push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                flow["flow-node-inventory:flow"]["match"])
 
-            #Compile instruction
+            # Compile instruction
             action1 = {'order': 0, 'push-vlan-action': {"ethernet-type": 0x8100,
                                                         "vlan-id": push_vlan_intent.required_vlan_id}}
 
@@ -297,21 +350,29 @@ class SynthesisLib():
                 continue
 
             # Get a vanilla flow
-            flow = self.create_base_flow(loop_preventing_drop_table, 100)
+            flow = self.create_base_flow(sw, loop_preventing_drop_table, 100)
+
 
             #Compile match with in_port and destination mac address
-            host_flow_match = flow["flow-node-inventory:flow"]["match"]
-            host_flow_match["in-port"] = str(h_obj.switch_port_attached)
+            if self.network_graph.controller == "odl":
 
-            ethernet_match = {}
-            ethernet_match["ethernet-destination"] = {"address": h_obj.mac_addr}
-            host_flow_match["ethernet-match"] = ethernet_match
+                host_flow_match = flow["flow-node-inventory:flow"]["match"]
+                host_flow_match["in-port"] = str(h_obj.switch_port_attached)
 
-            # Drop is the action
-            action_list = ["DROP"]
+                ethernet_match = {}
+                ethernet_match["ethernet-destination"] = {"address": h_obj.mac_addr}
+                host_flow_match["ethernet-match"] = ethernet_match
 
-            drop_action = {}
-            action_list = [{"drop-action": drop_action, "order": 0}]
+                # Drop is the action
+                drop_action = {}
+                action_list = [{"drop-action": drop_action, "order": 0}]
+
+            elif self.network_graph.controller == "ryu":
+                flow["match"]["in_port"] = str(h_obj.switch_port_attached)
+                flow["match"]["eth_dst"] = h_obj.mac_addr
+
+                # Empty list for drop action
+                action_list = []
 
             # Make and push the flow
             self.populate_flow_action_instruction(flow, action_list, True)

@@ -14,18 +14,18 @@ mm = None
 
 load_config = False
 save_config = True
-controller = "odl"
+controller = "ryu"
 topo_description = ("linear", 2, 1)
 experiment_switches = ["s1", "s2"]
 
 #
-# load_config = True
-# save_config = False
+# load_config = False
+# save_config = True
 # controller = "odl"
 # topo_description = ("ring", 4, 1)
 # experiment_switches = ["s1", "s3"]
-#
-#
+
+
 # load_config = False
 # save_config = True
 # controller = "ryu"

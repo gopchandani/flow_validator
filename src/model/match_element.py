@@ -33,6 +33,19 @@ ryu_field_names_mapping = {"in_port": "in_port",
                            "udp_src": "udp_source_port",
                            "dl_vlan": "vlan_id"}
 
+ryu_field_names_mapping_reverse = {"in_port": "in_port",
+                                   "ethernet_type": "eth_type",
+                                   "ethernet_source": "eth_src",
+                                   "ethernet_destination": "eth_dst",
+                                   "src_ip_addr": "nw_src",
+                                   "dst_ip_addr": "nw_dst",
+                                   "ip_protocol": "nw_proto",
+                                   "tcp_destination_port": "tcp_dst",
+                                   "tcp_source_port": "tcp_src",
+                                   "udp_destination_port": "udp_dst",
+                                   "udp_source_port": "udp_src",
+                                   "vlan_id": "dl_vlan"}
+
 class OdlMatchJsonParser():
 
     def __init__(self, match_json=None):
@@ -430,10 +443,10 @@ class MatchElement(DictMixin):
                 if "vlan-id" in match_json[match_field]:
                     self.set_match_field_element("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
 
-    def generate_match_json(self, match):
+    def generate_odl_match_json(self, match_json):
 
         if "in_port" in self and self["in_port"] != sys.maxsize:
-            match["in-port"] = self["in_port"]
+            match_json["in-port"] = self["in_port"]
 
         ethernet_match = {}
 
@@ -456,39 +469,57 @@ class MatchElement(DictMixin):
 
             ethernet_match["ethernet-destination"] = {"address": mac_hex_str}
 
-        match["ethernet-match"] = ethernet_match
+        match_json["ethernet-match"] = ethernet_match
 
         if "src_ip_addr" in self and self["src_ip_addr"] != sys.maxsize:
-            match["ipv4-source"] = self["src_ip_addr"]
+            match_json["ipv4-source"] = self["src_ip_addr"]
 
         if "dst_ip_addr" in self and self["dst_ip_addr"] != sys.maxsize:
-            match["ipv4-destination"] = self["dst_ip_addr"]
+            match_json["ipv4-destination"] = self["dst_ip_addr"]
 
         if ("tcp_destination_port" in self and self["tcp_destination_port"] != sys.maxsize) or \
                 ("tcp_source_port" in self and self["tcp_source_port"] != sys.maxsize):
             self["ip_protocol"] = 6
-            match["ip-match"] = {"ip-protocol": self["ip_protocol"]}
+            match_json["ip-match"] = {"ip-protocol": self["ip_protocol"]}
 
             if "tcp_destination_port" in self and self["tcp_destination_port"] != sys.maxsize:
-                match["tcp-destination-port"] = self["tcp_destination_port"]
+                match_json["tcp-destination-port"] = self["tcp_destination_port"]
 
             if "tcp_source_port" in self and self["tcp_source_port"] != sys.maxsize:
-                match["tcp-source-port"] = self["tcp_source_port"]
+                match_json["tcp-source-port"] = self["tcp_source_port"]
 
         if ("udp_destination_port" in self and self["udp_destination_port"] != sys.maxsize) or \
                 ("udp_source_port" in self and self["udp_source_port"] != sys.maxsize):
             self["ip_protocol"] = 17
-            match["ip-match"] = {"ip-protocol": self["ip_protocol"]}
+            match_json["ip-match"] = {"ip-protocol": self["ip_protocol"]}
 
             if "udp_destination_port" in self and self["udp_destination_port"] != sys.maxsize:
-                match["udp-destination-port"]= self["udp_destination_port"]
+                match_json["udp-destination-port"]= self["udp_destination_port"]
 
             if "udp_source_port" in self and self["udp_source_port"] != sys.maxsize:
-                match["udp-source-port"] = self["udp_source_port"]
+                match_json["udp-source-port"] = self["udp_source_port"]
 
         if "vlan_id" in self and self["vlan_id"] != sys.maxsize:
             vlan_match = {}
             vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"], "vlan-id-present": True}
-            match["vlan-match"] = vlan_match
+            match_json["vlan-match"] = vlan_match
 
-        return match
+        return match_json
+
+
+    def generate_ryu_match_json(self, match_json):
+
+        for field_name in field_names:
+
+            if field_name in self and self[field_name] != sys.maxsize:
+                match_json[ryu_field_names_mapping_reverse[field_name]] = self[field_name]
+
+        return match_json
+
+
+    def generate_match_json(self, controller, match_json):
+
+        if controller == "ryu":
+            return self.generate_ryu_match_json(match_json)
+        elif controller == "odl":
+            return self.generate_odl_match_json(match_json)
