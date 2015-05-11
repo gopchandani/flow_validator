@@ -13,19 +13,39 @@ class Bucket():
         self.weight = None
         self.group = group
 
-        for action_json in bucket_json["action"]:
-            self.action_list.append(Action(sw, action_json))
 
-        #  Sort the action_list by order
-        self.action_list = sorted(self.action_list, key=lambda action: action.order)
-        self.bucket_id = bucket_json["bucket-id"]
+        if self.sw.network_graph.controller == "odl":
 
-        if "watch_port" in bucket_json:
-            if bucket_json["watch_port"] != 4294967295:
-                self.watch_port = str(bucket_json["watch_port"])
+            self.bucket_id = bucket_json["bucket-id"]
 
-        if "weight" in bucket_json:
-            self.weight = str(bucket_json["weight"])
+            for action_json in bucket_json["action"]:
+                self.action_list.append(Action(sw, action_json))
+
+            if "watch_port" in bucket_json:
+                if bucket_json["watch_port"] != 4294967295:
+                    self.watch_port = str(bucket_json["watch_port"])
+
+            if "weight" in bucket_json:
+                self.weight = str(bucket_json["weight"])
+
+            # Sort the action_list by order
+            self.action_list = sorted(self.action_list, key=lambda action: action.order)
+
+        elif self.sw.network_graph.controller == "ryu":
+
+            for action_json in bucket_json["actions"]:
+                self.action_list.append(Action(sw, action_json))
+
+            if "watch_port" in bucket_json:
+                if bucket_json["watch_port"] != 4294967295:
+                    self.watch_port = str(bucket_json["watch_port"])
+
+            if "weight" in bucket_json:
+                self.weight = str(bucket_json["weight"])
+
+        for action in self.action_list:
+            action.bucket = self
+
 
     def is_live(self):
 
@@ -76,31 +96,46 @@ class Group():
     def __init__(self, sw, group_json):
 
         self.sw = sw
-        self.group_id = group_json["group-id"]
-        self.group_type = group_json["group-type"]
         self.bucket_list = []
 
-        for bucket_json in group_json["buckets"]["bucket"]:
-            self.bucket_list.append(Bucket(sw, bucket_json, self))
+        if self.sw.network_graph.controller == "odl":
+            self.group_id = group_json["group-id"]
+            self.group_type = group_json["group-type"]
 
-        #  Sort the bucket_list by bucket-id
-        self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
+            if group_json["group-type"] == "group-ff":
+                self.group_type = self.sw.network_graph.GROUP_FF
+            elif group_json["group-type"] == "group-all":
+                self.group_type = self.sw.network_graph.GROUP_ALL
 
-        for bucket in self.bucket_list:
-            for action in bucket.action_list:
-                action.bucket = bucket
+            for bucket_json in group_json["buckets"]["bucket"]:
+                self.bucket_list.append(Bucket(sw, bucket_json, self))
+
+            #  Sort the bucket_list by bucket-id
+            self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
+
+        elif self.sw.network_graph.controller == "ryu":
+            self.group_id = group_json["group_id"]
+
+            if group_json["type"] == u"ALL":
+                self.group_type = self.sw.network_graph.GROUP_ALL
+            elif group_json["type"] == u"FF":
+                self.group_type = self.sw.network_graph.GROUP_FF
+
+            for bucket_json in group_json["buckets"]:
+                self.bucket_list.append(Bucket(sw, bucket_json, self))
+
 
     def get_action_list(self):
         action_list = []
 
         # If it is a _all_ group, collect all buckets
-        if self.group_type == "group-all":
+        if self.group_type == self.sw.network_graph.GROUP_ALL:
 
             for action_bucket in self.bucket_list:
                 action_list.extend(action_bucket.action_list)
 
         # If it is a fast-failover group, collect the bucket which is active
-        elif self.group_type == "group-ff":
+        elif self.group_type == self.sw.network_graph.GROUP_FF:
 
             # at any point in time, only those actions are active that belong to the first live bucket
 
@@ -145,13 +180,13 @@ class Group():
         active_action_list = []
 
         # If it is a _all_ group, collect all buckets
-        if self.group_type == "group-all":
+        if self.group_type == self.sw.network_graph.GROUP_ALL:
 
             for action_bucket in self.bucket_list:
                 active_action_list.extend(action_bucket.action_list)
 
         # If it is a fast-failover group, collect the bucket which is active
-        elif self.group_type == "group-ff":
+        elif self.group_type == self.sw.network_graph.GROUP_FF:
 
             for action_bucket in self.bucket_list:
 
@@ -170,5 +205,6 @@ class GroupTable():
         self.groups = {}
 
         for group_json in groups_json:
-            self.groups[group_json["group-id"]] = Group(sw, group_json)
+            grp = Group(sw, group_json)
+            self.groups[int(grp.group_id)] = grp
 

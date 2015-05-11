@@ -24,6 +24,9 @@ class NetworkGraph():
         self.OFPP_IN = 0xfffffff8
         self.OFPP_NORMAL = 0xfffffffa
 
+        self.GROUP_FF = "group-ff"
+        self.GROUP_ALL = "group-all"
+
         # Initialize the self.graph
         self.graph = nx.Graph()
 
@@ -336,7 +339,7 @@ class NetworkGraph():
                     print "Error pulling switch ports from RYU."
 
                 # Get the groups
-                remaining_url = 'stats/group' + "/" + str(dpid)
+                remaining_url = 'stats/groupdesc' + "/" + str(dpid)
                 resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
 
                 if resp["status"] == "200":
@@ -377,8 +380,8 @@ class NetworkGraph():
             sw.ports = switch_ports
 
             # Parse group table if one is available
-            #if ryu_switches[dpid]["groups"]:
-                #sw.group_table = GroupTable(sw, node["flow-node-inventory:group"])
+            if "groups" in ryu_switches[dpid]:
+                sw.group_table = GroupTable(sw, ryu_switches[dpid]["groups"])
 
             # Parse all the flow tables and sort them by table_id in the list
 
@@ -386,7 +389,6 @@ class NetworkGraph():
             for table_id in ryu_switches[dpid]["flow_tables"]:
                 switch_flow_tables.append(FlowTable(sw, table_id, ryu_switches[dpid]["flow_tables"][table_id]))
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
-
 
     def parse_switches(self):
         

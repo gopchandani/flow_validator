@@ -66,7 +66,7 @@ class Action():
 
         if "group-action" in self.action_json:
             self.action_type = "group"
-            self.group_id = self.action_json["group-action"]["group-id"]
+            self.group_id = int(self.action_json["group-action"]["group-id"])
 
         if "push-vlan-action" in self.action_json:
             self.action_type = "push_vlan"
@@ -98,7 +98,7 @@ class Action():
 
         if self.action_json.startswith("GROUP"):
             self.action_type = "group"
-            self.group_id = self.action_json[self.action_json.find(":") + 1:]
+            self.group_id = int(self.action_json[self.action_json.find(":") + 1:])
 
         # if "push-vlan-action" in self.action_json:
         #     self.action_type = "push_vlan"
