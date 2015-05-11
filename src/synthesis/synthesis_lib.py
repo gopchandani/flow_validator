@@ -164,9 +164,14 @@ class SynthesisLib():
 
         #Compile instruction
         #  Assert that packet be sent to table with this table_id + 1
-        go_to_table_instruction = {"go-to-table": {"table_id": table_id + 1}, "order": 0}
 
-        flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
+        if self.network_graph.controller == "odl":
+            go_to_table_instruction = {"go-to-table": {"table_id": table_id + 1}, "order": 0}
+            flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
+
+        elif self.network_graph.controller == "ryu":
+            flow["actions"] = [{"type": "GOTO_TABLE",  "table_id": str(table_id + 1)}]
+
 
         self.push_flow(sw, flow)
 
