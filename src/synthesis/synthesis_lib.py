@@ -112,7 +112,7 @@ class SynthesisLib():
             flow["flags"] = ""
             flow["table_id"] = table_id
             flow["id"] = self.flow_id_cntr
-            flow["priority"] = priority
+            flow["priority"] = priority + 10
             flow["idle-timeout"] = 0
             flow["hard-timeout"] = 0
             flow["cookie"] = self.flow_id_cntr
@@ -136,7 +136,7 @@ class SynthesisLib():
             flow["table_id"] = table_id
             flow["idle_timeout"] = 0
             flow["hard_timeout"] = 0
-            flow["priority"] = priority
+            flow["priority"] = priority + 10
             flow["flags"] = 1
             flow["match"] = {}
             flow["actions"] = []
