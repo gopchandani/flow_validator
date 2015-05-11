@@ -230,8 +230,6 @@ class SynthesisLib():
 
         return flow
 
-
-
     def get_out_and_watch_port(self, intent):
         out_port = None
         watch_port = None
@@ -279,7 +277,24 @@ class SynthesisLib():
             group_id = group["flow-node-inventory:group"]["group-id"]
 
         elif self.network_graph.controller == "ryu":
-            pass
+
+            group["type"] = "FF"
+
+            bucket_primary = {}
+            bucket_failover = {}
+
+            out_port, watch_port = self.get_out_and_watch_port(primary_intent)
+            bucket_primary["actions"] = [{"type": "OUTPUT", "port": out_port}]
+            bucket_primary["weight"] = 20
+            bucket_primary["watch_port"] = watch_port
+
+            out_port, watch_port = self.get_out_and_watch_port(failover_intent)
+            bucket_failover["actions"] = [{"type": "OUTPUT", "port": out_port}]
+            bucket_failover["weight"] = 20
+            bucket_failover["watch_port"] = watch_port
+
+            group["buckets"] = [bucket_primary, bucket_failover]
+            group_id = group["group_id"]
 
         self.push_group(sw, group)
 
@@ -364,7 +379,6 @@ class SynthesisLib():
 
             self.push_destination_host_mac_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 1)
 
-
     def push_vlan_push_intents(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):
 
         for push_vlan_intent in push_vlan_intents:
@@ -409,7 +423,6 @@ class SynthesisLib():
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
             self.push_flow(sw, flow)
-
 
     def push_loop_preventing_drop_rules(self, sw, loop_preventing_drop_table):
 

@@ -31,7 +31,7 @@ ryu_field_names_mapping = {"in_port": "in_port",
                            "tcp_src": "tcp_source_port",
                            "udp_dst": "udp_destination_port",
                            "udp_src": "udp_source_port",
-                           "dl_vlan": "vlan_id"}
+                           "vlan_vid": "vlan_id"}
 
 ryu_field_names_mapping_reverse = {"in_port": "in_port",
                                    "ethernet_type": "eth_type",

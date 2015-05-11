@@ -53,7 +53,7 @@ class Instruction():
 
         elif instruction_name.startswith("GOTO_TABLE"):
             self.instruction_type = "go-to-table"
-            self.go_to_table = self.instruction_json["go-to-table"]["table_id"]
+            self.go_to_table = int(self.instruction_json[1])
 
         #TODO: Other instructions...
 
