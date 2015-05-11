@@ -11,19 +11,19 @@ from model.port_graph import PortGraph
 from model.traffic import Traffic
 
 mm = None
+#
+# load_config = False
+# save_config = True
+# controller = "ryu"
+# topo_description = ("linear", 2, 1)
+# experiment_switches = ["s1", "s2"]
+
 
 load_config = False
 save_config = True
 controller = "ryu"
-topo_description = ("linear", 2, 1)
-experiment_switches = ["s1", "s2"]
-
-# 
-# load_config = False
-# save_config = True
-# controller = "ryu"
-# topo_description = ("ring", 4, 1)
-# experiment_switches = ["s1", "s3"]
+topo_description = ("ring", 4, 1)
+experiment_switches = ["s1", "s3"]
 
 
 # load_config = False

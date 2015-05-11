@@ -335,11 +335,11 @@ class MatchElement(DictMixin):
                     self.set_match_field_element(field_name, int(match_json["dl_type"]), flow)
 
                 elif field_name == "ethernet_source":
-                    mac_int = int(match_json["ethernet-match"]["ethernet-source"]["address"].replace(":", ""), 16)
+                    mac_int = int(match_json[u"dl_src"].replace(":", ""), 16)
                     self.set_match_field_element(field_name, mac_int, flow)
 
                 elif field_name == "ethernet_destination":
-                    mac_int = int(match_json["ethernet-match"]["ethernet-destination"]["address"].replace(":", ""), 16)
+                    mac_int = int(match_json[u"dl_dst"].replace(":", ""), 16)
                     self.set_match_field_element(field_name, mac_int, flow)
 
                 #TODO: Add graceful handling of IP addresses
@@ -359,7 +359,7 @@ class MatchElement(DictMixin):
                 elif field_name == "udp_source_port":
                     self.set_match_field_element(field_name, int(match_json["udp-source-port"]), flow)
                 elif field_name == "vlan_id":
-                    self.set_match_field_element(field_name, int(match_json["vlan-match"]["vlan-id"]["vlan-id"]), flow)
+                    self.set_match_field_element(field_name, int(match_json[u"dl_vlan"]), flow)
 
             except KeyError:
                 self.set_match_field_element(field_name, is_wildcard=True)

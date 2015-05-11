@@ -139,9 +139,6 @@ class FlowTable():
 
         for flow in self.flows:
 
-            if self.sw.node_id == "s2":
-                pass
-
             intersection = flow.match.intersect(remaining_match)
             flow.port_graph = self.port_graph
 
