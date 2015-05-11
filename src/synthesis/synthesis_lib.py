@@ -74,10 +74,12 @@ class SynthesisLib():
     def create_ryu_flow_url(self):
         return "http://localhost:8080/stats/flowentry/add"
 
+    def create_ryu_group_url(self):
+        return "http://localhost:8080/stats/groupentry/add"
+
     def push_flow(self, sw, flow):
 
         url = None
-
         if self.network_graph.controller == "odl":
             flow_id = flow["flow-node-inventory:flow"]["id"]
             table_id = flow["flow-node-inventory:flow"]["table_id"]
@@ -90,19 +92,25 @@ class SynthesisLib():
 
     def push_group(self, sw, group):
 
-        group_id = group["flow-node-inventory:group"]["group-id"]
-        url = self.create_odl_group_url(sw, group_id)
+        url = None
+        if self.network_graph.controller == "odl":
+            group_id = group["flow-node-inventory:group"]["group-id"]
+            url = self.create_odl_group_url(sw, group_id)
+
+        elif self.network_graph.controller == "ryu":
+            url = self.create_ryu_group_url()
+
         self.push_change(url, group)
 
     def create_base_flow(self, sw, table_id, priority):
 
-        if self.network_graph.controller == "odl":
+        self.flow_id_cntr +=  1
+        flow = dict()
 
-            flow = dict()
+        if self.network_graph.controller == "odl":
 
             flow["flags"] = ""
             flow["table_id"] = table_id
-            self.flow_id_cntr +=  1
             flow["id"] = self.flow_id_cntr
             flow["priority"] = priority
             flow["idle-timeout"] = 0
@@ -119,22 +127,46 @@ class SynthesisLib():
             #  Wrap it in inventory
             flow = {"flow-node-inventory:flow": flow}
 
-            return flow
 
         elif self.network_graph.controller == "ryu":
 
-            flow = {"dpid": sw[1:],
-                    "cookie": self.flow_id_cntr,
-                    "cookie_mask": 1,
-                    "table_id": table_id,
-                    "idle_timeout": 0,
-                    "hard_timeout": 0,
-                    "priority": priority,
-                    "flags": 1,
-                    "match": {},
-                    "actions": []}
+            flow["dpid"] = sw[1:]
+            flow["cookie"] = self.flow_id_cntr
+            flow["cookie_mask"] = 1
+            flow["table_id"] = table_id
+            flow["idle_timeout"] = 0
+            flow["hard_timeout"] = 0
+            flow["priority"] = priority
+            flow["flags"] = 1
+            flow["match"] = {}
+            flow["actions"] = []
 
-            return flow
+        return flow
+
+
+    def create_base_group(self, sw):
+
+        group = dict()
+        self.group_id_cntr += 1
+
+        if self.network_graph.controller == "odl":
+
+            group["group-id"] = str(self.group_id_cntr)
+            group["barrier"] = False
+
+            #  Empty Bucket List
+            bucket = {"bucket": []}
+            group["buckets"] = bucket
+            group = {"flow-node-inventory:group": group}
+
+        elif self.network_graph.controller == "ryu":
+
+            group["dpid"] = sw[1:]
+            group["type"] = ""
+            group["group_id"] = self.group_id_cntr
+            group["buckets"] = []
+
+        return group
 
     def populate_flow_action_instruction(self, flow, action_list, apply_immediately):
 
@@ -195,19 +227,7 @@ class SynthesisLib():
 
         return flow
 
-    def create_base_group(self):
-        group = dict()
 
-        self.group_id_cntr += 1
-        group["group-id"] = str(self.group_id_cntr)
-        group["barrier"] = False
-
-        #  Empty Bucket List
-        bucket = {"bucket": []}
-        group["buckets"] = bucket
-        group = {"flow-node-inventory:group": group}
-
-        return group
 
     def get_out_and_watch_port(self, intent):
         out_port = None
@@ -224,7 +244,10 @@ class SynthesisLib():
 
     def push_fast_failover_group(self, sw, primary_intent, failover_intent):
 
-        group = self.create_base_group()
+        group = self.create_base_group(sw)
+        # if self.network_graph.controller == "odl":
+        # elif self.network_graph.controller == "ryu":
+
         bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
         group["flow-node-inventory:group"]["group-type"] = "group-ff"
 
@@ -255,13 +278,18 @@ class SynthesisLib():
 
     def push_select_all_group(self, sw, intent_list):
 
-        group = self.create_base_group()
-        bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
-        group["flow-node-inventory:group"]["group-type"] = "group-all"
+        if not intent_list:
+            raise Exception("Need to have either one or two forwarding intents")
 
-        if intent_list:
+        group = self.create_base_group(sw)
+
+        if self.network_graph.controller == "odl":
+
+            bucket_list = group["flow-node-inventory:group"]["buckets"]["bucket"]
+            group["flow-node-inventory:group"]["group-type"] = "group-all"
+
+            # Create a bucket for each intent
             for intent in intent_list:
-
                 out_port, watch_port = self.get_out_and_watch_port(intent)
 
                 bucket = {"action": [{'order': 0,
@@ -270,8 +298,15 @@ class SynthesisLib():
 
                 bucket_list.append(bucket)
 
-        else:
-            raise Exception("Need to have either one or two forwarding intents")
+        elif self.network_graph.controller == "ryu":
+            group["type"] = "ALL"
+            group["buckets"] = []
+
+            for intent in intent_list:
+                this_bucket = {}
+                out_port, watch_port = self.get_out_and_watch_port(intent)
+                this_bucket["actions"] = [{"type": "OUTPUT", "port": out_port}]
+                group["buckets"].append(this_bucket)
 
         self.push_group(sw, group)
 
@@ -319,7 +354,6 @@ class SynthesisLib():
         for push_vlan_intent in push_vlan_intents:
             flow = self.create_base_flow(sw, vlan_tag_push_rules_table_id, 1)
 
-
             # Compile instructions
             if self.network_graph.controller == "odl":
 
@@ -353,7 +387,7 @@ class SynthesisLib():
                                                                                 flow["match"])
 
                 action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
-                               {"type": "SET_FIELD", "field": "vlan_vid", "value": push_vlan_intent.required_vlan_id},
+                               {"type": "SET_FIELD", "field": "vlan_vid", "value": push_vlan_intent.required_vlan_id + 0x1000},
                                {"type": "GOTO_TABLE",  "table_id": str(vlan_tag_push_rules_table_id + 1)}]
 
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
