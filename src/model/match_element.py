@@ -211,8 +211,6 @@ class MatchElement(DictMixin):
                 else:
                     raise Exception("Probably should never get here")
 
-                #TODO: Take the smallest overlap between two intervals and put it in
-
         return matched_tree
 
     def intersect(self, in_match_element):
@@ -364,7 +362,6 @@ class MatchElement(DictMixin):
             except KeyError:
                 self.set_match_field_element(field_name, is_wildcard=True)
                 continue
-
 
 
     def get_orig_match_element(self, field_modifications=None):
