@@ -1,0 +1,1 @@
+{"s2": [{"host_switch_id": "s2", "host_name": "h2", "host_MAC": "ca:82:b1:fd:69:38", "host_IP": "10.0.0.2"}], "s1": [{"host_switch_id": "s1", "host_name": "h1", "host_MAC": "46:7b:00:6f:64:76", "host_IP": "10.0.0.1"}]}
