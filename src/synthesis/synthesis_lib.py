@@ -391,7 +391,6 @@ class SynthesisLib():
             enqueue_action = {"type": "SET_QUEUE", "queue_id": q_id, "port": mac_intent.out_port}
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
-
         action_list = [pop_vlan_action, enqueue_action, output_action]
         self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
         self.push_flow(sw, flow)

@@ -140,7 +140,7 @@ class MininetMan():
 #        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
 
         self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear")
-        self.synthesis_dij.synthesize_all_node_pairs(5)
+        self.synthesis_dij.synthesize_all_node_pairs(10)
 
 
         # Get all the nodes
@@ -162,7 +162,30 @@ class MininetMan():
 
         self.net.pingAll(self.ping_timeout)
 
+        # Start the server at h1s1
+        h1s1_output = self.h1s1.cmd("iperf -s -u -i 1 5001&")
+        print h1s1_output
 
+        # Start the client at h1s2
+        h1s2_output = self.h1s2.cmd("iperf -c " + self.h1s1.IP() + " -p 5001 -u -b 3M -t 1")
+        print h1s2_output
+        time.sleep(1)
+
+        h1s2_output = self.h1s2.cmd("iperf -c " + self.h1s1.IP() + " -p 5001 -u -b 6M -t 1")
+        print h1s2_output
+        time.sleep(1)
+
+        h1s2_output = self.h1s2.cmd("iperf -c " + self.h1s1.IP() + " -p 5001 -u -b 9M -t 1")
+        print h1s2_output
+        time.sleep(1)
+
+        h1s2_output = self.h1s2.cmd("iperf -c " + self.h1s1.IP() + " -p 5001 -u -b 12M -t 1")
+        print h1s2_output
+        time.sleep(1)
+
+        h1s2_output = self.h1s2.cmd("iperf -c " + self.h1s1.IP() + " -p 5001 -u -b 15M -t 1")
+        print h1s2_output
+        time.sleep(1)
 
 
     def setup_mininet_with_ryu_router(self):
