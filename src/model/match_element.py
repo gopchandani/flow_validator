@@ -374,12 +374,26 @@ class MatchElement(DictMixin):
         orig_match_element = MatchElement(is_wildcard=False, init_match_fields=False)
 
         for field_name in field_names:
+
+            # If the field is modified in the Traffic as it passes through a rule,
+            # The original traffic that comes at the front of that rule is computed as follows:
+            # If the field was not modified, then it is left as-is, no harm done
+            # If the field is modified however, it is left as-is too, unless it is modified to the exact value
+            # as it is contained in the traffic
+
             if field_name in mf:
 
-                print mf[field_name][1]
+                #TODO: Do this more properly ground up from the parser
+                field_val = int(mf[field_name][1])
+                value_tree = IntervalTree()
+                value_tree.add(Interval(field_val, field_val + 1))
 
-                # If the field was modified, make it what it was (in abstract) before being modified
-                orig_match_element.match_fields[field_name] = mf[field_name][0]
+                intersection = self.get_matched_tree(value_tree, self.match_fields[field_name])
+
+                if intersection:
+                    orig_match_element.match_fields[field_name] = mf[field_name][0]
+                else:
+                     orig_match_element.match_fields[field_name] = self.match_fields[field_name]
 
             else:
                 # Otherwise, just keep the field same as it was
@@ -517,10 +531,10 @@ class MatchElement(DictMixin):
                 if field_name == "ethernet_source" or field_name == "ethernet_destination":
 
                     print "self[field_name]:", self[field_name]
-
                     mac_hex_str = hex(self[field_name])[2:]
-
                     print "mac_hex_str:", mac_hex_str
+                    if len(mac_hex_str) == 11:
+                        mac_hex_str = "0" + mac_hex_str
 
                     mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
                     match_json[ryu_field_names_mapping_reverse[field_name]] = mac_hex_str
