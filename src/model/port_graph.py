@@ -166,6 +166,11 @@ class PortGraph:
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
+
+
+        if pred.port_id == "s2:table2" and curr.port_id == "s2:table3":
+            pass
+
         pred_admitted_traffic = Traffic()
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)
 
@@ -213,7 +218,7 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
-        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
+        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:

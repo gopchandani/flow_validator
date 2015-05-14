@@ -11,8 +11,6 @@ from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 from model.match_element import MatchElement
 
-import pprint
-
 class SynthesizeDij():
 
     def __init__(self, network_graph, master_switch=False):

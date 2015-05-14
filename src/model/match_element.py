@@ -375,8 +375,12 @@ class MatchElement(DictMixin):
 
         for field_name in field_names:
             if field_name in mf:
+
+                print mf[field_name][1]
+
                 # If the field was modified, make it what it was (in abstract) before being modified
-                orig_match_element.match_fields[field_name] = mf[field_name]
+                orig_match_element.match_fields[field_name] = mf[field_name][0]
+
             else:
                 # Otherwise, just keep the field same as it was
                 orig_match_element.match_fields[field_name] = self.match_fields[field_name]
@@ -511,7 +515,13 @@ class MatchElement(DictMixin):
             if field_name in self and self[field_name] != sys.maxsize:
 
                 if field_name == "ethernet_source" or field_name == "ethernet_destination":
+
+                    print "self[field_name]:", self[field_name]
+
                     mac_hex_str = hex(self[field_name])[2:]
+
+                    print "mac_hex_str:", mac_hex_str
+
                     mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
                     match_json[ryu_field_names_mapping_reverse[field_name]] = mac_hex_str
                 else:

@@ -15,7 +15,7 @@ mm = None
 load_config = False
 save_config = True
 controller = "ryu"
-topo_description = ("linear", 2, 1)
+topo_description = ("linear", 2, 2)
 experiment_switches = ["s1", "s2"]
 
 #

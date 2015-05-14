@@ -94,7 +94,7 @@ class Action():
             self.action_type = "set_field"
             field_mod = self.action_json[self.action_json.find("{") + 1:]
             self.modified_field = ryu_field_names_mapping[field_mod[0:field_mod.find(":")]]
-            self.field_modified_to = field_mod[field_mod.find(":") + 1:field_mod.find("}") - 1]
+            self.field_modified_to = field_mod[field_mod.find(":") + 1:field_mod.find("}")]
 
         if self.action_json.startswith("GROUP"):
             self.action_type = "group"
@@ -180,34 +180,19 @@ class ActionSet():
                 action.matched_flow = intersection
                 self.action_dict[action.action_type].append(action)
 
-    def get_resulting_match_element(self, input_match_element):
-
-        output_match_element = input_match_element
-
-        if "pop_vlan" in self.action_dict:
-            output_match_element.has_vlan_tag = False
-
-        if "push_vlan" in self.action_dict:
-            output_match_element.has_vlan_tag = True
-
-        if "set_field" in self.action_dict:
-            if output_match_element.has_vlan_tag:
-                for action in self.action_dict["set_field"]:
-                    output_match_element.set_fields_with_match_json(action.set_field_match_json)
-            else:
-                print "Odd. Setting vlan-id when there is no vlan-tag on the traffic."
-
-        return output_match_element
 
     def get_modified_fields_dict(self, flow_match_element):
         modified_fields_dict = {}
 
         for set_action in self.action_dict["set_field"]:
-            modified_fields_dict[set_action.modified_field] = flow_match_element.match_fields[set_action.modified_field]
+            # Capture the value before (in principle and after) the modification in a tuple
+            modified_fields_dict[set_action.modified_field] = \
+                (flow_match_element.match_fields[set_action.modified_field], set_action.field_modified_to)
 
+        #TODO: Figure out how to include the has_vlan_tag thing back in the mix
         # The impact of push/pop vlan actions appears on vlan_id field
-        if "push_vlan" in self.action_dict or "pop_vlan" in self.action_dict:
-            modified_fields_dict["vlan_id"] = flow_match_element.match_fields["vlan_id"]
+        # if "push_vlan" in self.action_dict or "pop_vlan" in self.action_dict:
+        #     modified_fields_dict["vlan_id"] = flow_match_element.match_fields["vlan_id"]
 
         return modified_fields_dict
 
