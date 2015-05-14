@@ -19,6 +19,7 @@ from experiments.topologies.two_ring_topo import TwoRingTopo
 from experiments.topologies.ring_topo import RingTopo
 
 from synthesis.synthesize_dij import SynthesizeDij
+from synthesis.synthesize_dij_qos import SynthesizeQoS
 
 
 class MininetMan():
@@ -136,8 +137,10 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
-        self.synthesis_dij.synthesize_all_node_pairs()
+#        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
+
+        self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear")
+        self.synthesis_dij.synthesize_all_node_pairs(5)
 
 
         # Get all the nodes

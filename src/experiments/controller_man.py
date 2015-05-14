@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import time
+
 __author__ = 'Shane Rogers'
 
 # controllerMan will spin up the number of containers you pass as a parameter.
@@ -85,7 +86,11 @@ class ControllerMan():
 
     def get_next_ryu(self):
         #topo_apps = "ryu.app.rest_topology ryu.app.ws_topology"
-        ryu_cmd = ["ryu-manager", "--observe-links", "ryu.app.rest_router", "ryu.app.ofctl_rest"]
+        ryu_cmd = ["ryu-manager", "--observe-links",
+                   "ryu.app.rest_router",
+                   "ryu.app.ofctl_rest",
+                   "ryu.app.rest_qos"]
+
         self.ryu_proc = subprocess.Popen(ryu_cmd, stdout=subprocess.PIPE)
         return 6633
 

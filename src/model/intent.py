@@ -2,12 +2,15 @@ __author__ = 'Rakesh Kumar'
 
 class Intent():
 
-    def __init__(self, intent_type, flow_match, in_port, out_port, apply_immediately=False):
+    def __init__(self, intent_type, flow_match, in_port, out_port, apply_immediately=False,
+                 min_rate=None, max_rate=None):
 
         self.intent_type = intent_type
         self.flow_match = flow_match
         self.in_port = in_port
         self.out_port = out_port
+        self.min_rate = min_rate
+        self.max_rate = max_rate
 
         self.required_vlan_id = None
         self.hash_value = hash(str(self.in_port) + str(self.out_port) + str(self.flow_match))

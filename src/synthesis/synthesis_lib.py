@@ -5,6 +5,8 @@ import pprint
 import time
 import httplib2
 import json
+import subprocess
+import os
 
 from model.network_graph import NetworkGraph
 
@@ -25,9 +27,31 @@ class SynthesisLib():
 
         self.group_id_cntr = 0
         self.flow_id_cntr = 0
+        self.queue_id_cntr = 1
 
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
+
+        # Cleanup all Queue/QoS records from OVSDB
+        os.system("sudo ovs-vsctl -- --all destroy QoS")
+        os.system("sudo ovs-vsctl -- --all destroy Queue")
+
+    def push_queue(self, sw, port, min_rate, max_rate):
+
+        self.queue_id_cntr = self.queue_id_cntr + 1
+        min_rate_str = str(min_rate * 1000000)
+        max_rate_str = str(max_rate * 1000000)
+        sw_port_str = sw + "-" + "eth" + str(port)
+
+        queue_cmd = "sudo ovs-vsctl -- set Port " + sw_port_str + " qos=@newqos -- " + \
+              "--id=@newqos create QoS type=linux-htb other-config:max-rate=" + "1000000000" + \
+                    " queues=" + str(self.queue_id_cntr) + "=@q" + str(self.queue_id_cntr) + " -- " +\
+              "--id=@q" + str(self.queue_id_cntr) + " create Queue other-config:min-rate=" + min_rate_str + \
+              " other-config:max-rate=" + max_rate_str
+
+        os.system(queue_cmd)
+
+        return self.queue_id_cntr
 
     def push_change(self, url, pushed_content):
 
@@ -348,6 +372,9 @@ class SynthesisLib():
         pop_vlan_action = None
         output_action = None
 
+        print "Rates for mac_intent", mac_intent.min_rate, mac_intent.max_rate
+        q_id = self.push_queue(sw, mac_intent.out_port, mac_intent.min_rate, mac_intent.max_rate)
+
         if self.network_graph.controller == "odl":
 
             flow["flow-node-inventory:flow"]["match"] = \
@@ -361,10 +388,11 @@ class SynthesisLib():
 
             flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"])
             pop_vlan_action = {"type": "POP_VLAN"}
+            enqueue_action = {"type": "SET_QUEUE", "queue_id": q_id, "port": mac_intent.out_port}
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
-        action_list = [pop_vlan_action, output_action]
 
+        action_list = [pop_vlan_action, enqueue_action, output_action]
         self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
         self.push_flow(sw, flow)
 
