@@ -21,7 +21,7 @@ experiment_switches = ["s1", "s2"]
 #
 # load_config = False
 # save_config = True
-# controller = "ryu "
+# controller = "ryu"
 # topo_description = ("ring", 4, 1)
 # experiment_switches = ["s1", "s3"]
 
@@ -107,7 +107,7 @@ class FlowValidator:
         # Baseline
         at.print_port_paths()
 
-        return len(at.match_elements)
+        return len(at.traffic_elements)
 
     def validate_all_host_pair_reachability(self):
 

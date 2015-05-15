@@ -123,13 +123,13 @@ class InstructionSet():
                 self.instruction_list.insert(0, instruction)
 
                 # Add all the actions to the applied_action_set
-                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
+                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
 
             else:
                 self.instruction_list.append(instruction)
 
             if instruction.instruction_type == "write-actions":
-                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
+                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
 
             elif instruction.instruction_type == "go-to-table":
                 self.goto_table = instruction.go_to_table
@@ -148,13 +148,13 @@ class InstructionSet():
                 self.instruction_list.insert(0, instruction)
 
                 # Add all the actions to the applied_action_set
-                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
+                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
 
             else:
                 self.instruction_list.append(instruction)
 
             if instruction.instruction_type == "write-actions":
-                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.match_element)
+                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
 
             elif instruction.instruction_type == "go-to-table":
                 self.goto_table = instruction.go_to_table

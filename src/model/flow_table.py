@@ -50,7 +50,7 @@ class Flow():
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
             self.applied_field_modifications = \
-                self.instruction_set.applied_action_set.get_modified_fields_dict(self.match_element)
+                self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
             port_graph_edge_status = self.instruction_set.applied_action_set.get_port_graph_edge_status()
 
             for out_port, output_action in port_graph_edge_status:
@@ -66,7 +66,7 @@ class Flow():
                 self.port_graph_edges.append(e)
 
             self.written_field_modifications = \
-                self.instruction_set.written_action_set.get_modified_fields_dict(self.match_element)
+                self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
             port_graph_edge_status = self.instruction_set.written_action_set.get_port_graph_edge_status()
 
             for out_port, output_action in port_graph_edge_status:
