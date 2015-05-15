@@ -132,7 +132,6 @@ class MininetMan():
 
         self.net.pingAll(self.ping_timeout)
 
-
     def setup_mininet_with_ryu(self, ng):
 
         print "Synthesizing..."

@@ -161,8 +161,6 @@ class FlowValidator:
                         print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
                         return
 
-
-
 def main():
 
     controller_port = 6633

@@ -1,6 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-from match_element import MatchElement
+from match import MatchElement
 from traffic import Traffic
 from instruction_set import InstructionSet
 
@@ -36,14 +36,12 @@ class Flow():
         self.complement_traffic.add_match_elements(complement_match_elements)
 
     def parse_odl_flow(self):
-
         self.table_id = self.flow_json["table_id"]
         self.priority = int(self.flow_json["priority"])
         self.match_element = MatchElement(match_json=self.flow_json["match"], controller="odl", flow=self)
 
 
     def parse_ryu_flow(self):
-
         self.table_id = self.flow_json["table_id"]
         self.priority = int(self.flow_json["priority"])
         self.match_element = MatchElement(match_json=self.flow_json["match"], controller="ryu", flow=self)

@@ -1,7 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
-from match_element import OdlMatchJsonParser
-from match_element import ryu_field_names_mapping
+from match import OdlMatchJsonParser
+from match import ryu_field_names_mapping
 from collections import defaultdict
 from copy import copy
 

@@ -9,7 +9,7 @@ from model.network_graph import NetworkGraph
 
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
-from model.match_element import MatchElement
+from model.match import MatchElement
 
 class SynthesizeDij():
 
@@ -61,7 +61,7 @@ class SynthesizeDij():
 
             # All intents except the first one in the primary path must specify the vlan tag
             if not (i == 0 and intent_type == "primary"):
-                fwd_flow_match.set_match_field_element("vlan_id", int(dst_switch_tag))
+                fwd_flow_match["vlan_id"] = int(dst_switch_tag)
 
             if in_port == out_port:
                 pass
@@ -162,8 +162,8 @@ class SynthesizeDij():
 
         host_mac_match = deepcopy(flow_match)
         mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
-        host_mac_match.set_match_field_element("ethernet_destination", int(mac_int))
-        host_mac_match.set_match_field_element("vlan_id", int(matching_tag))
+        host_mac_match["ethernet_destination"] = int(mac_int)
+        host_mac_match["vlan_id"] = int(matching_tag)
 
         host_mac_intent = Intent("mac", host_mac_match, "all", out_port, self.apply_other_intents_immediately)
 
@@ -174,7 +174,7 @@ class SynthesizeDij():
     def _compute_push_vlan_tag_intents(self, h_obj, flow_match, required_tag):
 
         push_vlan_match= deepcopy(flow_match)
-        push_vlan_match.set_match_field_element("in_port", int(h_obj.switch_port_attached))
+        push_vlan_match["in_port"] = int(h_obj.switch_port_attached)
         push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", self.apply_tag_intents_immediately)
         push_vlan_tag_intent.required_vlan_id = required_tag
 
@@ -283,7 +283,7 @@ class SynthesizeDij():
                     group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
 
                     if not self.master_switch:
-                        primary_intents[0].flow_match.set_match_field_element("in_port", int(primary_intents[0].in_port))
+                        primary_intents[0].flow_match["in_port"] = int(primary_intents[0].in_port)
 
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         sw,
@@ -312,7 +312,7 @@ class SynthesizeDij():
                     else:
                         in_port = primary_intents[0].in_port
 
-                    primary_intents[0].flow_match.set_match_field_element("in_port", int(in_port))
+                    primary_intents[0].flow_match["in_port"] = int(in_port)
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         sw,
                         self.ip_forwarding_table_id,
@@ -331,7 +331,7 @@ class SynthesizeDij():
                     for failover_intent in failover_intents:
 
                         group_id = self.synthesis_lib.push_select_all_group(sw, [failover_intent])
-                        failover_intent.flow_match.set_match_field_element("in_port", int(failover_intent.in_port))
+                        failover_intent.flow_match["in_port"] = int(failover_intent.in_port)
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                             sw,
                             self.ip_forwarding_table_id,
@@ -356,7 +356,7 @@ class SynthesizeDij():
                     else:
                         in_port = primary_intents[0].in_port
 
-                    primary_intents[0].flow_match.set_match_field_element("in_port", int(in_port))
+                    primary_intents[0].flow_match["in_port"] = int(in_port)
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         sw,
                         self.ip_forwarding_table_id,
@@ -369,7 +369,7 @@ class SynthesizeDij():
 
                     group_id = self.synthesis_lib.push_select_all_group(sw, [reverse_intents[0]])
 
-                    reverse_intents[0].flow_match.set_match_field_element("in_port", int(reverse_intents[0].in_port))
+                    reverse_intents[0].flow_match["in_port"] = int(reverse_intents[0].in_port)
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         sw,
                         self.reverse_rules_table_id,
