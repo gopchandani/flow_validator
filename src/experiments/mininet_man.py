@@ -132,31 +132,12 @@ class MininetMan():
 
         self.net.pingAll(self.ping_timeout)
 
-
     def setup_mininet_with_ryu(self, ng):
 
         print "Synthesizing..."
 
         self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
         self.synthesis_dij.synthesize_all_node_pairs()
-
-        # Get all the nodes
-        self.h1s1 = self.net.getNodeByName("h1s1")
-        self.h1s2 = self.net.getNodeByName("h1s2")
-        self.h2s1 = self.net.getNodeByName("h2s1")
-        self.h2s2 = self.net.getNodeByName("h2s2")
-
-        # print "MAC: h1s1", self.h1s1.MAC()
-        # print "MAC: h2s1", self.h2s1.MAC()
-        #
-        # print "MAC: h1s2", self.h1s2.MAC()
-        # print "MAC: h2s2", self.h2s2.MAC()
-        #
-        # cmd = "arp -a"
-        # print self.h1s1.cmd(cmd)
-        # cmd = "ping -c3 " + self.h2s1.IP()
-        # print self.h1s1.cmd(cmd)
-
         self.net.pingAll(self.ping_timeout)
 
 

@@ -1,7 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
-from match_element import OdlMatchJsonParser
-from match_element import ryu_field_names_mapping
+from match import OdlMatchJsonParser
+from match import ryu_field_names_mapping
 from collections import defaultdict
 from copy import copy
 
@@ -180,7 +180,6 @@ class ActionSet():
                 action.matched_flow = intersection
                 self.action_dict[action.action_type].append(action)
 
-
     def get_modified_fields_dict(self, flow_match_element):
         modified_fields_dict = {}
 
@@ -189,7 +188,7 @@ class ActionSet():
             modified_fields_dict[set_action.modified_field] = \
                 (flow_match_element.match_fields[set_action.modified_field], set_action.field_modified_to)
 
-        #TODO: Figure out how to include the has_vlan_tag thing back in the mix
+        # TODO: Figure out how to include the has_vlan_tag thing back in the mix
         # The impact of push/pop vlan actions appears on vlan_id field
         # if "push_vlan" in self.action_dict or "pop_vlan" in self.action_dict:
         #     modified_fields_dict["vlan_id"] = flow_match_element.match_fields["vlan_id"]

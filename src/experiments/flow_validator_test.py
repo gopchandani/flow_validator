@@ -14,7 +14,7 @@ from two_ring_topo import TwoRingTopo
 from ring_topo import RingTopo
 from line_topo import LineTopo
 
-from model.match_element import Match
+from model.match import Match
 from synthesis.synthensize_dij import SynthesizeDij
 from analysis.backup_paths import BackupPaths
 import os

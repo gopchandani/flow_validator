@@ -21,7 +21,7 @@ experiment_switches = ["s1", "s2"]
 #
 # load_config = False
 # save_config = True
-# controller = "ryu "
+# controller = "ryu"
 # topo_description = ("ring", 4, 1)
 # experiment_switches = ["s1", "s3"]
 
@@ -107,7 +107,7 @@ class FlowValidator:
         # Baseline
         at.print_port_paths()
 
-        return len(at.match_elements)
+        return len(at.traffic_elements)
 
     def validate_all_host_pair_reachability(self):
 
@@ -160,8 +160,6 @@ class FlowValidator:
                     if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
                         print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
                         return
-
-
 
 def main():
 

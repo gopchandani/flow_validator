@@ -1,7 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
-from match_element import MatchElement
-from traffic import Traffic
+from match import Match
+from traffic import Traffic, TrafficElement
 from instruction_set import InstructionSet
 
 class Flow():
@@ -19,34 +19,24 @@ class Flow():
         self.applied_actions = []
         self.go_to_table = None
 
-        self.applied_match = None
-        self.port_graph_edges = []
-
-        self.match = Traffic()
-        self.complement_traffic = Traffic()
-
         if self.sw.network_graph.controller == "odl":
-            self.parse_odl_flow()
-
+            self.table_id = self.flow_json["table_id"]
+            self.priority = int(self.flow_json["priority"])
+            self.match = Match(match_json=self.flow_json["match"], controller="odl", flow=self)
+        
         elif self.sw.network_graph.controller == "ryu":
-            self.parse_ryu_flow()
+            self.table_id = self.flow_json["table_id"]
+            self.priority = int(self.flow_json["priority"])
+            self.match = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
 
-        self.match.match_elements.append(self.match_element)
-        complement_match_elements = self.match_element.get_complement_match_elements()
-        self.complement_traffic.add_match_elements(complement_match_elements)
+        self.port_graph_edges = []
+        self.traffic_element = TrafficElement(init_match=self.match)
+        self.traffic = Traffic()
+        self.complement_traffic = Traffic()
+        self.applied_traffic = None
 
-    def parse_odl_flow(self):
-
-        self.table_id = self.flow_json["table_id"]
-        self.priority = int(self.flow_json["priority"])
-        self.match_element = MatchElement(match_json=self.flow_json["match"], controller="odl", flow=self)
-
-
-    def parse_ryu_flow(self):
-
-        self.table_id = self.flow_json["table_id"]
-        self.priority = int(self.flow_json["priority"])
-        self.match_element = MatchElement(match_json=self.flow_json["match"], controller="ryu", flow=self)
+        self.traffic.add_traffic_elements([self.traffic_element])
+        self.complement_traffic.add_traffic_elements(self.traffic_element.get_complement_traffic_elements())
 
     def add_port_graph_edges(self):
 
@@ -60,7 +50,7 @@ class Flow():
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
             self.applied_field_modifications = \
-                self.instruction_set.applied_action_set.get_modified_fields_dict(self.match_element)
+                self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
             port_graph_edge_status = self.instruction_set.applied_action_set.get_port_graph_edge_status()
 
             for out_port, output_action in port_graph_edge_status:
@@ -71,12 +61,12 @@ class Flow():
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                                outgoing_port,
                                                (self, output_action),
-                                               self.applied_match)
+                                               self.applied_traffic)
 
                 self.port_graph_edges.append(e)
 
             self.written_field_modifications = \
-                self.instruction_set.written_action_set.get_modified_fields_dict(self.match_element)
+                self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
             port_graph_edge_status = self.instruction_set.written_action_set.get_port_graph_edge_status()
 
             for out_port, output_action in port_graph_edge_status:
@@ -87,7 +77,7 @@ class Flow():
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                                outgoing_port,
                                                (self, output_action),
-                                               self.applied_match)
+                                               self.applied_traffic)
 
                 self.port_graph_edges.append(e)
 
@@ -100,7 +90,7 @@ class Flow():
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                                self.sw.flow_tables[self.instruction_set.goto_table].port,
                                                (self, None),
-                                               self.applied_match)
+                                               self.applied_traffic)
 
                 self.port_graph_edges.append(e)
 
@@ -135,25 +125,24 @@ class FlowTable():
 
     def init_flow_table_port_graph(self):
 
-        remaining_match = Traffic(init_wildcard=True)
+        remaining_traffic = Traffic(init_wildcard=True)
 
         for flow in self.flows:
 
-            intersection = flow.match.intersect(remaining_match)
+            intersection = flow.traffic.intersect(remaining_traffic)
             flow.port_graph = self.port_graph
 
-            # Don't care about matches that have full empty fields
             if not intersection.is_empty():
 
                 # See what is left after this rule is through
-                remaining_match = flow.complement_traffic.intersect(remaining_match)
-                flow.applied_match = intersection
+                remaining_traffic = flow.complement_traffic.intersect(remaining_traffic)
+                flow.applied_traffic = intersection
 
                 # Add the edges in the portgraph
                 flow.add_port_graph_edges()
             else:
                 # Say that this flow does not matter
-                flow.applied_match = None
+                flow.applied_traffic = None
 
     def de_init_flow_table_port_graph(self):
         pass
