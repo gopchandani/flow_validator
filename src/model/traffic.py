@@ -1,7 +1,9 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
-from match import MatchElement, field_names
+
+from netaddr import IPNetwork
+from match import Match, field_names
 from external.intervaltree import Interval, IntervalTree
 
 class TrafficElement():
@@ -23,7 +25,7 @@ class TrafficElement():
 
         return port_path_str
 
-    def __init__(self, match_json=None, controller=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
+    def __init__(self, controller=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
 
         self.traffic = traffic
         self.port = None
@@ -39,13 +41,10 @@ class TrafficElement():
             for field_name in field_names:
                 self.match_fields[field_name] = IntervalTree()
 
-        if match_json and flow and controller == "odl":
-            self.add_element_from_odl_match_json(match_json, flow)
-        elif match_json and flow and controller == "ryu":
-            self.add_element_from_ryu_match_json(match_json, flow)
-        elif is_wildcard:
+        if is_wildcard:
             for field_name in field_names:
                 self.set_match_field_element(field_name, is_wildcard=True)
+
 
     def set_match_field_element(self, key, value=None, flow=None, is_wildcard=False, exception=False):
 
@@ -150,99 +149,6 @@ class TrafficElement():
         else:
             return True
 
-    def add_element_from_odl_match_json(self, match_json, flow):
-
-        for field_name in field_names:
-
-            try:
-                if field_name == "in_port":
-                    try:
-                        self.set_match_field_element(field_name, int(match_json["in-port"]), flow)
-                    except ValueError:
-                        parsed_in_port = match_json["in-port"].split(":")[2]
-                        self.set_match_field_element(field_name, int(parsed_in_port), flow)
-
-                elif field_name == "ethernet_type":
-                    self.set_match_field_element(field_name, int(match_json["ethernet-match"]["ethernet-type"]["type"]), flow)
-                elif field_name == "ethernet_source":
-                    mac_int = int(match_json["ethernet-match"]["ethernet-source"]["address"].replace(":", ""), 16)
-                    self.set_match_field_element(field_name, mac_int, flow)
-
-                elif field_name == "ethernet_destination":
-                    mac_int = int(match_json["ethernet-match"]["ethernet-destination"]["address"].replace(":", ""), 16)
-                    self.set_match_field_element(field_name, mac_int, flow)
-
-                #TODO: Add graceful handling of IP addresses
-                elif field_name == "src_ip_addr":
-                    self.set_match_field_element(field_name, IPNetwork(match_json["src_ip_addr"]))
-                elif field_name == "dst_ip_addr":
-                    self.set_match_field_element(field_name, IPNetwork(match_json["dst_ip_addr"]))
-
-                elif field_name == "ip_protocol":
-                    self.set_match_field_element(field_name, int(match_json["ip-match"]["ip-protocol"]), flow)
-                elif field_name == "tcp_destination_port":
-                    self.set_match_field_element(field_name, int(match_json["tcp-destination-port"]), flow)
-                elif field_name == "tcp_source_port":
-                    self.set_match_field_element(field_name, int(match_json["tcp-source-port"]), flow)
-                elif field_name == "udp_destination_port":
-                    self.set_match_field_element(field_name, int(match_json["udp-destination-port"]), flow)
-                elif field_name == "udp_source_port":
-                    self.set_match_field_element(field_name, int(match_json["udp-source-port"]), flow)
-                elif field_name == "vlan_id":
-                    self.set_match_field_element(field_name, int(match_json["vlan-match"]["vlan-id"]["vlan-id"]), flow)
-
-            except KeyError:
-                self.set_match_field_element(field_name, is_wildcard=True)
-                continue
-
-    def add_element_from_ryu_match_json(self, match_json, flow):
-
-        for field_name in field_names:
-
-            try:
-                if field_name == "in_port":
-                    try:
-                        self.set_match_field_element(field_name, int(match_json["in_port"]), flow)
-
-                    except ValueError:
-                        parsed_in_port = match_json["in-port"].split(":")[2]
-                        self.set_match_field_element(field_name, int(parsed_in_port), flow)
-
-                elif field_name == "ethernet_type":
-                    self.set_match_field_element(field_name, int(match_json["dl_type"]), flow)
-
-                elif field_name == "ethernet_source":
-                    mac_int = int(match_json[u"dl_src"].replace(":", ""), 16)
-                    self.set_match_field_element(field_name, mac_int, flow)
-
-                elif field_name == "ethernet_destination":
-                    mac_int = int(match_json[u"dl_dst"].replace(":", ""), 16)
-                    self.set_match_field_element(field_name, mac_int, flow)
-
-                #TODO: Add graceful handling of IP addresses
-                elif field_name == "src_ip_addr":
-                    self.set_match_field_element(field_name, IPNetwork(match_json["nw_src"]))
-                elif field_name == "dst_ip_addr":
-                    self.set_match_field_element(field_name, IPNetwork(match_json["nw_dst"]))
-
-                elif field_name == "ip_protocol":
-                    self.set_match_field_element(field_name, int(match_json["ip-match"]["ip-protocol"]), flow)
-                elif field_name == "tcp_destination_port":
-                    self.set_match_field_element(field_name, int(match_json["tcp-destination-port"]), flow)
-                elif field_name == "tcp_source_port":
-                    self.set_match_field_element(field_name, int(match_json["tcp-source-port"]), flow)
-                elif field_name == "udp_destination_port":
-                    self.set_match_field_element(field_name, int(match_json["udp-destination-port"]), flow)
-                elif field_name == "udp_source_port":
-                    self.set_match_field_element(field_name, int(match_json["udp-source-port"]), flow)
-                elif field_name == "vlan_id":
-                    self.set_match_field_element(field_name, int(match_json[u"dl_vlan"]), flow)
-
-            except KeyError:
-                self.set_match_field_element(field_name, is_wildcard=True)
-                continue
-
-
     def get_orig_match_element(self, field_modifications=None):
 
         if field_modifications:
@@ -341,42 +247,42 @@ class Traffic():
 
     def __init__(self, init_wildcard=False):
 
-        self.match_elements = []
+        self.traffic_elements = []
 
         # If initialized as wildcard, add one to the list
         if init_wildcard:
-            self.match_elements.append(TrafficElement(is_wildcard=True))
+            self.traffic_elements.append(TrafficElement(is_wildcard=True))
 
     def add_match_elements(self, me_list):
         for me in me_list:
-            self.match_elements.append(me)
+            self.traffic_elements.append(me)
             me.traffic = self
 
     def is_empty(self):
-        return len(self.match_elements) == 0
+        return len(self.traffic_elements) == 0
 
     def set_field(self, key, value=None, match_json=None, is_wildcard=False, exception=False):
 
         if key and value and exception:
-            for me in self.match_elements:
+            for me in self.traffic_elements:
                 me.set_match_field_element(key, value, exception=True)
 
         elif key and value:
-            for me in self.match_elements:
+            for me in self.traffic_elements:
                 me.set_match_field_element(key, value)
 
         elif is_wildcard:
-            for me in self.match_elements:
+            for me in self.traffic_elements:
                 me.set_match_field_element(key, is_wildcard=True)
 
         elif match_json:
-            for me in self.match_elements:
+            for me in self.traffic_elements:
                 me.set_fields_with_match_json(match_json)
 
     def is_subset_me(self, in_me):
 
         is_subset = False
-        for self_me in self.match_elements:
+        for self_me in self.traffic_elements:
             if self_me.is_subset(in_me):
                 is_subset = True
                 break
@@ -386,7 +292,7 @@ class Traffic():
     def is_redundant_me(self, in_me):
 
         is_redundant = False
-        for self_me in self.match_elements:
+        for self_me in self.traffic_elements:
             if self_me.is_subset(in_me) and self_me.succ_match_element == in_me.succ_match_element:
                 is_redundant = True
                 break
@@ -396,7 +302,7 @@ class Traffic():
     def intersect(self, in_traffic):
         im = Traffic()
         for e_in in in_traffic.match_elements:
-            for e_self in self.match_elements:
+            for e_self in self.traffic_elements:
                 ei = e_self.intersect(e_in)
                 if ei:
 
@@ -429,7 +335,7 @@ class Traffic():
                 continue
 
             union_me.traffic = self
-            self.match_elements.append(union_me)
+            self.traffic_elements.append(union_me)
 
         return self
 
@@ -438,9 +344,9 @@ class Traffic():
         # Check if this existing_me can be taken even partially by any of the candidates
         # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
 
-        #print "pipe_welding has:", len(self.match_elements), "existing match elements to take care of..."
+        #print "pipe_welding has:", len(self.traffic_elements), "existing match elements to take care of..."
 
-        for existing_me in self.match_elements:
+        for existing_me in self.traffic_elements:
             existing_me_welded = False
             for candidate_me in now_admitted_match.match_elements:
 
@@ -458,25 +364,25 @@ class Traffic():
     def get_orig_traffic(self, modified_fields=None):
 
         orig_traffic = Traffic()
-        for me in self.match_elements:
+        for me in self.traffic_elements:
             orig_me = me.get_orig_match_element(modified_fields)
             orig_me.traffic = orig_traffic
             orig_traffic.match_elements.append(orig_me)
         return orig_traffic
 
     def set_port(self, port):
-        for me in self.match_elements:
+        for me in self.traffic_elements:
             me.port = port
 
     def set_succ_match_element(self, succ_match_element):
-        for me in self.match_elements:
+        for me in self.traffic_elements:
             me.succ_match_element = succ_match_element
             succ_match_element.pred_match_elements.append(me)
 
     def is_field_wildcard(self, field_name):
         retval = True
 
-        for me in self.match_elements:
+        for me in self.traffic_elements:
             retval = me.is_field_wildcard(field_name)
             if not retval:
                 break
@@ -485,7 +391,7 @@ class Traffic():
 
     def print_port_paths(self):
 
-        for me in self.match_elements:
+        for me in self.traffic_elements:
             print me.get_port_path_str()
 
 

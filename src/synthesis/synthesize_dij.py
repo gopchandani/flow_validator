@@ -9,7 +9,7 @@ from model.network_graph import NetworkGraph
 
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
-from model.match import MatchElement
+from model.match import Match
 
 class SynthesizeDij():
 
@@ -400,7 +400,7 @@ class SynthesizeDij():
                 print 'Synthesizing primary and backup paths from', src, 'to', dst
                 print "-----------------------------------------------------------------------------------------------"
 
-                flow_match = MatchElement(is_wildcard=True)
+                flow_match = Match(is_wildcard=True)
                 flow_match["ethernet_type"] = 0x0800
 
                 self.synthesize_flow(src_h_obj, dst_h_obj, flow_match)

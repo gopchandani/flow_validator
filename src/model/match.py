@@ -1,10 +1,8 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
-
 from netaddr import IPNetwork
 from UserDict import DictMixin
-
 
 field_names = ["in_port",
               "ethernet_type",
@@ -107,8 +105,7 @@ class OdlMatchJsonParser():
     def keys(self):
         return self.field_values.keys()
 
-
-class MatchElement(DictMixin):
+class Match(DictMixin):
 
     def __getitem__(self, item):
         return self.match_field_values[item]
@@ -124,12 +121,13 @@ class MatchElement(DictMixin):
 
     def __init__(self, match_json=None, controller=None, flow=None, is_wildcard=True):
 
+        self.flow = flow
         self.match_field_values = {}
 
-        if match_json and flow and controller == "odl":
-            self.add_element_from_odl_match_json(match_json, flow)
-        elif match_json and flow and controller == "ryu":
-            self.add_element_from_ryu_match_json(match_json, flow)
+        if match_json and controller == "odl":
+            self.add_element_from_odl_match_json(match_json)
+        elif match_json and controller == "ryu":
+            self.add_element_from_ryu_match_json(match_json)
         elif is_wildcard:
             for field_name in field_names:
                 self.match_field_values[field_name] = sys.maxsize
@@ -137,7 +135,7 @@ class MatchElement(DictMixin):
     def is_field_wildcard(self, field_name):
         return self.match_field_values[field_name] == sys.maxsize
 
-    def add_element_from_odl_match_json(self, match_json, flow):
+    def add_element_from_odl_match_json(self, match_json):
 
         for field_name in field_names:
 
