@@ -8,6 +8,33 @@ from external.intervaltree import Interval, IntervalTree
 
 class TrafficElement():
 
+    def __init__(self, init_match=None, init_field_wildcard=False):
+
+        self.traffic = None
+        self.port = None
+        self.succ_traffic_element = None
+        self.pred_traffic_elements = []
+        self.written_field_modifications = {}
+
+        self.match_fields = {}
+        self.has_vlan_tag = False
+
+        # If a match has been provided to initialize with
+        if init_match:
+            for field_name in field_names:
+                self.match_fields[field_name] = IntervalTree()
+
+                if init_match[field_name] == sys.maxsize:
+                    self.set_match_field_element(field_name, is_wildcard=True)
+                else:
+                    self.set_match_field_element(field_name, init_match[field_name])
+
+        # Create one IntervalTree per field and put the wildcard interval in it
+        if init_field_wildcard:
+            for field_name in field_names:
+                self.match_fields[field_name] = IntervalTree()
+                self.set_match_field_element(field_name, is_wildcard=True)
+
     def __str__(self):
         if self.port:
             return str(id(self)) + "@" + self.port.port_id
@@ -17,36 +44,15 @@ class TrafficElement():
     def get_port_path_str(self):
 
         port_path_str = self.port.port_id + "(" + str(id(self)) + ")"
-        trav = self.succ_match_element
+        trav = self.succ_traffic_element
 
         while trav != None:
             port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
-            trav = trav.succ_match_element
+            trav = trav.succ_traffic_element
 
         return port_path_str
-
-    def __init__(self, controller=None, flow=None, is_wildcard=True, init_match_fields=True, traffic=None):
-
-        self.traffic = traffic
-        self.port = None
-        self.succ_match_element = None
-        self.pred_match_elements = []
-        self.written_field_modifications = {}
-
-        self.match_fields = {}
-        self.has_vlan_tag = False
-
-        # Create one IntervalTree per field.
-        if init_match_fields:
-            for field_name in field_names:
-                self.match_fields[field_name] = IntervalTree()
-
-        if is_wildcard:
-            for field_name in field_names:
-                self.set_match_field_element(field_name, is_wildcard=True)
-
-
-    def set_match_field_element(self, key, value=None, flow=None, is_wildcard=False, exception=False):
+    
+    def set_match_field_element(self, key, value=None, is_wildcard=False, exception=False):
 
         # First remove all current intervals
         prev_intervals = list(self.match_fields[key])
@@ -54,11 +60,11 @@ class TrafficElement():
             self.match_fields[key].remove(iv)
 
         if exception:
-            self.match_fields[key].add(Interval(0, value, flow))
-            self.match_fields[key].add(Interval(value + 1, sys.maxsize, flow))
+            self.match_fields[key].add(Interval(0, value))
+            self.match_fields[key].add(Interval(value + 1, sys.maxsize))
 
         elif is_wildcard:
-            self.match_fields[key].add(Interval(0, sys.maxsize, flow))
+            self.match_fields[key].add(Interval(0, sys.maxsize))
 
         else:
             if isinstance(value, IPNetwork):
@@ -91,72 +97,71 @@ class TrafficElement():
 
         return matched_tree
 
-    def intersect(self, in_match_element):
+    def intersect(self, in_traffic_element):
 
         intersection_element = TrafficElement()
 
         for field_name in field_names:
             intersection_element.match_fields[field_name] = self.get_matched_tree(
-                in_match_element.match_fields[field_name], self.match_fields[field_name])
+                in_traffic_element.match_fields[field_name], self.match_fields[field_name])
 
             # If the resulting tree has no intervals in it, then balk:
             if not intersection_element.match_fields[field_name]:
                 #print field_name, \
                 #    "self:", self.match_fields[field_name], \
-                #    "in_match:", in_match_element.match_fields[field_name]
+                #    "in_match:", in_traffic_element.match_fields[field_name]
                 return None
 
         return intersection_element
 
-    def get_complement_match_elements(self):
+    def get_complement_traffic_elements(self):
 
-        complement_match_elements = []
-
+        complement_traffic_elements = []
         for field_name in field_names:
 
-            #If the field is not a wildcard, then chop it from the wildcard initialized Traffic
+            # If the field is not a wildcard, then chop it from the wildcard initialized Traffic
             if not (Interval(0, sys.maxsize) in self.match_fields[field_name]):
-                me = TrafficElement(is_wildcard=True)
+                te = TrafficElement(init_field_wildcard=True)
 
-                # Chop out each interval from me[field_name]
+                # Chop out each interval from te[field_name]
                 for interval in self.match_fields[field_name]:
-                    me.match_fields[field_name].chop(interval.begin, interval.end)
+                    te.match_fields[field_name].chop(interval.begin, interval.end)
 
-                complement_match_elements.append(me)
+                complement_traffic_elements.append(te)
 
-        return complement_match_elements
+        return complement_traffic_elements
 
 
     # A is_subset of B if A - B == NullSet
-    # A is in_match_element
+    # A is in_traffic_element
     # B here is self
 
-    def is_subset(self, in_match_element):
+    def is_subset(self, in_traffic_element):
 
         # find B'
-        complement_match_elements = self.get_complement_match_elements()
+        complement_traffic_elements = self.get_complement_traffic_elements()
 
-        # Intersect in_match_element with B' to get A-B by doing A Int B'
-        diff_match_elements = []
-        for cme in complement_match_elements:
-            i = in_match_element.intersect(cme)
+        # Intersect in_traffic_element with B' to get A-B by doing A Int B'
+        diff_traffic_elements = []
+        for cme in complement_traffic_elements:
+            i = in_traffic_element.intersect(cme)
             if i:
-                diff_match_elements.append(i)
+                diff_traffic_elements.append(i)
 
         # Return True/False based on if there was anything found in A Int B'
-        if diff_match_elements:
+        if diff_traffic_elements:
             return False
         else:
             return True
 
-    def get_orig_match_element(self, field_modifications=None):
+    def get_orig_traffic_element(self, field_modifications=None):
 
         if field_modifications:
             mf = field_modifications
         else:
             mf = self.written_field_modifications
 
-        orig_match_element = TrafficElement(is_wildcard=False, init_match_fields=False)
+        orig_traffic_element = TrafficElement()
 
         for field_name in field_names:
 
@@ -176,29 +181,29 @@ class TrafficElement():
                 intersection = self.get_matched_tree(value_tree, self.match_fields[field_name])
 
                 if intersection:
-                    orig_match_element.match_fields[field_name] = mf[field_name][0]
+                    orig_traffic_element.match_fields[field_name] = mf[field_name][0]
                 else:
-                     orig_match_element.match_fields[field_name] = self.match_fields[field_name]
+                     orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
 
             else:
                 # Otherwise, just keep the field same as it was
-                orig_match_element.match_fields[field_name] = self.match_fields[field_name]
+                orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
 
         # Accumulate field modifications
-        orig_match_element.written_field_modifications.update(self.written_field_modifications)
+        orig_traffic_element.written_field_modifications.update(self.written_field_modifications)
 
-        # This newly minted ME depends on the succ_match_element
-        orig_match_element.succ_match_element = self.succ_match_element
+        # This newly minted ME depends on the succ_traffic_element
+        orig_traffic_element.succ_traffic_element = self.succ_traffic_element
 
-        # This also means that succ_match_element.pred_match_elements also need to carry around orig_match_element
-        if self.succ_match_element:
-            self.succ_match_element.pred_match_elements.append(orig_match_element)
+        # This also means that succ_traffic_element.pred_traffic_elements also need to carry around orig_traffic_element
+        if self.succ_traffic_element:
+            self.succ_traffic_element.pred_traffic_elements.append(orig_traffic_element)
 
         # Copy these from self
-        orig_match_element.port = self.port
-        orig_match_element.pred_match_elements = self.pred_match_elements
+        orig_traffic_element.port = self.port
+        orig_traffic_element.pred_traffic_elements = self.pred_traffic_elements
 
-        return orig_match_element
+        return orig_traffic_element
 
     def set_fields_with_match_json(self, match_json):
 
@@ -251,12 +256,12 @@ class Traffic():
 
         # If initialized as wildcard, add one to the list
         if init_wildcard:
-            self.traffic_elements.append(TrafficElement(is_wildcard=True))
+            self.traffic_elements.append(TrafficElement(init_field_wildcard=True))
 
-    def add_match_elements(self, me_list):
-        for me in me_list:
-            self.traffic_elements.append(me)
-            me.traffic = self
+    def add_traffic_elements(self, te_list):
+        for te in te_list:
+            self.traffic_elements.append(te)
+            te.traffic = self
 
     def is_empty(self):
         return len(self.traffic_elements) == 0
@@ -264,126 +269,126 @@ class Traffic():
     def set_field(self, key, value=None, match_json=None, is_wildcard=False, exception=False):
 
         if key and value and exception:
-            for me in self.traffic_elements:
-                me.set_match_field_element(key, value, exception=True)
+            for te in self.traffic_elements:
+                te.set_match_field_element(key, value, exception=True)
 
         elif key and value:
-            for me in self.traffic_elements:
-                me.set_match_field_element(key, value)
+            for te in self.traffic_elements:
+                te.set_match_field_element(key, value)
 
         elif is_wildcard:
-            for me in self.traffic_elements:
-                me.set_match_field_element(key, is_wildcard=True)
+            for te in self.traffic_elements:
+                te.set_match_field_element(key, is_wildcard=True)
 
         elif match_json:
-            for me in self.traffic_elements:
-                me.set_fields_with_match_json(match_json)
+            for te in self.traffic_elements:
+                te.set_fields_with_match_json(match_json)
 
-    def is_subset_me(self, in_me):
+    def is_subset_te(self, in_te):
 
         is_subset = False
-        for self_me in self.traffic_elements:
-            if self_me.is_subset(in_me):
+        for self_te in self.traffic_elements:
+            if self_te.is_subset(in_te):
                 is_subset = True
                 break
 
         return is_subset
 
-    def is_redundant_me(self, in_me):
+    def is_redundant_te(self, in_te):
 
         is_redundant = False
-        for self_me in self.traffic_elements:
-            if self_me.is_subset(in_me) and self_me.succ_match_element == in_me.succ_match_element:
+        for self_te in self.traffic_elements:
+            if self_te.is_subset(in_te) and self_te.succ_traffic_element == in_te.succ_traffic_element:
                 is_redundant = True
                 break
 
         return is_redundant
 
     def intersect(self, in_traffic):
-        im = Traffic()
-        for e_in in in_traffic.match_elements:
+        traffic_intersection = Traffic()
+        for e_in in in_traffic.traffic_elements:
             for e_self in self.traffic_elements:
                 ei = e_self.intersect(e_in)
                 if ei:
 
                     # Check to see if this intersection can be expressed as subset of any of the previous
-                    # me's that are already collected
-                    is_subset = im.is_subset_me(ei)
+                    # te's that are already collected
+                    is_subset = traffic_intersection.is_subset_te(ei)
 
                     # If so, no need to add this one to the mix
                     if is_subset:
                         continue
 
                     # Add this and do the necessary book-keeping...
-                    ei.traffic = im
-                    im.match_elements.append(ei)
+                    ei.traffic = traffic_intersection
+                    traffic_intersection.traffic_elements.append(ei)
 
                     ei.written_field_modifications.update(e_in.written_field_modifications)
 
                     # Establish that the resulting ei is based on e_in
-                    ei.succ_match_element = e_in
-                    e_in.pred_match_elements.append(ei)
+                    ei.succ_traffic_element = e_in
+                    e_in.pred_traffic_elements.append(ei)
 
-        return im
+        return traffic_intersection
 
     def union(self, in_traffic):
 
-        for union_me in in_traffic.match_elements:
+        for union_te in in_traffic.traffic_elements:
 
             # Check to see if this needs to be added at all
-            if self.is_redundant_me(union_me):
+            if self.is_redundant_te(union_te):
                 continue
 
-            union_me.traffic = self
-            self.traffic_elements.append(union_me)
+            union_te.traffic = self
+            self.traffic_elements.append(union_te)
 
         return self
 
     def pipe_welding(self, now_admitted_match):
 
-        # Check if this existing_me can be taken even partially by any of the candidates
-        # TODO: This does not handle left-over cases when parts of the existing_me are taken by multiple candidate_me
+        # Check if this existing_te can be taken even partially by any of the candidates
+        # TODO: This does not handle left-over cases when parts of the existing_te are taken by multiple candidate_te
 
         #print "pipe_welding has:", len(self.traffic_elements), "existing match elements to take care of..."
 
-        for existing_me in self.traffic_elements:
-            existing_me_welded = False
-            for candidate_me in now_admitted_match.match_elements:
+        for existing_te in self.traffic_elements:
+            existing_te_welded = False
+            for candidate_te in now_admitted_match.traffic_elements:
 
-                if candidate_me.is_subset(existing_me):
-                    existing_me.written_field_modifications.update(candidate_me.written_field_modifications)
-                    existing_me.succ_match_element = candidate_me.succ_match_element
-                    existing_me_welded = True
+                if candidate_te.is_subset(existing_te):
+                    existing_te.written_field_modifications.update(candidate_te.written_field_modifications)
+                    existing_te.succ_traffic_element = candidate_te.succ_traffic_element
+                    existing_te_welded = True
                     break
 
-            # If none of the candidate_me took existing_me:
-            #Delete everybody who dependent on existing_me, the whole chain...
-            if not existing_me_welded:
-                existing_me.succ_match_element = None
+            # If none of the candidate_te took existing_te:
+            #Delete everybody who dependent on existing_te, the whole chain...
+            if not existing_te_welded:
+                existing_te.succ_traffic_element = None
 
     def get_orig_traffic(self, modified_fields=None):
 
         orig_traffic = Traffic()
-        for me in self.traffic_elements:
-            orig_me = me.get_orig_match_element(modified_fields)
-            orig_me.traffic = orig_traffic
-            orig_traffic.match_elements.append(orig_me)
+        for te in self.traffic_elements:
+            orig_te = te.get_orig_traffic_element(modified_fields)
+            orig_te.traffic = orig_traffic
+            orig_traffic.traffic_elements.append(orig_te)
         return orig_traffic
 
     def set_port(self, port):
-        for me in self.traffic_elements:
-            me.port = port
+        for te in self.traffic_elements:
+            te.port = port
 
-    def set_succ_match_element(self, succ_match_element):
-        for me in self.traffic_elements:
-            me.succ_match_element = succ_match_element
-            succ_match_element.pred_match_elements.append(me)
+    def set_succ_traffic_element(self, succ_traffic_element):
+        for te in self.traffic_elements:
+            te.succ_traffic_element = succ_traffic_element
+            succ_traffic_element.pred_traffic_elements.append(te)
 
     def is_field_wildcard(self, field_name):
         retval = True
 
-        for me in self.traffic_elements:
-            retval = me.is_field_wildcard(field_name)
+        for te in self.traffic_elements:
+            retval = te.is_field_wildcard(field_name)
             if not retval:
                 break
 
@@ -391,8 +396,8 @@ class Traffic():
 
     def print_port_paths(self):
 
-        for me in self.traffic_elements:
-            print me.get_port_path_str()
+        for te in self.traffic_elements:
+            print te.get_port_path_str()
 
 
 def main():

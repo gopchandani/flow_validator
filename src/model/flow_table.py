@@ -1,7 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 from match import Match
-from traffic import Traffic
+from traffic import Traffic, TrafficElement
 from instruction_set import InstructionSet
 
 class Flow():
@@ -22,20 +22,21 @@ class Flow():
         if self.sw.network_graph.controller == "odl":
             self.table_id = self.flow_json["table_id"]
             self.priority = int(self.flow_json["priority"])
-            self.match_element = Match(match_json=self.flow_json["match"], controller="odl", flow=self)
+            self.match = Match(match_json=self.flow_json["match"], controller="odl", flow=self)
         
         elif self.sw.network_graph.controller == "ryu":
             self.table_id = self.flow_json["table_id"]
             self.priority = int(self.flow_json["priority"])
-            self.match_element = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
+            self.match = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
 
         self.port_graph_edges = []
+        self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
         self.complement_traffic = Traffic()
         self.applied_traffic = None
 
-        # self.traffic.add_match_elements([self.match_element])
-        # self.complement_traffic.add_match_elements(self.match_element.get_complement_match_elements())
+        self.traffic.add_traffic_elements([self.traffic_element])
+        self.complement_traffic.add_traffic_elements(self.traffic_element.get_complement_traffic_elements())
 
     def add_port_graph_edges(self):
 
