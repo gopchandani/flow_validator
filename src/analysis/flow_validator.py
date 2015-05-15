@@ -182,6 +182,7 @@ def main():
             mm.setup_mininet_with_odl(ng)
         elif controller == "ryu":
             #mm.setup_mininet_with_ryu_router()
+            #mm.setup_mininet_with_ryu_qos(ng)
             mm.setup_mininet_with_ryu(ng)
 
     # Refresh the network_graph

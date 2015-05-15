@@ -372,11 +372,7 @@ class SynthesisLib():
         pop_vlan_action = None
         output_action = None
 
-        print "Rates for mac_intent", mac_intent.min_rate, mac_intent.max_rate
-        q_id = self.push_queue(sw, mac_intent.out_port, mac_intent.min_rate, mac_intent.max_rate)
-
         if self.network_graph.controller == "odl":
-
             flow["flow-node-inventory:flow"]["match"] = \
                 mac_intent.flow_match.generate_match_json(self.network_graph.controller,
                                                           flow["flow-node-inventory:flow"]["match"])
@@ -385,13 +381,22 @@ class SynthesisLib():
             output_action = [{'order': 1, "output-action": {"output-node-connector": mac_intent.out_port}}]
 
         elif self.network_graph.controller == "ryu":
-
             flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"])
             pop_vlan_action = {"type": "POP_VLAN"}
-            enqueue_action = {"type": "SET_QUEUE", "queue_id": q_id, "port": mac_intent.out_port}
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
-        action_list = [pop_vlan_action, enqueue_action, output_action]
+        action_list = None
+        if mac_intent.min_rate and mac_intent.max_rate:
+            q_id = self.push_queue(sw, mac_intent.out_port, mac_intent.min_rate, mac_intent.max_rate)
+            if self.network_graph.controller == "ryu":
+                enqueue_action = {"type": "SET_QUEUE", "queue_id": q_id, "port": mac_intent.out_port}
+                action_list = [pop_vlan_action, enqueue_action, output_action]
+
+            #TODO: Do this for ODL maybe?
+
+        else:
+            action_list = [pop_vlan_action, output_action]
+
         self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
         self.push_flow(sw, flow)
 
