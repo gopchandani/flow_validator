@@ -65,7 +65,6 @@ class FlowValidator:
             admitted_traffic.set_field("ethernet_destination", dst_mac_int)
 
             admitted_traffic.set_port(host_obj.ingress_port)
-
             host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id] = admitted_traffic
 
     #@profile

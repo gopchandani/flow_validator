@@ -74,6 +74,22 @@ class Switch():
             flow_table.init_flow_table_port_graph()
 
 
+    def compute_transfer_function(self):
+
+        # Inject wildcard traffic at each ingress port of the switch
+        for port in self.ports:
+
+            out_p_id = self.port_graph.get_outgoing_port_id(self.node_id, port)
+            out_p = self.port_graph.get_port(out_p_id)
+
+            admitted_traffic = Traffic(init_wildcard=True)
+            admitted_traffic.set_port(out_p)
+            out_p.admitted_traffic[out_p_id] = admitted_traffic
+
+            self.port_graph.compute_admitted_traffic(out_p, out_p.admitted_traffic[out_p_id], out_p)
+
+        print "here"
+
     def de_init_switch_port_graph(self, port_graph):
 
         # Try passing a wildcard through the flow table
