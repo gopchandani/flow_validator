@@ -234,3 +234,5 @@ class PortGraph:
 
             if not pred_admitted_traffic.is_empty():
                 self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
+
+
