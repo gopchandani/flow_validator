@@ -11,19 +11,19 @@ from model.port_graph import PortGraph
 from model.traffic import Traffic
 
 mm = None
-#
-# load_config = False
-# save_config = True
-# controller = "ryu"
-# topo_description = ("linear", 2, 2)
-# experiment_switches = ["s1", "s2"]
-
 
 load_config = False
 save_config = True
 controller = "ryu"
-topo_description = ("ring", 4, 1)
-experiment_switches = ["s1", "s3"]
+topo_description = ("linear", 2, 2)
+experiment_switches = ["s1", "s2"]
+
+#
+# load_config = False
+# save_config = True
+# controller = "ryu"
+# topo_description = ("ring", 4, 1)
+# experiment_switches = ["s1", "s3"]
 
 
 # load_config = False
@@ -93,15 +93,17 @@ class FlowValidator:
     def validate_host_pair_reachability(self, src_h_id, dst_h_id):
 
         src_host_obj = self.network_graph.get_node_object(src_h_id)
+        src_switch_egress_port = self.port_graph.get_port(self.port_graph.g.successors(src_host_obj.egress_port.port_id)[0])
+
         dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
         print "Paths from:", src_h_id, "to:", dst_h_id
 
-        if dst_host_obj.ingress_port.port_id not in src_host_obj.egress_port.admitted_traffic:
+        if dst_host_obj.ingress_port.port_id not in src_switch_egress_port.admitted_traffic:
             print "None found."
             return
 
-        at = src_host_obj.egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
+        at = src_switch_egress_port.admitted_traffic[dst_host_obj.ingress_port.port_id]
 
         # Baseline
         at.print_port_paths()
