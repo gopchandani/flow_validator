@@ -73,7 +73,6 @@ class Switch():
         for flow_table in self.flow_tables:
             flow_table.init_flow_table_port_graph()
 
-
     def compute_transfer_function(self):
 
         # Inject wildcard traffic at each ingress port of the switch

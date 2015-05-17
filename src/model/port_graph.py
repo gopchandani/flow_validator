@@ -40,7 +40,7 @@ class PortGraph:
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
             sw.init_switch_port_graph(self)
-            sw.compute_transfer_function()
+            #sw.compute_transfer_function()
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
