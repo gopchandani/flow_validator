@@ -34,12 +34,13 @@ class PortGraph:
 
     def init_port_graph(self):
 
-        #Add a port for controller
+        # Add a port for controller
         self.init_global_controller_port()
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
             sw.init_switch_port_graph(self)
+            #sw.compute_transfer_function()
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
@@ -233,3 +234,5 @@ class PortGraph:
 
             if not pred_admitted_traffic.is_empty():
                 self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
+
+

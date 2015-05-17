@@ -11,19 +11,19 @@ from model.port_graph import PortGraph
 from model.traffic import Traffic
 
 mm = None
-
-load_config = False
-save_config = True
-controller = "ryu"
-topo_description = ("linear", 2, 2)
-experiment_switches = ["s1", "s2"]
-
 #
 # load_config = False
 # save_config = True
 # controller = "ryu"
-# topo_description = ("ring", 4, 1)
-# experiment_switches = ["s1", "s3"]
+# topo_description = ("linear", 2, 2)
+# experiment_switches = ["s1", "s2"]
+
+
+load_config = False
+save_config = True
+controller = "ryu"
+topo_description = ("ring", 4, 1)
+experiment_switches = ["s1", "s3"]
 
 
 # load_config = False
@@ -65,7 +65,6 @@ class FlowValidator:
             admitted_traffic.set_field("ethernet_destination", dst_mac_int)
 
             admitted_traffic.set_port(host_obj.ingress_port)
-
             host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id] = admitted_traffic
 
     #@profile

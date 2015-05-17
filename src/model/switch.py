@@ -73,6 +73,85 @@ class Switch():
         for flow_table in self.flow_tables:
             flow_table.init_flow_table_port_graph()
 
+    def compute_transfer_function(self):
+
+        # Inject wildcard traffic at each ingress port of the switch
+        for port in self.ports:
+
+            out_p_id = self.port_graph.get_outgoing_port_id(self.node_id, port)
+            out_p = self.port_graph.get_port(out_p_id)
+
+            transfer_traffic = Traffic(init_wildcard=True)
+            transfer_traffic.set_port(out_p)
+            out_p.transfer_traffic[out_p_id] = transfer_traffic
+
+            self.compute_transfer_traffic(out_p, out_p.transfer_traffic[out_p_id], out_p)
+
+
+    def compute_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
+
+        #print "Current Port:", curr.port_id, "Preds:", self.port_graph.g.predecessors(curr.port_id)
+
+        if dst_port.port_id not in curr.transfer_traffic:
+            curr.transfer_traffic[dst_port.port_id] = curr_transfer_traffic
+        else:
+            curr.transfer_traffic[dst_port.port_id].union(curr_transfer_traffic)
+
+        # Recursively call myself at each of my predecessors in the port graph
+        for pred_id in self.port_graph.g.predecessors_iter(curr.port_id):
+
+            pred = self.port_graph.get_port(pred_id)
+            pred_transfer_traffic = self.compute_pred_transfer_traffic(pred, curr, dst_port.port_id)
+
+            # Base cases
+            # 1. No traffic left to propagate to predecessors
+            # 2. There is some traffic but current port is ingress
+            if not pred_transfer_traffic.is_empty() and  curr.port_type != "ingress":
+                self.compute_transfer_traffic(pred, pred_transfer_traffic, dst_port)
+
+    def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
+
+        pred_transfer_traffic = Traffic()
+        edge_data = self.port_graph.g.get_edge_data(pred.port_id, curr.port_id)
+
+        for flow, edge_action in edge_data:
+            this_edge = edge_data[(flow, edge_action)]
+
+            if edge_action:
+                if not edge_action.is_active:
+                    continue
+
+            if dst_port_id in curr.transfer_traffic:
+
+                # At egress edges, set the in_port of the admitted match for destination to wildcard
+                if this_edge["edge_type"] == "egress":
+                    curr.transfer_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
+
+                # This check takes care of any applied actions
+                if flow and flow.applied_field_modifications:
+                    curr_transfer_traffic = \
+                        curr.transfer_traffic[dst_port_id].get_orig_traffic(flow.applied_field_modifications)
+                else:
+                    curr_transfer_traffic = curr.transfer_traffic[dst_port_id]
+
+                # At ingress edge compute the effect of written-actions
+                if this_edge["edge_type"] == "ingress":
+                    curr_transfer_traffic = curr_transfer_traffic.get_orig_traffic()
+
+                i = this_edge["edge_filter_match"].intersect(curr_transfer_traffic)
+                if not i.is_empty():
+
+                    # For non-ingress edges, accumulate written_field_modifications in the pred_transfer_traffic
+                    if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
+
+                        # Accumulate modifications
+                        for me in i.match_elements:
+                            me.written_field_modifications.update(flow.written_field_modifications)
+
+                    i.set_port(pred)
+                    pred_transfer_traffic.union(i)
+
+        return pred_transfer_traffic
 
     def de_init_switch_port_graph(self, port_graph):
 
