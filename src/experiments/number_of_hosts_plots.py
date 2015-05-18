@@ -96,7 +96,7 @@ def merge_data(data1, data2):
 
 #with open("data/number_of_hosts_data_20150330_131129.json", "r") as infile:
 
-with open("data/number_of_hosts_data_20150517_161410.json", "r") as infile:
+with open("data/number_of_hosts_data_20150517_163925.json", "r") as infile:
     ipgct = json.load(infile)["initial_port_graph_construction_time"]
 
 
