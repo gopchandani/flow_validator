@@ -4,6 +4,12 @@ import sys
 import json
 import time
 import gc
+import json
+import time
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as ss
+
 
 sys.path.append("./")
 
@@ -106,13 +112,55 @@ class NumberOfHosts():
         with open(filename, "w") as outfile:
             json.dump(self.data, outfile)
 
-    def __del__(self):
-        self.dump_data()
+    def plot_data(self):
+        self.plot_number_of_hosts(self.data["initial_port_graph_construction_time"])
+
+
+    def plot_number_of_hosts(self, initial_port_graph_construction_time):
+
+        h = []
+
+        if initial_port_graph_construction_time:
+
+            x1, \
+            initial_port_graph_construction_time_mean, \
+            initial_port_graph_construction_time_sem = self.get_x_y_err(initial_port_graph_construction_time)
+
+            l_initial_port_graph_construction_time = plt.errorbar(x1,
+                                                                  initial_port_graph_construction_time_mean,
+                                                                  initial_port_graph_construction_time_sem,
+                                                                  label="Port Graph Construction",
+                                                                  fmt="s",
+                                                                  color="black")
+            h.append(l_initial_port_graph_construction_time)
+
+        plt.xlim((0, 22))
+        plt.xticks(range(2, 22, 2), fontsize=16)
+        plt.yticks(fontsize=16)
+
+        plt.xlabel("Total number of hosts", fontsize=18)
+        plt.ylabel("Port Graph Construction Time(ms)", fontsize=18)
+        plt.show()
+
+    def get_x_y_err(self, data_dict):
+
+        x = sorted(data_dict.keys())
+
+        data_means = []
+        data_sems = []
+
+        for p in x:
+            mean = np.mean(data_dict[p])
+            sem = ss.sem(data_dict[p])
+            data_means.append(mean)
+            data_sems.append(sem)
+
+        return x, data_means, data_sems
 
 def main():
 
     num_iterations = 10
-    total_number_of_hosts = [2, 4, 6, 8, 10]#, 8, 10, 12, 14, 16])#, 18, 20]
+    total_number_of_hosts = [2, 4]#, 6, 8, 10]#, 8, 10, 12, 14, 16])#, 18, 20]
     load_config = False
     save_config = True
     controller = "ryu"
@@ -126,6 +174,8 @@ def main():
                         experiment_switches)
 
     exp.trigger()
+    exp.dump_data()
+    exp.plot_data()
 
 if __name__ == "__main__":
     main()
