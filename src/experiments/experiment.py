@@ -16,7 +16,6 @@ class Experiment(object):
     def __init__(self,
                  experiment_name,
                  num_iterations,
-                 total_number_of_hosts,
                  load_config,
                  save_config,
                  controller,
@@ -25,15 +24,12 @@ class Experiment(object):
         self.experiment_tag = experiment_name + "_" +time.strftime("%Y%m%d_%H%M%S")
 
         self.num_iterations = num_iterations
-        self.total_number_of_hosts = total_number_of_hosts
         self.load_config = load_config
         self.save_config = save_config
         self.controller = controller
         self.experiment_switches = experiment_switches
 
         self.data = {}
-
-
 
     def setup_network_graph(self, topo_description):
 
@@ -43,19 +39,22 @@ class Experiment(object):
             cm = ControllerMan(1, controller=self.controller)
             controller_port = cm.get_next()
 
-        mm = MininetMan(self.controller_port, *topo_description)
+        self.mm = MininetMan(self.controller_port, *topo_description)
 
         # Get a flow validator instance
-        ng = NetworkGraph(mininet_man=mm, controller=self.controller, experiment_switches=self.experiment_switches,
-                          save_config=self.save_config, load_config=self.load_config)
+        ng = NetworkGraph(mininet_man=self.mm,
+                          controller=self.controller,
+                          experiment_switches=self.experiment_switches,
+                          save_config=self.save_config,
+                          load_config=self.load_config)
 
         if not self.load_config and self.save_config:
             if self.controller == "odl":
-                mm.setup_mininet_with_odl(ng)
+                self.mm.setup_mininet_with_odl(ng)
             elif self.controller == "ryu":
-                #mm.setup_mininet_with_ryu_router()
-                #mm.setup_mininet_with_ryu_qos(ng)
-                mm.setup_mininet_with_ryu(ng)
+                #self.mm.setup_mininet_with_ryu_router()
+                #self.mm.setup_mininet_with_ryu_qos(ng)
+                self.mm.setup_mininet_with_ryu(ng)
 
         # Refresh the network_graph
         ng.parse_switches()

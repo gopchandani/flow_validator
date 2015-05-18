@@ -23,11 +23,12 @@ class NumberOfHosts(Experiment):
 
         super(NumberOfHosts, self).__init__("number_of_hosts",
                                             num_iterations,
-                                            total_number_of_hosts,
                                             load_config,
                                             save_config,
                                             controller,
                                             experiment_switches)
+
+        self.total_number_of_hosts = total_number_of_hosts
 
         self.data = {
             "initial_port_graph_construction_time": defaultdict(list),

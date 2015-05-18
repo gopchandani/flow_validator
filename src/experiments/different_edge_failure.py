@@ -3,54 +3,59 @@ __author__ = 'Rakesh Kumar'
 import sys
 import json
 import time
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as ss
+
 
 sys.path.append("./")
 
-from collections import defaultdict
 from pprint import pprint
 
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from controller_man import ControllerMan
 from mininet_man import MininetMan
+from experiment import Experiment
 
-class DifferentEdgeFailure():
 
-    def __init__(self, sample_size):
+class DifferentEdgeFailure(Experiment):
 
-        self.num_iterations = sample_size
+    def __init__(self,
+                 num_iterations,
+                 load_config,
+                 save_config,
+                 controller,
+                 experiment_switches):
 
-        # Data in this case is keyed by the primary path edges that we are going to break
-        self.data = {}
+        super(DifferentEdgeFailure, self).__init__("different_edge_failure",
+                                                   num_iterations,
+                                                   load_config,
+                                                   save_config,
+                                                   controller,
+                                                   experiment_switches)
+
+
         self.edges_broken = {}
         self.data["edges_broken"] = self.edges_broken
 
-        # Get the dockers ready
-        self.cm = ControllerMan(1)
-
-    def setup_network(self):
-
-        # First get a docker for controller
-        controller_port = self.cm.get_next()
-        print "Controller Port", controller_port
-
-        self.mm = MininetMan(controller_port, "ring", 10, 1, experiment_switches=["s1", "s6"])
-        self.mm.setup_mininet_with_odl()
+        if not load_config and save_config:
+            cm = ControllerMan(1, controller=controller)
+            self.controller_port = cm.get_next()
 
     def trigger(self):
 
-        print "Starting experiment..."
-
-        self.setup_network()
+        self.topo_description = ("ring", 10, 1)
+        ng = self.setup_network_graph(self.topo_description)
 
         for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
-            s1 = node1.split(":")[1]
-            s2 = node2.split(":")[1]
+            s1 = node1[1:]
+            s2 = node2[1:]
             self.data["edges_broken"][s1 + "<->" + s2] = []
 
         for i in range(self.num_iterations):
 
-            fv = FlowValidator(self.mm.ng)
+            fv = FlowValidator(ng)
             fv.init_port_graph()
             fv.add_hosts()
             fv.initialize_admitted_traffic()
@@ -61,25 +66,42 @@ class DifferentEdgeFailure():
                     fv.port_graph.remove_node_graph_edge(node1, node2)
                     fv.port_graph.add_node_graph_edge(node1, node2)
 
-                s1 = node1.split(":")[1]
-                s2 = node2.split(":")[1]
+                s1 = node1[1:]
+                s2 = node2[1:]
                 self.data["edges_broken"][s1 + "<->" + s2].append(t.msecs)
 
-        print "Done..."
-        self.dump_data()
+    def plot_different_edge_failure(self):
 
-    def dump_data(self):
-        pprint(self.data)
-        with open("data/different_edge_failure_data_" + time.strftime("%Y%m%d_%H%M%S")+".json", "w") as outfile:
-            json.dump(self.data, outfile)
+        x, edges_broken_mean, edges_broken_sem = self.get_x_y_err(self.data["edges_broken"])
+        ind = np.arange(len(x))
+        width = 0.3
 
-    def __del__(self):
-        self.dump_data()
+        plt.bar(ind + width, edges_broken_mean, yerr=edges_broken_sem, color="0.90", align='center',
+                error_kw=dict(ecolor='gray', lw=2, capsize=5, capthick=2))
+
+        plt.xticks(ind + width, tuple(x))
+        plt.xlabel("Edge Broken", fontsize=18)
+        plt.ylabel("Computation Time (ms)", fontsize=18)
+        plt.show()
 
 def main():
 
-    exp = DifferentEdgeFailure(100)
+    num_iterations = 10
+    load_config = False
+    save_config = True
+    controller = "ryu"
+    experiment_switches = ["s1", "s6"]
+
+    exp = DifferentEdgeFailure(num_iterations,
+                               load_config,
+                               save_config,
+                               controller,
+                               experiment_switches)
+
     exp.trigger()
+    exp.dump_data()
+    exp.plot_different_edge_failure()
+
 
 if __name__ == "__main__":
     main()
