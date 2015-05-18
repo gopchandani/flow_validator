@@ -1,25 +1,17 @@
 __author__ = 'Rakesh Kumar'
 
+
 import sys
-import json
-import time
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.stats as ss
-
-
 sys.path.append("./")
+import matplotlib.pyplot as plt
 
 from collections import defaultdict
-from pprint import pprint
-
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from controller_man import ControllerMan
-from mininet_man import MininetMan
-from model.network_graph import NetworkGraph
+from experiment import Experiment
 
-class NumberOfHosts():
+class NumberOfHosts(Experiment):
 
     def __init__(self,
                  num_iterations,
@@ -29,54 +21,22 @@ class NumberOfHosts():
                  controller,
                  experiment_switches):
 
-        self.experiment_tag = "number_of_hosts_" + time.strftime("%Y%m%d_%H%M%S")
+        super(NumberOfHosts, self).__init__("number_of_hosts",
+                                            num_iterations,
+                                            total_number_of_hosts,
+                                            load_config,
+                                            save_config,
+                                            controller,
+                                            experiment_switches)
 
-        self.num_iterations = num_iterations
-        self.total_number_of_hosts = total_number_of_hosts
-        self.load_config = load_config
-        self.save_config = save_config
-        self.controller = controller
-        self.experiment_switches = experiment_switches
-
-        # Data dictionaries in this case is keyed by the total_number_of_hosts that are added
         self.data = {
             "initial_port_graph_construction_time": defaultdict(list),
             "initial_traffic_set_propagation_time": defaultdict(list)
         }
 
-        # Get the dockers ready
-        self.cm = ControllerMan(len(self.total_number_of_hosts), controller=controller)
-
         if not load_config and save_config:
-            cm = ControllerMan(1, controller=controller)
-            controller_port = cm.get_next()
-
-    def setup_network_graph(self, topo_description):
-
-        controller_port = 6633
-
-        if not self.load_config and self.save_config:
-            cm = ControllerMan(1, controller=self.controller)
-            controller_port = cm.get_next()
-
-        mm = MininetMan(controller_port, *topo_description)
-
-        # Get a flow validator instance
-        ng = NetworkGraph(mininet_man=mm, controller=self.controller, experiment_switches=self.experiment_switches,
-                          save_config=self.save_config, load_config=self.load_config)
-
-        if not self.load_config and self.save_config:
-            if self.controller == "odl":
-                mm.setup_mininet_with_odl(ng)
-            elif self.controller == "ryu":
-                #mm.setup_mininet_with_ryu_router()
-                #mm.setup_mininet_with_ryu_qos(ng)
-                mm.setup_mininet_with_ryu(ng)
-
-        # Refresh the network_graph
-        ng.parse_switches()
-
-        return ng
+            cm = ControllerMan(len(self.total_number_of_hosts), controller=controller)
+            self.controller_port = cm.get_next()
 
     def trigger(self):
 
@@ -102,15 +62,6 @@ class NumberOfHosts():
                 fv.validate_all_host_pair_reachability()
 
         print "Done..."
-
-    def dump_data(self):
-        pprint(self.data)
-        filename = "data/" + self.experiment_tag + "_data.json"
-        print "Writing to file:", filename
-
-        with open(filename, "w") as outfile:
-            json.dump(self.data, outfile)
-
 
     def plot_number_of_hosts(self):
 
@@ -139,21 +90,6 @@ class NumberOfHosts():
         plt.ylabel("Port Graph Construction Time(ms)", fontsize=18)
         plt.savefig("plots/" +  self.experiment_tag + "_plot.png")
         plt.show()
-
-    def get_x_y_err(self, data_dict):
-
-        x = sorted(data_dict.keys())
-
-        data_means = []
-        data_sems = []
-
-        for p in x:
-            mean = np.mean(data_dict[p])
-            sem = ss.sem(data_dict[p])
-            data_means.append(mean)
-            data_sems.append(sem)
-
-        return x, data_means, data_sems
 
 def main():
 
