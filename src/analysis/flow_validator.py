@@ -3,34 +3,9 @@ __author__ = 'Rakesh Kumar'
 import sys
 sys.path.append("./")
 
-from experiments.controller_man import ControllerMan
-from experiments.mininet_man import MininetMan
-
-from model.network_graph import NetworkGraph
 from model.port_graph import PortGraph
 from model.traffic import Traffic
 
-mm = None
-
-load_config = False
-save_config = True
-controller = "ryu"
-topo_description = ("linear", 2, 2)
-experiment_switches = ["s1", "s2"]
-
-#
-# load_config = False
-# save_config = True
-# controller = "ryu"
-# topo_description = ("ring", 4, 1)
-# experiment_switches = ["s1", "s3"]
-
-
-# load_config = False
-# save_config = True
-# controller = "ryu"
-# topo_description = ("linear", 3, 1)
-# experiment_switches = ["s1", "s2", "s3"]
 
 class FlowValidator:
 
@@ -114,21 +89,7 @@ class FlowValidator:
 
         for src_h_id in self.network_graph.get_experiment_host_ids():
             for dst_h_id in self.network_graph.get_experiment_host_ids():
-
-                if controller == "ryu":
-                    # if (src_h_id == "h2" and dst_h_id == "h1") or \
-                    #         (src_h_id == "h1" and dst_h_id == "h2") or \
-                    #         (src_h_id == "h2" and dst_h_id == "h3") or \
-                    #         (src_h_id == "h3" and dst_h_id == "h2"):
-
-                    # if (src_h_id == "h2" and dst_h_id == "h3") or \
-                    #         (src_h_id == "h3" and dst_h_id == "h2"):
-
-                    if True:
-                        self.validate_host_pair_reachability(src_h_id, dst_h_id)
-
-                elif controller == "odl":
-                    self.validate_host_pair_reachability(src_h_id, dst_h_id)
+                self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
     def validate_all_host_pair_backup(self):
 
@@ -161,44 +122,3 @@ class FlowValidator:
                     if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
                         print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
                         return
-
-def main():
-
-    controller_port = 6633
-
-    if not load_config and save_config:
-        cm = ControllerMan(1, controller=controller)
-        controller_port = cm.get_next()
-
-    mm = MininetMan(controller_port, *topo_description)
-
-    # Get a flow validator instance
-    ng = NetworkGraph(mininet_man=mm, controller=controller, experiment_switches=experiment_switches,
-                      save_config=save_config, load_config=load_config)
-
-    if not load_config and save_config:
-        if controller == "odl":
-            mm.setup_mininet_with_odl(ng)
-        elif controller == "ryu":
-            #mm.setup_mininet_with_ryu_router()
-            #mm.setup_mininet_with_ryu_qos(ng)
-            mm.setup_mininet_with_ryu(ng)
-
-    # Refresh the network_graph
-    ng.parse_switches()
-    fv = FlowValidator(ng)
-
-    # Three steps to happy living:
-    fv.init_port_graph()
-    fv.add_hosts()
-    fv.initialize_admitted_traffic()
-
-    fv.validate_all_host_pair_reachability()
-    # fv.remove_hosts()
-
-    #fv.validate_all_host_pair_backup()
-
-    fv.de_init_port_graph()
-
-if __name__ == "__main__":
-    main()

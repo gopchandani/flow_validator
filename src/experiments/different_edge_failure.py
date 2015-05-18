@@ -45,7 +45,7 @@ class DifferentEdgeFailure(Experiment):
 
     def trigger(self):
 
-        self.topo_description = ("ring", 10, 1)
+        self.topo_description = ("ring", 4, 1)
         ng = self.setup_network_graph(self.topo_description)
 
         for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
@@ -90,7 +90,7 @@ def main():
     load_config = False
     save_config = True
     controller = "ryu"
-    experiment_switches = ["s1", "s6"]
+    experiment_switches = ["s1", "s3"]
 
     exp = DifferentEdgeFailure(num_iterations,
                                load_config,
