@@ -1,1 +1,1 @@
-{"s2": [{"host_switch_id": "s2", "host_name": "h2", "host_MAC": "02:e7:76:6c:ca:18", "host_IP": "10.0.0.2"}], "s1": [{"host_switch_id": "s1", "host_name": "h1", "host_MAC": "3a:46:28:0c:cf:13", "host_IP": "10.0.0.1"}]}
+{"s2": [{"host_switch_id": "s2", "host_name": "h2", "host_MAC": "22:8c:b1:8b:05:66", "host_IP": "10.0.0.2"}], "s1": [{"host_switch_id": "s1", "host_name": "h1", "host_MAC": "0a:81:9c:38:3b:4b", "host_IP": "10.0.0.1"}]}

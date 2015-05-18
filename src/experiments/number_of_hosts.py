@@ -3,9 +3,6 @@ __author__ = 'Rakesh Kumar'
 import sys
 import json
 import time
-import gc
-import json
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as ss
@@ -31,6 +28,8 @@ class NumberOfHosts():
                  save_config,
                  controller,
                  experiment_switches):
+
+        self.experiment_tag = "number_of_hosts_" + time.strftime("%Y%m%d_%H%M%S")
 
         self.num_iterations = num_iterations
         self.total_number_of_hosts = total_number_of_hosts
@@ -106,18 +105,16 @@ class NumberOfHosts():
 
     def dump_data(self):
         pprint(self.data)
-        filename = "data/number_of_hosts_data_" + time.strftime("%Y%m%d_%H%M%S")+".json"
+        filename = "data/" + self.experiment_tag + "_data.json"
         print "Writing to file:", filename
 
         with open(filename, "w") as outfile:
             json.dump(self.data, outfile)
 
-    def plot_data(self):
-        self.plot_number_of_hosts(self.data["initial_port_graph_construction_time"])
 
+    def plot_number_of_hosts(self):
 
-    def plot_number_of_hosts(self, initial_port_graph_construction_time):
-
+        initial_port_graph_construction_time = self.data["initial_port_graph_construction_time"]
         h = []
 
         if initial_port_graph_construction_time:
@@ -140,6 +137,7 @@ class NumberOfHosts():
 
         plt.xlabel("Total number of hosts", fontsize=18)
         plt.ylabel("Port Graph Construction Time(ms)", fontsize=18)
+        plt.savefig("plots/" +  self.experiment_tag + "_plot.png")
         plt.show()
 
     def get_x_y_err(self, data_dict):
@@ -175,7 +173,7 @@ def main():
 
     exp.trigger()
     exp.dump_data()
-    exp.plot_data()
+    exp.plot_number_of_hosts()
 
 if __name__ == "__main__":
     main()
