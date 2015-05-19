@@ -135,32 +135,32 @@ class PortGraph:
 
     def add_node_graph_edge(self, node1_id, node2_id):
 
-        edge_data = self.network_graph.get_edge_port_dict(node1_id, node2_id)
+        edge_port_dict = self.network_graph.get_edge_port_dict(node1_id, node2_id)
 
-        from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
-        to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
+        from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_port_dict[node1_id]))
+        to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_port_dict[node2_id]))
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
 
-        from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
-        to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
+        from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
+        to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
-        edge_data = self.network_graph.get_edge_port_dict(node1_id, node2_id)
+        edge_port_dict = self.network_graph.get_edge_port_dict(node1_id, node2_id)
 
-        from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_data[node1_id]))
-        to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_data[node2_id]))
+        from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_port_dict[node1_id]))
+        to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_port_dict[node2_id]))
         from_port.state = "down"
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
-        from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_data[node2_id]))
-        to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_data[node1_id]))
+        from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
+        to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
         from_port.state = "down"
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
@@ -169,6 +169,7 @@ class PortGraph:
 
         pred_admitted_traffic = Traffic()
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)
+        print "pred:", pred.port_id, " -> ", "curr:",  curr.port_id, ", len:", len(edge_data)
 
         for flow, edge_action in edge_data:
             this_edge = edge_data[(flow, edge_action)]

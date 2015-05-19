@@ -97,7 +97,7 @@ class NumberOfHosts(Experiment):
 def main():
 
     num_iterations = 10
-    total_number_of_hosts = [2, 4, 6, 8, 10]#, 8, 10, 12, 14, 16])#, 18, 20]
+    total_number_of_hosts = [2]#, 4, 6, 8, 10]#, 8, 10, 12, 14, 16])#, 18, 20]
     load_config = False
     save_config = True
     controller = "ryu"
