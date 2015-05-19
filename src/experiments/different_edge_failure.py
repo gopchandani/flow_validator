@@ -80,7 +80,7 @@ class DifferentEdgeFailure(Experiment):
                 error_kw=dict(ecolor='gray', lw=2, capsize=5, capthick=2))
 
         plt.xticks(ind + width, tuple(x))
-        plt.xlabel("Edge Broken", fontsize=18)
+        plt.xlabel("EdgeData Broken", fontsize=18)
         plt.ylabel("Computation Time (ms)", fontsize=18)
         plt.show()
 
