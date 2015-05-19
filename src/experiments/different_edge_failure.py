@@ -1,21 +1,14 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
-import json
-import time
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.stats as ss
-
-
 sys.path.append("./")
 
-from pprint import pprint
+import numpy as np
+import matplotlib.pyplot as plt
 
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from controller_man import ControllerMan
-from mininet_man import MininetMan
 from experiment import Experiment
 
 
