@@ -66,7 +66,8 @@ class Switch():
 
             self.port_graph.add_edge(in_p,
                                      self.flow_tables[0].port,
-                                     (None, None),
+                                     None,
+                                     None,
                                      incoming_port_match)
 
         # Try passing a wildcard through the flow table

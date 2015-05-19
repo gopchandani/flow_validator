@@ -60,7 +60,8 @@ class Flow():
 
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                                outgoing_port,
-                                               (self, output_action),
+                                               self,
+                                               output_action,
                                                self.applied_traffic)
 
                 self.port_graph_edges.append(e)
@@ -76,7 +77,8 @@ class Flow():
 
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                                outgoing_port,
-                                               (self, output_action),
+                                               self,
+                                               output_action,
                                                self.applied_traffic)
 
                 self.port_graph_edges.append(e)
@@ -89,22 +91,21 @@ class Flow():
 
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                                self.sw.flow_tables[self.instruction_set.goto_table].port,
-                                               (self, None),
+                                               self, None,
                                                self.applied_traffic)
 
                 self.port_graph_edges.append(e)
 
     def update_port_graph_edges(self):
 
-        for src_port_id, dst_port_id, key in self.port_graph_edges:
-            action = key[1]
+        for src_port_id, dst_port_id, flow, edge_action in self.port_graph_edges:
 
             # TODO: If there is no action here (why isn't there one)
-            if action:
+            if edge_action:
                 if self.sw.port_graph.get_port(dst_port_id).state != "down":
-                    action.update_active_status()
+                    edge_action.update_active_status()
                 else:
-                    action.is_active = False
+                    edge_action.is_active = False
 
 class FlowTable():
     def __init__(self, sw, table_id, flow_list):

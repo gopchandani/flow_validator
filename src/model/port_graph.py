@@ -61,9 +61,8 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph(self)
 
-    def add_edge(self, port1, port2, key, edge_filter_match):
+    def add_edge(self, port1, port2, flow, edge_action, edge_filter_match):
 
-        flow, edge_action = key
         edge_type = None
         if port1.port_type == "table" and port2.port_type == "egress":
             edge_type = "egress"
@@ -91,7 +90,7 @@ class PortGraph:
         # due to addition of this edge
         self.update_predecessors(port1)
 
-        return (port1.port_id, port2.port_id, key)
+        return (port1.port_id, port2.port_id, flow, edge_action)
 
     def remove_edge(self, port1, port2):
 
@@ -152,13 +151,13 @@ class PortGraph:
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_port_dict[node2_id]))
         from_port.state = "up"
         to_port.state = "up"
-        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
+        self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True))
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
         from_port.state = "up"
         to_port.state = "up"
-        self.add_edge(from_port, to_port, (None, None), Traffic(init_wildcard=True))
+        self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True))
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -179,9 +178,7 @@ class PortGraph:
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
         pred_admitted_traffic = Traffic()
-
         edge_data_list = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data_list"]
-        print "pred:", pred.port_id, " -> ", "curr:",  curr.port_id, ", len:", len(edge_data_list)
 
         for edge_data_dict in edge_data_list:
 
