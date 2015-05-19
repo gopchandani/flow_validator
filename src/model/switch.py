@@ -3,6 +3,7 @@ __author__ = 'Rakesh Kumar'
 from collections import defaultdict
 from traffic import Traffic
 from port import Port
+from edge import Edge
 
 
 class Switch():

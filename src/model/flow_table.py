@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+from edge import Edge
 from match import Match
 from traffic import Traffic, TrafficElement
 from instruction_set import InstructionSet

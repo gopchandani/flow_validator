@@ -1,11 +1,9 @@
 __author__ = 'Rakesh Kumar'
 
-import gc
-
 import networkx as nx
 from port import Port
+from edge import Edge
 from traffic import Traffic
-from network_graph import NetworkGraph
 
 class PortGraph:
 
