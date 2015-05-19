@@ -29,7 +29,7 @@ class SynthesizeDij():
         self.primary_path_edge_dict = {}
 
         self.apply_tag_intents_immediately = True
-        self.apply_other_intents_immediately = True
+        self.apply_other_intents_immediately = False
 
 
         # Table contains the rules that drop packets destined to the same MAC address as host of origin

@@ -174,6 +174,7 @@ class TrafficElement():
             if field_name in mf:
 
                 #TODO: Do this more properly ground up from the parser
+
                 field_val = int(mf[field_name][1])
                 value_tree = IntervalTree()
                 value_tree.add(Interval(field_val, field_val + 1))

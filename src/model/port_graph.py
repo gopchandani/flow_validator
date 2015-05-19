@@ -176,7 +176,8 @@ class PortGraph:
                     curr.admitted_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
 
                 # This check takes care of any applied actions
-                if edge_causing_flow and edge_causing_flow.applied_field_modifications:
+                if edge_causing_flow and \
+                        edge_causing_flow.applied_field_modifications:
                     curr_admitted_traffic = \
                         curr.admitted_traffic[dst_port_id].get_orig_traffic(edge_causing_flow.applied_field_modifications)
                 else:
@@ -185,17 +186,16 @@ class PortGraph:
                 # At ingress edge compute the effect of written-actions
                 if edge_data.edge_type == "ingress":
                     curr_admitted_traffic = curr_admitted_traffic.get_orig_traffic()
-
-                i = edge_filter_match.intersect(curr_admitted_traffic)
-                if not i.is_empty():
-
-                    # For non-ingress edges, accumulate written_field_modifications in the pred_admitted_traffic
-                    if not edge_data.edge_type == "ingress" and edge_causing_flow and edge_causing_flow.written_field_modifications:
-
+                else:
+                    # For non-ingress edges, accumulate written_field_modifications
+                    if edge_causing_flow and edge_causing_flow.written_field_modifications:
                         # Accumulate modifications
                         for me in i.match_elements:
                             me.written_field_modifications.update(edge_causing_flow.written_field_modifications)
 
+                i = edge_filter_match.intersect(curr_admitted_traffic)
+
+                if not i.is_empty():
                     i.set_port(pred)
                     pred_admitted_traffic.union(i)
 
@@ -226,5 +226,3 @@ class PortGraph:
 
             if not pred_admitted_traffic.is_empty():
                 self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
-
-
