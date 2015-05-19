@@ -12,7 +12,7 @@ class PortGraph:
     def __init__(self, network_graph):
 
         self.network_graph = network_graph
-        self.g = nx.MultiDiGraph()
+        self.g = nx.DiGraph()
 
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
@@ -63,23 +63,35 @@ class PortGraph:
 
     def add_edge(self, port1, port2, key, edge_filter_match):
 
+        flow, edge_action = key
         edge_type = None
         if port1.port_type == "table" and port2.port_type == "egress":
             edge_type = "egress"
         elif port1.port_type == "ingress" and port2.port_type == "table":
             edge_type = "ingress"
 
-        e = (port1.port_id, port2.port_id, key)
+        edge_data = self.g.get_edge_data(port1.port_id, port2.port_id)
+        if edge_data:
+            edge_data_list = edge_data["edge_data_list"]
+            edge_data_list.append({"edge_filter_match": edge_filter_match,
+                                   "edge_type": edge_type,
+                                   "edge_causing_flow": flow,
+                                   "edge_action": edge_action})
+        else:
+            edge_data_list = [{"edge_filter_match": edge_filter_match,
+                               "edge_type": edge_type,
+                               "edge_causing_flow": flow,
+                               "edge_action": edge_action}]
 
-        self.g.add_edge(*e,
-                        edge_filter_match=edge_filter_match,
-                        edge_type=edge_type)
+            self.g.add_edge(port1.port_id,
+                            port2.port_id,
+                            edge_data_list=edge_data_list)
 
         # Take care of any changes that need to be made to the predecessors of port1
         # due to addition of this edge
         self.update_predecessors(port1)
 
-        return e
+        return (port1.port_id, port2.port_id, key)
 
     def remove_edge(self, port1, port2):
 
@@ -96,12 +108,11 @@ class PortGraph:
         # But this could have fail-over consequences for this port's predecessors' match elements
         for pred_id in node_preds:
             pred = self.get_port(pred_id)
-            edge_data = self.g.get_edge_data(pred_id, node.port_id)
+            edge_data_list = self.g.get_edge_data(pred_id, node.port_id)["edge_data_list"]
 
-            edge_data_keys = edge_data.keys()
-            for flow, edge_action in edge_data_keys:
-                if flow:
-                    flow.update_port_graph_edges()
+            for edge_data_dict in edge_data_list:
+                if edge_data_dict["edge_causing_flow"]:
+                    edge_data_dict["edge_causing_flow"].update_port_graph_edges()
 
             # But now the admitted_traffic on this port and its dependents needs to be modified to reflect the reality
             self.update_match_elements(pred)
@@ -168,42 +179,42 @@ class PortGraph:
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
         pred_admitted_traffic = Traffic()
-        edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)
-        print "pred:", pred.port_id, " -> ", "curr:",  curr.port_id, ", len:", len(edge_data)
 
-        for flow, edge_action in edge_data:
-            this_edge = edge_data[(flow, edge_action)]
+        edge_data_list = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data_list"]
+        print "pred:", pred.port_id, " -> ", "curr:",  curr.port_id, ", len:", len(edge_data_list)
 
-            if edge_action:
-                if not edge_action.is_active:
+        for edge_data_dict in edge_data_list:
+
+            if edge_data_dict["edge_action"]:
+                if not edge_data_dict["edge_action"].is_active:
                     continue
 
             if dst_port_id in curr.admitted_traffic:
 
                 # At egress edges, set the in_port of the admitted match for destination to wildcard
-                if this_edge["edge_type"] == "egress":
+                if edge_data_dict["edge_type"] == "egress":
                     curr.admitted_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
 
                 # This check takes care of any applied actions
-                if flow and flow.applied_field_modifications:
+                if edge_data_dict["edge_causing_flow"] and edge_data_dict["edge_causing_flow"].applied_field_modifications:
                     curr_admitted_traffic = \
-                        curr.admitted_traffic[dst_port_id].get_orig_traffic(flow.applied_field_modifications)
+                        curr.admitted_traffic[dst_port_id].get_orig_traffic(edge_data_dict["edge_causing_flow"].applied_field_modifications)
                 else:
                     curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
 
                 # At ingress edge compute the effect of written-actions
-                if this_edge["edge_type"] == "ingress":
+                if edge_data_dict["edge_type"] == "ingress":
                     curr_admitted_traffic = curr_admitted_traffic.get_orig_traffic()
 
-                i = this_edge["edge_filter_match"].intersect(curr_admitted_traffic)
+                i = edge_data_dict["edge_filter_match"].intersect(curr_admitted_traffic)
                 if not i.is_empty():
 
                     # For non-ingress edges, accumulate written_field_modifications in the pred_admitted_traffic
-                    if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
+                    if not edge_data_dict["edge_type"] == "ingress" and edge_data_dict["edge_causing_flow"] and edge_data_dict["edge_causing_flow"].written_field_modifications:
 
                         # Accumulate modifications
                         for me in i.match_elements:
-                            me.written_field_modifications.update(flow.written_field_modifications)
+                            me.written_field_modifications.update(edge_data_dict["edge_causing_flow"].written_field_modifications)
 
                     i.set_port(pred)
                     pred_admitted_traffic.union(i)
