@@ -96,6 +96,9 @@ class Action():
             self.modified_field = ryu_field_names_mapping[field_mod[0:field_mod.find(":")]]
             self.field_modified_to = field_mod[field_mod.find(":") + 1:field_mod.find("}")]
 
+            if self.modified_field == "vlan_id":
+                self.field_modified_to = int(self.field_modified_to) - 0x1000
+
         if self.action_json.startswith("GROUP"):
             self.action_type = "group"
             self.group_id = int(self.action_json[self.action_json.find(":") + 1:])

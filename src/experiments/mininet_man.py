@@ -136,13 +136,13 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
+        self.synthesis_dij = SynthesizeDij(ng)#, master_switch=self.topo_name == "linear")
         self.synthesis_dij.synthesize_all_node_pairs()
 
         # self.s1 = self.net.getNodeByName("s1")
         # self.s1.addIntf("s1-eth5", self.s1.newPort())
 
-        #self.net.pingAll(self.ping_timeout)
+        self.net.pingAll(self.ping_timeout)
 
 
     def setup_mininet_with_ryu_qos(self, ng):

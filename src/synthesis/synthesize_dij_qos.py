@@ -20,7 +20,7 @@ class SynthesizeQoS():
         self.master_switch = master_switch
 
 
-        self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph, master_switch=master_switch)
+        self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
         # s represents the set of all switches that are
         # affected as a result of flow synthesis

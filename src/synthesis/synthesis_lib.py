@@ -13,7 +13,7 @@ from model.network_graph import NetworkGraph
 
 class SynthesisLib():
 
-    def __init__(self, controller_host, controller_port, model=None, master_switch=False):
+    def __init__(self, controller_host, controller_port, model=None):
 
         if not model:
             self.network_graph = NetworkGraph()
@@ -22,8 +22,6 @@ class SynthesisLib():
 
         self.controller_host = controller_host
         self.controller_port = controller_port
-
-        self.master_switch = master_switch
 
         self.group_id_cntr = 0
         self.flow_id_cntr = 0
