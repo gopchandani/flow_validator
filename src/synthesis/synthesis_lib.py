@@ -5,7 +5,6 @@ import pprint
 import time
 import httplib2
 import json
-import subprocess
 import os
 
 from model.network_graph import NetworkGraph

@@ -160,9 +160,6 @@ class PortGraph:
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
-        if dst_port_id == "h1s1:ingress0" and pred.port_id == "s2:table2" and curr.port_id == "s2:table3":
-            pass
-
         pred_admitted_traffic = Traffic()
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 

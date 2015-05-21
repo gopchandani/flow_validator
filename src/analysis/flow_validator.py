@@ -74,7 +74,7 @@ class FlowValidator:
 
         print "Paths from:", src_h_id, "to:", dst_h_id
 
-        if src_h_id == "h1s2" and dst_h_id == "h2s2" or src_h_id == "h2s2" and dst_h_id == "h1s2":
+        if src_h_id == "h1s2" and dst_h_id == "h2s1" or src_h_id == "h2s1" and dst_h_id == "h1s2":
             pass
 
         if dst_host_obj.ingress_port.port_id not in src_switch_egress_port.admitted_traffic:

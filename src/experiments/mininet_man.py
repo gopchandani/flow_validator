@@ -136,7 +136,7 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.synthesis_dij = SynthesizeDij(ng)#, master_switch=self.topo_name == "linear")
+        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
         self.synthesis_dij.synthesize_all_node_pairs()
 
         # self.s1 = self.net.getNodeByName("s1")
