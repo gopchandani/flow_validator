@@ -38,7 +38,7 @@ class DifferentEdgeFailure(Experiment):
 
     def trigger(self):
 
-        self.topo_description = ("ring", 4, 1)
+        self.topo_description = ("ring", 4, 2)
         ng = self.setup_network_graph(self.topo_description)
 
         for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
@@ -52,6 +52,7 @@ class DifferentEdgeFailure(Experiment):
             fv.init_port_graph()
             fv.add_hosts()
             fv.initialize_admitted_traffic()
+            fv.validate_all_host_pair_reachability()
 
             for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
 
@@ -79,7 +80,7 @@ class DifferentEdgeFailure(Experiment):
 
 def main():
 
-    num_iterations = 10
+    num_iterations = 1
     load_config = False
     save_config = True
     controller = "ryu"

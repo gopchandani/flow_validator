@@ -20,6 +20,7 @@ from experiments.topologies.ring_topo import RingTopo
 
 from synthesis.synthesize_dij import SynthesizeDij
 from synthesis.synthesize_dij_qos import SynthesizeQoS
+from synthesis.intent_synthesis import IntentSynthesis
 
 
 class MininetMan():
@@ -136,7 +137,9 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
+        #self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
+
+        self.synthesis_dij = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
         self.synthesis_dij.synthesize_all_node_pairs()
 
         # self.s1 = self.net.getNodeByName("s1")
@@ -266,7 +269,7 @@ class MininetMan():
         # Ping from h2->h1
         print self.h2.cmd("ping -c3 172.16.20.10")
 
-    def cleanup_mininet(self):
+    def cleanup(self):
 
         if self.net:
             print "Mininet cleanup..."
@@ -274,7 +277,7 @@ class MininetMan():
             os.system("sudo mn -c")
 
     def __del__(self):
-        self.cleanup_mininet()
+        self.cleanup()
 
 def main():
 

@@ -1,17 +1,18 @@
 __author__ = 'Rakesh Kumar'
 
+import networkx as nx
+
+
 from collections import defaultdict
 from copy import deepcopy
 
-import networkx as nx
 
 from model.network_graph import NetworkGraph
-
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 from model.match import Match
 
-class SynthesizeDij():
+class IntentSynthesis():
 
     def __init__(self, network_graph, master_switch=False):
 
@@ -64,7 +65,7 @@ class SynthesizeDij():
             if in_port == out_port:
                 pass
 
-            intent = Intent(intent_type, fwd_flow_match, in_port, out_port, self.apply_other_intents_immediately)
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
@@ -162,7 +163,7 @@ class SynthesizeDij():
         host_mac_match["ethernet_destination"] = int(mac_int)
         host_mac_match["vlan_id"] = int(matching_tag)
 
-        host_mac_intent = Intent("mac", host_mac_match, "all", out_port, self.apply_other_intents_immediately)
+        host_mac_intent = Intent("mac", host_mac_match, "all", out_port)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
         # by using its mac address as the key
@@ -172,7 +173,7 @@ class SynthesizeDij():
 
         push_vlan_match= deepcopy(flow_match)
         push_vlan_match["in_port"] = int(h_obj.switch_port_attached)
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", self.apply_tag_intents_immediately)
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all")
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         # Avoiding adding a new intent for every departing flow for this switch,
@@ -292,24 +293,17 @@ class SynthesizeDij():
 
                 if primary_intents and failover_intents:
 
-                    #  See if both want same destination
+                    # TODO: All of the intents in both list should want the same port
+                    #  See if both want same destination port of out of this switch
                     if primary_intents[0].out_port != failover_intents[0].out_port:
                         group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], failover_intents[0])
                     else:
-                        group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+                        raise Exception("Something is wrong with installed intents.")
 
                     # Push the rule that refers to the group
-                    in_port = None
-                    # Sanity check
-                    if primary_intents[0].in_port != failover_intents[0].in_port:
-                        #  This can only happen if the host is directly connected to the switch, so check that.
-                        sw_obj = self.network_graph.get_node_object(sw)
-                        if not int(sw_obj.synthesis_tag) == int(dst):
-                            raise Exception("Primary and failover intents' src port mismatch")
-                    else:
-                        in_port = primary_intents[0].in_port
 
-                    primary_intents[0].flow_match["in_port"] = int(in_port)
+                    primary_intents[0].flow_match["vlan_id"] = int(dst)
+
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         sw,
                         self.ip_forwarding_table_id,
@@ -317,10 +311,6 @@ class SynthesizeDij():
                         1,
                         primary_intents[0].flow_match,
                         primary_intents[0].apply_immediately)
-
-                    if len(failover_intents) > 1:
-                        #raise Exception ("Hitting an unexpected case.")
-                        failover_intents = failover_intents[1:]
 
                 #  Handle the case when switch only participates in carrying the failover traffic in-transit
                 if not primary_intents and failover_intents:
@@ -367,6 +357,8 @@ class SynthesizeDij():
                     group_id = self.synthesis_lib.push_select_all_group(sw, [reverse_intents[0]])
 
                     reverse_intents[0].flow_match["in_port"] = int(reverse_intents[0].in_port)
+                    reverse_intents[0].flow_match["vlan_id"] = int(dst)
+
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         sw,
                         self.reverse_rules_table_id,

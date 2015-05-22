@@ -9,7 +9,6 @@ import os
 
 from model.network_graph import NetworkGraph
 
-
 class SynthesisLib():
 
     def __init__(self, controller_host, controller_port, model=None):
