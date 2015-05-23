@@ -206,8 +206,7 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
-        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
-
+        # print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
         # if dst_port.port_id == "h31:ingress0" and curr.port_id == "h11:egress0":
         #      pass
 
@@ -218,9 +217,6 @@ class PortGraph:
         # If you already know something about this destination, then keep accumulating
         # this is for cases when recursion comes from multiple directions and accumulates here
         else:
-            if curr.port_id == "s3:ingress1":
-                pass
-
             curr.admitted_traffic[dst_port.port_id].union(curr_admitted_traffic)
 
         # Recursively call myself at each of my predecessors in the port graph
