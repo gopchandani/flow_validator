@@ -114,10 +114,9 @@ class Switch():
     def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
 
         pred_transfer_traffic = Traffic()
-        edge_data = self.port_graph.g.get_edge_data(pred.port_id, curr.port_id)
+        edge_data = self.port_graph.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
-        for flow, edge_action in edge_data:
-            this_edge = edge_data[(flow, edge_action)]
+        for edge_filter_match, edge_causing_flow, edge_action in edge_data.edge_data_list:
 
             if edge_action:
                 if not edge_action.is_active:
@@ -126,30 +125,30 @@ class Switch():
             if dst_port_id in curr.transfer_traffic:
 
                 # At egress edges, set the in_port of the admitted match for destination to wildcard
-                if this_edge["edge_type"] == "egress":
+                if edge_data.edge_type == "egress":
                     curr.transfer_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
 
                 # This check takes care of any applied actions
-                if flow and flow.applied_field_modifications:
+                if edge_causing_flow and \
+                        edge_causing_flow.applied_field_modifications:
                     curr_transfer_traffic = \
-                        curr.transfer_traffic[dst_port_id].get_orig_traffic(flow.applied_field_modifications)
+                        curr.transfer_traffic[dst_port_id].get_orig_traffic(edge_causing_flow.applied_field_modifications)
                 else:
                     curr_transfer_traffic = curr.transfer_traffic[dst_port_id]
 
                 # At ingress edge compute the effect of written-actions
-                if this_edge["edge_type"] == "ingress":
+                if edge_data.edge_type == "ingress":
                     curr_transfer_traffic = curr_transfer_traffic.get_orig_traffic()
-
-                i = this_edge["edge_filter_match"].intersect(curr_transfer_traffic)
-                if not i.is_empty():
-
-                    # For non-ingress edges, accumulate written_field_modifications in the pred_transfer_traffic
-                    if not this_edge["edge_type"] == "ingress" and flow and flow.written_field_modifications:
-
+                else:
+                    # For non-ingress edges, accumulate written_field_modifications
+                    if edge_causing_flow and edge_causing_flow.written_field_modifications:
                         # Accumulate modifications
                         for me in i.match_elements:
-                            me.written_field_modifications.update(flow.written_field_modifications)
+                            me.written_field_modifications.update(edge_causing_flow.written_field_modifications)
 
+                i = edge_filter_match.intersect(curr_transfer_traffic)
+
+                if not i.is_empty():
                     i.set_port(pred)
                     pred_transfer_traffic.union(i)
 

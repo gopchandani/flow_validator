@@ -207,8 +207,6 @@ class PortGraph:
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
         #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
-        #if dst_port.port_id == "h31:ingress0" and curr.port_id == "s1:table0":
-        #    pass
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
@@ -226,4 +224,4 @@ class PortGraph:
             pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
 
             if not pred_admitted_traffic.is_empty():
-                  self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
+                self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)

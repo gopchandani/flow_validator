@@ -38,7 +38,7 @@ class DifferentEdgeFailure(Experiment):
 
     def trigger(self):
 
-        self.topo_description = ("ring", 4, 2)
+        self.topo_description = ("ring", 4, 1)
         ng = self.setup_network_graph(self.topo_description)
 
         for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
