@@ -146,7 +146,12 @@ class MininetMan():
         # self.s1.addIntf("s1-eth5", self.s1.newPort())
 
         #self.net.pingAll(self.ping_timeout)
-
+        #
+        # self.h11 = self.net.getNodeByName("h11")
+        # self.h31 = self.net.getNodeByName("h31")
+        #
+        # # Ping from h1-> h3
+        # print self.h11.cmd("ping -c3 " + self.h31.IP())
 
     def setup_mininet_with_ryu_qos(self, ng):
 

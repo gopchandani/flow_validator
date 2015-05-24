@@ -55,12 +55,6 @@ class FlowValidator:
         for host_id in self.network_graph.get_experiment_host_ids():
             host_obj = self.network_graph.get_node_object(host_id)
 
-            #print "Computing admitted_traffic:", host_id, "connected to switch:", \
-            #    host_obj.switch_id, "at port:", \
-            #    host_obj.switch_port_attached
-
-            switch_egress_port = self.port_graph.get_port(self.port_graph.g.predecessors(host_obj.ingress_port.port_id)[0])
-
             self.port_graph.compute_admitted_traffic(host_obj.ingress_port,
                                                    host_obj.ingress_port.admitted_traffic[host_obj.ingress_port.port_id],
                                                    host_obj.ingress_port)
@@ -73,9 +67,6 @@ class FlowValidator:
         dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
         print "Paths from:", src_h_id, "to:", dst_h_id
-
-        if src_h_id == "h1s2" and dst_h_id == "h2s1" or src_h_id == "h2s1" and dst_h_id == "h1s2":
-            pass
 
         if dst_host_obj.ingress_port.port_id not in src_switch_egress_port.admitted_traffic:
             print "None found."
