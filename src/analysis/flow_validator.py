@@ -28,20 +28,18 @@ class FlowValidator:
         for host_id in self.network_graph.get_experiment_host_ids():
 
             host_obj = self.network_graph.get_node_object(host_id)
-
-            self.port_graph.add_port(host_obj.ingress_port)
-            self.port_graph.add_port(host_obj.egress_port)
-
-            self.port_graph.add_node_graph_edge(host_id, host_obj.switch_id)
+            host_obj.switch_ingress_port = self.port_graph.get_port(host_obj.switch_id +
+                                                                    ":ingress" + str(host_obj.switch_port_attached))
+            host_obj.switch_egress_port = self.port_graph.get_port(host_obj.switch_id +
+                                                                   ":egress" + str(host_obj.switch_port_attached))
 
             admitted_traffic = Traffic(init_wildcard=True)
             admitted_traffic.set_field("ethernet_type", 0x0800)
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
             admitted_traffic.set_field("ethernet_destination", dst_mac_int)
 
-            switch_port = self.port_graph.get_port(self.port_graph.g.predecessors(host_obj.ingress_port.port_id)[0])
-            admitted_traffic.set_port(switch_port)
-            switch_port.admitted_traffic[switch_port.port_id] = admitted_traffic
+            admitted_traffic.set_port(host_obj.switch_egress_port)
+            host_obj.switch_egress_port.admitted_traffic[host_obj.switch_egress_port.port_id] = admitted_traffic
 
     #@profile
     def remove_hosts(self):
@@ -55,27 +53,23 @@ class FlowValidator:
 
         for host_id in self.network_graph.get_experiment_host_ids():
             host_obj = self.network_graph.get_node_object(host_id)
-            switch_port = self.port_graph.get_port(self.port_graph.g.predecessors(host_obj.ingress_port.port_id)[0])
 
-            self.port_graph.compute_admitted_traffic(switch_port,
-                                                     switch_port.admitted_traffic[switch_port.port_id],
-                                                     switch_port)
+            self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
+                                                     host_obj.switch_egress_port.admitted_traffic[host_obj.switch_egress_port.port_id],
+                                                     host_obj.switch_egress_port)
 
     def validate_host_pair_reachability(self, src_h_id, dst_h_id):
 
         src_host_obj = self.network_graph.get_node_object(src_h_id)
         dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
-        src_switch_port = self.port_graph.get_port(self.port_graph.g.successors(src_host_obj.egress_port.port_id)[0])
-        dst_switch_port = self.port_graph.get_port(self.port_graph.g.predecessors(dst_host_obj.ingress_port.port_id)[0])
-
         print "Paths from:", src_h_id, "to:", dst_h_id
 
-        if dst_switch_port.port_id not in src_switch_port.admitted_traffic:
+        if dst_host_obj.switch_egress_port.port_id not in src_host_obj.switch_ingress_port.admitted_traffic:
             print "None found."
             return
 
-        at = src_switch_port.admitted_traffic[dst_switch_port.port_id]
+        at = src_host_obj.switch_ingress_port.admitted_traffic[dst_host_obj.switch_egress_port.port_id]
 
         # Baseline
         at.print_port_paths()

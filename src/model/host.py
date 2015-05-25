@@ -17,5 +17,5 @@ class Host():
         self.switch_port_attached = switch_port_attached
         self.switch_port = switch_obj.ports[self.switch_port_attached]
 
-        self.ingress_port = Port(None, port_type="ingress", port_id=self.node_id + ":ingress" + "0")
-        self.egress_port = Port(None, port_type="egress", port_id=self.node_id + ":egress" + "0")
+        self.switch_ingress_port = None
+        self.switch_egress_port = None
