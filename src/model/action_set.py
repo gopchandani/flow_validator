@@ -199,7 +199,7 @@ class ActionSet():
         return modified_fields_dict
 
 
-    def get_port_graph_edge_status(self):
+    def get_port_graph_edges(self):
 
         port_graph_edge_status = []
 

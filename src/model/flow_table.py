@@ -52,9 +52,9 @@ class Flow():
 
             self.applied_field_modifications = \
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
-            port_graph_edge_status = self.instruction_set.applied_action_set.get_port_graph_edge_status()
+            port_graph_edges = self.instruction_set.applied_action_set.get_port_graph_edges()
 
-            for out_port, output_action in port_graph_edge_status:
+            for out_port, output_action in port_graph_edges:
 
                 outgoing_port = self.port_graph.get_port(
                     self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
@@ -71,9 +71,9 @@ class Flow():
 
             self.written_field_modifications = \
                 self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
-            port_graph_edge_status = self.instruction_set.written_action_set.get_port_graph_edge_status()
+            port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
 
-            for out_port, output_action in port_graph_edge_status:
+            for out_port, output_action in port_graph_edges:
 
                 outgoing_port = self.port_graph.get_port(
                     self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
