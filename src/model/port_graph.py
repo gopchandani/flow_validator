@@ -77,7 +77,7 @@ class PortGraph:
         # due to addition of this edge
         self.update_predecessors(port1)
 
-        return (port1.port_id, port2.port_id, edge_causing_flow, edge_action)
+        return (port1.port_id, port2.port_id, edge_action)
 
     def remove_edge(self, port1, port2):
 

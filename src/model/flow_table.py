@@ -102,7 +102,7 @@ class Flow():
 
     def update_port_graph_edges(self):
 
-        for src_port_id, dst_port_id, flow, edge_action in self.port_graph_edges:
+        for src_port_id, dst_port_id, edge_action in self.port_graph_edges:
 
             if edge_action:
                 if self.sw.port_graph.get_port(dst_port_id).state != "down":
