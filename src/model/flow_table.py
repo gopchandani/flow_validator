@@ -63,7 +63,9 @@ class Flow():
                                                outgoing_port,
                                                self,
                                                output_action,
-                                               self.applied_traffic)
+                                               self.applied_traffic,
+                                               self.applied_field_modifications,
+                                               None)
 
                 self.port_graph_edges.append(e)
 
@@ -80,11 +82,11 @@ class Flow():
                                                outgoing_port,
                                                self,
                                                output_action,
-                                               self.applied_traffic)
+                                               self.applied_traffic,
+                                               None,
+                                               self.written_field_modifications)
 
                 self.port_graph_edges.append(e)
-
-
 
 
             # See the edge impact of any go-to-table instruction
@@ -93,7 +95,8 @@ class Flow():
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
                                                self.sw.flow_tables[self.instruction_set.goto_table].port,
                                                self, None,
-                                               self.applied_traffic)
+                                               self.applied_traffic,
+                                               None, None)
 
                 self.port_graph_edges.append(e)
 
@@ -101,7 +104,6 @@ class Flow():
 
         for src_port_id, dst_port_id, flow, edge_action in self.port_graph_edges:
 
-            # TODO: If there is no action here (why isn't there one)
             if edge_action:
                 if self.sw.port_graph.get_port(dst_port_id).state != "down":
                     edge_action.update_active_status()

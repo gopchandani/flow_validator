@@ -69,7 +69,8 @@ class Switch():
                                      self.flow_tables[0].port,
                                      None,
                                      None,
-                                     incoming_port_match)
+                                     incoming_port_match,
+                                     None, None)
 
         # Try passing a wildcard through the flow table
         for flow_table in self.flow_tables:

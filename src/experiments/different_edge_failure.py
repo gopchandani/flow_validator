@@ -54,10 +54,14 @@ class DifferentEdgeFailure(Experiment):
             fv.initialize_admitted_traffic()
             fv.validate_all_host_pair_reachability()
 
+
             for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
+
+                print "Edge:", node1, "<->", node2
 
                 with Timer(verbose=True) as t:
                     fv.port_graph.remove_node_graph_edge(node1, node2)
+                    fv.validate_all_host_pair_reachability()
                     fv.port_graph.add_node_graph_edge(node1, node2)
 
                 s1 = node1[1:]

@@ -16,5 +16,7 @@ class EdgeData():
 
         self.edge_data_list = []
 
-    def add_edge_data(self, edge_filter_match, edge_causing_flow, edge_action):
-        self.edge_data_list.append((edge_filter_match, edge_causing_flow, edge_action))
+    def add_edge_data(self, edge_filter_match, edge_causing_flow, edge_action,
+                      applied_modifications, written_modifications):
+        self.edge_data_list.append((edge_filter_match, edge_causing_flow, edge_action,
+                                    applied_modifications, written_modifications))
