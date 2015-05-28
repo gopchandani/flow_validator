@@ -14,8 +14,6 @@ class Port():
         self.admitted_traffic = {}
         self.transfer_traffic = {}
 
-        self.traversal_distance = None
-
         # These apply specifically to physical ports
         self.mac_address = None
         self.port_number = None
