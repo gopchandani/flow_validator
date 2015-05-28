@@ -117,7 +117,8 @@ class Switch():
         pred_transfer_traffic = Traffic()
         edge_data = self.port_graph.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
-        for edge_filter_match, edge_causing_flow, edge_action in edge_data.edge_data_list:
+        for edge_filter_match, edge_causing_flow, edge_action, \
+            applied_modifications, written_modifications in edge_data.edge_data_list:
 
             if edge_action:
                 if not edge_action.is_active:

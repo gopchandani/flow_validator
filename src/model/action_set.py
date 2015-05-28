@@ -191,11 +191,6 @@ class ActionSet():
             modified_fields_dict[set_action.modified_field] = \
                 (flow_match_element.match_fields[set_action.modified_field], set_action.field_modified_to)
 
-        # TODO: Figure out how to include the has_vlan_tag thing back in the mix
-        # The impact of push/pop vlan actions appears on vlan_id field
-        # if "push_vlan" in self.action_dict or "pop_vlan" in self.action_dict:
-        #     modified_fields_dict["vlan_id"] = flow_match_element.match_fields["vlan_id"]
-
         return modified_fields_dict
 
 

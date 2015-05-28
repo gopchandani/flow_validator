@@ -17,7 +17,6 @@ class TrafficElement():
         self.written_field_modifications = {}
 
         self.match_fields = {}
-        self.has_vlan_tag = False
 
         # If a match has been provided to initialize with
         if init_match:
