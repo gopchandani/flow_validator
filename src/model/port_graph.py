@@ -169,7 +169,7 @@ class PortGraph:
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
         for edge_filter_match, edge_causing_flow, edge_action, \
-            applied_modifications, written_modifications in edge_data.edge_data_list:
+            applied_modifications, written_modificat ions in edge_data.edge_data_list:
 
             if edge_action:
                 if not edge_action.is_active:
