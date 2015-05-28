@@ -13,7 +13,6 @@ class TrafficElement():
         self.traffic = None
         self.port = None
         self.succ_traffic_element = None
-        self.pred_traffic_elements = []
         self.written_field_modifications = {}
 
         self.match_fields = {}
@@ -194,13 +193,8 @@ class TrafficElement():
         # This newly minted ME depends on the succ_traffic_element
         orig_traffic_element.succ_traffic_element = self.succ_traffic_element
 
-        # This also means that succ_traffic_element.pred_traffic_elements also need to carry around orig_traffic_element
-        if self.succ_traffic_element:
-            self.succ_traffic_element.pred_traffic_elements.append(orig_traffic_element)
-
         # Copy these from self
         orig_traffic_element.port = self.port
-        orig_traffic_element.pred_traffic_elements = self.pred_traffic_elements
 
         return orig_traffic_element
 
@@ -326,7 +320,6 @@ class Traffic():
 
                     # Establish that the resulting ei is based on e_in
                     ei.succ_traffic_element = e_in
-                    e_in.pred_traffic_elements.append(ei)
 
         return traffic_intersection
 
@@ -381,7 +374,6 @@ class Traffic():
     def set_succ_traffic_element(self, succ_traffic_element):
         for te in self.traffic_elements:
             te.succ_traffic_element = succ_traffic_element
-            succ_traffic_element.pred_traffic_elements.append(te)
 
     def is_field_wildcard(self, field_name):
         retval = True
