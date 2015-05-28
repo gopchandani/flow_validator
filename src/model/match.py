@@ -341,9 +341,9 @@ class Match(DictMixin):
 
                 if field_name == "ethernet_source" or field_name == "ethernet_destination":
 
-                    print "self[field_name]:", self[field_name]
+                    #print "self[field_name]:", self[field_name]
                     mac_hex_str = hex(self[field_name])[2:]
-                    print "mac_hex_str:", mac_hex_str
+                    #print "mac_hex_str:", mac_hex_str
                     if len(mac_hex_str) == 11:
                         mac_hex_str = "0" + mac_hex_str
 
