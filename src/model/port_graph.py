@@ -38,7 +38,8 @@ class PortGraph:
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
             sw.init_switch_port_graph(self)
-            #sw.compute_transfer_function()
+            # sw.compute_transfer_function()
+            # print "Computed transfer function for switch."
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
@@ -59,21 +60,24 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph(self)
 
-    def add_edge(self, port1, port2, edge_causing_flow, edge_action, edge_filter_match):
+    def add_edge(self, port1, port2, edge_causing_flow, edge_action, edge_filter_match,
+                 applied_modifications, written_modifications):
 
         edge_data = self.g.get_edge_data(port1.port_id, port2.port_id)
         if edge_data:
-            edge_data["edge_data"].add_edge_data(edge_filter_match, edge_causing_flow, edge_action)
+            edge_data["edge_data"].add_edge_data(edge_filter_match, edge_causing_flow, edge_action,
+                                                 applied_modifications, written_modifications)
         else:
             edge_data = EdgeData(port1, port2)
-            edge_data.add_edge_data(edge_filter_match, edge_causing_flow, edge_action)
+            edge_data.add_edge_data(edge_filter_match, edge_causing_flow, edge_action,
+                                    applied_modifications, written_modifications)
             self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
 
         # Take care of any changes that need to be made to the predecessors of port1
         # due to addition of this edge
         self.update_predecessors(port1)
 
-        return (port1.port_id, port2.port_id, edge_causing_flow, edge_action)
+        return (port1.port_id, port2.port_id, edge_action)
 
     def remove_edge(self, port1, port2):
 
@@ -92,7 +96,8 @@ class PortGraph:
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
 
-            for edge_filter_match, edge_causing_flow, edge_action in edge_data.edge_data_list:
+            for edge_filter_match, edge_causing_flow, edge_action, \
+                applied_modifications, written_modifications in edge_data.edge_data_list:
                 if edge_causing_flow:
                     edge_causing_flow.update_port_graph_edges()
 
@@ -134,13 +139,13 @@ class PortGraph:
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_port_dict[node2_id]))
         from_port.state = "up"
         to_port.state = "up"
-        self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True))
+        self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True), None, None)
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
         from_port.state = "up"
         to_port.state = "up"
-        self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True))
+        self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True), None, None)
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -163,7 +168,8 @@ class PortGraph:
         pred_admitted_traffic = Traffic()
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
-        for edge_filter_match, edge_causing_flow, edge_action in edge_data.edge_data_list:
+        for edge_filter_match, edge_causing_flow, edge_action, \
+            applied_modifications, written_modifications in edge_data.edge_data_list:
 
             if edge_action:
                 if not edge_action.is_active:
@@ -176,10 +182,9 @@ class PortGraph:
                     curr.admitted_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
 
                 # This check takes care of any applied actions
-                if edge_causing_flow and \
-                        edge_causing_flow.applied_field_modifications:
+                if applied_modifications:
                     curr_admitted_traffic = \
-                        curr.admitted_traffic[dst_port_id].get_orig_traffic(edge_causing_flow.applied_field_modifications)
+                        curr.admitted_traffic[dst_port_id].get_orig_traffic(applied_modifications)
                 else:
                     curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
 
@@ -188,10 +193,10 @@ class PortGraph:
                     curr_admitted_traffic = curr_admitted_traffic.get_orig_traffic()
                 else:
                     # For non-ingress edges, accumulate written_field_modifications
-                    if edge_causing_flow and edge_causing_flow.written_field_modifications:
+                    if written_modifications:
                         # Accumulate modifications
                         for me in i.match_elements:
-                            me.written_field_modifications.update(edge_causing_flow.written_field_modifications)
+                            me.written_field_modifications.update(written_modifications)
 
                 i = edge_filter_match.intersect(curr_admitted_traffic)
 
