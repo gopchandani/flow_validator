@@ -11,6 +11,7 @@ class PortGraph:
 
         self.network_graph = network_graph
         self.g = nx.DiGraph()
+        self.g2 = nx.DiGraph()
 
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
@@ -24,11 +25,20 @@ class PortGraph:
     def add_port(self, port):
         self.g.add_node(port.port_id, p=port)
 
+    def add_port_2(self, port):
+        self.g2.add_node(port.port_id, p=port)
+
     def remove_port(self, port):
         self.g.remove_node(port.port_id)
 
+    def remove_port_2(self, port):
+        self.g2.remove_node(port.port_id)
+
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
+
+    def get_port_2(self, port_id):
+        return self.g2.node[port_id]["p"]
 
     def init_port_graph(self):
 
@@ -64,6 +74,7 @@ class PortGraph:
                  applied_modifications, written_modifications):
 
         edge_data = self.g.get_edge_data(port1.port_id, port2.port_id)
+
         if edge_data:
             edge_data["edge_data"].add_edge_data(edge_filter_match, edge_causing_flow, edge_action,
                                                  applied_modifications, written_modifications)
@@ -79,12 +90,30 @@ class PortGraph:
 
         return (port1.port_id, port2.port_id, edge_action)
 
+    def add_edge_2(self, port1, port2, edge_filter_match, written_modifications, applied_modifications):
+
+        edge_data = self.g2.get_edge_data(port1.port_id, port2.port_id)
+
+        if edge_data:
+            edge_data["edge_data"].add_edge_data(edge_filter_match, applied_modifications, written_modifications)
+        else:
+            edge_data = EdgeData(port1, port2)
+            edge_data.add_edge_data_2(edge_filter_match,applied_modifications, written_modifications)
+            self.g2.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
+
+
     def remove_edge(self, port1, port2):
 
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
 
         self.update_predecessors(port1)
+
+    def remove_edge_2(self, port1, port2):
+
+        # Remove the port-graph edges corresponding to ports themselves
+        self.g2.remove_edge(port1.port_id, port2.port_id)
+
 
     def update_predecessors(self, node):
 
@@ -140,12 +169,14 @@ class PortGraph:
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True), None, None)
+        self.add_edge_2(from_port, to_port, Traffic(init_wildcard=True), None, None)
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True), None, None)
+        self.add_edge_2(from_port, to_port, Traffic(init_wildcard=True), None, None)
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -156,12 +187,15 @@ class PortGraph:
         from_port.state = "down"
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
+        self.remove_edge_2(from_port, to_port)
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
         from_port.state = "down"
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
+        self.remove_edge_2(from_port, to_port)
+
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
