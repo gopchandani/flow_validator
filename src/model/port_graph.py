@@ -268,6 +268,9 @@ class PortGraph:
 
     def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
 
+        if pred.port_id == "s1:ingress1" and curr.port_id == "s1:egress2":
+            pass
+
         pred_transfer_traffic = Traffic()
         edge_data = self.g2.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
