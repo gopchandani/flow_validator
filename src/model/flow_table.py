@@ -50,7 +50,7 @@ class Flow():
             elif self.sw.network_graph.controller == "ryu":
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
-            self.applied_field_modifications = \
+            self.applied_modifications = \
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
             port_graph_edges = self.instruction_set.applied_action_set.get_port_graph_edges()
 
@@ -60,16 +60,16 @@ class Flow():
                     self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
-                                               outgoing_port,
-                                               self,
-                                               output_action,
-                                               self.applied_traffic,
-                                               self.applied_field_modifications,
-                                               None)
+                                             outgoing_port,
+                                             self,
+                                             output_action,
+                                             self.applied_traffic,
+                                             self.applied_modifications,
+                                             None)
 
                 self.port_graph_edges.append(e)
 
-            self.written_field_modifications = \
+            self.written_modifications = \
                 self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
             port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
 
@@ -79,12 +79,12 @@ class Flow():
                     self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
-                                               outgoing_port,
-                                               self,
-                                               output_action,
-                                               self.applied_traffic,
-                                               None,
-                                               self.written_field_modifications)
+                                             outgoing_port,
+                                             self,
+                                             output_action,
+                                             self.applied_traffic,
+                                             None,
+                                             self.written_modifications)
 
                 self.port_graph_edges.append(e)
 
@@ -93,10 +93,12 @@ class Flow():
             if self.instruction_set.goto_table:
 
                 e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
-                                               self.sw.flow_tables[self.instruction_set.goto_table].port,
-                                               self, None,
-                                               self.applied_traffic,
-                                               None, None)
+                                             self.sw.flow_tables[self.instruction_set.goto_table].port,
+                                             self,
+                                             None,
+                                             self.applied_traffic,
+                                             None,
+                                             None)
 
                 self.port_graph_edges.append(e)
 

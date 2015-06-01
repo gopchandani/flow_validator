@@ -13,7 +13,8 @@ class TrafficElement():
         self.traffic = None
         self.port = None
         self.succ_traffic_element = None
-        self.written_field_modifications = {}
+        self.written_modifications = {}
+        self.applied_modifications = {}
 
         self.match_fields = {}
 
@@ -152,12 +153,12 @@ class TrafficElement():
         else:
             return True
 
-    def get_orig_traffic_element(self, field_modifications=None):
+    def get_orig_traffic_element(self, modifications=None):
 
-        if field_modifications:
-            mf = field_modifications
+        if modifications:
+            mf = modifications
         else:
-            mf = self.written_field_modifications
+            mf = self.written_modifications
 
         orig_traffic_element = TrafficElement()
 
@@ -188,7 +189,8 @@ class TrafficElement():
                 orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
 
         # Accumulate field modifications
-        orig_traffic_element.written_field_modifications.update(self.written_field_modifications)
+        orig_traffic_element.written_modifications.update(self.written_modifications)
+        orig_traffic_element.applied_modifications.update(self.applied_modifications)
 
         # This newly minted ME depends on the succ_traffic_element
         orig_traffic_element.succ_traffic_element = self.succ_traffic_element
@@ -316,7 +318,9 @@ class Traffic():
                     ei.traffic = traffic_intersection
                     traffic_intersection.traffic_elements.append(ei)
 
-                    ei.written_field_modifications.update(e_in.written_field_modifications)
+                    ei.written_modifications.update(e_in.written_modifications)
+                    ei.applied_modifications.update(e_in.applied_modifications)
+
 
                     # Establish that the resulting ei is based on e_in
                     ei.succ_traffic_element = e_in
@@ -348,7 +352,8 @@ class Traffic():
             for candidate_te in now_admitted_match.traffic_elements:
 
                 if candidate_te.is_subset(existing_te):
-                    existing_te.written_field_modifications.update(candidate_te.written_field_modifications)
+                    existing_te.written_modifications.update(candidate_te.written_modifications)
+                    existing_te.applied_modifications.update(candidate_te.applied_modifications)
                     existing_te.succ_traffic_element = candidate_te.succ_traffic_element
                     existing_te_welded = True
                     break

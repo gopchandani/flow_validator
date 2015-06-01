@@ -49,7 +49,8 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.init_switch_port_graph(self)
             sw.compute_transfer_function()
-            print "Computed transfer function for switch."
+
+        print "Computed transfer functions for switch."
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
@@ -70,8 +71,14 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph(self)
 
-    def add_edge(self, port1, port2, edge_causing_flow, edge_action, edge_filter_match,
-                 applied_modifications, written_modifications):
+    def add_edge(self,
+                 port1,
+                 port2,
+                 edge_causing_flow,
+                 edge_action,
+                 edge_filter_match,
+                 applied_modifications,
+                 written_modifications):
 
         edge_data = self.g.get_edge_data(port1.port_id, port2.port_id)
 
@@ -118,7 +125,6 @@ class PortGraph:
     def update_predecessors(self, node):
 
         node_preds = self.g.predecessors(node.port_id)
-        #print "update_predecessors node_preds:", node_preds
 
         # But this could have fail-over consequences for this port's predecessors' match elements
         for pred_id in node_preds:
