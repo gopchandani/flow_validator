@@ -196,18 +196,15 @@ class PortGraph:
         self.remove_edge(from_port, to_port)
         self.remove_edge_2(from_port, to_port)
 
-
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
+        if curr.port_id == "s2:egress1" and pred.port_id == "s2:ingress2":
+            pass
+
         pred_admitted_traffic = Traffic()
-        edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+        edge_data = self.g2.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
-        for edge_filter_match, edge_causing_flow, edge_action, \
-            applied_modifications, written_modifications in edge_data.edge_data_list:
-
-            if edge_action:
-                if not edge_action.is_active:
-                    continue
+        for edge_filter_match,applied_modifications, written_modifications in edge_data.edge_data_list:
 
             if dst_port_id in curr.admitted_traffic:
 
@@ -245,7 +242,10 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
-        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        print "Current Port:", curr.port_id, "Preds:", self.g2.predecessors(curr.port_id), "dst:", dst_port.port_id
+
+        if curr.port_id == "s1:ingress2" and dst_port.port_id == "s1:egress1":
+            pass
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
@@ -257,77 +257,10 @@ class PortGraph:
             curr.admitted_traffic[dst_port.port_id].union(curr_admitted_traffic)
 
         # Recursively call myself at each of my predecessors in the port graph
-        for pred_id in self.g.predecessors_iter(curr.port_id):
+        for pred_id in self.g2.predecessors_iter(curr.port_id):
 
             pred = self.get_port(pred_id)
             pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
 
             if not pred_admitted_traffic.is_empty():
                 self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
-
-
-    def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
-
-        if pred.port_id == "s1:ingress1" and curr.port_id == "s1:egress2":
-            pass
-
-        pred_transfer_traffic = Traffic()
-        edge_data = self.g2.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
-
-        for edge_filter_match,applied_modifications, written_modifications in edge_data.edge_data_list:
-
-            if dst_port_id in curr.transfer_traffic:
-
-                # At egress edges, set the in_port of the admitted match for destination to wildcard
-                if edge_data.edge_type == "egress":
-                    curr.transfer_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
-
-                # This check takes care of any applied actions
-                if applied_modifications:
-                    curr_transfer_traffic = \
-                        curr.transfer_traffic[dst_port_id].get_orig_traffic(applied_modifications)
-                else:
-                    curr_transfer_traffic = curr.transfer_traffic[dst_port_id]
-
-                # At ingress edge compute the effect of written-actions
-                if edge_data.edge_type == "ingress":
-                    curr_transfer_traffic = curr_transfer_traffic.get_orig_traffic()
-                else:
-                    # For non-ingress edges, accumulate written_field_modifications
-                    if written_modifications:
-                        # Accumulate modifications
-                        for me in i.match_elements:
-                            me.written_field_modifications.update(written_modifications)
-
-                i = edge_filter_match.intersect(curr_transfer_traffic)
-
-                if not i.is_empty():
-                    i.set_port(pred)
-                    pred_transfer_traffic.union(i)
-
-        return pred_transfer_traffic
-
-    # curr in this function below represents the port we assumed to have already reached
-    # and are either collecting goods and stopping or recursively trying to get to its predecessors
-
-    def compute_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
-
-        print "Current Port:", curr.port_id, "Preds:", self.g2.predecessors(curr.port_id), "dst:", dst_port.port_id
-
-        # If curr has not seen destination at all, first get the curr_transfer_traffic account started
-        if dst_port.port_id not in curr.transfer_traffic:
-            curr.transfer_traffic[dst_port.port_id] = curr_transfer_traffic
-
-        # If you already know something about this destination, then keep accumulating
-        # this is for cases when recursion comes from multiple directions and accumulates here
-        else:
-            curr.transfer_traffic[dst_port.port_id].union(curr_transfer_traffic)
-
-        # Recursively call myself at each of my predecessors in the port graph
-        for pred_id in self.g2.predecessors_iter(curr.port_id):
-
-            pred = self.get_port(pred_id)
-            pred_transfer_traffic = self.compute_pred_transfer_traffic(pred, curr, dst_port.port_id)
-
-            if not pred_transfer_traffic.is_empty():
-                self.compute_transfer_traffic(pred, pred_transfer_traffic, dst_port)

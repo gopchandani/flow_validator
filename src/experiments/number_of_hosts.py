@@ -112,6 +112,7 @@ def main():
 
     exp.trigger()
     exp.dump_data()
+
     exp.plot_number_of_hosts()
 
 if __name__ == "__main__":

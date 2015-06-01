@@ -59,9 +59,6 @@ class FlowValidator:
                                                      host_obj.switch_egress_port)
 
 
-            self.port_graph.compute_transfer_traffic(host_obj.switch_egress_port,
-                                                     host_obj.switch_egress_port.admitted_traffic[host_obj.switch_egress_port.port_id],
-                                                     host_obj.switch_egress_port)
 
     def validate_host_pair_reachability(self, src_h_id, dst_h_id):
 
@@ -75,11 +72,9 @@ class FlowValidator:
             return
 
         at = src_host_obj.switch_ingress_port.admitted_traffic[dst_host_obj.switch_egress_port.port_id]
-        at2 = src_host_obj.switch_ingress_port.transfer_traffic[dst_host_obj.switch_egress_port.port_id]
 
         # Baseline
         at.print_port_paths()
-        at2.print_port_paths()
 
         return len(at.traffic_elements)
 
