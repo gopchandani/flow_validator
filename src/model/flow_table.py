@@ -52,6 +52,13 @@ class Flow():
 
             self.applied_modifications = \
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
+
+            self.written_modifications = \
+                self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
+
+            if self.written_modifications or self.applied_modifications:
+                pass
+
             port_graph_edges = self.instruction_set.applied_action_set.get_port_graph_edges()
 
             for out_port, output_action in port_graph_edges:
@@ -65,12 +72,10 @@ class Flow():
                                              output_action,
                                              self.applied_traffic,
                                              self.applied_modifications,
-                                             None)
+                                             self.written_modifications)
 
                 self.port_graph_edges.append(e)
 
-            self.written_modifications = \
-                self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
             port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
 
             for out_port, output_action in port_graph_edges:
@@ -83,11 +88,10 @@ class Flow():
                                              self,
                                              output_action,
                                              self.applied_traffic,
-                                             None,
+                                             self.applied_modifications,
                                              self.written_modifications)
 
                 self.port_graph_edges.append(e)
-
 
             # See the edge impact of any go-to-table instruction
             if self.instruction_set.goto_table:
@@ -97,8 +101,8 @@ class Flow():
                                              self,
                                              None,
                                              self.applied_traffic,
-                                             None,
-                                             None)
+                                             self.applied_modifications,
+                                             self.written_modifications)
 
                 self.port_graph_edges.append(e)
 

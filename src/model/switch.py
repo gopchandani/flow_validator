@@ -148,7 +148,7 @@ class Switch():
 
                 if applied_modifications:
                     curr_transfer_traffic = curr.transfer_traffic[dst_port_id].get_orig_traffic(applied_modifications)
-                    for te in curr_transfer_traffic:
+                    for te in curr_transfer_traffic.traffic_elements:
                         te.applied_modifications.update(applied_modifications)
                 else:
                     curr_transfer_traffic = curr.transfer_traffic[dst_port_id]
@@ -157,7 +157,7 @@ class Switch():
                     curr_transfer_traffic = curr_transfer_traffic.get_orig_traffic()
                 else:
                     if written_modifications:
-                        for te in i.match_elements:
+                        for te in i.traffic_elements:
                             te.written_modifications.update(written_modifications)
 
                 i = edge_filter_match.intersect(curr_transfer_traffic)
