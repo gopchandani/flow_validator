@@ -13,15 +13,12 @@ class FlowValidator:
         self.network_graph = network_graph
         self.port_graph = PortGraph(network_graph)
 
-    #@profile
     def init_port_graph(self):
         self.port_graph.init_port_graph()
 
-    #@profile
     def de_init_port_graph(self):
         self.port_graph.de_init_port_graph()
 
-    #@profile
     def add_hosts(self):
 
         # Attach a destination port for each host.
@@ -41,14 +38,12 @@ class FlowValidator:
             admitted_traffic.set_port(host_obj.switch_egress_port)
             host_obj.switch_egress_port.admitted_traffic[host_obj.switch_egress_port.port_id] = admitted_traffic
 
-    #@profile
     def remove_hosts(self):
 
         for host_id in self.network_graph.get_experiment_host_ids():
             host_obj = self.network_graph.get_node_object(host_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
-    #@profile
     def initialize_admitted_traffic(self):
 
         for host_id in self.network_graph.get_experiment_host_ids():
@@ -57,8 +52,6 @@ class FlowValidator:
             self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
                                                      host_obj.switch_egress_port.admitted_traffic[host_obj.switch_egress_port.port_id],
                                                      host_obj.switch_egress_port)
-
-
 
     def validate_host_pair_reachability(self, src_h_id, dst_h_id):
 
