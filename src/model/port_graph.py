@@ -50,8 +50,6 @@ class PortGraph:
             sw.init_switch_port_graph(self)
             sw.compute_transfer_function()
 
-        print "Computed transfer functions for switch."
-
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
@@ -202,12 +200,6 @@ class PortGraph:
         self.remove_edge_2(from_port, to_port)
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
-
-        if curr.port_id == "s2:ingress2" and pred.port_id == "s1:egress2" and dst_port_id == "s2:egress1":
-            pass
-
-        if curr.port_id == "s1:ingress2" and pred.port_id == "s2:egress2" and dst_port_id == "s2:egress1":
-            pass
 
         pred_admitted_traffic = Traffic()
         edge_data = self.g2.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
