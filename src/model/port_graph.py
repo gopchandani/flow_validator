@@ -203,6 +203,9 @@ class PortGraph:
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
+        if curr.port_id == "s2:ingress2" and pred.port_id == "s1:egress2" and dst_port_id == "s2:egress1":
+            pass
+
         if curr.port_id == "s1:ingress2" and pred.port_id == "s2:egress2" and dst_port_id == "s2:egress1":
             pass
 
