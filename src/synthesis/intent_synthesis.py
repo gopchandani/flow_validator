@@ -173,7 +173,7 @@ class IntentSynthesis():
 
         push_vlan_match= deepcopy(flow_match)
         push_vlan_match["in_port"] = int(h_obj.switch_port_attached)
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all")
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", apply_immediately=False)
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         # Avoiding adding a new intent for every departing flow for this switch,

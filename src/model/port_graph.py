@@ -102,7 +102,10 @@ class PortGraph:
         for te in edge_filter_traffic.traffic_elements:
             t = Traffic()
             t.add_traffic_elements([te])
-            edge_data.add_edge_data_2(t, te.applied_modifications)
+            modifications = {}
+            modifications.update(te.applied_modifications)
+            modifications.update(te.written_modifications)
+            edge_data.add_edge_data_2(t, modifications)
 
         self.g2.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
 

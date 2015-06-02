@@ -321,7 +321,6 @@ class Traffic():
                     ei.written_modifications.update(e_in.written_modifications)
                     ei.applied_modifications.update(e_in.applied_modifications)
 
-
                     # Establish that the resulting ei is based on e_in
                     ei.succ_traffic_element = e_in
 

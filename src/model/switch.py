@@ -159,7 +159,7 @@ class Switch():
                     curr_transfer_traffic = curr_transfer_traffic.get_orig_traffic()
                 else:
                     if written_modifications:
-                        for te in i.traffic_elements:
+                        for te in curr_transfer_traffic.traffic_elements:
                             te.written_modifications.update(written_modifications)
 
                 i = edge_filter_match.intersect(curr_transfer_traffic)
