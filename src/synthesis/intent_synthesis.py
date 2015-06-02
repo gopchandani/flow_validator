@@ -163,7 +163,7 @@ class IntentSynthesis():
         host_mac_match["ethernet_destination"] = int(mac_int)
         host_mac_match["vlan_id"] = int(matching_tag)
 
-        host_mac_intent = Intent("mac", host_mac_match, "all", out_port)
+        host_mac_intent = Intent("mac", host_mac_match, "all", out_port, apply_immediately=False)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
         # by using its mac address as the key

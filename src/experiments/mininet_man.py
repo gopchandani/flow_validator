@@ -125,8 +125,8 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
-        self.synthesis_dij.synthesize_all_node_pairs()
+        self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
+        self.synthesis.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
@@ -137,10 +137,8 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        #self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
-
-        self.synthesis_dij = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
-        self.synthesis_dij.synthesize_all_node_pairs()
+        self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
+        self.synthesis.synthesize_all_node_pairs()
 
         # self.s1 = self.net.getNodeByName("s1")
         # self.s1.addIntf("s1-eth5", self.s1.newPort())
