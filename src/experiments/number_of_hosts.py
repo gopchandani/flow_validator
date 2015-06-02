@@ -26,7 +26,8 @@ class NumberOfHosts(Experiment):
                                             load_config,
                                             save_config,
                                             controller,
-                                            experiment_switches)
+                                            experiment_switches,
+                                            len(total_number_of_hosts))
 
         self.total_number_of_hosts = total_number_of_hosts
 
@@ -34,10 +35,6 @@ class NumberOfHosts(Experiment):
             "initial_port_graph_construction_time": defaultdict(list),
             "initial_traffic_set_propagation_time": defaultdict(list)
         }
-
-        if not load_config and save_config:
-            cm = ControllerMan(len(self.total_number_of_hosts), controller=controller)
-            self.controller_port = cm.get_next()
 
     def trigger(self):
 
@@ -100,7 +97,7 @@ def main():
     total_number_of_hosts = [2]#, 4, 6, 8, 10]# 14, 16])#, 18, 20]
     load_config = False
     save_config = True
-    controller = "ryu"
+    controller = "odl"
     experiment_switches = ["s1", "s2"]
 
     exp = NumberOfHosts(num_iterations,

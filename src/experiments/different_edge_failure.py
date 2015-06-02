@@ -26,15 +26,11 @@ class DifferentEdgeFailure(Experiment):
                                                    load_config,
                                                    save_config,
                                                    controller,
-                                                   experiment_switches)
-
+                                                   experiment_switches,
+                                                   1)
 
         self.edges_broken = {}
         self.data["edges_broken"] = self.edges_broken
-
-        if not load_config and save_config:
-            cm = ControllerMan(1, controller=controller)
-            self.controller_port = cm.get_next()
 
     def trigger(self):
 

@@ -80,7 +80,7 @@ class ControllerMan():
             this_port = self.start_container()
 
         print "Waiting for the controller to get ready for synthesis"
-        time.sleep(240)
+        time.sleep(300)
 
         return this_port
 
