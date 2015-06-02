@@ -100,7 +100,7 @@ class PortGraph:
         edge_data = EdgeData(port1, port2)
 
         for te in edge_filter_traffic.traffic_elements:
-            t = Traffic(te)
+            t = Traffic()
             t.add_traffic_elements([te])
             edge_data.add_edge_data_2(t, te.applied_modifications)
 
@@ -231,8 +231,6 @@ class PortGraph:
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
-
-        print "Current Port:", curr.port_id, "Preds:", self.g2.predecessors(curr.port_id)
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:

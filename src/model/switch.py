@@ -107,7 +107,8 @@ class Switch():
                 if in_p.port_number == out_p.port_number:
                     continue
 
-                self.port_graph.add_edge_2(in_p, out_p, in_p.transfer_traffic[out_p_id])
+                traffic_filter = in_p.transfer_traffic[out_p_id]
+                self.port_graph.add_edge_2(in_p, out_p, traffic_filter)
 
     def compute_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
 
