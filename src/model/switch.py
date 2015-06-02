@@ -65,7 +65,6 @@ class Switch():
             self.port_graph.add_port_2(in_p)
             self.port_graph.add_port_2(out_p)
 
-
             incoming_port_match = Traffic(init_wildcard=True)
             incoming_port_match.set_field("in_port", int(port))
 
@@ -95,7 +94,6 @@ class Switch():
 
             self.compute_transfer_traffic(out_p, out_p.transfer_traffic[out_p_id], out_p)
 
-
         # Add relevant edges to the port graph
         for port in self.ports:
 
@@ -105,12 +103,11 @@ class Switch():
             for out_p_id in in_p.transfer_traffic:
                 out_p = self.port_graph.get_port_2(out_p_id)
 
-                self.port_graph.add_edge_2(in_p, out_p, in_p.transfer_traffic[out_p_id], None, None)
-
+                self.port_graph.add_edge_2(in_p, out_p, in_p.transfer_traffic[out_p_id])
 
     def compute_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
 
-        print "Current Port:", curr.port_id, "Preds:", self.port_graph.g.predecessors(curr.port_id)
+       # print "Current Port:", curr.port_id, "Preds:", self.port_graph.g.predecessors(curr.port_id)
 
         if dst_port.port_id not in curr.transfer_traffic:
             curr.transfer_traffic[dst_port.port_id] = curr_transfer_traffic

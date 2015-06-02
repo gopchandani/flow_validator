@@ -97,17 +97,16 @@ class PortGraph:
 
         return (port1.port_id, port2.port_id, edge_action)
 
-    def add_edge_2(self, port1, port2, edge_filter_match, written_modifications, applied_modifications):
+    def add_edge_2(self, port1, port2, edge_filter_traffic):
 
-        edge_data = self.g2.get_edge_data(port1.port_id, port2.port_id)
+        edge_data = EdgeData(port1, port2)
 
-        if edge_data:
-            edge_data["edge_data"].add_edge_data(edge_filter_match, applied_modifications, written_modifications)
-        else:
-            edge_data = EdgeData(port1, port2)
-            edge_data.add_edge_data_2(edge_filter_match,applied_modifications, written_modifications)
-            self.g2.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
+        for te in edge_filter_traffic.traffic_elements:
+            t = Traffic(te)
+            t.add_traffic_elements([te])
+            edge_data.add_edge_data_2(t, te.applied_modifications)
 
+        self.g2.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
 
     def remove_edge(self, port1, port2):
 
@@ -175,14 +174,14 @@ class PortGraph:
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True), None, None)
-        self.add_edge_2(from_port, to_port, Traffic(init_wildcard=True), None, None)
+        self.add_edge_2(from_port, to_port, Traffic(init_wildcard=True))
 
         from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
         to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, None, None, Traffic(init_wildcard=True), None, None)
-        self.add_edge_2(from_port, to_port, Traffic(init_wildcard=True), None, None)
+        self.add_edge_2(from_port, to_port, Traffic(init_wildcard=True))
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -204,13 +203,13 @@ class PortGraph:
 
     def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
 
-        if curr.port_id == "s2:egress1" and pred.port_id == "s2:ingress2":
+        if curr.port_id == "s1:ingress2" and pred.port_id == "s2:egress2" and dst_port_id == "s2:egress1":
             pass
 
         pred_admitted_traffic = Traffic()
         edge_data = self.g2.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
-        for edge_filter_match,applied_modifications, written_modifications in edge_data.edge_data_list:
+        for edge_filter_traffic, modifications in edge_data.edge_data_list:
 
             if dst_port_id in curr.admitted_traffic:
 
@@ -219,23 +218,13 @@ class PortGraph:
                     curr.admitted_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
 
                 # This check takes care of any applied actions
-                if applied_modifications:
+                if modifications:
                     curr_admitted_traffic = \
-                        curr.admitted_traffic[dst_port_id].get_orig_traffic(applied_modifications)
+                        curr.admitted_traffic[dst_port_id].get_orig_traffic(modifications)
                 else:
                     curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
 
-                # At ingress edge compute the effect of written-actions
-                if edge_data.edge_type == "ingress":
-                    curr_admitted_traffic = curr_admitted_traffic.get_orig_traffic()
-                else:
-                    # For non-ingress edges, accumulate written_field_modifications
-                    if written_modifications:
-                        # Accumulate modifications
-                        for me in i.match_elements:
-                            me.written_field_modifications.update(written_modifications)
-
-                i = edge_filter_match.intersect(curr_admitted_traffic)
+                i = edge_filter_traffic.intersect(curr_admitted_traffic)
 
                 if not i.is_empty():
                     i.set_port(pred)
@@ -248,10 +237,7 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
-        print "Current Port:", curr.port_id, "Preds:", self.g2.predecessors(curr.port_id), "dst:", dst_port.port_id
-
-        if curr.port_id == "s1:ingress2" and dst_port.port_id == "s1:egress1":
-            pass
+        print "Current Port:", curr.port_id, "Preds:", self.g2.predecessors(curr.port_id)
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:

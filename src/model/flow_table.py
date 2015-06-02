@@ -56,9 +56,6 @@ class Flow():
             self.written_modifications = \
                 self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
 
-            if self.written_modifications or self.applied_modifications:
-                pass
-
             port_graph_edges = self.instruction_set.applied_action_set.get_port_graph_edges()
 
             for out_port, output_action in port_graph_edges:
