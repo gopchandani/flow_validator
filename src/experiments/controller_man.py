@@ -85,6 +85,10 @@ class ControllerMan():
         return this_port
 
     def get_next_ryu(self):
+
+        if self.ryu_proc:
+            self.ryu_proc.kill()
+
         #topo_apps = "ryu.app.rest_topology ryu.app.ws_topology"
         ryu_cmd = ["ryu-manager", "--observe-links",
                    "ryu.app.rest_router",
