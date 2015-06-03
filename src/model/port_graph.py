@@ -235,6 +235,8 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
+        #print "Current Port:", curr.port_id, "Preds:", self.g2.predecessors(curr.port_id)
+
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
             curr.admitted_traffic[dst_port.port_id] = curr_admitted_traffic
