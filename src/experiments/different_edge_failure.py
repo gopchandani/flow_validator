@@ -37,7 +37,7 @@ class DifferentEdgeFailure(Experiment):
         self.topo_description = ("ring", 4, 1)
         ng = self.setup_network_graph(self.topo_description)
 
-        for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
+        for (node1, node2) in self.mm.synthesis.primary_path_edges:
             s1 = node1[1:]
             s2 = node2[1:]
             self.data["edges_broken"][s1 + "<->" + s2] = []
@@ -50,7 +50,7 @@ class DifferentEdgeFailure(Experiment):
             fv.initialize_admitted_traffic()
             fv.validate_all_host_pair_reachability()
 
-            for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
+            for (node1, node2) in self.mm.synthesis.primary_path_edges:
 
                 print "Edge:", node1, "<->", node2
 
