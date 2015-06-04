@@ -5,7 +5,6 @@ from traffic import Traffic
 from port import Port
 from edge_data import EdgeData
 
-
 class Switch():
 
     def __init__(self, sw_id, network_graph):
@@ -16,11 +15,11 @@ class Switch():
         self.group_table = None
         self.ports = None
 
-        #Synthesis stuff
+        # Synthesis stuff
         self.intents = defaultdict(dict)
         self.synthesis_tag = int(self.node_id[1:])
 
-        #Analysis stuff
+        # Analysis stuff
         self.in_port_match = None
         self.accepted_destination_match = {}
 
@@ -136,8 +135,12 @@ class Switch():
         pred_transfer_traffic = Traffic()
         edge_data = self.port_graph.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
-        for edge_filter_match, edge_causing_flow, edge_action, \
-            applied_modifications, written_modifications in edge_data.edge_data_list:
+        for edge_filter_match, \
+            edge_causing_flow, \
+            edge_action, \
+            applied_modifications, \
+            written_modifications, \
+            output_action_type in edge_data.edge_data_list:
 
             if edge_action:
                 if not edge_action.is_active:
@@ -147,6 +150,9 @@ class Switch():
 
                 if edge_data.edge_type == "egress":
                     curr.transfer_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
+
+                    for te in curr.transfer_traffic[dst_port_id].traffic_elements:
+                        te.output_action_type = output_action_type
 
                 if applied_modifications:
                     curr_transfer_traffic = curr.transfer_traffic[dst_port_id].get_orig_traffic(applied_modifications)

@@ -68,7 +68,8 @@ class Flow():
                                              output_action,
                                              self.applied_traffic,
                                              self.applied_modifications,
-                                             self.written_modifications)
+                                             self.written_modifications,
+                                             "applied")
 
                 self.port_graph_edges.append(e)
 
@@ -85,7 +86,8 @@ class Flow():
                                              output_action,
                                              self.applied_traffic,
                                              self.applied_modifications,
-                                             self.written_modifications)
+                                             self.written_modifications,
+                                             "written")
 
                 self.port_graph_edges.append(e)
 

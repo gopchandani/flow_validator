@@ -76,17 +76,27 @@ class PortGraph:
                  edge_action,
                  edge_filter_match,
                  applied_modifications,
-                 written_modifications):
+                 written_modifications,
+                 output_action_type=None):
 
         edge_data = self.g.get_edge_data(port1.port_id, port2.port_id)
 
         if edge_data:
-            edge_data["edge_data"].add_edge_data(edge_filter_match, edge_causing_flow, edge_action,
-                                                 applied_modifications, written_modifications)
+            edge_data["edge_data"].add_edge_data(edge_filter_match,
+                                                 edge_causing_flow,
+                                                 edge_action,
+                                                 applied_modifications,
+                                                 written_modifications,
+                                                 output_action_type)
         else:
             edge_data = EdgeData(port1, port2)
-            edge_data.add_edge_data(edge_filter_match, edge_causing_flow, edge_action,
-                                    applied_modifications, written_modifications)
+            edge_data.add_edge_data(edge_filter_match,
+                                    edge_causing_flow,
+                                    edge_action,
+                                    applied_modifications,
+                                    written_modifications,
+                                    output_action_type)
+
             self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
 
         # Take care of any changes that need to be made to the predecessors of port1
@@ -103,8 +113,12 @@ class PortGraph:
             t = Traffic()
             t.add_traffic_elements([te])
             modifications = {}
+
+            # Include only such modifications that will actually apply
+            if not te.output_action_type == "applied":
+                modifications.update(te.written_modifications)
+
             modifications.update(te.applied_modifications)
-            modifications.update(te.written_modifications)
             edge_data.add_edge_data_2(t, modifications)
 
         self.g2.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
@@ -121,7 +135,6 @@ class PortGraph:
         # Remove the port-graph edges corresponding to ports themselves
         self.g2.remove_edge(port1.port_id, port2.port_id)
 
-
     def update_predecessors(self, node):
 
         node_preds = self.g.predecessors(node.port_id)
@@ -132,7 +145,7 @@ class PortGraph:
             edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
 
             for edge_filter_match, edge_causing_flow, edge_action, \
-                applied_modifications, written_modifications in edge_data.edge_data_list:
+                applied_modifications, written_modifications, output_action_type in edge_data.edge_data_list:
                 if edge_causing_flow:
                     edge_causing_flow.update_port_graph_edges()
 
@@ -155,7 +168,6 @@ class PortGraph:
                 now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
 
             curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
-
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")

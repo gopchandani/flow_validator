@@ -13,8 +13,10 @@ class TrafficElement():
         self.traffic = None
         self.port = None
         self.succ_traffic_element = None
+
         self.written_modifications = {}
         self.applied_modifications = {}
+        self.output_action_type = None
 
         self.match_fields = {}
 
@@ -191,6 +193,7 @@ class TrafficElement():
         # Accumulate field modifications
         orig_traffic_element.written_modifications.update(self.written_modifications)
         orig_traffic_element.applied_modifications.update(self.applied_modifications)
+        orig_traffic_element.output_action_type = self.output_action_type
 
         # This newly minted ME depends on the succ_traffic_element
         orig_traffic_element.succ_traffic_element = self.succ_traffic_element
@@ -320,6 +323,7 @@ class Traffic():
 
                     ei.written_modifications.update(e_in.written_modifications)
                     ei.applied_modifications.update(e_in.applied_modifications)
+                    ei.output_action_type = e_in.output_action_type
 
                     # Establish that the resulting ei is based on e_in
                     ei.succ_traffic_element = e_in
@@ -353,6 +357,7 @@ class Traffic():
                 if candidate_te.is_subset(existing_te):
                     existing_te.written_modifications.update(candidate_te.written_modifications)
                     existing_te.applied_modifications.update(candidate_te.applied_modifications)
+                    existing_te.output_action_type = candidate_te.output_action_type
                     existing_te.succ_traffic_element = candidate_te.succ_traffic_element
                     existing_te_welded = True
                     break

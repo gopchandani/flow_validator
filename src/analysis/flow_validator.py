@@ -6,7 +6,6 @@ sys.path.append("./")
 from model.port_graph import PortGraph
 from model.traffic import Traffic
 
-
 class FlowValidator:
 
     def __init__(self, network_graph):
