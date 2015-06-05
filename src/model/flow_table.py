@@ -59,10 +59,10 @@ class Flow():
 
             for out_port, output_action in port_graph_edges:
 
-                outgoing_port = self.port_graph.get_port(
-                    self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+                outgoing_port = self.sw.get_port(
+                    self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
 
-                e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
                                              outgoing_port,
                                              self,
                                              output_action,
@@ -80,7 +80,7 @@ class Flow():
                 outgoing_port = self.port_graph.get_port(
                     self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
 
-                e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
                                              outgoing_port,
                                              self,
                                              output_action,
@@ -94,7 +94,7 @@ class Flow():
             # See the edge impact of any go-to-table instruction
             if self.instruction_set.goto_table:
 
-                e = self.port_graph.add_edge(self.sw.flow_tables[self.table_id].port,
+                e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
                                              self.sw.flow_tables[self.instruction_set.goto_table].port,
                                              self,
                                              None,
