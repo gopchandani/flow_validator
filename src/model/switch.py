@@ -104,16 +104,16 @@ class Switch():
                     edge_causing_flow.update_port_graph_edges()
 
             # But now the admitted_traffic on this port and its dependents needs to be modified to reflect the reality
-            self.update_match_elements(pred)
+            self.update_predecessor_traffic(pred)
 
-    def update_match_elements(self, curr):
+    def update_predecessor_traffic(self, curr):
 
-        #print "update_match_elements at port:", curr.port_id
+        #print "update_predecessor_traffic at port:", curr.port_id
 
         # This needs to be done for each destination for which curr holds admitted_traffic
         for dst in curr.admitted_traffic:
 
-            #print "update_match_elements dst:", dst
+            #print "update_predecessor_traffic dst:", dst
 
             # First compute what the admitted_traffic for this dst looks like right now after edge status changes...
             now_admitted_traffic = Traffic()

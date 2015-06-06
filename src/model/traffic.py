@@ -343,7 +343,7 @@ class Traffic():
 
         return self
 
-    def pipe_welding(self, now_admitted_match):
+    def pipe_welding(self, now_admitted_traffic):
 
         # Check if this existing_te can be taken even partially by any of the candidates
         # TODO: This does not handle left-over cases when parts of the existing_te are taken by multiple candidate_te
@@ -352,7 +352,7 @@ class Traffic():
 
         for existing_te in self.traffic_elements:
             existing_te_welded = False
-            for candidate_te in now_admitted_match.traffic_elements:
+            for candidate_te in now_admitted_traffic.traffic_elements:
 
                 if candidate_te.is_subset(existing_te):
                     existing_te.written_modifications.update(candidate_te.written_modifications)
@@ -362,8 +362,7 @@ class Traffic():
                     existing_te_welded = True
                     break
 
-            # If none of the candidate_te took existing_te:
-            #Delete everybody who dependent on existing_te, the whole chain...
+            # If none of the candidate_te took existing_te, stop the chain...
             if not existing_te_welded:
                 existing_te.succ_traffic_element = None
 
