@@ -46,15 +46,12 @@ class Bucket():
         for action in self.action_list:
             action.bucket = self
 
-
     def is_live(self):
 
         # Check if the watch port is up.
         if self.watch_port:
 
-            watch_port_obj = self.sw.port_graph.get_port(\
-                self.sw.port_graph.get_outgoing_port_id(self.sw.node_id, str(self.watch_port)))
-
+            watch_port_obj = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, str(self.watch_port)))
             return watch_port_obj.state == "up"
 
         # If no watch_port was specified, then assume the bucket is always live

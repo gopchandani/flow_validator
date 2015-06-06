@@ -26,8 +26,6 @@ class Switch():
         self.in_port_match = None
         self.accepted_destination_match = {}
 
-        self.port_graph = None
-
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
@@ -123,9 +121,7 @@ class Switch():
 
             curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
 
-    def init_switch_port_graph(self, port_graph):
-
-        self.port_graph = port_graph
+    def init_switch_port_graph(self):
 
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
@@ -136,7 +132,6 @@ class Switch():
 
             self.add_port(tp)
             flow_table.port = tp
-            flow_table.port_graph = self.port_graph
 
         # Add two nodes per physical port in port graph one for incoming and outgoing direction
         # Connect incoming direction port to table 0's port
@@ -159,25 +154,22 @@ class Switch():
             self.add_port(in_p)
             self.add_port(out_p)
 
-            self.port_graph.add_port(in_p)
-            self.port_graph.add_port(out_p)
-
             incoming_port_match = Traffic(init_wildcard=True)
             incoming_port_match.set_field("in_port", int(port))
 
             self.add_edge(in_p,
-                                     self.flow_tables[0].port,
-                                     None,
-                                     None,
-                                     incoming_port_match,
-                                     None,
-                                     None)
+                          self.flow_tables[0].port,
+                          None,
+                          None,
+                          incoming_port_match,
+                          None,
+                          None)
 
         # Try passing a wildcard through the flow table
         for flow_table in self.flow_tables:
             flow_table.init_flow_table_port_graph()
 
-    def compute_transfer_function(self):
+    def compute_switch_transfer_traffic(self):
 
         # Inject wildcard traffic at each ingress port of the switch
         for port in self.ports:
@@ -189,27 +181,11 @@ class Switch():
             transfer_traffic.set_port(out_p)
             out_p.transfer_traffic[out_p_id] = transfer_traffic
 
-            self.compute_transfer_traffic(out_p, out_p.transfer_traffic[out_p_id], out_p)
+            self.compute_port_transfer_traffic(out_p, out_p.transfer_traffic[out_p_id], out_p)
 
-        # Add relevant edges to the port graph
-        for port in self.ports:
+    def compute_port_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
 
-            in_p_id = self.get_incoming_port_id(self.node_id, port)
-            in_p = self.port_graph.get_port(in_p_id)
-
-            for out_p_id in in_p.transfer_traffic:
-                out_p = self.port_graph.get_port(out_p_id)
-
-                # Don't add looping edges
-                if in_p.port_number == out_p.port_number:
-                    continue
-
-                traffic_filter = in_p.transfer_traffic[out_p_id]
-                self.port_graph.add_edge(in_p, out_p, traffic_filter)
-
-    def compute_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
-
-       # print "Current Port:", curr.port_id, "Preds:", self.port_graph.g.predecessors(curr.port_id)
+        # print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
 
         if dst_port.port_id not in curr.transfer_traffic:
             curr.transfer_traffic[dst_port.port_id] = curr_transfer_traffic
@@ -225,8 +201,8 @@ class Switch():
             # Base cases
             # 1. No traffic left to propagate to predecessors
             # 2. There is some traffic but current port is ingress
-            if not pred_transfer_traffic.is_empty() and  curr.port_type != "ingress":
-                self.compute_transfer_traffic(pred, pred_transfer_traffic, dst_port)
+            if not pred_transfer_traffic.is_empty() and curr.port_type != "ingress":
+                self.compute_port_transfer_traffic(pred, pred_transfer_traffic, dst_port)
 
     def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
 

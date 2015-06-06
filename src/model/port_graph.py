@@ -27,6 +27,27 @@ class PortGraph:
     def get_port(self, port_id):
         return self.g.node[port_id]["p"]
 
+    def add_switch_transfer_function(self, sw):
+
+        # First grab the port objects from the sw's node graph and add them to port_graph's node graph
+        for port in sw.ports:
+            self.add_port(sw.get_port(self.get_incoming_port_id(sw.node_id, port)))
+            self.add_port(sw.get_port(self.get_outgoing_port_id(sw.node_id, port)))
+
+        # Add edges from all possible source/destination ports
+        for src_port_number in sw.ports:
+            src_p = self.get_port(self.get_incoming_port_id(sw.node_id, src_port_number))
+
+            for dst_p_id in src_p.transfer_traffic:
+                dst_p = self.get_port(dst_p_id)
+
+                # Don't add looping edges
+                if src_p.port_number == dst_p.port_number:
+                    continue
+
+                traffic_filter = src_p.transfer_traffic[dst_p_id]
+                self.add_edge(src_p, dst_p, traffic_filter)
+
     def init_port_graph(self):
 
         # Add a port for controller
@@ -34,8 +55,9 @@ class PortGraph:
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
-            sw.init_switch_port_graph(self)
-            sw.compute_transfer_function()
+            sw.init_switch_port_graph()
+            sw.compute_switch_transfer_traffic()
+            self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():

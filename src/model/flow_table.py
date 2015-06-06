@@ -14,7 +14,6 @@ class Flow():
         self.sw = sw
         self.flow_json = flow_json
         self.network_graph = sw.network_graph
-        self.port_graph = None
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
@@ -59,8 +58,7 @@ class Flow():
 
             for out_port, output_action in port_graph_edges:
 
-                outgoing_port = self.sw.get_port(
-                    self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
+                outgoing_port = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
                                              outgoing_port,
@@ -77,8 +75,7 @@ class Flow():
 
             for out_port, output_action in port_graph_edges:
 
-                outgoing_port = self.port_graph.get_port(
-                    self.port_graph.get_outgoing_port_id(self.sw.node_id, out_port))
+                outgoing_port = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
                                              outgoing_port,
@@ -109,7 +106,7 @@ class Flow():
         for src_port_id, dst_port_id, edge_action in self.port_graph_edges:
 
             if edge_action:
-                if self.sw.port_graph.get_port(dst_port_id).state != "down":
+                if self.sw.get_port(dst_port_id).state != "down":
                     edge_action.update_active_status()
                 else:
                     edge_action.is_active = False
@@ -122,7 +119,6 @@ class FlowTable():
         self.table_id = table_id
         self.flows = []
         self.input_port = None
-        self.port_graph = None
 
         for f in flow_list:
             f = Flow(sw, f)
@@ -138,7 +134,6 @@ class FlowTable():
         for flow in self.flows:
 
             intersection = flow.traffic.intersect(remaining_traffic)
-            flow.port_graph = self.port_graph
 
             if not intersection.is_empty():
 
