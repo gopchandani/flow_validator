@@ -97,7 +97,7 @@ def main():
     total_number_of_hosts = [2]#, 6, 8, 10]# 14, 16])#, 18, 20]
     load_config = True
     save_config = False
-    controller = "ryu"
+    controller = "odl"
     experiment_switches = ["s1", "s2"]
 
     exp = NumberOfHosts(num_iterations,

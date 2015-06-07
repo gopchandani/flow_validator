@@ -238,6 +238,9 @@ class Switch():
                 if edge_data.edge_type == "ingress":
                     curr_transfer_traffic = curr_transfer_traffic.get_orig_traffic()
                 else:
+
+                    # At all the non-ingress edges accumulate written modifications
+                    # But these are useless if the output_action_type is applied.
                     if written_modifications:
                         for te in curr_transfer_traffic.traffic_elements:
                             te.written_modifications.update(written_modifications)

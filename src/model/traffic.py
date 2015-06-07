@@ -14,6 +14,7 @@ class TrafficElement():
         self.port = None
         self.succ_traffic_element = None
 
+        self.effective_modifications = {}
         self.written_modifications = {}
         self.applied_modifications = {}
         self.output_action_type = None
@@ -160,6 +161,10 @@ class TrafficElement():
         if modifications:
             mf = modifications
         else:
+            # if the output_action type is applied, no written modifications take effect.
+            if self.output_action_type == "applied":
+                return self
+
             mf = self.written_modifications
 
         orig_traffic_element = TrafficElement()
@@ -175,6 +180,7 @@ class TrafficElement():
             if field_name in mf:
 
                 #TODO: Do this more properly ground up from the parser
+
                 field_val = int(mf[field_name][1])
                 value_tree = IntervalTree()
                 value_tree.add(Interval(field_val, field_val + 1))
@@ -195,7 +201,7 @@ class TrafficElement():
         orig_traffic_element.applied_modifications.update(self.applied_modifications)
         orig_traffic_element.output_action_type = self.output_action_type
 
-        # This newly minted ME depends on the succ_traffic_element
+        # This newly minted te depends on the succ_traffic_element
         orig_traffic_element.succ_traffic_element = self.succ_traffic_element
 
         # Copy these from self
