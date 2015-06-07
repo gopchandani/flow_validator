@@ -230,8 +230,6 @@ class Switch():
 
                 if applied_modifications:
                     curr_transfer_traffic = curr.transfer_traffic[dst_port_id].get_orig_traffic(applied_modifications)
-                    for te in curr_transfer_traffic.traffic_elements:
-                        te.applied_modifications.update(applied_modifications)
                 else:
                     curr_transfer_traffic = curr.transfer_traffic[dst_port_id]
 

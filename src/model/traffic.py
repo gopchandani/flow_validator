@@ -16,7 +16,6 @@ class TrafficElement():
 
         self.effective_modifications = {}
         self.written_modifications = {}
-        self.applied_modifications = {}
         self.output_action_type = None
 
         self.match_fields = {}
@@ -201,7 +200,6 @@ class TrafficElement():
 
         # Accumulate field modifications
         orig_traffic_element.written_modifications.update(self.written_modifications)
-        orig_traffic_element.applied_modifications.update(self.applied_modifications)
         orig_traffic_element.output_action_type = self.output_action_type
         orig_traffic_element.effective_modifications = self.effective_modifications
 
@@ -334,7 +332,6 @@ class Traffic():
                     traffic_intersection.traffic_elements.append(ei)
 
                     ei.written_modifications.update(e_in.written_modifications)
-                    ei.applied_modifications.update(e_in.applied_modifications)
                     ei.output_action_type = e_in.output_action_type
                     ei.effective_modifications = e_in.effective_modifications
 
@@ -369,7 +366,6 @@ class Traffic():
 
                 if candidate_te.is_subset(existing_te):
                     existing_te.written_modifications.update(candidate_te.written_modifications)
-                    existing_te.applied_modifications.update(candidate_te.applied_modifications)
                     existing_te.output_action_type = candidate_te.output_action_type
                     existing_te.effective_modifications = candidate_te.effective_modifications
                     existing_te.succ_traffic_element = candidate_te.succ_traffic_element

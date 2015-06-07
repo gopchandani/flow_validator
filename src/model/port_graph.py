@@ -154,8 +154,7 @@ class PortGraph:
 
                 # If there were modifications along the way...
                 if modifications:
-                    curr_admitted_traffic = \
-                        curr.admitted_traffic[dst_port_id].get_orig_traffic(modifications)
+                    curr_admitted_traffic = curr.admitted_traffic[dst_port_id].get_orig_traffic(modifications)
                 else:
                     curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
 
