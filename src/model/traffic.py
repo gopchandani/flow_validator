@@ -160,12 +160,14 @@ class TrafficElement():
 
         if modifications:
             mf = modifications
+            self.effective_modifications.update(modifications)
         else:
             # if the output_action type is applied, no written modifications take effect.
             if self.output_action_type == "applied":
                 return self
 
             mf = self.written_modifications
+            self.effective_modifications.update(self.written_modifications)
 
         orig_traffic_element = TrafficElement()
 
@@ -173,6 +175,7 @@ class TrafficElement():
 
             # If the field is modified in the Traffic as it passes through a rule,
             # The original traffic that comes at the front of that rule is computed as follows:
+
             # If the field was not modified, then it is left as-is, no harm done
             # If the field is modified however, it is left as-is too, unless it is modified to the exact value
             # as it is contained in the traffic
@@ -200,12 +203,15 @@ class TrafficElement():
         orig_traffic_element.written_modifications.update(self.written_modifications)
         orig_traffic_element.applied_modifications.update(self.applied_modifications)
         orig_traffic_element.output_action_type = self.output_action_type
+        orig_traffic_element.effective_modifications = self.effective_modifications
 
         # This newly minted te depends on the succ_traffic_element
         orig_traffic_element.succ_traffic_element = self.succ_traffic_element
 
         # Copy these from self
         orig_traffic_element.port = self.port
+
+
 
         return orig_traffic_element
 
@@ -330,6 +336,7 @@ class Traffic():
                     ei.written_modifications.update(e_in.written_modifications)
                     ei.applied_modifications.update(e_in.applied_modifications)
                     ei.output_action_type = e_in.output_action_type
+                    ei.effective_modifications = e_in.effective_modifications
 
                     # Establish that the resulting ei is based on e_in
                     ei.succ_traffic_element = e_in
@@ -364,6 +371,7 @@ class Traffic():
                     existing_te.written_modifications.update(candidate_te.written_modifications)
                     existing_te.applied_modifications.update(candidate_te.applied_modifications)
                     existing_te.output_action_type = candidate_te.output_action_type
+                    existing_te.effective_modifications = candidate_te.effective_modifications
                     existing_te.succ_traffic_element = candidate_te.succ_traffic_element
                     existing_te_welded = True
                     break

@@ -85,19 +85,11 @@ class PortGraph:
         # Each traffic element has its own edge_data, because of how it might have
         # traveled through the switch and what modifications it may have accumulated
 
-        # Why is this state not implicitly present in traffic elements (when it already actually is!)
-
         for te in edge_filter_traffic.traffic_elements:
             t = Traffic()
             t.add_traffic_elements([te])
 
-            # Include only such modifications that will actually apply
-            modifications = {}
-            if not te.output_action_type == "applied":
-                modifications.update(te.written_modifications)
-            modifications.update(te.applied_modifications)
-
-            edge_data.add_edge_data_2(t, modifications)
+            edge_data.add_edge_data_2(t, te.effective_modifications)
 
         self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
 
