@@ -88,7 +88,6 @@ class PortGraph:
         for te in edge_filter_traffic.traffic_elements:
             t = Traffic()
             t.add_traffic_elements([te])
-
             edge_data.add_edge_data_2(t, te.effective_modifications)
 
         self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
@@ -97,6 +96,8 @@ class PortGraph:
 
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
+
+        port1.sw.update_port_transfer_traffic(port1)
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")

@@ -209,8 +209,6 @@ class TrafficElement():
         # Copy these from self
         orig_traffic_element.port = self.port
 
-
-
         return orig_traffic_element
 
     def set_fields_with_match_json(self, match_json):

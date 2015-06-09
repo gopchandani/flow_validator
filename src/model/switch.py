@@ -76,7 +76,9 @@ class Switch():
 
         # Take care of any changes that need to be made to the predecessors of port1
         # due to addition of this edge
-        self.update_predecessors(port1)
+
+        #TODO: See how this is affected in cases involving rule addition
+        #self.update_port_transfer_traffic(port1)
 
         return (port1.port_id, port2.port_id, edge_action)
 
@@ -85,24 +87,8 @@ class Switch():
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
 
-        self.update_predecessors(port1)
-
-    def update_predecessors(self, node):
-
-        node_preds = self.g.predecessors(node.port_id)
-
-        # But this could have fail-over consequences for this port's predecessors' match elements
-        for pred_id in node_preds:
-            pred = self.get_port(pred_id)
-            edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
-
-            for edge_filter_match, edge_causing_flow, edge_action, \
-                applied_modifications, written_modifications, output_action_type in edge_data.edge_data_list:
-                if edge_causing_flow:
-                    edge_causing_flow.update_port_graph_edges()
-
-            # But now the admitted_traffic on this port and its dependents needs to be modified to reflect the reality
-            self.update_predecessor_traffic(pred)
+        #TODO: See how this is affected in cases involving rule removal
+        #self.update_port_transfer_traffic(port1)
 
     def update_predecessor_traffic(self, curr):
 
@@ -203,6 +189,24 @@ class Switch():
             # 2. There is some traffic but current port is ingress
             if not pred_transfer_traffic.is_empty() and curr.port_type != "ingress":
                 self.compute_port_transfer_traffic(pred, pred_transfer_traffic, dst_port)
+
+    def update_port_transfer_traffic(self, node):
+
+        node_preds = self.g.predecessors(node.port_id)
+
+        # But this could have fail-over consequences for this port's predecessors' match elements
+        for pred_id in node_preds:
+            pred = self.get_port(pred_id)
+            edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
+
+            for edge_filter_match, edge_causing_flow, edge_action, \
+                applied_modifications, written_modifications, output_action_type in edge_data.edge_data_list:
+                if edge_causing_flow:
+                    edge_causing_flow.update_port_graph_edges()
+
+            # But now the admitted_traffic on this port and its dependents needs to be modified to reflect the reality
+            self.update_predecessor_traffic(pred)
+
 
     def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
 
