@@ -26,6 +26,84 @@ class Switch():
         self.in_port_match = None
         self.accepted_destination_match = {}
 
+    def init_switch_port_graph(self):
+
+        # Add a node per table in the port graph
+        for flow_table in self.flow_tables:
+
+            tp = Port(self,
+                      port_type="table",
+                      port_id=self.get_table_port_id(self.node_id, flow_table.table_id))
+
+            self.add_port(tp)
+            flow_table.port = tp
+
+        # Add two nodes per physical port in port graph one for incoming and outgoing direction
+        # Connect incoming direction port to table 0's port
+        for port in self.ports:
+
+            in_p = Port(self,
+                        port_type="ingress",
+                        port_id=self.get_incoming_port_id(self.node_id, port))
+
+            out_p = Port(self,
+                         port_type="egress",
+                         port_id=self.get_outgoing_port_id(self.node_id, port))
+
+            in_p.state = "up"
+            out_p.state = "up"
+
+            in_p.port_number = int(port)
+            out_p.port_number = int(port)
+
+            self.add_port(in_p)
+            self.add_port(out_p)
+
+            incoming_port_match = Traffic(init_wildcard=True)
+            incoming_port_match.set_field("in_port", int(port))
+
+            self.add_edge(in_p,
+                          self.flow_tables[0].port,
+                          None,
+                          None,
+                          incoming_port_match,
+                          None,
+                          None)
+
+        # Try passing a wildcard through the flow table
+        for flow_table in self.flow_tables:
+            flow_table.init_flow_table_port_graph()
+
+    def de_init_switch_port_graph(self):
+
+        # Try passing a wildcard through the flow table
+        for flow_table in self.flow_tables:
+            flow_table.de_init_flow_table_port_graph()
+
+        # Remove nodes for physical ports
+        for port in self.ports:
+
+            in_p = self.get_port(self.get_incoming_port_id(self.node_id, port))
+            out_p = self.get_port(self.get_outgoing_port_id(self.node_id, port))
+
+            self.remove_edge(in_p, self.flow_tables[0].port)
+
+            self.remove_port(in_p)
+            self.remove_port(out_p)
+
+            del in_p
+            del out_p
+
+        # Remove table ports
+        # Add a node per table in the port graph
+        for flow_table in self.flow_tables:
+
+            tp = self.get_port(self.get_table_port_id(self.node_id, flow_table.table_id))
+            self.remove_port(tp)
+            flow_table.port = None
+            flow_table.port_graph = None
+            del tp
+
     def get_table_port_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
@@ -90,71 +168,6 @@ class Switch():
         #TODO: See how this is affected in cases involving rule removal
         #self.update_port_transfer_traffic(port1)
 
-    def update_predecessor_traffic(self, curr):
-
-        #print "update_predecessor_traffic at port:", curr.port_id
-
-        # This needs to be done for each destination for which curr holds admitted_traffic
-        for dst in curr.admitted_traffic:
-
-            #print "update_predecessor_traffic dst:", dst
-
-            # First compute what the admitted_traffic for this dst looks like right now after edge status changes...
-            now_admitted_traffic = Traffic()
-            for succ_id in self.g.successors_iter(curr.port_id):
-                succ = self.get_port(succ_id)
-                now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
-
-            curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
-
-    def init_switch_port_graph(self):
-
-        # Add a node per table in the port graph
-        for flow_table in self.flow_tables:
-
-            tp = Port(self,
-                      port_type="table",
-                      port_id=self.get_table_port_id(self.node_id, flow_table.table_id))
-
-            self.add_port(tp)
-            flow_table.port = tp
-
-        # Add two nodes per physical port in port graph one for incoming and outgoing direction
-        # Connect incoming direction port to table 0's port
-        for port in self.ports:
-
-            in_p = Port(self,
-                        port_type="ingress",
-                        port_id=self.get_incoming_port_id(self.node_id, port))
-
-            out_p = Port(self,
-                         port_type="egress",
-                         port_id=self.get_outgoing_port_id(self.node_id, port))
-
-            in_p.state = "up"
-            out_p.state = "up"
-
-            in_p.port_number = int(port)
-            out_p.port_number = int(port)
-
-            self.add_port(in_p)
-            self.add_port(out_p)
-
-            incoming_port_match = Traffic(init_wildcard=True)
-            incoming_port_match.set_field("in_port", int(port))
-
-            self.add_edge(in_p,
-                          self.flow_tables[0].port,
-                          None,
-                          None,
-                          incoming_port_match,
-                          None,
-                          None)
-
-        # Try passing a wildcard through the flow table
-        for flow_table in self.flow_tables:
-            flow_table.init_flow_table_port_graph()
-
     def compute_switch_transfer_traffic(self):
 
         # Inject wildcard traffic at each ingress port of the switch
@@ -194,7 +207,7 @@ class Switch():
 
         node_preds = self.g.predecessors(node.port_id)
 
-        # But this could have fail-over consequences for this port's predecessors' match elements
+        # But this could have fail-over consequences for this port's predecessors' traffic elements
         for pred_id in node_preds:
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
@@ -205,8 +218,7 @@ class Switch():
                     edge_causing_flow.update_port_graph_edges()
 
             # But now the admitted_traffic on this port and its dependents needs to be modified to reflect the reality
-            self.update_predecessor_traffic(pred)
-
+            self.update_pred_transfer_traffic(pred)
 
     def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
 
@@ -255,32 +267,19 @@ class Switch():
 
         return pred_transfer_traffic
 
-    def de_init_switch_port_graph(self):
+    def update_pred_transfer_traffic(self, curr):
 
-        # Try passing a wildcard through the flow table
-        for flow_table in self.flow_tables:
-            flow_table.de_init_flow_table_port_graph()
+        #print "update_pred_transfer_traffic at port:", curr.port_id
 
-        # Remove nodes for physical ports
-        for port in self.ports:
+        # This needs to be done for each destination for which curr holds admitted_traffic
+        for dst in curr.admitted_traffic:
 
-            in_p = self.get_port(self.get_incoming_port_id(self.node_id, port))
-            out_p = self.get_port(self.get_outgoing_port_id(self.node_id, port))
+            #print "update_pred_transfer_traffic dst:", dst
 
-            self.remove_edge(in_p, self.flow_tables[0].port)
+            # First compute what the admitted_traffic for this dst looks like right now after edge status changes...
+            now_admitted_traffic = Traffic()
+            for succ_id in self.g.successors_iter(curr.port_id):
+                succ = self.get_port(succ_id)
+                now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
 
-            self.remove_port(in_p)
-            self.remove_port(out_p)
-
-            del in_p
-            del out_p
-
-        # Remove table ports
-        # Add a node per table in the port graph
-        for flow_table in self.flow_tables:
-
-            tp = self.get_port(self.get_table_port_id(self.node_id, flow_table.table_id))
-            self.remove_port(tp)
-            flow_table.port = None
-            flow_table.port_graph = None
-            del tp
+            curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
