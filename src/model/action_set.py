@@ -110,16 +110,8 @@ class Action():
         # if "pop-vlan-action" in self.action_json:
         #     self.action_type = "pop_vlan"
 
-    def update_active_status(self):
 
-        # If the action has a bucket that means, it belongs to one of the groups and its being active
-        # depends on whether its bucket is still the first live bucket for that group
 
-        if self.bucket:
-            if self.bucket.group.get_first_live_bucket() == self.bucket:
-                self.is_active = True
-            else:
-                self.is_active = False
 
 
 class ActionSet():

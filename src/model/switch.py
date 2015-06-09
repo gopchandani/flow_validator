@@ -217,7 +217,7 @@ class Switch():
                 if edge_causing_flow:
                     edge_causing_flow.update_port_graph_edges()
 
-            # But now the admitted_traffic on this port and its dependents needs to be modified to reflect the reality
+            # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
             self.update_pred_transfer_traffic(pred)
 
     def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
@@ -271,15 +271,15 @@ class Switch():
 
         #print "update_pred_transfer_traffic at port:", curr.port_id
 
-        # This needs to be done for each destination for which curr holds admitted_traffic
-        for dst in curr.admitted_traffic:
+        # This needs to be done for each destination for which curr holds transfer_traffic
+        for dst in curr.transfer_traffic:
 
             #print "update_pred_transfer_traffic dst:", dst
 
-            # First compute what the admitted_traffic for this dst looks like right now after edge status changes...
-            now_admitted_traffic = Traffic()
+            # First compute what the transfer_traffic for this dst looks like right now after edge status changes...
+            now_transfer_traffic = Traffic()
             for succ_id in self.g.successors_iter(curr.port_id):
                 succ = self.get_port(succ_id)
-                now_admitted_traffic.union(self.compute_pred_admitted_traffic(curr, succ, dst))
+                now_transfer_traffic.union(self.compute_pred_transfer_traffic(curr, succ, dst))
 
-            curr.admitted_traffic[dst].pipe_welding(now_admitted_traffic)
+            curr.transfer_traffic[dst].pipe_welding(now_transfer_traffic)

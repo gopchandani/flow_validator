@@ -105,11 +105,24 @@ class Flow():
 
         for src_port_id, dst_port_id, edge_action in self.port_graph_edges:
 
+            # If it is not a group action which has to be part of a bucket, then it is always active
+            if not edge_action.bucket:
+                continue
+
             if edge_action:
-                if self.sw.get_port(dst_port_id).state != "down":
-                    edge_action.update_active_status()
+                if self.sw.get_port(dst_port_id).state == "up":
+
+                    # If the action has a bucket that means, it belongs to one of the groups and its being active
+                    # depends on whether its bucket is still the first live bucket for that group
+                    if edge_action.bucket:
+                        if edge_action.bucket.group.get_first_live_bucket() == edge_action.bucket:
+                            edge_action.is_active = True
+                        else:
+                            edge_action.is_active = False
+
                 else:
                     edge_action.is_active = False
+
 
 class FlowTable():
     def __init__(self, sw, table_id, flow_list):
