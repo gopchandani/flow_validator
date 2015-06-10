@@ -105,11 +105,12 @@ class Flow():
 
         for src_port_id, dst_port_id, edge_action in self.port_graph_edges:
 
-            # If it is not a group action which has to be part of a bucket, then it is always active
-            if not edge_action.bucket:
-                continue
-
             if edge_action:
+
+                # If it is not a group action which has to be part of a bucket, then it is always active
+                if not edge_action.bucket:
+                    continue
+
                 if self.sw.get_port(dst_port_id).state == "up":
 
                     # If the action has a bucket that means, it belongs to one of the groups and its being active

@@ -216,7 +216,7 @@ class Switch():
                 applied_modifications, written_modifications, output_action_type in edge_data.edge_data_list:
                 if edge_causing_flow:
                     edge_causing_flow.update_port_graph_edges()
-
+                    
             # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
             self.update_pred_transfer_traffic(pred)
 
