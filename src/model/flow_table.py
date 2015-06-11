@@ -22,7 +22,7 @@ class Flow():
             self.table_id = self.flow_json["table_id"]
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="odl", flow=self)
-        
+
         elif self.sw.network_graph.controller == "ryu":
             self.table_id = self.flow_json["table_id"]
             self.priority = int(self.flow_json["priority"])
@@ -60,12 +60,12 @@ class Flow():
                 outgoing_port = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
-                                             outgoing_port,
-                                             output_action,
-                                             self.applied_traffic,
-                                             self.applied_modifications,
-                                             self.written_modifications,
-                                             "applied")
+                                     outgoing_port,
+                                     output_action,
+                                     self.applied_traffic,
+                                     self.applied_modifications,
+                                     self.written_modifications,
+                                     "applied")
 
             port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
 
@@ -74,22 +74,22 @@ class Flow():
                 outgoing_port = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
-                                             outgoing_port,
-                                             output_action,
-                                             self.applied_traffic,
-                                             self.applied_modifications,
-                                             self.written_modifications,
-                                             "written")
+                                     outgoing_port,
+                                     output_action,
+                                     self.applied_traffic,
+                                     self.applied_modifications,
+                                     self.written_modifications,
+                                     "written")
 
             # See the edge impact of any go-to-table instruction
             if self.instruction_set.goto_table:
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
-                                             self.sw.flow_tables[self.instruction_set.goto_table].port,
-                                             None,
-                                             self.applied_traffic,
-                                             self.applied_modifications,
-                                             self.written_modifications)
+                                     self.sw.flow_tables[self.instruction_set.goto_table].port,
+                                     None,
+                                     self.applied_traffic,
+                                     self.applied_modifications,
+                                     self.written_modifications)
 
 
 class FlowTable():

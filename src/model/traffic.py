@@ -52,7 +52,7 @@ class TrafficElement():
             trav = trav.succ_traffic_element
 
         return port_path_str
-    
+
     def set_match_field_element(self, key, value=None, is_wildcard=False, exception=False):
 
         # First remove all current intervals
@@ -192,7 +192,7 @@ class TrafficElement():
                 if intersection:
                     orig_traffic_element.match_fields[field_name] = mf[field_name][0]
                 else:
-                     orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
+                    orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
 
             else:
                 # Otherwise, just keep the field same as it was
@@ -374,11 +374,11 @@ class Traffic():
             if not existing_te_welded:
                 existing_te.succ_traffic_element = None
 
-    def get_orig_traffic(self, modified_fields=None):
+    def get_orig_traffic(self, modifications=None):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
-            orig_te = te.get_orig_traffic_element(modified_fields)
+            orig_te = te.get_orig_traffic_element(modifications)
             orig_te.traffic = orig_traffic
             orig_traffic.traffic_elements.append(orig_te)
         return orig_traffic
