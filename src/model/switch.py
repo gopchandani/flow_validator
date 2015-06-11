@@ -65,7 +65,6 @@ class Switch():
             self.add_edge(in_p,
                           self.flow_tables[0].port,
                           None,
-                          None,
                           incoming_port_match,
                           None,
                           None)
@@ -125,7 +124,6 @@ class Switch():
     def add_edge(self,
                  port1,
                  port2,
-                 edge_causing_flow,
                  edge_action,
                  edge_filter_match,
                  applied_modifications,
@@ -136,7 +134,6 @@ class Switch():
 
         if edge_data:
             edge_data["edge_data"].add_edge_data(edge_filter_match,
-                                                 edge_causing_flow,
                                                  edge_action,
                                                  applied_modifications,
                                                  written_modifications,
@@ -144,7 +141,6 @@ class Switch():
         else:
             edge_data = EdgeData(port1, port2)
             edge_data.add_edge_data(edge_filter_match,
-                                    edge_causing_flow,
                                     edge_action,
                                     applied_modifications,
                                     written_modifications,
@@ -212,11 +208,11 @@ class Switch():
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
 
-            for edge_filter_match, edge_causing_flow, edge_action, \
-                applied_modifications, written_modifications, output_action_type in edge_data.edge_data_list:
-                if edge_causing_flow:
-                    edge_causing_flow.update_port_graph_edges()
-                    
+            for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type in edge_data.edge_data_list:
+
+                if edge_action:
+                    edge_action.perform_edge_failover()
+
             # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
             self.update_pred_transfer_traffic(pred)
 
@@ -226,7 +222,6 @@ class Switch():
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
         for edge_filter_match, \
-            edge_causing_flow, \
             edge_action, \
             applied_modifications, \
             written_modifications, \

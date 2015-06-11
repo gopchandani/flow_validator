@@ -92,6 +92,8 @@ class PortGraph:
 
         self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
 
+        port1.sw.update_port_transfer_traffic(port1)
+
     def remove_edge(self, port1, port2):
 
         # Remove the port-graph edges corresponding to ports themselves

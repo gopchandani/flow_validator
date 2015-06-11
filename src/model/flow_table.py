@@ -28,7 +28,6 @@ class Flow():
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
 
-        self.port_graph_edges = []
         self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
         self.complement_traffic = Traffic()
@@ -62,14 +61,11 @@ class Flow():
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
                                              outgoing_port,
-                                             self,
                                              output_action,
                                              self.applied_traffic,
                                              self.applied_modifications,
                                              self.written_modifications,
                                              "applied")
-
-                self.port_graph_edges.append(e)
 
             port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
 
@@ -79,50 +75,21 @@ class Flow():
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
                                              outgoing_port,
-                                             self,
                                              output_action,
                                              self.applied_traffic,
                                              self.applied_modifications,
                                              self.written_modifications,
                                              "written")
 
-                self.port_graph_edges.append(e)
-
             # See the edge impact of any go-to-table instruction
             if self.instruction_set.goto_table:
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
                                              self.sw.flow_tables[self.instruction_set.goto_table].port,
-                                             self,
                                              None,
                                              self.applied_traffic,
                                              self.applied_modifications,
                                              self.written_modifications)
-
-                self.port_graph_edges.append(e)
-
-    def update_port_graph_edges(self):
-
-        for src_port_id, dst_port_id, output_action in self.port_graph_edges:
-
-            if output_action:
-
-                # If it is not a group action which has to be part of a bucket, then it is always active
-                if not output_action.bucket:
-                    continue
-
-                if self.sw.get_port(dst_port_id).state == "up":
-
-                    # If the action has a bucket that means, it belongs to one of the groups and its being active
-                    # depends on whether its bucket is still the first live bucket for that group
-                    if output_action.bucket:
-                        if output_action.bucket.group.get_first_live_bucket() == output_action.bucket:
-                            output_action.is_active = True
-                        else:
-                            output_action.is_active = False
-
-                else:
-                    output_action.is_active = False
 
 
 class FlowTable():

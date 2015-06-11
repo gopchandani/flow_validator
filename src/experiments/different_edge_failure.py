@@ -59,6 +59,8 @@ class DifferentEdgeFailure(Experiment):
                     fv.validate_all_host_pair_reachability()
                     fv.port_graph.add_node_graph_edge(node1, node2)
 
+                    break
+
                 s1 = node1[1:]
                 s2 = node2[1:]
                 self.data["edges_broken"][s1 + "<->" + s2].append(t.msecs)
