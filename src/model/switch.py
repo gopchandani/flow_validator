@@ -208,7 +208,11 @@ class Switch():
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
 
-            for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type in edge_data.edge_data_list:
+            for edge_filter_match, \
+                edge_action, \
+                applied_modifications, \
+                written_modifications, \
+                output_action_type in edge_data.edge_data_list:
 
                 if edge_action:
                     edge_action.perform_edge_failover()
@@ -264,16 +268,13 @@ class Switch():
 
     def update_pred_transfer_traffic(self, curr):
 
-        #print "update_pred_transfer_traffic at port:", curr.port_id
-
         # This needs to be done for each destination for which curr holds transfer_traffic
         for dst in curr.transfer_traffic:
 
-            #print "update_pred_transfer_traffic dst:", dst
-
             # First compute what the transfer_traffic for this dst looks like right now after edge status changes...
             now_transfer_traffic = Traffic()
-            for succ_id in self.g.successors_iter(curr.port_id):
+            successors = self.g.successors(curr.port_id)
+            for succ_id in successors:
                 succ = self.get_port(succ_id)
                 now_transfer_traffic.union(self.compute_pred_transfer_traffic(curr, succ, dst))
 

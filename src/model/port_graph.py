@@ -48,6 +48,11 @@ class PortGraph:
                 traffic_filter = src_p.transfer_traffic[dst_p_id]
                 self.add_edge(src_p, dst_p, traffic_filter)
 
+    def update_switch_transfer_function(self, sw, affected_port=None):
+
+        if affected_port:
+            sw.update_port_transfer_traffic(affected_port)
+
     def init_port_graph(self):
 
         # Add a port for controller
@@ -78,9 +83,9 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph()
 
-    def add_edge(self, port1, port2, edge_filter_traffic):
+    def add_edge(self, src_port, dst_port, edge_filter_traffic):
 
-        edge_data = EdgeData(port1, port2)
+        edge_data = EdgeData(src_port, dst_port)
 
         # Each traffic element has its own edge_data, because of how it might have
         # traveled through the switch and what modifications it may have accumulated
@@ -90,16 +95,16 @@ class PortGraph:
             t.add_traffic_elements([te])
             edge_data.add_edge_data_2(t, te.effective_modifications)
 
-        self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
+        self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
 
-        port1.sw.update_port_transfer_traffic(port1)
+        #self.update_switch_transfer_function(src_port.sw, src_port)
 
-    def remove_edge(self, port1, port2):
+    def remove_edge(self, src_port, dst_port):
 
         # Remove the port-graph edges corresponding to ports themselves
-        self.g.remove_edge(port1.port_id, port2.port_id)
+        self.g.remove_edge(src_port.port_id, dst_port.port_id)
 
-        port1.sw.update_port_transfer_traffic(port1)
+        self.update_switch_transfer_function(src_port.sw, src_port)
 
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")
