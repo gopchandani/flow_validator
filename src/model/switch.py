@@ -191,7 +191,8 @@ class Switch():
         for pred_id in self.g.predecessors_iter(curr.port_id):
 
             pred = self.get_port(pred_id)
-            pred_transfer_traffic = self.compute_pred_transfer_traffic(pred, curr, dst_port.port_id)
+            edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+            pred_transfer_traffic = self.compute_edge_transfer_traffic(pred, curr, edge_data, dst_port.port_id)
 
             # Base cases
             # 1. No traffic left to propagate to predecessors
@@ -208,11 +209,8 @@ class Switch():
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
 
-            for edge_filter_match, \
-                edge_action, \
-                applied_modifications, \
-                written_modifications, \
-                output_action_type in edge_data.edge_data_list:
+            for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
+                    in edge_data.edge_data_list:
 
                 if edge_action:
                     edge_action.perform_edge_failover()
@@ -220,16 +218,12 @@ class Switch():
             # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
             self.update_pred_transfer_traffic(pred)
 
-    def compute_pred_transfer_traffic(self, pred, curr, dst_port_id):
+    def compute_edge_transfer_traffic(self, pred, curr, edge_data, dst_port_id):
 
         pred_transfer_traffic = Traffic()
-        edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
-        for edge_filter_match, \
-            edge_action, \
-            applied_modifications, \
-            written_modifications, \
-            output_action_type in edge_data.edge_data_list:
+        for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
+                in edge_data.edge_data_list:
 
             if edge_action:
                 if not edge_action.is_active:
@@ -251,7 +245,6 @@ class Switch():
                 if edge_data.edge_type == "ingress":
                     curr_transfer_traffic = curr_transfer_traffic.get_orig_traffic()
                 else:
-
                     # At all the non-ingress edges accumulate written modifications
                     # But these are useless if the output_action_type is applied.
                     if written_modifications:
@@ -276,6 +269,7 @@ class Switch():
             successors = self.g.successors(curr.port_id)
             for succ_id in successors:
                 succ = self.get_port(succ_id)
-                now_transfer_traffic.union(self.compute_pred_transfer_traffic(curr, succ, dst))
+                edge_data = self.g.get_edge_data(curr.port_id, succ.port_id)["edge_data"]
+                now_transfer_traffic.union(self.compute_edge_transfer_traffic(curr, succ, edge_data, dst))
 
             curr.transfer_traffic[dst].pipe_welding(now_transfer_traffic)

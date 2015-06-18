@@ -147,7 +147,7 @@ class PortGraph:
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
-    def compute_pred_admitted_traffic(self, pred, curr, dst_port_id):
+    def compute_edge_admitted_traffic(self, pred, curr, dst_port_id):
 
         pred_admitted_traffic = Traffic()
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
@@ -193,7 +193,7 @@ class PortGraph:
         for pred_id in self.g.predecessors_iter(curr.port_id):
 
             pred = self.get_port(pred_id)
-            pred_admitted_traffic = self.compute_pred_admitted_traffic(pred, curr, dst_port.port_id)
+            pred_admitted_traffic = self.compute_edge_admitted_traffic(pred, curr, dst_port.port_id)
 
             if not pred_admitted_traffic.is_empty():
                 self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
