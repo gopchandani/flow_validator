@@ -193,6 +193,7 @@ class Switch():
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
             pred_transfer_traffic = self.compute_edge_transfer_traffic(pred, curr, edge_data, dst_port.port_id)
+            pred_transfer_traffic.set_port(pred)
 
             # Base cases
             # 1. No traffic left to propagate to predecessors
@@ -254,7 +255,6 @@ class Switch():
                 i = edge_filter_match.intersect(curr_transfer_traffic)
 
                 if not i.is_empty():
-                    i.set_port(pred)
                     pred_transfer_traffic.union(i)
 
         return pred_transfer_traffic
