@@ -192,7 +192,7 @@ class Switch():
 
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
-            pred_transfer_traffic = self.compute_edge_transfer_traffic(pred, curr, edge_data, dst_port.port_id)
+            pred_transfer_traffic = self.compute_edge_transfer_traffic(curr, edge_data, dst_port.port_id)
             pred_transfer_traffic.set_port(pred)
 
             # Base cases
@@ -219,7 +219,7 @@ class Switch():
             # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
             self.update_pred_transfer_traffic(pred)
 
-    def compute_edge_transfer_traffic(self, pred, curr, edge_data, dst_port_id):
+    def compute_edge_transfer_traffic(self, curr, edge_data, dst_port_id):
 
         pred_transfer_traffic = Traffic()
 
@@ -270,6 +270,8 @@ class Switch():
             for succ_id in successors:
                 succ = self.get_port(succ_id)
                 edge_data = self.g.get_edge_data(curr.port_id, succ.port_id)["edge_data"]
-                now_transfer_traffic.union(self.compute_edge_transfer_traffic(curr, succ, edge_data, dst))
+                t = self.compute_edge_transfer_traffic(succ, edge_data, dst)
+                t.set_port(curr)
+                now_transfer_traffic.union(t)
 
             curr.transfer_traffic[dst].pipe_welding(now_transfer_traffic)
