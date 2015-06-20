@@ -180,7 +180,7 @@ class Switch():
 
     def compute_port_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
 
-        # print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
+        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         if dst_port.port_id not in curr.transfer_traffic:
             curr.transfer_traffic[dst_port.port_id] = curr_transfer_traffic
@@ -192,7 +192,7 @@ class Switch():
 
             pred = self.get_port(pred_id)
             edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
-            pred_transfer_traffic = self.compute_edge_transfer_traffic(curr, edge_data, dst_port.port_id)
+            pred_transfer_traffic = self.compute_edge_transfer_traffic(curr.transfer_traffic[dst_port.port_id], edge_data)
             pred_transfer_traffic.set_port(pred)
 
             # Base cases
@@ -217,9 +217,9 @@ class Switch():
                     edge_action.perform_edge_failover()
 
             # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
-            self.update_pred_transfer_traffic(pred)
+            #self.update_pred_transfer_traffic(pred)
 
-    def compute_edge_transfer_traffic(self, curr, edge_data, dst_port_id):
+    def compute_edge_transfer_traffic(self, curr_transfer_traffic, edge_data):
 
         pred_transfer_traffic = Traffic()
 
@@ -230,48 +230,46 @@ class Switch():
                 if not edge_action.is_active:
                     continue
 
-            if dst_port_id in curr.transfer_traffic:
+            if edge_data.edge_type == "egress":
+                curr_transfer_traffic.set_field("in_port", is_wildcard=True)
 
-                if edge_data.edge_type == "egress":
-                    curr.transfer_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
+                for te in curr_transfer_traffic.traffic_elements:
+                    te.output_action_type = output_action_type
 
-                    for te in curr.transfer_traffic[dst_port_id].traffic_elements:
-                        te.output_action_type = output_action_type
+            if applied_modifications:
+                ctt = curr_transfer_traffic.get_orig_traffic(applied_modifications)
+            else:
+                ctt = curr_transfer_traffic
 
-                if applied_modifications:
-                    curr_transfer_traffic = curr.transfer_traffic[dst_port_id].get_orig_traffic(applied_modifications)
-                else:
-                    curr_transfer_traffic = curr.transfer_traffic[dst_port_id]
+            if edge_data.edge_type == "ingress":
+                ctt = curr_transfer_traffic.get_orig_traffic()
+            else:
+                # At all the non-ingress edges accumulate written modifications
+                # But these are useless if the output_action_type is applied.
+                if written_modifications:
+                    for te in ctt.traffic_elements:
+                        te.written_modifications.update(written_modifications)
 
-                if edge_data.edge_type == "ingress":
-                    curr_transfer_traffic = curr_transfer_traffic.get_orig_traffic()
-                else:
-                    # At all the non-ingress edges accumulate written modifications
-                    # But these are useless if the output_action_type is applied.
-                    if written_modifications:
-                        for te in curr_transfer_traffic.traffic_elements:
-                            te.written_modifications.update(written_modifications)
+            i = edge_filter_match.intersect(ctt)
 
-                i = edge_filter_match.intersect(curr_transfer_traffic)
-
-                if not i.is_empty():
-                    pred_transfer_traffic.union(i)
+            if not i.is_empty():
+                pred_transfer_traffic.union(i)
 
         return pred_transfer_traffic
-
-    def update_pred_transfer_traffic(self, curr):
-
-        # This needs to be done for each destination for which curr holds transfer_traffic
-        for dst in curr.transfer_traffic:
-
-            # First compute what the transfer_traffic for this dst looks like right now after edge status changes...
-            now_transfer_traffic = Traffic()
-            successors = self.g.successors(curr.port_id)
-            for succ_id in successors:
-                succ = self.get_port(succ_id)
-                edge_data = self.g.get_edge_data(curr.port_id, succ.port_id)["edge_data"]
-                t = self.compute_edge_transfer_traffic(succ, edge_data, dst)
-                t.set_port(curr)
-                now_transfer_traffic.union(t)
-
-            curr.transfer_traffic[dst].pipe_welding(now_transfer_traffic)
+    #
+    # def update_pred_transfer_traffic(self, curr):
+    #
+    #     # This needs to be done for each destination for which curr holds transfer_traffic
+    #     for dst in curr.transfer_traffic:
+    #
+    #         # First compute what the transfer_traffic for this dst looks like right now after edge status changes...
+    #         now_transfer_traffic = Traffic()
+    #         successors = self.g.successors(curr.port_id)
+    #         for succ_id in successors:
+    #             succ = self.get_port(succ_id)
+    #             edge_data = self.g.get_edge_data(curr.port_id, succ.port_id)["edge_data"]
+    #             t = self.compute_edge_transfer_traffic(curr.transfer_traffic[dst], edge_data)
+    #             t.set_port(curr)
+    #             now_transfer_traffic.union(t)
+    #
+    #         curr.transfer_traffic[dst].pipe_welding(now_transfer_traffic)

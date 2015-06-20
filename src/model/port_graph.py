@@ -149,6 +149,9 @@ class PortGraph:
 
     def compute_edge_admitted_traffic(self, pred, curr, dst_port_id):
 
+        # if curr.port_id == "s1:egress2" and pred.port_id == "s1:ingress3" and dst_port_id == "s3:egress1":
+        #     pass
+
         pred_admitted_traffic = Traffic()
         edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
@@ -178,7 +181,7 @@ class PortGraph:
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
-        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id)
+        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:
