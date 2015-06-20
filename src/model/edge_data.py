@@ -16,18 +16,5 @@ class EdgeData():
 
         self.edge_data_list = []
 
-    def add_edge_data(self,
-                      edge_filter_match,
-                      edge_action,
-                      applied_modifications,
-                      written_modifications,
-                      output_action_type):
-
-        self.edge_data_list.append((edge_filter_match,
-                                    edge_action,
-                                    applied_modifications,
-                                    written_modifications,
-                                    output_action_type))
-
-    def add_edge_data_2(self, edge_filter_traffic, modifications):
-        self.edge_data_list.append((edge_filter_traffic, modifications))
+    def add_edge_data(self, edge_data_tuple):
+        self.edge_data_list.append(edge_data_tuple)

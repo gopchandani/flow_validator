@@ -133,18 +133,18 @@ class Switch():
         edge_data = self.g.get_edge_data(port1.port_id, port2.port_id)
 
         if edge_data:
-            edge_data["edge_data"].add_edge_data(edge_filter_match,
+            edge_data["edge_data"].add_edge_data((edge_filter_match,
                                                  edge_action,
                                                  applied_modifications,
                                                  written_modifications,
-                                                 output_action_type)
+                                                 output_action_type))
         else:
             edge_data = EdgeData(port1, port2)
-            edge_data.add_edge_data(edge_filter_match,
+            edge_data.add_edge_data((edge_filter_match,
                                     edge_action,
                                     applied_modifications,
                                     written_modifications,
-                                    output_action_type)
+                                    output_action_type))
 
             self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
 

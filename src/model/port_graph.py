@@ -93,7 +93,7 @@ class PortGraph:
         for te in edge_filter_traffic.traffic_elements:
             t = Traffic()
             t.add_traffic_elements([te])
-            edge_data.add_edge_data_2(t, te.switch_modifications)
+            edge_data.add_edge_data((t, te.switch_modifications))
 
         self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
 
