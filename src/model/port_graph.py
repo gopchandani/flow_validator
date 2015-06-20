@@ -147,33 +147,26 @@ class PortGraph:
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
-    def compute_edge_admitted_traffic(self, pred, curr, dst_port_id):
-
-        # if curr.port_id == "s1:egress2" and pred.port_id == "s1:ingress3" and dst_port_id == "s3:egress1":
-        #     pass
+    def compute_edge_admitted_traffic(self, curr_admitted_traffic, edge_data):
 
         pred_admitted_traffic = Traffic()
-        edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
 
         for edge_filter_traffic, modifications in edge_data.edge_data_list:
 
-            if dst_port_id in curr.admitted_traffic:
+            # At egress edges, set the in_port of the admitted match for destination to wildcard
+            if edge_data.edge_type == "egress":
+                curr_admitted_traffic.set_field("in_port", is_wildcard=True)
 
-                # At egress edges, set the in_port of the admitted match for destination to wildcard
-                if edge_data.edge_type == "egress":
-                    curr.admitted_traffic[dst_port_id].set_field("in_port", is_wildcard=True)
+            # If there were modifications along the way...
+            if modifications:
+                cat = curr_admitted_traffic.get_orig_traffic(modifications)
+            else:
+                cat = curr_admitted_traffic
 
-                # If there were modifications along the way...
-                if modifications:
-                    curr_admitted_traffic = curr.admitted_traffic[dst_port_id].get_orig_traffic(modifications)
-                else:
-                    curr_admitted_traffic = curr.admitted_traffic[dst_port_id]
+            i = edge_filter_traffic.intersect(cat)
 
-                i = edge_filter_traffic.intersect(curr_admitted_traffic)
-
-                if not i.is_empty():
-                    i.set_port(pred)
-                    pred_admitted_traffic.union(i)
+            if not i.is_empty():
+                pred_admitted_traffic.union(i)
 
         return pred_admitted_traffic
 
@@ -196,7 +189,9 @@ class PortGraph:
         for pred_id in self.g.predecessors_iter(curr.port_id):
 
             pred = self.get_port(pred_id)
-            pred_admitted_traffic = self.compute_edge_admitted_traffic(pred, curr, dst_port.port_id)
+            edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+            pred_admitted_traffic = self.compute_edge_admitted_traffic(curr.admitted_traffic[dst_port.port_id], edge_data)
+            pred_admitted_traffic.set_port(pred)
 
             if not pred_admitted_traffic.is_empty():
                 self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
