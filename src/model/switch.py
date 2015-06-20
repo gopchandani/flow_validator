@@ -195,10 +195,8 @@ class Switch():
             pred_transfer_traffic = self.compute_edge_transfer_traffic(curr.transfer_traffic[dst_port.port_id], edge_data)
             pred_transfer_traffic.set_port(pred)
 
-            # Base cases
-            # 1. No traffic left to propagate to predecessors
-            # 2. There is some traffic but current port is ingress
-            if not pred_transfer_traffic.is_empty() and curr.port_type != "ingress":
+            # Base case: No traffic left to propagate to predecessors
+            if not pred_transfer_traffic.is_empty():
                 self.compute_port_transfer_traffic(pred, pred_transfer_traffic, dst_port)
 
     def update_port_transfer_traffic(self, node):
