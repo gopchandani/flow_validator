@@ -304,7 +304,7 @@ class Traffic():
 
         is_redundant = False
         for self_te in self.traffic_elements:
-            if self_te.is_subset(in_te):# and self_te.succ_traffic_element == in_te.succ_traffic_element:
+            if self_te.is_subset(in_te) and self_te.succ_traffic_element == in_te.succ_traffic_element:
                 is_redundant = True
                 break
 
