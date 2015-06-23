@@ -178,14 +178,17 @@ class Switch():
 
             self.compute_port_transfer_traffic(out_p, out_p.transfer_traffic[out_p_id], out_p)
 
+    def account_port_transfer_traffic(self, port, traffic, dst_port):
+
+        if dst_port.port_id not in port.transfer_traffic:
+            port.transfer_traffic[dst_port.port_id] = traffic
+        else:
+            port.transfer_traffic[dst_port.port_id].union(traffic)
+
     def compute_port_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
 
         #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
-
-        if dst_port.port_id not in curr.transfer_traffic:
-            curr.transfer_traffic[dst_port.port_id] = curr_transfer_traffic
-        else:
-            curr.transfer_traffic[dst_port.port_id].union(curr_transfer_traffic)
+        self.account_port_transfer_traffic(curr, curr_transfer_traffic, dst_port)
 
         # Recursively call myself at each of my predecessors in the port graph
         for pred_id in self.g.predecessors_iter(curr.port_id):
@@ -198,24 +201,6 @@ class Switch():
             # Base case: No traffic left to propagate to predecessors
             if not pred_transfer_traffic.is_empty():
                 self.compute_port_transfer_traffic(pred, pred_transfer_traffic, dst_port)
-
-    def update_port_transfer_traffic(self, node):
-
-        node_preds = self.g.predecessors(node.port_id)
-
-        # But this could have fail-over consequences for this port's predecessors' traffic elements
-        for pred_id in node_preds:
-            pred = self.get_port(pred_id)
-            edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
-
-            for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
-                    in edge_data.edge_data_list:
-
-                if edge_action:
-                    edge_action.perform_edge_failover()
-
-            # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
-            #self.update_pred_transfer_traffic(pred)
 
     def compute_edge_transfer_traffic(self, curr_transfer_traffic, edge_data):
 
@@ -254,7 +239,25 @@ class Switch():
                 pred_transfer_traffic.union(i)
 
         return pred_transfer_traffic
-    #
+
+    def update_port_transfer_traffic(self, node):
+
+        node_preds = self.g.predecessors(node.port_id)
+
+        # But this could have fail-over consequences for this port's predecessors' traffic elements
+        for pred_id in node_preds:
+            pred = self.get_port(pred_id)
+            edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
+
+            for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
+                    in edge_data.edge_data_list:
+
+                if edge_action:
+                    edge_action.perform_edge_failover()
+
+            # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
+            #self.update_pred_transfer_traffic(pred)
+
     # def update_pred_transfer_traffic(self, curr):
     #
     #     # This needs to be done for each destination for which curr holds transfer_traffic
