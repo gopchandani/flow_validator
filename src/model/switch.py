@@ -174,33 +174,41 @@ class Switch():
 
             transfer_traffic = Traffic(init_wildcard=True)
             transfer_traffic.set_port(out_p)
-            out_p.transfer_traffic[out_p_id] = transfer_traffic
+            #out_p.transfer_traffic[out_p_id] = transfer_traffic
 
-            self.compute_port_transfer_traffic(out_p, out_p.transfer_traffic[out_p_id], out_p)
+            self.compute_port_transfer_traffic(out_p, transfer_traffic, out_p)
 
     def account_port_transfer_traffic(self, port, traffic, dst_port):
 
+        traffic_to_propagate = None
+
         if dst_port.port_id not in port.transfer_traffic:
             port.transfer_traffic[dst_port.port_id] = traffic
+            traffic_to_propagate = traffic
         else:
-            port.transfer_traffic[dst_port.port_id].union(traffic)
+            traffic_to_propagate = port.transfer_traffic[dst_port.port_id].compute_diff_traffic(traffic)
+            port.transfer_traffic[dst_port.port_id].union(traffic_to_propagate)
+
+        return traffic_to_propagate
 
     def compute_port_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
 
-        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
-        self.account_port_transfer_traffic(curr, curr_transfer_traffic, dst_port)
+        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        traffic_to_propagate = self.account_port_transfer_traffic(curr, curr_transfer_traffic, dst_port)
 
-        # Recursively call myself at each of my predecessors in the port graph
-        for pred_id in self.g.predecessors_iter(curr.port_id):
+        if not traffic_to_propagate.is_empty():
 
-            pred = self.get_port(pred_id)
-            edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
-            pred_transfer_traffic = self.compute_edge_transfer_traffic(curr.transfer_traffic[dst_port.port_id], edge_data)
-            pred_transfer_traffic.set_port(pred)
+            # Recursively call myself at each of my predecessors in the port graph
+            for pred_id in self.g.predecessors_iter(curr.port_id):
 
-            # Base case: No traffic left to propagate to predecessors
-            if not pred_transfer_traffic.is_empty():
-                self.compute_port_transfer_traffic(pred, pred_transfer_traffic, dst_port)
+                pred = self.get_port(pred_id)
+                edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+                pred_transfer_traffic = self.compute_edge_transfer_traffic(traffic_to_propagate, edge_data)
+                pred_transfer_traffic.set_port(pred)
+
+                # Base case: No traffic left to propagate to predecessors
+                if not pred_transfer_traffic.is_empty():
+                    self.compute_port_transfer_traffic(pred, pred_transfer_traffic, dst_port)
 
     def compute_edge_transfer_traffic(self, curr_transfer_traffic, edge_data):
 

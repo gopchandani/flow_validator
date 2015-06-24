@@ -132,22 +132,28 @@ class TrafficElement():
 
         return complement_traffic_elements
 
+    # Computes A - B  = A Intersect B'
 
-    # A is_subset of B if A - B == NullSet
-    # A is in_traffic_element
-    # B here is self
-
-    def is_subset(self, in_traffic_element):
+    def get_diff_traffic_elements(self, in_traffic_element):
 
         # find B'
         complement_traffic_elements = self.get_complement_traffic_elements()
 
-        # Intersect in_traffic_element with B' to get A-B by doing A Int B'
+        # Do the intersection
         diff_traffic_elements = []
         for cme in complement_traffic_elements:
             i = in_traffic_element.intersect(cme)
             if i:
                 diff_traffic_elements.append(i)
+
+        return diff_traffic_elements
+
+    # A is_subset of B if A - B == NullSet
+    # A is in_traffic_element
+    # B here is self
+    def is_subset(self, in_traffic_element):
+
+        diff_traffic_elements = self.get_diff_traffic_elements(in_traffic_element)
 
         # Return True/False based on if there was anything found in A Int B'
         if diff_traffic_elements:
@@ -300,16 +306,6 @@ class Traffic():
 
         return is_subset
 
-    def is_redundant_te(self, in_te):
-
-        is_redundant = False
-        for self_te in self.traffic_elements:
-            if self_te.is_subset(in_te) and self_te.succ_traffic_element == in_te.succ_traffic_element:
-                is_redundant = True
-                break
-
-        return is_redundant
-
     def intersect(self, in_traffic):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:
@@ -338,17 +334,35 @@ class Traffic():
 
         return traffic_intersection
 
+
+    # Computes what traffic needs to be added by the union
+    def compute_diff_traffic(self, in_traffic):
+
+        diff_traffic = Traffic()
+
+        for self_te in self.traffic_elements:
+            for in_te in in_traffic.traffic_elements:
+                diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
+
+                if diff_traffic_elements:
+                    diff_traffic.traffic_elements.extend(diff_traffic_elements)
+
+        return diff_traffic
+
+        # is_redundant = False
+        #     if self_te.is_subset(self_te) and self_te.succ_traffic_element == self_te.succ_traffic_element:
+        #         is_redundant = True
+        #         break
+        #
+        # if is_redundant:
+        #     continue
+
+    # Returns the new traffic that just got added
     def union(self, in_traffic):
 
         for union_te in in_traffic.traffic_elements:
-
-            # Check to see if this needs to be added at all
-            if self.is_redundant_te(union_te):
-                continue
-
             union_te.traffic = self
             self.traffic_elements.append(union_te)
-
         return self
 
     def pipe_welding(self, now_admitted_traffic):

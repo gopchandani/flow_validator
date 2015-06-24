@@ -29,14 +29,6 @@ class FlowValidator:
             host_obj.switch_egress_port = self.port_graph.get_port(host_obj.switch_id +
                                                                    ":egress" + str(host_obj.switch_port_attached))
 
-            admitted_traffic = Traffic(init_wildcard=True)
-            admitted_traffic.set_field("ethernet_type", 0x0800)
-            dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
-            admitted_traffic.set_field("ethernet_destination", dst_mac_int)
-
-            admitted_traffic.set_port(host_obj.switch_egress_port)
-            host_obj.switch_egress_port.admitted_traffic[host_obj.switch_egress_port.port_id] = admitted_traffic
-
     def remove_hosts(self):
 
         for host_id in self.network_graph.get_experiment_host_ids():
@@ -48,8 +40,14 @@ class FlowValidator:
         for host_id in self.network_graph.get_experiment_host_ids():
             host_obj = self.network_graph.get_node_object(host_id)
 
+            admitted_traffic = Traffic(init_wildcard=True)
+            admitted_traffic.set_field("ethernet_type", 0x0800)
+            dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
+            admitted_traffic.set_field("ethernet_destination", dst_mac_int)
+            admitted_traffic.set_port(host_obj.switch_egress_port)
+
             self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
-                                                     host_obj.switch_egress_port.admitted_traffic[host_obj.switch_egress_port.port_id],
+                                                     admitted_traffic,
                                                      host_obj.switch_egress_port)
 
     def validate_host_pair_reachability(self, src_h_id, dst_h_id):
