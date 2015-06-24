@@ -174,7 +174,7 @@ class PortGraph:
     # and are either collecting goods and stopping or recursively trying to get to its predecessors
     def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
 
-        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         # If curr has not seen destination at all, first get the curr_admitted_traffic account started
         if dst_port.port_id not in curr.admitted_traffic:

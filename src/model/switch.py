@@ -193,7 +193,8 @@ class Switch():
 
     def compute_port_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
 
-        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+
         traffic_to_propagate = self.account_port_transfer_traffic(curr, curr_transfer_traffic, dst_port)
 
         if not traffic_to_propagate.is_empty():

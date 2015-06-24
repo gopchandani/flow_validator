@@ -133,7 +133,8 @@ class TrafficElement():
         return complement_traffic_elements
 
     # Computes A - B  = A Intersect B'
-
+    # A is in_traffic_element
+    # B here is self
     def get_diff_traffic_elements(self, in_traffic_element):
 
         # find B'
@@ -334,7 +335,6 @@ class Traffic():
 
         return traffic_intersection
 
-
     # Computes what traffic needs to be added by the union
     def compute_diff_traffic(self, in_traffic):
 
@@ -342,7 +342,15 @@ class Traffic():
 
         for self_te in self.traffic_elements:
             for in_te in in_traffic.traffic_elements:
-                diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
+
+                diff_traffic_elements = []
+
+                # If the successors of both element are same, only the difference gets added
+                if self_te.succ_traffic_element == in_te.succ_traffic_element:
+                    diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
+                # Otherwise the whole gets added
+                else:
+                    diff_traffic_elements.append(in_te)
 
                 if diff_traffic_elements:
                     diff_traffic.traffic_elements.extend(diff_traffic_elements)
