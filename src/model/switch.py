@@ -178,6 +178,7 @@ class Switch():
 
             self.compute_port_transfer_traffic(out_p, transfer_traffic, out_p)
 
+
     def account_port_transfer_traffic(self, port, traffic, dst_port):
 
         traffic_to_propagate = None
@@ -211,7 +212,7 @@ class Switch():
                 if not pred_transfer_traffic.is_empty():
                     self.compute_port_transfer_traffic(pred, pred_transfer_traffic, dst_port)
 
-    def compute_edge_transfer_traffic(self, curr_transfer_traffic, edge_data):
+    def compute_edge_transfer_traffic(self, traffic_to_propagate, edge_data):
 
         pred_transfer_traffic = Traffic()
 
@@ -223,26 +224,26 @@ class Switch():
                     continue
 
             if edge_data.edge_type == "egress":
-                curr_transfer_traffic.set_field("in_port", is_wildcard=True)
+                traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
-                for te in curr_transfer_traffic.traffic_elements:
+                for te in traffic_to_propagate.traffic_elements:
                     te.output_action_type = output_action_type
 
             if applied_modifications:
-                ctt = curr_transfer_traffic.get_orig_traffic(applied_modifications)
+                ttp = traffic_to_propagate.get_orig_traffic(applied_modifications)
             else:
-                ctt = curr_transfer_traffic
+                ttp = traffic_to_propagate
 
             if edge_data.edge_type == "ingress":
-                ctt = curr_transfer_traffic.get_orig_traffic()
+                ttp = traffic_to_propagate.get_orig_traffic()
             else:
                 # At all the non-ingress edges accumulate written modifications
                 # But these are useless if the output_action_type is applied.
                 if written_modifications:
-                    for te in ctt.traffic_elements:
+                    for te in ttp.traffic_elements:
                         te.written_modifications.update(written_modifications)
 
-            i = edge_filter_match.intersect(ctt)
+            i = edge_filter_match.intersect(ttp)
 
             if not i.is_empty():
                 pred_transfer_traffic.union(i)

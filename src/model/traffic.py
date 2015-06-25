@@ -335,7 +335,7 @@ class Traffic():
 
         return traffic_intersection
 
-    # Computes what traffic needs to be added by the union
+    # Computes a difference between two traffic instances and if they have changed.
     def compute_diff_traffic(self, in_traffic):
 
         diff_traffic = Traffic()
@@ -345,10 +345,11 @@ class Traffic():
 
                 diff_traffic_elements = []
 
-                # If the successors of both element are same, only the difference gets added
+                # If the successors of both element are same, only the set difference gets added to diff_traffic
                 if self_te.succ_traffic_element == in_te.succ_traffic_element:
                     diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
-                # Otherwise the whole gets added
+
+                # Otherwise the whole gets added to diff_traffic
                 else:
                     diff_traffic_elements.append(in_te)
 
