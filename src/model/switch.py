@@ -178,7 +178,6 @@ class Switch():
 
             self.compute_port_transfer_traffic(out_p, transfer_traffic, out_p)
 
-
     def account_port_transfer_traffic(self, port, traffic, dst_port):
 
         traffic_to_propagate = None

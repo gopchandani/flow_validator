@@ -410,10 +410,6 @@ class Traffic():
         for te in self.traffic_elements:
             te.port = port
 
-    def set_succ_traffic_element(self, succ_traffic_element):
-        for te in self.traffic_elements:
-            te.succ_traffic_element = succ_traffic_element
-
     def is_field_wildcard(self, field_name):
         retval = True
 
