@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+from collections import defaultdict
 
 class Port():
 
@@ -11,10 +12,12 @@ class Port():
         self.curr_speed = None
         self.max_speed = None
 
-        # This dictionary is to hold a Match object per destination
         self.path_elements = {}
+
         self.admitted_traffic = {}
-        self.transfer_traffic = {}
+
+        # This nested dictionary is to hold Traffic object per successor, per destination
+        self.transfer_traffic = defaultdict(defaultdict)
 
         # These apply specifically to physical ports
         self.mac_address = None

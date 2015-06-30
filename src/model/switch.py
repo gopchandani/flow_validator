@@ -176,26 +176,34 @@ class Switch():
             transfer_traffic.set_port(out_p)
             #out_p.transfer_traffic[out_p_id] = transfer_traffic
 
-            self.compute_port_transfer_traffic(out_p, transfer_traffic, out_p)
+            self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p)
 
-    def account_port_transfer_traffic(self, port, traffic, dst_port):
+    def account_port_transfer_traffic(self, port, propagating_traffic, succ, dst_port):
 
         traffic_to_propagate = None
+        curr_succ_dst_traffic = None
 
-        if dst_port.port_id not in port.transfer_traffic:
-            port.transfer_traffic[dst_port.port_id] = traffic
-            traffic_to_propagate = traffic
-        else:
-            traffic_to_propagate = port.transfer_traffic[dst_port.port_id].compute_diff_traffic(traffic)
-            port.transfer_traffic[dst_port.port_id].union(traffic_to_propagate)
+        # If the traffic at this port already exist for this dst-succ combination,
+        # Grab it, compute delta with what is being propagated and fill up the gaps
+        try:
+            curr_succ_dst_traffic = port.transfer_traffic[dst_port.port_id][succ]
+            traffic_to_propagate = curr_succ_dst_traffic.compute_diff_traffic(propagating_traffic)
+            port.transfer_traffic[dst_port.port_id][succ].union(traffic_to_propagate)
+
+        # If there is no traffic for this dst-succ combination prior to this propagation
+        # Setup a traffic object, store it and propagate it no need to compute any delta.
+        except KeyError:
+            port.transfer_traffic[dst_port.port_id][succ] = Traffic()
+            port.transfer_traffic[dst_port.port_id][succ].union(propagating_traffic)
+            traffic_to_propagate = propagating_traffic
 
         return traffic_to_propagate
 
-    def compute_port_transfer_traffic(self, curr, curr_transfer_traffic, dst_port):
+    def compute_port_transfer_traffic(self, curr, propagating_traffic, succ, dst_port):
 
         #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
-        traffic_to_propagate = self.account_port_transfer_traffic(curr, curr_transfer_traffic, dst_port)
+        traffic_to_propagate = self.account_port_transfer_traffic(curr, propagating_traffic, succ, dst_port)
 
         if not traffic_to_propagate.is_empty():
 
@@ -209,7 +217,7 @@ class Switch():
 
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_transfer_traffic.is_empty():
-                    self.compute_port_transfer_traffic(pred, pred_transfer_traffic, dst_port)
+                    self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port)
 
     def compute_edge_transfer_traffic(self, traffic_to_propagate, edge_data):
 

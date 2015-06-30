@@ -342,29 +342,11 @@ class Traffic():
 
         for self_te in self.traffic_elements:
             for in_te in in_traffic.traffic_elements:
-
-                diff_traffic_elements = []
-
-                # If the successors of both element are same, only the set difference gets added to diff_traffic
-                if self_te.succ_traffic_element == in_te.succ_traffic_element:
-                    diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
-
-                # Otherwise the whole gets added to diff_traffic
-                else:
-                    diff_traffic_elements.append(in_te)
-
+                diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
                 if diff_traffic_elements:
                     diff_traffic.traffic_elements.extend(diff_traffic_elements)
 
         return diff_traffic
-
-        # is_redundant = False
-        #     if self_te.is_subset(self_te) and self_te.succ_traffic_element == self_te.succ_traffic_element:
-        #         is_redundant = True
-        #         break
-        #
-        # if is_redundant:
-        #     continue
 
     # Returns the new traffic that just got added
     def union(self, in_traffic):

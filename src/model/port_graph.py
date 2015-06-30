@@ -46,7 +46,10 @@ class PortGraph:
                     continue
 
                 traffic_filter = src_p.transfer_traffic[dst_p_id]
-                self.add_edge(src_p, dst_p, traffic_filter)
+                total_traffic = Traffic()
+                for succ in traffic_filter:
+                    total_traffic.union(traffic_filter[succ])
+                self.add_edge(src_p, dst_p, total_traffic)
 
     def update_switch_transfer_function(self, sw, affected_port=None):
 
@@ -89,7 +92,6 @@ class PortGraph:
 
         # Each traffic element has its own edge_data, because of how it might have
         # traveled through the switch and what modifications it may have accumulated
-
         for te in edge_filter_traffic.traffic_elements:
             t = Traffic()
             t.add_traffic_elements([te])
