@@ -38,7 +38,7 @@ class Experiment(object):
         if not self.load_config and self.save_config:
             self.cm = ControllerMan(self.num_controller_instances, controller=controller)
 
-    def setup_network_graph(self, topo_description):
+    def setup_network_graph(self, topo_description, qos=False):
 
         if not self.load_config and self.save_config:
             self.controller_port = self.cm.get_next()
@@ -57,8 +57,11 @@ class Experiment(object):
                 self.mm.setup_mininet_with_odl(ng)
             elif self.controller == "ryu":
                 #self.mm.setup_mininet_with_ryu_router()
-                #self.mm.setup_mininet_with_ryu_qos(ng)
-                self.mm.setup_mininet_with_ryu(ng)
+
+                if qos:
+                    self.mm.setup_mininet_with_ryu_qos(ng)
+                else:
+                    self.mm.setup_mininet_with_ryu(ng)
 
         # Refresh the network_graph
         ng.parse_switches()

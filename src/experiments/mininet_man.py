@@ -162,19 +162,6 @@ class MininetMan():
         self.h2s1 = self.net.getNodeByName("h2s1")
         self.h2s2 = self.net.getNodeByName("h2s2")
 
-        # print "MAC: h1s1", self.h1s1.MAC()
-        # print "MAC: h2s1", self.h2s1.MAC()
-        #
-        # print "MAC: h1s2", self.h1s2.MAC()
-        # print "MAC: h2s2", self.h2s2.MAC()
-        #
-        # cmd = "arp -a"
-        # print self.h1s1.cmd(cmd)
-        # cmd = "ping -c3 " + self.h2s1.IP()
-        # print self.h1s1.cmd(cmd)
-
-        self.net.pingAll(self.ping_timeout)
-
         # Start the server at h1s1
         h1s1_output = self.h1s1.cmd("iperf -s -u -i 1 5001&")
         print h1s1_output
