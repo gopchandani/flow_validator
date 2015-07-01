@@ -12,12 +12,9 @@ class Port():
         self.curr_speed = None
         self.max_speed = None
 
-        self.path_elements = {}
-
-        self.admitted_traffic = {}
-
         # This nested dictionary is to hold Traffic object per successor, per destination
         self.transfer_traffic = defaultdict(defaultdict)
+        self.admitted_traffic = defaultdict(defaultdict)
 
         # These apply specifically to physical ports
         self.mac_address = None

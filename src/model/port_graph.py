@@ -45,7 +45,7 @@ class PortGraph:
                 if src_p.port_number == dst_p.port_number:
                     continue
 
-                sw.print_paths(src_p, dst_p, src_p.port_id + "->")
+                sw.print_paths(src_p, dst_p, src_p.port_id)
 
                 traffic_filter = src_p.transfer_traffic[dst_p_id]
                 total_traffic = Traffic()
@@ -174,28 +174,52 @@ class PortGraph:
 
         return pred_admitted_traffic
 
-    # curr in this function below represents the port we assumed to have already reached
-    # and are either collecting goods and stopping or recursively trying to get to its predecessors
-    def compute_admitted_traffic(self, curr, curr_admitted_traffic, dst_port):
+    def print_paths(self, src_p, dst_p, path_str=""):
+        at = src_p.admitted_traffic[dst_p.port_id]
+
+        for succ_p in at:
+            if succ_p:
+                self.print_paths(succ_p, dst_p, path_str + " -> " + succ_p.port_id)
+            else:
+                print path_str
+
+    def account_port_transfer_traffic(self, port, propagating_traffic, succ, dst_port):
+
+        traffic_to_propagate = None
+        curr_succ_dst_traffic = None
+
+        # If the traffic at this port already exist for this dst-succ combination,
+        # Grab it, compute delta with what is being propagated and fill up the gaps
+        try:
+            curr_succ_dst_traffic = port.admitted_traffic[dst_port.port_id][succ]
+            traffic_to_propagate = curr_succ_dst_traffic.compute_diff_traffic(propagating_traffic)
+            port.admitted_traffic[dst_port.port_id][succ].union(traffic_to_propagate)
+
+        # If there is no traffic for this dst-succ combination prior to this propagation
+        # Setup a traffic object, store it and propagate it no need to compute any delta.
+        except KeyError:
+            port.admitted_traffic[dst_port.port_id][succ] = Traffic()
+            port.admitted_traffic[dst_port.port_id][succ].union(propagating_traffic)
+            traffic_to_propagate = propagating_traffic
+
+        return traffic_to_propagate
+
+    def compute_admitted_traffic(self, curr, propagating_traffic, succ, dst_port):
 
         #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
-        # If curr has not seen destination at all, first get the curr_admitted_traffic account started
-        if dst_port.port_id not in curr.admitted_traffic:
-            curr.admitted_traffic[dst_port.port_id] = curr_admitted_traffic
+        traffic_to_propagate = self.account_port_transfer_traffic(curr, propagating_traffic, succ, dst_port)
 
-        # If you already know something about this destination, then keep accumulating
-        # this is for cases when recursion comes from multiple directions and accumulates here
-        else:
-            curr.admitted_traffic[dst_port.port_id].union(curr_admitted_traffic)
+        if not traffic_to_propagate.is_empty():
 
-        # Recursively call myself at each of my predecessors in the port graph
-        for pred_id in self.g.predecessors_iter(curr.port_id):
+            # Recursively call myself at each of my predecessors in the port graph
+            for pred_id in self.g.predecessors_iter(curr.port_id):
 
-            pred = self.get_port(pred_id)
-            edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
-            pred_admitted_traffic = self.compute_edge_admitted_traffic(curr.admitted_traffic[dst_port.port_id], edge_data)
-            pred_admitted_traffic.set_port(pred)
+                pred = self.get_port(pred_id)
+                edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+                pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
+                pred_transfer_traffic.set_port(pred)
 
-            if not pred_admitted_traffic.is_empty():
-                self.compute_admitted_traffic(pred, pred_admitted_traffic, dst_port)
+                # Base case: No traffic left to propagate to predecessors
+                if not pred_transfer_traffic.is_empty():
+                    self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port)

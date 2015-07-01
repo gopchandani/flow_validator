@@ -48,6 +48,7 @@ class FlowValidator:
 
             self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
                                                      admitted_traffic,
+                                                     None,
                                                      host_obj.switch_egress_port)
 
     def validate_host_pair_reachability(self, src_h_id, dst_h_id):
@@ -61,12 +62,9 @@ class FlowValidator:
             print "None found."
             return
 
-        at = src_host_obj.switch_ingress_port.admitted_traffic[dst_host_obj.switch_egress_port.port_id]
-
-        # Baseline
-        at.print_port_paths()
-
-        return len(at.traffic_elements)
+        self.port_graph.print_paths(src_host_obj.switch_ingress_port,
+                                    dst_host_obj.switch_egress_port,
+                                    path_str=src_host_obj.switch_ingress_port.port_id)
 
     def validate_all_host_pair_reachability(self):
 
