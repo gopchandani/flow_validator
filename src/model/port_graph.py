@@ -45,6 +45,8 @@ class PortGraph:
                 if src_p.port_number == dst_p.port_number:
                     continue
 
+                sw.print_paths(src_p, dst_p, src_p.port_id + "->")
+
                 traffic_filter = src_p.transfer_traffic[dst_p_id]
                 total_traffic = Traffic()
                 for succ in traffic_filter:

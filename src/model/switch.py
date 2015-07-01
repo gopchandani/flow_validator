@@ -150,8 +150,6 @@ class Switch():
 
         # Take care of any changes that need to be made to the predecessors of port1
         # due to addition of this edge
-
-        #TODO: See how this is affected in cases involving rule addition
         #self.update_port_transfer_traffic(port1)
 
         return (port1.port_id, port2.port_id, edge_action)
@@ -161,7 +159,6 @@ class Switch():
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(port1.port_id, port2.port_id)
 
-        #TODO: See how this is affected in cases involving rule removal
         #self.update_port_transfer_traffic(port1)
 
     def compute_switch_transfer_traffic(self):
@@ -177,6 +174,15 @@ class Switch():
             #out_p.transfer_traffic[out_p_id] = transfer_traffic
 
             self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p)
+
+    def print_paths(self, src_p, dst_p, path_str=""):
+        tt = src_p.transfer_traffic[dst_p.port_id]
+
+        for succ_p in tt:
+            if succ_p:
+                self.print_paths(succ_p, dst_p, path_str + " -> " + succ_p.port_id)
+            else:
+                print path_str
 
     def account_port_transfer_traffic(self, port, propagating_traffic, succ, dst_port):
 
