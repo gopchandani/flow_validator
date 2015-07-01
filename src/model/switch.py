@@ -263,20 +263,23 @@ class Switch():
 
         return pred_transfer_traffic
 
-    def update_port_transfer_traffic(self, node):
+    def update_port_transfer_traffic(self, port):
 
-        node_preds = self.g.predecessors(node.port_id)
+        node_preds = self.g.predecessors(port.port_id)
 
         # But this could have fail-over consequences for this port's predecessors' traffic elements
         for pred_id in node_preds:
             pred = self.get_port(pred_id)
-            edge_data = self.g.get_edge_data(pred_id, node.port_id)["edge_data"]
+            edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
 
             for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
                     in edge_data.edge_data_list:
 
                 if edge_action:
                     edge_action.perform_edge_failover()
+
+
+                # As a result of the edge failures, some traffic elements will need to be yanked out of because they
 
             # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
             #self.update_pred_transfer_traffic(pred)

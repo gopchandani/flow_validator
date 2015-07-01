@@ -12,7 +12,6 @@ class TrafficElement():
 
         self.traffic = None
         self.port = None
-        self.succ_traffic_element = None
 
         self.switch_modifications = {}
         self.written_modifications = {}
@@ -41,17 +40,6 @@ class TrafficElement():
             return str(id(self)) + "@" + self.port.port_id
         else:
             return str(id(self)) + "@NONE"
-
-    def get_port_path_str(self):
-
-        port_path_str = self.port.port_id + "(" + str(id(self)) + ")"
-        trav = self.succ_traffic_element
-
-        while trav != None:
-            port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
-            trav = trav.succ_traffic_element
-
-        return port_path_str
 
     def set_match_field_element(self, key, value=None, is_wildcard=False, exception=False):
 
@@ -210,9 +198,6 @@ class TrafficElement():
         orig_traffic_element.output_action_type = self.output_action_type
         orig_traffic_element.switch_modifications = self.switch_modifications
 
-        # This newly minted te depends on the succ_traffic_element
-        orig_traffic_element.succ_traffic_element = self.succ_traffic_element
-
         # Copy these from self
         orig_traffic_element.port = self.port
 
@@ -330,9 +315,6 @@ class Traffic():
                     ei.output_action_type = e_in.output_action_type
                     ei.switch_modifications = e_in.switch_modifications
 
-                    # Establish that the resulting ei is based on e_in
-                    ei.succ_traffic_element = e_in
-
         return traffic_intersection
 
     # Computes a difference between two traffic instances and if they have changed.
@@ -355,29 +337,6 @@ class Traffic():
             union_te.traffic = self
             self.traffic_elements.append(union_te)
         return self
-
-    def pipe_welding(self, now_admitted_traffic):
-
-        # Check if this existing_te can be taken even partially by any of the candidates
-        # TODO: This does not handle left-over cases when parts of the existing_te are taken by multiple candidate_te
-
-        #print "pipe_welding has:", len(self.traffic_elements), "existing match elements to take care of..."
-
-        for existing_te in self.traffic_elements:
-            existing_te_welded = False
-            for candidate_te in now_admitted_traffic.traffic_elements:
-
-                if candidate_te.is_subset(existing_te):
-                    existing_te.written_modifications.update(candidate_te.written_modifications)
-                    existing_te.output_action_type = candidate_te.output_action_type
-                    existing_te.switch_modifications = candidate_te.switch_modifications
-                    existing_te.succ_traffic_element = candidate_te.succ_traffic_element
-                    existing_te_welded = True
-                    break
-
-            # If none of the candidate_te took existing_te, stop the chain...
-            if not existing_te_welded:
-                existing_te.succ_traffic_element = None
 
     def get_orig_traffic(self, modifications=None):
 
