@@ -263,33 +263,18 @@ class Switch():
 
         return pred_transfer_traffic
 
-    def update_port_transfer_traffic(self, port):
 
-        node_preds = self.g.predecessors(port.port_id)
+    # This one executes Step 1 and computes exactly what traffic it is (per-destination), that is being transferred
+    # via this port after all the changes that have happened in the graph.
+    # These changes can include:
+    #  -- Addition/Removal of physical edges
+    #  -- Addition/Removal of rules inside the table port
 
-        # But this could have fail-over consequences for this port's predecessors' traffic elements
-        for pred_id in node_preds:
-            pred = self.get_port(pred_id)
-            edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
+    def update_port_transfer_traffic(self, port, event_type=None):
 
-            for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
-                    in edge_data.edge_data_list:
-
-                if edge_action:
-                    edge_action.perform_edge_failover()
-
-
-                # As a result of the edge failures, some traffic elements will need to be yanked out of because they
-
-            # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
-            #self.update_pred_transfer_traffic(pred)
-
-    # def update_pred_transfer_traffic(self, curr):
-    #
-    #     # This needs to be done for each destination for which curr holds transfer_traffic
-    #     for dst in curr.transfer_traffic:
-    #
-    #         # First compute what the transfer_traffic for this dst looks like right now after edge status changes...
+        # 1. Compute What is being admitted per destination here, now, based on event_type
+        for dst in port.transfer_traffic:
+            pass
     #         now_transfer_traffic = Traffic()
     #         successors = self.g.successors(curr.port_id)
     #         for succ_id in successors:
@@ -298,5 +283,21 @@ class Switch():
     #             t = self.compute_edge_transfer_traffic(curr.transfer_traffic[dst], edge_data)
     #             t.set_port(curr)
     #             now_transfer_traffic.union(t)
-    #
-    #         curr.transfer_traffic[dst].pipe_welding(now_transfer_traffic)
+
+        # 2. But this could have fail-over consequences for this port's predecessors' traffic elements
+        node_preds = self.g.predecessors(port.port_id)
+        for pred_id in node_preds:
+            pred = self.get_port(pred_id)
+                        
+            edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
+
+            for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
+                    in edge_data.edge_data_list:
+
+                if edge_action:
+                    edge_action.perform_edge_failover()
+
+                # As a result of the edge failures, some traffic elements will need to be yanked out of because they
+
+            # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
+            #self.update_pred_transfer_traffic(pred)
