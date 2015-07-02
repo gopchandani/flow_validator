@@ -318,15 +318,21 @@ class Traffic():
         return traffic_intersection
 
     # Computes a difference between two traffic instances and if they have changed.
+    # Computes A - B, where A is in_traffic and B is self
     def compute_diff_traffic(self, in_traffic):
 
         diff_traffic = Traffic()
 
-        for self_te in self.traffic_elements:
-            for in_te in in_traffic.traffic_elements:
-                diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
-                if diff_traffic_elements:
-                    diff_traffic.traffic_elements.extend(diff_traffic_elements)
+        for in_te in in_traffic.traffic_elements:
+
+            if self.traffic_elements:
+
+                for self_te in self.traffic_elements:
+                    diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
+                    if diff_traffic_elements:
+                        diff_traffic.traffic_elements.extend(diff_traffic_elements)
+            else:
+                diff_traffic.traffic_elements.append(in_te)
 
         return diff_traffic
 

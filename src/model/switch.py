@@ -187,14 +187,30 @@ class Switch():
     def account_port_transfer_traffic(self, port, propagating_traffic, succ, dst_port):
 
         traffic_to_propagate = None
-        curr_succ_dst_traffic = None
 
         # If the traffic at this port already exist for this dst-succ combination,
         # Grab it, compute delta with what is being propagated and fill up the gaps
         try:
-            curr_succ_dst_traffic = port.transfer_traffic[dst_port][succ]
-            traffic_to_propagate = curr_succ_dst_traffic.compute_diff_traffic(propagating_traffic)
-            port.transfer_traffic[dst_port][succ].union(traffic_to_propagate)
+            total_traffic_before_changes = Traffic()
+            for succ in port.transfer_traffic[dst_port]:
+                total_traffic_before_changes.union(port.transfer_traffic[dst_port][succ])
+
+            additional_traffic = total_traffic_before_changes.compute_diff_traffic(propagating_traffic)
+            reduced_traffic = propagating_traffic.compute_diff_traffic(total_traffic_before_changes)
+
+            if not additional_traffic.is_empty():
+                port.transfer_traffic[dst_port][succ].union(additional_traffic)
+
+            if not reduced_traffic.is_empty():
+                port.transfer_traffic[dst_port][succ] = reduced_traffic.compute_diff_traffic(port.transfer_traffic[dst_port][succ])
+
+            #port.transfer_traffic[dst_port][succ].union(additional_traffic)
+
+            total_traffic_after_changes = Traffic()
+            for succ in port.transfer_traffic[dst_port]:
+                total_traffic_after_changes.union(port.transfer_traffic[dst_port][succ])
+
+            traffic_to_propagate = total_traffic_after_changes
 
         # If there is no traffic for this dst-succ combination prior to this propagation
         # Setup a traffic object, store it and propagate it no need to compute any delta.
