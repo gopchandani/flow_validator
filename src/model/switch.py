@@ -176,7 +176,7 @@ class Switch():
             self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p)
 
     def print_paths(self, src_p, dst_p, path_str=""):
-        tt = src_p.transfer_traffic[dst_p.port_id]
+        tt = src_p.transfer_traffic[dst_p]
 
         for succ_p in tt:
             if succ_p:
@@ -192,15 +192,15 @@ class Switch():
         # If the traffic at this port already exist for this dst-succ combination,
         # Grab it, compute delta with what is being propagated and fill up the gaps
         try:
-            curr_succ_dst_traffic = port.transfer_traffic[dst_port.port_id][succ]
+            curr_succ_dst_traffic = port.transfer_traffic[dst_port][succ]
             traffic_to_propagate = curr_succ_dst_traffic.compute_diff_traffic(propagating_traffic)
-            port.transfer_traffic[dst_port.port_id][succ].union(traffic_to_propagate)
+            port.transfer_traffic[dst_port][succ].union(traffic_to_propagate)
 
         # If there is no traffic for this dst-succ combination prior to this propagation
         # Setup a traffic object, store it and propagate it no need to compute any delta.
         except KeyError:
-            port.transfer_traffic[dst_port.port_id][succ] = Traffic()
-            port.transfer_traffic[dst_port.port_id][succ].union(propagating_traffic)
+            port.transfer_traffic[dst_port][succ] = Traffic()
+            port.transfer_traffic[dst_port][succ].union(propagating_traffic)
             traffic_to_propagate = propagating_traffic
 
         return traffic_to_propagate
@@ -263,7 +263,6 @@ class Switch():
 
         return pred_transfer_traffic
 
-
     # This one executes Step 1 and computes exactly what traffic it is (per-destination), that is being transferred
     # via this port after all the changes that have happened in the graph.
     # These changes can include:
@@ -274,6 +273,8 @@ class Switch():
 
         # The cardinal processing is per-destination
         for dst in port.transfer_traffic:
+
+            print dst, type(dst)
 
             # If a port goes down, go through all the Traffic from its predecessor ports and
             # 1. remove traffic that goes through this port

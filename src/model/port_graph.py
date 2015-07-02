@@ -38,8 +38,7 @@ class PortGraph:
         for src_port_number in sw.ports:
             src_p = self.get_port(self.get_incoming_port_id(sw.node_id, src_port_number))
 
-            for dst_p_id in src_p.transfer_traffic:
-                dst_p = self.get_port(dst_p_id)
+            for dst_p in src_p.transfer_traffic:
 
                 # Don't add looping edges
                 if src_p.port_number == dst_p.port_number:
@@ -47,7 +46,7 @@ class PortGraph:
 
                 sw.print_paths(src_p, dst_p, src_p.port_id)
 
-                traffic_filter = src_p.transfer_traffic[dst_p_id]
+                traffic_filter = src_p.transfer_traffic[dst_p]
                 total_traffic = Traffic()
                 for succ in traffic_filter:
                     total_traffic.union(traffic_filter[succ])
@@ -179,7 +178,7 @@ class PortGraph:
             else:
                 print path_str
 
-    def account_port_transfer_traffic(self, port, propagating_traffic, succ, dst_port):
+    def account_port_admitted_traffic(self, port, propagating_traffic, succ, dst_port):
 
         traffic_to_propagate = None
         curr_succ_dst_traffic = None
@@ -204,7 +203,7 @@ class PortGraph:
 
         #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
-        traffic_to_propagate = self.account_port_transfer_traffic(curr, propagating_traffic, succ, dst_port)
+        traffic_to_propagate = self.account_port_admitted_traffic(curr, propagating_traffic, succ, dst_port)
 
         if not traffic_to_propagate.is_empty():
 
@@ -213,9 +212,9 @@ class PortGraph:
 
                 pred = self.get_port(pred_id)
                 edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
-                pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
-                pred_transfer_traffic.set_port(pred)
+                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
+                pred_admitted_traffic.set_port(pred)
 
                 # Base case: No traffic left to propagate to predecessors
-                if not pred_transfer_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port)
+                if not pred_admitted_traffic.is_empty():
+                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst_port)
