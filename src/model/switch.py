@@ -187,6 +187,8 @@ class Switch():
     def account_port_transfer_traffic(self, port, propagating_traffic, succ, dst_port):
 
         traffic_to_propagate = None
+        additional_traffic = None
+        reduced_traffic = None
 
         # If the traffic at this port already exist for this dst-succ combination,
         # Grab it, compute delta with what is being propagated and fill up the gaps
@@ -218,16 +220,18 @@ class Switch():
             port.transfer_traffic[dst_port][succ] = Traffic()
             port.transfer_traffic[dst_port][succ].union(propagating_traffic)
             traffic_to_propagate = propagating_traffic
+            additional_traffic = traffic_to_propagate
 
-        return traffic_to_propagate
+        return additional_traffic, reduced_traffic, traffic_to_propagate
 
     def compute_port_transfer_traffic(self, curr, propagating_traffic, succ, dst_port):
 
         #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
-        traffic_to_propagate = self.account_port_transfer_traffic(curr, propagating_traffic, succ, dst_port)
+        additional_traffic, reduced_traffic, traffic_to_propagate = \
+            self.account_port_transfer_traffic(curr, propagating_traffic, succ, dst_port)
 
-        if not traffic_to_propagate.is_empty():
+        if not additional_traffic.is_empty() or not reduced_traffic.is_empty():
 
             # Recursively call myself at each of my predecessors in the port graph
             for pred_id in self.g.predecessors_iter(curr.port_id):
