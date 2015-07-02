@@ -274,8 +274,6 @@ class Switch():
         # The cardinal processing is per-destination
         for dst in port.transfer_traffic:
 
-            print dst, type(dst)
-
             # If a port goes down, go through all the Traffic from its predecessor ports and
             # 1. remove traffic that goes through this port
             # 2. perform edge_failover
@@ -293,9 +291,11 @@ class Switch():
                             in edge_data.edge_data_list:
 
                         if edge_action:
-                            failover_port = edge_action.perform_edge_failover()
+                            failover_port_number = edge_action.perform_edge_failover()
+                            if failover_port_number:
+                                failover_port = self.get_port(self.get_outgoing_port_id(self.node_id,
+                                                                                        failover_port_number))
 
-                            if failover_port:
                                 self.compute_port_transfer_traffic(pred, total_traffic, failover_port, dst)
 
                     #  and propagate it to the predecessors
