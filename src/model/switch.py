@@ -270,7 +270,12 @@ class Switch():
     #  -- Addition/Removal of physical edges
     #  -- Addition/Removal of rules inside the table port
 
-    def update_port_transfer_traffic(self, port, event_type=None):
+    def update_port_transfer_traffic(self, port, event_type):
+
+        if event_type == "port_down":
+            pass
+        elif event_type == "port_up":
+            pass
 
         # 1. Compute What is being admitted per destination here, now, based on event_type
         for dst in port.transfer_traffic:
@@ -288,7 +293,7 @@ class Switch():
         node_preds = self.g.predecessors(port.port_id)
         for pred_id in node_preds:
             pred = self.get_port(pred_id)
-                        
+
             edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
 
             for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \

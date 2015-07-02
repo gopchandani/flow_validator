@@ -53,11 +53,6 @@ class PortGraph:
                     total_traffic.union(traffic_filter[succ])
                 self.add_edge(src_p, dst_p, total_traffic)
 
-    def update_switch_transfer_function(self, sw, affected_port=None):
-
-        if affected_port:
-            sw.update_port_transfer_traffic(affected_port)
-
     def init_port_graph(self):
 
         # Add a port for controller
@@ -108,8 +103,6 @@ class PortGraph:
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(src_port.port_id, dst_port.port_id)
 
-        self.update_switch_transfer_function(src_port.sw, src_port)
-
     def init_global_controller_port(self):
         cp = Port(None, port_type="controller", port_id="4294967293")
         self.add_port(cp)
@@ -150,6 +143,9 @@ class PortGraph:
         from_port.state = "down"
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
+
+        from_port.sw.update_port_transfer_traffic(from_port, "port_down")
+        to_port.sw.update_port_transfer_traffic(to_port, "port_down")
 
     def compute_edge_admitted_traffic(self, curr_admitted_traffic, edge_data):
 
