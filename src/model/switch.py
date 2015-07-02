@@ -272,10 +272,16 @@ class Switch():
 
     def update_port_transfer_traffic(self, port, event_type):
 
+        # If a port goes down, go through all the Traffic for all destinations from its predecessor ports and remove
+        # traffic that goes through it.
         if event_type == "port_down":
             pass
         elif event_type == "port_up":
             pass
+
+        # For each predecessor, compute what traffic is being admitted now
+
+        # Propagate that traffic
 
         # 1. Compute What is being admitted per destination here, now, based on event_type
         for dst in port.transfer_traffic:
