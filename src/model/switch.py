@@ -272,43 +272,29 @@ class Switch():
 
     def update_port_transfer_traffic(self, port, event_type):
 
-        # If a port goes down, go through all the Traffic for all destinations from its predecessor ports and remove
-        # traffic that goes through it.
-        if event_type == "port_down":
-            pass
-        elif event_type == "port_up":
-            pass
-
-        # For each predecessor, compute what traffic is being admitted now
-
-        # Propagate that traffic
-
-        # 1. Compute What is being admitted per destination here, now, based on event_type
+        # The cardinal processing is per-destination
         for dst in port.transfer_traffic:
-            pass
-    #         now_transfer_traffic = Traffic()
-    #         successors = self.g.successors(curr.port_id)
-    #         for succ_id in successors:
-    #             succ = self.get_port(succ_id)
-    #             edge_data = self.g.get_edge_data(curr.port_id, succ.port_id)["edge_data"]
-    #             t = self.compute_edge_transfer_traffic(curr.transfer_traffic[dst], edge_data)
-    #             t.set_port(curr)
-    #             now_transfer_traffic.union(t)
 
-        # 2. But this could have fail-over consequences for this port's predecessors' traffic elements
-        node_preds = self.g.predecessors(port.port_id)
-        for pred_id in node_preds:
-            pred = self.get_port(pred_id)
+            # If a port goes down, go through all the Traffic from its predecessor ports and
+            # 1. remove traffic that goes through this port
+            # 2. perform edge_failover
 
-            edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
+            if event_type == "port_down":
 
-            for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
-                    in edge_data.edge_data_list:
+                # Compute what traffic is being admitted here now
+                total_traffic = Traffic()
 
-                if edge_action:
-                    edge_action.perform_edge_failover()
+                for pred_id in self.g.predecessors(port.port_id):
+                    pred = self.get_port(pred_id)
+                    edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
+                    for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
+                            in edge_data.edge_data_list:
 
-                # As a result of the edge failures, some traffic elements will need to be yanked out of because they
+                        if edge_action:
+                            edge_action.perform_edge_failover()
 
-            # But now the transfer_traffic on this port and its dependents needs to be modified to reflect the reality
-            #self.update_pred_transfer_traffic(pred)
+                    #  and propagate it to the predecessors
+                    self.compute_port_transfer_traffic(pred, total_traffic, port, dst)
+
+            elif event_type == "port_up":
+                pass
