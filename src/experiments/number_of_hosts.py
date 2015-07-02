@@ -59,11 +59,10 @@ class NumberOfHosts(Experiment):
 
                 fv.validate_all_host_pair_reachability()
 
-                # for (node1, node2) in self.mm.synthesis.primary_path_edges:
-                #
-                #         fv.port_graph.remove_node_graph_edge(node1, node2)
-                #         fv.validate_all_host_pair_reachability()
-                #         fv.port_graph.add_node_graph_edge(node1, node2)
+                for (node1, node2) in self.mm.synthesis.primary_path_edges:
+                        fv.port_graph.remove_node_graph_edge(node1, node2)
+                        fv.validate_all_host_pair_reachability()
+                        fv.port_graph.add_node_graph_edge(node1, node2)
 
                 fv.de_init_port_graph()
 
@@ -101,8 +100,8 @@ def main():
 
     num_iterations = 1#10
     total_number_of_hosts = [2]#, 6, 8, 10]# 14, 16])#, 18, 20]
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
     experiment_switches = ["s1", "s2"]
 
