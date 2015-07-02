@@ -287,11 +287,15 @@ class Switch():
                 for pred_id in self.g.predecessors(port.port_id):
                     pred = self.get_port(pred_id)
                     edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
+
                     for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
                             in edge_data.edge_data_list:
 
                         if edge_action:
-                            edge_action.perform_edge_failover()
+                            failover_port = edge_action.perform_edge_failover()
+
+                            if failover_port:
+                                self.compute_port_transfer_traffic(pred, total_traffic, failover_port, dst)
 
                     #  and propagate it to the predecessors
                     self.compute_port_transfer_traffic(pred, total_traffic, port, dst)

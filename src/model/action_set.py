@@ -111,6 +111,8 @@ class Action():
 
     def perform_edge_failover(self):
 
+        failover_port = None
+
         # Do I belong to a failover group, if so, only then a failover might exist...
         if self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF:
 
@@ -130,9 +132,6 @@ class Action():
                     for action in first_live_bucket.action_list:
                         action.is_active = True
 
-                    # keep track of which bucket is currently active
-                    self.bucket.group.active_bucket = first_live_bucket
-
                 # Otherwise, ensure that my bucket's actions are active and currently active bucket's actions are inactive
                 else:
                     for action in self.bucket.action_list:
@@ -143,8 +142,8 @@ class Action():
                         for action in self.bucket.group.active_bucket.action_list:
                             action.is_active = False
 
-                    # keep track of which bucket is currently active
-                    self.bucket.group.active_bucket = first_live_bucket
+                # keep track of which bucket is currently active
+                self.bucket.group.active_bucket = first_live_bucket
 
             # If there is no live bucket, then set actions in the current active bucket accordingly
             else:
