@@ -11,7 +11,6 @@ class TrafficElement():
     def __init__(self, init_match=None, init_field_wildcard=False):
 
         self.traffic = None
-        self.port = None
 
         self.switch_modifications = {}
         self.written_modifications = {}
@@ -34,12 +33,6 @@ class TrafficElement():
             for field_name in field_names:
                 self.match_fields[field_name] = IntervalTree()
                 self.set_match_field_element(field_name, is_wildcard=True)
-
-    def __str__(self):
-        if self.port:
-            return str(id(self)) + "@" + self.port.port_id
-        else:
-            return str(id(self)) + "@NONE"
 
     def set_match_field_element(self, key, value=None, is_wildcard=False, exception=False):
 
@@ -198,9 +191,6 @@ class TrafficElement():
         orig_traffic_element.output_action_type = self.output_action_type
         orig_traffic_element.switch_modifications = self.switch_modifications
 
-        # Copy these from self
-        orig_traffic_element.port = self.port
-
         return orig_traffic_element
 
     def set_fields_with_match_json(self, match_json):
@@ -352,10 +342,6 @@ class Traffic():
             orig_te.traffic = orig_traffic
             orig_traffic.traffic_elements.append(orig_te)
         return orig_traffic
-
-    def set_port(self, port):
-        for te in self.traffic_elements:
-            te.port = port
 
     def is_field_wildcard(self, field_name):
         retval = True

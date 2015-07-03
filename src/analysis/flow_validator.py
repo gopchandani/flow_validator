@@ -44,7 +44,6 @@ class FlowValidator:
             admitted_traffic.set_field("ethernet_type", 0x0800)
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
             admitted_traffic.set_field("ethernet_destination", dst_mac_int)
-            admitted_traffic.set_port(host_obj.switch_egress_port)
 
             self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
                                                      admitted_traffic,

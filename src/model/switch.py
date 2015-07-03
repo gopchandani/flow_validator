@@ -170,7 +170,6 @@ class Switch():
             out_p = self.get_port(out_p_id)
 
             transfer_traffic = Traffic(init_wildcard=True)
-            transfer_traffic.set_port(out_p)
             #out_p.transfer_traffic[out_p_id] = transfer_traffic
 
             self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p)
@@ -226,24 +225,30 @@ class Switch():
 
     def compute_port_transfer_traffic(self, curr, propagating_traffic, succ, dst_port):
 
-        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, propagating_traffic, succ, dst_port)
 
-        if not additional_traffic.is_empty() or not reduced_traffic.is_empty():
+        if not additional_traffic.is_empty():
 
-            # Recursively call myself at each of my predecessors in the port graph
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
                 pred = self.get_port(pred_id)
                 edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
                 pred_transfer_traffic = self.compute_edge_transfer_traffic(traffic_to_propagate, edge_data)
-                pred_transfer_traffic.set_port(pred)
 
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_transfer_traffic.is_empty():
                     self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port)
+
+        if not reduced_traffic.is_empty():
+
+            for pred_id in self.g.predecessors_iter(curr.port_id):
+
+                pred = self.get_port(pred_id)
+                pred_transfer_traffic = traffic_to_propagate
+                self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port)
 
     def compute_edge_transfer_traffic(self, traffic_to_propagate, edge_data):
 
@@ -320,6 +325,17 @@ class Switch():
 
                     #  and propagate it to the predecessors
                     self.compute_port_transfer_traffic(pred, total_traffic, port, dst)
+
+                    for src_port_number in self.ports:
+                        src_p = self.get_port(self.get_incoming_port_id(self.node_id, src_port_number))
+
+                        for dst_p in src_p.transfer_traffic:
+
+                            # Don't add looping edges
+                            if src_p.port_number == dst_p.port_number:
+                                continue
+
+                            self.print_paths(src_p, dst_p, src_p.port_id)
 
             elif event_type == "port_up":
                 pass

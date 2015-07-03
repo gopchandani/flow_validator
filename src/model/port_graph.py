@@ -213,7 +213,6 @@ class PortGraph:
                 pred = self.get_port(pred_id)
                 edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
-                pred_admitted_traffic.set_port(pred)
 
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_admitted_traffic.is_empty():
