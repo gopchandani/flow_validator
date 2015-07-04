@@ -317,10 +317,13 @@ class Traffic():
 
             if self.traffic_elements:
 
+                diff_traffic_elements = []
+
                 for self_te in self.traffic_elements:
-                    diff_traffic_elements = self_te.get_diff_traffic_elements(in_te)
-                    if diff_traffic_elements:
-                        diff_traffic.traffic_elements.extend(diff_traffic_elements)
+                    diff_traffic_elements.extend(self_te.get_diff_traffic_elements(in_te))
+
+                if diff_traffic_elements:
+                    diff_traffic.traffic_elements.extend(diff_traffic_elements)
             else:
                 diff_traffic.traffic_elements.append(in_te)
 

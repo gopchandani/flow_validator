@@ -193,8 +193,8 @@ class Switch():
         # Grab it, compute delta with what is being propagated and fill up the gaps
         try:
             total_traffic_before_changes = Traffic()
-            for succ in port.transfer_traffic[dst_port]:
-                total_traffic_before_changes.union(port.transfer_traffic[dst_port][succ])
+            for sp in port.transfer_traffic[dst_port]:
+                total_traffic_before_changes.union(port.transfer_traffic[dst_port][sp])
 
             additional_traffic = total_traffic_before_changes.compute_diff_traffic(propagating_traffic)
             reduced_traffic = propagating_traffic.compute_diff_traffic(total_traffic_before_changes)
