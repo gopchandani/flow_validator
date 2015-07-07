@@ -245,7 +245,6 @@ class Switch():
         if not reduced_traffic.is_empty():
 
             for pred_id in self.g.predecessors_iter(curr.port_id):
-
                 pred = self.get_port(pred_id)
                 pred_transfer_traffic = traffic_to_propagate
                 self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port)
