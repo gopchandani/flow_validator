@@ -314,13 +314,19 @@ class Traffic():
         diff_traffic = Traffic()
 
         for in_te in in_traffic.traffic_elements:
-
             if self.traffic_elements:
-
                 diff_traffic_elements = []
-
+                dte = in_te
                 for self_te in self.traffic_elements:
-                    diff_traffic_elements.extend(self_te.get_diff_traffic_elements(in_te))
+                    dte = self_te.get_diff_traffic_elements(dte)
+                    if dte:
+                        if len(dte) > 1:
+                            print len(dte)
+                        dte = dte[0]
+                    else:
+                        break
+                if dte:
+                    diff_traffic_elements.extend(dte)
 
                 if diff_traffic_elements:
                     diff_traffic.traffic_elements.extend(diff_traffic_elements)
