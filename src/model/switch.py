@@ -211,6 +211,10 @@ class Switch():
             for succ in port.transfer_traffic[dst_port]:
                 total_traffic_after_changes.union(port.transfer_traffic[dst_port][succ])
 
+            # If nothing is left behind then clean up the dictionary.
+            if total_traffic_after_changes.is_empty():
+                del port.transfer_traffic[dst_port]
+
             traffic_to_propagate = total_traffic_after_changes
 
         # If there is no traffic for this dst-succ combination prior to this propagation
@@ -225,7 +229,7 @@ class Switch():
 
     def compute_port_transfer_traffic(self, curr, propagating_traffic, succ, dst_port):
 
-        print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, propagating_traffic, succ, dst_port)
