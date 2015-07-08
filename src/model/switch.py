@@ -306,20 +306,23 @@ class Switch():
     #  -- Addition/Removal of physical edges
     #  -- Addition/Removal of rules inside the table port
 
-    def update_port_transfer_traffic(self, port, event_type):
+    def update_port_transfer_traffic(self, port_num, event_type):
 
-        # The cardinal processing is per-destination
-        for dst in port.transfer_traffic:
+        outgoing_port = self.get_port(self.get_outgoing_port_id(self.node_id, port_num))
+        incoming_port = self.get_port(self.get_incoming_port_id(self.node_id, port_num))
 
-            # If a port goes down, go through all the Traffic from its predecessor ports and
-            # 1. remove traffic that goes through this port
-            # 2. perform edge_failover
+        # If a port goes down, go through all the Traffic from its predecessor ports and
+        # 1. remove traffic that goes through this port
+        # 2. perform edge_failover
 
-            if event_type == "port_down":
+        if event_type == "port_down":
 
-                for pred_id in self.g.predecessors(port.port_id):
+            # The cardinal processing is per-destination
+            for dst in outgoing_port.transfer_traffic:
+
+                for pred_id in self.g.predecessors(outgoing_port.port_id):
                     pred = self.get_port(pred_id)
-                    edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
+                    edge_data = self.g.get_edge_data(pred_id, outgoing_port.port_id)["edge_data"]
 
                     for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
                             in edge_data.edge_data_list:
@@ -333,18 +336,25 @@ class Switch():
                                 self.compute_port_transfer_traffic(pred, edge_filter_match, failover_port, failover_port)
 
                     #  and propagate empty traffic it to the predecessors
-                    self.compute_port_transfer_traffic(pred, Traffic(), port, dst)
+                    self.compute_port_transfer_traffic(pred, Traffic(), outgoing_port, dst)
 
-                    for src_port_number in self.ports:
-                        src_p = self.get_port(self.get_incoming_port_id(self.node_id, src_port_number))
+            # All outgoing transfer traffic from this port is gone now.
+            incoming_port.transfer_traffic.clear()
 
-                        for dst_p in src_p.transfer_traffic:
+            self.print_transfer_function()
 
-                            # Don't add looping edges
-                            if src_p.port_number == dst_p.port_number:
-                                continue
+        elif event_type == "port_up":
+            pass
 
-                            self.print_paths(src_p, dst_p, src_p.port_id)
+    def print_transfer_function(self):
 
-            elif event_type == "port_up":
-                pass
+        for src_port_number in self.ports:
+            src_p = self.get_port(self.get_incoming_port_id(self.node_id, src_port_number))
+
+            for dst_p in src_p.transfer_traffic:
+
+                # Don't add looping edges
+                if src_p.port_number == dst_p.port_number:
+                    continue
+
+                self.print_paths(src_p, dst_p, src_p.port_id)

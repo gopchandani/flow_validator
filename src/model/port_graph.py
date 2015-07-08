@@ -29,6 +29,8 @@ class PortGraph:
 
     def add_switch_transfer_function(self, sw):
 
+        sw.print_transfer_function()
+
         # First grab the port objects from the sw's node graph and add them to port_graph's node graph
         for port in sw.ports:
             self.add_port(sw.get_port(self.get_incoming_port_id(sw.node_id, port)))
@@ -43,8 +45,6 @@ class PortGraph:
                 # Don't add looping edges
                 if src_p.port_number == dst_p.port_number:
                     continue
-
-                sw.print_paths(src_p, dst_p, src_p.port_id)
 
                 traffic_filter = src_p.transfer_traffic[dst_p]
                 total_traffic = Traffic()
@@ -133,6 +133,7 @@ class PortGraph:
 
         from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_port_dict[node1_id]))
         to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_port_dict[node2_id]))
+
         from_port.state = "down"
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
@@ -143,12 +144,11 @@ class PortGraph:
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
-        outgoing_port_1 = self.get_port(self.get_outgoing_port_id(node1_id, edge_port_dict[node1_id]))
-        outgoing_port_2 = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
+        sw1 = self.network_graph.get_node_object(node1_id)
+        sw2 = self.network_graph.get_node_object(node2_id)
 
-        outgoing_port_1.sw.update_port_transfer_traffic(outgoing_port_1, "port_down")
-        outgoing_port_2.sw.update_port_transfer_traffic(outgoing_port_2, "port_down")
-        pass
+        sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_down")
+        sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_down")
 
     def compute_edge_admitted_traffic(self, curr_admitted_traffic, edge_data):
 
