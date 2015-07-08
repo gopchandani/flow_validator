@@ -143,8 +143,12 @@ class PortGraph:
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
-        from_port.sw.update_port_transfer_traffic(from_port, "port_down")
-        to_port.sw.update_port_transfer_traffic(to_port, "port_down")
+        outgoing_port_1 = self.get_port(self.get_outgoing_port_id(node1_id, edge_port_dict[node1_id]))
+        outgoing_port_2 = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
+
+        outgoing_port_1.sw.update_port_transfer_traffic(outgoing_port_1, "port_down")
+        outgoing_port_2.sw.update_port_transfer_traffic(outgoing_port_2, "port_down")
+        pass
 
     def compute_edge_admitted_traffic(self, curr_admitted_traffic, edge_data):
 

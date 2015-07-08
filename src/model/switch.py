@@ -189,41 +189,47 @@ class Switch():
         additional_traffic = None
         reduced_traffic = None
 
-        # If the traffic at this port already exist for this dst-succ combination,
-        # Grab it, compute delta with what is being propagated and fill up the gaps
+        # Keep track of what traffic looks like before any changes occur
+        traffic_before_changes = Traffic()
+        for sp in port.transfer_traffic[dst_port]:
+            traffic_before_changes.union(port.transfer_traffic[dst_port][sp])
+
+        # Compute what additional traffic is being admitted overall
+        additional_traffic = traffic_before_changes.compute_diff_traffic(propagating_traffic)
+
+        # Do the changes...
         try:
-            total_traffic_before_changes = Traffic()
-            for sp in port.transfer_traffic[dst_port]:
-                total_traffic_before_changes.union(port.transfer_traffic[dst_port][sp])
+            # First accumulate any more traffic that has arrived from this sucessor
+            more_from_succ = port.transfer_traffic[dst_port][succ].compute_diff_traffic(propagating_traffic)
+            if not more_from_succ.is_empty():
+                port.transfer_traffic[dst_port][succ].union(more_from_succ)
 
-            additional_traffic = total_traffic_before_changes.compute_diff_traffic(propagating_traffic)
-            reduced_traffic = propagating_traffic.compute_diff_traffic(total_traffic_before_changes)
+            # Then get rid of traffic that this particular successor does not admit anymore
+            less_from_succ = propagating_traffic.compute_diff_traffic(port.transfer_traffic[dst_port][succ])
+            if not less_from_succ.is_empty():
+                port.transfer_traffic[dst_port][succ] = less_from_succ.compute_diff_traffic(port.transfer_traffic[dst_port][succ])
+                if port.transfer_traffic[dst_port][succ].is_empty():
+                    del port.transfer_traffic[dst_port][succ]
 
-            if not additional_traffic.is_empty():
-                port.transfer_traffic[dst_port][succ].union(additional_traffic)
-
-            if not reduced_traffic.is_empty():
-                port.transfer_traffic[dst_port][succ] = reduced_traffic.compute_diff_traffic(port.transfer_traffic[dst_port][succ])
-
-            #port.transfer_traffic[dst_port][succ].union(additional_traffic)
-
-            total_traffic_after_changes = Traffic()
-            for succ in port.transfer_traffic[dst_port]:
-                total_traffic_after_changes.union(port.transfer_traffic[dst_port][succ])
-
-            # If nothing is left behind then clean up the dictionary.
-            if total_traffic_after_changes.is_empty():
-                del port.transfer_traffic[dst_port]
-
-            traffic_to_propagate = total_traffic_after_changes
-
-        # If there is no traffic for this dst-succ combination prior to this propagation
-        # Setup a traffic object, store it and propagate it no need to compute any delta.
+        # If there is no traffic for this dst-succ combination prior to this propagation, 
+        # setup a traffic object for successor
         except KeyError:
             port.transfer_traffic[dst_port][succ] = Traffic()
             port.transfer_traffic[dst_port][succ].union(propagating_traffic)
-            traffic_to_propagate = propagating_traffic
-            additional_traffic = traffic_to_propagate
+
+        # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
+        traffic_after_changes = Traffic()
+        for sp in port.transfer_traffic[dst_port]:
+            traffic_after_changes.union(port.transfer_traffic[dst_port][sp])
+
+        # These are used to decide if a propagation needs to happen at all
+        reduced_traffic = propagating_traffic.compute_diff_traffic(traffic_after_changes)
+
+        # If nothing is left behind then clean up the dictionary.
+        if traffic_after_changes.is_empty():
+            del port.transfer_traffic[dst_port]
+
+        traffic_to_propagate = traffic_after_changes
 
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
@@ -308,9 +314,6 @@ class Switch():
 
             if event_type == "port_down":
 
-                # Compute what traffic is being admitted here now
-                total_traffic = Traffic()
-
                 for pred_id in self.g.predecessors(port.port_id):
                     pred = self.get_port(pred_id)
                     edge_data = self.g.get_edge_data(pred_id, port.port_id)["edge_data"]
@@ -324,10 +327,10 @@ class Switch():
                                 failover_port = self.get_port(self.get_outgoing_port_id(self.node_id,
                                                                                         failover_port_number))
 
-                                self.compute_port_transfer_traffic(pred, total_traffic, failover_port, dst)
+                                self.compute_port_transfer_traffic(pred, edge_filter_match, failover_port, dst)
 
-                    #  and propagate it to the predecessors
-                    self.compute_port_transfer_traffic(pred, total_traffic, port, dst)
+                    #  and propagate empty traffic it to the predecessors
+                    self.compute_port_transfer_traffic(pred, Traffic(), port, dst)
 
                     for src_port_number in self.ports:
                         src_p = self.get_port(self.get_incoming_port_id(self.node_id, src_port_number))
