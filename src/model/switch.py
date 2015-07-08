@@ -195,19 +195,19 @@ class Switch():
             traffic_before_changes.union(port.transfer_traffic[dst_port][sp])
 
         # Compute what additional traffic is being admitted overall
-        additional_traffic = traffic_before_changes.compute_diff_traffic(propagating_traffic)
+        additional_traffic = traffic_before_changes.difference(propagating_traffic)
 
         # Do the changes...
         try:
             # First accumulate any more traffic that has arrived from this sucessor
-            more_from_succ = port.transfer_traffic[dst_port][succ].compute_diff_traffic(propagating_traffic)
+            more_from_succ = port.transfer_traffic[dst_port][succ].difference(propagating_traffic)
             if not more_from_succ.is_empty():
                 port.transfer_traffic[dst_port][succ].union(more_from_succ)
 
             # Then get rid of traffic that this particular successor does not admit anymore
-            less_from_succ = propagating_traffic.compute_diff_traffic(port.transfer_traffic[dst_port][succ])
+            less_from_succ = propagating_traffic.difference(port.transfer_traffic[dst_port][succ])
             if not less_from_succ.is_empty():
-                port.transfer_traffic[dst_port][succ] = less_from_succ.compute_diff_traffic(port.transfer_traffic[dst_port][succ])
+                port.transfer_traffic[dst_port][succ] = less_from_succ.difference(port.transfer_traffic[dst_port][succ])
                 if port.transfer_traffic[dst_port][succ].is_empty():
                     del port.transfer_traffic[dst_port][succ]
 
@@ -223,7 +223,10 @@ class Switch():
             traffic_after_changes.union(port.transfer_traffic[dst_port][sp])
 
         # These are used to decide if a propagation needs to happen at all
-        reduced_traffic = propagating_traffic.compute_diff_traffic(traffic_after_changes)
+        #reduced_traffic = propagating_traffic.difference(traffic_after_changes)
+
+        # Compute what reductions (if any) in traffic has occured due to all the changes
+        reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
 
         # If nothing is left behind then clean up the dictionary.
         if traffic_after_changes.is_empty():
@@ -327,7 +330,7 @@ class Switch():
                                 failover_port = self.get_port(self.get_outgoing_port_id(self.node_id,
                                                                                         failover_port_number))
 
-                                self.compute_port_transfer_traffic(pred, edge_filter_match, failover_port, dst)
+                                self.compute_port_transfer_traffic(pred, edge_filter_match, failover_port, failover_port)
 
                     #  and propagate empty traffic it to the predecessors
                     self.compute_port_transfer_traffic(pred, Traffic(), port, dst)

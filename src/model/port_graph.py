@@ -191,7 +191,7 @@ class PortGraph:
         # Grab it, compute delta with what is being propagated and fill up the gaps
         try:
             curr_succ_dst_traffic = port.admitted_traffic[dst_port.port_id][succ]
-            traffic_to_propagate = curr_succ_dst_traffic.compute_diff_traffic(propagating_traffic)
+            traffic_to_propagate = curr_succ_dst_traffic.difference(propagating_traffic)
             port.admitted_traffic[dst_port.port_id][succ].union(traffic_to_propagate)
 
         # If there is no traffic for this dst-succ combination prior to this propagation

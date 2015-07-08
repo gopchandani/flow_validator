@@ -309,7 +309,7 @@ class Traffic():
 
     # Computes a difference between two traffic instances and if they have changed.
     # Computes A - B, where A is in_traffic and B is self
-    def compute_diff_traffic(self, in_traffic):
+    def difference(self, in_traffic):
 
         diff_traffic = Traffic()
 
@@ -326,7 +326,7 @@ class Traffic():
                         remaining_traffic.traffic_elements.extend(remaining)
                         to_subtract = Traffic()
                         to_subtract.traffic_elements.append(self_te)
-                        remaining_traffic = to_subtract.compute_diff_traffic(remaining_traffic)
+                        remaining_traffic = to_subtract.difference(remaining_traffic)
                         remaining = remaining_traffic.traffic_elements
 
                     elif len(remaining) == 1:
