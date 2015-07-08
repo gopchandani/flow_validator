@@ -111,7 +111,8 @@ class Action():
 
     def perform_edge_failover(self):
 
-        failover_port_number = None
+        muted_port_number = None
+        unmuted_port_number = None
 
         # Do I belong to a failover group, if so, only then a failover might exist...
         if self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF:
@@ -132,17 +133,20 @@ class Action():
                     for action in first_live_bucket.action_list:
                         action.is_active = True
 
-                    failover_port_number = first_live_bucket.watch_port
+                    muted_port_number = self.bucket.watch_port
+                    unmuted_port_number = first_live_bucket.watch_port
 
-                # Otherwise, ensure that my bucket's actions are active and currently active bucket's actions are inactive
+                # Otherwise, I am back in the action,
+                #  ensure that my bucket's actions are active and currently active bucket's actions are inactive
                 else:
                     for action in self.bucket.action_list:
                         action.is_active = True
 
-                    # This a safety check against weird calls to this function
-                    if self.bucket.group.active_bucket != self.bucket:
-                        for action in self.bucket.group.active_bucket.action_list:
-                            action.is_active = False
+                    for action in self.bucket.group.active_bucket.action_list:
+                        action.is_active = False
+
+                    muted_port_number = self.bucket.group.active_bucket.watch_port
+                    unmuted_port_number = self.bucket.watch_port
 
                 # keep track of which bucket is currently active
                 self.bucket.group.active_bucket = first_live_bucket
@@ -152,7 +156,7 @@ class Action():
                 for action in self.bucket.group.active_bucket.bucket.action_list:
                     action.is_active = False
 
-        return failover_port_number
+        return muted_port_number, unmuted_port_number
 
 class ActionSet():
 

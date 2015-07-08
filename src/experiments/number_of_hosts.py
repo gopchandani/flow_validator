@@ -62,7 +62,7 @@ class NumberOfHosts(Experiment):
                 for (node1, node2) in self.mm.synthesis.primary_path_edges:
                         fv.port_graph.remove_node_graph_edge(node1, node2)
                         fv.validate_all_host_pair_reachability()
-                        fv.port_graph.add_node_graph_edge(node1, node2)
+                        fv.port_graph.add_node_graph_edge(node1, node2, updating=True)
 
                 fv.de_init_port_graph()
 

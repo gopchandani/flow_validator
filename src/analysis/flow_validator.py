@@ -95,7 +95,7 @@ class FlowValidator:
                     print "Restoring edge:", edge
 
                     # Add it back
-                    self.port_graph.add_node_graph_edge(edge[0], edge[1])
+                    self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
                     edge_added_back_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
 
                     # the number of elements should be same in three scenarios for each edge

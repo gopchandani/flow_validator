@@ -111,7 +111,7 @@ class PortGraph:
         self.remove_port(cp)
         del cp
 
-    def add_node_graph_edge(self, node1_id, node2_id):
+    def add_node_graph_edge(self, node1_id, node2_id, updating=False):
 
         edge_port_dict = self.network_graph.get_edge_port_dict(node1_id, node2_id)
 
@@ -126,6 +126,12 @@ class PortGraph:
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, Traffic(init_wildcard=True))
+
+        if updating:
+            sw1 = self.network_graph.get_node_object(node1_id)
+            sw2 = self.network_graph.get_node_object(node2_id)
+            sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_up")
+            sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_up")
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
