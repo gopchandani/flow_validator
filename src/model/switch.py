@@ -185,10 +185,6 @@ class Switch():
 
     def account_port_transfer_traffic(self, port, propagating_traffic, succ, dst_port):
 
-        traffic_to_propagate = None
-        additional_traffic = None
-        reduced_traffic = None
-
         # Keep track of what traffic looks like before any changes occur
         traffic_before_changes = Traffic()
         for sp in port.transfer_traffic[dst_port]:
@@ -221,9 +217,6 @@ class Switch():
         traffic_after_changes = Traffic()
         for sp in port.transfer_traffic[dst_port]:
             traffic_after_changes.union(port.transfer_traffic[dst_port][sp])
-
-        # These are used to decide if a propagation needs to happen at all
-        #reduced_traffic = propagating_traffic.difference(traffic_after_changes)
 
         # Compute what reductions (if any) in traffic has occured due to all the changes
         reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
