@@ -331,8 +331,7 @@ class Switch():
                             # Propagate traffic if some port got failed-over-to...
                             muted_port_number, unmuted_port_number = edge_action.perform_edge_failover()
                             if unmuted_port_number:
-                                failover_port = self.get_port(self.get_outgoing_port_id(self.node_id,
-                                                                                        unmuted_port_number))
+                                failover_port = self.get_port(self.get_outgoing_port_id(self.node_id, unmuted_port_number))
 
                                 self.compute_port_transfer_traffic(pred, edge_filter_match, failover_port, failover_port)
 
@@ -356,17 +355,15 @@ class Switch():
                     for edge_filter_match, edge_action, applied_modifications, written_modifications, output_action_type \
                             in edge_data.edge_data_list:
 
+                        #  and propagate traffic it to the predecessors
+                        self.compute_port_transfer_traffic(pred, edge_filter_match, outgoing_port, dst)
+
                         if edge_action:
                             # Propagate empty traffic if some port that was failed-over-to, got muted
                             muted_port_number, unmuted_port_number = edge_action.perform_edge_failover()
                             if muted_port_number:
-                                failover_port = self.get_port(self.get_outgoing_port_id(self.node_id,
-                                                                                        muted_port_number))
-
+                                failover_port = self.get_port(self.get_outgoing_port_id(self.node_id, muted_port_number))
                                 self.compute_port_transfer_traffic(pred, Traffic(), failover_port, failover_port)
-
-                    #  and propagate traffic it to the predecessors
-                    self.compute_port_transfer_traffic(pred, edge_filter_match, outgoing_port, dst)
 
             self.print_transfer_function()
 
