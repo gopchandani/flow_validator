@@ -14,7 +14,10 @@ This README would normally document whatever steps are necessary to get your app
 * sudo pip install networkx
 * sudo pip install netaddr
 * sudo pip install intervaltree
-* Install scipy, numpy and matplotlib (Ubuntu packages python-scipy, python-numpy, python-matplotlib)
+* sudo apt-get install mininet
+* sudo apt-get install python-scipy
+* sudo apt-get install python-numpy
+* sudo apt-get install python-matplotlib
 * Setup PYTHONPATH to src folder: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/
 * Configuration
 * Dependencies
