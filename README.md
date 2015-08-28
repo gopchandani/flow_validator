@@ -15,6 +15,7 @@ This README would normally document whatever steps are necessary to get your app
 * sudo pip install networkx
 * sudo pip install netaddr
 * sudo pip install intervaltree
+* sudo pip install httplib2
 * sudo apt-get install mininet
 * sudo apt-get install python-scipy
 * sudo apt-get install python-numpy
