@@ -10,7 +10,7 @@ This README would normally document whatever steps are necessary to get your app
 
 ### How do I get set up? ###
 
-* Install numpy
+* Install numpy and matplotlib (Ubuntu packages python-numpy, python-matplotlib)
 * Summary of set up
 * Configuration
 * Dependencies
