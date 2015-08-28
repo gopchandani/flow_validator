@@ -26,22 +26,18 @@ class DifferentEdgeFailure(Experiment):
                                                    load_config,
                                                    save_config,
                                                    controller,
-                                                   experiment_switches)
-
+                                                   experiment_switches,
+                                                   1)
 
         self.edges_broken = {}
         self.data["edges_broken"] = self.edges_broken
-
-        if not load_config and save_config:
-            cm = ControllerMan(1, controller=controller)
-            self.controller_port = cm.get_next()
 
     def trigger(self):
 
         self.topo_description = ("ring", 4, 1)
         ng = self.setup_network_graph(self.topo_description)
 
-        for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
+        for (node1, node2) in self.mm.synthesis.primary_path_edges:
             s1 = node1[1:]
             s2 = node2[1:]
             self.data["edges_broken"][s1 + "<->" + s2] = []
@@ -54,14 +50,14 @@ class DifferentEdgeFailure(Experiment):
             fv.initialize_admitted_traffic()
             fv.validate_all_host_pair_reachability()
 
-            for (node1, node2) in self.mm.synthesis_dij.primary_path_edges:
+            for (node1, node2) in self.mm.synthesis.primary_path_edges:
 
                 print "Edge:", node1, "<->", node2
 
                 with Timer(verbose=True) as t:
                     fv.port_graph.remove_node_graph_edge(node1, node2)
-                    #fv.validate_all_host_pair_reachability()
-                    fv.port_graph.add_node_graph_edge(node1, node2)
+                    fv.validate_all_host_pair_reachability()
+                    fv.port_graph.add_node_graph_edge(node1, node2, updating=True)
 
                 s1 = node1[1:]
                 s2 = node2[1:]

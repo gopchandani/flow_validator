@@ -80,11 +80,15 @@ class ControllerMan():
             this_port = self.start_container()
 
         print "Waiting for the controller to get ready for synthesis"
-        time.sleep(240)
+        time.sleep(300)
 
         return this_port
 
     def get_next_ryu(self):
+
+        if self.ryu_proc:
+            self.ryu_proc.kill()
+
         #topo_apps = "ryu.app.rest_topology ryu.app.ws_topology"
         ryu_cmd = ["ryu-manager", "--observe-links",
                    "ryu.app.rest_router",

@@ -151,7 +151,6 @@ class SynthesizeDij():
             intents[key] = defaultdict(int)
             intents[key][intent] = 1
 
-
     def _compute_destination_host_mac_intents(self, h_obj, flow_match, matching_tag):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(h_obj.switch_id, h_obj.node_id)

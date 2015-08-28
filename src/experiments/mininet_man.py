@@ -125,8 +125,8 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
-        self.synthesis_dij.synthesize_all_node_pairs()
+        self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
+        self.synthesis.synthesize_all_node_pairs()
 
         print "Synthesis Completed. Waiting for rules to be detected by controller..."
         time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
@@ -137,10 +137,8 @@ class MininetMan():
 
         print "Synthesizing..."
 
-        #self.synthesis_dij = SynthesizeDij(ng, master_switch=self.topo_name == "linear")
-
-        self.synthesis_dij = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
-        self.synthesis_dij.synthesize_all_node_pairs()
+        self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
+        self.synthesis.synthesize_all_node_pairs()
 
         # self.s1 = self.net.getNodeByName("s1")
         # self.s1.addIntf("s1-eth5", self.s1.newPort())
@@ -163,19 +161,6 @@ class MininetMan():
         self.h1s2 = self.net.getNodeByName("h1s2")
         self.h2s1 = self.net.getNodeByName("h2s1")
         self.h2s2 = self.net.getNodeByName("h2s2")
-
-        # print "MAC: h1s1", self.h1s1.MAC()
-        # print "MAC: h2s1", self.h2s1.MAC()
-        #
-        # print "MAC: h1s2", self.h1s2.MAC()
-        # print "MAC: h2s2", self.h2s2.MAC()
-        #
-        # cmd = "arp -a"
-        # print self.h1s1.cmd(cmd)
-        # cmd = "ping -c3 " + self.h2s1.IP()
-        # print self.h1s1.cmd(cmd)
-
-        self.net.pingAll(self.ping_timeout)
 
         # Start the server at h1s1
         h1s1_output = self.h1s1.cmd("iperf -s -u -i 1 5001&")

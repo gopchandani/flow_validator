@@ -3,7 +3,6 @@ __author__ = 'Rakesh Kumar'
 from match import OdlMatchJsonParser
 from match import ryu_field_names_mapping
 from collections import defaultdict
-from copy import copy
 
 class Action():
     '''
@@ -110,17 +109,54 @@ class Action():
         # if "pop-vlan-action" in self.action_json:
         #     self.action_type = "pop_vlan"
 
-    def update_active_status(self):
+    def perform_edge_failover(self):
 
-        # If the action has a bucket that means, it belongs to one of the groups and its being active
-        # depends on whether its bucket is still the first live bucket for that group
+        muted_port_number = None
+        unmuted_port_number = None
 
-        if self.bucket:
-            if self.bucket.group.get_first_live_bucket() == self.bucket:
-                self.is_active = True
+        # Do I belong to a failover group, if so, only then a failover might exist...
+        if self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF:
+
+            # Look at my group's first live bucket
+            first_live_bucket = self.bucket.group.get_first_live_bucket()
+
+            # If there is a live bucket
+            if first_live_bucket:
+
+                # If the first live bucket is not the same as my bucket, my port has gone down and some other bucket's
+                # actions have come up, so do the due...
+                if first_live_bucket != self.bucket:
+
+                    for action in self.bucket.action_list:
+                        action.is_active = False
+
+                    for action in first_live_bucket.action_list:
+                        action.is_active = True
+
+                    muted_port_number = self.bucket.watch_port
+                    unmuted_port_number = first_live_bucket.watch_port
+
+                # Otherwise, I am back in the action,
+                #  ensure that my bucket's actions are active and currently active bucket's actions are inactive
+                else:
+                    for action in self.bucket.action_list:
+                        action.is_active = True
+
+                    for action in self.bucket.group.active_bucket.action_list:
+                        action.is_active = False
+
+                    muted_port_number = self.bucket.group.active_bucket.watch_port
+                    unmuted_port_number = self.bucket.watch_port
+
+                # keep track of which bucket is currently active
+                self.bucket.group.active_bucket = first_live_bucket
+
+            # If there is no live bucket, then set actions in the current active bucket accordingly
             else:
-                self.is_active = False
+                for action in self.bucket.group.active_bucket.bucket.action_list:
+                    action.is_active = False
 
+        return muted_port_number, unmuted_port_number
 
 class ActionSet():
 
@@ -193,7 +229,6 @@ class ActionSet():
 
         return modified_fields_dict
 
-
     def get_port_graph_edges(self):
 
         port_graph_edge_status = []
@@ -211,20 +246,15 @@ class ActionSet():
                 # Consider all possible ports if they are currently up and are not the watch port
                 for in_port in self.sw.ports:
 
-                    #if output_action.bucket and output_action.bucket.watch_port == in_port:
-                    #    continue
-
                     if self.sw.ports[in_port].state != "up":
                         continue
 
-                    action_copy = copy(output_action)
-                    port_graph_edge_status.append((str(in_port), action_copy))
+                    port_graph_edge_status.append((str(in_port), output_action))
 
             else:
 
                 # Add an edge, only if the output_port is currently up
                 if self.sw.ports[output_action.out_port].state == "up":
-                    action_copy = output_action
-                    port_graph_edge_status.append((str(output_action.out_port), action_copy))
+                    port_graph_edge_status.append((str(output_action.out_port), output_action))
 
         return port_graph_edge_status
