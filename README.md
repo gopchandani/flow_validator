@@ -19,7 +19,7 @@ This README would normally document whatever steps are necessary to get your app
 * sudo apt-get install python-scipy
 * sudo apt-get install python-numpy
 * sudo apt-get install python-matplotlib
-* Setup PYTHONPATH to src folder by adding following to bashrc: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/
+* Setup PYTHONPATH to src folder by adding following to ~/.bashrc: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/ and allow PYTHONPATH to be retained by sudo by adding following to /etc/sudoers: Defaults env_keep += "PYTHONPATH"
 * For running, go under src/experiments and run: sudo python experiment_module_name.py
 
 ### Contribution guidelines ###
