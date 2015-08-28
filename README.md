@@ -11,7 +11,7 @@ This README would normally document whatever steps are necessary to get your app
 ### How do I get set up? ###
 
 * Install numpy and matplotlib (Ubuntu packages python-numpy, python-matplotlib)
-* Summary of set up
+* Setup PYTHONPATH to src folder: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/
 * Configuration
 * Dependencies
 * Database configuration
