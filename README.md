@@ -20,10 +20,7 @@ This README would normally document whatever steps are necessary to get your app
 * sudo apt-get install python-numpy
 * sudo apt-get install python-matplotlib
 * Setup PYTHONPATH to src folder by adding following to bashrc: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/
-
-
 * For running, go under src/experiments and run: sudo python experiment_module_name.py
-* Deployment instructions
 
 ### Contribution guidelines ###
 
