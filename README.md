@@ -11,6 +11,7 @@ This README would normally document whatever steps are necessary to get your app
 ### How do I get set up? ###
 
 * If you don't have pip installed, then install the python package manager. (Ubuntu package: python-pip)
+* sudo pip install ryu
 * sudo pip install networkx
 * sudo pip install netaddr
 * sudo pip install intervaltree
