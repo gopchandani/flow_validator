@@ -10,6 +10,7 @@ This README would normally document whatever steps are necessary to get your app
 
 ### How do I get set up? ###
 
+* If you don't have pip installed, then install the python package manager. (Ubuntu package: python-pip)
 * Install numpy and matplotlib (Ubuntu packages python-numpy, python-matplotlib)
 * Setup PYTHONPATH to src folder: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/
 * Configuration
