@@ -6,9 +6,7 @@
 * sudo pip install netaddr
 * sudo pip install intervaltree
 * sudo pip install httplib2
-
 * Install mininet version 2.2 by following instructions here: http://mininet.org/download/
-
 * sudo apt-get install python-scipy
 * sudo apt-get install python-numpy
 * sudo apt-get install python-matplotlib
