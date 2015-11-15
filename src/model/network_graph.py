@@ -12,6 +12,7 @@ from host import Host
 from flow_table import FlowTable
 from group_table import GroupTable
 from port import Port
+from sel_controller import Session, OperationalTree, ConfigTree
 
 class NetworkGraph():
 
@@ -33,6 +34,7 @@ class NetworkGraph():
         # Initialize things to talk to controller
         self.baseUrlOdl = "http://localhost:8181/restconf/"
         self.baseUrlRyu = "http://localhost:8080/"
+        self.baseUrlSel = "http://selcontroller:1234/"
 
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
@@ -43,6 +45,9 @@ class NetworkGraph():
 
         self.experiment_switches = experiment_switches
         self.controller = controller
+
+        self.sel_session = Session.Http(self.baseUrlSel)
+        self.sel_session.auth_user_callback(user="hobbs", password="Asdf123$", role="Engineer")
 
         dir_name = self.controller + \
                    str(self.mininet_man.topo_name) + \
@@ -389,6 +394,75 @@ class NetworkGraph():
                 switch_flow_tables.append(FlowTable(sw, table_id, ryu_switches[dpid]["flow_tables"][table_id]))
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
+    def get_sel_switches(self):
+        nodes = OperationalTree.nodesHttpAccess(self.sel_session)
+        sel_switches = {}
+        for each in nodes.read_collection():
+            this_switch = {}
+            if not (each.linked_key.startswith("OpenFlow")):
+                # If the linked_key does not start with "OpenFlow" it means that this is a Host node
+                # and not a switch node. Skip the execution for the rest of the flow.
+                continue
+
+            ports = OperationalTree.portsHttpAccess(self.sel_session)
+            sw_ports = {}
+            for port in ports.read_collection():
+                sw_ports[port.id] = port.to_pyson()
+            this_switch["ports"] = sw_ports
+
+            groups = ConfigTree.groupsHttpAccess(self.sel_session)
+            sw_groups = {}
+            for group in groups.read_collection():
+                sw_groups[group.id] = group.to_pyson()
+
+            this_switch["groups"] = sw_groups
+
+            flow_tables = ConfigTree.flowsHttpAccess(self.sel_session)
+            switch_flow_tables = defaultdict(list)
+            for flow_rule in flow_tables.read_collection():
+                switch_flow_tables[flow_rule["tableId"]].append(flow_rule.to_pyson())
+
+            this_switch["flow_tables"] = switch_flow_tables
+
+            sel_switches[each.id] = this_switch
+
+        if self.save_config:
+            with open(self.config_path_prefix + "sel_switches.json", "w") as outfile:
+                json.dump(sel_switches, outfile)
+
+        return sel_switches
+
+    def parse_sel_switches(self, sel_switches):
+        for each_id in sel_switches:
+            # prepare the switch id
+            switch_id = "s" + str(each_id)
+
+            # Check to see if a switch with this id already exists in the graph,
+            # if so grab it, otherwise create it
+            if not sw:
+                sw = Switch(switch_id, self)
+                self.graph.add_node(switch_id, node_type="switch", sw=sw)
+                self.switch_ids.append(switch_id)
+
+            # Parse out the information about all the ports in the switch
+            switch_ports = {}
+            for port in sel_switches[each_id]["ports"]:
+                switch_ports[port["port_no"]] = Port(sw, port_json=port)
+
+            sw.ports = switch_ports
+
+            # Parse group table if one is available
+            if "groups" in sel_switches[each_id]:
+                sw.group_table = GroupTable(sw, sel_switches[each_id]["groups"])
+
+            # Parse all the flow tables and sort them by table_id in the list
+            switch_flow_tables = []
+            for table_id in sel_switches[each_id]["flow_tables"]:
+                switch_flow_tables.append(FlowTable(sw, table_id,
+                                                    sel_switches[each_id]["flow_tables"][table_id]))
+
+            sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+
     def parse_switches(self):
         
         if self.controller == "odl":
@@ -398,6 +472,10 @@ class NetworkGraph():
         elif self.controller == "ryu":
             ryu_switches = self.get_ryu_switches()
             self.parse_ryu_switches(ryu_switches)
+
+        elif self.controller == "sel":
+            sel_switches = self.get_sel_switches()
+            self.parse_sel_switches(sel_switches)
 
     def parse_network_graph(self):
         

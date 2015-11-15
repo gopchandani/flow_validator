@@ -26,16 +26,21 @@ from synthesis.intent_synthesis import IntentSynthesis
 class MininetMan():
 
     def __init__(self,
-                 controller_port,
-                 topo_name,
-                 num_switches,
-                 num_hosts_per_switch):
+                controller_port,
+                controller_host,
+                topo_name,
+                num_switches,
+                num_hosts_per_switch):
 
         self.net = None
         self.ping_timeout = 5
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
+        if controller_ip:
+            self.controller_host = controller_host
+        else:
+            self.controller_host = "127.0.0.1"
 
         self.experiment_switches = None
         self.topo_name = topo_name
@@ -56,7 +61,7 @@ class MininetMan():
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
                            autoStaticArp=True,
-                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
+                           controller=lambda name: RemoteController(name, ip=self.controller_host, port=self.controller_port),
                            switch=self.switch)
 
         self.net.start()

@@ -43,7 +43,11 @@ class Experiment(object):
         if not self.load_config and self.save_config:
             self.controller_port = self.cm.get_next()
 
-        self.mm = MininetMan(self.controller_port, *topo_description)
+        # TODO(abhilash)
+        # Hard coding the port for now, need to remove this later.
+        if self.controller == "sel":
+            self.controller_port = 6653
+        self.mm = MininetMan(self.controller_port, "selcontroller", *topo_description)
 
         # Get a flow validator instance
         ng = NetworkGraph(mininet_man=self.mm,

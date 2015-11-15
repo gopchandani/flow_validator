@@ -2,7 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 import sys
 sys.path.append("./")
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 from collections import defaultdict
 from timer import Timer
@@ -32,21 +32,21 @@ class QosDemo(Experiment):
 
     def trigger(self):
 
-        print "Starting experiment..."
+        print("Starting experiment...")
         for total_number_of_hosts in self.total_number_of_hosts:
 
             self.topo_description = ("linear", 2, total_number_of_hosts/2)
             ng = self.setup_network_graph(self.topo_description, True)
 
-        print "Done..."
+        print("Done...")
 
 def main():
 
-    num_iterations = 1#10
-    total_number_of_hosts = [4]#, 6, 8, 10]# 14, 16])#, 18, 20]
+    num_iterations = 1 #10
+    total_number_of_hosts = [4] #, 6, 8, 10]# 14, 16])#, 18, 20]
     load_config = False
     save_config = True
-    controller = "ryu"
+    controller = "sel"
     experiment_switches = ["s1", "s2"]
 
     exp = QosDemo(num_iterations,

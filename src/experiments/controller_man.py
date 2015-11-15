@@ -32,6 +32,9 @@ class ControllerMan():
         elif controller == "ryu":
             self.ryu_proc = None
 
+        elif controller == "sel":
+            pass
+
     def initialize_odl_containers(self):
 
         print "Initializing, number of containers:", self.num_cons

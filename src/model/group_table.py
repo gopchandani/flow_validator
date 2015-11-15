@@ -29,7 +29,8 @@ class Bucket():
 
             # Sort the action_list by order
             self.action_list = sorted(self.action_list, key=lambda action: action.order)
-
+        elif self.sw.network_graph.controller == "sel":
+            pass
         elif self.sw.network_graph.controller == "ryu":
 
             for action_json in bucket_json["actions"]:
@@ -107,7 +108,8 @@ class Group():
 
             #  Sort the bucket_list by bucket-id
             self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
-
+        elif self.sw.network_graph.controller == "sel":
+            pass
         elif self.sw.network_graph.controller == "ryu":
             self.group_id = group_json["group_id"]
 

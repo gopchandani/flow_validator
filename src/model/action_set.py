@@ -48,6 +48,9 @@ class Action():
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_action_json()
 
+        elif self.sw.network_graph.controller == "sel":
+            self.parse_sel_action_json()
+
 
     def parse_odl_action_json(self):
 
@@ -81,6 +84,10 @@ class Action():
             if mjp.keys():
                 self.modified_field = mjp.keys()[0]
                 self.field_modified_to = mjp[self.modified_field]
+
+
+    def parse_sel_action_json(self):
+        pass
 
     def parse_ryu_action_json(self):
 

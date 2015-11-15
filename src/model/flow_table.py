@@ -28,6 +28,13 @@ class Flow():
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
 
+        elif self.sw.network_graph.controller == "sel":
+            self.table_id = self.flow_json["table_id"]
+            self.priority = int(self.flow_json["priority"])
+            self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
+
+
+
         self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
         self.complement_traffic = Traffic()
@@ -44,6 +51,8 @@ class Flow():
             if self.sw.network_graph.controller == "odl":
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
+            elif self.sw.network_graph.controller == "sel":
+                pass
             elif self.sw.network_graph.controller == "ryu":
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 

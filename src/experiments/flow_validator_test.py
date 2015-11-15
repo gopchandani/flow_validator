@@ -9,14 +9,14 @@ from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
 
-from fat_tree import FatTree
-from two_ring_topo import TwoRingTopo
-from ring_topo import RingTopo
-from line_topo import LineTopo
+from topologies.fat_tree import FatTree
+from topologies.two_ring_topo import TwoRingTopo
+from topologies.ring_topo import RingTopo
+#from topologies.line_topo import LineTopo
 
 from model.match import Match
-from synthesis.synthensize_dij import SynthesizeDij
-from analysis.backup_paths import BackupPaths
+from synthesis.synthesize_dij import SynthesizeDij
+#from analysis.backup_paths import BackupPaths
 import os
 
 class FlowValidatorTest():
@@ -31,8 +31,8 @@ class FlowValidatorTest():
 
         if topo == "ring":
             self.topo = RingTopo(self.num_switches, self.num_hosts_per_switch)
-        elif topo == "line":
-            self.topo = LineTopo(self.num_switches, self.num_hosts_per_switch)
+#        elif topo == "line":
+#            self.topo = LineTopo(self.num_switches, self.num_hosts_per_switch)
         elif topo == "two_ring":
             self.topo = TwoRingTopo(self.num_switches, self.num_hosts_per_switch)
         elif topo == "fat_tree":
@@ -108,7 +108,7 @@ class FlowValidatorTest():
     def _start_test(self):
 
         print "Waiting for the controller to boot completely..."
-        time.sleep(150)
+        time.sleep(100)
 
         #self.net = Mininet(topo=self.topo)
         self.net = Mininet(topo=self.topo,
@@ -178,7 +178,7 @@ class FlowValidatorTest():
             return False
 
 def start_controller():
-    bashCommand = "sudo docker run -t -i -p=6633:6633 -p=8181:8181 opendaylight /distribution-karaf-0.2.1-Helium-SR1/bin/karaf &"
+    bashCommand = "sudo docker run -i -t -p=6633:6633 -p=8181:8181 opendaylight /distribution-karaf-0.2.1-Helium-SR1/bin/karaf &"
     os.system(bashCommand)    
 
 def main():
