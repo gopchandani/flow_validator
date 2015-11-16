@@ -9,24 +9,25 @@
 #     the code is regenerated.
 # </auto-generated>
 # ------------------------------------------------------------------------------
+from __future__ import absolute_import
 import json
 import datetime
 
 
-class BaseHttpAccess:
-    entity_base_name = ""
-    entity_odata_type = ""
+class BaseHttpAccess(object):
+    entity_base_name = u""
+    entity_odata_type = u""
     _session = None
-    api_tree_path = 'default/security/'
+    api_tree_path = u'default/security/'
 
     def __init__(self, session):
         self._session = session
 
     def read_single(self, item_id):
-        entity_path = self.api_tree_path + self.entity_base_name + "('" + item_id + "')"
+        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
         response = self._session.get_data(entity_path)
         pyson_response = json.loads(response)
-        object_type = pyson_response['@odata.type'] if '@odata.type' in pyson_response else self.entity_odata_type
+        object_type = pyson_response[u'@odata.type'] if u'@odata.type' in pyson_response else self.entity_odata_type
         result = _ResolveOdataType.getNewObject(object_type)
         result.from_pyson(pyson_response)
         return result
@@ -36,9 +37,9 @@ class BaseHttpAccess:
         response = self._session.get_data(collection_path)
         pyson_response = json.loads(response)
         result = []
-        raw_json_list = pyson_response['value']
+        raw_json_list = pyson_response[u'value']
         for pyson_object in raw_json_list:
-            object_type = pyson_object['@odata.type'] if '@odata.type' in pyson_object else self.entity_odata_type
+            object_type = pyson_object[u'@odata.type'] if u'@odata.type' in pyson_object else self.entity_odata_type
             new_object = _ResolveOdataType.getNewObject(object_type)
             new_object.from_pyson(pyson_object)
             result.append(new_object)
@@ -49,14 +50,14 @@ class BaseHttpAccess:
         collection_path = self.api_tree_path + self.entity_base_name
         response = self._session.post_data(collection_path, json_string)
         pyson_response = json.loads(response)
-        object_type = pyson_response['@odata.type'] if '@odata.type' in pyson_response else self.entity_odata_type
+        object_type = pyson_response[u'@odata.type'] if u'@odata.type' in pyson_response else self.entity_odata_type
         result = _ResolveOdataType.getNewObject(object_type)
         result.from_pyson(pyson_response)
         return result
 
     def update_single(self, item, item_id):
         item_json = item.to_json()
-        entity_path = self.api_tree_path + self.entity_base_name + "('" + item_id + "')"
+        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
         response = self._session.put_json_data(entity_path, item_json)
         return response
 
@@ -65,13 +66,13 @@ class BaseHttpAccess:
         patch = {}
         for key in update_key_list:
             patch[key] = item_pyson[key]
-        entity_path = self.api_tree_path + self.entity_base_name + "('" + item_id + "')"
-        json_string = json.dumps(patch, sort_keys=True, indent=4, separators=(',', ': '))
+        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
+        json_string = json.dumps(patch, sort_keys=True, indent=4, separators=(u',', u': '))
         response = self._session.patch_json_data(entity_path, json_string)
         return response
 
     def delete_single(self, item_id):
-        entity_path = self.api_tree_path + self.entity_base_name + "('" + item_id + "')"
+        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
         response = self._session.delete_json_data(entity_path)
         return response
 
@@ -84,8 +85,8 @@ class rolesHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(rolesHttpAccess, self).__init__(session)
-        self.entity_base_name = "roles"
-        self.entity_odata_type = "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Role"
+        self.entity_base_name = u"roles"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Role"
 
 
 
@@ -93,8 +94,8 @@ class usersHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(usersHttpAccess, self).__init__(session)
-        self.entity_base_name = "users"
-        self.entity_odata_type = "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.User"
+        self.entity_base_name = u"users"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.User"
 
 
 
@@ -102,8 +103,8 @@ class authServicesHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(authServicesHttpAccess, self).__init__(session)
-        self.entity_base_name = "authServices"
-        self.entity_odata_type = "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthService"
+        self.entity_base_name = u"authServices"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthService"
 
 
 
@@ -111,8 +112,8 @@ class moduleRolesHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(moduleRolesHttpAccess, self).__init__(session)
-        self.entity_base_name = "moduleRoles"
-        self.entity_odata_type = "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.ModuleRole"
+        self.entity_base_name = u"moduleRoles"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.ModuleRole"
 
 
 
@@ -120,8 +121,8 @@ class oauthClientsHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(oauthClientsHttpAccess, self).__init__(session)
-        self.entity_base_name = "oauthClients"
-        self.entity_odata_type = "#Sel.Sel5056.Common.RestBroker.Models.OauthClient"
+        self.entity_base_name = u"oauthClients"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.RestBroker.Models.OauthClient"
 
 
 
@@ -129,8 +130,8 @@ class authCodesHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(authCodesHttpAccess, self).__init__(session)
-        self.entity_base_name = "authCodes"
-        self.entity_odata_type = "#Sel.Sel5056.Common.RestBroker.Models.AuthCode"
+        self.entity_base_name = u"authCodes"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.RestBroker.Models.AuthCode"
 
 
 
@@ -138,8 +139,8 @@ class refreshTokensHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(refreshTokensHttpAccess, self).__init__(session)
-        self.entity_base_name = "refreshTokens"
-        self.entity_odata_type = "#Sel.Sel5056.Common.RestBroker.Models.RefreshTokenHandle"
+        self.entity_base_name = u"refreshTokens"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.RestBroker.Models.RefreshTokenHandle"
 
 
 
@@ -147,8 +148,8 @@ class tokensHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(tokensHttpAccess, self).__init__(session)
-        self.entity_base_name = "tokens"
-        self.entity_odata_type = "#Sel.Sel5056.Common.RestBroker.Models.TokenHandle"
+        self.entity_base_name = u"tokens"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.RestBroker.Models.TokenHandle"
 
 
 
@@ -156,8 +157,8 @@ class transactionsHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(transactionsHttpAccess, self).__init__(session)
-        self.entity_base_name = "transactions"
-        self.entity_odata_type = "#Sel.Sel5056.Common.RestBroker.Models.RestTransaction"
+        self.entity_base_name = u"transactions"
+        self.entity_odata_type = u"#Sel.Sel5056.Common.RestBroker.Models.RestTransaction"
 
 
 #
@@ -167,12 +168,12 @@ class transactionsHttpAccess(BaseHttpAccess):
 
 
 
-class Permission():
+class Permission(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Permission'
-        self._module = ""
-        self._permission_tag = ""
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Permission'
+        self._module = u""
+        self._permission_tag = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -181,7 +182,7 @@ class Permission():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _module = None
@@ -204,13 +205,13 @@ class Permission():
         self._permission_tag = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['module'] = self._module
-        pyson_object['permissionTag'] = self._permission_tag
+        pyson_object[u'module'] = self._module
+        pyson_object[u'permissionTag'] = self._permission_tag
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -218,22 +219,22 @@ class Permission():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'module' in pyson_object:
-            self._module = pyson_object['module']
+        if u'module' in pyson_object:
+            self._module = pyson_object[u'module']
 
-        if 'permissionTag' in pyson_object:
-            self._permission_tag = pyson_object['permissionTag']
+        if u'permissionTag' in pyson_object:
+            self._permission_tag = pyson_object[u'permissionTag']
 
         return pyson_object
 
 
-class Role():
+class Role(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Role'
-        self._role_name = ""
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Role'
+        self._role_name = u""
         self._permissions = []
-        self._id = ""
+        self._id = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -242,7 +243,7 @@ class Role():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _role_name = None
@@ -274,18 +275,18 @@ class Role():
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['roleName'] = self._role_name
+        pyson_object[u'roleName'] = self._role_name
         #Complex Copy of permissions
         permissions_result = []
         for item_from_permissions in self._permissions:
             permissions_result.append(item_from_permissions.to_pyson())
-        pyson_object['permissions'] = permissions_result
-        pyson_object['id'] = self._id
+        pyson_object[u'permissions'] = permissions_result
+        pyson_object[u'id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -293,32 +294,32 @@ class Role():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'roleName' in pyson_object:
-            self._role_name = pyson_object['roleName']
+        if u'roleName' in pyson_object:
+            self._role_name = pyson_object[u'roleName']
 
-        if 'permissions' in pyson_object:
+        if u'permissions' in pyson_object:
             self._permissions = []
-            permissions_json_list = pyson_object['permissions']
+            permissions_json_list = pyson_object[u'permissions']
             for permissions_json_element in permissions_json_list:
-                permissions_odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Permission'
-                if '@odata.type' in permissions_json_element:
-                    permissions_odata_type = permissions_json_element['@odata.type']
+                permissions_odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Permission'
+                if u'@odata.type' in permissions_json_element:
+                    permissions_odata_type = permissions_json_element[u'@odata.type']
                 new_element = _ResolveOdataType.getNewObject(permissions_odata_type)
                 new_element.from_pyson(permissions_json_element)
                 self._permissions.append(new_element)
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
         return pyson_object
 
 
-class User():
+class User(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.User'
-        self._username = ""
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.User'
+        self._username = u""
         self._roles = []
-        self._id = ""
+        self._id = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -327,7 +328,7 @@ class User():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _username = None
@@ -359,14 +360,14 @@ class User():
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['username'] = self._username
-        pyson_object['roles'] = list( self._roles )
-        pyson_object['id'] = self._id
+        pyson_object[u'username'] = self._username
+        pyson_object[u'roles'] = list( self._roles )
+        pyson_object[u'id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -374,23 +375,23 @@ class User():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'username' in pyson_object:
-            self._username = pyson_object['username']
+        if u'username' in pyson_object:
+            self._username = pyson_object[u'username']
 
-        if 'roles' in pyson_object:
-            self._roles = list(pyson_object['roles'])
+        if u'roles' in pyson_object:
+            self._roles = list(pyson_object[u'roles'])
 
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
         return pyson_object
 
 
-class AuthService():
+class AuthService(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthService'
-        self._id = ""
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthService'
+        self._id = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -399,7 +400,7 @@ class AuthService():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _id = None
@@ -413,12 +414,12 @@ class AuthService():
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['id'] = self._id
+        pyson_object[u'id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -426,19 +427,19 @@ class AuthService():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
         return pyson_object
 
 
-class ModuleRole():
+class ModuleRole(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.ModuleRole'
-        self._module = ""
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.ModuleRole'
+        self._module = u""
         self._permissions = []
-        self._id = ""
+        self._id = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -447,7 +448,7 @@ class ModuleRole():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _module = None
@@ -479,18 +480,18 @@ class ModuleRole():
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['module'] = self._module
+        pyson_object[u'module'] = self._module
         #Complex Copy of permissions
         permissions_result = []
         for item_from_permissions in self._permissions:
             permissions_result.append(item_from_permissions.to_pyson())
-        pyson_object['permissions'] = permissions_result
-        pyson_object['id'] = self._id
+        pyson_object[u'permissions'] = permissions_result
+        pyson_object[u'id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -498,21 +499,21 @@ class ModuleRole():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'module' in pyson_object:
-            self._module = pyson_object['module']
+        if u'module' in pyson_object:
+            self._module = pyson_object[u'module']
 
-        if 'permissions' in pyson_object:
+        if u'permissions' in pyson_object:
             self._permissions = []
-            permissions_json_list = pyson_object['permissions']
+            permissions_json_list = pyson_object[u'permissions']
             for permissions_json_element in permissions_json_list:
-                permissions_odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Permission'
-                if '@odata.type' in permissions_json_element:
-                    permissions_odata_type = permissions_json_element['@odata.type']
+                permissions_odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Permission'
+                if u'@odata.type' in permissions_json_element:
+                    permissions_odata_type = permissions_json_element[u'@odata.type']
                 new_element = _ResolveOdataType.getNewObject(permissions_odata_type)
                 new_element.from_pyson(permissions_json_element)
                 self._permissions.append(new_element)
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
         return pyson_object
 
@@ -520,9 +521,9 @@ class ModuleRole():
 class AuthServiceUser(User):
 
     def __init__(self):
-        super().__init__()
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthServiceUser'
-        self._auth_service = ""
+        super(AuthServiceUser, self).__init__()
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthServiceUser'
+        self._auth_service = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -531,7 +532,7 @@ class AuthServiceUser(User):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _auth_service = None
@@ -545,13 +546,13 @@ class AuthServiceUser(User):
         self._auth_service = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         super(AuthServiceUser, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['authService'] = self._auth_service
+        pyson_object[u'authService'] = self._auth_service
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -560,8 +561,8 @@ class AuthServiceUser(User):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'authService' in pyson_object:
-            self._auth_service = pyson_object['authService']
+        if u'authService' in pyson_object:
+            self._auth_service = pyson_object[u'authService']
 
         return pyson_object
 
@@ -569,11 +570,11 @@ class AuthServiceUser(User):
 class LocalUser(User):
 
     def __init__(self):
-        super().__init__()
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.LocalUser'
+        super(LocalUser, self).__init__()
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.LocalUser'
         self._salted_hash_password = None
         self._current_salt = None
-        self._clear_text_pass = ""
+        self._clear_text_pass = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -582,7 +583,7 @@ class LocalUser(User):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _salted_hash_password = None
@@ -614,15 +615,15 @@ class LocalUser(User):
         self._clear_text_pass = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         super(LocalUser, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['saltedHashPassword'] = self._salted_hash_password
-        pyson_object['currentSalt'] = self._current_salt
-        pyson_object['clearTextPass'] = self._clear_text_pass
+        pyson_object[u'saltedHashPassword'] = self._salted_hash_password
+        pyson_object[u'currentSalt'] = self._current_salt
+        pyson_object[u'clearTextPass'] = self._clear_text_pass
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -631,31 +632,31 @@ class LocalUser(User):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'saltedHashPassword' in pyson_object:
-            self._salted_hash_password = pyson_object['saltedHashPassword']
+        if u'saltedHashPassword' in pyson_object:
+            self._salted_hash_password = pyson_object[u'saltedHashPassword']
 
-        if 'currentSalt' in pyson_object:
-            self._current_salt = pyson_object['currentSalt']
+        if u'currentSalt' in pyson_object:
+            self._current_salt = pyson_object[u'currentSalt']
 
-        if 'clearTextPass' in pyson_object:
-            self._clear_text_pass = pyson_object['clearTextPass']
+        if u'clearTextPass' in pyson_object:
+            self._clear_text_pass = pyson_object[u'clearTextPass']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.Common.RestBroker.Models
 
 
 
-class OauthClient():
+class OauthClient(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.RestBroker.Models.OauthClient'
-        self._id = ""
+        self._odata_type = u'#Sel.Sel5056.Common.RestBroker.Models.OauthClient'
+        self._id = u""
         self._enabled = False
-        self._client_id = ""
+        self._client_id = u""
         self._client_secrets = []
-        self._client_name = ""
-        self._client_uri = ""
-        self._logo_uri = ""
+        self._client_name = u""
+        self._client_uri = u""
+        self._logo_uri = u""
         self._require_consent = False
         self._allow_remember_consent = False
         self._allow_client_credentials_only = False
@@ -686,7 +687,7 @@ class OauthClient():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _id = None
@@ -988,52 +989,52 @@ class OauthClient():
         self._allowed_cors_origins = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['id'] = self._id
-        pyson_object['enabled'] = self._enabled
-        pyson_object['clientId'] = self._client_id
+        pyson_object[u'id'] = self._id
+        pyson_object[u'enabled'] = self._enabled
+        pyson_object[u'clientId'] = self._client_id
         #Complex Copy of clientSecrets
         client_secrets_result = []
         for item_from_client_secrets in self._client_secrets:
             client_secrets_result.append(item_from_client_secrets.to_pyson())
-        pyson_object['clientSecrets'] = client_secrets_result
-        pyson_object['clientName'] = self._client_name
-        pyson_object['clientUri'] = self._client_uri
-        pyson_object['logoUri'] = self._logo_uri
-        pyson_object['requireConsent'] = self._require_consent
-        pyson_object['allowRememberConsent'] = self._allow_remember_consent
-        pyson_object['flow'] = self._flow
-        pyson_object['allowClientCredentialsOnly'] = self._allow_client_credentials_only
-        pyson_object['redirectUris'] = list( self._redirect_uris )
-        pyson_object['postLogoutRedirectUris'] = list( self._post_logout_redirect_uris )
-        pyson_object['allowAccessToAllScopes'] = self._allow_access_to_all_scopes
-        pyson_object['allowedScopes'] = list( self._allowed_scopes )
-        pyson_object['identityTokenLifetime'] = self._identity_token_lifetime
-        pyson_object['accessTokenLifetime'] = self._access_token_lifetime
-        pyson_object['authorizationCodeLifetime'] = self._authorization_code_lifetime
-        pyson_object['absoluteRefreshTokenLifetime'] = self._absolute_refresh_token_lifetime
-        pyson_object['slidingRefreshTokenLifetime'] = self._sliding_refresh_token_lifetime
-        pyson_object['refreshTokenUsage'] = self._refresh_token_usage
-        pyson_object['updateAccessTokenClaimsOnRefresh'] = self._update_access_token_claims_on_refresh
-        pyson_object['refreshTokenExpiration'] = self._refresh_token_expiration
-        pyson_object['accessTokenType'] = self._access_token_type
-        pyson_object['enableLocalLogin'] = self._enable_local_login
-        pyson_object['identityProviderRestrictions'] = list( self._identity_provider_restrictions )
-        pyson_object['includeJwtId'] = self._include_jwt_id
+        pyson_object[u'clientSecrets'] = client_secrets_result
+        pyson_object[u'clientName'] = self._client_name
+        pyson_object[u'clientUri'] = self._client_uri
+        pyson_object[u'logoUri'] = self._logo_uri
+        pyson_object[u'requireConsent'] = self._require_consent
+        pyson_object[u'allowRememberConsent'] = self._allow_remember_consent
+        pyson_object[u'flow'] = self._flow
+        pyson_object[u'allowClientCredentialsOnly'] = self._allow_client_credentials_only
+        pyson_object[u'redirectUris'] = list( self._redirect_uris )
+        pyson_object[u'postLogoutRedirectUris'] = list( self._post_logout_redirect_uris )
+        pyson_object[u'allowAccessToAllScopes'] = self._allow_access_to_all_scopes
+        pyson_object[u'allowedScopes'] = list( self._allowed_scopes )
+        pyson_object[u'identityTokenLifetime'] = self._identity_token_lifetime
+        pyson_object[u'accessTokenLifetime'] = self._access_token_lifetime
+        pyson_object[u'authorizationCodeLifetime'] = self._authorization_code_lifetime
+        pyson_object[u'absoluteRefreshTokenLifetime'] = self._absolute_refresh_token_lifetime
+        pyson_object[u'slidingRefreshTokenLifetime'] = self._sliding_refresh_token_lifetime
+        pyson_object[u'refreshTokenUsage'] = self._refresh_token_usage
+        pyson_object[u'updateAccessTokenClaimsOnRefresh'] = self._update_access_token_claims_on_refresh
+        pyson_object[u'refreshTokenExpiration'] = self._refresh_token_expiration
+        pyson_object[u'accessTokenType'] = self._access_token_type
+        pyson_object[u'enableLocalLogin'] = self._enable_local_login
+        pyson_object[u'identityProviderRestrictions'] = list( self._identity_provider_restrictions )
+        pyson_object[u'includeJwtId'] = self._include_jwt_id
         #Complex Copy of claims
         claims_result = []
         for item_from_claims in self._claims:
             claims_result.append(item_from_claims.to_pyson())
-        pyson_object['claims'] = claims_result
-        pyson_object['alwaysSendClientClaims'] = self._always_send_client_claims
-        pyson_object['prefixClientClaims'] = self._prefix_client_claims
-        pyson_object['allowAccessToAllCustomGrantTypes'] = self._allow_access_to_all_custom_grant_types
-        pyson_object['allowedCustomGrantTypes'] = list( self._allowed_custom_grant_types )
-        pyson_object['allowedCorsOrigins'] = list( self._allowed_cors_origins )
+        pyson_object[u'claims'] = claims_result
+        pyson_object[u'alwaysSendClientClaims'] = self._always_send_client_claims
+        pyson_object[u'prefixClientClaims'] = self._prefix_client_claims
+        pyson_object[u'allowAccessToAllCustomGrantTypes'] = self._allow_access_to_all_custom_grant_types
+        pyson_object[u'allowedCustomGrantTypes'] = list( self._allowed_custom_grant_types )
+        pyson_object[u'allowedCorsOrigins'] = list( self._allowed_cors_origins )
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1041,131 +1042,131 @@ class OauthClient():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
-        if 'enabled' in pyson_object:
-            self._enabled = pyson_object['enabled']
+        if u'enabled' in pyson_object:
+            self._enabled = pyson_object[u'enabled']
 
-        if 'clientId' in pyson_object:
-            self._client_id = pyson_object['clientId']
+        if u'clientId' in pyson_object:
+            self._client_id = pyson_object[u'clientId']
 
-        if 'clientSecrets' in pyson_object:
+        if u'clientSecrets' in pyson_object:
             self._client_secrets = []
-            client_secrets_json_list = pyson_object['clientSecrets']
+            client_secrets_json_list = pyson_object[u'clientSecrets']
             for client_secrets_json_element in client_secrets_json_list:
-                client_secrets_odata_type = '#IdentityServer3.Core.Models.Secret'
-                if '@odata.type' in client_secrets_json_element:
-                    client_secrets_odata_type = client_secrets_json_element['@odata.type']
+                client_secrets_odata_type = u'#IdentityServer3.Core.Models.Secret'
+                if u'@odata.type' in client_secrets_json_element:
+                    client_secrets_odata_type = client_secrets_json_element[u'@odata.type']
                 new_element = _ResolveOdataType.getNewObject(client_secrets_odata_type)
                 new_element.from_pyson(client_secrets_json_element)
                 self._client_secrets.append(new_element)
-        if 'clientName' in pyson_object:
-            self._client_name = pyson_object['clientName']
+        if u'clientName' in pyson_object:
+            self._client_name = pyson_object[u'clientName']
 
-        if 'clientUri' in pyson_object:
-            self._client_uri = pyson_object['clientUri']
+        if u'clientUri' in pyson_object:
+            self._client_uri = pyson_object[u'clientUri']
 
-        if 'logoUri' in pyson_object:
-            self._logo_uri = pyson_object['logoUri']
+        if u'logoUri' in pyson_object:
+            self._logo_uri = pyson_object[u'logoUri']
 
-        if 'requireConsent' in pyson_object:
-            self._require_consent = pyson_object['requireConsent']
+        if u'requireConsent' in pyson_object:
+            self._require_consent = pyson_object[u'requireConsent']
 
-        if 'allowRememberConsent' in pyson_object:
-            self._allow_remember_consent = pyson_object['allowRememberConsent']
+        if u'allowRememberConsent' in pyson_object:
+            self._allow_remember_consent = pyson_object[u'allowRememberConsent']
 
-        if 'flow' in pyson_object:
-            self._flow = pyson_object['flow']
+        if u'flow' in pyson_object:
+            self._flow = pyson_object[u'flow']
 
-        if 'allowClientCredentialsOnly' in pyson_object:
-            self._allow_client_credentials_only = pyson_object['allowClientCredentialsOnly']
+        if u'allowClientCredentialsOnly' in pyson_object:
+            self._allow_client_credentials_only = pyson_object[u'allowClientCredentialsOnly']
 
-        if 'redirectUris' in pyson_object:
-            self._redirect_uris = list(pyson_object['redirectUris'])
+        if u'redirectUris' in pyson_object:
+            self._redirect_uris = list(pyson_object[u'redirectUris'])
 
-        if 'postLogoutRedirectUris' in pyson_object:
-            self._post_logout_redirect_uris = list(pyson_object['postLogoutRedirectUris'])
+        if u'postLogoutRedirectUris' in pyson_object:
+            self._post_logout_redirect_uris = list(pyson_object[u'postLogoutRedirectUris'])
 
-        if 'allowAccessToAllScopes' in pyson_object:
-            self._allow_access_to_all_scopes = pyson_object['allowAccessToAllScopes']
+        if u'allowAccessToAllScopes' in pyson_object:
+            self._allow_access_to_all_scopes = pyson_object[u'allowAccessToAllScopes']
 
-        if 'allowedScopes' in pyson_object:
-            self._allowed_scopes = list(pyson_object['allowedScopes'])
+        if u'allowedScopes' in pyson_object:
+            self._allowed_scopes = list(pyson_object[u'allowedScopes'])
 
-        if 'identityTokenLifetime' in pyson_object:
-            self._identity_token_lifetime = pyson_object['identityTokenLifetime']
+        if u'identityTokenLifetime' in pyson_object:
+            self._identity_token_lifetime = pyson_object[u'identityTokenLifetime']
 
-        if 'accessTokenLifetime' in pyson_object:
-            self._access_token_lifetime = pyson_object['accessTokenLifetime']
+        if u'accessTokenLifetime' in pyson_object:
+            self._access_token_lifetime = pyson_object[u'accessTokenLifetime']
 
-        if 'authorizationCodeLifetime' in pyson_object:
-            self._authorization_code_lifetime = pyson_object['authorizationCodeLifetime']
+        if u'authorizationCodeLifetime' in pyson_object:
+            self._authorization_code_lifetime = pyson_object[u'authorizationCodeLifetime']
 
-        if 'absoluteRefreshTokenLifetime' in pyson_object:
-            self._absolute_refresh_token_lifetime = pyson_object['absoluteRefreshTokenLifetime']
+        if u'absoluteRefreshTokenLifetime' in pyson_object:
+            self._absolute_refresh_token_lifetime = pyson_object[u'absoluteRefreshTokenLifetime']
 
-        if 'slidingRefreshTokenLifetime' in pyson_object:
-            self._sliding_refresh_token_lifetime = pyson_object['slidingRefreshTokenLifetime']
+        if u'slidingRefreshTokenLifetime' in pyson_object:
+            self._sliding_refresh_token_lifetime = pyson_object[u'slidingRefreshTokenLifetime']
 
-        if 'refreshTokenUsage' in pyson_object:
-            self._refresh_token_usage = pyson_object['refreshTokenUsage']
+        if u'refreshTokenUsage' in pyson_object:
+            self._refresh_token_usage = pyson_object[u'refreshTokenUsage']
 
-        if 'updateAccessTokenClaimsOnRefresh' in pyson_object:
-            self._update_access_token_claims_on_refresh = pyson_object['updateAccessTokenClaimsOnRefresh']
+        if u'updateAccessTokenClaimsOnRefresh' in pyson_object:
+            self._update_access_token_claims_on_refresh = pyson_object[u'updateAccessTokenClaimsOnRefresh']
 
-        if 'refreshTokenExpiration' in pyson_object:
-            self._refresh_token_expiration = pyson_object['refreshTokenExpiration']
+        if u'refreshTokenExpiration' in pyson_object:
+            self._refresh_token_expiration = pyson_object[u'refreshTokenExpiration']
 
-        if 'accessTokenType' in pyson_object:
-            self._access_token_type = pyson_object['accessTokenType']
+        if u'accessTokenType' in pyson_object:
+            self._access_token_type = pyson_object[u'accessTokenType']
 
-        if 'enableLocalLogin' in pyson_object:
-            self._enable_local_login = pyson_object['enableLocalLogin']
+        if u'enableLocalLogin' in pyson_object:
+            self._enable_local_login = pyson_object[u'enableLocalLogin']
 
-        if 'identityProviderRestrictions' in pyson_object:
-            self._identity_provider_restrictions = list(pyson_object['identityProviderRestrictions'])
+        if u'identityProviderRestrictions' in pyson_object:
+            self._identity_provider_restrictions = list(pyson_object[u'identityProviderRestrictions'])
 
-        if 'includeJwtId' in pyson_object:
-            self._include_jwt_id = pyson_object['includeJwtId']
+        if u'includeJwtId' in pyson_object:
+            self._include_jwt_id = pyson_object[u'includeJwtId']
 
-        if 'claims' in pyson_object:
+        if u'claims' in pyson_object:
             self._claims = []
-            claims_json_list = pyson_object['claims']
+            claims_json_list = pyson_object[u'claims']
             for claims_json_element in claims_json_list:
-                claims_odata_type = '#System.Security.Claims.Claim'
-                if '@odata.type' in claims_json_element:
-                    claims_odata_type = claims_json_element['@odata.type']
+                claims_odata_type = u'#System.Security.Claims.Claim'
+                if u'@odata.type' in claims_json_element:
+                    claims_odata_type = claims_json_element[u'@odata.type']
                 new_element = _ResolveOdataType.getNewObject(claims_odata_type)
                 new_element.from_pyson(claims_json_element)
                 self._claims.append(new_element)
-        if 'alwaysSendClientClaims' in pyson_object:
-            self._always_send_client_claims = pyson_object['alwaysSendClientClaims']
+        if u'alwaysSendClientClaims' in pyson_object:
+            self._always_send_client_claims = pyson_object[u'alwaysSendClientClaims']
 
-        if 'prefixClientClaims' in pyson_object:
-            self._prefix_client_claims = pyson_object['prefixClientClaims']
+        if u'prefixClientClaims' in pyson_object:
+            self._prefix_client_claims = pyson_object[u'prefixClientClaims']
 
-        if 'allowAccessToAllCustomGrantTypes' in pyson_object:
-            self._allow_access_to_all_custom_grant_types = pyson_object['allowAccessToAllCustomGrantTypes']
+        if u'allowAccessToAllCustomGrantTypes' in pyson_object:
+            self._allow_access_to_all_custom_grant_types = pyson_object[u'allowAccessToAllCustomGrantTypes']
 
-        if 'allowedCustomGrantTypes' in pyson_object:
-            self._allowed_custom_grant_types = list(pyson_object['allowedCustomGrantTypes'])
+        if u'allowedCustomGrantTypes' in pyson_object:
+            self._allowed_custom_grant_types = list(pyson_object[u'allowedCustomGrantTypes'])
 
-        if 'allowedCorsOrigins' in pyson_object:
-            self._allowed_cors_origins = list(pyson_object['allowedCorsOrigins'])
+        if u'allowedCorsOrigins' in pyson_object:
+            self._allowed_cors_origins = list(pyson_object[u'allowedCorsOrigins'])
 
         return pyson_object
 
 
-class AuthCode():
+class AuthCode(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.RestBroker.Models.AuthCode'
-        self._id = ""
-        self._key = ""
-        self._subject_id = ""
-        self._client_id = ""
-        self._token_json = ""
+        self._odata_type = u'#Sel.Sel5056.Common.RestBroker.Models.AuthCode'
+        self._id = u""
+        self._key = u""
+        self._subject_id = u""
+        self._client_id = u""
+        self._token_json = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1174,7 +1175,7 @@ class AuthCode():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _id = None
@@ -1224,16 +1225,16 @@ class AuthCode():
         self._token_json = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['id'] = self._id
-        pyson_object['key'] = self._key
-        pyson_object['subjectId'] = self._subject_id
-        pyson_object['clientId'] = self._client_id
-        pyson_object['tokenJson'] = self._token_json
+        pyson_object[u'id'] = self._id
+        pyson_object[u'key'] = self._key
+        pyson_object[u'subjectId'] = self._subject_id
+        pyson_object[u'clientId'] = self._client_id
+        pyson_object[u'tokenJson'] = self._token_json
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1241,33 +1242,33 @@ class AuthCode():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
-        if 'key' in pyson_object:
-            self._key = pyson_object['key']
+        if u'key' in pyson_object:
+            self._key = pyson_object[u'key']
 
-        if 'subjectId' in pyson_object:
-            self._subject_id = pyson_object['subjectId']
+        if u'subjectId' in pyson_object:
+            self._subject_id = pyson_object[u'subjectId']
 
-        if 'clientId' in pyson_object:
-            self._client_id = pyson_object['clientId']
+        if u'clientId' in pyson_object:
+            self._client_id = pyson_object[u'clientId']
 
-        if 'tokenJson' in pyson_object:
-            self._token_json = pyson_object['tokenJson']
+        if u'tokenJson' in pyson_object:
+            self._token_json = pyson_object[u'tokenJson']
 
         return pyson_object
 
 
-class RefreshTokenHandle():
+class RefreshTokenHandle(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.RestBroker.Models.RefreshTokenHandle'
-        self._id = ""
-        self._key = ""
-        self._subject_id = ""
-        self._client_id = ""
-        self._token_json = ""
+        self._odata_type = u'#Sel.Sel5056.Common.RestBroker.Models.RefreshTokenHandle'
+        self._id = u""
+        self._key = u""
+        self._subject_id = u""
+        self._client_id = u""
+        self._token_json = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1276,7 +1277,7 @@ class RefreshTokenHandle():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _id = None
@@ -1326,16 +1327,16 @@ class RefreshTokenHandle():
         self._token_json = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['id'] = self._id
-        pyson_object['key'] = self._key
-        pyson_object['subjectId'] = self._subject_id
-        pyson_object['clientId'] = self._client_id
-        pyson_object['tokenJson'] = self._token_json
+        pyson_object[u'id'] = self._id
+        pyson_object[u'key'] = self._key
+        pyson_object[u'subjectId'] = self._subject_id
+        pyson_object[u'clientId'] = self._client_id
+        pyson_object[u'tokenJson'] = self._token_json
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1343,33 +1344,33 @@ class RefreshTokenHandle():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
-        if 'key' in pyson_object:
-            self._key = pyson_object['key']
+        if u'key' in pyson_object:
+            self._key = pyson_object[u'key']
 
-        if 'subjectId' in pyson_object:
-            self._subject_id = pyson_object['subjectId']
+        if u'subjectId' in pyson_object:
+            self._subject_id = pyson_object[u'subjectId']
 
-        if 'clientId' in pyson_object:
-            self._client_id = pyson_object['clientId']
+        if u'clientId' in pyson_object:
+            self._client_id = pyson_object[u'clientId']
 
-        if 'tokenJson' in pyson_object:
-            self._token_json = pyson_object['tokenJson']
+        if u'tokenJson' in pyson_object:
+            self._token_json = pyson_object[u'tokenJson']
 
         return pyson_object
 
 
-class TokenHandle():
+class TokenHandle(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.RestBroker.Models.TokenHandle'
-        self._id = ""
-        self._key = ""
-        self._subject_id = ""
-        self._client_id = ""
-        self._token_json = ""
+        self._odata_type = u'#Sel.Sel5056.Common.RestBroker.Models.TokenHandle'
+        self._id = u""
+        self._key = u""
+        self._subject_id = u""
+        self._client_id = u""
+        self._token_json = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1378,7 +1379,7 @@ class TokenHandle():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _id = None
@@ -1428,16 +1429,16 @@ class TokenHandle():
         self._token_json = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['id'] = self._id
-        pyson_object['key'] = self._key
-        pyson_object['subjectId'] = self._subject_id
-        pyson_object['clientId'] = self._client_id
-        pyson_object['tokenJson'] = self._token_json
+        pyson_object[u'id'] = self._id
+        pyson_object[u'key'] = self._key
+        pyson_object[u'subjectId'] = self._subject_id
+        pyson_object[u'clientId'] = self._client_id
+        pyson_object[u'tokenJson'] = self._token_json
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1445,29 +1446,29 @@ class TokenHandle():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
-        if 'key' in pyson_object:
-            self._key = pyson_object['key']
+        if u'key' in pyson_object:
+            self._key = pyson_object[u'key']
 
-        if 'subjectId' in pyson_object:
-            self._subject_id = pyson_object['subjectId']
+        if u'subjectId' in pyson_object:
+            self._subject_id = pyson_object[u'subjectId']
 
-        if 'clientId' in pyson_object:
-            self._client_id = pyson_object['clientId']
+        if u'clientId' in pyson_object:
+            self._client_id = pyson_object[u'clientId']
 
-        if 'tokenJson' in pyson_object:
-            self._token_json = pyson_object['tokenJson']
+        if u'tokenJson' in pyson_object:
+            self._token_json = pyson_object[u'tokenJson']
 
         return pyson_object
 
 
-class RestTransaction():
+class RestTransaction(object):
 
     def __init__(self):
-        self._odata_type = '#Sel.Sel5056.Common.RestBroker.Models.RestTransaction'
-        self._id = ""
+        self._odata_type = u'#Sel.Sel5056.Common.RestBroker.Models.RestTransaction'
+        self._id = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1476,7 +1477,7 @@ class RestTransaction():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _id = None
@@ -1490,12 +1491,12 @@ class RestTransaction():
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['id'] = self._id
+        pyson_object[u'id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1503,8 +1504,8 @@ class RestTransaction():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'id' in pyson_object:
-            self._id = pyson_object['id']
+        if u'id' in pyson_object:
+            self._id = pyson_object[u'id']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.Common.DataBroker
@@ -1514,10 +1515,10 @@ class RestTransaction():
 class DataBrokerPermission(Permission):
 
     def __init__(self):
-        super().__init__()
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.DataBrokerPermission'
-        self._data_type = ""
-        self._tree = ""
+        super(DataBrokerPermission, self).__init__()
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.DataBrokerPermission'
+        self._data_type = u""
+        self._tree = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1526,7 +1527,7 @@ class DataBrokerPermission(Permission):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _data_type = None
@@ -1549,14 +1550,14 @@ class DataBrokerPermission(Permission):
         self._tree = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         super(DataBrokerPermission, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['dataType'] = self._data_type
-        pyson_object['tree'] = self._tree
+        pyson_object[u'dataType'] = self._data_type
+        pyson_object[u'tree'] = self._tree
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1565,11 +1566,11 @@ class DataBrokerPermission(Permission):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'dataType' in pyson_object:
-            self._data_type = pyson_object['dataType']
+        if u'dataType' in pyson_object:
+            self._data_type = pyson_object[u'dataType']
 
-        if 'tree' in pyson_object:
-            self._tree = pyson_object['tree']
+        if u'tree' in pyson_object:
+            self._tree = pyson_object[u'tree']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.Common.DataBroker.Types
@@ -1579,9 +1580,9 @@ class DataBrokerPermission(Permission):
 class SecurityAttributePermission(Permission):
 
     def __init__(self):
-        super().__init__()
-        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.SecurityAttributePermission'
-        self._security_attribute = ""
+        super(SecurityAttributePermission, self).__init__()
+        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.SecurityAttributePermission'
+        self._security_attribute = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1590,7 +1591,7 @@ class SecurityAttributePermission(Permission):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _security_attribute = None
@@ -1604,13 +1605,13 @@ class SecurityAttributePermission(Permission):
         self._security_attribute = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         super(SecurityAttributePermission, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['securityAttribute'] = self._security_attribute
+        pyson_object[u'securityAttribute'] = self._security_attribute
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1619,8 +1620,8 @@ class SecurityAttributePermission(Permission):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'securityAttribute' in pyson_object:
-            self._security_attribute = pyson_object['securityAttribute']
+        if u'securityAttribute' in pyson_object:
+            self._security_attribute = pyson_object[u'securityAttribute']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.Common.SecurityManager
@@ -1630,22 +1631,22 @@ class SecurityAttributePermission(Permission):
 class LDAPAuthService(AuthService):
 
     def __init__(self):
-        super().__init__()
-        self._odata_type = '#Sel.Sel5056.Common.SecurityManager.LDAPAuthService'
-        self._name = ""
-        self._server_address = ""
+        super(LDAPAuthService, self).__init__()
+        self._odata_type = u'#Sel.Sel5056.Common.SecurityManager.LDAPAuthService'
+        self._name = u""
+        self._server_address = u""
         self._server_port = 0
         self._use_ssl = False
-        self._bind_user_name = ""
-        self._bind_password = ""
-        self._user_id_filter = ""
-        self._search_base = ""
-        self._group_membership_attribute = ""
-        self._first_name = ""
-        self._last_name = ""
-        self._email = ""
-        self._work_phone = ""
-        self._auth_type = ""
+        self._bind_user_name = u""
+        self._bind_password = u""
+        self._user_id_filter = u""
+        self._search_base = u""
+        self._group_membership_attribute = u""
+        self._first_name = u""
+        self._last_name = u""
+        self._email = u""
+        self._work_phone = u""
+        self._auth_type = u""
         self._protocol_version = 0
         self._error_log = []
 
@@ -1656,7 +1657,7 @@ class LDAPAuthService(AuthService):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _name = None
@@ -1805,28 +1806,28 @@ class LDAPAuthService(AuthService):
         self._error_log = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         super(LDAPAuthService, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['name'] = self._name
-        pyson_object['serverAddress'] = self._server_address
-        pyson_object['serverPort'] = self._server_port
-        pyson_object['useSSL'] = self._use_ssl
-        pyson_object['bindUserName'] = self._bind_user_name
-        pyson_object['bindPassword'] = self._bind_password
-        pyson_object['userIdFilter'] = self._user_id_filter
-        pyson_object['searchBase'] = self._search_base
-        pyson_object['groupMembershipAttribute'] = self._group_membership_attribute
-        pyson_object['firstName'] = self._first_name
-        pyson_object['lastName'] = self._last_name
-        pyson_object['email'] = self._email
-        pyson_object['workPhone'] = self._work_phone
-        pyson_object['authType'] = self._auth_type
-        pyson_object['protocolVersion'] = self._protocol_version
-        pyson_object['errorLog'] = list( self._error_log )
+        pyson_object[u'name'] = self._name
+        pyson_object[u'serverAddress'] = self._server_address
+        pyson_object[u'serverPort'] = self._server_port
+        pyson_object[u'useSSL'] = self._use_ssl
+        pyson_object[u'bindUserName'] = self._bind_user_name
+        pyson_object[u'bindPassword'] = self._bind_password
+        pyson_object[u'userIdFilter'] = self._user_id_filter
+        pyson_object[u'searchBase'] = self._search_base
+        pyson_object[u'groupMembershipAttribute'] = self._group_membership_attribute
+        pyson_object[u'firstName'] = self._first_name
+        pyson_object[u'lastName'] = self._last_name
+        pyson_object[u'email'] = self._email
+        pyson_object[u'workPhone'] = self._work_phone
+        pyson_object[u'authType'] = self._auth_type
+        pyson_object[u'protocolVersion'] = self._protocol_version
+        pyson_object[u'errorLog'] = list( self._error_log )
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1835,123 +1836,123 @@ class LDAPAuthService(AuthService):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'name' in pyson_object:
-            self._name = pyson_object['name']
+        if u'name' in pyson_object:
+            self._name = pyson_object[u'name']
 
-        if 'serverAddress' in pyson_object:
-            self._server_address = pyson_object['serverAddress']
+        if u'serverAddress' in pyson_object:
+            self._server_address = pyson_object[u'serverAddress']
 
-        if 'serverPort' in pyson_object:
-            self._server_port = pyson_object['serverPort']
+        if u'serverPort' in pyson_object:
+            self._server_port = pyson_object[u'serverPort']
 
-        if 'useSSL' in pyson_object:
-            self._use_ssl = pyson_object['useSSL']
+        if u'useSSL' in pyson_object:
+            self._use_ssl = pyson_object[u'useSSL']
 
-        if 'bindUserName' in pyson_object:
-            self._bind_user_name = pyson_object['bindUserName']
+        if u'bindUserName' in pyson_object:
+            self._bind_user_name = pyson_object[u'bindUserName']
 
-        if 'bindPassword' in pyson_object:
-            self._bind_password = pyson_object['bindPassword']
+        if u'bindPassword' in pyson_object:
+            self._bind_password = pyson_object[u'bindPassword']
 
-        if 'userIdFilter' in pyson_object:
-            self._user_id_filter = pyson_object['userIdFilter']
+        if u'userIdFilter' in pyson_object:
+            self._user_id_filter = pyson_object[u'userIdFilter']
 
-        if 'searchBase' in pyson_object:
-            self._search_base = pyson_object['searchBase']
+        if u'searchBase' in pyson_object:
+            self._search_base = pyson_object[u'searchBase']
 
-        if 'groupMembershipAttribute' in pyson_object:
-            self._group_membership_attribute = pyson_object['groupMembershipAttribute']
+        if u'groupMembershipAttribute' in pyson_object:
+            self._group_membership_attribute = pyson_object[u'groupMembershipAttribute']
 
-        if 'firstName' in pyson_object:
-            self._first_name = pyson_object['firstName']
+        if u'firstName' in pyson_object:
+            self._first_name = pyson_object[u'firstName']
 
-        if 'lastName' in pyson_object:
-            self._last_name = pyson_object['lastName']
+        if u'lastName' in pyson_object:
+            self._last_name = pyson_object[u'lastName']
 
-        if 'email' in pyson_object:
-            self._email = pyson_object['email']
+        if u'email' in pyson_object:
+            self._email = pyson_object[u'email']
 
-        if 'workPhone' in pyson_object:
-            self._work_phone = pyson_object['workPhone']
+        if u'workPhone' in pyson_object:
+            self._work_phone = pyson_object[u'workPhone']
 
-        if 'authType' in pyson_object:
-            self._auth_type = pyson_object['authType']
+        if u'authType' in pyson_object:
+            self._auth_type = pyson_object[u'authType']
 
-        if 'protocolVersion' in pyson_object:
-            self._protocol_version = pyson_object['protocolVersion']
+        if u'protocolVersion' in pyson_object:
+            self._protocol_version = pyson_object[u'protocolVersion']
 
-        if 'errorLog' in pyson_object:
-            self._error_log = list(pyson_object['errorLog'])
+        if u'errorLog' in pyson_object:
+            self._error_log = list(pyson_object[u'errorLog'])
 
         return pyson_object
 # Odata Namespace IdentityServer3.Core.Models
 
 
-class Flows():
+class Flows(object):
 
     @staticmethod
     def authorization_code():
-        return "AuthorizationCode"
+        return u"AuthorizationCode"
 
     @staticmethod
     def implicit():
-        return "Implicit"
+        return u"Implicit"
 
     @staticmethod
     def hybrid():
-        return "Hybrid"
+        return u"Hybrid"
 
     @staticmethod
     def client_credentials():
-        return "ClientCredentials"
+        return u"ClientCredentials"
 
     @staticmethod
     def resource_owner():
-        return "ResourceOwner"
+        return u"ResourceOwner"
 
     @staticmethod
     def custom():
-        return "Custom"
+        return u"Custom"
 
-class TokenUsage():
+class TokenUsage(object):
 
     @staticmethod
     def re_use():
-        return "ReUse"
+        return u"ReUse"
 
     @staticmethod
     def one_time_only():
-        return "OneTimeOnly"
+        return u"OneTimeOnly"
 
-class TokenExpiration():
+class TokenExpiration(object):
 
     @staticmethod
     def sliding():
-        return "Sliding"
+        return u"Sliding"
 
     @staticmethod
     def absolute():
-        return "Absolute"
+        return u"Absolute"
 
-class AccessTokenType():
+class AccessTokenType(object):
 
     @staticmethod
     def jwt():
-        return "Jwt"
+        return u"Jwt"
 
     @staticmethod
     def reference():
-        return "Reference"
+        return u"Reference"
 
 
-class Secret():
+class Secret(object):
 
     def __init__(self):
-        self._odata_type = '#IdentityServer3.Core.Models.Secret'
-        self._description = ""
-        self._value = ""
+        self._odata_type = u'#IdentityServer3.Core.Models.Secret'
+        self._description = u""
+        self._value = u""
         self._expiration = datetime.datetime.fromtimestamp(0)  # the *nix epoch
-        self._type = ""
+        self._type = u""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1960,7 +1961,7 @@ class Secret():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _description = None
@@ -2001,15 +2002,15 @@ class Secret():
         self._type = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object['description'] = self._description
-        pyson_object['value'] = self._value
-        pyson_object['expiration'] = self._expiration
-        pyson_object['type'] = self._type
+        pyson_object[u'description'] = self._description
+        pyson_object[u'value'] = self._value
+        pyson_object[u'expiration'] = self._expiration
+        pyson_object[u'type'] = self._type
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2017,27 +2018,27 @@ class Secret():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'description' in pyson_object:
-            self._description = pyson_object['description']
+        if u'description' in pyson_object:
+            self._description = pyson_object[u'description']
 
-        if 'value' in pyson_object:
-            self._value = pyson_object['value']
+        if u'value' in pyson_object:
+            self._value = pyson_object[u'value']
 
-        if 'expiration' in pyson_object:
-            self._expiration = pyson_object['expiration']
+        if u'expiration' in pyson_object:
+            self._expiration = pyson_object[u'expiration']
 
-        if 'type' in pyson_object:
-            self._type = pyson_object['type']
+        if u'type' in pyson_object:
+            self._type = pyson_object[u'type']
 
         return pyson_object
 # Odata Namespace System.Security.Claims
 
 
 
-class Claim():
+class Claim(object):
 
     def __init__(self):
-        self._odata_type = '#System.Security.Claims.Claim'
+        self._odata_type = u'#System.Security.Claims.Claim'
         self._properties = []
 
     def from_json(self, json_string):
@@ -2047,7 +2048,7 @@ class Claim():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
     _properties = []
@@ -2061,7 +2062,7 @@ class Claim():
         self._properties = value
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
@@ -2070,7 +2071,7 @@ class Claim():
         properties_result = []
         for item_from_properties in self._properties:
             properties_result.append(item_from_properties.to_pyson())
-        pyson_object['properties'] = properties_result
+        pyson_object[u'properties'] = properties_result
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2078,13 +2079,13 @@ class Claim():
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if 'properties' in pyson_object:
+        if u'properties' in pyson_object:
             self._properties = []
-            properties_json_list = pyson_object['properties']
+            properties_json_list = pyson_object[u'properties']
             for properties_json_element in properties_json_list:
-                properties_odata_type = '#System.Collections.Generic.KeyValuePair_2OfString_String'
-                if '@odata.type' in properties_json_element:
-                    properties_odata_type = properties_json_element['@odata.type']
+                properties_odata_type = u'#System.Collections.Generic.KeyValuePair_2OfString_String'
+                if u'@odata.type' in properties_json_element:
+                    properties_odata_type = properties_json_element[u'@odata.type']
                 new_element = _ResolveOdataType.getNewObject(properties_odata_type)
                 new_element.from_pyson(properties_json_element)
                 self._properties.append(new_element)
@@ -2093,10 +2094,10 @@ class Claim():
 
 
 
-class KeyValuePair_2OfString_String():
+class KeyValuePair_2OfString_String(object):
 
     def __init__(self):
-        self._odata_type = '#System.Collections.Generic.KeyValuePair_2OfString_String'
+        self._odata_type = u'#System.Collections.Generic.KeyValuePair_2OfString_String'
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2105,12 +2106,12 @@ class KeyValuePair_2OfString_String():
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
         return json_string
 
 
     def to_pyson(self):
-        pyson_object = {'@odata.type': self._odata_type}
+        pyson_object = {u'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
@@ -2129,46 +2130,46 @@ class KeyValuePair_2OfString_String():
 #
 #Begin IOC Container Definition (Dependency Resolvers)
 #
-class _ResolveOdataType:
+class _ResolveOdataType(object):
 
     @staticmethod
     def getNewObject(odata_type):
         result = None
-        if odata_type == "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Permission":
+        if odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Permission":
             result = Permission()
-        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Role":
+        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.Role":
             result = Role()
-        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.User":
+        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.User":
             result = User()
-        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthService":
+        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthService":
             result = AuthService()
-        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.ModuleRole":
+        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.ModuleRole":
             result = ModuleRole()
-        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthServiceUser":
+        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.AuthServiceUser":
             result = AuthServiceUser()
-        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.LocalUser":
+        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.SecurityManager.LocalUser":
             result = LocalUser()
-        elif odata_type == "#Sel.Sel5056.Common.RestBroker.Models.OauthClient":
+        elif odata_type == u"#Sel.Sel5056.Common.RestBroker.Models.OauthClient":
             result = OauthClient()
-        elif odata_type == "#Sel.Sel5056.Common.RestBroker.Models.AuthCode":
+        elif odata_type == u"#Sel.Sel5056.Common.RestBroker.Models.AuthCode":
             result = AuthCode()
-        elif odata_type == "#Sel.Sel5056.Common.RestBroker.Models.RefreshTokenHandle":
+        elif odata_type == u"#Sel.Sel5056.Common.RestBroker.Models.RefreshTokenHandle":
             result = RefreshTokenHandle()
-        elif odata_type == "#Sel.Sel5056.Common.RestBroker.Models.TokenHandle":
+        elif odata_type == u"#Sel.Sel5056.Common.RestBroker.Models.TokenHandle":
             result = TokenHandle()
-        elif odata_type == "#Sel.Sel5056.Common.RestBroker.Models.RestTransaction":
+        elif odata_type == u"#Sel.Sel5056.Common.RestBroker.Models.RestTransaction":
             result = RestTransaction()
-        elif odata_type == "#Sel.Sel5056.Common.DataBroker.DataBrokerPermission":
+        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.DataBrokerPermission":
             result = DataBrokerPermission()
-        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.SecurityAttributePermission":
+        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.SecurityAttributePermission":
             result = SecurityAttributePermission()
-        elif odata_type == "#Sel.Sel5056.Common.SecurityManager.LDAPAuthService":
+        elif odata_type == u"#Sel.Sel5056.Common.SecurityManager.LDAPAuthService":
             result = LDAPAuthService()
-        elif odata_type == "#IdentityServer3.Core.Models.Secret":
+        elif odata_type == u"#IdentityServer3.Core.Models.Secret":
             result = Secret()
-        elif odata_type == "#System.Security.Claims.Claim":
+        elif odata_type == u"#System.Security.Claims.Claim":
             result = Claim()
-        elif odata_type == "#System.Collections.Generic.KeyValuePair_2OfString_String":
+        elif odata_type == u"#System.Collections.Generic.KeyValuePair_2OfString_String":
             result = KeyValuePair_2OfString_String()
         return result
 
