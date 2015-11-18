@@ -29,7 +29,7 @@ class Flow():
             self.match = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
 
         elif self.sw.network_graph.controller == "sel":
-            self.table_id = self.flow_json["table_id"]
+            self.table_id = self.flow_json["tableId"]
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
 

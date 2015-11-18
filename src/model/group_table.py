@@ -109,7 +109,17 @@ class Group():
             #  Sort the bucket_list by bucket-id
             self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
         elif self.sw.network_graph.controller == "sel":
-            pass
+            self.group_id = group_json["groupId"]
+            self.group_type = group_json["groupType"]
+
+            if group_json["groupType"] == "FF":
+                self.group_type = self.sw.network_graph.GROUP_FF
+            elif group_json["groupType"] == "All":
+                self.group_type = self.sw.network_graph.GROUP_ALL
+
+            for bucket_json in group_json["buckets"]:
+                self.bucket_list.append(Bucket(sw, bucket_json, self))
+
         elif self.sw.network_graph.controller == "ryu":
             self.group_id = group_json["group_id"]
 

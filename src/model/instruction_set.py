@@ -19,6 +19,9 @@ class Instruction():
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction()
 
+        elif self.sw.network_graph.controller == "sel":
+            raise NotImplementedError
+
     def parse_odl_instruction(self):
 
         if "write-actions" in self.instruction_json:

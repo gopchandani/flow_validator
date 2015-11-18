@@ -226,7 +226,6 @@ class NetworkGraph():
 
 
     def parse_mininet_port_edges(self, mininet_port_edges):
-
         for src_node in mininet_port_edges:
             for src_node_port in mininet_port_edges[src_node]:
                 dst_list = mininet_port_edges[src_node][src_node_port]
@@ -395,36 +394,42 @@ class NetworkGraph():
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
     def get_sel_switches(self):
-        nodes = OperationalTree.nodesHttpAccess(self.sel_session)
+        nodes = ConfigTree.nodesHttpAccess(self.sel_session)
         sel_switches = {}
         for each in nodes.read_collection():
             this_switch = {}
-            if not (each.linked_key.startswith("OpenFlow")):
+            if  (each.linked_key.startswith("OpenFlow")):
                 # If the linked_key does not start with "OpenFlow" it means that this is a Host node
                 # and not a switch node. Skip the execution for the rest of the flow.
-                continue
 
-            ports = OperationalTree.portsHttpAccess(self.sel_session)
-            sw_ports = {}
-            for port in ports.read_collection():
-                sw_ports[port.id] = port.to_pyson()
-            this_switch["ports"] = sw_ports
+                switch_id = each.linked_key.replace("OpenFlow:", "s")
+                ports = OperationalTree.portsHttpAccess(self.sel_session)
+                sw_ports = []
+                for port in ports.read_collection():
+                    try:
+                        if port.name.startswith(switch_id):
+                            sw_ports.append(port.to_pyson())
+                    except AttributeError:
+                        # There is no name in the port, that means it belongs to a
+                        # host instead of a switch, just ignore this.
+                        pass
+                this_switch["ports"] = sw_ports
 
-            groups = ConfigTree.groupsHttpAccess(self.sel_session)
-            sw_groups = {}
-            for group in groups.read_collection():
-                sw_groups[group.id] = group.to_pyson()
+                groups = ConfigTree.groupsHttpAccess(self.sel_session)
+                sw_groups = []
+                for group in groups.read_collection():
+                    sw_groups.append(group.to_pyson())
 
-            this_switch["groups"] = sw_groups
+                this_switch["groups"] = sw_groups
 
-            flow_tables = ConfigTree.flowsHttpAccess(self.sel_session)
-            switch_flow_tables = defaultdict(list)
-            for flow_rule in flow_tables.read_collection():
-                switch_flow_tables[flow_rule["tableId"]].append(flow_rule.to_pyson())
+                flow_tables = ConfigTree.flowsHttpAccess(self.sel_session)
+                switch_flow_tables = defaultdict(list)
+                for flow_rule in flow_tables.read_collection():
+                    switch_flow_tables[flow_rule.to_pyson()["tableId"]].append(flow_rule.to_pyson())
 
-            this_switch["flow_tables"] = switch_flow_tables
+                this_switch["flow_tables"] = switch_flow_tables
 
-            sel_switches[each.id] = this_switch
+                sel_switches[switch_id] = this_switch
 
         if self.save_config:
             with open(self.config_path_prefix + "sel_switches.json", "w") as outfile:
@@ -435,8 +440,9 @@ class NetworkGraph():
     def parse_sel_switches(self, sel_switches):
         for each_id in sel_switches:
             # prepare the switch id
-            switch_id = "s" + str(each_id)
+            switch_id = each_id
 
+            sw = self.get_node_object(switch_id)
             # Check to see if a switch with this id already exists in the graph,
             # if so grab it, otherwise create it
             if not sw:
@@ -447,7 +453,7 @@ class NetworkGraph():
             # Parse out the information about all the ports in the switch
             switch_ports = {}
             for port in sel_switches[each_id]["ports"]:
-                switch_ports[port["port_no"]] = Port(sw, port_json=port)
+                switch_ports[port["portId"]] = Port(sw, port_json=port)
 
             sw.ports = switch_ports
 
@@ -532,9 +538,7 @@ class NetworkGraph():
 
     def get_node_object(self, node_id):
         node_obj = None
-
         if self.graph.has_node(node_id):
-
             graph_node = self.graph.node[node_id]
             if graph_node["node_type"] == "switch":
                 node_obj = graph_node["sw"]

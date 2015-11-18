@@ -2918,7 +2918,7 @@ class EthernetPort(OperationalPort):
 
 class OpenFlowPort(EthernetPort):
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super(OpenFlowPort, self).__init__()
         self._odata_type = u'#Sel.Sel5056.TopologyManager.Ports.OpenFlowPort'
         self._data_path_id = 0

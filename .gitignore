@@ -4,3 +4,5 @@ src/model/.cache/*
 src/analysis/.cache/*
 src/synthesis/.cache/*
 *pyc
+*.bak
+*~

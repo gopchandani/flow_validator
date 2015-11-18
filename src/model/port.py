@@ -27,6 +27,9 @@ class Port():
         elif port_type == "physical" and self.sw.network_graph.controller == "ryu":
             self.parse_ryu_port_json(port_json)
 
+        elif self.sw.network_graph.controller == "sel":
+            self.parse_sel_port_json(port_json)
+
         elif port_type == "ingress":
             self.port_id = port_id
         elif port_type == "egress":
@@ -62,6 +65,13 @@ class Port():
 
         #TODO: Peep into port_json["state"]
         self.state = "up"
+
+    def parse_sel_port_json(self, port_json):
+        self.port_id = str(port_json["name"])
+        self.port_number = port_json["portId"]
+        self.mac_address = port_json["hardwareAddress"]
+        self.curr_speed = port_json["currentSpeed"]
+        self.max_speed = port_json["maxSpeed"]
 
     def __str__(self):
 

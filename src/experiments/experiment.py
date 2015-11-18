@@ -43,11 +43,13 @@ class Experiment(object):
         if not self.load_config and self.save_config:
             self.controller_port = self.cm.get_next()
 
+        controller_host = None
         # TODO(abhilash)
         # Hard coding the port for now, need to remove this later.
         if self.controller == "sel":
             self.controller_port = 6653
-        self.mm = MininetMan(self.controller_port, "selcontroller", *topo_description)
+            controller_host = "selcontroller"
+        self.mm = MininetMan(self.controller_port, controller_host, *topo_description)
 
         # Get a flow validator instance
         ng = NetworkGraph(mininet_man=self.mm,
@@ -66,6 +68,8 @@ class Experiment(object):
                     self.mm.setup_mininet_with_ryu_qos(ng)
                 else:
                     self.mm.setup_mininet_with_ryu(ng)
+            elif self.controller == "sel":
+                self.mm.setup_mininet_with_sel(ng)
 
         # Refresh the network_graph
         ng.parse_switches()

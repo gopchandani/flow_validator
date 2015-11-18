@@ -1,13 +1,13 @@
 from __future__ import absolute_import
-from . import ConfigTree
-from . import OperationalTree
-from . import Session
+import ConfigTree
+import OperationalTree
+import Session
 
 session = Session.Http(u"http://selcontroller:1234/")
 
 ## Uncomment for extra debug info
-session.print_status = True
-session.print_data = True
+session.print_status = False
+session.print_data = False
 
 session.auth_user_callback(user=u"hobbs", role=u"Engineer")
 opNodes = OperationalTree.nodesHttpAccess(session)
@@ -15,8 +15,6 @@ confNodes = ConfigTree.nodesHttpAccess(session)
 opLinks = OperationalTree.linksHttpAccess(session)
 flowStats = OperationalTree.flowStatsHttpAccess(session)
 flows = ConfigTree.flowsHttpAccess(session)
-
-print flows
 
 
 def example_read_all():
@@ -63,6 +61,8 @@ def program_flow():
     flow.enabled = True
 
     result = flows.create_single(flow)
+    type(result)
+    print(result)
 
 	
 program_flow()

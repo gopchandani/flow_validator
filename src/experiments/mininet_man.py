@@ -37,7 +37,7 @@ class MininetMan():
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
-        if controller_ip:
+        if controller_host:
             self.controller_host = controller_host
         else:
             self.controller_host = "127.0.0.1"
@@ -138,6 +138,18 @@ class MininetMan():
 
         self.net.pingAll(self.ping_timeout)
 
+    def setup_mininet_with_sel(self, ng):
+        print("Synthesizing....")
+
+        self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
+        self.synthesis.synthesize_all_node_pairs()
+
+        #print("Synthesis Completed. Waiting for rules to be detected by controller...")
+        # time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
+
+        # self.net.pingAll(self.ping_timeout)
+
+
     def setup_mininet_with_ryu(self, ng):
 
         print "Synthesizing..."
@@ -155,6 +167,7 @@ class MininetMan():
         #
         # # Ping from h1-> h3
         # print self.h11.cmd("ping -c3 " + self.h31.IP())
+
 
     def setup_mininet_with_ryu_qos(self, ng):
 

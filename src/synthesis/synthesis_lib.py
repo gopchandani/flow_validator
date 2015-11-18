@@ -8,6 +8,7 @@ import json
 import os
 
 from model.network_graph import NetworkGraph
+from sel_controller import ConfigTree, Session, OperationalTree
 
 class SynthesisLib():
 
@@ -27,6 +28,10 @@ class SynthesisLib():
 
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
+        self.sel_session = Session.Http("http://selcontroller:1234/")
+        self.sel_session.auth_user_callback(user="hobbs", role="Engineer", password="Asdf123$")
+        self.sel_session.print_status = True
+        self.sel_session.print_data = True
 
         # Cleanup all Queue/QoS records from OVSDB
         os.system("sudo ovs-vsctl -- --all destroy QoS")
@@ -65,16 +70,29 @@ class SynthesisLib():
                                            headers={'Content-Type': 'application/json; charset=UTF-8'},
                                            body=json.dumps(pushed_content))
 
+        elif self.network_graph.controller == "sel":
+            if isinstance(pushed_content, ConfigTree.Flow):
+                flows = ConfigTree.flowsHttpAccess(self.sel_session)
+                result = flows.create_single(pushed_content)
+            elif isinstance(pushed_content, ConfigTree.Group):
+                groups = ConfigTree.groupsHttpAccess(self.sel_session)
+                result = groups.create_single(pushed_content)
+            else:
+                raise NotImplementedError
+
         #resp = {"status": "200"}
         #pprint.pprint(pushed_content)
 
-        if resp["status"] == "200":
-            print "Pushed Successfully:", pushed_content.keys()[0]
-            #print resp["status"]
+        if  self.network_graph.controller == "sel":
+            pass
         else:
-            print "Problem Pushing:", pushed_content.keys()[0]
-            print "resp:", resp, "content:", content
-            pprint.pprint(pushed_content)
+            if resp["status"] == "200":
+                print "Pushed Successfully:", pushed_content.keys()[0]
+                # print resp["status"]
+            else:
+                print "Problem Pushing:", pushed_content.keys()[0]
+                print "resp:", resp, "content:", content
+                pprint.pprint(pushed_content)
 
 
     def create_odl_group_url(self, node_id,  group_id):
@@ -108,6 +126,9 @@ class SynthesisLib():
         elif self.network_graph.controller == "ryu":
             url = self.create_ryu_flow_url()
 
+        elif self.network_graph.controller == "sel":
+            flow.enabled = True
+
         self.push_change(url, flow)
 
     def push_group(self, sw, group):
@@ -119,6 +140,12 @@ class SynthesisLib():
 
         elif self.network_graph.controller == "ryu":
             url = self.create_ryu_group_url()
+
+        elif self.network_graph.controller == "sel":
+            pass
+
+        else:
+            raise NotImplementedError
 
         self.push_change(url, group)
 
@@ -161,6 +188,31 @@ class SynthesisLib():
             flow["match"] = {}
             flow["actions"] = []
 
+
+        elif self.network_graph.controller == "sel":
+
+            flow = ConfigTree.Flow()
+            flow.node = sw[1:]
+            flow.buffer_id = 0
+            flow.cookie = self.flow_id_cntr
+            flow.priority = priority + 10
+            flow.table_id = table_id
+                # enumerating these isnt required just added for reference
+            flow.eth_dst = None
+            flow.eth_src = None
+            flow.ipv4_dst = None
+            flow.ipv4_src = None
+            flow.eth_type = None
+            flow.tcp_src = None
+            flow.tcp_dst = None
+            flow.udp_src = None
+            flow.udp_dst = None
+            flow.vlan_vid = None
+            flow.vlan_pcp = None
+            flow.ip_proto = None
+        else:
+            raise NotImplementedError
+
         return flow
 
 
@@ -186,6 +238,15 @@ class SynthesisLib():
             group["group_id"] = self.group_id_cntr
             group["buckets"] = []
 
+        elif self.network_graph.controller == "sel":
+            group = ConfigTree.Group()
+
+            group.id = sw[1:]
+            group.group_id = self.group_id_cntr
+
+        else:
+            raise NotImplementedError
+
         return group
 
     def populate_flow_action_instruction(self, flow, action_list, apply_immediately):
@@ -208,6 +269,25 @@ class SynthesisLib():
             else:
                 pass
 
+        elif self.network_graph.controller == "sel":
+            if apply_immediately:
+                instruction = ConfigTree.ApplyActions()
+                instruction.instruction_type = "ApplyActions"
+                for action in action_list:
+                    instruction.actions.append(action)
+
+            else:
+                instruction = ConfigTree.WriteActions()
+                instruction.instruction_type = "WriteActions"
+                for action in action_list:
+                    instruction.actions.append(action)
+
+
+        else:
+            raise NotImplementedError
+
+        return flow
+
 
     def push_table_miss_goto_next_table_flow(self, sw, table_id):
 
@@ -224,6 +304,13 @@ class SynthesisLib():
         elif self.network_graph.controller == "ryu":
             flow["actions"] = [{"type": "GOTO_TABLE",  "table_id": str(table_id + 1)}]
 
+        elif self.network_graph.controller == "sel":
+            go_to_table_instruction = ConfigTree.GoToTable()
+            go_to_table_instruction.instruction_type = "GotoTable"
+            flow.instructions.append(go_to_table_instruction)
+
+        else:
+            raise NotImplementedError
 
         self.push_flow(sw, flow)
 
@@ -242,9 +329,19 @@ class SynthesisLib():
             self.populate_flow_action_instruction(flow, action_list, apply_immediately)
 
         elif self.network_graph.controller == "ryu":
-                flow["match"] = flow_match.generate_match_json(self.network_graph.controller, flow["match"])
-                action_list = [{"type": "GROUP", "group_id": group_id}]
-                self.populate_flow_action_instruction(flow, action_list, apply_immediately)
+            flow["match"] = flow_match.generate_match_json(self.network_graph.controller, flow["match"])
+            action_list = [{"type": "GROUP", "group_id": group_id}]
+            self.populate_flow_action_instruction(flow, action_list, apply_immediately)
+
+        elif self.network_graph.controller == "sel":
+            match = flow_match.generate_match_json(self.network_graph.controller, flow.match)
+            action = ConfigTree.GroupAction()
+            action.action_type = "Group"
+            flow.match = match
+            self.populate_flow_action_instruction(flow, [action], apply_immediately)
+
+        else:
+            raise NotImplementedError
 
         self.push_flow(sw, flow)
 
@@ -316,6 +413,9 @@ class SynthesisLib():
             group["buckets"] = [bucket_primary, bucket_failover]
             group_id = group["group_id"]
 
+        else:
+            raise NotImplementedError
+
         self.push_group(sw, group)
 
         return group_id
@@ -357,6 +457,21 @@ class SynthesisLib():
 
             group_id = group["group_id"]
 
+        elif self.network_graph.controller == "sel":
+            group = ConfigTree.Group()
+            group.group_type = "All"
+            for intent in intent_list:
+                out_port, watch_port = self.get_out_and_watch_port(intent)
+                action = ConfigTree.OutputAction()
+                action.out_port = out_port
+                action.action_type = "Output"
+                bucket = ConfigTree.Bucket()
+                bucket.actions.append(action)
+                group.buckets.append(bucket)
+
+        else:
+            raise NotImplementedError
+
         self.push_group(sw, group)
 
         return group_id
@@ -380,6 +495,17 @@ class SynthesisLib():
             flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"])
             pop_vlan_action = {"type": "POP_VLAN"}
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
+
+        elif self.network_graph.controller == "sel":
+            flow.match = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow.match)
+            pop_vlan_action = ConfigTree.PopVlanAction()
+            pop_vlan_action.action_type = "PopVlan"
+            output_action = ConfigTree.OutputAction()
+            output_action.out_port = mac_intent.out_port
+            output_action.action_type = "Output"
+
+        else:
+            raise NotImplementedError
 
         action_list = None
         if mac_intent.min_rate and mac_intent.max_rate:
@@ -450,6 +576,24 @@ class SynthesisLib():
 
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
+            elif self.network_graph.controller == "sel":
+                flow.match = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                                flow.match)
+
+                flow.match.vlan_vid = push_vlan_intent.required_vlan_id + 0x1000
+                push_vlan_action = ConfigTree.PushVlanAction()
+                push_vlan_action.ether_type = 0x8100
+                push_vlan_action.action_type = "PushVlan"
+                go_to_table_action = ConfigTree.GoToTable()
+                go_to_table_action.instruction_type = "GotoTable"
+                go_to_table_action.table_id = str(vlan_tag_push_rules_table_id + 1)
+
+                action_list = [push_vlan_action, go_to_table_action]
+                self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
+
+            else:
+                raise NotImplementedError
+
             self.push_flow(sw, flow)
 
     def push_loop_preventing_drop_rules(self, sw, loop_preventing_drop_table):
@@ -464,6 +608,7 @@ class SynthesisLib():
             # Get a vanilla flow
             flow = self.create_base_flow(sw, loop_preventing_drop_table, 100)
 
+            action_list = []
 
             #Compile match with in_port and destination mac address
             if self.network_graph.controller == "odl":
@@ -485,6 +630,16 @@ class SynthesisLib():
 
                 # Empty list for drop action
                 action_list = []
+
+            elif self.network_graph.controller == "sel":
+                print(flow, h_obj)
+                flow.match.in_port = str(h_obj.switch_port_attached)
+                flow.match.eth_dst = h_obj.mac_addr
+
+                drop_action = ConfigTree.Action()
+                drop_action.type = "DropAction"
+                # Empty list for drop action
+                action_list = [drop_action]
 
             # Make and push the flow
             self.populate_flow_action_instruction(flow, action_list, True)

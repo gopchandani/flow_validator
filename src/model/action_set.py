@@ -87,7 +87,9 @@ class Action():
 
 
     def parse_sel_action_json(self):
-        pass
+        if self.modified_field == "vlab_id":
+            self.field_modified_to = int(self.field_modified_to) - 0x1000
+        raise NotImplementedError
 
     def parse_ryu_action_json(self):
 
