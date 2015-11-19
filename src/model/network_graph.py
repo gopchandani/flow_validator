@@ -204,7 +204,6 @@ class NetworkGraph():
                 host_switch_obj = self.get_node_object(mininet_host_dict["host_switch_id"])
                 # Add the host to the graph
                 self.host_ids.append(mininet_host_dict["host_name"])
-                pdb.set_trace()
                 if self.load_config:
                     h_obj = Host(mininet_host_dict["host_name"],
                                  self,

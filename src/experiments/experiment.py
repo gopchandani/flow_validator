@@ -64,16 +64,12 @@ class Experiment(object):
                 self.mm.setup_mininet_with_odl(ng)
             elif self.controller == "ryu":
                 #self.mm.setup_mininet_with_ryu_router()
-
                 if qos:
                     self.mm.setup_mininet_with_ryu_qos(ng)
                 else:
                     self.mm.setup_mininet_with_ryu(ng)
             elif self.controller == "sel":
                 self.mm.setup_mininet_with_sel(ng)
-
-        import pdb
-        pdb.set_trace()
 
         # Refresh the network_graph
         ng.parse_switches()
