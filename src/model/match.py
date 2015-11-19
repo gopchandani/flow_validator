@@ -210,50 +210,49 @@ class Match(DictMixin):
 
     def add_element_from_sel_match_json(self, match_json):
 
-        pass
-        # for field_name in field_names:
-        #     try:
-        #         if field_name == "in_port":
-        #             try:
-        #                 self[field_name] = int(match_json["in_port"])
-        #
-        #             except ValueError:
-        #                 parsed_in_port = match_json["in-port"].split(":")[2]
-        #                 self[field_name] = int(parsed_in_port)
-        #
-        #         elif field_name == "ethernet_type":
-        #             self[field_name] = match_json["dl_type"]
-        #
-        #         elif field_name == "ethernet_source":
-        #             mac_int = int(match_json[u"dl_src"].replace(":", ""), 16)
-        #             self[field_name] = mac_int
-        #
-        #         elif field_name == "ethernet_destination":
-        #             mac_int = int(match_json[u"dl_dst"].replace(":", ""), 16)
-        #             self[field_name] = mac_int
-        #
-        #         #TODO: Add graceful handling of IP addresses
-        #         elif field_name == "src_ip_addr":
-        #             self[field_name] = IPNetwork(match_json["nw_src"])
-        #         elif field_name == "dst_ip_addr":
-        #             self[field_name] = IPNetwork(match_json["nw_dst"])
-        #
-        #         elif field_name == "ip_protocol":
-        #             self[field_name] = int(match_json["ip-match"]["ip-protocol"])
-        #         elif field_name == "tcp_destination_port":
-        #             self[field_name] = int(match_json["tcp-destination-port"])
-        #         elif field_name == "tcp_source_port":
-        #             self[field_name] = int(match_json["tcp-source-port"])
-        #         elif field_name == "udp_destination_port":
-        #             self[field_name] = int(match_json["udp-destination-port"])
-        #         elif field_name == "udp_source_port":
-        #             self[field_name] = int(match_json["udp-source-port"])
-        #         elif field_name == "vlan_id":
-        #             self[field_name] = int(match_json[u"dl_vlan"])
-        #
-        #     except KeyError:
-        #         self[field_name] = sys.maxsize
-        #         continue
+        for field_name in field_names:
+            try:
+                if field_name == "in_port":
+                    try:
+                        self[field_name] = int(match_json["in_port"])
+
+                    except ValueError:
+                        parsed_in_port = match_json["in-port"].split(":")[2]
+                        self[field_name] = int(parsed_in_port)
+
+                elif field_name == "ethernet_type":
+                    self[field_name] = match_json["dl_type"]
+
+                elif field_name == "ethernet_source":
+                    mac_int = int(match_json[u"dl_src"].replace(":", ""), 16)
+                    self[field_name] = mac_int
+
+                elif field_name == "ethernet_destination":
+                    mac_int = int(match_json[u"dl_dst"].replace(":", ""), 16)
+                    self[field_name] = mac_int
+
+                #TODO: Add graceful handling of IP addresses
+                elif field_name == "src_ip_addr":
+                    self[field_name] = IPNetwork(match_json["nw_src"])
+                elif field_name == "dst_ip_addr":
+                    self[field_name] = IPNetwork(match_json["nw_dst"])
+
+                elif field_name == "ip_protocol":
+                    self[field_name] = int(match_json["ip-match"]["ip-protocol"])
+                elif field_name == "tcp_destination_port":
+                    self[field_name] = int(match_json["tcp-destination-port"])
+                elif field_name == "tcp_source_port":
+                    self[field_name] = int(match_json["tcp-source-port"])
+                elif field_name == "udp_destination_port":
+                    self[field_name] = int(match_json["udp-destination-port"])
+                elif field_name == "udp_source_port":
+                    self[field_name] = int(match_json["udp-source-port"])
+                elif field_name == "vlan_id":
+                    self[field_name] = int(match_json[u"dl_vlan"])
+
+            except KeyError:
+                self[field_name] = sys.maxsize
+                continue
 
 
     def add_element_from_ryu_match_json(self, match_json):
