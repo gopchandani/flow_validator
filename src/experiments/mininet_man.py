@@ -149,7 +149,6 @@ class MininetMan():
 
         # self.net.pingAll(self.ping_timeout)
 
-
     def setup_mininet_with_ryu(self, ng):
 
         print "Synthesizing..."
@@ -160,7 +159,7 @@ class MininetMan():
         # self.s1 = self.net.getNodeByName("s1")
         # self.s1.addIntf("s1-eth5", self.s1.newPort())
 
-        #self.net.pingAll(self.ping_timeout)
+        self.net.pingAll(self.ping_timeout)
         #
         # self.h11 = self.net.getNodeByName("h11")
         # self.h31 = self.net.getNodeByName("h31")

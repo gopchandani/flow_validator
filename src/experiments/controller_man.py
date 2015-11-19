@@ -121,6 +121,8 @@ class ControllerMan():
 
         if self.controller == "ryu":
             self.ryu_proc.kill()
+        elif self.controller == "sel":
+            pass
         else:
             print "Docker cleanup..."
             self.kill_all()

@@ -58,6 +58,7 @@ class Experiment(object):
                           save_config=self.save_config,
                           load_config=self.load_config)
 
+
         if not self.load_config and self.save_config:
             if self.controller == "odl":
                 self.mm.setup_mininet_with_odl(ng)
@@ -70,6 +71,9 @@ class Experiment(object):
                     self.mm.setup_mininet_with_ryu(ng)
             elif self.controller == "sel":
                 self.mm.setup_mininet_with_sel(ng)
+
+        import pdb
+        pdb.set_trace()
 
         # Refresh the network_graph
         ng.parse_switches()

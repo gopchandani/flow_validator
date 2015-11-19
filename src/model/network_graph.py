@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 import os
+import pdb
 import json
 import httplib2
 import networkx as nx
@@ -201,10 +202,9 @@ class NetworkGraph():
             # For every host
             for mininet_host_dict in mininet_host_nodes[sw]:
                 host_switch_obj = self.get_node_object(mininet_host_dict["host_switch_id"])
-
                 # Add the host to the graph
                 self.host_ids.append(mininet_host_dict["host_name"])
-
+                pdb.set_trace()
                 if self.load_config:
                     h_obj = Host(mininet_host_dict["host_name"],
                                  self,
@@ -231,7 +231,6 @@ class NetworkGraph():
                 dst_list = mininet_port_edges[src_node][src_node_port]
                 dst_node = dst_list[0]
                 dst_node_port = dst_list[1]
-
                 self.add_edge(src_node,
                               int(src_node_port),
                               dst_node,
@@ -393,26 +392,27 @@ class NetworkGraph():
                 switch_flow_tables.append(FlowTable(sw, table_id, ryu_switches[dpid]["flow_tables"][table_id]))
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
+    def print_sel_flow_stats(self):
+        for each in OperationalTree.flowStatsHttpAccess(self.sel_session).read_collection():
+            print (each.to_pyson())
+
     def get_sel_switches(self):
-        nodes = ConfigTree.nodesHttpAccess(self.sel_session)
+        nodes = OperationalTree.nodesHttpAccess(self.sel_session)
         sel_switches = {}
         for each in nodes.read_collection():
             this_switch = {}
-            if  (each.linked_key.startswith("OpenFlow")):
-                # If the linked_key does not start with "OpenFlow" it means that this is a Host node
-                # and not a switch node. Skip the execution for the rest of the flow.
+            if isinstance(each, OperationalTree.OpenFlowNode):
+                switch_id = each.data_path_id
 
-                switch_id = each.linked_key.replace("OpenFlow:", "s")
                 ports = OperationalTree.portsHttpAccess(self.sel_session)
                 sw_ports = []
+
                 for port in ports.read_collection():
-                    try:
-                        if port.name.startswith(switch_id):
+
+                    if isinstance(port, OperationalTree.OpenFlowPort):
+                        if port.data_path_id == switch_id:
                             sw_ports.append(port.to_pyson())
-                    except AttributeError:
-                        # There is no name in the port, that means it belongs to a
-                        # host instead of a switch, just ignore this.
-                        pass
+
                 this_switch["ports"] = sw_ports
 
                 groups = ConfigTree.groupsHttpAccess(self.sel_session)
@@ -438,9 +438,9 @@ class NetworkGraph():
         return sel_switches
 
     def parse_sel_switches(self, sel_switches):
-        for each_id in sel_switches:
+        for each_id, switch in sel_switches.iteritems():
             # prepare the switch id
-            switch_id = each_id
+            switch_id = "s" + str(each_id)
 
             sw = self.get_node_object(switch_id)
             # Check to see if a switch with this id already exists in the graph,
@@ -449,10 +449,9 @@ class NetworkGraph():
                 sw = Switch(switch_id, self)
                 self.graph.add_node(switch_id, node_type="switch", sw=sw)
                 self.switch_ids.append(switch_id)
-
             # Parse out the information about all the ports in the switch
             switch_ports = {}
-            for port in sel_switches[each_id]["ports"]:
+            for port in switch["ports"]:
                 switch_ports[port["portId"]] = Port(sw, port_json=port)
 
             sw.ports = switch_ports

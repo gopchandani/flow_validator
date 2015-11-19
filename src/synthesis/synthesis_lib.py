@@ -31,7 +31,7 @@ class SynthesisLib():
         self.sel_session = Session.Http("http://selcontroller:1234/")
         self.sel_session.auth_user_callback(user="hobbs", role="Engineer", password="Asdf123$")
         self.sel_session.print_status = True
-        self.sel_session.print_data = True
+        self.sel_session.print_data = False
 
         # Cleanup all Queue/QoS records from OVSDB
         os.system("sudo ovs-vsctl -- --all destroy QoS")
@@ -54,6 +54,13 @@ class SynthesisLib():
 
         return self.queue_id_cntr
 
+    def sel_change_node_id(self, flow):
+        for node in ConfigTree.nodesHttpAccess(self.sel_session).read_collection():
+            if node.linked_key == "OpenFlow:{}".format(flow.node[1:]):
+                flow.node = node.id
+                return flow
+
+
     def push_change(self, url, pushed_content):
 
         time.sleep(0.1)
@@ -73,13 +80,13 @@ class SynthesisLib():
         elif self.network_graph.controller == "sel":
             if isinstance(pushed_content, ConfigTree.Flow):
                 flows = ConfigTree.flowsHttpAccess(self.sel_session)
+                flow = self.sel_change_node_id(pushed_content)
                 result = flows.create_single(pushed_content)
             elif isinstance(pushed_content, ConfigTree.Group):
                 groups = ConfigTree.groupsHttpAccess(self.sel_session)
                 result = groups.create_single(pushed_content)
             else:
                 raise NotImplementedError
-
         #resp = {"status": "200"}
         #pprint.pprint(pushed_content)
 
@@ -192,24 +199,12 @@ class SynthesisLib():
         elif self.network_graph.controller == "sel":
 
             flow = ConfigTree.Flow()
-            flow.node = sw[1:]
+            flow.node = sw
             flow.buffer_id = 0
             flow.cookie = self.flow_id_cntr
             flow.priority = priority + 10
             flow.table_id = table_id
-                # enumerating these isnt required just added for reference
-            flow.eth_dst = None
-            flow.eth_src = None
-            flow.ipv4_dst = None
-            flow.ipv4_src = None
-            flow.eth_type = None
-            flow.tcp_src = None
-            flow.tcp_dst = None
-            flow.udp_src = None
-            flow.udp_dst = None
-            flow.vlan_vid = None
-            flow.vlan_pcp = None
-            flow.ip_proto = None
+
         else:
             raise NotImplementedError
 
@@ -241,7 +236,7 @@ class SynthesisLib():
         elif self.network_graph.controller == "sel":
             group = ConfigTree.Group()
 
-            group.id = sw[1:]
+            group.id = sw
             group.group_id = self.group_id_cntr
 
         else:
@@ -306,7 +301,8 @@ class SynthesisLib():
 
         elif self.network_graph.controller == "sel":
             go_to_table_instruction = ConfigTree.GoToTable()
-            go_to_table_instruction.instruction_type = "GotoTable"
+            go_to_table_instruction.instruction_type = "GoToTable"
+            go_to_table_instruction.table_id = table_id + 1
             flow.instructions.append(go_to_table_instruction)
 
         else:
@@ -337,6 +333,7 @@ class SynthesisLib():
             match = flow_match.generate_match_json(self.network_graph.controller, flow.match)
             action = ConfigTree.GroupAction()
             action.action_type = "Group"
+            action.group_id = group_id
             flow.match = match
             self.populate_flow_action_instruction(flow, [action], apply_immediately)
 
@@ -412,6 +409,7 @@ class SynthesisLib():
 
             group["buckets"] = [bucket_primary, bucket_failover]
             group_id = group["group_id"]
+
 
         else:
             raise NotImplementedError
@@ -632,7 +630,6 @@ class SynthesisLib():
                 action_list = []
 
             elif self.network_graph.controller == "sel":
-                print(flow, h_obj)
                 flow.match.in_port = str(h_obj.switch_port_attached)
                 flow.match.eth_dst = h_obj.mac_addr
 
