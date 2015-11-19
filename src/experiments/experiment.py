@@ -1,6 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-
 import json
 import time
 import numpy as np
@@ -48,7 +47,7 @@ class Experiment(object):
         # Hard coding the port for now, need to remove this later.
         if self.controller == "sel":
             self.controller_port = 6653
-            controller_host = "selcontroller"
+            controller_host = "192.168.56.1"
         self.mm = MininetMan(self.controller_port, controller_host, *topo_description)
 
         # Get a flow validator instance
@@ -73,7 +72,6 @@ class Experiment(object):
 
         # Refresh the network_graph
         ng.parse_switches()
-
         return ng
 
     def dump_data(self):

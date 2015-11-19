@@ -410,7 +410,6 @@ class Match(DictMixin):
 
 
     def generate_sel_match_json(self, match):
-        print(self)
         if "in_port" in self and self["in_port"] != sys.maxsize:
             # TODO(abhilash) check what does SEL want in case of port_in;
             # it errors out if you let the port number (self["port_in"]) pass
@@ -466,7 +465,6 @@ class Match(DictMixin):
         if "vlan_id" in self and self["vlan_id"] != sys.maxsize:
            match.__setattr__("vlan_id", str(self["vlan_id"]))
 
-        print(match.to_json())
         return match
 
     def generate_ryu_match_json(self, match_json):

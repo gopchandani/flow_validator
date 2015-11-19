@@ -63,10 +63,6 @@ class MininetMan():
                            autoStaticArp=True,
                            controller=lambda name: RemoteController(name, ip=self.controller_host, port=self.controller_port),
                            switch=self.switch)
-
-        import pdb
-        pdb.set_trace()
-
         self.net.start()
 
 
