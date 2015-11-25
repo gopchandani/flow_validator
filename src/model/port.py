@@ -27,7 +27,7 @@ class Port():
         elif port_type == "physical" and self.sw.network_graph.controller == "ryu":
             self.parse_ryu_port_json(port_json)
 
-        elif self.sw.network_graph.controller == "sel":
+        elif port_type == "physical" and self.sw.network_graph.controller == "sel":
             self.parse_sel_port_json(port_json)
 
         elif port_type == "ingress":

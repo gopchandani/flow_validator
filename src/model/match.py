@@ -246,9 +246,9 @@ class Match(DictMixin):
                 elif field_name == "udp_destination_port":
                     self[field_name] = int(match_json["udp-destination-port"])
                 elif field_name == "udp_source_port":
-                    self[field_name] = int(match_json["udp-source-port"])
+                    self[field_name] = (match_json["udp-source-port"])
                 elif field_name == "vlan_id":
-                    self[field_name] = int(match_json[u"dl_vlan"])
+                    self[field_name] = str(match_json[u"dl_vlan"])
 
             except KeyError:
                 self[field_name] = sys.maxsize

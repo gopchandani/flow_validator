@@ -81,7 +81,7 @@ class SynthesisLib():
             if isinstance(pushed_content, ConfigTree.Flow):
                 flows = ConfigTree.flowsHttpAccess(self.sel_session)
                 flow = self.sel_change_node_id(pushed_content)
-                result = flows.create_single(pushed_content)
+                result = flows.create_single(flow)
             elif isinstance(pushed_content, ConfigTree.Group):
                 groups = ConfigTree.groupsHttpAccess(self.sel_session)
                 result = groups.create_single(pushed_content)
@@ -235,7 +235,6 @@ class SynthesisLib():
 
         elif self.network_graph.controller == "sel":
             group = ConfigTree.Group()
-
             group.id = sw
             group.group_id = self.group_id_cntr
 
@@ -301,7 +300,7 @@ class SynthesisLib():
 
         elif self.network_graph.controller == "sel":
             go_to_table_instruction = ConfigTree.GoToTable()
-            go_to_table_instruction.instruction_type = "GoToTable"
+            go_to_table_instruction.instruction_type = "GotoTable"
             go_to_table_instruction.table_id = table_id + 1
             flow.instructions.append(go_to_table_instruction)
 
@@ -409,6 +408,31 @@ class SynthesisLib():
 
             group["buckets"] = [bucket_primary, bucket_failover]
             group_id = group["group_id"]
+
+        elif self.network_graph.controller == "sel":
+
+            group = self.create_base_group(sw)
+            group.group_type = "FastFailover"
+            out_port, watch_port = self.get_out_and_watch_port(primary_intent)
+
+            bucket_primary = ConfigTree.Bucket()
+            action = ConfigTree.OutputAction()
+            action.action_type = "Output"
+            action.out_port = out_port
+            bucket_primary.actions.append(action)
+            bucket_primary.watch_port = watch_port
+            # No idea how to set the weight of this bucket.
+            group.buckets.append(bucket_primary)
+
+            out_port, watch_port = self.get_out_and_watch_port(failover_intent)
+            bucket_failover = ConfigTree.Bucket()
+            action = ConfigTree.OutputAction()
+            action.action_type = "Output"
+            action.out_port = out_port
+            bucket_failover.actions.append(action)
+            bucket_failover.watch_port = watch_port
+
+            group.buckets.append(bucket_failover)
 
 
         else:
@@ -578,7 +602,7 @@ class SynthesisLib():
                 flow.match = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
                                                                                 flow.match)
 
-                flow.match.vlan_vid = push_vlan_intent.required_vlan_id + 0x1000
+                flow.match.vlan_vid = str(push_vlan_intent.required_vlan_id)
                 push_vlan_action = ConfigTree.PushVlanAction()
                 push_vlan_action.ether_type = 0x8100
                 push_vlan_action.action_type = "PushVlan"

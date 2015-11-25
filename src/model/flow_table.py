@@ -52,9 +52,11 @@ class Flow():
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
             elif self.sw.network_graph.controller == "sel":
-                pass
+                self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
             elif self.sw.network_graph.controller == "ryu":
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
+            else:
+                raise NotImplementedError
 
             self.applied_modifications = \
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)

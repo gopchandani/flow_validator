@@ -6,3 +6,4 @@ src/synthesis/.cache/*
 *pyc
 *.bak
 *~
+*.json
