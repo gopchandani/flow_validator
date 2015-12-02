@@ -10,6 +10,7 @@ from pprint import pprint
 from controller_man import ControllerMan
 from mininet_man import MininetMan
 from model.network_graph import NetworkGraph
+from sel_controller import adopt_all
 
 class Experiment(object):
 
@@ -51,6 +52,14 @@ class Experiment(object):
             controller_host = "192.168.56.1"
         self.mm = MininetMan(self.controller_port, controller_host, *topo_description)
 
+        if self.controller == "sel":
+            time.sleep(5)
+            print("Trying to adopt all switches on {0}:{1}".format(controller_host, 1234))
+            adopt_all.main("http://selcontroller:1234/")
+            print("Running pingall")
+            self.mm.net.pingAll(2)
+            print("Trying to adopt all switches")
+            adopt_all.main("http://selcontroller:1234/")
         # Get a flow validator instance
         ng = NetworkGraph(mininet_man=self.mm,
                           controller=self.controller,

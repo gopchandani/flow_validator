@@ -48,7 +48,7 @@ class NetworkGraph():
         self.controller = controller
 
         self.sel_session = Session.Http(self.baseUrlSel)
-        self.sel_session.auth_user_callback(user="hobbs", password="Asdf123$", role="Engineer")
+        self.sel_session.auth_user_callback()
 
         dir_name = self.controller + \
                    str(self.mininet_man.topo_name) + \

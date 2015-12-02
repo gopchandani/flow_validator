@@ -58,7 +58,7 @@ class BaseHttpAccess(object):
     def update_single(self, item, item_id):
         item_json = item.to_json()
         entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
-        response = self._session.put_json_data(entity_path, item_json)
+        response = self._session.put_data(entity_path, item_json)
         return response
 
     def patch_single(self, item, item_id, update_key_list):
@@ -68,12 +68,12 @@ class BaseHttpAccess(object):
             patch[key] = item_pyson[key]
         entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
         json_string = json.dumps(patch, sort_keys=True, indent=4, separators=(u',', u': '))
-        response = self._session.patch_json_data(entity_path, json_string)
+        response = self._session.patch_data(entity_path, json_string)
         return response
 
     def delete_single(self, item_id):
         entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
-        response = self._session.delete_json_data(entity_path)
+        response = self._session.delete_data(entity_path)
         return response
 
 #
@@ -1013,7 +1013,6 @@ class WriteActions(Instruction):
 class Flow(object):
 
     def __init__(self):
-	
         self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Flow'
         self._node = u""
         self._cookie = 0

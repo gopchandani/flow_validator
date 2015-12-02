@@ -1,11 +1,12 @@
 # Copyright (c) 2015 Schweitzer Engineering Laboratories, Inc.
-
 from __future__ import absolute_import
 import requests
+# from IPython.display import display, HTML
 import re
 from oauth2client.client import OAuth2WebServerFlow
 from requests.auth import HTTPBasicAuth
 
+PORT = 8000
 auth_code = u""
 
 u'''
@@ -13,6 +14,7 @@ from http://stackoverflow.com/questions/38987/how-can-i-merge-two-python-diction
 Given any number of dicts, shallow copy and merge into a new dict,
 precedence goes to key value pairs in latter dicts.
 '''
+
 
 
 def merge_dicts(*dict_args):
@@ -37,23 +39,28 @@ class Http(object):
         self.controller_base = base_url
         self.api_base_url = base_url + u"api/"
       
-    def auth_user_callback(self, user="hobbs", role="Engineer", password="Asdf123$"):
-        post_resp = requests.post(self.controller_base + "identity/connect/token",
-                                  auth=HTTPBasicAuth('uiuc-validator-client', 'supersecret'),
-                                  data = { "grant_type": "password",
-                                    "scope": "Rest",
-                                    "username":user,
-                                    "password":password,
-                                    "acr_values": "role:"+role }
-                          , headers = {'Content-Type': 'application/x-www-form-urlencoded'})
+    def auth_user_callback(self, user=u"hobbs", role=u"Engineer", password=u"Asdf123$"):
+        post_resp = requests.post(self.controller_base + u"identity/connect/token",
+                                  # auth=HTTPBasicAuth('uiuc-validator-client', 'supersecret'),
+                                  auth=HTTPBasicAuth(u'password-client', u'8b2cacd9d07219d0af89cf1c2280d071'),
+                                  data = { u"grant_type": u"password", 
+                                    u"scope": u"Rest", 
+                                    u"username":user, 
+                                    u"password":password, 
+                                    u"acr_values": u"role:"+role }
+                          , headers = {u'Content-Type': u'application/x-www-form-urlencoded'})
         self.current_user_name = user
-        self.current_user_token = post_resp.json()["access_token"]
+
+        # print( post_resp.status_code )
+        # print( post_resp.text )
+
+        self.current_user_token = post_resp.json()[u"access_token"]
         return self.current_user_token
 
 
     def create_authorization_header(self):
-        bearer_token = 'Bearer ' + self.current_user_token
-        return {'authorization': bearer_token}
+        bearer_token = u'Bearer ' + self.current_user_token
+        return {u'authorization': bearer_token}
 
     def get_data(self, url_extension):
         parameters = None if self.current_transaction_id is None else set([u"transactionId", self.current_transaction_id])
@@ -64,15 +71,15 @@ class Http(object):
                                   headers=merge_dicts(self.json_application_type, self.create_authorization_header()),
                                   params=parameters)
         except Exception, e:
-            print ('Unable to GET from URL: ' + url)
-            print ('Reason ' + e)
+            print u'Unable to GET from URL: ' + url
+            print u'Reason ' + e
         content = result.text
-        self._print_status("GET", url, result.status_code)
+        self._print_status(u"GET", url, result.status_code)
         self._print_data(content)
         return content
 
     def post_data(self, url_extension, raw_data):
-        parameters = None if self.current_transaction_id is None else set(["transactionId", self.current_transaction_id])
+        parameters = None if self.current_transaction_id is None else set([u"transactionId", self.current_transaction_id])
         url = self.api_base_url + url_extension
         result = None
         try:
@@ -80,15 +87,15 @@ class Http(object):
                                    headers=merge_dicts(self.json_application_type, self.create_authorization_header()),
                                    params=parameters)
         except Exception, e:
-            print ('Unable to POST to URL: ' + url)
-            print ('Reason ' + e)
+            print u'Unable to POST to URL: ' + url
+            print u'Reason ' + e
         content = result.text
-        self._print_status("GET", url, result.status_code)
+        self._print_status(u"GET", url, result.status_code)
         self._print_data(content)
         return content
 
     def put_data(self, url_extension, raw_data):
-        parameters = None if self.current_transaction_id is None else set(["transactionId", self.current_transaction_id])
+        parameters = None if self.current_transaction_id is None else set([u"transactionId", self.current_transaction_id])
         url = self.api_base_url + url_extension
         result = None
         try:
@@ -96,13 +103,13 @@ class Http(object):
                                    headers=merge_dicts(self.json_application_type, self.create_authorization_header()),
                                    params=parameters)
         except Exception, e:
-            print ('Unable to PUT to URL: ' + url)
-            print ('Reason ' + e)
-        self.print_status("PUT", url, result.status_code)
+            print u'Unable to PUT to URL: ' + url
+            print u'Reason ' + e
+        self._print_status(u"PUT", url, result.status_code)
         return result
 
     def patch_data(self, url_extension, raw_data):
-        parameters = None if self.current_transaction_id is None else set(["transactionId", self.current_transaction_id])
+        parameters = None if self.current_transaction_id is None else set([u"transactionId", self.current_transaction_id])
         url = self.api_base_url + url_extension
         result = None
         try:
@@ -110,13 +117,13 @@ class Http(object):
                                     headers=merge_dicts(self.json_application_type, self.create_authorization_header()),
                                     params=parameters)
         except Exception, e:
-            print ('Unable to PATCH to URL: ' + url)
-            print ('Reason ' + e)
-        self.print_status("PATCH", url, result.status_code)
+            print u'Unable to PATCH to URL: ' + url
+            print u'Reason ' + e
+        self._print_status(u"PATCH", url, result.status_code)
         return result
 
     def delete_data(self, url_extension):
-        parameters = None if self.current_transaction_id is None else set(["transactionId", self.current_transaction_id])
+        parameters = None if self.current_transaction_id is None else set([u"transactionId", self.current_transaction_id])
         url = self.api_base_url + url_extension
         result = None
         try:
@@ -124,18 +131,25 @@ class Http(object):
                                      headers=merge_dicts(self.json_application_type, self.create_authorization_header()),
                                      params=parameters)
         except Exception, e:
-            print ('Unable to DELETE data at URL: ' + url)
-            print ('Reason ' + e)
-        self.print_status("DELETE", url, result.status_code)
+            print u'Unable to DELETE data at URL: ' + url
+            print u'Reason ' + e
+        self._print_status(u"DELETE", url, result.status_code)
         return result
 
     def _print_status(self, operation, url, status):
         if self.print_status:
-            print ('{0} URL: {1}'.format(operation, url))
-            print ('Status Code:' + unicode(status))
+            print u'{0} URL: {1}'.format(operation, url)
+            print u'Status Code:' + unicode(status)
 
     def _print_data(self, data):
         if self.print_data:
-            print ('{:-^30}'.format('Begin Content'))
+            print u'{:-^30}'.format(u'Begin Content')
             print data
-            print ('{:-^30}'.format('End Content'))
+            print u'{:-^30}'.format(u'End Content')
+    @staticmethod
+    def run_from_ipython():
+        try:
+            __IPYTHON__
+            return True
+        except NameError:
+            return False

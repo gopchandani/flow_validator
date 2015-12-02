@@ -9,25 +9,24 @@
 #     the code is regenerated.
 # </auto-generated>
 # ------------------------------------------------------------------------------
-from __future__ import absolute_import
 import json
 import datetime
 
 
 class BaseHttpAccess(object):
-    entity_base_name = u""
-    entity_odata_type = u""
+    entity_base_name = ""
+    entity_odata_type = ""
     _session = None
-    api_tree_path = u'default/operational/'
+    api_tree_path = 'default/operational/'
 
     def __init__(self, session):
         self._session = session
 
     def read_single(self, item_id):
-        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
+        entity_path = self.api_tree_path + self.entity_base_name + "('" + item_id + "')"
         response = self._session.get_data(entity_path)
         pyson_response = json.loads(response)
-        object_type = pyson_response[u'@odata.type'] if u'@odata.type' in pyson_response else self.entity_odata_type
+        object_type = pyson_response['@odata.type'] if '@odata.type' in pyson_response else self.entity_odata_type
         result = _ResolveOdataType.getNewObject(object_type)
         result.from_pyson(pyson_response)
         return result
@@ -37,9 +36,9 @@ class BaseHttpAccess(object):
         response = self._session.get_data(collection_path)
         pyson_response = json.loads(response)
         result = []
-        raw_json_list = pyson_response[u'value']
+        raw_json_list = pyson_response['value']
         for pyson_object in raw_json_list:
-            object_type = pyson_object[u'@odata.type'] if u'@odata.type' in pyson_object else self.entity_odata_type
+            object_type = pyson_object['@odata.type'] if '@odata.type' in pyson_object else self.entity_odata_type
             new_object = _ResolveOdataType.getNewObject(object_type)
             new_object.from_pyson(pyson_object)
             result.append(new_object)
@@ -50,15 +49,15 @@ class BaseHttpAccess(object):
         collection_path = self.api_tree_path + self.entity_base_name
         response = self._session.post_data(collection_path, json_string)
         pyson_response = json.loads(response)
-        object_type = pyson_response[u'@odata.type'] if u'@odata.type' in pyson_response else self.entity_odata_type
+        object_type = pyson_response['@odata.type'] if '@odata.type' in pyson_response else self.entity_odata_type
         result = _ResolveOdataType.getNewObject(object_type)
         result.from_pyson(pyson_response)
         return result
 
     def update_single(self, item, item_id):
         item_json = item.to_json()
-        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
-        response = self._session.put_json_data(entity_path, item_json)
+        entity_path = self.api_tree_path + self.entity_base_name + "('" + item_id + "')"
+        response = self._session.put_data(entity_path, item_json)
         return response
 
     def patch_single(self, item, item_id, update_key_list):
@@ -66,14 +65,14 @@ class BaseHttpAccess(object):
         patch = {}
         for key in update_key_list:
             patch[key] = item_pyson[key]
-        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
-        json_string = json.dumps(patch, sort_keys=True, indent=4, separators=(u',', u': '))
-        response = self._session.patch_json_data(entity_path, json_string)
+        entity_path = self.api_tree_path + self.entity_base_name + "('" + item_id + "')"
+        json_string = json.dumps(patch, sort_keys=True, indent=4, separators=(',', ': '))
+        response = self._session.patch_data(entity_path, json_string)
         return response
 
     def delete_single(self, item_id):
-        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
-        response = self._session.delete_json_data(entity_path)
+        entity_path = self.api_tree_path + self.entity_base_name + "('" + item_id + "')"
+        response = self._session.delete_data(entity_path)
         return response
 
 #
@@ -85,8 +84,8 @@ class nodesHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(nodesHttpAccess, self).__init__(session)
-        self.entity_base_name = u"nodes"
-        self.entity_odata_type = u"#Sel.Sel5056.TopologyManager.Nodes.OperationalNode"
+        self.entity_base_name = "nodes"
+        self.entity_odata_type = "#Sel.Sel5056.TopologyManager.Nodes.OperationalNode"
 
 
 
@@ -94,8 +93,8 @@ class portsHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(portsHttpAccess, self).__init__(session)
-        self.entity_base_name = u"ports"
-        self.entity_odata_type = u"#Sel.Sel5056.TopologyManager.Ports.OperationalPort"
+        self.entity_base_name = "ports"
+        self.entity_odata_type = "#Sel.Sel5056.TopologyManager.Ports.OperationalPort"
 
 
 
@@ -103,8 +102,8 @@ class linksHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(linksHttpAccess, self).__init__(session)
-        self.entity_base_name = u"links"
-        self.entity_odata_type = u"#Sel.Sel5056.TopologyManager.Links.OperationalLink"
+        self.entity_base_name = "links"
+        self.entity_odata_type = "#Sel.Sel5056.TopologyManager.Links.OperationalLink"
 
 
 
@@ -112,8 +111,8 @@ class eventsHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(eventsHttpAccess, self).__init__(session)
-        self.entity_base_name = u"events"
-        self.entity_odata_type = u"#Sel.Sel5056.Common.DataBroker.Types.EventBus.Event"
+        self.entity_base_name = "events"
+        self.entity_odata_type = "#Sel.Sel5056.Common.DataBroker.Types.EventBus.Event"
 
 
 
@@ -121,8 +120,8 @@ class flowStatsHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(flowStatsHttpAccess, self).__init__(session)
-        self.entity_base_name = u"flowStats"
-        self.entity_odata_type = u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStats"
+        self.entity_base_name = "flowStats"
+        self.entity_odata_type = "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStats"
 
 
 
@@ -130,8 +129,8 @@ class groupDescHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(groupDescHttpAccess, self).__init__(session)
-        self.entity_base_name = u"groupDesc"
-        self.entity_odata_type = u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupDesc"
+        self.entity_base_name = "groupDesc"
+        self.entity_odata_type = "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupDesc"
 
 
 
@@ -139,8 +138,8 @@ class portDescHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(portDescHttpAccess, self).__init__(session)
-        self.entity_base_name = u"portDesc"
-        self.entity_odata_type = u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortDesc"
+        self.entity_base_name = "portDesc"
+        self.entity_odata_type = "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortDesc"
 
 
 
@@ -148,8 +147,8 @@ class deviceCapabilitiesHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(deviceCapabilitiesHttpAccess, self).__init__(session)
-        self.entity_base_name = u"deviceCapabilities"
-        self.entity_odata_type = u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.DeviceCapability"
+        self.entity_base_name = "deviceCapabilities"
+        self.entity_odata_type = "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.DeviceCapability"
 
 
 
@@ -157,8 +156,8 @@ class tableStatsHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(tableStatsHttpAccess, self).__init__(session)
-        self.entity_base_name = u"tableStats"
-        self.entity_odata_type = u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStats"
+        self.entity_base_name = "tableStats"
+        self.entity_odata_type = "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStats"
 
 
 
@@ -166,8 +165,8 @@ class portStatsHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(portStatsHttpAccess, self).__init__(session)
-        self.entity_base_name = u"portStats"
-        self.entity_odata_type = u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStats"
+        self.entity_base_name = "portStats"
+        self.entity_odata_type = "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStats"
 
 
 
@@ -175,8 +174,8 @@ class transactionsHttpAccess(BaseHttpAccess):
 
     def __init__(self, session):
         super(transactionsHttpAccess, self).__init__(session)
-        self.entity_base_name = u"transactions"
-        self.entity_odata_type = u"#Sel.Sel5056.Common.RestBroker.Models.RestTransaction"
+        self.entity_base_name = "transactions"
+        self.entity_odata_type = "#Sel.Sel5056.Common.RestBroker.Models.RestTransaction"
 
 
 #
@@ -186,12 +185,12 @@ class transactionsHttpAccess(BaseHttpAccess):
 
 
 
-class EventType(object):
+class EventType():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventType'
+        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventType'
         self._type_key = TypeKey()
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -200,7 +199,7 @@ class EventType(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _type_key = None
@@ -241,15 +240,15 @@ class EventType(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'typeKey'] = self._type_key.to_pyson()
-        pyson_object[u'durationSetting'] = self._duration_setting
-        pyson_object[u'severity'] = self._severity
-        pyson_object[u'id'] = self._id
+        pyson_object['typeKey'] = self._type_key.to_pyson()
+        pyson_object['durationSetting'] = self._duration_setting
+        pyson_object['severity'] = self._severity
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -257,28 +256,28 @@ class EventType(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'typeKey' in pyson_object:
-            self._type_key = pyson_object[u'typeKey']
+        if 'typeKey' in pyson_object:
+            self._type_key = pyson_object['typeKey']
 
-        if u'durationSetting' in pyson_object:
-            self._duration_setting = pyson_object[u'durationSetting']
+        if 'durationSetting' in pyson_object:
+            self._duration_setting = pyson_object['durationSetting']
 
-        if u'severity' in pyson_object:
-            self._severity = pyson_object[u'severity']
+        if 'severity' in pyson_object:
+            self._severity = pyson_object['severity']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
 
-class EventCategory(object):
+class EventCategory():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventCategory'
-        self._key = u""
+        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventCategory'
+        self._key = ""
         self._behaviors = []
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -287,7 +286,7 @@ class EventCategory(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _key = None
@@ -319,18 +318,18 @@ class EventCategory(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'key'] = self._key
+        pyson_object['key'] = self._key
         #Complex Copy of behaviors
         behaviors_result = []
         for item_from_behaviors in self._behaviors:
             behaviors_result.append(item_from_behaviors.to_pyson())
-        pyson_object[u'behaviors'] = behaviors_result
-        pyson_object[u'id'] = self._id
+        pyson_object['behaviors'] = behaviors_result
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -338,21 +337,21 @@ class EventCategory(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'key' in pyson_object:
-            self._key = pyson_object[u'key']
+        if 'key' in pyson_object:
+            self._key = pyson_object['key']
 
-        if u'behaviors' in pyson_object:
+        if 'behaviors' in pyson_object:
             self._behaviors = []
-            behaviors_json_list = pyson_object[u'behaviors']
+            behaviors_json_list = pyson_object['behaviors']
             for behaviors_json_element in behaviors_json_list:
-                behaviors_odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.EventBus.Behavior'
-                if u'@odata.type' in behaviors_json_element:
-                    behaviors_odata_type = behaviors_json_element[u'@odata.type']
+                behaviors_odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.Behavior'
+                if '@odata.type' in behaviors_json_element:
+                    behaviors_odata_type = behaviors_json_element['@odata.type']
                 new_element = _ResolveOdataType.getNewObject(behaviors_odata_type)
                 new_element.from_pyson(behaviors_json_element)
                 self._behaviors.append(new_element)
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
@@ -361,7 +360,7 @@ class ClearedEventType(EventType):
 
     def __init__(self):
         super(ClearedEventType, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.EventBus.ClearedEventType'
+        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.ClearedEventType'
         self._linked_type_key = TypeKey()
 
     def from_json(self, json_string):
@@ -371,7 +370,7 @@ class ClearedEventType(EventType):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _linked_type_key = None
@@ -385,13 +384,13 @@ class ClearedEventType(EventType):
         self._linked_type_key = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(ClearedEventType, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'linkedTypeKey'] = self._linked_type_key.to_pyson()
+        pyson_object['linkedTypeKey'] = self._linked_type_key.to_pyson()
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -400,16 +399,16 @@ class ClearedEventType(EventType):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'linkedTypeKey' in pyson_object:
-            self._linked_type_key = pyson_object[u'linkedTypeKey']
+        if 'linkedTypeKey' in pyson_object:
+            self._linked_type_key = pyson_object['linkedTypeKey']
 
         return pyson_object
 
 
-class Behavior(object):
+class Behavior():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.EventBus.Behavior'
+        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.Behavior'
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -418,7 +417,7 @@ class Behavior(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _behavior_type = None
@@ -441,13 +440,13 @@ class Behavior(object):
         self._severity = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'behaviorType'] = self._behavior_type
-        pyson_object[u'severity'] = self._severity
+        pyson_object['behaviorType'] = self._behavior_type
+        pyson_object['severity'] = self._severity
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -455,23 +454,23 @@ class Behavior(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'behaviorType' in pyson_object:
-            self._behavior_type = pyson_object[u'behaviorType']
+        if 'behaviorType' in pyson_object:
+            self._behavior_type = pyson_object['behaviorType']
 
-        if u'severity' in pyson_object:
-            self._severity = pyson_object[u'severity']
+        if 'severity' in pyson_object:
+            self._severity = pyson_object['severity']
 
         return pyson_object
 
 
-class Event(object):
+class Event():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.EventBus.Event'
+        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.Event'
         self._dictionary_arguments = []
         self._category = EventCategory()
         self._event_type = EventType()
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -480,7 +479,7 @@ class Event(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _dictionary_arguments = []
@@ -530,16 +529,16 @@ class Event(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'dictionaryArguments'] = list( self._dictionary_arguments )
-        pyson_object[u'state'] = self._state
-        pyson_object[u'category'] = self._category.to_pyson()
-        pyson_object[u'eventType'] = self._event_type.to_pyson()
-        pyson_object[u'id'] = self._id
+        pyson_object['dictionaryArguments'] = list( self._dictionary_arguments )
+        pyson_object['state'] = self._state
+        pyson_object['category'] = self._category.to_pyson()
+        pyson_object['eventType'] = self._event_type.to_pyson()
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -547,30 +546,30 @@ class Event(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'dictionaryArguments' in pyson_object:
-            self._dictionary_arguments = list(pyson_object[u'dictionaryArguments'])
+        if 'dictionaryArguments' in pyson_object:
+            self._dictionary_arguments = list(pyson_object['dictionaryArguments'])
 
-        if u'state' in pyson_object:
-            self._state = pyson_object[u'state']
+        if 'state' in pyson_object:
+            self._state = pyson_object['state']
 
-        if u'category' in pyson_object:
-            self._category = pyson_object[u'category']
+        if 'category' in pyson_object:
+            self._category = pyson_object['category']
 
-        if u'eventType' in pyson_object:
-            self._event_type = pyson_object[u'eventType']
+        if 'eventType' in pyson_object:
+            self._event_type = pyson_object['eventType']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.OpenFlowPlugin.DataTreeObjects
 
 
 
-class Action(object):
+class Action():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action'
         self._set_order = 0
 
     def from_json(self, json_string):
@@ -580,7 +579,7 @@ class Action(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _action_type = None
@@ -603,13 +602,13 @@ class Action(object):
         self._set_order = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'actionType'] = self._action_type
-        pyson_object[u'setOrder'] = self._set_order
+        pyson_object['actionType'] = self._action_type
+        pyson_object['setOrder'] = self._set_order
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -617,11 +616,11 @@ class Action(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'actionType' in pyson_object:
-            self._action_type = pyson_object[u'actionType']
+        if 'actionType' in pyson_object:
+            self._action_type = pyson_object['actionType']
 
-        if u'setOrder' in pyson_object:
-            self._set_order = pyson_object[u'setOrder']
+        if 'setOrder' in pyson_object:
+            self._set_order = pyson_object['setOrder']
 
         return pyson_object
 
@@ -630,7 +629,7 @@ class GroupAction(Action):
 
     def __init__(self):
         super(GroupAction, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupAction'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupAction'
         self._group_id = 0
 
     def from_json(self, json_string):
@@ -640,7 +639,7 @@ class GroupAction(Action):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _group_id = None
@@ -654,13 +653,13 @@ class GroupAction(Action):
         self._group_id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(GroupAction, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'groupId'] = self._group_id
+        pyson_object['groupId'] = self._group_id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -669,8 +668,8 @@ class GroupAction(Action):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'groupId' in pyson_object:
-            self._group_id = pyson_object[u'groupId']
+        if 'groupId' in pyson_object:
+            self._group_id = pyson_object['groupId']
 
         return pyson_object
 
@@ -679,7 +678,7 @@ class OutputAction(Action):
 
     def __init__(self):
         super(OutputAction, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.OutputAction'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.OutputAction'
         self._out_port = 0
         self._max_length = 0
 
@@ -690,7 +689,7 @@ class OutputAction(Action):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _out_port = None
@@ -713,14 +712,14 @@ class OutputAction(Action):
         self._max_length = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(OutputAction, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'outPort'] = self._out_port
-        pyson_object[u'maxLength'] = self._max_length
+        pyson_object['outPort'] = self._out_port
+        pyson_object['maxLength'] = self._max_length
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -729,11 +728,11 @@ class OutputAction(Action):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'outPort' in pyson_object:
-            self._out_port = pyson_object[u'outPort']
+        if 'outPort' in pyson_object:
+            self._out_port = pyson_object['outPort']
 
-        if u'maxLength' in pyson_object:
-            self._max_length = pyson_object[u'maxLength']
+        if 'maxLength' in pyson_object:
+            self._max_length = pyson_object['maxLength']
 
         return pyson_object
 
@@ -742,7 +741,7 @@ class PushVlanAction(Action):
 
     def __init__(self):
         super(PushVlanAction, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PushVlanAction'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PushVlanAction'
         self._ether_type = 0
 
     def from_json(self, json_string):
@@ -752,7 +751,7 @@ class PushVlanAction(Action):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _ether_type = None
@@ -766,13 +765,13 @@ class PushVlanAction(Action):
         self._ether_type = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(PushVlanAction, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'etherType'] = self._ether_type
+        pyson_object['etherType'] = self._ether_type
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -781,8 +780,8 @@ class PushVlanAction(Action):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'etherType' in pyson_object:
-            self._ether_type = pyson_object[u'etherType']
+        if 'etherType' in pyson_object:
+            self._ether_type = pyson_object['etherType']
 
         return pyson_object
 
@@ -791,7 +790,7 @@ class PopVlanAction(Action):
 
     def __init__(self):
         super(PopVlanAction, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PopVlanAction'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PopVlanAction'
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -800,12 +799,12 @@ class PopVlanAction(Action):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(PopVlanAction, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
@@ -822,23 +821,23 @@ class PopVlanAction(Action):
         return pyson_object
 
 
-class Match(object):
+class Match():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Match'
-        self._in_port = u""
-        self._eth_dst = u""
-        self._eth_src = u""
-        self._ipv4_dst = u""
-        self._ipv4_src = u""
-        self._eth_type = u""
-        self._tcp_src = u""
-        self._tcp_dst = u""
-        self._udp_src = u""
-        self._udp_dst = u""
-        self._vlan_vid = u""
-        self._vlan_pcp = u""
-        self._ip_proto = u""
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Match'
+        self._in_port = ""
+        self._eth_dst = ""
+        self._eth_src = ""
+        self._ipv4_dst = ""
+        self._ipv4_src = ""
+        self._eth_type = ""
+        self._tcp_src = ""
+        self._tcp_dst = ""
+        self._udp_src = ""
+        self._udp_dst = ""
+        self._vlan_vid = ""
+        self._vlan_pcp = ""
+        self._ip_proto = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -847,7 +846,7 @@ class Match(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _in_port = None
@@ -969,24 +968,24 @@ class Match(object):
         self._ip_proto = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'inPort'] = self._in_port
-        pyson_object[u'ethDst'] = self._eth_dst
-        pyson_object[u'ethSrc'] = self._eth_src
-        pyson_object[u'ipv4Dst'] = self._ipv4_dst
-        pyson_object[u'ipv4Src'] = self._ipv4_src
-        pyson_object[u'ethType'] = self._eth_type
-        pyson_object[u'tcpSrc'] = self._tcp_src
-        pyson_object[u'tcpDst'] = self._tcp_dst
-        pyson_object[u'udpSrc'] = self._udp_src
-        pyson_object[u'udpDst'] = self._udp_dst
-        pyson_object[u'vlanVid'] = self._vlan_vid
-        pyson_object[u'vlanPcp'] = self._vlan_pcp
-        pyson_object[u'ipProto'] = self._ip_proto
+        pyson_object['inPort'] = self._in_port
+        pyson_object['ethDst'] = self._eth_dst
+        pyson_object['ethSrc'] = self._eth_src
+        pyson_object['ipv4Dst'] = self._ipv4_dst
+        pyson_object['ipv4Src'] = self._ipv4_src
+        pyson_object['ethType'] = self._eth_type
+        pyson_object['tcpSrc'] = self._tcp_src
+        pyson_object['tcpDst'] = self._tcp_dst
+        pyson_object['udpSrc'] = self._udp_src
+        pyson_object['udpDst'] = self._udp_dst
+        pyson_object['vlanVid'] = self._vlan_vid
+        pyson_object['vlanPcp'] = self._vlan_pcp
+        pyson_object['ipProto'] = self._ip_proto
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -994,52 +993,52 @@ class Match(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'inPort' in pyson_object:
-            self._in_port = pyson_object[u'inPort']
+        if 'inPort' in pyson_object:
+            self._in_port = pyson_object['inPort']
 
-        if u'ethDst' in pyson_object:
-            self._eth_dst = pyson_object[u'ethDst']
+        if 'ethDst' in pyson_object:
+            self._eth_dst = pyson_object['ethDst']
 
-        if u'ethSrc' in pyson_object:
-            self._eth_src = pyson_object[u'ethSrc']
+        if 'ethSrc' in pyson_object:
+            self._eth_src = pyson_object['ethSrc']
 
-        if u'ipv4Dst' in pyson_object:
-            self._ipv4_dst = pyson_object[u'ipv4Dst']
+        if 'ipv4Dst' in pyson_object:
+            self._ipv4_dst = pyson_object['ipv4Dst']
 
-        if u'ipv4Src' in pyson_object:
-            self._ipv4_src = pyson_object[u'ipv4Src']
+        if 'ipv4Src' in pyson_object:
+            self._ipv4_src = pyson_object['ipv4Src']
 
-        if u'ethType' in pyson_object:
-            self._eth_type = pyson_object[u'ethType']
+        if 'ethType' in pyson_object:
+            self._eth_type = pyson_object['ethType']
 
-        if u'tcpSrc' in pyson_object:
-            self._tcp_src = pyson_object[u'tcpSrc']
+        if 'tcpSrc' in pyson_object:
+            self._tcp_src = pyson_object['tcpSrc']
 
-        if u'tcpDst' in pyson_object:
-            self._tcp_dst = pyson_object[u'tcpDst']
+        if 'tcpDst' in pyson_object:
+            self._tcp_dst = pyson_object['tcpDst']
 
-        if u'udpSrc' in pyson_object:
-            self._udp_src = pyson_object[u'udpSrc']
+        if 'udpSrc' in pyson_object:
+            self._udp_src = pyson_object['udpSrc']
 
-        if u'udpDst' in pyson_object:
-            self._udp_dst = pyson_object[u'udpDst']
+        if 'udpDst' in pyson_object:
+            self._udp_dst = pyson_object['udpDst']
 
-        if u'vlanVid' in pyson_object:
-            self._vlan_vid = pyson_object[u'vlanVid']
+        if 'vlanVid' in pyson_object:
+            self._vlan_vid = pyson_object['vlanVid']
 
-        if u'vlanPcp' in pyson_object:
-            self._vlan_pcp = pyson_object[u'vlanPcp']
+        if 'vlanPcp' in pyson_object:
+            self._vlan_pcp = pyson_object['vlanPcp']
 
-        if u'ipProto' in pyson_object:
-            self._ip_proto = pyson_object[u'ipProto']
+        if 'ipProto' in pyson_object:
+            self._ip_proto = pyson_object['ipProto']
 
         return pyson_object
 
 
-class Instruction(object):
+class Instruction():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Instruction'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Instruction'
         self._actions = []
 
     def from_json(self, json_string):
@@ -1049,7 +1048,7 @@ class Instruction(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _instruction_type = None
@@ -1072,17 +1071,17 @@ class Instruction(object):
         self._actions = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'instructionType'] = self._instruction_type
+        pyson_object['instructionType'] = self._instruction_type
         #Complex Copy of actions
         actions_result = []
         for item_from_actions in self._actions:
             actions_result.append(item_from_actions.to_pyson())
-        pyson_object[u'actions'] = actions_result
+        pyson_object['actions'] = actions_result
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1090,33 +1089,33 @@ class Instruction(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'instructionType' in pyson_object:
-            self._instruction_type = pyson_object[u'instructionType']
+        if 'instructionType' in pyson_object:
+            self._instruction_type = pyson_object['instructionType']
 
-        if u'actions' in pyson_object:
+        if 'actions' in pyson_object:
             self._actions = []
-            actions_json_list = pyson_object[u'actions']
+            actions_json_list = pyson_object['actions']
             for actions_json_element in actions_json_list:
-                actions_odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action'
-                if u'@odata.type' in actions_json_element:
-                    actions_odata_type = actions_json_element[u'@odata.type']
+                actions_odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action'
+                if '@odata.type' in actions_json_element:
+                    actions_odata_type = actions_json_element['@odata.type']
                 new_element = _ResolveOdataType.getNewObject(actions_odata_type)
                 new_element.from_pyson(actions_json_element)
                 self._actions.append(new_element)
         return pyson_object
 
 
-class Port(object):
+class Port():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Port'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Port'
         self._advertised = 0
         self._config = 0
         self._curr = 0
         self._current_speed = 0
-        self._hardware_address = u""
+        self._hardware_address = ""
         self._max_speed = 0
-        self._name = u""
+        self._name = ""
         self._port_id = 0
         self._peer = 0
         self._supported = 0
@@ -1128,7 +1127,7 @@ class Port(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _advertised = None
@@ -1232,22 +1231,22 @@ class Port(object):
         self._supported = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'advertised'] = self._advertised
-        pyson_object[u'config'] = self._config
-        pyson_object[u'curr'] = self._curr
-        pyson_object[u'currentSpeed'] = self._current_speed
-        pyson_object[u'hardwareAddress'] = self._hardware_address
-        pyson_object[u'maxSpeed'] = self._max_speed
-        pyson_object[u'name'] = self._name
-        pyson_object[u'portId'] = self._port_id
-        pyson_object[u'peer'] = self._peer
-        pyson_object[u'state'] = self._state
-        pyson_object[u'supported'] = self._supported
+        pyson_object['advertised'] = self._advertised
+        pyson_object['config'] = self._config
+        pyson_object['curr'] = self._curr
+        pyson_object['currentSpeed'] = self._current_speed
+        pyson_object['hardwareAddress'] = self._hardware_address
+        pyson_object['maxSpeed'] = self._max_speed
+        pyson_object['name'] = self._name
+        pyson_object['portId'] = self._port_id
+        pyson_object['peer'] = self._peer
+        pyson_object['state'] = self._state
+        pyson_object['supported'] = self._supported
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1255,38 +1254,38 @@ class Port(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'advertised' in pyson_object:
-            self._advertised = pyson_object[u'advertised']
+        if 'advertised' in pyson_object:
+            self._advertised = pyson_object['advertised']
 
-        if u'config' in pyson_object:
-            self._config = pyson_object[u'config']
+        if 'config' in pyson_object:
+            self._config = pyson_object['config']
 
-        if u'curr' in pyson_object:
-            self._curr = pyson_object[u'curr']
+        if 'curr' in pyson_object:
+            self._curr = pyson_object['curr']
 
-        if u'currentSpeed' in pyson_object:
-            self._current_speed = pyson_object[u'currentSpeed']
+        if 'currentSpeed' in pyson_object:
+            self._current_speed = pyson_object['currentSpeed']
 
-        if u'hardwareAddress' in pyson_object:
-            self._hardware_address = pyson_object[u'hardwareAddress']
+        if 'hardwareAddress' in pyson_object:
+            self._hardware_address = pyson_object['hardwareAddress']
 
-        if u'maxSpeed' in pyson_object:
-            self._max_speed = pyson_object[u'maxSpeed']
+        if 'maxSpeed' in pyson_object:
+            self._max_speed = pyson_object['maxSpeed']
 
-        if u'name' in pyson_object:
-            self._name = pyson_object[u'name']
+        if 'name' in pyson_object:
+            self._name = pyson_object['name']
 
-        if u'portId' in pyson_object:
-            self._port_id = pyson_object[u'portId']
+        if 'portId' in pyson_object:
+            self._port_id = pyson_object['portId']
 
-        if u'peer' in pyson_object:
-            self._peer = pyson_object[u'peer']
+        if 'peer' in pyson_object:
+            self._peer = pyson_object['peer']
 
-        if u'state' in pyson_object:
-            self._state = pyson_object[u'state']
+        if 'state' in pyson_object:
+            self._state = pyson_object['state']
 
-        if u'supported' in pyson_object:
-            self._supported = pyson_object[u'supported']
+        if 'supported' in pyson_object:
+            self._supported = pyson_object['supported']
 
         return pyson_object
 
@@ -1295,7 +1294,7 @@ class ApplyActions(Instruction):
 
     def __init__(self):
         super(ApplyActions, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.ApplyActions'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.ApplyActions'
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1304,12 +1303,12 @@ class ApplyActions(Instruction):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(ApplyActions, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
@@ -1330,7 +1329,7 @@ class GoToTable(Instruction):
 
     def __init__(self):
         super(GoToTable, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GoToTable'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GoToTable'
         self._table_id = 0
 
     def from_json(self, json_string):
@@ -1340,7 +1339,7 @@ class GoToTable(Instruction):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _table_id = None
@@ -1354,13 +1353,13 @@ class GoToTable(Instruction):
         self._table_id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(GoToTable, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'tableId'] = self._table_id
+        pyson_object['tableId'] = self._table_id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1369,8 +1368,8 @@ class GoToTable(Instruction):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'tableId' in pyson_object:
-            self._table_id = pyson_object[u'tableId']
+        if 'tableId' in pyson_object:
+            self._table_id = pyson_object['tableId']
 
         return pyson_object
 
@@ -1379,7 +1378,7 @@ class WriteActions(Instruction):
 
     def __init__(self):
         super(WriteActions, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.WriteActions'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.WriteActions'
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1388,12 +1387,12 @@ class WriteActions(Instruction):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(WriteActions, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
@@ -1410,10 +1409,10 @@ class WriteActions(Instruction):
         return pyson_object
 
 
-class FlowStat(object):
+class FlowStat():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStat'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStat'
         self._byte_count = 0
         self._cookie = 0
         self._duration_n_sec = 0
@@ -1434,7 +1433,7 @@ class FlowStat(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _byte_count = None
@@ -1547,27 +1546,27 @@ class FlowStat(object):
         self._instructions = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'byteCount'] = self._byte_count
-        pyson_object[u'cookie'] = self._cookie
-        pyson_object[u'durationNSec'] = self._duration_n_sec
-        pyson_object[u'durationSec'] = self._duration_sec
-        pyson_object[u'flags'] = self._flags
-        pyson_object[u'hardTimeout'] = self._hard_timeout
-        pyson_object[u'idleTimeout'] = self._idle_timeout
-        pyson_object[u'packetCount'] = self._packet_count
-        pyson_object[u'priority'] = self._priority
-        pyson_object[u'tableId'] = self._table_id
-        pyson_object[u'match'] = self._match.to_pyson()
+        pyson_object['byteCount'] = self._byte_count
+        pyson_object['cookie'] = self._cookie
+        pyson_object['durationNSec'] = self._duration_n_sec
+        pyson_object['durationSec'] = self._duration_sec
+        pyson_object['flags'] = self._flags
+        pyson_object['hardTimeout'] = self._hard_timeout
+        pyson_object['idleTimeout'] = self._idle_timeout
+        pyson_object['packetCount'] = self._packet_count
+        pyson_object['priority'] = self._priority
+        pyson_object['tableId'] = self._table_id
+        pyson_object['match'] = self._match.to_pyson()
         #Complex Copy of instructions
         instructions_result = []
         for item_from_instructions in self._instructions:
             instructions_result.append(item_from_instructions.to_pyson())
-        pyson_object[u'instructions'] = instructions_result
+        pyson_object['instructions'] = instructions_result
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1575,57 +1574,57 @@ class FlowStat(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'byteCount' in pyson_object:
-            self._byte_count = pyson_object[u'byteCount']
+        if 'byteCount' in pyson_object:
+            self._byte_count = pyson_object['byteCount']
 
-        if u'cookie' in pyson_object:
-            self._cookie = pyson_object[u'cookie']
+        if 'cookie' in pyson_object:
+            self._cookie = pyson_object['cookie']
 
-        if u'durationNSec' in pyson_object:
-            self._duration_n_sec = pyson_object[u'durationNSec']
+        if 'durationNSec' in pyson_object:
+            self._duration_n_sec = pyson_object['durationNSec']
 
-        if u'durationSec' in pyson_object:
-            self._duration_sec = pyson_object[u'durationSec']
+        if 'durationSec' in pyson_object:
+            self._duration_sec = pyson_object['durationSec']
 
-        if u'flags' in pyson_object:
-            self._flags = pyson_object[u'flags']
+        if 'flags' in pyson_object:
+            self._flags = pyson_object['flags']
 
-        if u'hardTimeout' in pyson_object:
-            self._hard_timeout = pyson_object[u'hardTimeout']
+        if 'hardTimeout' in pyson_object:
+            self._hard_timeout = pyson_object['hardTimeout']
 
-        if u'idleTimeout' in pyson_object:
-            self._idle_timeout = pyson_object[u'idleTimeout']
+        if 'idleTimeout' in pyson_object:
+            self._idle_timeout = pyson_object['idleTimeout']
 
-        if u'packetCount' in pyson_object:
-            self._packet_count = pyson_object[u'packetCount']
+        if 'packetCount' in pyson_object:
+            self._packet_count = pyson_object['packetCount']
 
-        if u'priority' in pyson_object:
-            self._priority = pyson_object[u'priority']
+        if 'priority' in pyson_object:
+            self._priority = pyson_object['priority']
 
-        if u'tableId' in pyson_object:
-            self._table_id = pyson_object[u'tableId']
+        if 'tableId' in pyson_object:
+            self._table_id = pyson_object['tableId']
 
-        if u'match' in pyson_object:
+        if 'match' in pyson_object:
             self._match = Match()
-            self._match.from_pyson(pyson_object[u'match'])
+            self._match.from_pyson(pyson_object['match'])
 
-        if u'instructions' in pyson_object:
+        if 'instructions' in pyson_object:
             self._instructions = []
-            instructions_json_list = pyson_object[u'instructions']
+            instructions_json_list = pyson_object['instructions']
             for instructions_json_element in instructions_json_list:
-                instructions_odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Instruction'
-                if u'@odata.type' in instructions_json_element:
-                    instructions_odata_type = instructions_json_element[u'@odata.type']
+                instructions_odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Instruction'
+                if '@odata.type' in instructions_json_element:
+                    instructions_odata_type = instructions_json_element['@odata.type']
                 new_element = _ResolveOdataType.getNewObject(instructions_odata_type)
                 new_element.from_pyson(instructions_json_element)
                 self._instructions.append(new_element)
         return pyson_object
 
 
-class TableStat(object):
+class TableStat():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStat'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStat'
         self._table_id = 0
         self._lookup_count = 0
         self._active_count = 0
@@ -1638,7 +1637,7 @@ class TableStat(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _table_id = None
@@ -1679,15 +1678,15 @@ class TableStat(object):
         self._match_count = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'tableId'] = self._table_id
-        pyson_object[u'lookupCount'] = self._lookup_count
-        pyson_object[u'activeCount'] = self._active_count
-        pyson_object[u'matchCount'] = self._match_count
+        pyson_object['tableId'] = self._table_id
+        pyson_object['lookupCount'] = self._lookup_count
+        pyson_object['activeCount'] = self._active_count
+        pyson_object['matchCount'] = self._match_count
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1695,25 +1694,25 @@ class TableStat(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'tableId' in pyson_object:
-            self._table_id = pyson_object[u'tableId']
+        if 'tableId' in pyson_object:
+            self._table_id = pyson_object['tableId']
 
-        if u'lookupCount' in pyson_object:
-            self._lookup_count = pyson_object[u'lookupCount']
+        if 'lookupCount' in pyson_object:
+            self._lookup_count = pyson_object['lookupCount']
 
-        if u'activeCount' in pyson_object:
-            self._active_count = pyson_object[u'activeCount']
+        if 'activeCount' in pyson_object:
+            self._active_count = pyson_object['activeCount']
 
-        if u'matchCount' in pyson_object:
-            self._match_count = pyson_object[u'matchCount']
+        if 'matchCount' in pyson_object:
+            self._match_count = pyson_object['matchCount']
 
         return pyson_object
 
 
-class PortStat(object):
+class PortStat():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStat'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStat'
         self._collisions = 0
         self._port_no = 0
         self._rx_crc_err = 0
@@ -1735,7 +1734,7 @@ class PortStat(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _collisions = None
@@ -1857,24 +1856,24 @@ class PortStat(object):
         self._tx_packets = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'collisions'] = self._collisions
-        pyson_object[u'portNo'] = self._port_no
-        pyson_object[u'rxCrcErr'] = self._rx_crc_err
-        pyson_object[u'rxDropped'] = self._rx_dropped
-        pyson_object[u'rxErrors'] = self._rx_errors
-        pyson_object[u'rxFrameErr'] = self._rx_frame_err
-        pyson_object[u'rxOverError'] = self._rx_over_error
-        pyson_object[u'rxPackets'] = self._rx_packets
-        pyson_object[u'rxBytes'] = self._rx_bytes
-        pyson_object[u'txBytes'] = self._tx_bytes
-        pyson_object[u'txDropped'] = self._tx_dropped
-        pyson_object[u'txErrors'] = self._tx_errors
-        pyson_object[u'txPackets'] = self._tx_packets
+        pyson_object['collisions'] = self._collisions
+        pyson_object['portNo'] = self._port_no
+        pyson_object['rxCrcErr'] = self._rx_crc_err
+        pyson_object['rxDropped'] = self._rx_dropped
+        pyson_object['rxErrors'] = self._rx_errors
+        pyson_object['rxFrameErr'] = self._rx_frame_err
+        pyson_object['rxOverError'] = self._rx_over_error
+        pyson_object['rxPackets'] = self._rx_packets
+        pyson_object['rxBytes'] = self._rx_bytes
+        pyson_object['txBytes'] = self._tx_bytes
+        pyson_object['txDropped'] = self._tx_dropped
+        pyson_object['txErrors'] = self._tx_errors
+        pyson_object['txPackets'] = self._tx_packets
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1882,55 +1881,55 @@ class PortStat(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'collisions' in pyson_object:
-            self._collisions = pyson_object[u'collisions']
+        if 'collisions' in pyson_object:
+            self._collisions = pyson_object['collisions']
 
-        if u'portNo' in pyson_object:
-            self._port_no = pyson_object[u'portNo']
+        if 'portNo' in pyson_object:
+            self._port_no = pyson_object['portNo']
 
-        if u'rxCrcErr' in pyson_object:
-            self._rx_crc_err = pyson_object[u'rxCrcErr']
+        if 'rxCrcErr' in pyson_object:
+            self._rx_crc_err = pyson_object['rxCrcErr']
 
-        if u'rxDropped' in pyson_object:
-            self._rx_dropped = pyson_object[u'rxDropped']
+        if 'rxDropped' in pyson_object:
+            self._rx_dropped = pyson_object['rxDropped']
 
-        if u'rxErrors' in pyson_object:
-            self._rx_errors = pyson_object[u'rxErrors']
+        if 'rxErrors' in pyson_object:
+            self._rx_errors = pyson_object['rxErrors']
 
-        if u'rxFrameErr' in pyson_object:
-            self._rx_frame_err = pyson_object[u'rxFrameErr']
+        if 'rxFrameErr' in pyson_object:
+            self._rx_frame_err = pyson_object['rxFrameErr']
 
-        if u'rxOverError' in pyson_object:
-            self._rx_over_error = pyson_object[u'rxOverError']
+        if 'rxOverError' in pyson_object:
+            self._rx_over_error = pyson_object['rxOverError']
 
-        if u'rxPackets' in pyson_object:
-            self._rx_packets = pyson_object[u'rxPackets']
+        if 'rxPackets' in pyson_object:
+            self._rx_packets = pyson_object['rxPackets']
 
-        if u'rxBytes' in pyson_object:
-            self._rx_bytes = pyson_object[u'rxBytes']
+        if 'rxBytes' in pyson_object:
+            self._rx_bytes = pyson_object['rxBytes']
 
-        if u'txBytes' in pyson_object:
-            self._tx_bytes = pyson_object[u'txBytes']
+        if 'txBytes' in pyson_object:
+            self._tx_bytes = pyson_object['txBytes']
 
-        if u'txDropped' in pyson_object:
-            self._tx_dropped = pyson_object[u'txDropped']
+        if 'txDropped' in pyson_object:
+            self._tx_dropped = pyson_object['txDropped']
 
-        if u'txErrors' in pyson_object:
-            self._tx_errors = pyson_object[u'txErrors']
+        if 'txErrors' in pyson_object:
+            self._tx_errors = pyson_object['txErrors']
 
-        if u'txPackets' in pyson_object:
-            self._tx_packets = pyson_object[u'txPackets']
+        if 'txPackets' in pyson_object:
+            self._tx_packets = pyson_object['txPackets']
 
         return pyson_object
 
 
-class FlowStats(object):
+class FlowStats():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStats'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStats'
         self._stats = []
         self._data_path_id = 0
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -1939,7 +1938,7 @@ class FlowStats(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _stats = []
@@ -1971,7 +1970,7 @@ class FlowStats(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
@@ -1980,9 +1979,9 @@ class FlowStats(object):
         stats_result = []
         for item_from_stats in self._stats:
             stats_result.append(item_from_stats.to_pyson())
-        pyson_object[u'stats'] = stats_result
-        pyson_object[u'dataPathId'] = self._data_path_id
-        pyson_object[u'id'] = self._id
+        pyson_object['stats'] = stats_result
+        pyson_object['dataPathId'] = self._data_path_id
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -1990,31 +1989,31 @@ class FlowStats(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'stats' in pyson_object:
+        if 'stats' in pyson_object:
             self._stats = []
-            stats_json_list = pyson_object[u'stats']
+            stats_json_list = pyson_object['stats']
             for stats_json_element in stats_json_list:
-                stats_odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStat'
-                if u'@odata.type' in stats_json_element:
-                    stats_odata_type = stats_json_element[u'@odata.type']
+                stats_odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStat'
+                if '@odata.type' in stats_json_element:
+                    stats_odata_type = stats_json_element['@odata.type']
                 new_element = _ResolveOdataType.getNewObject(stats_odata_type)
                 new_element.from_pyson(stats_json_element)
                 self._stats.append(new_element)
-        if u'dataPathId' in pyson_object:
-            self._data_path_id = pyson_object[u'dataPathId']
+        if 'dataPathId' in pyson_object:
+            self._data_path_id = pyson_object['dataPathId']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
 
-class GroupDesc(object):
+class GroupDesc():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupDesc'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupDesc'
         self._data_path_id = 0
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2023,7 +2022,7 @@ class GroupDesc(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _data_path_id = None
@@ -2046,13 +2045,13 @@ class GroupDesc(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'dataPathId'] = self._data_path_id
-        pyson_object[u'id'] = self._id
+        pyson_object['dataPathId'] = self._data_path_id
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2060,22 +2059,22 @@ class GroupDesc(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'dataPathId' in pyson_object:
-            self._data_path_id = pyson_object[u'dataPathId']
+        if 'dataPathId' in pyson_object:
+            self._data_path_id = pyson_object['dataPathId']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
 
-class PortDesc(object):
+class PortDesc():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortDesc'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortDesc'
         self._data_path_id = 0
         self._ports = []
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2084,7 +2083,7 @@ class PortDesc(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _data_path_id = None
@@ -2116,18 +2115,18 @@ class PortDesc(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'dataPathId'] = self._data_path_id
+        pyson_object['dataPathId'] = self._data_path_id
         #Complex Copy of ports
         ports_result = []
         for item_from_ports in self._ports:
             ports_result.append(item_from_ports.to_pyson())
-        pyson_object[u'ports'] = ports_result
-        pyson_object[u'id'] = self._id
+        pyson_object['ports'] = ports_result
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2135,33 +2134,33 @@ class PortDesc(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'dataPathId' in pyson_object:
-            self._data_path_id = pyson_object[u'dataPathId']
+        if 'dataPathId' in pyson_object:
+            self._data_path_id = pyson_object['dataPathId']
 
-        if u'ports' in pyson_object:
+        if 'ports' in pyson_object:
             self._ports = []
-            ports_json_list = pyson_object[u'ports']
+            ports_json_list = pyson_object['ports']
             for ports_json_element in ports_json_list:
-                ports_odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Port'
-                if u'@odata.type' in ports_json_element:
-                    ports_odata_type = ports_json_element[u'@odata.type']
+                ports_odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Port'
+                if '@odata.type' in ports_json_element:
+                    ports_odata_type = ports_json_element['@odata.type']
                 new_element = _ResolveOdataType.getNewObject(ports_odata_type)
                 new_element.from_pyson(ports_json_element)
                 self._ports.append(new_element)
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
 
-class DeviceCapability(object):
+class DeviceCapability():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.DeviceCapability'
-        self._protocol = u""
-        self._version = u""
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.DeviceCapability'
+        self._protocol = ""
+        self._version = ""
         self._data_path_id = 0
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2170,7 +2169,7 @@ class DeviceCapability(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _protocol = None
@@ -2211,15 +2210,15 @@ class DeviceCapability(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'protocol'] = self._protocol
-        pyson_object[u'version'] = self._version
-        pyson_object[u'dataPathId'] = self._data_path_id
-        pyson_object[u'id'] = self._id
+        pyson_object['protocol'] = self._protocol
+        pyson_object['version'] = self._version
+        pyson_object['dataPathId'] = self._data_path_id
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2227,28 +2226,28 @@ class DeviceCapability(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'protocol' in pyson_object:
-            self._protocol = pyson_object[u'protocol']
+        if 'protocol' in pyson_object:
+            self._protocol = pyson_object['protocol']
 
-        if u'version' in pyson_object:
-            self._version = pyson_object[u'version']
+        if 'version' in pyson_object:
+            self._version = pyson_object['version']
 
-        if u'dataPathId' in pyson_object:
-            self._data_path_id = pyson_object[u'dataPathId']
+        if 'dataPathId' in pyson_object:
+            self._data_path_id = pyson_object['dataPathId']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
 
-class TableStats(object):
+class TableStats():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStats'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStats'
         self._table_stat_list = []
         self._data_path_id = 0
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2257,7 +2256,7 @@ class TableStats(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _table_stat_list = []
@@ -2289,7 +2288,7 @@ class TableStats(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
@@ -2298,9 +2297,9 @@ class TableStats(object):
         table_stat_list_result = []
         for item_from_table_stat_list in self._table_stat_list:
             table_stat_list_result.append(item_from_table_stat_list.to_pyson())
-        pyson_object[u'tableStatList'] = table_stat_list_result
-        pyson_object[u'dataPathId'] = self._data_path_id
-        pyson_object[u'id'] = self._id
+        pyson_object['tableStatList'] = table_stat_list_result
+        pyson_object['dataPathId'] = self._data_path_id
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2308,32 +2307,32 @@ class TableStats(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'tableStatList' in pyson_object:
+        if 'tableStatList' in pyson_object:
             self._table_stat_list = []
-            table_stat_list_json_list = pyson_object[u'tableStatList']
+            table_stat_list_json_list = pyson_object['tableStatList']
             for table_stat_list_json_element in table_stat_list_json_list:
-                table_stat_list_odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStat'
-                if u'@odata.type' in table_stat_list_json_element:
-                    table_stat_list_odata_type = table_stat_list_json_element[u'@odata.type']
+                table_stat_list_odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStat'
+                if '@odata.type' in table_stat_list_json_element:
+                    table_stat_list_odata_type = table_stat_list_json_element['@odata.type']
                 new_element = _ResolveOdataType.getNewObject(table_stat_list_odata_type)
                 new_element.from_pyson(table_stat_list_json_element)
                 self._table_stat_list.append(new_element)
-        if u'dataPathId' in pyson_object:
-            self._data_path_id = pyson_object[u'dataPathId']
+        if 'dataPathId' in pyson_object:
+            self._data_path_id = pyson_object['dataPathId']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
 
-class PortStats(object):
+class PortStats():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStats'
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStats'
         self._port_stat_list = []
         self._data_path_id = 0
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2342,7 +2341,7 @@ class PortStats(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _port_stat_list = []
@@ -2374,7 +2373,7 @@ class PortStats(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
@@ -2383,9 +2382,9 @@ class PortStats(object):
         port_stat_list_result = []
         for item_from_port_stat_list in self._port_stat_list:
             port_stat_list_result.append(item_from_port_stat_list.to_pyson())
-        pyson_object[u'portStatList'] = port_stat_list_result
-        pyson_object[u'dataPathId'] = self._data_path_id
-        pyson_object[u'id'] = self._id
+        pyson_object['portStatList'] = port_stat_list_result
+        pyson_object['dataPathId'] = self._data_path_id
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2393,32 +2392,32 @@ class PortStats(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'portStatList' in pyson_object:
+        if 'portStatList' in pyson_object:
             self._port_stat_list = []
-            port_stat_list_json_list = pyson_object[u'portStatList']
+            port_stat_list_json_list = pyson_object['portStatList']
             for port_stat_list_json_element in port_stat_list_json_list:
-                port_stat_list_odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStat'
-                if u'@odata.type' in port_stat_list_json_element:
-                    port_stat_list_odata_type = port_stat_list_json_element[u'@odata.type']
+                port_stat_list_odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStat'
+                if '@odata.type' in port_stat_list_json_element:
+                    port_stat_list_odata_type = port_stat_list_json_element['@odata.type']
                 new_element = _ResolveOdataType.getNewObject(port_stat_list_odata_type)
                 new_element.from_pyson(port_stat_list_json_element)
                 self._port_stat_list.append(new_element)
-        if u'dataPathId' in pyson_object:
-            self._data_path_id = pyson_object[u'dataPathId']
+        if 'dataPathId' in pyson_object:
+            self._data_path_id = pyson_object['dataPathId']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
 
-class Group(object):
+class Group():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Group'
-        self._node = u""
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Group'
+        self._node = ""
         self._group_id = 0
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2427,7 +2426,7 @@ class Group(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _node = None
@@ -2468,15 +2467,15 @@ class Group(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'node'] = self._node
-        pyson_object[u'groupType'] = self._group_type
-        pyson_object[u'groupId'] = self._group_id
-        pyson_object[u'id'] = self._id
+        pyson_object['node'] = self._node
+        pyson_object['groupType'] = self._group_type
+        pyson_object['groupId'] = self._group_id
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2484,26 +2483,26 @@ class Group(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'node' in pyson_object:
-            self._node = pyson_object[u'node']
+        if 'node' in pyson_object:
+            self._node = pyson_object['node']
 
-        if u'groupType' in pyson_object:
-            self._group_type = pyson_object[u'groupType']
+        if 'groupType' in pyson_object:
+            self._group_type = pyson_object['groupType']
 
-        if u'groupId' in pyson_object:
-            self._group_id = pyson_object[u'groupId']
+        if 'groupId' in pyson_object:
+            self._group_id = pyson_object['groupId']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
 
-class Bucket(object):
+class Bucket():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Bucket'
-        self._id = u""
+        self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Bucket'
+        self._id = ""
         self._watch_port = 0
         self._watch_group = 0
         self._actions = []
@@ -2515,7 +2514,7 @@ class Bucket(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _id = None
@@ -2556,19 +2555,19 @@ class Bucket(object):
         self._actions = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'id'] = self._id
-        pyson_object[u'watchPort'] = self._watch_port
-        pyson_object[u'watchGroup'] = self._watch_group
+        pyson_object['id'] = self._id
+        pyson_object['watchPort'] = self._watch_port
+        pyson_object['watchGroup'] = self._watch_group
         #Complex Copy of actions
         actions_result = []
         for item_from_actions in self._actions:
             actions_result.append(item_from_actions.to_pyson())
-        pyson_object[u'actions'] = actions_result
+        pyson_object['actions'] = actions_result
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2576,22 +2575,22 @@ class Bucket(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
-        if u'watchPort' in pyson_object:
-            self._watch_port = pyson_object[u'watchPort']
+        if 'watchPort' in pyson_object:
+            self._watch_port = pyson_object['watchPort']
 
-        if u'watchGroup' in pyson_object:
-            self._watch_group = pyson_object[u'watchGroup']
+        if 'watchGroup' in pyson_object:
+            self._watch_group = pyson_object['watchGroup']
 
-        if u'actions' in pyson_object:
+        if 'actions' in pyson_object:
             self._actions = []
-            actions_json_list = pyson_object[u'actions']
+            actions_json_list = pyson_object['actions']
             for actions_json_element in actions_json_list:
-                actions_odata_type = u'#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action'
-                if u'@odata.type' in actions_json_element:
-                    actions_odata_type = actions_json_element[u'@odata.type']
+                actions_odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action'
+                if '@odata.type' in actions_json_element:
+                    actions_odata_type = actions_json_element['@odata.type']
                 new_element = _ResolveOdataType.getNewObject(actions_odata_type)
                 new_element.from_pyson(actions_json_element)
                 self._actions.append(new_element)
@@ -2603,11 +2602,11 @@ class Bucket(object):
 class OperationalNode(object):
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.TopologyManager.Nodes.OperationalNode'
+        self._odata_type = '#Sel.Sel5056.TopologyManager.Nodes.OperationalNode'
         self._is_connected = False
-        self._mac = u""
+        self._mac = ""
         self._discoverer_list = []
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2616,7 +2615,7 @@ class OperationalNode(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _is_connected = None
@@ -2666,16 +2665,16 @@ class OperationalNode(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'isConnected'] = self._is_connected
-        pyson_object[u'mac'] = self._mac
-        pyson_object[u'discovererList'] = list( self._discoverer_list )
-        pyson_object[u'state'] = self._state
-        pyson_object[u'id'] = self._id
+        pyson_object['isConnected'] = self._is_connected
+        pyson_object['mac'] = self._mac
+        pyson_object['discovererList'] = list( self._discoverer_list )
+        pyson_object['state'] = self._state
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2683,20 +2682,20 @@ class OperationalNode(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'isConnected' in pyson_object:
-            self._is_connected = pyson_object[u'isConnected']
+        if 'isConnected' in pyson_object:
+            self._is_connected = pyson_object['isConnected']
 
-        if u'mac' in pyson_object:
-            self._mac = pyson_object[u'mac']
+        if 'mac' in pyson_object:
+            self._mac = pyson_object['mac']
 
-        if u'discovererList' in pyson_object:
-            self._discoverer_list = list(pyson_object[u'discovererList'])
+        if 'discovererList' in pyson_object:
+            self._discoverer_list = list(pyson_object['discovererList'])
 
-        if u'state' in pyson_object:
-            self._state = pyson_object[u'state']
+        if 'state' in pyson_object:
+            self._state = pyson_object['state']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
@@ -2705,9 +2704,9 @@ class OpenFlowNode(OperationalNode):
 
     def __init__(self):
         super(OpenFlowNode, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.TopologyManager.Nodes.OpenFlowNode'
-        self._ip_address = u""
-        self._name = u""
+        self._odata_type = '#Sel.Sel5056.TopologyManager.Nodes.OpenFlowNode'
+        self._ip_address = ""
+        self._name = ""
         self._data_path_id = 0
 
     def from_json(self, json_string):
@@ -2717,7 +2716,7 @@ class OpenFlowNode(OperationalNode):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _ip_address = None
@@ -2749,15 +2748,15 @@ class OpenFlowNode(OperationalNode):
         self._data_path_id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(OpenFlowNode, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'ipAddress'] = self._ip_address
-        pyson_object[u'name'] = self._name
-        pyson_object[u'dataPathId'] = self._data_path_id
+        pyson_object['ipAddress'] = self._ip_address
+        pyson_object['name'] = self._name
+        pyson_object['dataPathId'] = self._data_path_id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2766,14 +2765,14 @@ class OpenFlowNode(OperationalNode):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'ipAddress' in pyson_object:
-            self._ip_address = pyson_object[u'ipAddress']
+        if 'ipAddress' in pyson_object:
+            self._ip_address = pyson_object['ipAddress']
 
-        if u'name' in pyson_object:
-            self._name = pyson_object[u'name']
+        if 'name' in pyson_object:
+            self._name = pyson_object['name']
 
-        if u'dataPathId' in pyson_object:
-            self._data_path_id = pyson_object[u'dataPathId']
+        if 'dataPathId' in pyson_object:
+            self._data_path_id = pyson_object['dataPathId']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.TopologyManager.Ports
@@ -2783,11 +2782,11 @@ class OpenFlowNode(OperationalNode):
 class OperationalPort(object):
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.TopologyManager.Ports.OperationalPort'
-        self._parent_node = u""
+        self._odata_type = '#Sel.Sel5056.TopologyManager.Ports.OperationalPort'
+        self._parent_node = ""
         self._is_connected = False
         self._discoverer_list = []
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2796,7 +2795,7 @@ class OperationalPort(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _parent_node = None
@@ -2846,16 +2845,16 @@ class OperationalPort(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'parentNode'] = self._parent_node
-        pyson_object[u'isConnected'] = self._is_connected
-        pyson_object[u'discovererList'] = list( self._discoverer_list )
-        pyson_object[u'state'] = self._state
-        pyson_object[u'id'] = self._id
+        pyson_object['parentNode'] = self._parent_node
+        pyson_object['isConnected'] = self._is_connected
+        pyson_object['discovererList'] = list( self._discoverer_list )
+        pyson_object['state'] = self._state
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -2863,20 +2862,20 @@ class OperationalPort(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'parentNode' in pyson_object:
-            self._parent_node = pyson_object[u'parentNode']
+        if 'parentNode' in pyson_object:
+            self._parent_node = pyson_object['parentNode']
 
-        if u'isConnected' in pyson_object:
-            self._is_connected = pyson_object[u'isConnected']
+        if 'isConnected' in pyson_object:
+            self._is_connected = pyson_object['isConnected']
 
-        if u'discovererList' in pyson_object:
-            self._discoverer_list = list(pyson_object[u'discovererList'])
+        if 'discovererList' in pyson_object:
+            self._discoverer_list = list(pyson_object['discovererList'])
 
-        if u'state' in pyson_object:
-            self._state = pyson_object[u'state']
+        if 'state' in pyson_object:
+            self._state = pyson_object['state']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 
@@ -2885,7 +2884,7 @@ class EthernetPort(OperationalPort):
 
     def __init__(self):
         super(EthernetPort, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.TopologyManager.Ports.EthernetPort'
+        self._odata_type = '#Sel.Sel5056.TopologyManager.Ports.EthernetPort'
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -2894,12 +2893,12 @@ class EthernetPort(OperationalPort):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(EthernetPort, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
@@ -2918,17 +2917,17 @@ class EthernetPort(OperationalPort):
 
 class OpenFlowPort(EthernetPort):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         super(OpenFlowPort, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.TopologyManager.Ports.OpenFlowPort'
+        self._odata_type = '#Sel.Sel5056.TopologyManager.Ports.OpenFlowPort'
         self._data_path_id = 0
         self._advertised = 0
         self._config = 0
         self._current_features = 0
         self._current_speed = 0
-        self._hardware_address = u""
+        self._hardware_address = ""
         self._max_speed = 0
-        self._name = u""
+        self._name = ""
         self._port_id = 0
         self._peer = 0
         self._supported = 0
@@ -2940,7 +2939,7 @@ class OpenFlowPort(EthernetPort):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _data_path_id = None
@@ -3053,24 +3052,24 @@ class OpenFlowPort(EthernetPort):
         self._supported = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(OpenFlowPort, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'dataPathId'] = self._data_path_id
-        pyson_object[u'advertised'] = self._advertised
-        pyson_object[u'config'] = self._config
-        pyson_object[u'currentFeatures'] = self._current_features
-        pyson_object[u'currentSpeed'] = self._current_speed
-        pyson_object[u'hardwareAddress'] = self._hardware_address
-        pyson_object[u'maxSpeed'] = self._max_speed
-        pyson_object[u'name'] = self._name
-        pyson_object[u'portId'] = self._port_id
-        pyson_object[u'peer'] = self._peer
-        pyson_object[u'ofState'] = self._of_state
-        pyson_object[u'supported'] = self._supported
+        pyson_object['dataPathId'] = self._data_path_id
+        pyson_object['advertised'] = self._advertised
+        pyson_object['config'] = self._config
+        pyson_object['currentFeatures'] = self._current_features
+        pyson_object['currentSpeed'] = self._current_speed
+        pyson_object['hardwareAddress'] = self._hardware_address
+        pyson_object['maxSpeed'] = self._max_speed
+        pyson_object['name'] = self._name
+        pyson_object['portId'] = self._port_id
+        pyson_object['peer'] = self._peer
+        pyson_object['ofState'] = self._of_state
+        pyson_object['supported'] = self._supported
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -3079,55 +3078,55 @@ class OpenFlowPort(EthernetPort):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'dataPathId' in pyson_object:
-            self._data_path_id = pyson_object[u'dataPathId']
+        if 'dataPathId' in pyson_object:
+            self._data_path_id = pyson_object['dataPathId']
 
-        if u'advertised' in pyson_object:
-            self._advertised = pyson_object[u'advertised']
+        if 'advertised' in pyson_object:
+            self._advertised = pyson_object['advertised']
 
-        if u'config' in pyson_object:
-            self._config = pyson_object[u'config']
+        if 'config' in pyson_object:
+            self._config = pyson_object['config']
 
-        if u'currentFeatures' in pyson_object:
-            self._current_features = pyson_object[u'currentFeatures']
+        if 'currentFeatures' in pyson_object:
+            self._current_features = pyson_object['currentFeatures']
 
-        if u'currentSpeed' in pyson_object:
-            self._current_speed = pyson_object[u'currentSpeed']
+        if 'currentSpeed' in pyson_object:
+            self._current_speed = pyson_object['currentSpeed']
 
-        if u'hardwareAddress' in pyson_object:
-            self._hardware_address = pyson_object[u'hardwareAddress']
+        if 'hardwareAddress' in pyson_object:
+            self._hardware_address = pyson_object['hardwareAddress']
 
-        if u'maxSpeed' in pyson_object:
-            self._max_speed = pyson_object[u'maxSpeed']
+        if 'maxSpeed' in pyson_object:
+            self._max_speed = pyson_object['maxSpeed']
 
-        if u'name' in pyson_object:
-            self._name = pyson_object[u'name']
+        if 'name' in pyson_object:
+            self._name = pyson_object['name']
 
-        if u'portId' in pyson_object:
-            self._port_id = pyson_object[u'portId']
+        if 'portId' in pyson_object:
+            self._port_id = pyson_object['portId']
 
-        if u'peer' in pyson_object:
-            self._peer = pyson_object[u'peer']
+        if 'peer' in pyson_object:
+            self._peer = pyson_object['peer']
 
-        if u'ofState' in pyson_object:
-            self._of_state = pyson_object[u'ofState']
+        if 'ofState' in pyson_object:
+            self._of_state = pyson_object['ofState']
 
-        if u'supported' in pyson_object:
-            self._supported = pyson_object[u'supported']
+        if 'supported' in pyson_object:
+            self._supported = pyson_object['supported']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.TopologyManager.Links
 
 
 
-class OperationalLink(object):
+class OperationalLink():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.TopologyManager.Links.OperationalLink'
+        self._odata_type = '#Sel.Sel5056.TopologyManager.Links.OperationalLink'
         self._end_points = []
         self._is_connected = False
         self._discoverer_list = []
-        self._id = u""
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -3136,7 +3135,7 @@ class OperationalLink(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _end_points = []
@@ -3186,16 +3185,16 @@ class OperationalLink(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'endPoints'] = list( self._end_points )
-        pyson_object[u'isConnected'] = self._is_connected
-        pyson_object[u'discovererList'] = list( self._discoverer_list )
-        pyson_object[u'state'] = self._state
-        pyson_object[u'id'] = self._id
+        pyson_object['endPoints'] = list( self._end_points )
+        pyson_object['isConnected'] = self._is_connected
+        pyson_object['discovererList'] = list( self._discoverer_list )
+        pyson_object['state'] = self._state
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -3203,31 +3202,31 @@ class OperationalLink(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'endPoints' in pyson_object:
-            self._end_points = list(pyson_object[u'endPoints'])
+        if 'endPoints' in pyson_object:
+            self._end_points = list(pyson_object['endPoints'])
 
-        if u'isConnected' in pyson_object:
-            self._is_connected = pyson_object[u'isConnected']
+        if 'isConnected' in pyson_object:
+            self._is_connected = pyson_object['isConnected']
 
-        if u'discovererList' in pyson_object:
-            self._discoverer_list = list(pyson_object[u'discovererList'])
+        if 'discovererList' in pyson_object:
+            self._discoverer_list = list(pyson_object['discovererList'])
 
-        if u'state' in pyson_object:
-            self._state = pyson_object[u'state']
+        if 'state' in pyson_object:
+            self._state = pyson_object['state']
 
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.Common.RestBroker.Models
 
 
 
-class RestTransaction(object):
+class RestTransaction():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.Common.RestBroker.Models.RestTransaction'
-        self._id = u""
+        self._odata_type = '#Sel.Sel5056.Common.RestBroker.Models.RestTransaction'
+        self._id = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -3236,7 +3235,7 @@ class RestTransaction(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _id = None
@@ -3250,12 +3249,12 @@ class RestTransaction(object):
         self._id = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'id'] = self._id
+        pyson_object['id'] = self._id
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -3263,21 +3262,21 @@ class RestTransaction(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'id' in pyson_object:
-            self._id = pyson_object[u'id']
+        if 'id' in pyson_object:
+            self._id = pyson_object['id']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.Common.DataBroker.Types
 
 
 
-class TypeKey(object):
+class TypeKey():
 
     def __init__(self):
-        self._odata_type = u'#Sel.Sel5056.Common.DataBroker.Types.TypeKey'
-        self._full_key = u""
-        self._category_key = u""
-        self._event_type_key = u""
+        self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.TypeKey'
+        self._full_key = ""
+        self._category_key = ""
+        self._event_type_key = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -3286,7 +3285,7 @@ class TypeKey(object):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _full_key = None
@@ -3318,14 +3317,14 @@ class TypeKey(object):
         self._event_type_key = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'fullKey'] = self._full_key
-        pyson_object[u'categoryKey'] = self._category_key
-        pyson_object[u'eventTypeKey'] = self._event_type_key
+        pyson_object['fullKey'] = self._full_key
+        pyson_object['categoryKey'] = self._category_key
+        pyson_object['eventTypeKey'] = self._event_type_key
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -3333,52 +3332,52 @@ class TypeKey(object):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'fullKey' in pyson_object:
-            self._full_key = pyson_object[u'fullKey']
+        if 'fullKey' in pyson_object:
+            self._full_key = pyson_object['fullKey']
 
-        if u'categoryKey' in pyson_object:
-            self._category_key = pyson_object[u'categoryKey']
+        if 'categoryKey' in pyson_object:
+            self._category_key = pyson_object['categoryKey']
 
-        if u'eventTypeKey' in pyson_object:
-            self._event_type_key = pyson_object[u'eventTypeKey']
+        if 'eventTypeKey' in pyson_object:
+            self._event_type_key = pyson_object['eventTypeKey']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.TopologyManager
 
 
-class State(object):
+class State():
 
     @staticmethod
     def none():
-        return u"None"
+        return "None"
 
     @staticmethod
     def adopted():
-        return u"Adopted"
+        return "Adopted"
 
     @staticmethod
     def unadopted():
-        return u"Unadopted"
+        return "Unadopted"
 
     @staticmethod
     def disconnected():
-        return u"Disconnected"
+        return "Disconnected"
 
     @staticmethod
     def established():
-        return u"Established"
+        return "Established"
 
     @staticmethod
     def configured():
-        return u"Configured"
+        return "Configured"
 
 
 class HostNode(OperationalNode):
 
     def __init__(self):
         super(HostNode, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.TopologyManager.HostNode'
-        self._ip_address = u""
+        self._odata_type = '#Sel.Sel5056.TopologyManager.HostNode'
+        self._ip_address = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -3387,7 +3386,7 @@ class HostNode(OperationalNode):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _ip_address = None
@@ -3401,13 +3400,13 @@ class HostNode(OperationalNode):
         self._ip_address = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(HostNode, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'ipAddress'] = self._ip_address
+        pyson_object['ipAddress'] = self._ip_address
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -3416,8 +3415,8 @@ class HostNode(OperationalNode):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'ipAddress' in pyson_object:
-            self._ip_address = pyson_object[u'ipAddress']
+        if 'ipAddress' in pyson_object:
+            self._ip_address = pyson_object['ipAddress']
 
         return pyson_object
 
@@ -3426,8 +3425,8 @@ class HostInterfacePort(OperationalPort):
 
     def __init__(self):
         super(HostInterfacePort, self).__init__()
-        self._odata_type = u'#Sel.Sel5056.TopologyManager.HostInterfacePort'
-        self._mac = u""
+        self._odata_type = '#Sel.Sel5056.TopologyManager.HostInterfacePort'
+        self._mac = ""
 
     def from_json(self, json_string):
         pyson_object = json.loads(json_string)
@@ -3436,7 +3435,7 @@ class HostInterfacePort(OperationalPort):
 
     def to_json(self):
         pyson_object = self.to_pyson()
-        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(u',', u': '))
+        json_string = json.dumps(pyson_object, sort_keys=True, indent=4, separators=(',', ': '))
         return json_string
 
     _mac = None
@@ -3450,13 +3449,13 @@ class HostInterfacePort(OperationalPort):
         self._mac = value
 
     def to_pyson(self):
-        pyson_object = {u'@odata.type': self._odata_type}
+        pyson_object = {'@odata.type': self._odata_type}
         super(HostInterfacePort, self)._add_pyson(pyson_object)
         self._add_pyson(pyson_object)
         return pyson_object
 
     def _add_pyson(self, pyson_object):
-        pyson_object[u'mac'] = self._mac
+        pyson_object['mac'] = self._mac
         return pyson_object
 
     def from_pyson(self,pyson_object):
@@ -3465,326 +3464,326 @@ class HostInterfacePort(OperationalPort):
         return pyson_object
 
     def _parse_pyson(self, pyson_object):
-        if u'mac' in pyson_object:
-            self._mac = pyson_object[u'mac']
+        if 'mac' in pyson_object:
+            self._mac = pyson_object['mac']
 
         return pyson_object
 # Odata Namespace Sel.Sel5056.Common.DataBroker.Types.EventBus.Enums
 
 
-class DurationType(object):
+class DurationType():
 
     @staticmethod
     def momentary():
-        return u"Momentary"
+        return "Momentary"
 
     @staticmethod
     def persistent():
-        return u"Persistent"
+        return "Persistent"
 
-class SeverityLevel(object):
+class SeverityLevel():
 
     @staticmethod
     def emergency():
-        return u"Emergency"
+        return "Emergency"
 
     @staticmethod
     def alert():
-        return u"Alert"
+        return "Alert"
 
     @staticmethod
     def critical():
-        return u"Critical"
+        return "Critical"
 
     @staticmethod
     def error():
-        return u"Error"
+        return "Error"
 
     @staticmethod
     def warning():
-        return u"Warning"
+        return "Warning"
 
     @staticmethod
     def notice():
-        return u"Notice"
+        return "Notice"
 
     @staticmethod
     def informational():
-        return u"Informational"
+        return "Informational"
 
     @staticmethod
     def debug():
-        return u"Debug"
+        return "Debug"
 
-class BehaviorType(object):
+class BehaviorType():
 
     @staticmethod
     def alarm_request():
-        return u"AlarmRequest"
+        return "AlarmRequest"
 
     @staticmethod
     def local_log_data():
-        return u"LocalLogData"
+        return "LocalLogData"
 
     @staticmethod
     def syslog_data():
-        return u"SyslogData"
+        return "SyslogData"
 
     @staticmethod
     def web_data():
-        return u"WebData"
+        return "WebData"
 
-class EventState(object):
+class EventState():
 
     @staticmethod
     def cleared():
-        return u"Cleared"
+        return "Cleared"
 
     @staticmethod
     def raised():
-        return u"Raised"
+        return "Raised"
 # Odata Namespace Sel.Sel5056.OpenFlowPlugin.Enums
 
 
-class OfpActionType(object):
+class OfpActionType():
 
     @staticmethod
     def output():
-        return u"Output"
+        return "Output"
 
     @staticmethod
     def copy_ttl_out():
-        return u"CopyTtlOut"
+        return "CopyTtlOut"
 
     @staticmethod
     def copy_ttl_in():
-        return u"CopyTtlIn"
+        return "CopyTtlIn"
 
     @staticmethod
     def set_mpls_ttl():
-        return u"SetMplsTtl"
+        return "SetMplsTtl"
 
     @staticmethod
     def dec_mpls_ttl():
-        return u"DecMplsTtl"
+        return "DecMplsTtl"
 
     @staticmethod
     def push_vlan():
-        return u"PushVlan"
+        return "PushVlan"
 
     @staticmethod
     def pop_vlan():
-        return u"PopVlan"
+        return "PopVlan"
 
     @staticmethod
     def push_mpls():
-        return u"PushMpls"
+        return "PushMpls"
 
     @staticmethod
     def pop_mpls():
-        return u"PopMpls"
+        return "PopMpls"
 
     @staticmethod
     def set_queue():
-        return u"SetQueue"
+        return "SetQueue"
 
     @staticmethod
     def group():
-        return u"Group"
+        return "Group"
 
     @staticmethod
     def set_nw_ttl():
-        return u"SetNwTtl"
+        return "SetNwTtl"
 
     @staticmethod
     def dec_nw_ttl():
-        return u"DecNwTtl"
+        return "DecNwTtl"
 
     @staticmethod
     def set_field():
-        return u"SetField"
+        return "SetField"
 
     @staticmethod
     def push_pbb():
-        return u"PushPbb"
+        return "PushPbb"
 
     @staticmethod
     def pop_pbb():
-        return u"PopPbb"
+        return "PopPbb"
 
     @staticmethod
     def experimenter():
-        return u"Experimenter"
+        return "Experimenter"
 
-class OfpInstructionType(object):
+class OfpInstructionType():
 
     @staticmethod
     def goto_table():
-        return u"GotoTable"
+        return "GotoTable"
 
     @staticmethod
     def write_metadata():
-        return u"WriteMetadata"
+        return "WriteMetadata"
 
     @staticmethod
     def write_actions():
-        return u"WriteActions"
+        return "WriteActions"
 
     @staticmethod
     def apply_actions():
-        return u"ApplyActions"
+        return "ApplyActions"
 
     @staticmethod
     def clear_actions():
-        return u"ClearActions"
+        return "ClearActions"
 
     @staticmethod
     def meter():
-        return u"Meter"
+        return "Meter"
 
     @staticmethod
     def experimenter():
-        return u"Experimenter"
+        return "Experimenter"
 
-class OfpPortStatus(object):
+class OfpPortStatus():
 
     @staticmethod
     def link_up():
-        return u"LinkUp"
+        return "LinkUp"
 
     @staticmethod
     def link_down():
-        return u"LinkDown"
+        return "LinkDown"
 
     @staticmethod
     def blocked():
-        return u"Blocked"
+        return "Blocked"
 
     @staticmethod
     def live():
-        return u"Live"
+        return "Live"
 
-class OfpGroupType(object):
+class OfpGroupType():
 
     @staticmethod
     def all():
-        return u"All"
+        return "All"
 
     @staticmethod
     def select():
-        return u"Select"
+        return "Select"
 
     @staticmethod
     def indirect():
-        return u"Indirect"
+        return "Indirect"
 
     @staticmethod
     def fast_failover():
-        return u"FastFailover"
+        return "FastFailover"
 # Odata Namespace Sel.Sel5056.TopologyManager.Enums
 
 
-class OfpPortStatus(object):
+class OfpPortStatus():
 
     @staticmethod
     def link_up():
-        return u"LinkUp"
+        return "LinkUp"
 
     @staticmethod
     def link_down():
-        return u"LinkDown"
+        return "LinkDown"
 
     @staticmethod
     def blocked():
-        return u"Blocked"
+        return "Blocked"
 
     @staticmethod
     def live():
-        return u"Live"
+        return "Live"
 # Odata Namespace Sel
 
 
 #
 #Begin IOC Container Definition (Dependency Resolvers)
 #
-class _ResolveOdataType(object):
+class _ResolveOdataType:
 
     @staticmethod
     def getNewObject(odata_type):
         result = None
-        if odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventType":
+        if odata_type == "#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventType":
             result = EventType()
-        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventCategory":
+        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventCategory":
             result = EventCategory()
-        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.EventBus.ClearedEventType":
+        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.EventBus.ClearedEventType":
             result = ClearedEventType()
-        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.EventBus.Behavior":
+        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.EventBus.Behavior":
             result = Behavior()
-        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.EventBus.Event":
+        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.EventBus.Event":
             result = Event()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action":
             result = Action()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupAction":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupAction":
             result = GroupAction()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.OutputAction":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.OutputAction":
             result = OutputAction()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PushVlanAction":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PushVlanAction":
             result = PushVlanAction()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PopVlanAction":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PopVlanAction":
             result = PopVlanAction()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Match":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Match":
             result = Match()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Instruction":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Instruction":
             result = Instruction()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Port":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Port":
             result = Port()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.ApplyActions":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.ApplyActions":
             result = ApplyActions()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GoToTable":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GoToTable":
             result = GoToTable()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.WriteActions":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.WriteActions":
             result = WriteActions()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStat":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStat":
             result = FlowStat()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStat":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStat":
             result = TableStat()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStat":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStat":
             result = PortStat()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStats":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStats":
             result = FlowStats()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupDesc":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupDesc":
             result = GroupDesc()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortDesc":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortDesc":
             result = PortDesc()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.DeviceCapability":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.DeviceCapability":
             result = DeviceCapability()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStats":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStats":
             result = TableStats()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStats":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStats":
             result = PortStats()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Group":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Group":
             result = Group()
-        elif odata_type == u"#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Bucket":
+        elif odata_type == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Bucket":
             result = Bucket()
-        elif odata_type == u"#Sel.Sel5056.TopologyManager.Nodes.OperationalNode":
+        elif odata_type == "#Sel.Sel5056.TopologyManager.Nodes.OperationalNode":
             result = OperationalNode()
-        elif odata_type == u"#Sel.Sel5056.TopologyManager.Nodes.OpenFlowNode":
+        elif odata_type == "#Sel.Sel5056.TopologyManager.Nodes.OpenFlowNode":
             result = OpenFlowNode()
-        elif odata_type == u"#Sel.Sel5056.TopologyManager.Ports.OperationalPort":
+        elif odata_type == "#Sel.Sel5056.TopologyManager.Ports.OperationalPort":
             result = OperationalPort()
-        elif odata_type == u"#Sel.Sel5056.TopologyManager.Ports.EthernetPort":
+        elif odata_type == "#Sel.Sel5056.TopologyManager.Ports.EthernetPort":
             result = EthernetPort()
-        elif odata_type == u"#Sel.Sel5056.TopologyManager.Ports.OpenFlowPort":
+        elif odata_type == "#Sel.Sel5056.TopologyManager.Ports.OpenFlowPort":
             result = OpenFlowPort()
-        elif odata_type == u"#Sel.Sel5056.TopologyManager.Links.OperationalLink":
+        elif odata_type == "#Sel.Sel5056.TopologyManager.Links.OperationalLink":
             result = OperationalLink()
-        elif odata_type == u"#Sel.Sel5056.Common.RestBroker.Models.RestTransaction":
+        elif odata_type == "#Sel.Sel5056.Common.RestBroker.Models.RestTransaction":
             result = RestTransaction()
-        elif odata_type == u"#Sel.Sel5056.Common.DataBroker.Types.TypeKey":
+        elif odata_type == "#Sel.Sel5056.Common.DataBroker.Types.TypeKey":
             result = TypeKey()
-        elif odata_type == u"#Sel.Sel5056.TopologyManager.HostNode":
+        elif odata_type == "#Sel.Sel5056.TopologyManager.HostNode":
             result = HostNode()
-        elif odata_type == u"#Sel.Sel5056.TopologyManager.HostInterfacePort":
+        elif odata_type == "#Sel.Sel5056.TopologyManager.HostInterfacePort":
             result = HostInterfacePort()
         return result
 
