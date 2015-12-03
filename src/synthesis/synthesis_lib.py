@@ -54,12 +54,10 @@ class SynthesisLib():
 
         return self.queue_id_cntr
 
-    def sel_change_node_id(self, flow):
+    def sel_get_node_id(self, switch):
         for node in ConfigTree.nodesHttpAccess(self.sel_session).read_collection():
-            if node.linked_key == "OpenFlow:{}".format(flow.node[1:]):
-                flow.node = node.id
-                return flow
-
+            if node.linked_key == "OpenFlow:{}".format(switch[1:]):
+                return node.id
 
     def push_change(self, url, pushed_content):
 
@@ -80,8 +78,8 @@ class SynthesisLib():
         elif self.network_graph.controller == "sel":
             if isinstance(pushed_content, ConfigTree.Flow):
                 flows = ConfigTree.flowsHttpAccess(self.sel_session)
-                flow = self.sel_change_node_id(pushed_content)
-                result = flows.create_single(flow)
+                pushed_content.node = self.sel_get_node_id(pushed_content.node)
+                result = flows.create_single(pushed_content)
             elif isinstance(pushed_content, ConfigTree.Group):
                 groups = ConfigTree.groupsHttpAccess(self.sel_session)
                 result = groups.create_single(pushed_content)
@@ -239,6 +237,7 @@ class SynthesisLib():
             group = ConfigTree.Group()
             group.id = str(self.group_id_cntr)
             group.group_id = self.group_id_cntr
+            group.node = self.sel_get_node_id(sw)
 
         else:
             raise NotImplementedError
@@ -493,8 +492,12 @@ class SynthesisLib():
                 action = ConfigTree.OutputAction()
                 action.out_port = out_port
                 action.action_type = "Output"
+                action.max_length = 65535
+
                 bucket = ConfigTree.Bucket()
                 bucket.actions.append(action)
+                bucket.watch_port = 4294967295
+                bucket.watch_group = 4294967295
                 group.buckets.append(bucket)
 
             group_id = group.group_id
