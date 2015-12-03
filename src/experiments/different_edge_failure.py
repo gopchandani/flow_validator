@@ -49,6 +49,7 @@ class DifferentEdgeFailure(Experiment):
             fv.add_hosts()
             fv.initialize_admitted_traffic()
             fv.validate_all_host_pair_reachability()
+            ng.mininet_man.net.pingAll(1)
 
             for (node1, node2) in self.mm.synthesis.primary_path_edges:
 
@@ -57,6 +58,7 @@ class DifferentEdgeFailure(Experiment):
                 with Timer(verbose=True) as t:
                     fv.port_graph.remove_node_graph_edge(node1, node2)
                     fv.validate_all_host_pair_reachability()
+                    ng.mininet_man.net.pingAll(1)
                     fv.port_graph.add_node_graph_edge(node1, node2, updating=True)
 
                 s1 = node1[1:]
