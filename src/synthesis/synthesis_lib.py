@@ -30,8 +30,8 @@ class SynthesisLib():
         self.h.add_credentials('admin', 'admin')
         self.sel_session = Session.Http("http://selcontroller:1234/")
         self.sel_session.auth_user_callback()
-        self.sel_session.print_status = True
-        self.sel_session.print_data = True
+        self.sel_session.print_status = False
+        self.sel_session.print_data = False
 
         # Cleanup all Queue/QoS records from OVSDB
         os.system("sudo ovs-vsctl -- --all destroy QoS")
