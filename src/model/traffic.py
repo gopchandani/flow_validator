@@ -11,9 +11,10 @@ class TrafficElement():
     def __init__(self, init_match=None, init_field_wildcard=False):
 
         self.traffic = None
-        self.port = None
-        self.succ_traffic_element = None
-        self.written_field_modifications = {}
+
+        self.switch_modifications = {}
+        self.written_modifications = {}
+        self.output_action_type = None
 
         self.match_fields = {}
 
@@ -33,23 +34,6 @@ class TrafficElement():
                 self.match_fields[field_name] = IntervalTree()
                 self.set_match_field_element(field_name, is_wildcard=True)
 
-    def __str__(self):
-        if self.port:
-            return str(id(self)) + "@" + self.port.port_id
-        else:
-            return str(id(self)) + "@NONE"
-
-    def get_port_path_str(self):
-
-        port_path_str = self.port.port_id + "(" + str(id(self)) + ")"
-        trav = self.succ_traffic_element
-
-        while trav != None:
-            port_path_str += (" -> " + trav.port.port_id + "(" + str(id(trav)) + ")")
-            trav = trav.succ_traffic_element
-
-        return port_path_str
-    
     def set_match_field_element(self, key, value=None, is_wildcard=False, exception=False):
 
         # First remove all current intervals
@@ -129,22 +113,29 @@ class TrafficElement():
 
         return complement_traffic_elements
 
-
-    # A is_subset of B if A - B == NullSet
+    # Computes A - B  = A Intersect B'
     # A is in_traffic_element
     # B here is self
-
-    def is_subset(self, in_traffic_element):
+    def get_diff_traffic_elements(self, in_traffic_element):
 
         # find B'
         complement_traffic_elements = self.get_complement_traffic_elements()
 
-        # Intersect in_traffic_element with B' to get A-B by doing A Int B'
+        # Do the intersection
         diff_traffic_elements = []
         for cme in complement_traffic_elements:
             i = in_traffic_element.intersect(cme)
             if i:
                 diff_traffic_elements.append(i)
+
+        return diff_traffic_elements
+
+    # A is_subset of B if A - B == NullSet
+    # A is in_traffic_element
+    # B here is self
+    def is_subset(self, in_traffic_element):
+
+        diff_traffic_elements = self.get_diff_traffic_elements(in_traffic_element)
 
         # Return True/False based on if there was anything found in A Int B'
         if diff_traffic_elements:
@@ -152,12 +143,18 @@ class TrafficElement():
         else:
             return True
 
-    def get_orig_traffic_element(self, field_modifications=None):
+    def get_orig_traffic_element(self, modifications=None):
 
-        if field_modifications:
-            mf = field_modifications
+        if modifications:
+            mf = modifications
+            self.switch_modifications.update(modifications)
         else:
-            mf = self.written_field_modifications
+            # if the output_action type is applied, no written modifications take effect.
+            if self.output_action_type == "applied":
+                return self
+
+            mf = self.written_modifications
+            self.switch_modifications.update(self.written_modifications)
 
         orig_traffic_element = TrafficElement()
 
@@ -165,6 +162,7 @@ class TrafficElement():
 
             # If the field is modified in the Traffic as it passes through a rule,
             # The original traffic that comes at the front of that rule is computed as follows:
+
             # If the field was not modified, then it is left as-is, no harm done
             # If the field is modified however, it is left as-is too, unless it is modified to the exact value
             # as it is contained in the traffic
@@ -172,6 +170,7 @@ class TrafficElement():
             if field_name in mf:
 
                 #TODO: Do this more properly ground up from the parser
+
                 field_val = int(mf[field_name][1])
                 value_tree = IntervalTree()
                 value_tree.add(Interval(field_val, field_val + 1))
@@ -181,20 +180,16 @@ class TrafficElement():
                 if intersection:
                     orig_traffic_element.match_fields[field_name] = mf[field_name][0]
                 else:
-                     orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
+                    orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
 
             else:
                 # Otherwise, just keep the field same as it was
                 orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
 
         # Accumulate field modifications
-        orig_traffic_element.written_field_modifications.update(self.written_field_modifications)
-
-        # This newly minted ME depends on the succ_traffic_element
-        orig_traffic_element.succ_traffic_element = self.succ_traffic_element
-
-        # Copy these from self
-        orig_traffic_element.port = self.port
+        orig_traffic_element.written_modifications.update(self.written_modifications)
+        orig_traffic_element.output_action_type = self.output_action_type
+        orig_traffic_element.switch_modifications = self.switch_modifications
 
         return orig_traffic_element
 
@@ -287,16 +282,6 @@ class Traffic():
 
         return is_subset
 
-    def is_redundant_te(self, in_te):
-
-        is_redundant = False
-        for self_te in self.traffic_elements:
-            if self_te.is_subset(in_te) and self_te.succ_traffic_element == in_te.succ_traffic_element:
-                is_redundant = True
-                break
-
-        return is_redundant
-
     def intersect(self, in_traffic):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:
@@ -316,64 +301,65 @@ class Traffic():
                     ei.traffic = traffic_intersection
                     traffic_intersection.traffic_elements.append(ei)
 
-                    ei.written_field_modifications.update(e_in.written_field_modifications)
-
-                    # Establish that the resulting ei is based on e_in
-                    ei.succ_traffic_element = e_in
+                    ei.written_modifications.update(e_in.written_modifications)
+                    ei.output_action_type = e_in.output_action_type
+                    ei.switch_modifications = e_in.switch_modifications
 
         return traffic_intersection
 
+    # Computes a difference between two traffic instances and if they have changed.
+    # Computes A - B, where A is in_traffic and B is self
+    def difference(self, in_traffic):
+
+        diff_traffic = Traffic()
+
+        for in_te in in_traffic.traffic_elements:
+            if self.traffic_elements:
+                diff_traffic_elements = []
+
+                remaining = [in_te]
+
+                for self_te in self.traffic_elements:
+
+                    if len(remaining) > 1:
+                        remaining_traffic = Traffic()
+                        remaining_traffic.traffic_elements.extend(remaining)
+                        to_subtract = Traffic()
+                        to_subtract.traffic_elements.append(self_te)
+                        remaining_traffic = to_subtract.difference(remaining_traffic)
+                        remaining = remaining_traffic.traffic_elements
+
+                    elif len(remaining) == 1:
+                        remaining = self_te.get_diff_traffic_elements(remaining[0])
+                    else:
+                        break
+
+                if remaining:
+                    diff_traffic_elements.extend(remaining)
+
+                if diff_traffic_elements:
+                    diff_traffic.traffic_elements.extend(diff_traffic_elements)
+            else:
+                diff_traffic.traffic_elements.append(in_te)
+
+        return diff_traffic
+
+    # Returns the new traffic that just got added
     def union(self, in_traffic):
 
         for union_te in in_traffic.traffic_elements:
-
-            # Check to see if this needs to be added at all
-            if self.is_redundant_te(union_te):
-                continue
-
             union_te.traffic = self
             self.traffic_elements.append(union_te)
-
         return self
 
-    def pipe_welding(self, now_admitted_match):
-
-        # Check if this existing_te can be taken even partially by any of the candidates
-        # TODO: This does not handle left-over cases when parts of the existing_te are taken by multiple candidate_te
-
-        #print "pipe_welding has:", len(self.traffic_elements), "existing match elements to take care of..."
-
-        for existing_te in self.traffic_elements:
-            existing_te_welded = False
-            for candidate_te in now_admitted_match.traffic_elements:
-
-                if candidate_te.is_subset(existing_te):
-                    existing_te.written_field_modifications.update(candidate_te.written_field_modifications)
-                    existing_te.succ_traffic_element = candidate_te.succ_traffic_element
-                    existing_te_welded = True
-                    break
-
-            # If none of the candidate_te took existing_te:
-            #Delete everybody who dependent on existing_te, the whole chain...
-            if not existing_te_welded:
-                existing_te.succ_traffic_element = None
-
-    def get_orig_traffic(self, modified_fields=None):
+    def get_orig_traffic(self, modifications=None):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
-            orig_te = te.get_orig_traffic_element(modified_fields)
+            orig_te = te.get_orig_traffic_element(modifications)
             orig_te.traffic = orig_traffic
             orig_traffic.traffic_elements.append(orig_te)
         return orig_traffic
-
-    def set_port(self, port):
-        for te in self.traffic_elements:
-            te.port = port
-
-    def set_succ_traffic_element(self, succ_traffic_element):
-        for te in self.traffic_elements:
-            te.succ_traffic_element = succ_traffic_element
 
     def is_field_wildcard(self, field_name):
         retval = True

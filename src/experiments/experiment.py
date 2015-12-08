@@ -19,7 +19,8 @@ class Experiment(object):
                  load_config,
                  save_config,
                  controller,
-                 experiment_switches):
+                 experiment_switches,
+                 num_controller_instances):
 
         self.experiment_tag = experiment_name + "_" +time.strftime("%Y%m%d_%H%M%S")
 
@@ -28,16 +29,19 @@ class Experiment(object):
         self.save_config = save_config
         self.controller = controller
         self.experiment_switches = experiment_switches
+        self.num_controller_instances = num_controller_instances
 
         self.data = {}
 
-    def setup_network_graph(self, topo_description):
-
         self.controller_port = 6633
+        self.cm = None
+        if not self.load_config and self.save_config:
+            self.cm = ControllerMan(self.num_controller_instances, controller=controller)
+
+    def setup_network_graph(self, topo_description, qos=False):
 
         if not self.load_config and self.save_config:
-            cm = ControllerMan(1, controller=self.controller)
-            controller_port = cm.get_next()
+            self.controller_port = self.cm.get_next()
 
         self.mm = MininetMan(self.controller_port, *topo_description)
 
@@ -53,8 +57,11 @@ class Experiment(object):
                 self.mm.setup_mininet_with_odl(ng)
             elif self.controller == "ryu":
                 #self.mm.setup_mininet_with_ryu_router()
-                #self.mm.setup_mininet_with_ryu_qos(ng)
-                self.mm.setup_mininet_with_ryu(ng)
+
+                if qos:
+                    self.mm.setup_mininet_with_ryu_qos(ng)
+                else:
+                    self.mm.setup_mininet_with_ryu(ng)
 
         # Refresh the network_graph
         ng.parse_switches()

@@ -118,7 +118,7 @@ class InstructionSet():
         for instruction_json in self.instructions_json:
             instruction = Instruction(self.sw, instruction_json)
 
-            #Apply-Action has to be the first one, so reorganizing that...
+            # Apply-Action has to be the first one, so reorganizing that...
             if instruction.instruction_type == "apply-actions":
                 self.instruction_list.insert(0, instruction)
 

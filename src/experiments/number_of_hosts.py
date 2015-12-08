@@ -26,7 +26,8 @@ class NumberOfHosts(Experiment):
                                             load_config,
                                             save_config,
                                             controller,
-                                            experiment_switches)
+                                            experiment_switches,
+                                            len(total_number_of_hosts))
 
         self.total_number_of_hosts = total_number_of_hosts
 
@@ -34,10 +35,6 @@ class NumberOfHosts(Experiment):
             "initial_port_graph_construction_time": defaultdict(list),
             "initial_traffic_set_propagation_time": defaultdict(list)
         }
-
-        if not load_config and save_config:
-            cm = ControllerMan(len(self.total_number_of_hosts), controller=controller)
-            self.controller_port = cm.get_next()
 
     def trigger(self):
 
@@ -61,6 +58,11 @@ class NumberOfHosts(Experiment):
                 self.data["initial_traffic_set_propagation_time"][total_number_of_hosts].append(t.msecs)
 
                 fv.validate_all_host_pair_reachability()
+
+                for (node1, node2) in self.mm.synthesis.primary_path_edges:
+                        fv.port_graph.remove_node_graph_edge(node1, node2)
+                        fv.validate_all_host_pair_reachability()
+                        fv.port_graph.add_node_graph_edge(node1, node2, updating=True)
 
                 fv.de_init_port_graph()
 
@@ -97,7 +99,7 @@ class NumberOfHosts(Experiment):
 def main():
 
     num_iterations = 1#10
-    total_number_of_hosts = [4]#, 4, 6, 8, 10]# 14, 16])#, 18, 20]
+    total_number_of_hosts = [2]#, 6, 8, 10]# 14, 16])#, 18, 20]
     load_config = False
     save_config = True
     controller = "ryu"
@@ -112,6 +114,7 @@ def main():
 
     exp.trigger()
     exp.dump_data()
+
     exp.plot_number_of_hosts()
 
 if __name__ == "__main__":

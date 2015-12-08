@@ -13,7 +13,6 @@ class Bucket():
         self.weight = None
         self.group = group
 
-
         if self.sw.network_graph.controller == "odl":
 
             self.bucket_id = bucket_json["bucket-id"]
@@ -46,15 +45,11 @@ class Bucket():
         for action in self.action_list:
             action.bucket = self
 
-
     def is_live(self):
 
         # Check if the watch port is up.
         if self.watch_port:
-
-            watch_port_obj = self.sw.port_graph.get_port(\
-                self.sw.port_graph.get_outgoing_port_id(self.sw.node_id, str(self.watch_port)))
-
+            watch_port_obj = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, str(self.watch_port)))
             return watch_port_obj.state == "up"
 
         # If no watch_port was specified, then assume the bucket is always live
@@ -124,6 +119,10 @@ class Group():
             for bucket_json in group_json["buckets"]:
                 self.bucket_list.append(Bucket(sw, bucket_json, self))
 
+        #TODO: For now, assume that all edges would be up at the system initialization and failure events
+        # will occur subsequently
+        if self.group_type == self.sw.network_graph.GROUP_FF:
+                self.active_bucket = self.bucket_list[0]
 
     def get_action_list(self):
         action_list = []

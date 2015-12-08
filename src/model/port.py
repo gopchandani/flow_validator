@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+from collections import defaultdict
 
 class Port():
 
@@ -8,11 +9,12 @@ class Port():
         self.sw = sw
         self.port_type = port_type
         self.port_id = None
+        self.curr_speed = None
+        self.max_speed = None
 
-        # This dictionary is to hold a Match object per destination
-        self.path_elements = {}
-        self.admitted_traffic = {}
-        self.transfer_traffic = {}
+        # This nested dictionary is to hold Traffic object per successor, per destination
+        self.transfer_traffic = defaultdict(defaultdict)
+        self.admitted_traffic = defaultdict(defaultdict)
 
         # These apply specifically to physical ports
         self.mac_address = None
@@ -42,6 +44,8 @@ class Port():
         self.port_id = str(self.sw.node_id) + ":" + str(port_json["flow-node-inventory:port-number"])
         self.port_number = port_json["flow-node-inventory:port-number"]
         self.mac_address = port_json["flow-node-inventory:hardware-address"]
+        self.curr_speed = int(port_json["flow-node-inventory:current-speed"])
+        self.max_speed = int(port_json["flow-node-inventory:maximum-speed"])
 
         if port_json["flow-node-inventory:state"]["link-down"]:
             self.state = "down"
@@ -53,6 +57,8 @@ class Port():
         self.port_id = str(self.sw.node_id) + ":" + str(port_json["port_no"])
         self.port_number = port_json["port_no"]
         self.mac_address = port_json["hw_addr"]
+        self.curr_speed = int(port_json["curr_speed"])
+        self.max_speed = int(port_json["max_speed"])
 
         #TODO: Peep into port_json["state"]
         self.state = "up"
