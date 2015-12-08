@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
+import random
 sys.path.append("./")
 
 from model.port_graph import PortGraph
@@ -50,28 +51,31 @@ class FlowValidator:
                                                      None,
                                                      host_obj.switch_egress_port)
 
-    def validate_host_pair_reachability(self, src_h_id, dst_h_id):
+    def validate_host_pair_reachability(self, src_h_id, dst_h_id, verbose=True):
+
+        at = None
 
         src_host_obj = self.network_graph.get_node_object(src_h_id)
         dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
-        print "Paths from:", src_h_id, "to:", dst_h_id
-
-        if dst_host_obj.switch_egress_port.port_id not in src_host_obj.switch_ingress_port.admitted_traffic:
-            print "None found."
-            return
-
-        self.port_graph.print_paths(src_host_obj.switch_ingress_port,
+        path_count = self.port_graph.count_paths(src_host_obj.switch_ingress_port,
                                     dst_host_obj.switch_egress_port,
+                                    verbose,
                                     path_str=src_host_obj.switch_ingress_port.port_id)
 
-    def validate_all_host_pair_reachability(self):
+        at = src_host_obj.switch_ingress_port.get_dst_admitted_traffic(dst_host_obj.switch_egress_port)
+        if not at.is_empty() and verbose:
+            print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
+
+        return at, path_count
+
+    def validate_all_host_pair_reachability(self, verbose=True):
 
         for src_h_id in self.network_graph.get_experiment_host_ids():
             for dst_h_id in self.network_graph.get_experiment_host_ids():
-                self.validate_host_pair_reachability(src_h_id, dst_h_id)
+                self.validate_host_pair_reachability(src_h_id, dst_h_id, verbose)
 
-    def validate_all_host_pair_backup(self):
+    def validate_all_host_pair_backup(self, verbose=True):
 
         for src_h_id in self.network_graph.get_experiment_host_ids():
             for dst_h_id in self.network_graph.get_experiment_host_ids():
@@ -79,26 +83,75 @@ class FlowValidator:
                 if src_h_id == dst_h_id:
                     continue
 
-                baseline_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
+                baseline_at, baseline_path_count = self.validate_host_pair_reachability(src_h_id,
+                                                                                        dst_h_id,
+                                                                                        verbose)
 
-                # Now break the edges in the primary path in this host-pair, one-by-one
+                # Now break the edges in the network graph, one-by-one
                 for edge in self.network_graph.graph.edges():
 
                     if edge[0].startswith("h") or edge[1].startswith("h"):
                         continue
 
-                    print "Failing edge:", edge
+                    if verbose:
+                        print "Failing edge:", edge
 
                     self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-                    edge_removed_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
-
-                    print "Restoring edge:", edge
+                    edge_removed_at, edge_remove_path_count = self.validate_host_pair_reachability(src_h_id,
+                                                                                                   dst_h_id,
+                                                                                                   verbose)
+                    if verbose:
+                        print "Restoring edge:", edge
 
                     # Add it back
                     self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
-                    edge_added_back_num_elements = self.validate_host_pair_reachability(src_h_id, dst_h_id)
+                    edge_added_back_at, edge_added_back_path_count = self.validate_host_pair_reachability(src_h_id,
+                                                                                                          dst_h_id,
+                                                                                                          verbose)
 
                     # the number of elements should be same in three scenarios for each edge
-                    if not(baseline_num_elements == edge_removed_num_elements == edge_added_back_num_elements):
+
+                    if not(baseline_at.is_subset_traffic(edge_removed_at) and
+                               edge_added_back_at.is_subset_traffic(edge_removed_at)):
                         print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
-                        return
+
+    #Return number of edges it took to break
+    def break_random_edges_until_pair_disconnected(self, src_h_id, dst_h_id, verbose):
+        edges_broken = []
+
+        at, path_count = self.validate_host_pair_reachability(src_h_id, dst_h_id, verbose)
+
+        orig_at = at
+        orig_path_count = path_count
+
+        while path_count:
+
+            # Randomly sample an edge to break, sample again if it has already been broken
+            edge = random.choice(self.network_graph.graph.edges())
+
+            # Ignore host edges
+            if edge[0].startswith("h") or edge[1].startswith("h"):
+                continue
+
+            if edge in edges_broken:
+                continue
+
+            # Break the edge
+            edges_broken.append(edge)
+            self.port_graph.remove_node_graph_edge(edge[0], edge[1])
+            at, path_count = self.validate_host_pair_reachability(src_h_id, dst_h_id, verbose)
+
+        # Restore the edges for next run
+        for edge in edges_broken:
+            self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
+
+        if verbose:
+            print "edges_broken:", edges_broken
+
+        # For comparison sake:
+        now_at, now_path_count = self.validate_host_pair_reachability(src_h_id, dst_h_id, verbose)
+
+        if now_path_count != orig_path_count or not(orig_at.is_subset_traffic(now_at)):
+            print "Something went wrong:", src_h_id, "<->", dst_h_id, "due to edges_broken:", edges_broken
+
+        return len(edges_broken)

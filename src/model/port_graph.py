@@ -4,6 +4,7 @@ import networkx as nx
 from port import Port
 from edge_data import EdgeData
 from traffic import Traffic
+from collections import defaultdict
 
 class PortGraph:
 
@@ -29,22 +30,18 @@ class PortGraph:
 
     def add_switch_transfer_function(self, sw):
 
-        sw.print_transfer_function()
-
         # First grab the port objects from the sw's node graph and add them to port_graph's node graph
         for port in sw.ports:
+
             self.add_port(sw.get_port(self.get_incoming_port_id(sw.node_id, port)))
             self.add_port(sw.get_port(self.get_outgoing_port_id(sw.node_id, port)))
 
         # Add edges from all possible source/destination ports
         for src_port_number in sw.ports:
+
             src_p = self.get_port(self.get_incoming_port_id(sw.node_id, src_port_number))
 
             for dst_p in src_p.transfer_traffic:
-
-                # Don't add looping edges
-                if src_p.port_number == dst_p.port_number:
-                    continue
 
                 traffic_filter = src_p.transfer_traffic[dst_p]
                 total_traffic = Traffic()
@@ -52,15 +49,84 @@ class PortGraph:
                     total_traffic.union(traffic_filter[succ])
                 self.add_edge(src_p, dst_p, total_traffic)
 
-    def init_port_graph(self):
+    def update_admitted_traffic(self, tf_changes):
 
-        # Add a port for controller
-        self.init_global_controller_port()
+        # This object holds for each ingress_port/destination combinations
+        # that have changed as keys and list of egress ports as values
+        change_matrix = defaultdict(defaultdict)
+
+        for change in tf_changes:
+
+            ingress_p = change[0]
+            egress_p = change[1]
+
+            # Modify the edge filter
+            edge_data = self.modify_edge(ingress_p, egress_p)
+
+            #TODO Limit the destinations (get them passed by tf_changes)
+            for dst_p in ingress_p.admitted_traffic:
+                if dst_p not in change_matrix[ingress_p]:
+                    change_matrix[ingress_p][dst_p] = [egress_p]
+                else:
+                    change_matrix[ingress_p][dst_p].append(egress_p)
+
+            for dst_p in egress_p.admitted_traffic:
+                if dst_p not in change_matrix[ingress_p]:
+                    change_matrix[ingress_p][dst_p] = [egress_p]
+                else:
+                    change_matrix[ingress_p][dst_p].append(egress_p)
+
+        # Do this for each ingress port that has changed
+        for ingress_p in change_matrix:
+
+            # For each destination that may have been affected at the ingress port
+            for dst_p in change_matrix[ingress_p]:
+
+                prev_ingress_p_traffic = ingress_p.get_dst_admitted_traffic(dst_p)
+                now_ingress_p_traffic = Traffic()
+
+                ingress_p_egress_p_traffic_now = {}
+
+                for egress_p in change_matrix[ingress_p][dst_p]:
+
+                    edge_data = self.g.get_edge_data(ingress_p.port_id, egress_p.port_id)["edge_data"]
+                    egress_p_traffic = egress_p.get_dst_admitted_traffic(dst_p)
+                    ingress_p_traffic = self.compute_edge_admitted_traffic(egress_p_traffic, edge_data)
+
+                    ingress_p_egress_p_traffic_now[egress_p] = ingress_p_traffic
+
+                    now_ingress_p_traffic.union(ingress_p_traffic)
+
+                more_now = prev_ingress_p_traffic.difference(now_ingress_p_traffic)
+                less_now = now_ingress_p_traffic.difference(prev_ingress_p_traffic)
+
+                # Decide if to propagate it, if more_now or less_now is not empty...
+                # TODO: Propagate from selective egress_p?,
+                if not more_now.is_empty() or not less_now.is_empty():
+                    for egress_p in change_matrix[ingress_p][dst_p]:
+                        self.compute_admitted_traffic(ingress_p,
+                                                      ingress_p_egress_p_traffic_now[egress_p],
+                                                      egress_p,
+                                                      dst_p)
+                else:
+                    # Update admitted traffic at ingress port to reflect any and all changes
+                    for egress_p in ingress_p_egress_p_traffic_now:
+                        ingress_p_traffic = ingress_p_egress_p_traffic_now[egress_p]
+                        if ingress_p_traffic.is_empty():
+                            if dst_p in ingress_p.admitted_traffic:
+                                if egress_p in ingress_p.admitted_traffic[dst_p]:
+                                    del ingress_p.admitted_traffic[dst_p][egress_p]
+                        else:
+                            ingress_p.admitted_traffic[dst_p][egress_p] = ingress_p_traffic
+
+    def init_port_graph(self):
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
+
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
+            #sw.test_transfer_function(verbose=True)
             self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
@@ -69,9 +135,6 @@ class PortGraph:
                 self.add_node_graph_edge(node_edge[0], node_edge[1])
 
     def de_init_port_graph(self):
-
-        # First get rid of the controller port
-        self.de_init_controller_port()
 
         # Then get rid of the edges in the port graph
         for node_edge in self.network_graph.graph.edges():
@@ -86,30 +149,45 @@ class PortGraph:
 
         edge_data = EdgeData(src_port, dst_port)
 
-        # Each traffic element has its own edge_data, because of how it might have
-        # traveled through the switch and what modifications it may have accumulated
-        for te in edge_filter_traffic.traffic_elements:
+        # If the edge filter became empty, reflect that.
+        if edge_filter_traffic.is_empty():
             t = Traffic()
-            t.add_traffic_elements([te])
-            edge_data.add_edge_data((t, te.switch_modifications))
+            edge_data.add_edge_data((t, {}))
+        else:
+            # Each traffic element has its own edge_data, because of how it might have
+            # traveled through the switch and what modifications it may have accumulated
+            for te in edge_filter_traffic.traffic_elements:
+                t = Traffic()
+                t.add_traffic_elements([te])
+                edge_data.add_edge_data((t, te.switch_modifications))
 
         self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
+
+        return edge_data
 
         #self.update_switch_transfer_function(src_port.sw, src_port)
 
     def remove_edge(self, src_port, dst_port):
 
+        if not self.g.has_edge(src_port.port_id, dst_port.port_id):
+            return
+
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(src_port.port_id, dst_port.port_id)
 
-    def init_global_controller_port(self):
-        cp = Port(None, port_type="controller", port_id="4294967293")
-        self.add_port(cp)
+    def modify_edge(self, src_port, dst_port):
 
-    def de_init_controller_port(self):
-        cp = self.get_port("4294967293")
-        self.remove_port(cp)
-        del cp
+        #TODO: right now, just doing it up by ripping up the edge and putting it back
+
+        self.remove_edge(src_port, dst_port)
+
+        traffic_filter = src_port.transfer_traffic[dst_port]
+        total_traffic = Traffic()
+        for succ in traffic_filter:
+            total_traffic.union(traffic_filter[succ])
+
+        edge_data = self.add_edge(src_port, dst_port, total_traffic)
+        return  edge_data
 
     def add_node_graph_edge(self, node1_id, node2_id, updating=False):
 
@@ -130,8 +208,12 @@ class PortGraph:
         if updating:
             sw1 = self.network_graph.get_node_object(node1_id)
             sw2 = self.network_graph.get_node_object(node2_id)
-            sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_up")
-            sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_up")
+
+            tf_changes = sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_up")
+            self.update_admitted_traffic(tf_changes)
+
+            tf_changes = sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_up")
+            self.update_admitted_traffic(tf_changes)
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -153,77 +235,137 @@ class PortGraph:
         sw1 = self.network_graph.get_node_object(node1_id)
         sw2 = self.network_graph.get_node_object(node2_id)
 
-        sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_down")
-        sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_down")
+        tf_changes = sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_down")
+        self.update_admitted_traffic(tf_changes)
 
-    def compute_edge_admitted_traffic(self, curr_admitted_traffic, edge_data):
+        tf_changes = sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_down")
+        self.update_admitted_traffic(tf_changes)
+
+    def compute_edge_admitted_traffic(self, traffic_to_propagate, edge_data):
 
         pred_admitted_traffic = Traffic()
 
         for edge_filter_traffic, modifications in edge_data.edge_data_list:
 
             # At egress edges, set the in_port of the admitted match for destination to wildcard
-            if edge_data.edge_type == "egress":
-                curr_admitted_traffic.set_field("in_port", is_wildcard=True)
+            if edge_data.edge_type == "outside":
+                traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
             # If there were modifications along the way...
             if modifications:
-                cat = curr_admitted_traffic.get_orig_traffic(modifications)
+                ttp = traffic_to_propagate.get_orig_traffic(modifications, store_switch_modifications=False)
             else:
-                cat = curr_admitted_traffic
+                ttp = traffic_to_propagate
 
-            i = edge_filter_traffic.intersect(cat)
+            i = edge_filter_traffic.intersect(ttp)
 
             if not i.is_empty():
                 pred_admitted_traffic.union(i)
 
         return pred_admitted_traffic
 
-    def print_paths(self, src_p, dst_p, path_str=""):
-        at = src_p.admitted_traffic[dst_p.port_id]
+    def account_port_admitted_traffic(self, port, dst_traffic_at_succ, succ, dst_port):
 
-        for succ_p in at:
-            if succ_p:
-                self.print_paths(succ_p, dst_p, path_str + " -> " + succ_p.port_id)
-            else:
-                print path_str
+        # Keep track of what traffic looks like before any changes occur
+        traffic_before_changes = Traffic()
+        for sp in port.admitted_traffic[dst_port]:
+            traffic_before_changes.union(port.admitted_traffic[dst_port][sp])
 
-    def account_port_admitted_traffic(self, port, propagating_traffic, succ, dst_port):
+        # Compute what additional traffic is being admitted overall
+        additional_traffic = traffic_before_changes.difference(dst_traffic_at_succ)
 
-        traffic_to_propagate = None
-        curr_succ_dst_traffic = None
-
-        # If the traffic at this port already exist for this dst-succ combination,
-        # Grab it, compute delta with what is being propagated and fill up the gaps
+        # Do the changes...
         try:
-            curr_succ_dst_traffic = port.admitted_traffic[dst_port.port_id][succ]
-            traffic_to_propagate = curr_succ_dst_traffic.difference(propagating_traffic)
-            port.admitted_traffic[dst_port.port_id][succ].union(traffic_to_propagate)
+            # First accumulate any more traffic that has arrived from this sucessor
+            more_from_succ = port.admitted_traffic[dst_port][succ].difference(dst_traffic_at_succ)
+            if not more_from_succ.is_empty():
+                port.admitted_traffic[dst_port][succ].union(more_from_succ)
 
-        # If there is no traffic for this dst-succ combination prior to this propagation
-        # Setup a traffic object, store it and propagate it no need to compute any delta.
+            # Then get rid of traffic that this particular successor does not admit anymore
+            less_from_succ = dst_traffic_at_succ.difference(port.admitted_traffic[dst_port][succ])
+            if not less_from_succ.is_empty():
+                port.admitted_traffic[dst_port][succ] = less_from_succ.difference(port.admitted_traffic[dst_port][succ])
+                if port.admitted_traffic[dst_port][succ].is_empty():
+                    del port.admitted_traffic[dst_port][succ]
+
+        # If there is no traffic for this dst-succ combination prior to this propagation,
+        # setup a traffic object for successor
         except KeyError:
-            port.admitted_traffic[dst_port.port_id][succ] = Traffic()
-            port.admitted_traffic[dst_port.port_id][succ].union(propagating_traffic)
-            traffic_to_propagate = propagating_traffic
+            if not dst_traffic_at_succ.is_empty():
+                port.admitted_traffic[dst_port][succ] = Traffic()
+                port.admitted_traffic[dst_port][succ].union(dst_traffic_at_succ)
 
-        return traffic_to_propagate
+        # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
+        traffic_after_changes = Traffic()
+        for sp in port.admitted_traffic[dst_port]:
+            traffic_after_changes.union(port.admitted_traffic[dst_port][sp])
 
-    def compute_admitted_traffic(self, curr, propagating_traffic, succ, dst_port):
+        # Compute what reductions (if any) in traffic has occured due to all the changes
+        reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
 
-        #print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        # If nothing is left behind then clean up the dictionary.
+        if traffic_after_changes.is_empty():
+            del port.admitted_traffic[dst_port]
 
-        traffic_to_propagate = self.account_port_admitted_traffic(curr, propagating_traffic, succ, dst_port)
+        traffic_to_propagate = traffic_after_changes
 
-        if not traffic_to_propagate.is_empty():
+        return additional_traffic, reduced_traffic, traffic_to_propagate
 
-            # Recursively call myself at each of my predecessors in the port graph
+    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes=None):
+
+        # if  dst_port.port_id == 's1:egress1':
+        #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+
+        additional_traffic, reduced_traffic, traffic_to_propagate = \
+            self.account_port_admitted_traffic(curr, dst_traffic_at_succ, succ, dst_port)
+
+        if not additional_traffic.is_empty():
+
+            # If it is an ingress port, it has no predecessors:
+            if curr.port_type == "ingress":
+                if tf_changes != None:
+                    tf_changes.append((curr, dst_port, "additional"))
+
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
                 pred = self.get_port(pred_id)
                 edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
-                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
+                pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
 
                 # Base case: No traffic left to propagate to predecessors
-                if not pred_admitted_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst_port)
+                if not pred_transfer_traffic.is_empty():
+                    self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
+
+        if not reduced_traffic.is_empty():
+
+            if curr.port_type == "ingress":
+                if tf_changes != None:
+                    tf_changes.append((curr, dst_port, "removal"))
+
+            for pred_id in self.g.predecessors_iter(curr.port_id):
+                pred = self.get_port(pred_id)
+                edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+                pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
+                self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
+
+    def count_paths(self, this_p, dst_p, verbose, path_str=""):
+
+        path_count = 0
+
+        if dst_p in this_p.admitted_traffic:
+
+            tt = this_p.admitted_traffic[dst_p]
+
+            for succ_p in tt:
+
+                if succ_p:
+                    path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.port_id)
+
+                # A none succcessor means, it originates here.
+                else:
+                    if verbose:
+                        print path_str
+
+                    path_count += 1
+
+        return path_count

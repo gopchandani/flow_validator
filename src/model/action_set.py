@@ -37,6 +37,7 @@ class Action():
         self.action_type = None
         self.is_active = is_active
         self.bucket = None
+        self.instruction_type = None
 
         # Captures what the action is doing.
         self.modified_field = None
@@ -109,54 +110,36 @@ class Action():
         # if "pop-vlan-action" in self.action_json:
         #     self.action_type = "pop_vlan"
 
+    def is_failover_action(self):
+        return (self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF)
+
     def perform_edge_failover(self):
 
-        muted_port_number = None
+        muted_port_numbers = []
         unmuted_port_number = None
 
-        # Do I belong to a failover group, if so, only then a failover might exist...
-        if self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF:
+        for this_bucket in self.bucket.group.bucket_list:
 
-            # Look at my group's first live bucket
-            first_live_bucket = self.bucket.group.get_first_live_bucket()
+            if this_bucket.is_live():
 
-            # If there is a live bucket
-            if first_live_bucket:
+                if not unmuted_port_number:
 
-                # If the first live bucket is not the same as my bucket, my port has gone down and some other bucket's
-                # actions have come up, so do the due...
-                if first_live_bucket != self.bucket:
-
-                    for action in self.bucket.action_list:
-                        action.is_active = False
-
-                    for action in first_live_bucket.action_list:
+                    for action in this_bucket.action_list:
                         action.is_active = True
 
-                    muted_port_number = self.bucket.watch_port
-                    unmuted_port_number = first_live_bucket.watch_port
-
-                # Otherwise, I am back in the action,
-                #  ensure that my bucket's actions are active and currently active bucket's actions are inactive
+                    unmuted_port_number= this_bucket.watch_port
                 else:
-                    for action in self.bucket.action_list:
-                        action.is_active = True
-
-                    for action in self.bucket.group.active_bucket.action_list:
+                    for action in this_bucket.action_list:
                         action.is_active = False
 
-                    muted_port_number = self.bucket.group.active_bucket.watch_port
-                    unmuted_port_number = self.bucket.watch_port
-
-                # keep track of which bucket is currently active
-                self.bucket.group.active_bucket = first_live_bucket
-
-            # If there is no live bucket, then set actions in the current active bucket accordingly
+                    muted_port_numbers.append(this_bucket.watch_port)
             else:
-                for action in self.bucket.group.active_bucket.bucket.action_list:
+                for action in this_bucket.action_list:
                     action.is_active = False
 
-        return muted_port_number, unmuted_port_number
+                muted_port_numbers.append(this_bucket.watch_port)
+
+        return muted_port_numbers, unmuted_port_number
 
 class ActionSet():
 
@@ -224,8 +207,10 @@ class ActionSet():
 
         for set_action in self.action_dict["set_field"]:
             # Capture the value before (in principle and after) the modification in a tuple
-            modified_fields_dict[set_action.modified_field] = \
-                (flow_match_element.match_fields[set_action.modified_field], set_action.field_modified_to)
+            #modified_fields_dict[set_action.modified_field] = \
+            #    (flow_match_element.match_fields[set_action.modified_field], set_action.field_modified_to, flow_match_element)
+
+            modified_fields_dict[set_action.modified_field] = (flow_match_element, set_action.field_modified_to)
 
         return modified_fields_dict
 
@@ -241,13 +226,20 @@ class ActionSet():
             if int(output_action.out_port) == self.sw.network_graph.OFPP_NORMAL:
                 continue
 
+            # If the output port is specified to be same as input port
             if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):
 
-                # Consider all possible ports if they are currently up and are not the watch port
+                # Consider all possible ports
                 for in_port in self.sw.ports:
 
+                    # if they are currently up
                     if self.sw.ports[in_port].state != "up":
                         continue
+
+                    # If they are not the watch port of actions that may have come before this action in a failover rule
+                    if output_action.is_failover_action():
+                        if in_port in output_action.bucket.prior_failed_ports():
+                            continue
 
                     port_graph_edge_status.append((str(in_port), output_action))
 

@@ -8,7 +8,6 @@ class RingTopo(Topo):
         
         Topo.__init__(self)
 
-
         self.num_switches = num_switches
         self.total_switches = self.num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
@@ -31,7 +30,5 @@ class RingTopo(Topo):
             #  Form a ring only when there are more than two switches
             if self.num_switches > 2:
                 self.addLink(self.switch_names[0], self.switch_names[-1])
-
-
 
 topos = {"ringtopo": (lambda: RingTopo())}

@@ -22,7 +22,6 @@ limitations under the License.
 from numbers import Number
 from collections import namedtuple
 
-
 # noinspection PyBroadException
 class Interval(namedtuple('IntervalBase', ['begin', 'end', 'data'])):
     __slots__ = ()  # Saves memory, avoiding the need to create __dict__ for each interval

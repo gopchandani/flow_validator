@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+from model.traffic import Traffic
 from collections import defaultdict
 
 class Port():
@@ -39,6 +40,16 @@ class Port():
         else:
             raise Exception("Invalid port type specified.")
 
+    def get_dst_admitted_traffic(self, dst_p):
+
+        dst_admitted_traffic = Traffic()
+
+        if dst_p in self.admitted_traffic:
+            for succ in self.admitted_traffic[dst_p]:
+                dst_admitted_traffic.union(self.admitted_traffic[dst_p][succ])
+
+        return dst_admitted_traffic
+
     def parse_odl_port_json(self, port_json):
 
         self.port_id = str(self.sw.node_id) + ":" + str(port_json["flow-node-inventory:port-number"])
@@ -57,8 +68,11 @@ class Port():
         self.port_id = str(self.sw.node_id) + ":" + str(port_json["port_no"])
         self.port_number = port_json["port_no"]
         self.mac_address = port_json["hw_addr"]
-        self.curr_speed = int(port_json["curr_speed"])
-        self.max_speed = int(port_json["max_speed"])
+
+        if "curr_speed" in port_json:
+            self.curr_speed = int(port_json["curr_speed"])
+        if "max_speed" in port_json:
+            self.max_speed = int(port_json["max_speed"])
 
         #TODO: Peep into port_json["state"]
         self.state = "up"

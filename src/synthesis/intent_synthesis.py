@@ -32,7 +32,7 @@ class IntentSynthesis():
         self.apply_other_intents_immediately = False
 
         # Table contains the rules that drop packets destined to the same MAC address as host of origin
-        self.loop_preventing_drop_table = 0
+        self.drop_table = 0
 
         # Table contains the reverse rules (they should be examined first)
         self.reverse_rules_table_id = 1
@@ -152,7 +152,6 @@ class IntentSynthesis():
             intents[key] = defaultdict(int)
             intents[key][intent] = 1
 
-
     def _compute_destination_host_mac_intents(self, h_obj, flow_match, matching_tag):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(h_obj.switch_id, h_obj.node_id)
@@ -197,7 +196,18 @@ class IntentSynthesis():
         self._compute_destination_host_mac_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
 
         #  First find the shortest path between src and dst.
-        p = nx.shortest_path(self.network_graph.graph, source=src_host.switch_id, target=dst_host.switch_id)
+        if self.network_graph.graph.has_edge('s1', 's2'):
+
+            if src_host.switch_id < dst_host.switch_id:
+                self.network_graph.graph['s1']['s2']['weight'] = 0.5
+            else:
+                self.network_graph.graph['s1']['s2']['weight'] = 1.5
+
+        p = nx.shortest_path(self.network_graph.graph,
+                            source=src_host.switch_id,
+                            target=dst_host.switch_id,
+                            weight='weight')
+
         print "Primary Path:", p
 
         self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)] = []
@@ -208,7 +218,6 @@ class IntentSynthesis():
                 self.primary_path_edges.append((p[i], p[i+1]))
 
             self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
-
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
@@ -246,8 +255,9 @@ class IntentSynthesis():
             print "-- Pushing at Switch:", sw
 
             # Push rules at the switch that drop packets from hosts that are connected to the switch
-            # and have the same MAC address as originating hosts
-            self.synthesis_lib.push_loop_preventing_drop_rules(sw, self.loop_preventing_drop_table)
+            # and have the same MAC address as originating hosts or have vlan tags associated with their own switch.
+            self.synthesis_lib.push_loop_preventing_drop_rules(sw, self.drop_table)
+            self.synthesis_lib.push_host_vlan_tagged_packets_drop_rules(sw, self.drop_table)
 
             # Push table miss entries at all Tables
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 0)
@@ -256,6 +266,8 @@ class IntentSynthesis():
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 3)
 
             intents = self.network_graph.graph.node[sw]["sw"].intents
+
+            self.network_graph.graph.node[sw]["sw"].intents = defaultdict(dict)
 
             for dst in intents:
                 dst_intents = intents[dst]
@@ -278,27 +290,38 @@ class IntentSynthesis():
                 #  Handle the case when the switch does not have to carry any failover traffic
                 if primary_intents and not failover_intents:
 
-                    group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+                    # If there are more than one primary intents (and only those), then they are because of different
+                    # source hosts originating at this switch and thus have their own in_ports. They all need their own
+                    # flow.
 
-                    if not self.master_switch:
-                        primary_intents[0].flow_match["in_port"] = int(primary_intents[0].in_port)
+                    in_ports_covered = []
+                    for pi in primary_intents:
+                        if pi.in_port not in in_ports_covered:
+                            in_ports_covered.append(pi.in_port)
 
-                    flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw,
-                        self.ip_forwarding_table_id,
-                        group_id,
-                        1,
-                        primary_intents[0].flow_match,
-                        primary_intents[0].apply_immediately)
+                            group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+
+                            if not self.master_switch:
+                                pi.flow_match["in_port"] = int(pi.in_port)
+
+                            flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                                sw,
+                                self.ip_forwarding_table_id,
+                                group_id,
+                                1,
+                                pi.flow_match,
+                                pi.apply_immediately)
 
                 if primary_intents and failover_intents:
 
-                    # TODO: All of the intents in both list should want the same port
-                    #  See if both want same destination port of out of this switch
+                    # TODO: All of the intents in both lists should want the same port
+                    #  See if both want same destination port of out of this switch, if not, do the failure group
                     if primary_intents[0].out_port != failover_intents[0].out_port:
                         group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], failover_intents[0])
                     else:
-                        raise Exception("Something is wrong with installed intents.")
+                        # If they do want the same port, Consolidation going on here...
+                        group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+                        #raise Exception("Something is wrong with installed intents.")
 
                     # Push the rule that refers to the group
 
@@ -367,10 +390,10 @@ class IntentSynthesis():
                         reverse_intents[0].flow_match,
                         reverse_intents[0].apply_immediately)
 
-
-    def synthesize_all_node_pairs(self):
+    def _synthesize_all_node_pairs(self, dst_port=None):
 
         print "Synthesizing backup paths between all possible host pairs..."
+
         for src in self.network_graph.get_experiment_host_ids():
             for dst in self.network_graph.get_experiment_host_ids():
 
@@ -392,17 +415,20 @@ class IntentSynthesis():
                 flow_match = Match(is_wildcard=True)
                 flow_match["ethernet_type"] = 0x0800
 
+                if dst_port:
+                    flow_match["ip_protocol"] = 6
+                    flow_match["tcp_destination_port"] = dst_port
+
                 self.synthesize_flow(src_h_obj, dst_h_obj, flow_match)
                 print "-----------------------------------------------------------------------------------------------"
 
         self._identify_reverse_and_balking_intents()
         self.push_switch_changes()
 
-def main():
-    ng = NetworkGraph()
-    s = SynthesizeDij(ng)
-    s.synthesize_all_node_pairs()
+    def synthesize_all_node_pairs(self, dst_ports_to_synthesize=None):
 
-if __name__ == "__main__":
-    main()
-
+        if not dst_ports_to_synthesize:
+            self._synthesize_all_node_pairs()
+        else:
+            for dst_port in dst_ports_to_synthesize:
+                self._synthesize_all_node_pairs(dst_port)

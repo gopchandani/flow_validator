@@ -1,6 +1,10 @@
 .idea/
+src/experiments/data/*
+src/experiments/plots/*
+src/experiments/configurations/*
 src/topo/.cache/*
 src/model/.cache/*
+src/experiments/.cache/*
 src/analysis/.cache/*
 src/synthesis/.cache/*
 *pyc

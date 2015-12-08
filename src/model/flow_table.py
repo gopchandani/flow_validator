@@ -57,6 +57,7 @@ class Flow():
 
             for out_port, output_action in port_graph_edges:
 
+                output_action.instruction_type = "applied"
                 outgoing_port = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
@@ -64,13 +65,13 @@ class Flow():
                                      output_action,
                                      self.applied_traffic,
                                      self.applied_modifications,
-                                     self.written_modifications,
-                                     "applied")
+                                     self.written_modifications)
 
             port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
 
             for out_port, output_action in port_graph_edges:
 
+                output_action.instruction_type = "written"
                 outgoing_port = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
 
                 e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
@@ -78,18 +79,20 @@ class Flow():
                                      output_action,
                                      self.applied_traffic,
                                      self.applied_modifications,
-                                     self.written_modifications,
-                                     "written")
+                                     self.written_modifications)
 
             # See the edge impact of any go-to-table instruction
             if self.instruction_set.goto_table:
 
-                e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
-                                     self.sw.flow_tables[self.instruction_set.goto_table].port,
-                                     None,
-                                     self.applied_traffic,
-                                     self.applied_modifications,
-                                     self.written_modifications)
+                if self.instruction_set.goto_table < len(self.sw.flow_tables):
+                    e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
+                                         self.sw.flow_tables[self.instruction_set.goto_table].port,
+                                         None,
+                                         self.applied_traffic,
+                                         self.applied_modifications,
+                                         self.written_modifications)
+                else:
+                    print "At switch:", self.sw.node_id, ", couldn't find flow table goto:", self.instruction_set.goto_table
 
 
 class FlowTable():
@@ -108,7 +111,13 @@ class FlowTable():
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
+        # if self.sw.node_id == 's1' and self.table_id == 3:
+        #     print len(self.flows)
+
     def init_flow_table_port_graph(self):
+
+        # if self.sw.node_id == 's1' and self.table_id == 3:
+        #     print len(self.flows)
 
         remaining_traffic = Traffic(init_wildcard=True)
 

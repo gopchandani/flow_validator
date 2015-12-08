@@ -14,7 +14,7 @@ class TrafficElement():
 
         self.switch_modifications = {}
         self.written_modifications = {}
-        self.output_action_type = None
+        self.instruction_type = None
 
         self.match_fields = {}
 
@@ -58,7 +58,7 @@ class TrafficElement():
     def is_field_wildcard(self, field_name):
         return Interval(0, sys.maxsize) in self.match_fields[field_name]
 
-    def get_matched_tree(self, tree1, tree2):
+    def get_field_intersection(self, tree1, tree2):
 
         matched_tree = IntervalTree()
         for iv in tree1:
@@ -84,7 +84,7 @@ class TrafficElement():
         intersection_element = TrafficElement()
 
         for field_name in field_names:
-            intersection_element.match_fields[field_name] = self.get_matched_tree(
+            intersection_element.match_fields[field_name] = self.get_field_intersection(
                 in_traffic_element.match_fields[field_name], self.match_fields[field_name])
 
             # If the resulting tree has no intervals in it, then balk:
@@ -118,6 +118,10 @@ class TrafficElement():
     # B here is self
     def get_diff_traffic_elements(self, in_traffic_element):
 
+        # Work avoidance check: If there is no intersection between the two elemenet, don't bother with difference...
+        if not in_traffic_element.intersect(self):
+            return [in_traffic_element]
+
         # find B'
         complement_traffic_elements = self.get_complement_traffic_elements()
 
@@ -130,6 +134,7 @@ class TrafficElement():
 
         return diff_traffic_elements
 
+    # Checks if in_traffic_element is a subset of self
     # A is_subset of B if A - B == NullSet
     # A is in_traffic_element
     # B here is self
@@ -143,18 +148,32 @@ class TrafficElement():
         else:
             return True
 
-    def get_orig_traffic_element(self, modifications=None):
+    def get_modified_traffic_element(self):
 
-        if modifications:
-            mf = modifications
-            self.switch_modifications.update(modifications)
+        modified_traffic_element = TrafficElement()
+
+        for field_name in self.match_fields:
+
+            # TODO: If this fields needs to be modified, apply the modification
+            if field_name in self.switch_modifications:
+                modified_traffic_element.match_fields[field_name] = self.match_fields[field_name]
+
+            else:
+                # Otherwise, just keep the field same as it was
+                modified_traffic_element.match_fields[field_name] = self.match_fields[field_name]
+
+        return modified_traffic_element
+
+    def get_orig_traffic_element(self, applied_modifications=None, store_switch_modifications=True):
+
+        if applied_modifications:
+            mf = applied_modifications
         else:
             # if the output_action type is applied, no written modifications take effect.
-            if self.output_action_type == "applied":
+            if self.instruction_type == "applied":
                 return self
 
             mf = self.written_modifications
-            self.switch_modifications.update(self.written_modifications)
 
         orig_traffic_element = TrafficElement()
 
@@ -169,16 +188,20 @@ class TrafficElement():
 
             if field_name in mf:
 
-                #TODO: Do this more properly ground up from the parser
+                # Check to see if the value on this traffic is same as what it was modified to be for this modification
+                # If it is, then use the 'original' value of the match that caused the modification. This is stored in mf
+                # If it is not, then the assumption here would be that even though the modification is there on this chunk
+                # but it does not really apply because of what the traffic chunk has gone through subsequently
 
+                #TODO: Do this tree building thing more properly ground up from the parser
                 field_val = int(mf[field_name][1])
                 value_tree = IntervalTree()
                 value_tree.add(Interval(field_val, field_val + 1))
 
-                intersection = self.get_matched_tree(value_tree, self.match_fields[field_name])
+                intersection = self.get_field_intersection(value_tree, self.match_fields[field_name])
 
                 if intersection:
-                    orig_traffic_element.match_fields[field_name] = mf[field_name][0]
+                    orig_traffic_element.match_fields[field_name] = mf[field_name][0].match_fields[field_name]
                 else:
                     orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
 
@@ -188,8 +211,10 @@ class TrafficElement():
 
         # Accumulate field modifications
         orig_traffic_element.written_modifications.update(self.written_modifications)
-        orig_traffic_element.output_action_type = self.output_action_type
-        orig_traffic_element.switch_modifications = self.switch_modifications
+        orig_traffic_element.instruction_type = self.instruction_type
+
+        if store_switch_modifications:
+            orig_traffic_element.switch_modifications.update(mf)
 
         return orig_traffic_element
 
@@ -272,12 +297,29 @@ class Traffic():
             for te in self.traffic_elements:
                 te.set_fields_with_match_json(match_json)
 
+    # Checks if in_te is subset of self (any one of its te)
+
     def is_subset_te(self, in_te):
 
         is_subset = False
         for self_te in self.traffic_elements:
             if self_te.is_subset(in_te):
                 is_subset = True
+                break
+
+        return is_subset
+
+    # Checks if in_traffic is a subset of self
+
+    def is_subset_traffic(self, in_traffic):
+
+        is_subset = True
+
+        # Each one of the in_te has to be subset of self
+        for in_te in in_traffic.traffic_elements:
+            is_subset_te = self.is_subset_te(in_te)
+            if not is_subset_te:
+                is_subset = False
                 break
 
         return is_subset
@@ -302,7 +344,7 @@ class Traffic():
                     traffic_intersection.traffic_elements.append(ei)
 
                     ei.written_modifications.update(e_in.written_modifications)
-                    ei.output_action_type = e_in.output_action_type
+                    ei.instruction_type = e_in.instruction_type
                     ei.switch_modifications = e_in.switch_modifications
 
         return traffic_intersection
@@ -313,34 +355,42 @@ class Traffic():
 
         diff_traffic = Traffic()
 
+        # If what is being subtracted is empty, then just return in_traffic
+        if not self.traffic_elements:
+            diff_traffic.traffic_elements.extend(in_traffic.traffic_elements)
+            return diff_traffic
+
+        #print "in_traffic.traffic_elements:", len(in_traffic.traffic_elements), "self.traffic_elements:", len(self.traffic_elements)
+
         for in_te in in_traffic.traffic_elements:
-            if self.traffic_elements:
-                diff_traffic_elements = []
 
-                remaining = [in_te]
+            remaining = [in_te]
 
-                for self_te in self.traffic_elements:
+            for self_te in self.traffic_elements:
+
+                # This is the recursive case
+                if len(remaining) > 1:
+                    remaining_traffic = Traffic()
+                    remaining_traffic.traffic_elements.extend(remaining)
+                    to_subtract = Traffic()
+                    to_subtract.traffic_elements.append(self_te)
+
+                    remaining_traffic = to_subtract.difference(remaining_traffic)
+                    remaining = remaining_traffic.traffic_elements
+
+                # This is the base case
+                elif len(remaining) == 1:
+                    remaining = self_te.get_diff_traffic_elements(remaining[0])
 
                     if len(remaining) > 1:
-                        remaining_traffic = Traffic()
-                        remaining_traffic.traffic_elements.extend(remaining)
-                        to_subtract = Traffic()
-                        to_subtract.traffic_elements.append(self_te)
-                        remaining_traffic = to_subtract.difference(remaining_traffic)
-                        remaining = remaining_traffic.traffic_elements
+                        pass
 
-                    elif len(remaining) == 1:
-                        remaining = self_te.get_diff_traffic_elements(remaining[0])
-                    else:
-                        break
+                else:
+                    break
 
-                if remaining:
-                    diff_traffic_elements.extend(remaining)
-
-                if diff_traffic_elements:
-                    diff_traffic.traffic_elements.extend(diff_traffic_elements)
-            else:
-                diff_traffic.traffic_elements.append(in_te)
+            # If there is anything that is left after all the differences have happened, then add it to diff_traffic
+            if remaining:
+                diff_traffic.traffic_elements.extend(remaining)
 
         return diff_traffic
 
@@ -352,14 +402,24 @@ class Traffic():
             self.traffic_elements.append(union_te)
         return self
 
-    def get_orig_traffic(self, modifications=None):
+    def get_orig_traffic(self, modifications=None, store_switch_modifications=True):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
-            orig_te = te.get_orig_traffic_element(modifications)
+            orig_te = te.get_orig_traffic_element(modifications, store_switch_modifications)
             orig_te.traffic = orig_traffic
             orig_traffic.traffic_elements.append(orig_te)
         return orig_traffic
+
+    def get_modified_traffic(self):
+
+        modified_traffic = Traffic()
+
+        for te in self.traffic_elements:
+            modified_te = te.get_modified_traffic_element()
+            modified_te.traffic = modified_traffic
+            modified_traffic.traffic_elements.append(modified_te)
+        return modified_traffic
 
     def is_field_wildcard(self, field_name):
         retval = True
@@ -375,7 +435,6 @@ class Traffic():
 
         for te in self.traffic_elements:
             print te.get_port_path_str()
-
 
 def main():
     m1 = Traffic()

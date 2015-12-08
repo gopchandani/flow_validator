@@ -56,6 +56,21 @@ class Bucket():
         else:
             return True
 
+    def prior_failed_ports(self):
+
+        prior_failed_ports = []
+        i = 0
+
+        while(i < len(self.group.bucket_list)):
+
+            if self == self.group.bucket_list[i]:
+                break
+
+            prior_failed_ports.append(int(self.group.bucket_list[i].watch_port))
+            i += 1
+
+        return prior_failed_ports
+
 class Group():
     '''
     As per OF1.3 specification:
@@ -107,6 +122,9 @@ class Group():
 
             #  Sort the bucket_list by bucket-id
             self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
+
+            # Initialize the active bucket
+            self.set_active_bucket()
 
         elif self.sw.network_graph.controller == "ryu":
             self.group_id = group_json["group_id"]
@@ -175,26 +193,8 @@ class Group():
 
         return None
 
-    def get_active_action_list(self):
-        active_action_list = []
-
-        # If it is a _all_ group, collect all buckets
-        if self.group_type == self.sw.network_graph.GROUP_ALL:
-
-            for action_bucket in self.bucket_list:
-                active_action_list.extend(action_bucket.action_list)
-
-        # If it is a fast-failover group, collect the bucket which is active
-        elif self.group_type == self.sw.network_graph.GROUP_FF:
-
-            for action_bucket in self.bucket_list:
-
-                # Check if the port that the bucket watches is actually up
-                if action_bucket.is_live():
-                    active_action_list.extend(action_bucket.action_list)
-                    break
-
-        return active_action_list
+    def set_active_bucket(self):
+        self.active_bucket = self.get_first_live_bucket()
 
 class GroupTable():
 
@@ -206,4 +206,3 @@ class GroupTable():
         for group_json in groups_json:
             grp = Group(sw, group_json)
             self.groups[int(grp.group_id)] = grp
-

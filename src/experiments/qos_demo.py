@@ -2,12 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 import sys
 sys.path.append("./")
-import matplotlib.pyplot as plt
 
-from collections import defaultdict
-from timer import Timer
-from analysis.flow_validator import FlowValidator
-from controller_man import ControllerMan
 from experiment import Experiment
 
 class QosDemo(Experiment):
@@ -36,7 +31,7 @@ class QosDemo(Experiment):
         for total_number_of_hosts in self.total_number_of_hosts:
 
             self.topo_description = ("linear", 2, total_number_of_hosts/2)
-            ng = self.setup_network_graph(self.topo_description, True)
+            ng = self.setup_network_graph(self.topo_description, qos=True)
 
         print "Done..."
 

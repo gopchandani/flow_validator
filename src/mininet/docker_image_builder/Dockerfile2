@@ -1,0 +1,12 @@
+#VERSION               1.0
+FROM      controller
+MAINTAINER Shane Rogers <shane@shanerogers.info>
+
+# Specify container username e.g. training, demo
+ENV VIRTUSER admin
+ENV JAVA_HOME /usr/lib/jvm/java-7-openjdk-amd64/jre
+ENV PATH $JAVA_HOME/bin:$PATH
+EXPOSE 6633
+RUN echo "Docker 2 Started"
+RUN wget https://www.dropbox.com/s/yfelsjzji2k0owo/karaf_config.tar.gz 
+RUN tar -xzvf karaf_config.tar.gz -C /distribution-karaf-0.2.1-Helium-SR1/etc/opendaylight/karaf/

@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 import os
+import time
 import json
 import httplib2
 import networkx as nx
@@ -188,7 +189,6 @@ class NetworkGraph():
                     switch_flow_tables.append(FlowTable(sw, flow_table["id"], flow_table["flow"]))
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
-
     def parse_mininet_host_nodes(self, mininet_host_nodes, mininet_port_edges):
 
         # From all the switches
@@ -218,7 +218,6 @@ class NetworkGraph():
                                  mininet_port_edges[mininet_host_dict["host_name"]][0][1])
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
-
 
     def parse_mininet_port_edges(self, mininet_port_edges):
 
@@ -298,6 +297,7 @@ class NetworkGraph():
 
     def get_ryu_switches(self):
         ryu_switches = {}
+        request_gap = 0
 
         if self.load_config:
 
@@ -307,6 +307,7 @@ class NetworkGraph():
         else:
             # Get all the ryu_switches from the inventory API
             remaining_url = 'stats/switches'
+            time.sleep(request_gap)
             resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
 
             ryu_switch_numbers = json.loads(content)
@@ -318,6 +319,7 @@ class NetworkGraph():
                 # Get the flows
                 remaining_url = 'stats/flow' + "/" + str(dpid)
                 resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+                time.sleep(request_gap)
 
                 if resp["status"] == "200":
                     switch_flows = json.loads(content)
@@ -331,6 +333,7 @@ class NetworkGraph():
                 # Get the ports
                 remaining_url = 'stats/portdesc' + "/" + str(dpid)
                 resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+                time.sleep(request_gap)
 
                 if resp["status"] == "200":
                     switch_ports = json.loads(content)
@@ -341,6 +344,7 @@ class NetworkGraph():
                 # Get the groups
                 remaining_url = 'stats/groupdesc' + "/" + str(dpid)
                 resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+                time.sleep(request_gap)
 
                 if resp["status"] == "200":
                     switch_groups = json.loads(content)
@@ -375,6 +379,9 @@ class NetworkGraph():
             # Parse out the information about all the ports in the switch
             switch_ports = {}
             for port in ryu_switches[dpid]["ports"]:
+                if port["port_no"] == 4294967294:
+                    continue
+
                 switch_ports[int(port["port_no"])] = Port(sw, port_json=port)
 
             sw.ports = switch_ports
@@ -473,6 +480,16 @@ class NetworkGraph():
             node_type = self.graph.node[node_id]["node_type"]
 
         return node_type
+
+    def get_num_rules(self):
+
+        num_rules = 0
+
+        for sw in self.get_switches():
+            for flow_table in sw.flow_tables:
+                num_rules += len(flow_table.flows)
+
+        return num_rules
 
 def main():
     m = NetworkGraph()

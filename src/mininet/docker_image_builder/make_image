@@ -1,0 +1,22 @@
+#!/bin/bash
+## when karaf starts run these two commands manually:
+## feature:install odl-nsf-all odl-restconf odl-l2switch-all odl-mdsal-apidocs odl-dlux-core
+## logout
+## Then exit with <CTRL>-P
+sudo apt-get update -qq
+sudo apt-get install -y docker.io
+sudo docker build --no-cache --rm=true -t controller .
+echo "Docker Built"
+sudo docker run -t -i controller /bin/bash
+##Wait for user input as outlined above
+container_id=`sudo docker ps -q`
+sudo docker commit $container_id controller
+sudo docker kill $container_id
+cp Dockerfile .oldDockerfile
+rm Dockerfile
+cp Dockerfile2 Dockerfile
+sudo docker build --no-cache -t opendaylight .
+rm Dockerfile
+cp .oldDockerfile Dockerfile
+rm .oldDockerfile
+

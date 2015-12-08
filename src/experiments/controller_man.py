@@ -98,7 +98,6 @@ class ControllerMan():
         self.ryu_proc = subprocess.Popen(ryu_cmd, stdout=subprocess.PIPE)
         return 6633
 
-
     def get_next(self):
         if self.controller == "odl":
             return self.get_next_odl()

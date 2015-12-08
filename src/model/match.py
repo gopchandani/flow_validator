@@ -23,7 +23,7 @@ ryu_field_names_mapping = {"in_port": "in_port",
                            "eth_dst":"ethernet_destination",
                            "nw_src": "src_ip_addr",
                            "nw_dst":"dst_ip_addr",
-                           "nw_proto": "ip_protocol",
+                           "ip_proto": "ip_protocol",
                            "tcp_dst": "tcp_destination_port",
                            "tcp_src": "tcp_source_port",
                            "udp_dst": "udp_destination_port",
@@ -211,15 +211,35 @@ class Match(DictMixin):
                     self[field_name] = IPNetwork(match_json["nw_dst"])
 
                 elif field_name == "ip_protocol":
-                    self[field_name] = int(match_json["ip-match"]["ip-protocol"])
+                    self[field_name] = int(match_json["nw_proto"])
                 elif field_name == "tcp_destination_port":
-                    self[field_name] = int(match_json["tcp-destination-port"])
+
+                    if match_json["nw_proto"] == 6:
+                        self[field_name] = int(match_json["tp_dst"])
+                    else:
+                        self[field_name] = match_json["zzzz"]
+
                 elif field_name == "tcp_source_port":
-                    self[field_name] = int(match_json["tcp-source-port"])
+
+                     if match_json["nw_proto"] == 6:
+                        self[field_name] = int(match_json["tp_src"])
+                     else:
+                        self[field_name] = match_json["zzzz"]
+
                 elif field_name == "udp_destination_port":
-                    self[field_name] = int(match_json["udp-destination-port"])
+
+                    if match_json["nw_proto"] == 17:
+                        self[field_name] = int(match_json["tp_dst"])
+                    else:
+                        self[field_name] = match_json["zzzz"]
+
                 elif field_name == "udp_source_port":
-                    self[field_name] = int(match_json["udp-source-port"])
+
+                     if match_json["nw_proto"] == 17:
+                        self[field_name] = int(match_json["tp_src"])
+                     else:
+                        self[field_name] = match_json["zzzz"]
+
                 elif field_name == "vlan_id":
                     self[field_name] = int(match_json[u"dl_vlan"])
 

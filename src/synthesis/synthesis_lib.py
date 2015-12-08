@@ -51,7 +51,7 @@ class SynthesisLib():
 
     def push_change(self, url, pushed_content):
 
-        time.sleep(0.1)
+        time.sleep(0.2)
 
         if self.network_graph.controller == "odl":
 
@@ -75,7 +75,6 @@ class SynthesisLib():
             print "Problem Pushing:", pushed_content.keys()[0]
             print "resp:", resp, "content:", content
             pprint.pprint(pushed_content)
-
 
     def create_odl_group_url(self, node_id,  group_id):
 
@@ -147,7 +146,6 @@ class SynthesisLib():
             #  Wrap it in inventory
             flow = {"flow-node-inventory:flow": flow}
 
-
         elif self.network_graph.controller == "ryu":
 
             flow["dpid"] = sw[1:]
@@ -162,7 +160,6 @@ class SynthesisLib():
             flow["actions"] = []
 
         return flow
-
 
     def create_base_group(self, sw):
 
@@ -208,7 +205,6 @@ class SynthesisLib():
             else:
                 pass
 
-
     def push_table_miss_goto_next_table_flow(self, sw, table_id):
 
         # Create a lowest possible flow
@@ -223,7 +219,6 @@ class SynthesisLib():
 
         elif self.network_graph.controller == "ryu":
             flow["actions"] = [{"type": "GOTO_TABLE",  "table_id": str(table_id + 1)}]
-
 
         self.push_flow(sw, flow)
 
@@ -420,7 +415,6 @@ class SynthesisLib():
                     push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
                                                                     flow["flow-node-inventory:flow"]["match"])
 
-
                 action1 = {'order': 0, 'push-vlan-action': {"ethernet-type": 0x8100,
                                                             "vlan-id": push_vlan_intent.required_vlan_id}}
 
@@ -463,7 +457,7 @@ class SynthesisLib():
 
             # Get a vanilla flow
             flow = self.create_base_flow(sw, loop_preventing_drop_table, 100)
-
+            action_list = []
 
             #Compile match with in_port and destination mac address
             if self.network_graph.controller == "odl":
@@ -482,6 +476,35 @@ class SynthesisLib():
             elif self.network_graph.controller == "ryu":
                 flow["match"]["in_port"] = str(h_obj.switch_port_attached)
                 flow["match"]["eth_dst"] = h_obj.mac_addr
+
+                # Empty list for drop action
+                action_list = []
+
+            # Make and push the flow
+            self.populate_flow_action_instruction(flow, action_list, True)
+            self.push_flow(sw, flow)
+
+    def push_host_vlan_tagged_packets_drop_rules(self, sw, host_vlan_tagged_drop_table):
+
+        for h_id in self.network_graph.get_experiment_host_ids():
+
+            # Get concerned only with hosts that are directly connected to this sw
+            h_obj = self.network_graph.get_node_object(h_id)
+            if h_obj.switch_id != sw:
+                continue
+
+            # Get a vanilla flow
+            flow = self.create_base_flow(sw, host_vlan_tagged_drop_table, 100)
+            action_list = []
+
+            #Compile match with in_port and destination mac address
+            if self.network_graph.controller == "odl":
+                #TODO, if at all
+                pass
+
+            elif self.network_graph.controller == "ryu":
+                flow["match"]["in_port"] = str(h_obj.switch_port_attached)
+                flow["match"]["dl_vlan"] = self.network_graph.graph.node[sw]["sw"].synthesis_tag
 
                 # Empty list for drop action
                 action_list = []

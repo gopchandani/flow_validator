@@ -19,7 +19,6 @@ class SynthesizeQoS():
         self.network_graph = network_graph
         self.master_switch = master_switch
 
-
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
         # s represents the set of all switches that are
@@ -154,7 +153,6 @@ class SynthesizeQoS():
         else:
             intents[key] = defaultdict(int)
             intents[key][intent] = 1
-
 
     def _compute_destination_host_mac_intents(self, h_obj, flow_match, matching_tag, min_rate, max_rate):
 
@@ -380,7 +378,6 @@ class SynthesizeQoS():
                         1,
                         reverse_intents[0].flow_match,
                         reverse_intents[0].apply_immediately)
-
 
     def synthesize_all_node_pairs(self, rate):
 
