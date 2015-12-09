@@ -87,9 +87,30 @@ class Action():
 
 
     def parse_sel_action_json(self):
-        if self.modified_field == "vlab_id":
-            self.field_modified_to = int(self.field_modified_to) - 0x1000
-        raise NotImplementedError
+        self.order = self.action_json["setOrder"]
+
+        if self.action_json["actionType"] == 'Output':
+            self.action_type = "output"
+            self.out_port = int(self.action_json["outPort"])
+
+        if self.action_json["actionType"] == 'GroupAction':
+            self.action_json = "group"
+            self.group_id = int(self.action_json["groupId"])
+
+        if self.action_json["actionType"] == 'PushVlanAction':
+            self.action_json = "push_vlan"
+            self.vlan_ethernet_type = self.action_json['ethernetType']
+
+        if self.action_json["actionType"] == 'PopVlanAction':
+            self.action_json = "pop_vlan"
+
+        if self.action_json["actionType"] == 'SetField':
+            self.action_json = "set_field"
+            self.set_field_match_json = self.action_json
+            # This might not be complete
+
+
+
 
     def parse_ryu_action_json(self):
 

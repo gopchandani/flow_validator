@@ -84,7 +84,7 @@ def main():
     num_iterations = 1
     load_config = False
     save_config = True
-    controller = "sel"
+    controller = "ryu"
     experiment_switches = ["s1", "s3"]
 
     exp = DifferentEdgeFailure(num_iterations,

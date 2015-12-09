@@ -50,7 +50,6 @@ class Flow():
         else:
             if self.sw.network_graph.controller == "odl":
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
-
             elif self.sw.network_graph.controller == "sel":
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
             elif self.sw.network_graph.controller == "ryu":

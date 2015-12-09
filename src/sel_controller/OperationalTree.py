@@ -185,7 +185,7 @@ class transactionsHttpAccess(BaseHttpAccess):
 
 
 
-class EventType():
+class EventType(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventType'
@@ -271,7 +271,7 @@ class EventType():
         return pyson_object
 
 
-class EventCategory():
+class EventCategory(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.EventCategory'
@@ -405,7 +405,7 @@ class ClearedEventType(EventType):
         return pyson_object
 
 
-class Behavior():
+class Behavior(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.Behavior'
@@ -463,7 +463,7 @@ class Behavior():
         return pyson_object
 
 
-class Event():
+class Event(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.EventBus.Event'
@@ -566,7 +566,7 @@ class Event():
 
 
 
-class Action():
+class Action(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Action'
@@ -821,7 +821,7 @@ class PopVlanAction(Action):
         return pyson_object
 
 
-class Match():
+class Match(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Match'
@@ -1035,7 +1035,7 @@ class Match():
         return pyson_object
 
 
-class Instruction():
+class Instruction(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Instruction'
@@ -1105,7 +1105,7 @@ class Instruction():
         return pyson_object
 
 
-class Port():
+class Port(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Port'
@@ -1409,7 +1409,7 @@ class WriteActions(Instruction):
         return pyson_object
 
 
-class FlowStat():
+class FlowStat(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStat'
@@ -1621,7 +1621,7 @@ class FlowStat():
         return pyson_object
 
 
-class TableStat():
+class TableStat(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStat'
@@ -1709,7 +1709,7 @@ class TableStat():
         return pyson_object
 
 
-class PortStat():
+class PortStat(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStat'
@@ -1923,7 +1923,7 @@ class PortStat():
         return pyson_object
 
 
-class FlowStats():
+class FlowStats(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.FlowStats'
@@ -2008,7 +2008,7 @@ class FlowStats():
         return pyson_object
 
 
-class GroupDesc():
+class GroupDesc(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.GroupDesc'
@@ -2068,7 +2068,7 @@ class GroupDesc():
         return pyson_object
 
 
-class PortDesc():
+class PortDesc(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortDesc'
@@ -2153,7 +2153,7 @@ class PortDesc():
         return pyson_object
 
 
-class DeviceCapability():
+class DeviceCapability(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.DeviceCapability'
@@ -2241,7 +2241,7 @@ class DeviceCapability():
         return pyson_object
 
 
-class TableStats():
+class TableStats(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.TableStats'
@@ -2326,7 +2326,7 @@ class TableStats():
         return pyson_object
 
 
-class PortStats():
+class PortStats(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.PortStats'
@@ -2411,7 +2411,7 @@ class PortStats():
         return pyson_object
 
 
-class Group():
+class Group(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Group'
@@ -2498,7 +2498,7 @@ class Group():
         return pyson_object
 
 
-class Bucket():
+class Bucket(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.Bucket'
@@ -3119,7 +3119,7 @@ class OpenFlowPort(EthernetPort):
 
 
 
-class OperationalLink():
+class OperationalLink(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.TopologyManager.Links.OperationalLink'
@@ -3222,7 +3222,7 @@ class OperationalLink():
 
 
 
-class RestTransaction():
+class RestTransaction(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.Common.RestBroker.Models.RestTransaction'
@@ -3270,7 +3270,7 @@ class RestTransaction():
 
 
 
-class TypeKey():
+class TypeKey(object):
 
     def __init__(self):
         self._odata_type = '#Sel.Sel5056.Common.DataBroker.Types.TypeKey'
@@ -3345,7 +3345,7 @@ class TypeKey():
 # Odata Namespace Sel.Sel5056.TopologyManager
 
 
-class State():
+class State(object):
 
     @staticmethod
     def none():
@@ -3471,7 +3471,7 @@ class HostInterfacePort(OperationalPort):
 # Odata Namespace Sel.Sel5056.Common.DataBroker.Types.EventBus.Enums
 
 
-class DurationType():
+class DurationType(object):
 
     @staticmethod
     def momentary():
@@ -3481,7 +3481,7 @@ class DurationType():
     def persistent():
         return "Persistent"
 
-class SeverityLevel():
+class SeverityLevel(object):
 
     @staticmethod
     def emergency():
@@ -3515,7 +3515,7 @@ class SeverityLevel():
     def debug():
         return "Debug"
 
-class BehaviorType():
+class BehaviorType(object):
 
     @staticmethod
     def alarm_request():
@@ -3533,7 +3533,7 @@ class BehaviorType():
     def web_data():
         return "WebData"
 
-class EventState():
+class EventState(object):
 
     @staticmethod
     def cleared():
@@ -3545,7 +3545,7 @@ class EventState():
 # Odata Namespace Sel.Sel5056.OpenFlowPlugin.Enums
 
 
-class OfpActionType():
+class OfpActionType(object):
 
     @staticmethod
     def output():

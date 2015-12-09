@@ -5,6 +5,8 @@ from port import Port
 from edge_data import EdgeData
 from traffic import Traffic
 
+import pdb
+
 class PortGraph:
 
     def __init__(self, network_graph):
@@ -76,7 +78,8 @@ class PortGraph:
         # Then get rid of the edges in the port graph
         for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
-                self.remove_node_graph_edge(node_edge[0], node_edge[1])
+                result = self.remove_node_graph_edge(node_edge[0], node_edge[1])
+
 
         # Then de-initialize switch port graph
         for sw in self.network_graph.get_switches():

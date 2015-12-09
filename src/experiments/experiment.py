@@ -54,11 +54,7 @@ class Experiment(object):
 
         if self.controller == "sel":
             time.sleep(5)
-            print("Trying to adopt all switches on {0}:{1}".format(controller_host, 1234))
-            adopt_all.main("http://selcontroller:1234/")
-            print("Running pingall")
-            self.mm.net.pingAll(2)
-            print("Trying to adopt all switches")
+            print("Trying to adopt all hosts on {0}:{1}".format(controller_host, 1234))
             adopt_all.main("http://selcontroller:1234/")
         # Get a flow validator instance
         ng = NetworkGraph(mininet_man=self.mm,
