@@ -2,6 +2,7 @@
 # Copyright (c) 2015 Schweitzer Engineering Laboratories, Inc.
 
 import sys
+import time
 import ConfigTree
 import OperationalTree
 import Session
@@ -75,6 +76,9 @@ def delete_group(group_id, config_tree_groups):
     if len(id) > 0:
         print( "Deleting group with id {0}".format(id))
         config_tree_groups.delete_single(id)
+        # TODO: replace this sleep with checking in the operational tree
+        print("Sleeping for 7 seconds to ensure delete completed")
+        time.sleep(7)
 
 def arp_flow(op_node, group_id, op_tree_ports, config_tree_nodes, config_tree_groups):
     '''
@@ -83,8 +87,6 @@ def arp_flow(op_node, group_id, op_tree_ports, config_tree_nodes, config_tree_gr
     Note: no loop-breaking is implemented, so if there are loops in the
     network you'll cause an ARP storm!
     '''
-
-    group_id = 3  # Make this a parameter for this method?
 
     op_ports = op_node_2_op_ports(op_node, op_tree_ports)
 
@@ -108,9 +110,9 @@ def arp_flow(op_node, group_id, op_tree_ports, config_tree_nodes, config_tree_gr
 
         buckets.append(bucket)
 
-    # TODO: Create a Group and add all of the buckets to it
-    #       Note: *I* assign the group.group_id to an (int) ID that is
-    #       not in use on the system
+    # Create a Group and add all of the buckets to it
+    #    Note: *I* assign the group.group_id to an (int) ID that is
+    #          not in use on the system
 
     group = ConfigTree.Group()
     config_tree_node_id = op_tree_node_id_2_config_tree_id(config_tree_nodes, op_node.id)
@@ -122,6 +124,9 @@ def arp_flow(op_node, group_id, op_tree_ports, config_tree_nodes, config_tree_gr
     # Write the Group to the REST interface (to get an ID)
 
     group_created = config_tree_groups.create_single(group)
+    # TODO: replace this sleep with checking in the operational tree
+    print("Sleeping for 7 seconds to ensure the group gets into the operational tree")
+    time.sleep(7)
 
     # print("group_created:\n{0}".format(group_created.to_json()))
 
@@ -130,15 +135,16 @@ def arp_flow(op_node, group_id, op_tree_ports, config_tree_nodes, config_tree_gr
     group_action = ConfigTree.GroupAction()
 
     group_action.group_id = group_id
+    group_action.action_type = ConfigTree.OfpActionType.group()
 
-    # TODO: ?? Create an instruction (a WriteAction?) and append the
-    #       GroupAction to its actions list?
+    # Create an instruction (an ApplyAction?) and append the GroupAction to
+    # its actions list?
 
     instruction = ConfigTree.WriteActions()
     instruction.actions.append(group_action)
     instruction.instruction_type = ConfigTree.OfpInstructionType.write_actions()
 
-    # TODO: Create the flow, append the instruction to the instructions
+    # Create the flow, append the instruction to the instructions
 
     flow = ConfigTree.Flow()
     flow.instructions.append(instruction)
@@ -168,6 +174,8 @@ def main(uri):
     # session.print_data = True
 
     session.auth_user_callback()
+    session.print_status = True
+    session.print_data = False
 
     ## test_config_port_2_operational_port(session)
 

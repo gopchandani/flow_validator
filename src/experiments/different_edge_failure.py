@@ -49,7 +49,6 @@ class DifferentEdgeFailure(Experiment):
             fv.add_hosts()
             fv.initialize_admitted_traffic()
             fv.validate_all_host_pair_reachability()
-            ng.mininet_man.net.pingAll(1)
 
             for (node1, node2) in self.mm.synthesis.primary_path_edges:
 
@@ -84,7 +83,7 @@ def main():
     num_iterations = 1
     load_config = False
     save_config = True
-    controller = "ryu"
+    controller = "sel"
     experiment_switches = ["s1", "s3"]
 
     exp = DifferentEdgeFailure(num_iterations,

@@ -8,7 +8,7 @@ import json
 import os
 
 from model.network_graph import NetworkGraph
-from sel_controller import ConfigTree, Session, OperationalTree
+from sel_controller import ConfigTree, Session
 
 class SynthesisLib():
 
@@ -30,8 +30,8 @@ class SynthesisLib():
         self.h.add_credentials('admin', 'admin')
         self.sel_session = Session.Http("http://selcontroller:1234/")
         self.sel_session.auth_user_callback()
-        self.sel_session.print_status = False
-        self.sel_session.print_data = False
+        self.sel_session.print_status = True
+        self.sel_session.print_data = True
 
         # Cleanup all Queue/QoS records from OVSDB
         os.system("sudo ovs-vsctl -- --all destroy QoS")
@@ -85,12 +85,11 @@ class SynthesisLib():
                 result = groups.create_single(pushed_content)
             else:
                 raise NotImplementedError
-        #resp = {"status": "200"}
-        #pprint.pprint(pushed_content)
 
         if  self.network_graph.controller == "sel":
-            pass
-            #print(result.to_pyson())
+            pprint.pprint(pushed_content.to_pyson())
+            import pdb
+            pdb.set_trace()
         else:
             if resp["status"] == "200":
                 print "Pushed Successfully:", pushed_content.keys()[0]
@@ -136,6 +135,7 @@ class SynthesisLib():
             flow.enabled = True
 
         self.push_change(url, flow)
+
 
     def push_group(self, sw, group):
 
@@ -265,17 +265,10 @@ class SynthesisLib():
                 pass
 
         elif self.network_graph.controller == "sel":
-            if apply_immediately:
-                instruction = ConfigTree.ApplyActions()
-                instruction.instruction_type = "ApplyActions"
-                for action in action_list:
-                    instruction.actions.append(action)
-
-            else:
-                instruction = ConfigTree.WriteActions()
-                instruction.instruction_type = "WriteActions"
-                for action in action_list:
-                    instruction.actions.append(action)
+            instruction = ConfigTree.WriteActions()
+            instruction.instruction_type = ConfigTree.OfpInstructionType.write_actions()
+            for action in action_list:
+                instruction.actions.append(action)
 
             flow.instructions.append(instruction)
         else:
@@ -332,7 +325,7 @@ class SynthesisLib():
         elif self.network_graph.controller == "sel":
             match = flow_match.generate_match_json(self.network_graph.controller, flow.match)
             action = ConfigTree.GroupAction()
-            action.action_type = "Group"
+            action.action_type = ConfigTree.OfpActionType.group()
             action.set_order = 0
             action.group_id = group_id
             flow.match = match
@@ -414,12 +407,12 @@ class SynthesisLib():
         elif self.network_graph.controller == "sel":
 
             group = self.create_base_group(sw)
-            group.group_type = "FastFailover"
+            group.group_type = ConfigTree.OfpGroupType.fast_failover()
             out_port, watch_port = self.get_out_and_watch_port(primary_intent)
 
             bucket_primary = ConfigTree.Bucket()
             action = ConfigTree.OutputAction()
-            action.action_type = "Output"
+            action.action_type = ConfigTree.OfpActionType.output()
             action.out_port = out_port
 
             bucket_primary.actions.append(action)
@@ -431,7 +424,7 @@ class SynthesisLib():
             out_port, watch_port = self.get_out_and_watch_port(failover_intent)
             bucket_failover = ConfigTree.Bucket()
             action = ConfigTree.OutputAction()
-            action.action_type = "Output"
+            action.action_type = ConfigTree.OfpActionType.output()
             action.out_port = out_port
             bucket_failover.actions.append(action)
             bucket_failover.watch_port = watch_port
@@ -486,12 +479,12 @@ class SynthesisLib():
             group_id = group["group_id"]
 
         elif self.network_graph.controller == "sel":
-            group.group_type = "All"
+            group.group_type = ConfigTree.OfpGroupType.all()
             for intent in intent_list:
                 out_port, watch_port = self.get_out_and_watch_port(intent)
                 action = ConfigTree.OutputAction()
                 action.out_port = out_port
-                action.action_type = "Output"
+                action.action_type = ConfigTree.OfpActionType.output()
                 action.max_length = 65535
 
                 bucket = ConfigTree.Bucket()
@@ -532,11 +525,11 @@ class SynthesisLib():
         elif self.network_graph.controller == "sel":
             flow.match = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow.match)
             pop_vlan_action = ConfigTree.PopVlanAction()
-            pop_vlan_action.action_type = "PopVlan"
+            pop_vlan_action.action_type = ConfigTree.OfpActionType.pop_vlan()
 
             output_action = ConfigTree.OutputAction()
             output_action.out_port = mac_intent.out_port
-            output_action.action_type = "Output"
+            output_action.action_type = ConfigTree.OfpActionType.output()
 
         else:
             raise NotImplementedError
@@ -614,13 +607,13 @@ class SynthesisLib():
                 flow.match = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
                                                                                 flow.match)
                 set_vlan_id_action = ConfigTree.Action()
-                set_vlan_id_action.action_type = "SetField"
+                set_vlan_id_action.action_type = ConfigTree.OfpActionType.set_field()
                 set_vlan_id_action.vlan_vid = str(push_vlan_intent.required_vlan_id)
                 push_vlan_action = ConfigTree.PushVlanAction()
                 push_vlan_action.ether_type = 0x8100
-                push_vlan_action.action_type = "PushVlan"
+                push_vlan_action.action_type = ConfigTree.OfpActionType.push_vlan()
                 go_to_table_instruction = ConfigTree.GoToTable()
-                go_to_table_instruction.instruction_type = "GotoTable"
+                go_to_table_instruction.instruction_type = ConfigTree.OfpInstructionType.goto_table()
                 go_to_table_instruction.table_id = str(vlan_tag_push_rules_table_id + 1)
 
                 flow.instructions.append(go_to_table_instruction)
