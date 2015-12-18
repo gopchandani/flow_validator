@@ -81,14 +81,14 @@ class FailoverPolicyValidationRing(Experiment):
 
 def main():
 
-    num_iterations = 5
+    num_iterations = 1
     load_config = False
     save_config = True
     controller = "ryu"
     experiment_switches = ["s1", "s3"]
 
-    total_number_of_switches_in_ring = [3, 4, 5, 6, 7, 8, 9, 10]
-    total_number_of_ports_to_synthesize = 3
+    total_number_of_switches_in_ring = [4]#3, 4, 5, 6, 7, 8, 9, 10]
+    total_number_of_ports_to_synthesize = 1
 
     exp = FailoverPolicyValidationRing(num_iterations,
                                        load_config,
@@ -98,11 +98,11 @@ def main():
                                        total_number_of_switches_in_ring,
                                        total_number_of_ports_to_synthesize)
 
-    #exp.trigger()
-    #exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    exp.load_data('data/failover_policy_validation_ring_5_iterations_20151206_073212.json')
-    exp.plot_failover_policy_validation_ring()
+    #exp.load_data('data/failover_policy_validation_ring_5_iterations_20151206_073212.json')
+    #exp.plot_failover_policy_validation_ring()
 
 
 if __name__ == "__main__":
