@@ -19,6 +19,7 @@ from experiments.topologies.two_ring_topo import TwoRingTopo
 from experiments.topologies.ring_topo import RingTopo
 from experiments.topologies.ring_line_topo import RingLineTopo
 from experiments.topologies.clos_topo import ClosTopo
+from experiments.topologies.clique_topo import CliqueTopo
 
 from synthesis.synthesize_dij import SynthesizeDij
 from synthesis.synthesize_dij_qos import SynthesizeQoS
@@ -33,7 +34,8 @@ class MininetMan():
                  num_switches,
                  num_hosts_per_switch,
                  fanout=None,
-                 core=None):
+                 core=None,
+                 per_switch_links=None):
 
         self.net = None
 
@@ -59,6 +61,8 @@ class MininetMan():
             self.topo = RingLineTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "clostopo":
             self.topo = ClosTopo(fanout, core)
+        elif self.topo_name == "cliquetopo":
+            self.topo = CliqueTopo(self.num_switches, self.num_hosts_per_switch, per_switch_links)
         else:
             raise Exception("Invalid, unknown topology type: " % topo_name)
 
