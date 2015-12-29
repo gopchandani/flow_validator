@@ -15,6 +15,9 @@ from controller_man import ControllerMan
 from mininet_man import MininetMan
 from model.network_graph import NetworkGraph
 
+from synthesis.intent_synthesis import IntentSynthesis
+from synthesis.intent_synthesis_ldst import IntentSynthesisLDST
+
 class Experiment(object):
 
     def __init__(self,
@@ -42,8 +45,13 @@ class Experiment(object):
         if not self.load_config and self.save_config:
             self.cm = ControllerMan(self.num_controller_instances, controller=controller)
 
-    def setup_network_graph(self, topo_description, qos=False, mininet_setup_gap=None,
-                            dst_ports_to_synthesize=None, synthesis_setup_gap=None):
+    def setup_network_graph(self,
+                            topo_description,
+                            qos=False,
+                            mininet_setup_gap=None,
+                            dst_ports_to_synthesize=None,
+                            synthesis_setup_gap=None,
+                            synthesis_scheme="IntentSynthesis"):
 
         if not self.load_config and self.save_config:
             self.controller_port = self.cm.get_next()
@@ -69,7 +77,14 @@ class Experiment(object):
                 if qos:
                     self.mm.setup_mininet_with_ryu_qos(ng)
                 else:
-                    self.mm.setup_mininet_with_ryu(ng, dst_ports_to_synthesize)
+                    #self.mm.setup_mininet_with_ryu(ng, dst_ports_to_synthesize)
+
+                    if synthesis_scheme == "IntentSynthesis":
+                        self.synthesis = IntentSynthesis(ng, master_switch=topo_description[0] == "linear")
+                        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+                    elif synthesis_scheme == "IntentSynthesisLDST":
+                        self.synthesis = IntentSynthesisLDST(ng, master_switch=topo_description[0] == "linear")
+                        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
         if synthesis_setup_gap:
             time.sleep(synthesis_setup_gap)
