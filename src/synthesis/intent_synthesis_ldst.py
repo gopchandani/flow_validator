@@ -216,14 +216,26 @@ class IntentSynthesisLDST():
                 g.add_edge(e[0], e[1], weight=1)
 
         st = nx.minimum_spanning_tree(g, weight='weight')
-        print(sorted(st.edges(data=True)))
+        print(sorted(st.edges()))
 
+        spanned_nodes = defaultdict(int)
         for e in st.edges(data=True):
-            print e
-            g[e[0]][e[1]]['weight'] = 100
+            spanned_nodes[e[0]] += 1
+            spanned_nodes[e[1]] += 1
+
+            g.remove_edge(e[0], e[1])
+
+        print len(spanned_nodes)
 
         st = nx.minimum_spanning_tree(g, weight='weight')
-        print(sorted(st.edges(data=True)))
+        print(sorted(st.edges()))
+
+        spanned_nodes = defaultdict(int)
+        for e in st.edges(data=True):
+            spanned_nodes[e[0]] += 1
+            spanned_nodes[e[1]] += 1
+
+        print len(spanned_nodes)
 
         #
         # print "Primary Path:", p

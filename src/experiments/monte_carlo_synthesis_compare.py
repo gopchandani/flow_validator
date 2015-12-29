@@ -54,7 +54,7 @@ class MonteCarloSynthesisCompare(Experiment):
         run_values = []
 
         for i in xrange(num_runs):
-            num_edges = self.fv.break_random_edges_until_pair_disconnected("h41", "h71", verbose=False)
+            num_edges = self.fv.break_random_edges_until_pair_disconnected("h71", "h141", verbose=False)
             #num_edges = self.fv.break_random_edges_until_pair_disconnected("h61", "h211", verbose=False)
             run_values.append(num_edges)
 
@@ -124,10 +124,10 @@ def main():
     save_config = True
     controller = "ryu"
 #    experiment_switches = ["s6", "s21"]
-    experiment_switches = ["s4", "s7"]
+    experiment_switches = ["s7", "s14"]
 
     fanout = 2
-    core = 1
+    core = 2
     total_number_of_ports_to_synthesize = 1#3
     numbers_of_monte_carlo_runs = [5]#[10, 20, 30]
 #    synthesis_schemes_to_try = ["IntentSynthesis", "IntentSynthesisLDST"]
