@@ -177,73 +177,94 @@ class IntentSynthesisLDST():
         
         self._add_intent(h_obj.switch_id, required_tag, push_vlan_tag_intent)
 
-    def synthesize_flow(self, src_host, dst_host, flow_match):
+    def synthesize_intents(self, dst_host, flow_match):
 
         # Handy info
-        edge_ports_dict = self.network_graph.get_edge_port_dict(src_host.node_id, src_host.switch_id)
-        in_port = edge_ports_dict[src_host.switch_id]        
         dst_sw_obj = self.network_graph.get_node_object(dst_host.switch_id)
     
-        ## Things at source
-        # Tag packets leaving the source host with a vlan tag of the destination switch
-        self._compute_push_vlan_tag_intents(src_host, flow_match, dst_sw_obj.synthesis_tag)    
+        # ## Things at source
+        # # Tag packets leaving the source host with a vlan tag of the destination switch
+        # self._compute_push_vlan_tag_intents(src_host, flow_match, dst_sw_obj.synthesis_tag)
 
         ## Things at destination
         # Add a MAC based forwarding rule for the destination host at the last hop
         self._compute_destination_host_mac_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
 
-        #  First find the shortest path between src and dst.
-        if self.network_graph.graph.has_edge('s1', 's2'):
+        # #  First find the shortest path between src and dst.
+        # if self.network_graph.graph.has_edge('s1', 's2'):
+        #
+        #     if src_host.switch_id < dst_host.switch_id:
+        #         self.network_graph.graph['s1']['s2']['weight'] = 0.5
+        #     else:
+        #         self.network_graph.graph['s1']['s2']['weight'] = 1.5
 
-            if src_host.switch_id < dst_host.switch_id:
-                self.network_graph.graph['s1']['s2']['weight'] = 0.5
-            else:
-                self.network_graph.graph['s1']['s2']['weight'] = 1.5
+        # p = nx.shortest_path(self.network_graph.graph,
+        #                     source=src_host.switch_id,
+        #                     target=dst_host.switch_id,
+        #                     weight='weight')
+        #
 
-        p = nx.shortest_path(self.network_graph.graph,
-                            source=src_host.switch_id,
-                            target=dst_host.switch_id,
-                            weight='weight')
+        # Create a graph from network_graph with switches only
+        g = nx.Graph()
 
-        print "Primary Path:", p
+        for n in self.network_graph.graph.nodes():
+            if self.network_graph.get_node_type(n) == "switch":
+                g.add_node(n)
 
-        self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)] = []
+        for e in self.network_graph.graph.edges():
+            if self.network_graph.get_node_type(e[0]) == "switch" and self.network_graph.get_node_type(e[1]) == "switch":
+                g.add_edge(e[0], e[1], weight=1)
 
-        for i in range(len(p)-1):
+        st = nx.minimum_spanning_tree(g, weight='weight')
+        print(sorted(st.edges(data=True)))
 
-            if (p[i], p[i+1]) not in self.primary_path_edges and (p[i+1], p[i]) not in self.primary_path_edges:
-                self.primary_path_edges.append((p[i], p[i+1]))
+        for e in st.edges(data=True):
+            print e
+            g[e[0]][e[1]]['weight'] = 100
 
-            self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
+        st = nx.minimum_spanning_tree(g, weight='weight')
+        print(sorted(st.edges(data=True)))
 
-        #  Compute all forwarding intents as a result of primary path
-        self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
-
-        #  Along the shortest path, break a link one-by-one
-        #  and accumulate desired action buckets in the resulting path
-
-        #  Go through the path, one edge at a time
-        for i in range(len(p) - 1):
-
-            # Keep a copy of this handy
-            edge_ports_dict = self.network_graph.get_edge_port_dict(p[i], p[i+1])
-
-            # Delete the edge
-            self.network_graph.graph.remove_edge(p[i], p[i + 1])
-
-            # Find the shortest path that results when the link breaks
-            # and compute forwarding intents for that
-            try:
-                bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.switch_id)
-                print "Backup Path", bp
-
-                self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
-            except nx.exception.NetworkXNoPath:
-                print "No backup path between:", p[i], "to:", dst_host.switch_id
-
-            # Add the edge back and the data that goes along with it
-            self.network_graph.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
-            in_port = edge_ports_dict[p[i+1]]
+        #
+        # print "Primary Path:", p
+        #
+        # self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)] = []
+        #
+        # for i in range(len(p)-1):
+        #
+        #     if (p[i], p[i+1]) not in self.primary_path_edges and (p[i+1], p[i]) not in self.primary_path_edges:
+        #         self.primary_path_edges.append((p[i], p[i+1]))
+        #
+        #     self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
+        #
+        # #  Compute all forwarding intents as a result of primary path
+        # self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
+        #
+        # #  Along the shortest path, break a link one-by-one
+        # #  and accumulate desired action buckets in the resulting path
+        #
+        # #  Go through the path, one edge at a time
+        # for i in range(len(p) - 1):
+        #
+        #     # Keep a copy of this handy
+        #     edge_ports_dict = self.network_graph.get_edge_port_dict(p[i], p[i+1])
+        #
+        #     # Delete the edge
+        #     self.network_graph.graph.remove_edge(p[i], p[i + 1])
+        #
+        #     # Find the shortest path that results when the link breaks
+        #     # and compute forwarding intents for that
+        #     try:
+        #         bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.switch_id)
+        #         print "Backup Path", bp
+        #
+        #         self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
+        #     except nx.exception.NetworkXNoPath:
+        #         print "No backup path between:", p[i], "to:", dst_host.switch_id
+        #
+        #     # Add the edge back and the data that goes along with it
+        #     self.network_graph.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
+        #     in_port = edge_ports_dict[p[i+1]]
 
     def push_switch_changes(self):
 
@@ -391,36 +412,26 @@ class IntentSynthesisLDST():
 
         print "Synthesizing backup paths between all possible host pairs..."
 
-        for src in self.network_graph.get_experiment_host_ids():
-            for dst in self.network_graph.get_experiment_host_ids():
+        for dst in self.network_graph.get_experiment_host_ids():
 
-                # Ignore paths with same src/dst
-                if src == dst:
-                    continue
+            dst_h_obj = self.network_graph.get_node_object(dst)
 
-                src_h_obj = self.network_graph.get_node_object(src)
-                dst_h_obj = self.network_graph.get_node_object(dst)
+            print "-----------------------------------------------------------------------------------------------"
+            print 'Synthesizing paths to:', dst
+            print "-----------------------------------------------------------------------------------------------"
 
-                # Ignore installation of paths between switches on the same switch
-                if src_h_obj.switch_id == dst_h_obj.switch_id:
-                    continue
+            flow_match = Match(is_wildcard=True)
+            flow_match["ethernet_type"] = 0x0800
 
-                print "-----------------------------------------------------------------------------------------------"
-                print 'Synthesizing primary and backup paths from', src, 'to', dst
-                print "-----------------------------------------------------------------------------------------------"
+            if dst_port:
+                flow_match["ip_protocol"] = 6
+                flow_match["tcp_destination_port"] = dst_port
 
-                flow_match = Match(is_wildcard=True)
-                flow_match["ethernet_type"] = 0x0800
+            self.synthesize_intents(dst_h_obj, flow_match)
+            print "-----------------------------------------------------------------------------------------------"
 
-                if dst_port:
-                    flow_match["ip_protocol"] = 6
-                    flow_match["tcp_destination_port"] = dst_port
-
-                self.synthesize_flow(src_h_obj, dst_h_obj, flow_match)
-                print "-----------------------------------------------------------------------------------------------"
-
-        self._identify_reverse_and_balking_intents()
-        self.push_switch_changes()
+        # self._identify_reverse_and_balking_intents()
+        # self.push_switch_changes()
 
     def synthesize_all_node_pairs(self, dst_ports_to_synthesize=None):
 

@@ -130,7 +130,8 @@ def main():
     core = 1
     total_number_of_ports_to_synthesize = 1#3
     numbers_of_monte_carlo_runs = [5]#[10, 20, 30]
-    synthesis_schemes_to_try = ["IntentSynthesis", "IntentSynthesisLDST"]
+#    synthesis_schemes_to_try = ["IntentSynthesis", "IntentSynthesisLDST"]
+    synthesis_schemes_to_try = ["IntentSynthesisLDST"]
 
     exp = MonteCarloSynthesisCompare(num_iterations,
                                      load_config,
