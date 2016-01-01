@@ -354,28 +354,29 @@ class IntentSynthesis():
 
                 if primary_intents and balking_intents:
 
-                    group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], balking_intents[0])
-                    in_port = None
+                    for balking_intent in balking_intents:
+                        corresponding_primary_intent = None
+                        for primary_intent in primary_intents:
+                            if balking_intent.in_port == primary_intent.in_port:
+                                corresponding_primary_intent = primary_intent
+                                break
 
-                    #Sanity check
-                    if primary_intents[0].in_port != balking_intents[0].in_port:
+                        if corresponding_primary_intent:
+                            group_id = self.synthesis_lib.push_fast_failover_group(sw,
+                                                                                   corresponding_primary_intent,
+                                                                                   balking_intent)
 
-                        #  This can only happen if the host is directly connected to the switch, so check that.
-                        sw_obj = self.network_graph.get_node_object(sw)
-                        if not int(sw_obj.synthesis_tag) == int(dst):
-                            raise Exception("Primary and balking intents' src port mismatch")
+                            corresponding_primary_intent.flow_match["in_port"] = int(corresponding_primary_intent.in_port)
+                            flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                                sw,
+                                self.ip_forwarding_table_id,
+                                group_id,
+                                1,
+                                corresponding_primary_intent.flow_match,
+                                corresponding_primary_intent.apply_immediately)
 
-                    else:
-                        in_port = primary_intents[0].in_port
-
-                    primary_intents[0].flow_match["in_port"] = int(in_port)
-                    flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw,
-                        self.ip_forwarding_table_id,
-                        group_id,
-                        1,
-                        primary_intents[0].flow_match,
-                        primary_intents[0].apply_immediately)
+                        else:
+                            raise Exception("There is a balking intent without a primary intent")
 
                 if reverse_intents:
 

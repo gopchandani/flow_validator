@@ -120,7 +120,7 @@ def main():
     experiment_switches = []
 
     fanout = 2
-    core = 1
+    core = 2
     total_number_of_ports_to_synthesize = 1
     numbers_of_monte_carlo_runs = 1#[10, 20, 30]
 
