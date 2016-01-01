@@ -39,7 +39,7 @@ class MininetMan():
 
         self.cleanup()
 
-        self.ping_timeout = 5
+        self.ping_timeout = 1
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
@@ -149,7 +149,7 @@ class MininetMan():
 
         self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-        #self.net.pingAll(self.ping_timeout)
+        self.net.pingAll(self.ping_timeout)
 
         # self.h81 = self.net.getNodeByName("h81")
         # self.h82 = self.net.getNodeByName("h82")
@@ -168,25 +168,6 @@ class MininetMan():
         # print self.h72.cmd("ping -c3 " + self.h81.IP())
         # print self.h72.cmd("ping -c3 " + self.h82.IP())
 
-        # self.s1.addIntf("s1-eth5", self.s1.newPort())
-        # self.net.pingAll(self.ping_timeout)
-
-        # self.h11 = self.net.getNodeByName("h11")
-        # self.h31 = self.net.getNodeByName("h31")
-        #
-        # # Ping from h1-> h3
-        # print self.h11.cmd("ping -c3 " + self.h31.IP())
-
-        # self.h71 = self.net.getNodeByName("h71")
-        # self.h81 = self.net.getNodeByName("h81")
-        # #Ping from h7-> h8
-        # print self.h71.cmd("ping -c3 " + self.h81.IP())
-
-        # self.h151 = self.net.getNodeByName("h151")
-        # self.h161 = self.net.getNodeByName("h161")
-        #
-        # #Ping from h7-> h8
-        # print self.h151.cmd("ping -c3 " + self.h161.IP())
 
     def setup_mininet_with_ryu_qos(self, ng):
 

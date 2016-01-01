@@ -168,17 +168,19 @@ class IntentSynthesis():
         # by using its mac address as the key
         self._add_intent(h_obj.switch_id, h_obj.mac_addr, host_mac_intent)
 
-    def _compute_push_vlan_tag_intents(self, h_obj, flow_match, required_tag):
+    def _compute_push_vlan_tag_intents(self, src_h_obj, dst_h_obj, flow_match, required_tag):
 
         push_vlan_match= deepcopy(flow_match)
-        push_vlan_match["in_port"] = int(h_obj.switch_port_attached)
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", apply_immediately=False)
+        mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
+        push_vlan_match["ethernet_destination"] = int(mac_int)
+        push_vlan_match["in_port"] = int(src_h_obj.switch_port_attached)
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port_attached, "all", apply_immediately=False)
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         # Avoiding adding a new intent for every departing flow for this switch,
         # by adding the tag as the key
         
-        self._add_intent(h_obj.switch_id, required_tag, push_vlan_tag_intent)
+        self._add_intent(src_h_obj.switch_id, required_tag, push_vlan_tag_intent)
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
@@ -189,7 +191,7 @@ class IntentSynthesis():
     
         ## Things at source
         # Tag packets leaving the source host with a vlan tag of the destination switch
-        self._compute_push_vlan_tag_intents(src_host, flow_match, dst_sw_obj.synthesis_tag)    
+        self._compute_push_vlan_tag_intents(src_host, dst_host, flow_match, dst_sw_obj.synthesis_tag)
 
         ## Things at destination
         # Add a MAC based forwarding rule for the destination host at the last hop
@@ -238,7 +240,7 @@ class IntentSynthesis():
             # and compute forwarding intents for that
             try:
                 bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.switch_id)
-                print "Backup Path", bp
+                print "Backup Path from src:", p[i], "to destination:", dst_host.switch_id, "is:", bp
 
                 self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
             except nx.exception.NetworkXNoPath:

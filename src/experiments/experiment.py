@@ -53,6 +53,9 @@ class Experiment(object):
         if mininet_setup_gap:
             time.sleep(mininet_setup_gap)
 
+        if not self.experiment_switches and self.mm.topo_name == "clostopo":
+            self.experiment_switches = self.mm.topo.edge_switches.values()
+
         # Get a flow validator instance
         ng = NetworkGraph(mininet_man=self.mm,
                           controller=self.controller,

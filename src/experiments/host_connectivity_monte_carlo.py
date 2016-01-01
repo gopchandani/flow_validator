@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as ss
 
-
 from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator
@@ -52,7 +51,8 @@ class MonteCarlo(Experiment):
         run_values = []
 
         for i in xrange(num_runs):
-            num_edges = self.fv.break_random_edges_until_pair_disconnected("h41", "h71", verbose=False)
+            #num_edges = self.fv.break_random_edges_until_pair_disconnected("h41", "h71", verbose=False)
+            num_edges = 0
             run_values.append(num_edges)
 
         runs_mean = np.mean(run_values)
@@ -113,16 +113,16 @@ class MonteCarlo(Experiment):
                                   y_scale='linear')
 
 def main():
-    num_iterations = 20
+    num_iterations = 1#20
     load_config = False
     save_config = True
     controller = "ryu"
-    experiment_switches = ["s4", "s7"]
+    experiment_switches = []
 
     fanout = 2
     core = 1
-    total_number_of_ports_to_synthesize = 3
-    numbers_of_monte_carlo_runs = [10, 20, 30]
+    total_number_of_ports_to_synthesize = 1
+    numbers_of_monte_carlo_runs = 1#[10, 20, 30]
 
     exp = MonteCarlo(num_iterations,
                      load_config,
@@ -134,10 +134,10 @@ def main():
                      total_number_of_ports_to_synthesize,
                      numbers_of_monte_carlo_runs)
 
-    #exp.trigger()
-    #exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    exp.load_data("data/monte_carlo_3_iterations_20151205_134951.json")
+    #exp.load_data("data/monte_carlo_3_iterations_20151205_134951.json")
     exp.plot_monte_carlo()
 
 
