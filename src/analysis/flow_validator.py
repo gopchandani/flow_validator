@@ -71,9 +71,16 @@ class FlowValidator:
 
     def validate_all_host_pair_reachability(self, verbose=True):
 
+        all_pair_connected = True
+
         for src_h_id in self.network_graph.get_experiment_host_ids():
             for dst_h_id in self.network_graph.get_experiment_host_ids():
-                self.validate_host_pair_reachability(src_h_id, dst_h_id, verbose)
+                baseline_at, baseline_path_count  = self.validate_host_pair_reachability(src_h_id, dst_h_id, verbose)
+
+                if not baseline_path_count:
+                    all_pair_connected = False
+
+        return all_pair_connected
 
     def validate_all_host_pair_backup(self, verbose=True):
 
@@ -153,5 +160,36 @@ class FlowValidator:
 
         if now_path_count != orig_path_count or not(orig_at.is_subset_traffic(now_at)):
             print "Something went wrong:", src_h_id, "<->", dst_h_id, "due to edges_broken:", edges_broken
+
+        return len(edges_broken)
+
+    def break_random_edges_until_any_pair_disconnected(self, verbose):
+        edges_broken = []
+
+        all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+
+        while all_pair_connected:
+
+            # Randomly sample an edge to break, sample again if it has already been broken
+            edge = random.choice(self.network_graph.graph.edges())
+
+            # Ignore host edges
+            if edge[0].startswith("h") or edge[1].startswith("h"):
+                continue
+
+            if edge in edges_broken:
+                continue
+
+            # Break the edge
+            edges_broken.append(edge)
+            self.port_graph.remove_node_graph_edge(edge[0], edge[1])
+            all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+
+        # Restore the edges for next run
+        for edge in edges_broken:
+            self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
+
+        if verbose:
+            print "edges_broken:", edges_broken
 
         return len(edges_broken)

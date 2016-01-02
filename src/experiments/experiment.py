@@ -56,6 +56,9 @@ class Experiment(object):
         if not self.experiment_switches and self.mm.topo_name == "clostopo":
             self.experiment_switches = self.mm.topo.edge_switches.values()
 
+        if not self.experiment_switches and self.mm.topo_name == "ring":
+            self.experiment_switches = self.mm.topo.switch_names
+
         # Get a flow validator instance
         ng = NetworkGraph(mininet_man=self.mm,
                           controller=self.controller,

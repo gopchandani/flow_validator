@@ -51,8 +51,7 @@ class MonteCarlo(Experiment):
         run_values = []
 
         for i in xrange(num_runs):
-            #num_edges = self.fv.break_random_edges_until_pair_disconnected("h41", "h71", verbose=False)
-            num_edges = 0
+            num_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
             run_values.append(num_edges)
 
         runs_mean = np.mean(run_values)
@@ -68,7 +67,7 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("clostopo", None, None, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -120,9 +119,9 @@ def main():
     experiment_switches = []
 
     fanout = 2
-    core = 2
+    core = 1
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = 1#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [2]#[10, 20, 30]
 
     exp = MonteCarlo(num_iterations,
                      load_config,

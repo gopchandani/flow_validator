@@ -24,7 +24,7 @@ class IntentSynthesis():
         # s represents the set of all switches that are
         # affected as a result of flow synthesis
         self.s = set()
-        
+
         self.primary_path_edges = []
         self.primary_path_edge_dict = {}
 
@@ -49,7 +49,7 @@ class IntentSynthesis():
     def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
-        
+
         in_port = first_in_port
         out_port = edge_ports_dict[p[0]]
 
@@ -179,16 +179,16 @@ class IntentSynthesis():
 
         # Avoiding adding a new intent for every departing flow for this switch,
         # by adding the tag as the key
-        
+
         self._add_intent(src_h_obj.switch_id, required_tag, push_vlan_tag_intent)
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         # Handy info
         edge_ports_dict = self.network_graph.get_edge_port_dict(src_host.node_id, src_host.switch_id)
-        in_port = edge_ports_dict[src_host.switch_id]        
+        in_port = edge_ports_dict[src_host.switch_id]
         dst_sw_obj = self.network_graph.get_node_object(dst_host.switch_id)
-    
+
         ## Things at source
         # Tag packets leaving the source host with a vlan tag of the destination switch
         self._compute_push_vlan_tag_intents(src_host, dst_host, flow_match, dst_sw_obj.synthesis_tag)
@@ -357,6 +357,7 @@ class IntentSynthesis():
                     for balking_intent in balking_intents:
                         corresponding_primary_intent = None
                         for primary_intent in primary_intents:
+
                             if balking_intent.in_port == primary_intent.in_port:
                                 corresponding_primary_intent = primary_intent
                                 break
@@ -366,6 +367,7 @@ class IntentSynthesis():
                                                                                    corresponding_primary_intent,
                                                                                    balking_intent)
 
+                            corresponding_primary_intent.flow_match["vlan_id"] = int(dst)
                             corresponding_primary_intent.flow_match["in_port"] = int(corresponding_primary_intent.in_port)
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                                 sw,
@@ -376,7 +378,18 @@ class IntentSynthesis():
                                 corresponding_primary_intent.apply_immediately)
 
                         else:
-                            raise Exception("There is a balking intent without a primary intent")
+                            group_id = self.synthesis_lib.push_select_all_group(sw, [balking_intent])
+
+                            balking_intent.flow_match["vlan_id"] = int(dst)
+                            balking_intent.flow_match["in_port"] = int(balking_intent.in_port)
+
+                            flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                                sw,
+                                self.ip_forwarding_table_id,
+                                group_id,
+                                1,
+                                balking_intent.flow_match,
+                                balking_intent.apply_immediately)
 
                 if reverse_intents:
 
