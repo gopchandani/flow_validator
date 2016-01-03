@@ -149,7 +149,17 @@ class MininetMan():
 
         self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-        self.net.pingAll(self.ping_timeout)
+        #self.net.pingAll(self.ping_timeout)
+
+        # self.h11 = self.net.getNodeByName("h11")
+        # self.h21 = self.net.getNodeByName("h21")
+        # print self.h11.cmd("ping -c3 " + self.h21.IP())
+        #
+        # self.net.configLinkStatus("s3", "s4", "down")
+        # print self.h11.cmd("ping -c3 " + self.h21.IP())
+        #
+        # self.net.configLinkStatus("s2", "s1", "down")
+        # print self.h11.cmd("ping -c3 " + self.h21.IP())
 
         # self.h81 = self.net.getNodeByName("h81")
         # self.h82 = self.net.getNodeByName("h82")

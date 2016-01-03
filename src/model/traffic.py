@@ -211,6 +211,7 @@ class TrafficElement():
 
         # Accumulate field modifications
         orig_traffic_element.written_modifications.update(self.written_modifications)
+        orig_traffic_element.switch_modifications.update(self.switch_modifications)
         orig_traffic_element.instruction_type = self.instruction_type
 
         if store_switch_modifications:

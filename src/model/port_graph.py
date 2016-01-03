@@ -82,6 +82,9 @@ class PortGraph:
             # For each destination that may have been affected at the ingress port
             for dst_p in change_matrix[ingress_p]:
 
+                if ingress_p.port_id == 's3:ingress1' and dst_p.port_id == 's4:egress1':
+                    pass
+
                 prev_ingress_p_traffic = ingress_p.get_dst_admitted_traffic(dst_p)
                 now_ingress_p_traffic = Traffic()
 
@@ -126,7 +129,8 @@ class PortGraph:
 
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
-            #sw.test_transfer_function(verbose=True)
+            # if sw.node_id == 's3':
+            #     sw.test_transfer_function(verbose=True)
             self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
@@ -253,7 +257,11 @@ class PortGraph:
 
             # If there were modifications along the way...
             if modifications:
-                ttp = traffic_to_propagate.get_orig_traffic(modifications, store_switch_modifications=False)
+                # If the edge ports belong to the same switch, keep the modifications, otherwise get rid of them.
+                if edge_data.port1.sw == edge_data.port2.sw:
+                    ttp = traffic_to_propagate.get_orig_traffic(modifications, store_switch_modifications=True)
+                else:
+                    ttp = traffic_to_propagate.get_orig_traffic(modifications, store_switch_modifications=False)
             else:
                 ttp = traffic_to_propagate
 
@@ -348,7 +356,7 @@ class PortGraph:
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
                 self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
 
-    def count_paths(self, this_p, dst_p, verbose, path_str=""):
+    def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
 
         path_count = 0
 
@@ -359,7 +367,14 @@ class PortGraph:
             for succ_p in tt:
 
                 if succ_p:
-                    path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.port_id)
+
+                    # Try and detect a loop, if a port repeats more than twice, it is a loop
+                    indices = [i for i,x in enumerate(path_elements) if x == succ_p.port_id]
+                    if len(indices) > 2:
+                        print "Found a loop, path_str:", path_str
+                    else:
+                        path_elements.append(succ_p.port_id)
+                        path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.port_id, path_elements)
 
                 # A none succcessor means, it originates here.
                 else:
