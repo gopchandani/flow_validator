@@ -391,6 +391,11 @@ class Traffic():
 
             # If there is anything that is left after all the differences have happened, then add it to diff_traffic
             if remaining:
+
+                for remaining_te in remaining:
+                    remaining_te.written_modifications = in_te.written_modifications
+                    remaining_te.switch_modifications = in_te.switch_modifications
+
                 diff_traffic.traffic_elements.extend(remaining)
 
         return diff_traffic

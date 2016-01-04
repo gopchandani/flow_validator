@@ -129,8 +129,8 @@ class PortGraph:
 
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
-            # if sw.node_id == 's3':
-            #     sw.test_transfer_function(verbose=True)
+            if sw.node_id == 's3':
+                sw.test_transfer_function(verbose=True)
             self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
@@ -321,8 +321,8 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes=None):
 
-        # if  dst_port.port_id == 's1:egress1':
-        #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        if curr.port_id == 's3:egress3' and dst_port.port_id == 's4:egress1':
+            print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_admitted_traffic(curr, dst_traffic_at_succ, succ, dst_port)

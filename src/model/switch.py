@@ -226,7 +226,7 @@ class Switch():
         # if dst_port.port_id == 's1:egress1':
         #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
-        if curr.port_id == 's3:table0' and dst_port.port_id == 's3:egress3':
+        if curr.port_id == 's3:table2' and dst_port.port_id == 's3:egress3':
             pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
@@ -450,6 +450,9 @@ class Switch():
         # Loop over ports of the switch and fail and restore them one by one
         
         for testing_port_number in self.ports:
+
+            if testing_port_number != 3:
+                continue
 
             path_count_1 = self.count_transfer_function_paths(verbose)
 
