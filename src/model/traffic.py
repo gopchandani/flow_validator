@@ -302,28 +302,23 @@ class Traffic():
 
     def is_subset_te(self, in_te):
 
-        is_subset = False
-        for self_te in self.traffic_elements:
-            if self_te.is_subset(in_te):
-                is_subset = True
-                break
+        in_traffic = Traffic()
+        in_traffic.traffic_elements.append(in_te)
 
-        return is_subset
+        return self.is_subset_traffic(in_traffic)
 
     # Checks if in_traffic is a subset of self
 
     def is_subset_traffic(self, in_traffic):
 
-        is_subset = True
+        # First compute in_traffic - self
+        diff_traffic = self.difference(in_traffic)
 
-        # Each one of the in_te has to be subset of self
-        for in_te in in_traffic.traffic_elements:
-            is_subset_te = self.is_subset_te(in_te)
-            if not is_subset_te:
-                is_subset = False
-                break
-
-        return is_subset
+        # If difference is empty, then say that in_traffic is a subset of self
+        if diff_traffic.is_empty():
+            return True
+        else:
+            return False
 
     def intersect(self, in_traffic):
         traffic_intersection = Traffic()

@@ -129,8 +129,8 @@ class PortGraph:
 
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
-            if sw.node_id == 's3':
-                sw.test_transfer_function(verbose=True)
+            # if sw.node_id == 's3':
+            #     sw.test_transfer_function(verbose=True)
             self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.

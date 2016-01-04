@@ -250,7 +250,5 @@ class FlowValidator:
         if verbose:
             print "edges_broken:", edges_broken
 
-        all_pair_connected = self.validate_all_host_pair_reachability(verbose, specific_traffic=True)
-
         return edges_broken, all_pair_connected
 
