@@ -86,10 +86,14 @@ class FlowValidator:
                 if src_h_id == dst_h_id:
                     continue
 
-                if specific_traffic:
+                src_h_obj = self.network_graph.get_node_object(src_h_id)
+                dst_h_obj = self.network_graph.get_node_object(dst_h_id)
 
-                    src_h_obj = self.network_graph.get_node_object(src_h_id)
-                    dst_h_obj = self.network_graph.get_node_object(dst_h_id)
+                # The intent synthesis scheme does not synthesize connectivity for hosts on same switch
+                if src_h_obj.switch_id == dst_h_obj.switch_id:
+                    continue
+
+                if specific_traffic:
 
                     specific_traffic = Traffic()
                     specific_match = Match(is_wildcard=True)
@@ -251,4 +255,3 @@ class FlowValidator:
             print "edges_broken:", edges_broken
 
         return edges_broken, all_pair_connected
-

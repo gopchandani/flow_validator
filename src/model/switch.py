@@ -226,8 +226,8 @@ class Switch():
         # if dst_port.port_id == 's1:egress1':
         #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
-        if curr.port_id == 's3:table2' and dst_port.port_id == 's3:egress3':
-            pass
+        # if curr.port_id == 's3:table2' and dst_port.port_id == 's3:egress3':
+        #     pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst_port)

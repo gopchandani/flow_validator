@@ -371,7 +371,8 @@ class PortGraph:
                     # Try and detect a loop, if a port repeats more than twice, it is a loop
                     indices = [i for i,x in enumerate(path_elements) if x == succ_p.port_id]
                     if len(indices) > 2:
-                        print "Found a loop, path_str:", path_str
+                        if verbose:
+                            print "Found a loop, path_str:", path_str
                     else:
                         path_elements.append(succ_p.port_id)
                         path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.port_id, path_elements)
