@@ -88,6 +88,20 @@ class Experiment(object):
                     if synthesis_scheme == "IntentSynthesis":
                         self.synthesis = IntentSynthesis(ng, master_switch=topo_description[0] == "linear")
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+                        #self.mm.net.pingAll(self.mm.ping_timeout)
+
+                        # h11 = self.mm.net.getNodeByName("h11")
+                        # h12 = self.mm.net.getNodeByName("h12")
+                        #
+                        # print h12.cmd("ping -c3 " + h11.IP())
+                        #
+                        # self.mm.net.configLinkStatus('s1', 's2', 'down')
+                        #
+                        # print h12.cmd("ping -c3 " + h11.IP())
+                        #
+                        # self.mm.net.configLinkStatus('s1', 's2', 'up')
+
+
                     elif synthesis_scheme == "IntentSynthesisLDST":
                         self.synthesis = IntentSynthesisLDST(ng, master_switch=topo_description[0] == "linear")
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)

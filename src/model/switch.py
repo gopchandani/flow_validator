@@ -450,9 +450,9 @@ class Switch():
         # Loop over ports of the switch and fail and restore them one by one
         
         for testing_port_number in self.ports:
-            #
-            # if testing_port_number != 3:
-            #     continue
+
+            if testing_port_number != 3:
+                continue
 
             path_count_1 = self.count_transfer_function_paths(verbose)
 

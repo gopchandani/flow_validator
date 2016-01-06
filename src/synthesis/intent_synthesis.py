@@ -32,7 +32,7 @@ class IntentSynthesis():
         self.apply_other_intents_immediately = False
 
         # Table contains the rules that drop packets destined to the same MAC address as host of origin
-        self.drop_table = 0
+        self.local_host_rule_table = 0
 
         # Table contains the reverse rules (they should be examined first)
         self.reverse_rules_table_id = 1
@@ -258,8 +258,8 @@ class IntentSynthesis():
 
             # Push rules at the switch that drop packets from hosts that are connected to the switch
             # and have the same MAC address as originating hosts or have vlan tags associated with their own switch.
-            self.synthesis_lib.push_loop_preventing_drop_rules(sw, self.drop_table)
-            self.synthesis_lib.push_host_vlan_tagged_packets_drop_rules(sw, self.drop_table)
+            self.synthesis_lib.push_loop_preventing_drop_rules(sw, self.local_host_rule_table)
+            self.synthesis_lib.push_host_vlan_tagged_packets_drop_rules(sw, self.local_host_rule_table)
 
             # Push table miss entries at all Tables
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 0)

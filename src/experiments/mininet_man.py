@@ -135,54 +135,6 @@ class MininetMan():
             for (src_host, dst_host) in self._get_experiment_host_pair():
                 self._ping_host_pair(src_host, dst_host)
 
-    def setup_mininet_with_odl(self, ng):
-
-        print "Synthesizing..."
-
-        self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
-        self.synthesis.synthesize_all_node_pairs()
-
-        print "Synthesis Completed. Waiting for rules to be detected by controller..."
-        time.sleep(30 * self.num_hosts_per_switch * self.num_switches)
-
-        self.net.pingAll(self.ping_timeout)
-
-    def setup_mininet_with_ryu(self, ng, dst_ports_to_synthesize=None):
-
-        print "Synthesizing..."
-
-        self.synthesis = IntentSynthesis(ng, master_switch=self.topo_name == "linear")
-        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-        #self.net.pingAll(self.ping_timeout)
-
-        # self.h11 = self.net.getNodeByName("h11")
-        # self.h21 = self.net.getNodeByName("h21")
-        # print self.h11.cmd("ping -c3 " + self.h21.IP())
-        #
-        # self.net.configLinkStatus("s3", "s4", "down")
-        # print self.h11.cmd("ping -c3 " + self.h21.IP())
-        #
-        # self.net.configLinkStatus("s2", "s1", "down")
-        # print self.h11.cmd("ping -c3 " + self.h21.IP())
-
-        # self.h81 = self.net.getNodeByName("h81")
-        # self.h82 = self.net.getNodeByName("h82")
-        # self.h71 = self.net.getNodeByName("h71")
-        # self.h72 = self.net.getNodeByName("h72")
-        #
-        # print self.h81.cmd("ping -c3 " + self.h71.IP())
-        # print self.h81.cmd("ping -c3 " + self.h72.IP())
-        #
-        # print self.h82.cmd("ping -c3 " + self.h71.IP())
-        # print self.h82.cmd("ping -c3 " + self.h72.IP())
-        #
-        # print self.h71.cmd("ping -c3 " + self.h81.IP())
-        # print self.h71.cmd("ping -c3 " + self.h82.IP())
-        #
-        # print self.h72.cmd("ping -c3 " + self.h81.IP())
-        # print self.h72.cmd("ping -c3 " + self.h82.IP())
-
-
     def setup_mininet_with_ryu_qos(self, ng):
 
         def parse_iperf_output(iperf_output_string):

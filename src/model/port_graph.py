@@ -82,7 +82,7 @@ class PortGraph:
             # For each destination that may have been affected at the ingress port
             for dst_p in change_matrix[ingress_p]:
 
-                if ingress_p.port_id == 's3:ingress1' and dst_p.port_id == 's4:egress1':
+                if ingress_p.port_id == 's2:ingress4' and dst_p.port_id == 's2:egress1':
                     pass
 
                 prev_ingress_p_traffic = ingress_p.get_dst_admitted_traffic(dst_p)
@@ -129,7 +129,7 @@ class PortGraph:
 
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
-            # if sw.node_id == 's3':
+            # if sw.node_id == 's2':
             #     sw.test_transfer_function(verbose=True)
             self.add_switch_transfer_function(sw)
 
@@ -321,7 +321,7 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes=None):
 
-        if curr.port_id == 's3:egress3' and dst_port.port_id == 's4:egress1':
+        if curr.port_id == 's2:ingress4' and dst_port.port_id == 's2:egress1':
             print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \

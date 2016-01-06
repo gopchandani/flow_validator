@@ -66,13 +66,19 @@ class FlowValidator:
                                                  path_elements=[src_host_obj.switch_ingress_port.port_id])
 
         at = src_host_obj.switch_ingress_port.get_dst_admitted_traffic(dst_host_obj.switch_egress_port)
-        if not at.is_empty() and verbose:
+        if not at.is_empty():
             print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
             
             if specific_traffic:
                 if not at.is_subset_traffic(specific_traffic):
                     at = None
-                    path_count = 0    
+                    path_count = 0
+
+                    #if verbose:
+                    print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at does not pass specific_traffic check."
+        else:
+            #if verbose:
+            print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at is empty."
 
         return at, path_count
 
@@ -88,10 +94,6 @@ class FlowValidator:
 
                 src_h_obj = self.network_graph.get_node_object(src_h_id)
                 dst_h_obj = self.network_graph.get_node_object(dst_h_id)
-
-                # The intent synthesis scheme does not synthesize connectivity for hosts on same switch
-                if src_h_obj.switch_id == dst_h_obj.switch_id:
-                    continue
 
                 if specific_traffic:
 

@@ -6,6 +6,7 @@ import time
 import httplib2
 import json
 import os
+import sys
 
 from model.network_graph import NetworkGraph
 
@@ -358,6 +359,31 @@ class SynthesisLib():
 
     def push_destination_host_mac_intent_flow(self, sw, mac_intent, table_id, priority):
 
+        mac_intent.flow_match["vlan_id"] = sys.maxsize
+        flow = self.create_base_flow(sw, table_id, priority)
+
+        output_action = None
+
+        if self.network_graph.controller == "odl":
+            flow["flow-node-inventory:flow"]["match"] = \
+                mac_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                          flow["flow-node-inventory:flow"]["match"])
+
+            output_action = [{'order': 1, "output-action": {"output-node-connector": mac_intent.out_port}}]
+
+        elif self.network_graph.controller == "ryu":
+            flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"])
+            output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
+
+        action_list = [output_action]
+
+        self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
+        self.push_flow(sw, flow)
+
+        return flow
+
+    def push_destination_host_mac_vlan_intent_flow(self, sw, mac_intent, table_id, priority):
+
         flow = self.create_base_flow(sw, table_id, priority)
 
         pop_vlan_action = None
@@ -400,7 +426,8 @@ class SynthesisLib():
             if len(mac_intents) > 1:
                 print "There are more than one mac intents for a single dst, will install only one"
 
-            self.push_destination_host_mac_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 1)
+            self.push_destination_host_mac_vlan_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 100)
+            self.push_destination_host_mac_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 10)
 
     def push_vlan_push_intents(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):
 
