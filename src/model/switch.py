@@ -446,9 +446,38 @@ class Switch():
         return path_count
                 
     def test_transfer_function(self, verbose=False):
-        
+
+        src_p = self.get_port(self.get_incoming_port_id(self.node_id, 1))
+        dst_p = self.get_port(self.get_outgoing_port_id(self.node_id, 4))
+        path_count = self.count_paths(src_p, dst_p, verbose, src_p.port_id)
+
+        testing_egress_port = self.get_port(self.get_outgoing_port_id(self.node_id, 3))
+        testing_egress_port.state = "down"
+        tf_changes = self.update_port_transfer_traffic(3, "port_down")
+
+        src_p = self.get_port(self.get_incoming_port_id(self.node_id, 1))
+        dst_p = self.get_port(self.get_outgoing_port_id(self.node_id, 4))
+        path_count = self.count_paths(src_p, dst_p, verbose, src_p.port_id)
+
+        testing_egress_port = self.get_port(self.get_outgoing_port_id(self.node_id, 4))
+        testing_egress_port.state = "down"
+        tf_changes = self.update_port_transfer_traffic(4, "port_down")
+
+        src_p = self.get_port(self.get_incoming_port_id(self.node_id, 1))
+        dst_p = self.get_port(self.get_outgoing_port_id(self.node_id, 4))
+        path_count = self.count_paths(src_p, dst_p, verbose, src_p.port_id)
+
+        testing_egress_port = self.get_port(self.get_outgoing_port_id(self.node_id, 4))
+        testing_egress_port.state = "up"
+        tf_changes = self.update_port_transfer_traffic(4, "port_up")
+
+        src_p = self.get_port(self.get_incoming_port_id(self.node_id, 1))
+        dst_p = self.get_port(self.get_outgoing_port_id(self.node_id, 4))
+        path_count = self.count_paths(src_p, dst_p, verbose, src_p.port_id)
+
+        return
+
         # Loop over ports of the switch and fail and restore them one by one
-        
         for testing_port_number in self.ports:
 
             if testing_port_number != 3:
