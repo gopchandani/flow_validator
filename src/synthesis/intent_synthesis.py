@@ -272,6 +272,7 @@ class IntentSynthesis():
             self.network_graph.graph.node[sw]["sw"].intents = defaultdict(dict)
 
             for dst in intents:
+
                 dst_intents = intents[dst]
 
                 # Take care of mac intents for this destination
@@ -316,26 +317,79 @@ class IntentSynthesis():
 
                 if primary_intents and failover_intents:
 
-                    # TODO: All of the intents in both lists should want the same port
-                    #  See if both want same destination port of out of this switch, if not, do the failure group
-                    if primary_intents[0].out_port != failover_intents[0].out_port:
-                        group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], failover_intents[0])
-                    else:
-                        # If they do want the same port, Consolidation going on here...
-                        group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
-                        #raise Exception("Something is wrong with installed intents.")
+                    # TODO: This leaves out the case when there is a primary intent for which failover
+                    # intent cannot be found and might need to be handled separately
 
-                    # Push the rule that refers to the group
+                    # Find intents to consolidate, they should have same in_port and different out_port
+                    consolidated_failover_intents = []
+                    handled_separately_intents = []
 
-                    primary_intents[0].flow_match["vlan_id"] = int(dst)
+                    for failover_intent in failover_intents:
+                        consolidation_found = False
 
-                    flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw,
-                        self.ip_forwarding_table_id,
-                        group_id,
-                        1,
-                        primary_intents[0].flow_match,
-                        primary_intents[0].apply_immediately)
+                        for primary_intent in primary_intents:
+                            if (primary_intent.in_port == failover_intent.in_port and
+                                        primary_intent.out_port != failover_intent.out_port):
+                                    consolidation_found = True
+
+                        if consolidation_found:
+                            already_exists = [(x,y) for x, y in consolidated_failover_intents
+                                              if x.in_port == primary_intent.in_port
+                                              and x.out_port == primary_intent.out_port
+                                              and y.out_port == failover_intent.out_port
+                                              and y.out_port == failover_intent.out_port]
+                            if not already_exists:
+                                consolidated_failover_intents.append((primary_intent, failover_intent))
+                        else:
+                            handled_separately_intents.append(failover_intent)
+
+                    for primary_intent, failover_intent in consolidated_failover_intents:
+                        group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intent, failover_intent)
+
+                        primary_intent.flow_match["vlan_id"] = int(dst)
+
+                        flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                            sw,
+                            self.ip_forwarding_table_id,
+                            group_id,
+                            1,
+                            primary_intent.flow_match,
+                            primary_intent.apply_immediately)
+
+                    for separate_intent in handled_separately_intents:
+                        group_id = self.synthesis_lib.push_select_all_group(sw, [separate_intent])
+
+                        separate_intent.flow_match["vlan_id"] = int(dst)
+                        separate_intent.flow_match["in_port"] = int(separate_intent.in_port)
+
+                        flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                            sw,
+                            self.ip_forwarding_table_id,
+                            group_id,
+                            1,
+                            separate_intent.flow_match,
+                            separate_intent.apply_immediately)
+
+                    # # TODO: All of the intents in both lists should want the same port
+                    # #  See if both want same destination port of out of this switch, if not, do the failure group
+                    # if primary_intents[0].out_port != failover_intents[0].out_port:
+                    #     group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], failover_intents[0])
+                    # else:
+                    #     # If they do want the same port, Consolidation going on here...
+                    #     group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+                    #     #raise Exception("Something is wrong with installed intents.")
+                    #
+                    # # Push the rule that refers to the group
+                    #
+                    # primary_intents[0].flow_match["vlan_id"] = int(dst)
+                    #
+                    # flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                    #     sw,
+                    #     self.ip_forwarding_table_id,
+                    #     group_id,
+                    #     1,
+                    #     primary_intents[0].flow_match,
+                    #     primary_intents[0].apply_immediately)
 
                 #  Handle the case when switch only participates in carrying the failover traffic in-transit
                 if not primary_intents and failover_intents:

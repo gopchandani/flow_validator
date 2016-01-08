@@ -67,18 +67,19 @@ class FlowValidator:
 
         at = src_host_obj.switch_ingress_port.get_dst_admitted_traffic(dst_host_obj.switch_egress_port)
         if not at.is_empty():
-            print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
+            if verbose:
+                print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
             
             if specific_traffic:
                 if not at.is_subset_traffic(specific_traffic):
                     at = None
                     path_count = 0
 
-                    #if verbose:
-                    print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at does not pass specific_traffic check."
+                    if verbose:
+                        print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at does not pass specific_traffic check."
         else:
-            #if verbose:
-            print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at is empty."
+            if verbose:
+                print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at is empty."
 
         return at, path_count
 
