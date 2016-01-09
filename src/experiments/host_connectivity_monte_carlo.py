@@ -83,7 +83,8 @@ class MonteCarlo(Experiment):
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
-                                          synthesis_setup_gap=len(ports_to_synthesize))
+                                          synthesis_setup_gap=len(ports_to_synthesize),
+                                          synthesis_scheme="IntentSynthesisLB")
 
             self.fv = FlowValidator(ng)
             self.fv.init_port_graph()
@@ -132,7 +133,7 @@ def main():
     fanout = 2
     core = 1
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = [5]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [10]#[10, 20, 30]
 
     exp = MonteCarlo(num_iterations,
                      load_config,

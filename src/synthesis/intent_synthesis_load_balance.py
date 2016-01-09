@@ -2,17 +2,14 @@ __author__ = 'Rakesh Kumar'
 
 import networkx as nx
 
-
 from collections import defaultdict
 from copy import deepcopy
 
-
-from model.network_graph import NetworkGraph
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 from model.match import Match
 
-class IntentSynthesis():
+class IntentSynthesisLB():
 
     def __init__(self, network_graph, master_switch=False):
 
@@ -37,48 +34,11 @@ class IntentSynthesis():
         # Table contains the reverse rules (they should be examined first)
         self.reverse_rules_table_id = 1
 
-        # Table contains any rules that have to do with vlan tag push
-        self.vlan_tag_push_rules_table_id = 2
-
         # Table contains any rules associated with forwarding host traffic
-        self.mac_forwarding_table_id = 3
+        self.mac_forwarding_table_id = 2
 
         # Table contains the actual forwarding rules
-        self.ip_forwarding_table_id = 4
-
-    def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
-
-        edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
-
-        in_port = first_in_port
-        out_port = edge_ports_dict[p[0]]
-
-        # This loop always starts at a switch
-        for i in range(len(p) - 1):
-
-            fwd_flow_match = deepcopy(flow_match)
-
-            # All intents except the first one in the primary path must specify the vlan tag
-            if not (i == 0 and intent_type == "primary"):
-                fwd_flow_match["vlan_id"] = int(dst_switch_tag)
-
-            if in_port == out_port:
-                pass
-
-            intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
-
-            # Using dst_switch_tag as key here to
-            # avoid adding multiple intents for the same destination
-
-            self._add_intent(p[i], dst_switch_tag, intent)
-
-            # Prep for next switch
-            if i < len(p) - 2:
-                edge_ports_dict = self.network_graph.get_edge_port_dict(p[i], p[i+1])
-                in_port = edge_ports_dict[p[i+1]]
-
-                edge_ports_dict = self.network_graph.get_edge_port_dict(p[i+1], p[i+2])
-                out_port = edge_ports_dict[p[i+1]]
+        self.ip_forwarding_table_id = 3
 
     def get_intents(self, dst_intents, intent_type):
 
@@ -108,10 +68,6 @@ class IntentSynthesis():
 
                     #  Nothing needs to be done for primary intent
                     if intent == primary_intent:
-                        continue
-
-                    # Nothing needs to be done for vlan intents either
-                    if intent.intent_type == "push_vlan":
                         continue
 
                     # A balking intent happens on the switch where reversal begins,
@@ -160,7 +116,6 @@ class IntentSynthesis():
         host_mac_match = deepcopy(flow_match)
         mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
         host_mac_match["ethernet_destination"] = int(mac_int)
-        host_mac_match["vlan_id"] = int(matching_tag)
 
         host_mac_intent = Intent("mac", host_mac_match, "all", out_port, apply_immediately=False)
 
@@ -168,34 +123,44 @@ class IntentSynthesis():
         # by using its mac address as the key
         self._add_intent(h_obj.switch_id, h_obj.mac_addr, host_mac_intent)
 
-    def _compute_push_vlan_tag_intents(self, src_h_obj, dst_h_obj, flow_match, required_tag):
+    def _compute_path_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
 
-        push_vlan_match= deepcopy(flow_match)
-        mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
-        push_vlan_match["ethernet_destination"] = int(mac_int)
-        push_vlan_match["in_port"] = int(src_h_obj.switch_port_attached)
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port_attached, "all", apply_immediately=False)
-        push_vlan_tag_intent.required_vlan_id = required_tag
+        edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
 
-        # Avoiding adding a new intent for every departing flow for this switch,
-        # by adding the tag as the key
+        in_port = first_in_port
+        out_port = edge_ports_dict[p[0]]
 
-        self._add_intent(src_h_obj.switch_id, required_tag, push_vlan_tag_intent)
+        # This loop always starts at a switch
+        for i in range(len(p) - 1):
+
+            fwd_flow_match = deepcopy(flow_match)
+            mac_int = int(dst_switch_tag.replace(":", ""), 16)
+            fwd_flow_match["ethernet_destination"] = mac_int
+
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
+
+            # Using dst_switch_tag as key here to
+            # avoid adding multiple intents for the same destination
+
+            self._add_intent(p[i], dst_switch_tag, intent)
+
+            # Prep for next switch
+            if i < len(p) - 2:
+                edge_ports_dict = self.network_graph.get_edge_port_dict(p[i], p[i+1])
+                in_port = edge_ports_dict[p[i+1]]
+
+                edge_ports_dict = self.network_graph.get_edge_port_dict(p[i+1], p[i+2])
+                out_port = edge_ports_dict[p[i+1]]
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         # Handy info
         edge_ports_dict = self.network_graph.get_edge_port_dict(src_host.node_id, src_host.switch_id)
         in_port = edge_ports_dict[src_host.switch_id]
-        dst_sw_obj = self.network_graph.get_node_object(dst_host.switch_id)
-
-        ## Things at source
-        # Tag packets leaving the source host with a vlan tag of the destination switch
-        self._compute_push_vlan_tag_intents(src_host, dst_host, flow_match, dst_sw_obj.synthesis_tag)
 
         ## Things at destination
         # Add a MAC based forwarding rule for the destination host at the last hop
-        self._compute_destination_host_mac_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
+        self._compute_destination_host_mac_intents(dst_host, flow_match, dst_host.mac_addr)
 
         #  First find the shortest path between src and dst.
         if self.network_graph.graph.has_edge('s1', 's2'):
@@ -222,7 +187,7 @@ class IntentSynthesis():
             self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
+        self._compute_path_intents(p, "primary", flow_match, in_port, dst_host.mac_addr)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
@@ -242,7 +207,7 @@ class IntentSynthesis():
                 bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.switch_id)
                 print "Backup Path from src:", p[i], "to destination:", dst_host.switch_id, "is:", bp
 
-                self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
+                self._compute_path_intents(bp, "failover", flow_match, in_port, dst_host.mac_addr)
             except nx.exception.NetworkXNoPath:
                 print "No backup path between:", p[i], "to:", dst_host.switch_id
 
@@ -259,7 +224,6 @@ class IntentSynthesis():
             # Push rules at the switch that drop packets from hosts that are connected to the switch
             # and have the same MAC address as originating hosts or have vlan tags associated with their own switch.
             self.synthesis_lib.push_loop_preventing_drop_rules(sw, self.local_host_rule_table)
-            self.synthesis_lib.push_host_vlan_tagged_packets_drop_rules(sw, self.local_host_rule_table)
 
             # Push table miss entries at all Tables
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 0)
@@ -278,12 +242,8 @@ class IntentSynthesis():
                 # Take care of mac intents for this destination
                 self.synthesis_lib.push_destination_host_mac_intents(sw, dst_intents,
                                                                      self.get_intents(dst_intents, "mac"),
-                                                                     self.mac_forwarding_table_id)
-
-                # Take care of vlan tag push intents for this destination
-                self.synthesis_lib.push_vlan_push_intents(sw, dst_intents,
-                                                          self.get_intents(dst_intents, "push_vlan"),
-                                                          self.vlan_tag_push_rules_table_id)
+                                                                     self.mac_forwarding_table_id, 
+                                                                     pop_vlan=False)
 
                 primary_intents = self.get_intents(dst_intents, "primary")
                 reverse_intents = self.get_intents(dst_intents, "reverse")
@@ -346,8 +306,6 @@ class IntentSynthesis():
                     for primary_intent, failover_intent in consolidated_failover_intents:
                         group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intent, failover_intent)
 
-                        primary_intent.flow_match["vlan_id"] = int(dst)
-
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                             sw,
                             self.ip_forwarding_table_id,
@@ -359,7 +317,6 @@ class IntentSynthesis():
                     for separate_intent in handled_separately_intents:
                         group_id = self.synthesis_lib.push_select_all_group(sw, [separate_intent])
 
-                        separate_intent.flow_match["vlan_id"] = int(dst)
                         separate_intent.flow_match["in_port"] = int(separate_intent.in_port)
 
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
@@ -400,7 +357,6 @@ class IntentSynthesis():
                                                                                    corresponding_primary_intent,
                                                                                    balking_intent)
 
-                            corresponding_primary_intent.flow_match["vlan_id"] = int(dst)
                             corresponding_primary_intent.flow_match["in_port"] = int(corresponding_primary_intent.in_port)
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                                 sw,
@@ -412,8 +368,6 @@ class IntentSynthesis():
 
                         else:
                             group_id = self.synthesis_lib.push_select_all_group(sw, [balking_intent])
-
-                            balking_intent.flow_match["vlan_id"] = int(dst)
                             balking_intent.flow_match["in_port"] = int(balking_intent.in_port)
 
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
@@ -427,9 +381,7 @@ class IntentSynthesis():
                 if reverse_intents:
 
                     group_id = self.synthesis_lib.push_select_all_group(sw, [reverse_intents[0]])
-
                     reverse_intents[0].flow_match["in_port"] = int(reverse_intents[0].in_port)
-                    reverse_intents[0].flow_match["vlan_id"] = int(dst)
 
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         sw,
