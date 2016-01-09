@@ -77,7 +77,7 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("ring", 4, 2, None, None)
+            self.topo_description = ("ring", 4, 1, None, None)
             #self.topo_description = ("clostopo", None, None, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
@@ -128,7 +128,7 @@ def main():
     load_config = False
     save_config = True
     controller = "ryu"
-    experiment_switches = []
+    experiment_switches = ["s1", "s3"]
 
     fanout = 2
     core = 1

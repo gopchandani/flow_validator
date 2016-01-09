@@ -98,24 +98,24 @@ class Experiment(object):
                         self.synthesis = IntentSynthesisLB(ng, master_switch=topo_description[0] == "linear")
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
-                    self.mm.net.pingAll(self.mm.ping_timeout)
+                    #self.mm.net.pingAll(self.mm.ping_timeout)
 
                     h11 = self.mm.net.getNodeByName("h11")
-                    h21 = self.mm.net.getNodeByName("h21")
+                    h31 = self.mm.net.getNodeByName("h31")
 
-                    print h11.cmd("ping -c3 " + h21.IP())
+                    print h11.cmd("ping -c3 " + h31.IP())
 
                     self.mm.net.configLinkStatus('s1', 's2', 'down')
 
-                    print h11.cmd("ping -c3 " + h21.IP())
+                    print h11.cmd("ping -c3 " + h31.IP())
 
-                    self.mm.net.configLinkStatus('s2', 's3', 'down')
+                    self.mm.net.configLinkStatus('s1', 's4', 'down')
 
-                    print h11.cmd("ping -c3 " + h21.IP())
+                    print h11.cmd("ping -c3 " + h31.IP())
 
                     self.mm.net.configLinkStatus('s1', 's2', 'up')
 
-                    print h11.cmd("ping -c3 " + h21.IP())
+                    print h11.cmd("ping -c3 " + h31.IP())
 
         if synthesis_setup_gap:
             time.sleep(synthesis_setup_gap)
