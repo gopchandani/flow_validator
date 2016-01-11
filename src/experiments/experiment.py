@@ -49,7 +49,7 @@ class Experiment(object):
         # Hard coding the port for now, need to remove this later.
         if self.controller == "sel":
             self.controller_port = 6653
-            controller_host = "192.168.56.1"
+            controller_host = "10.214.154.38"
         self.mm = MininetMan(self.controller_port, controller_host, *topo_description)
 
         if self.controller == "sel":

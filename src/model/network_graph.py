@@ -48,8 +48,7 @@ class NetworkGraph():
         self.controller = controller
 
         self.sel_session = Session.Http(self.baseUrlSel)
-        self.sel_session.auth_user_callback()
-
+        self.sel_session.auth_user_callback(u'hobbs', u'Engineer', u'Asdf123$')
         dir_name = self.controller + \
                    str(self.mininet_man.topo_name) + \
                    str(self.mininet_man.num_switches) + \
@@ -392,18 +391,21 @@ class NetworkGraph():
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
     def print_sel_flow_stats(self):
-        for each in OperationalTree.flowStatsHttpAccess(self.sel_session).read_collection():
+       # for each in OperationalTree.flowStatsHttpAccess(self.sel_session).read_collection():
+       for each in OperationalTree.FlowStatsEntityAccess(self.sel_session).read_collection():
             print (each.to_pyson())
 
     def get_sel_switches(self):
-        nodes = OperationalTree.nodesHttpAccess(self.sel_session)
+       # nodes = OperationalTree.nodesHttpAccess(self.sel_session)
+        nodes = OperationalTree.NodesEntityAccess(self.sel_session)
         sel_switches = {}
         for each in nodes.read_collection():
             this_switch = {}
             if isinstance(each, OperationalTree.OpenFlowNode):
                 switch_id = each.data_path_id
 
-                ports = OperationalTree.portsHttpAccess(self.sel_session)
+                #ports = OperationalTree.portsHttpAccess(self.sel_session)
+                ports = OperationalTree.PortsEntityAccess(self.sel_session)
                 sw_ports = []
 
                 for port in ports.read_collection():
@@ -414,14 +416,17 @@ class NetworkGraph():
 
                 this_switch["ports"] = sw_ports
 
-                groups = ConfigTree.groupsHttpAccess(self.sel_session)
+              #  groups = ConfigTree.groupsHttpAccess(self.sel_session)
+                groups = ConfigTree.GroupsEntityAccess(self.sel_session)
+
                 sw_groups = []
                 for group in groups.read_collection():
                     sw_groups.append(group.to_pyson())
 
                 this_switch["groups"] = sw_groups
 
-                flow_tables = ConfigTree.flowsHttpAccess(self.sel_session)
+                #flow_tables = ConfigTree.flowsHttpAccess(self.sel_session)
+                flow_tables = ConfigTree.FlowsEntityAccess(self.sel_session)
                 switch_flow_tables = defaultdict(list)
                 for flow_rule in flow_tables.read_collection():
                     switch_flow_tables[flow_rule.to_pyson()["tableId"]].append(flow_rule.to_pyson())
@@ -491,7 +496,7 @@ class NetworkGraph():
         self.parse_mininet_host_nodes(mininet_host_nodes, mininet_port_edges)
         self.parse_mininet_port_edges(mininet_port_edges)
 
-        #self.dump_model()
+        self.dump_model()
 
     def get_node_graph(self):
         return self.graph

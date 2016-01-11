@@ -3,9 +3,8 @@
 
 from __future__ import absolute_import
 import sys
-# import ConfigTree
-from sel_controller import OperationalTree
-from sel_controller import Session
+import sel_controller.OperationalTree as OperationalTree
+import sel_controller.Session as Session
 import requests
 
 def scan_and_adopt(tree, uri, id_headers, url_element, descriptor):
@@ -38,17 +37,21 @@ def main(uri):
     #session.print_status = True
     #session.print_data = True
 
-    session.auth_user_callback()
+    # session.auth_user_callback()
+    session.auth_user_callback(u'hobbs', u'Engineer', u'Asdf123$')
     id_headers = {u'Content-Type': u'application/json',
                   u'Authorization': u'Bearer ' + session.current_user_token}
 
-    nodes_op_tree = OperationalTree.nodesHttpAccess(session)
+    # nodes_op_tree = OperationalTree.nodesHttpAccess(session)
+    nodes_op_tree = OperationalTree.NodesEntityAccess(session)
     scan_and_adopt(nodes_op_tree, uri, id_headers, u'nodes', u'node')
 
-    ports_op_tree = OperationalTree.portsHttpAccess(session)
+    # ports_op_tree = OperationalTree.portsHttpAccess(session)
+    ports_op_tree = OperationalTree.PortsEntityAccess(session)
     scan_and_adopt(ports_op_tree, uri, id_headers, u'ports', u'port')
 
-    links_op_tree = OperationalTree.linksHttpAccess(session)
+    # links_op_tree = OperationalTree.linksHttpAccess(session)
+    links_op_tree = OperationalTree.LinksEntityAccess(session)
     scan_and_adopt(links_op_tree, uri, id_headers, u'links', u'link')
 
 

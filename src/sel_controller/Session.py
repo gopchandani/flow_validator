@@ -1,14 +1,9 @@
 # Copyright (c) 2015 Schweitzer Engineering Laboratories, Inc.
+
 from __future__ import absolute_import
 import requests
-# from IPython.display import display, HTML
-import re
-from oauth2client.client import OAuth2WebServerFlow
 from requests.auth import HTTPBasicAuth
-
-PORT = 8000
-auth_code = u""
-
+import json
 u'''
 from http://stackoverflow.com/questions/38987/how-can-i-merge-two-python-dictionaries-in-a-single-expression
 Given any number of dicts, shallow copy and merge into a new dict,
@@ -16,7 +11,7 @@ precedence goes to key value pairs in latter dicts.
 '''
 
 
-
+#from __future__ import absolute_import
 def merge_dicts(*dict_args):
     result = {}
     for dictionary in dict_args:
@@ -38,22 +33,17 @@ class Http(object):
     def __init__(self, base_url):
         self.controller_base = base_url
         self.api_base_url = base_url + u"api/"
-      
-    def auth_user_callback(self, user=u"hobbs", role=u"Engineer", password=u"Asdf123$"):
+
+    def auth_user_callback(self, user, role, password):
         post_resp = requests.post(self.controller_base + u"identity/connect/token",
-                                  # auth=HTTPBasicAuth('uiuc-validator-client', 'supersecret'),
                                   auth=HTTPBasicAuth(u'password-client', u'8b2cacd9d07219d0af89cf1c2280d071'),
-                                  data = { u"grant_type": u"password", 
-                                    u"scope": u"Rest", 
-                                    u"username":user, 
-                                    u"password":password, 
-                                    u"acr_values": u"role:"+role }
+                                  data = { u"grant_type": u"password",
+                                    u"scope": u"Rest",
+                                    u"username":user,
+                                    u"password":password,
+                                    u"acr_values": u"role:"+role}
                           , headers = {u'Content-Type': u'application/x-www-form-urlencoded'})
         self.current_user_name = user
-
-        # print( post_resp.status_code )
-        # print( post_resp.text )
-
         self.current_user_token = post_resp.json()[u"access_token"]
         return self.current_user_token
 
@@ -90,7 +80,7 @@ class Http(object):
             print u'Unable to POST to URL: ' + url
             print u'Reason ' + e
         content = result.text
-        self._print_status(u"GET", url, result.status_code)
+        self._print_status(u"POST", url, result.status_code)
         self._print_data(content)
         return content
 
@@ -99,7 +89,7 @@ class Http(object):
         url = self.api_base_url + url_extension
         result = None
         try:
-            result = requests.post(url, data=raw_data,
+            result = requests.put(url, data=raw_data,
                                    headers=merge_dicts(self.json_application_type, self.create_authorization_header()),
                                    params=parameters)
         except Exception, e:
@@ -118,7 +108,7 @@ class Http(object):
                                     params=parameters)
         except Exception, e:
             print u'Unable to PATCH to URL: ' + url
-            print u'Reason ' + e
+            print u'Reason ' + unicode(e)
         self._print_status(u"PATCH", url, result.status_code)
         return result
 
@@ -132,7 +122,7 @@ class Http(object):
                                      params=parameters)
         except Exception, e:
             print u'Unable to DELETE data at URL: ' + url
-            print u'Reason ' + e
+            print u'Reason ' + unicode(e)
         self._print_status(u"DELETE", url, result.status_code)
         return result
 
@@ -146,10 +136,88 @@ class Http(object):
             print u'{:-^30}'.format(u'Begin Content')
             print data
             print u'{:-^30}'.format(u'End Content')
-    @staticmethod
-    def run_from_ipython():
-        try:
-            __IPYTHON__
-            return True
-        except NameError:
-            return False
+
+
+def connect_session(controller_uri=u'http://localhost:1234/', username=u'', password=u'', role=u'Readonly'):
+    session = HttpSession(controller_uri)
+    session.auth_user_callback( username, role, password)
+    return session
+
+
+class EntityAccess(object):
+    def __init__(self, session, api_path, resolver):
+        self.resolver = resolver
+        self._session = session
+        self.api_tree_path = api_path
+        self.entity_base_name = u""
+        self.entity_odata_type = u""
+
+    def read_single(self, item_id):
+        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
+        response = self._session.get_data(entity_path)
+        if len(response) == 0:
+            return None
+        pyson_response = json.loads(response)
+        object_type = pyson_response[u'@odata.type'] if u'@odata.type' in pyson_response else self.entity_odata_type
+        result = self.resolver.get_new_object(object_type)
+        result.from_pyson(pyson_response)
+        return result
+
+    def read_collection(self):
+        collection_path = self.api_tree_path + self.entity_base_name
+        response = self._session.get_data(collection_path)
+        if len(response) == 0:
+            return None
+        pyson_response = json.loads(response)
+        result = []
+        #raw_json_list = pyson_response[u'value']
+        raw_json_list = pyson_response[u'value']
+        for pyson_object in raw_json_list:
+            object_type = pyson_object[u'@odata.type'] if u'@odata.type' in pyson_object else self.entity_odata_type
+            new_object = self.resolver.get_new_object(object_type)
+            new_object.from_pyson(pyson_object)
+            result.append(new_object)
+        return result
+
+    def create_single(self, item):
+        json_string = item.to_json()
+        collection_path = self.api_tree_path + self.entity_base_name
+        response = self._session.post_data(collection_path, json_string)
+        if len(response) == 0:
+            return None
+        pyson_response = json.loads(response)
+        object_type = pyson_response[u'@odata.type'] if u'@odata.type' in pyson_response else self.entity_odata_type
+        result = self.resolver.get_new_object(object_type)
+        result.from_pyson(pyson_response)
+        return result
+
+    def execute_action(self, item_id, pyson, action_namespace, action_name):
+        json_string = json.dumps(pyson)
+        collection_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')" + \
+            action_namespace + u'.' + action_name + u'()'
+        response = self._session.post_data(collection_path, json_string)
+        if len(response) == 0:
+            return None
+        pyson_response = json.loads(response)
+        return pyson_response
+
+    def update_single(self, item, item_id):
+        item_json = item.to_json()
+        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
+        response = self._session.put_json_data(entity_path, item_json)
+        return response
+
+    def patch_single(self, item, item_id, update_key_list):
+        item_pyson = item.to_pyson()
+        patch = {}
+        for key in update_key_list:
+            patch[key] = item_pyson[key]
+        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
+        json_string = json.dumps(patch, sort_keys=True, indent=4, separators=(u',', u': '))
+        response = self._session.patch_json_data(entity_path, json_string)
+        return response
+
+    def delete_single(self, item_id):
+        entity_path = self.api_tree_path + self.entity_base_name + u"('" + item_id + u"')"
+        response = self._session.delete_data(entity_path)
+        return response
