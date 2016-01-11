@@ -82,9 +82,6 @@ class PortGraph:
             # For each destination that may have been affected at the ingress port
             for dst_p in change_matrix[ingress_p]:
 
-                if ingress_p.port_id == 's3:ingress1' and dst_p.port_id == 's5:egress3':
-                    pass
-
                 prev_ingress_p_traffic = ingress_p.get_dst_admitted_traffic(dst_p)
                 now_ingress_p_traffic = Traffic()
 
@@ -212,47 +209,11 @@ class PortGraph:
             sw1 = self.network_graph.get_node_object(node1_id)
             sw2 = self.network_graph.get_node_object(node2_id)
 
-            if node1_id == 's3' and node2_id == 's5':
-
-                src_p = self.get_port('s3:ingress1')
-                dst_p = self.get_port('s5:egress3')
-                t = src_p.get_dst_admitted_traffic(dst_p)
-
-            if node1_id == 's3' and node2_id == 's1':
-
-                src_p = self.get_port('s3:ingress1')
-                dst_p = self.get_port('s5:egress3')
-                t = src_p.get_dst_admitted_traffic(dst_p)
-
             tf_changes = sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_up")
             self.update_admitted_traffic(tf_changes)
 
-            if node1_id == 's3' and node2_id == 's5':
-
-                src_p = self.get_port('s3:ingress1')
-                dst_p = self.get_port('s5:egress3')
-                t = src_p.get_dst_admitted_traffic(dst_p)
-
-            if node1_id == 's3' and node2_id == 's1':
-
-                src_p = self.get_port('s3:ingress1')
-                dst_p = self.get_port('s5:egress3')
-                t = src_p.get_dst_admitted_traffic(dst_p)
-
             tf_changes = sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_up")
             self.update_admitted_traffic(tf_changes)
-
-            if node1_id == 's3' and node2_id == 's5':
-
-                src_p = self.get_port('s3:ingress1')
-                dst_p = self.get_port('s5:egress3')
-                t = src_p.get_dst_admitted_traffic(dst_p)
-
-            if node1_id == 's3' and node2_id == 's1':
-
-                src_p = self.get_port('s3:ingress1')
-                dst_p = self.get_port('s5:egress3')
-                t = src_p.get_dst_admitted_traffic(dst_p)
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
@@ -274,20 +235,8 @@ class PortGraph:
         sw1 = self.network_graph.get_node_object(node1_id)
         sw2 = self.network_graph.get_node_object(node2_id)
 
-        if node1_id == 's3' and node2_id == 's1':
-
-            src_p = self.get_port('s3:ingress1')
-            dst_p = self.get_port('s5:egress3')
-            t = src_p.get_dst_admitted_traffic(dst_p)
-
         tf_changes = sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_down")
         self.update_admitted_traffic(tf_changes)
-
-        if node1_id == 's3' and node2_id == 's1':
-
-            src_p = self.get_port('s3:ingress1')
-            dst_p = self.get_port('s5:egress3')
-            t = src_p.get_dst_admitted_traffic(dst_p)
 
         tf_changes = sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_down")
         self.update_admitted_traffic(tf_changes)
@@ -368,8 +317,8 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes=None):
 
-        if dst_port.port_id == 's5:egress3':
-            print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
+        # if dst_port.port_id == 's5:egress3':
+        #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_admitted_traffic(curr, dst_traffic_at_succ, succ, dst_port)

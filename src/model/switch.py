@@ -134,18 +134,19 @@ class Switch():
                  written_modifications):
 
         edge_data = self.g.get_edge_data(port1.port_id, port2.port_id)
+        backup_edge_filter_match = Traffic()
 
         if edge_data:
             edge_data["edge_data"].add_edge_data((edge_filter_match,
                                                  edge_action,
                                                  applied_modifications,
-                                                 written_modifications))
+                                                 written_modifications, backup_edge_filter_match))
         else:
             edge_data = EdgeData(port1, port2)
             edge_data.add_edge_data((edge_filter_match,
                                     edge_action,
                                     applied_modifications,
-                                    written_modifications))
+                                    written_modifications, backup_edge_filter_match))
 
             self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
 
@@ -266,7 +267,7 @@ class Switch():
 
         pred_transfer_traffic = Traffic()
 
-        for edge_filter_match, edge_action, applied_modifications, written_modifications \
+        for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match\
                 in edge_data.edge_data_list:
 
             if edge_action:
@@ -347,7 +348,7 @@ class Switch():
                     pred = self.get_port(pred_id)
                     edge_data = self.g.get_edge_data(pred_id, outgoing_port.port_id)["edge_data"]
 
-                    for edge_filter_match, edge_action, applied_modifications, written_modifications \
+                    for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
                             in edge_data.edge_data_list:
 
                         if edge_action.is_failover_action():
@@ -363,6 +364,13 @@ class Switch():
                                     prop_traffic = prop_traffic.difference(pred.transfer_traffic[outgoing_port][outgoing_port])
                                     self.compute_port_transfer_traffic(pred, Traffic(), outgoing_port, dst, tf_changes)
 
+            for succ_id in self.g.successors(incoming_port.port_id):
+                edge_data = self.g.get_edge_data(incoming_port.port_id, succ_id)["edge_data"]
+                for edge_data_tuple in edge_data.edge_data_list:
+                    temp = edge_data_tuple[4].traffic_elements
+                    edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
+                    edge_data_tuple[0].traffic_elements = temp
+
             dsts = incoming_port.transfer_traffic.keys()
             for dst in dsts:
                 for succ_id in self.g.successors(incoming_port.port_id):
@@ -377,7 +385,7 @@ class Switch():
                     pred = self.get_port(pred_id)
                     edge_data = self.g.get_edge_data(pred_id, outgoing_port.port_id)["edge_data"]
 
-                    for edge_filter_match, edge_action, applied_modifications, written_modifications \
+                    for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
                             in edge_data.edge_data_list:
 
                         if edge_action.is_failover_action():
@@ -396,6 +404,12 @@ class Switch():
                             self.compute_port_transfer_traffic(pred, prop_traffic, outgoing_port, dst, tf_changes)
 
             for succ_id in self.g.successors(incoming_port.port_id):
+                edge_data = self.g.get_edge_data(incoming_port.port_id, succ_id)["edge_data"]
+                for edge_data_tuple in edge_data.edge_data_list:
+                    temp = edge_data_tuple[4].traffic_elements
+                    edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
+                    edge_data_tuple[0].traffic_elements = temp
+
                 succ = self.get_port(succ_id)
 
                 for dst in succ.transfer_traffic.keys():

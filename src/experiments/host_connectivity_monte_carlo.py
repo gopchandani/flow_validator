@@ -52,9 +52,9 @@ class MonteCarlo(Experiment):
         run_edges = []
 
         for i in xrange(num_runs):
-            #broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
-            broken_edges = self.fv.break_specified_edges_in_order([('s3', 's5'),('s3', 's1')], verbose=True)
-            broken_edges = self.fv.break_specified_edges_in_order([('s2', 's5')], verbose=True)
+            broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
+            # broken_edges = self.fv.break_specified_edges_in_order([('s3', 's5'),('s3', 's1')], verbose=True)
+            # broken_edges = self.fv.break_specified_edges_in_order([('s2', 's5')], verbose=True)
 
             num_edges = len(broken_edges)
 
@@ -77,8 +77,8 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            #self.topo_description = ("ring", 4, 2, None, None)
-            self.topo_description = ("clostopo", None, None, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 2, None, None)
+            #self.topo_description = ("clostopo", None, None, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -132,7 +132,7 @@ def main():
     fanout = 2
     core = 1
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = [30]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [5]#[10, 20, 30]
 
     exp = MonteCarlo(num_iterations,
                      load_config,
