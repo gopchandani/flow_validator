@@ -82,12 +82,6 @@ class PortGraph:
             # For each destination that may have been affected at the ingress port
             for dst_p in change_matrix[ingress_p]:
 
-                if ingress_p.port_id == 's3:ingress4' and dst_p.port_id == 's2:egress1':
-                    pass
-
-                if ingress_p.port_id == 's1:ingress4' and dst_p.port_id == 's2:egress1':
-                    pass
-
                 prev_ingress_p_traffic = ingress_p.get_dst_admitted_traffic(dst_p)
                 now_ingress_p_traffic = Traffic()
 
@@ -241,26 +235,11 @@ class PortGraph:
         sw1 = self.network_graph.get_node_object(node1_id)
         sw2 = self.network_graph.get_node_object(node2_id)
 
-        if node1_id == 's3' and node2_id == 's2':
-            egress_p = self.get_port('s1:egress4')
-            dst_p = self.get_port('s2:egress1')
-            prev_egress_p_traffic = egress_p.get_dst_admitted_traffic(dst_p)
-
         tf_changes = sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_down")
         self.update_admitted_traffic(tf_changes)
 
-        if node1_id == 's3' and node2_id == 's2':
-            egress_p = self.get_port('s1:egress4')
-            dst_p = self.get_port('s2:egress1')
-            prev_egress_p_traffic = egress_p.get_dst_admitted_traffic(dst_p)
-
         tf_changes = sw2.update_port_transfer_traffic(edge_port_dict[node2_id], "port_down")
         self.update_admitted_traffic(tf_changes)
-
-        if node1_id == 's3' and node2_id == 's2':
-            egress_p = self.get_port('s1:egress4')
-            dst_p = self.get_port('s2:egress1')
-            prev_egress_p_traffic = egress_p.get_dst_admitted_traffic(dst_p)
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge_data):
 
@@ -338,7 +317,7 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes=None):
 
-        # if dst_port.port_id == 's2:egress1':
+        # if dst_port.port_id == 's5:egress3':
         #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
