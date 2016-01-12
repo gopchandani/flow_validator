@@ -62,15 +62,15 @@ class IntentSynthesisLB():
             for dst in intents:
                 dst_intents = intents[dst]
 
-                primary_intent = None
+                h41 = self.network_graph.get_node_object('h41')
+                h21 = self.network_graph.get_node_object('h21')
+
                 primary_intents = self.get_intents(dst_intents, "primary")
-                if primary_intents:
-                    primary_intent = primary_intents[0]
 
                 for intent in dst_intents:
 
                     #  Nothing needs to be done for primary intent
-                    if intent == primary_intent:
+                    if intent in primary_intents:
                         continue
 
                     # A balking intent happens on the switch where reversal begins,
@@ -81,24 +81,25 @@ class IntentSynthesisLB():
                         intent.intent_type = "balking"
                         continue
 
-                    #  Processing from this point onwards require presence of a primary intent
-                    if not primary_intent:
-                        continue
+                # Identifying reverse intents separately out of remaining failover intents
+                reverse_candidate_intents = self.get_intents(dst_intents, "failover")
 
-                    #  If this intent is at a reverse flow carrier switch
+                for primary_intent in primary_intents:
+                    for reverse_candidate_intent in reverse_candidate_intents:
 
-                    #  There are two ways to identify reverse intents
+                        #  If this intent is at a reverse flow carrier switch
 
-                    #  1. at the source switch, with intent's source port equal to destination port of the primary intent
-                    if intent.in_port == primary_intent.out_port:
-                        intent.intent_type = "reverse"
-                        continue
+                        #  There are two ways to identify reverse intents
+                        #  1. at the source switch, with intent's source port equal to destination port of the primary intent
+                        if reverse_candidate_intent.in_port == primary_intent.out_port:
+                            reverse_candidate_intent.intent_type = "reverse"
+                            continue
 
-                    #  2. At any other switch
-                    # with intent's destination port equal to source port of primary intent
-                    if intent.out_port == primary_intent.in_port:
-                        intent.intent_type = "reverse"
-                        continue
+                        #  2. At any other switch
+                        # with intent's destination port equal to source port of primary intent
+                        if reverse_candidate_intent.out_port == primary_intent.in_port:
+                            reverse_candidate_intent.intent_type = "reverse"
+                            continue
 
     def _add_intent(self, switch_id, key, intent):
 
@@ -126,7 +127,7 @@ class IntentSynthesisLB():
         # by using its mac address as the key
         self._add_intent(h_obj.switch_id, h_obj.mac_addr, host_mac_intent)
 
-    def _compute_path_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
+    def _compute_path_intents(self, p, intent_type, flow_match, first_in_port, src_host_mac, dst_host_mac):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
 
@@ -137,15 +138,17 @@ class IntentSynthesisLB():
         for i in range(len(p) - 1):
 
             fwd_flow_match = deepcopy(flow_match)
-            mac_int = int(dst_switch_tag.replace(":", ""), 16)
-            fwd_flow_match["ethernet_destination"] = mac_int
+            src_mac_int = int(src_host_mac.replace(":", ""), 16)
+            fwd_flow_match["ethernet_source"] = src_mac_int
+            dst_mac_int = int(dst_host_mac.replace(":", ""), 16)
+            fwd_flow_match["ethernet_destination"] = dst_mac_int
 
             intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
 
-            # Using dst_switch_tag as key here to
+            # Using dst_host_mac as key here to
             # avoid adding multiple intents for the same destination
 
-            self._add_intent(p[i], dst_switch_tag, intent)
+            self._add_intent(p[i], (src_host_mac, dst_host_mac), intent)
 
             # Prep for next switch
             if i < len(p) - 2:
@@ -176,7 +179,7 @@ class IntentSynthesisLB():
             self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((primary_path[i], primary_path[i+1]))
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_intents(primary_path, "primary", flow_match, in_port, dst_host.mac_addr)
+        self._compute_path_intents(primary_path, "primary", flow_match, in_port, src_host.mac_addr, dst_host.mac_addr)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
@@ -199,7 +202,7 @@ class IntentSynthesisLB():
 
                 print "Backup Path:", backup_path
 
-                self._compute_path_intents(backup_path, "failover", flow_match, in_port, dst_host.mac_addr)
+                self._compute_path_intents(backup_path, "failover", flow_match, in_port, src_host.mac_addr, dst_host.mac_addr)
 
             except nx.exception.NetworkXNoPath:
                 print "No backup path between:", primary_path[i], "to:", dst_host.switch_id
@@ -214,6 +217,9 @@ class IntentSynthesisLB():
     def push_switch_changes(self):
 
         for sw in self.s:
+
+            if sw == 's4':
+                pass
 
             print "-- Pushing at Switch:", sw
 
@@ -231,6 +237,8 @@ class IntentSynthesisLB():
             self.network_graph.graph.node[sw]["sw"].intents = defaultdict(dict)
 
             for dst in intents:
+
+                h21 = self.network_graph.get_node_object('h21')
 
                 dst_intents = intents[dst]
 

@@ -100,22 +100,40 @@ class Experiment(object):
 
                     self.mm.net.pingAll(self.mm.ping_timeout)
 
-                    # h11 = self.mm.net.getNodeByName("h11")
-                    # h31 = self.mm.net.getNodeByName("h31")
-                    #
-                    # print h11.cmd("ping -c3 " + h31.IP())
-                    #
-                    # self.mm.net.configLinkStatus('s1', 's2', 'down')
-                    #
-                    # print h11.cmd("ping -c3 " + h31.IP())
-                    #
-                    # self.mm.net.configLinkStatus('s1', 's4', 'down')
-                    #
-                    # print h11.cmd("ping -c3 " + h31.IP())
-                    #
-                    # self.mm.net.configLinkStatus('s1', 's2', 'up')
-                    #
-                    # print h11.cmd("ping -c3 " + h31.IP())
+                    h21 = self.mm.net.getNodeByName("h21")
+                    h41 = self.mm.net.getNodeByName("h41")
+
+                    print h21.cmd("ping -c3 " + h41.IP())
+
+                    print "Failling edge: s1 - s2"
+
+                    self.mm.net.configLinkStatus('s1', 's2', 'down')
+                    print h21.cmd("ping -c3 " + h41.IP())
+                    self.mm.net.configLinkStatus('s1', 's2', 'up')
+                    print h21.cmd("ping -c3 " + h41.IP())
+
+                    print "Failling edge: s2 - s3"
+
+                    self.mm.net.configLinkStatus('s2', 's3', 'down')
+                    print h21.cmd("ping -c3 " + h41.IP())
+                    self.mm.net.configLinkStatus('s2', 's3', 'up')
+                    print h21.cmd("ping -c3 " + h41.IP())
+
+                    print "Failling edge: s3 - s4"
+
+                    self.mm.net.configLinkStatus('s3', 's4', 'down')
+                    print h21.cmd("ping -c3 " + h41.IP())
+                    self.mm.net.configLinkStatus('s3', 's4', 'up')
+                    print h21.cmd("ping -c3 " + h41.IP())
+
+                    print "Failling edge: s4 - s1"
+
+                    self.mm.net.configLinkStatus('s4', 's1', 'down')
+                    print h21.cmd("ping -c3 " + h41.IP())
+                    self.mm.net.configLinkStatus('s4', 's1', 'up')
+                    print h21.cmd("ping -c3 " + h41.IP())
+
+                    print "here"
 
         if synthesis_setup_gap:
             time.sleep(synthesis_setup_gap)
