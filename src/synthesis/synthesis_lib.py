@@ -31,7 +31,7 @@ class SynthesisLib():
         self.sel_session = Session.Http("http://selcontroller:1234/")
         self.sel_session.auth_user_callback(u'hobbs', u'Engineer', u'Asdf123$')
         self.sel_session.print_status = True
-        self.sel_session.print_data = True
+        self.sel_session.print_data = False
 
         # Cleanup all Queue/QoS records from OVSDB
         os.system("sudo ovs-vsctl -- --all destroy QoS")
@@ -270,27 +270,26 @@ class SynthesisLib():
                 pass
 
         elif self.network_graph.controller == "sel":
-            if apply_immediately:
-               # instruction = ConfigTree.ApplyActions()
-               # instruction.instruction_type = "ApplyActions"
-                instruction = ConfigTree.WriteActions()
-               # instruction.instruction_type = "WriteActions"
-                instruction.instruction_type = ConfigTree.OfpInstructionType.write_actions()
-                for action in action_list:
-                    instruction.actions.append(action)
-
-            else:
-             #   instruction = ConfigTree.ApplyActions()
-              #  instruction.instruction_type = "ApplyActions"
-
-             #   instruction = ConfigTree.WriteActions()
-                instruction = ConfigTree.WriteActions()
-               #  instruction.instruction_type = "WriteActions"
-                instruction.instruction_type = ConfigTree.OfpInstructionType.write_actions()
-                for action in action_list:
-                    instruction.actions.append(action)
-
+            instruction = ConfigTree.WriteActions()
+            instruction.instruction_type = ConfigTree.OfpInstructionType.write_actions()
+            for action in action_list:
+                instruction.actions.append(action)
             flow.instructions.append(instruction)
+
+            # if apply_immediately:
+            #     instruction = ConfigTree.ApplyActions()
+            #     instruction.instruction_type = "ApplyActions"
+            #     # instruction.instruction_type = "WriteActions"
+            #     # instruction.instruction_type = ConfigTree.OfpInstructionType.write_actions()
+            #     for action in action_list:
+            #         instruction.actions.append(action)
+            # else:
+            #     instruction = ConfigTree.WriteActions()
+            #     instruction.instruction_type = ConfigTree.OfpInstructionType.write_actions()
+            #     for action in action_list:
+            #         instruction.actions.append(action)
+            # flow.instructions.append(instruction)
+
         else:
             raise NotImplementedError
 

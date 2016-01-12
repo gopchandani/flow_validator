@@ -5,6 +5,7 @@ sys.path.append("./")
 
 import numpy as np
 import matplotlib.pyplot as plt
+import networkx as nx
 
 from timer import Timer
 from analysis.flow_validator import FlowValidator
@@ -49,6 +50,10 @@ class DifferentEdgeFailure(Experiment):
             fv.add_hosts()
             fv.initialize_admitted_traffic()
             fv.validate_all_host_pair_reachability()
+
+            nx.draw(fv.port_graph.g)
+            plt.draw()
+            plt.show()
 
             for (node1, node2) in self.mm.synthesis.primary_path_edges:
 

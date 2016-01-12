@@ -91,24 +91,29 @@ class Action():
 
         if self.action_json["actionType"] == 'Output':
             self.action_type = "output"
-            self.out_port = int(self.action_json["outPort"])
+            if int(self.action_json["outPort"]) == 4294967293:
+                self.out_port = self.sw.network_graph.OFPP_CONTROLLER
+            else:
+                self.out_port = int(self.action_json["outPort"])
 
         if self.action_json["actionType"] == 'GroupAction':
-            self.action_json = "group"
+            self.action_type = "group"
             self.group_id = int(self.action_json["groupId"])
 
-        if self.action_json["actionType"] == 'PushVlanAction':
-            self.action_json = "push_vlan"
-            self.vlan_ethernet_type = self.action_json['ethernetType']
+        # if self.action_json["actionType"] == 'PushVlanAction':
+        #     self.action_type = "push_vlan"
+        #     self.vlan_ethernet_type = self.action_json['ethernetType']
 
-        if self.action_json["actionType"] == 'PopVlanAction':
-            self.action_json = "pop_vlan"
+        # if self.action_json["actionType"] == 'PopVlanAction':
+        #     self.action_type = "pop_vlan"
 
         if self.action_json["actionType"] == 'SetField':
-            self.action_json = "set_field"
-            self.set_field_match_json = self.action_json
-            # This might not be complete
-
+            self.action_type = "set_field"
+            if self.action_json["field"]["@odata.type"] == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.MatchFields.VlanVid":
+                self.modified_field = "vlan_id"
+                self.field_modified_to = int(self.action_json["field"]["value"])
+            else:
+                raise NotImplementedError
 
 
 

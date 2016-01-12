@@ -67,7 +67,7 @@ class Port():
         self.state = "up"
 
     def parse_sel_port_json(self, port_json):
-        self.port_id = str(self.sw.node_id) + str(port_json["name"])
+        self.port_id = str(self.sw.node_id) + ":" + str(port_json["portId"])
         self.port_number = port_json["portId"]
         self.mac_address = port_json["hardwareAddress"]
         self.curr_speed = port_json["currentSpeed"]
