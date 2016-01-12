@@ -52,8 +52,8 @@ class MonteCarlo(Experiment):
         run_edges = []
 
         for i in xrange(num_runs):
-            #broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
-            broken_edges = self.fv.break_specified_edges_in_order([('s3', 's4')], verbose=True)
+            broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
+            #broken_edges = self.fv.break_specified_edges_in_order([('s3', 's4')], verbose=True)
 
             num_edges = len(broken_edges)
 
@@ -132,7 +132,7 @@ def main():
     fanout = 2
     core = 1
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = [1]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [3]#[10, 20, 30]
 
     exp = MonteCarlo(num_iterations,
                      load_config,

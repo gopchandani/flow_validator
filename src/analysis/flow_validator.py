@@ -101,6 +101,7 @@ class FlowValidator:
                     specific_traffic = Traffic()
                     specific_match = Match(is_wildcard=True)
                     specific_match["ethernet_type"] = 0x0800
+                    specific_match["ethernet_source"] = int(src_h_obj.mac_addr.replace(":", ""), 16)
                     specific_match["ethernet_destination"] = int(dst_h_obj.mac_addr.replace(":", ""), 16)
                     specific_match["in_port"] = int(src_h_obj.switch_port_attached)
 
