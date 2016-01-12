@@ -216,6 +216,7 @@ class IntentSynthesisLB():
 
     def _push_balking_intents(self, sw, primary_intents, balking_intents):
 
+        all_primary_intents = set(primary_intents)
         used_primary_intents = set()
         remaining_primary_intents = set()
 
@@ -228,6 +229,9 @@ class IntentSynthesisLB():
                     break
 
             if corresponding_primary_intent:
+
+                used_primary_intents.add(corresponding_primary_intent)
+
                 group_id = self.synthesis_lib.push_fast_failover_group(sw,
                                                                        corresponding_primary_intent,
                                                                        balking_intent)
@@ -252,6 +256,9 @@ class IntentSynthesisLB():
                     1,
                     balking_intent.flow_match,
                     balking_intent.apply_immediately)
+
+        remaining_primary_intents = all_primary_intents.difference(used_primary_intents)
+        return list(remaining_primary_intents)
 
     def push_switch_changes(self):
 
@@ -295,17 +302,13 @@ class IntentSynthesisLB():
                 #  Handle the case when the switch does not have to carry any failover traffic
                 if primary_intents:
 
-                    # If there are more than one primary intents (and only those), then they are because of different
-                    # source hosts originating at this switch and thus have their own in_ports. They all need their own
-                    # flow.
-
                     if not failover_intents:
                         in_ports_covered = []
                         for pi in primary_intents:
                             if pi.in_port not in in_ports_covered:
                                 in_ports_covered.append(pi.in_port)
 
-                                group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+                                group_id = self.synthesis_lib.push_select_all_group(sw, [pi])
 
                                 if not self.master_switch:
                                     pi.flow_match["in_port"] = int(pi.in_port)
@@ -318,8 +321,10 @@ class IntentSynthesisLB():
                                     pi.flow_match,
                                     pi.apply_immediately)
 
+                    remaining_primary_intents = primary_intents
                     if balking_intents:
                         remaining_primary_intents = self._push_balking_intents(sw, primary_intents, balking_intents)
+                        print remaining_primary_intents
 
                 if primary_intents and failover_intents:
 
