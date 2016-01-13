@@ -105,12 +105,12 @@ class Experiment(object):
                     
                     print h_src.cmd("ping -c3 " + h_dst.IP())
                     
-                    print "Failling edge: s1 - s2"
-
-                    self.mm.net.configLinkStatus('s1', 's2', 'down')
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
-                    self.mm.net.configLinkStatus('s1', 's2', 'up')
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
+                    # print "Failling edge: s1 - s2"
+                    #
+                    # self.mm.net.configLinkStatus('s1', 's2', 'down')
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
+                    # self.mm.net.configLinkStatus('s1', 's2', 'up')
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
 
                     print "Failling edge: s2 - s3"
 
@@ -119,19 +119,19 @@ class Experiment(object):
                     self.mm.net.configLinkStatus('s2', 's3', 'up')
                     print h_src.cmd("ping -c3 " + h_dst.IP())
                     
-                    print "Failling edge: s3 - s4"
-                    
-                    self.mm.net.configLinkStatus('s3', 's4', 'down')
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
-                    self.mm.net.configLinkStatus('s3', 's4', 'up')
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
-                    
-                    print "Failling edge: s4 - s1"
-
-                    self.mm.net.configLinkStatus('s4', 's1', 'down')
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
-                    self.mm.net.configLinkStatus('s4', 's1', 'up')
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
+                    # print "Failling edge: s3 - s4"
+                    #
+                    # self.mm.net.configLinkStatus('s3', 's4', 'down')
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
+                    # self.mm.net.configLinkStatus('s3', 's4', 'up')
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
+                    #
+                    # print "Failling edge: s4 - s1"
+                    #
+                    # self.mm.net.configLinkStatus('s4', 's1', 'down')
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
+                    # self.mm.net.configLinkStatus('s4', 's1', 'up')
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
                     
                     print "here"
 
