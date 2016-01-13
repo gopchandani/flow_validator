@@ -46,7 +46,6 @@ class MininetMan():
         self.num_hosts_per_switch = num_hosts_per_switch
         self.controller_port = int(controller_port)
 
-        self.experiment_switches = None
         self.topo_name = topo_name
 
         if self.topo_name == "ring":
@@ -92,19 +91,19 @@ class MininetMan():
                 if dst_node.startswith("h"):
                     yield self.net.get(dst_node)
 
-    def get_experiment_switch_hosts(self, switch_id):
+    def get_experiment_switch_hosts(self, switch_id, experiment_switches):
 
-        if switch_id in self.experiment_switches:
+        if switch_id in experiment_switches:
             for i in range(0, self.num_hosts_per_switch):
                 host_name = "h" + switch_id[1:] + str(i+1)
                 yield self.net.get(host_name)
         else:
             return
 
-    def _get_experiment_host_pair(self):
+    def _get_experiment_host_pair(self, experiment_switches):
 
-        for src_switch in self.experiment_switches:
-            for dst_switch in self.experiment_switches:
+        for src_switch in experiment_switches:
+            for dst_switch in experiment_switches:
                 if src_switch == dst_switch:
                     continue
 
@@ -120,20 +119,36 @@ class MininetMan():
     def _ping_host_pair(self, src_host, dst_host):
         hosts = [src_host, dst_host]
         ping_loss_rate = self.net.ping(hosts, self.ping_timeout)
-        print "Ping Loss Rate:", ping_loss_rate
 
         if ping_loss_rate < 100.0:
             return True
         else:
             return False
 
-    def _ping_experiment_hosts(self):
+    def is_bi_connected_manual_ping_test(self, experiment_switches):
 
-        if self.topo_name == "line":
-            self.net.pingAll(timeout=self.ping_timeout)
-        else:
-            for (src_host, dst_host) in self._get_experiment_host_pair():
-                self._ping_host_pair(src_host, dst_host)
+        is_bi_connected= True
+
+        for (src_host, dst_host) in self._get_experiment_host_pair(experiment_switches):
+
+            for edge in self.topo.g.edges():
+
+                # Only try and break switch-switch edges
+                if edge[0].startswith("h") or edge[1].startswith("h"):
+                    continue
+                else:
+                    is_connected_before_failure = self._ping_host_pair(src_host, dst_host)
+                    self.net.configLinkStatus('s1', 's2', 'down')
+                    is_connected_after_failure = self._ping_host_pair(src_host, dst_host)
+                    self.net.configLinkStatus('s1', 's2', 'up')
+                    is_connected_after_restoration = self._ping_host_pair(src_host, dst_host)
+
+                    if is_connected_before_failure != is_connected_after_failure:
+                        print "Got a problem here for src_host:", src_host, "dst_host:", dst_host
+                        is_bi_connected = False
+
+        return is_bi_connected
+
 
     def setup_mininet_with_ryu_qos(self, ng):
 
