@@ -382,7 +382,7 @@ class SynthesisLib():
 
         return flow
 
-    def push_destination_host_mac_vlan_intent_flow(self, sw, mac_intent, table_id, priority, pop_vlan=True):
+    def push_destination_host_mac_vlan_intent_flow(self, sw, mac_intent, table_id, priority):
 
         flow = self.create_base_flow(sw, table_id, priority)
 
@@ -412,10 +412,7 @@ class SynthesisLib():
             #TODO: Do this for ODL maybe?
 
         else:
-            if pop_vlan:
-                action_list = [pop_vlan_action, output_action]
-            else:
-                action_list = [output_action]
+            action_list = [pop_vlan_action, output_action]
 
         self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
         self.push_flow(sw, flow)
@@ -429,7 +426,12 @@ class SynthesisLib():
             if len(mac_intents) > 1:
                 print "There are more than one mac intents for a single dst, will install only one"
 
-            self.push_destination_host_mac_vlan_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 100, pop_vlan)
+            if pop_vlan:
+                self.push_destination_host_mac_vlan_intent_flow(sw,
+                                                                mac_intents[0],
+                                                                mac_forwarding_table_id,
+                                                                100)
+
             self.push_destination_host_mac_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 10)
 
     def push_vlan_push_intents(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):

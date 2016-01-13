@@ -283,6 +283,9 @@ class IntentSynthesisLB():
 
                 dst_intents = intents[dst]
 
+                if sw == 's4':
+                    pass
+
                 # Take care of mac intents for this destination
                 self.synthesis_lib.push_destination_host_mac_intents(sw, dst_intents,
                                                                      self.get_intents(dst_intents, "mac"),
