@@ -264,9 +264,6 @@ class IntentSynthesisLB():
 
         for sw in self.s:
 
-            if sw == 's4':
-                pass
-
             print "-- Pushing at Switch:", sw
 
             # Push rules at the switch that drop packets from hosts that are connected to the switch
@@ -284,8 +281,6 @@ class IntentSynthesisLB():
 
             for dst in intents:
 
-                h21 = self.network_graph.get_node_object('h21')
-
                 dst_intents = intents[dst]
 
                 # Take care of mac intents for this destination
@@ -302,9 +297,13 @@ class IntentSynthesisLB():
                 #  Handle the case when the switch does not have to carry any failover traffic
                 if primary_intents:
 
+                    remaining_primary_intents = primary_intents
+                    if balking_intents:
+                        remaining_primary_intents = self._push_balking_intents(sw, primary_intents, balking_intents)
+
                     if not failover_intents:
                         in_ports_covered = []
-                        for pi in primary_intents:
+                        for pi in remaining_primary_intents:
                             if pi.in_port not in in_ports_covered:
                                 in_ports_covered.append(pi.in_port)
 
@@ -320,11 +319,6 @@ class IntentSynthesisLB():
                                     1,
                                     pi.flow_match,
                                     pi.apply_immediately)
-
-                    remaining_primary_intents = primary_intents
-                    if balking_intents:
-                        remaining_primary_intents = self._push_balking_intents(sw, primary_intents, balking_intents)
-                        print remaining_primary_intents
 
                 if primary_intents and failover_intents:
 
