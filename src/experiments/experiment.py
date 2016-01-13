@@ -98,13 +98,13 @@ class Experiment(object):
                         self.synthesis = IntentSynthesisLB(ng, master_switch=topo_description[0] == "linear")
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
-                    #self.mm.net.pingAll(self.mm.ping_timeout)
+                    self.mm.net.pingAll(self.mm.ping_timeout)
                     
-                    h_src = self.mm.net.getNodeByName("h41")
-                    h_dst = self.mm.net.getNodeByName("h21")
-                    
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
-                    
+                    # h_src = self.mm.net.getNodeByName("h41")
+                    # h_dst = self.mm.net.getNodeByName("h21")
+                    #
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
+                    #
                     # print "Failling edge: s1 - s2"
                     #
                     # self.mm.net.configLinkStatus('s1', 's2', 'down')
@@ -112,12 +112,12 @@ class Experiment(object):
                     # self.mm.net.configLinkStatus('s1', 's2', 'up')
                     # print h_src.cmd("ping -c3 " + h_dst.IP())
 
-                    print "Failling edge: s2 - s3"
-
-                    self.mm.net.configLinkStatus('s2', 's3', 'down')
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
-                    self.mm.net.configLinkStatus('s2', 's3', 'up')
-                    print h_src.cmd("ping -c3 " + h_dst.IP())
+                    # print "Failling edge: s2 - s3"
+                    #
+                    # self.mm.net.configLinkStatus('s2', 's3', 'down')
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
+                    # self.mm.net.configLinkStatus('s2', 's3', 'up')
+                    # print h_src.cmd("ping -c3 " + h_dst.IP())
                     
                     # print "Failling edge: s3 - s4"
                     #
@@ -132,8 +132,6 @@ class Experiment(object):
                     # print h_src.cmd("ping -c3 " + h_dst.IP())
                     # self.mm.net.configLinkStatus('s4', 's1', 'up')
                     # print h_src.cmd("ping -c3 " + h_dst.IP())
-                    
-                    print "here"
 
         if synthesis_setup_gap:
             time.sleep(synthesis_setup_gap)

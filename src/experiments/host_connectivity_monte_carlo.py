@@ -52,8 +52,8 @@ class MonteCarlo(Experiment):
         run_edges = []
 
         for i in xrange(num_runs):
-            #broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
-            broken_edges = self.fv.break_specified_edges_in_order([('s2', 's3')], verbose=True)
+            broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
+            #broken_edges = self.fv.break_specified_edges_in_order([('s2', 's3')], verbose=True)
 
             num_edges = len(broken_edges)
 
@@ -83,7 +83,7 @@ class MonteCarlo(Experiment):
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=len(ports_to_synthesize),
-                                          synthesis_scheme="IntentSynthesis")
+                                          synthesis_scheme="IntentSynthesisLB")
 
             self.fv = FlowValidator(ng)
             self.fv.init_port_graph()

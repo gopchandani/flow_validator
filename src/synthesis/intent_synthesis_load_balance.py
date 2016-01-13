@@ -266,10 +266,6 @@ class IntentSynthesisLB():
 
             print "-- Pushing at Switch:", sw
 
-            # Push rules at the switch that drop packets from hosts that are connected to the switch
-            # and have the same MAC address as originating hosts or have vlan tags associated with their own switch.
-            self.synthesis_lib.push_loop_preventing_drop_rules(sw, self.local_host_rule_table)
-
             # Push table miss entries at all Tables
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 0)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 1)
@@ -282,9 +278,6 @@ class IntentSynthesisLB():
             for dst in intents:
 
                 dst_intents = intents[dst]
-
-                if sw == 's4':
-                    pass
 
                 # Take care of mac intents for this destination
                 self.synthesis_lib.push_destination_host_mac_intents(sw, dst_intents,
