@@ -39,6 +39,8 @@ class MininetMan():
         self.ping_timeout = 1
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
+        self.fanout = fanout
+        self.core = core
         self.controller_port = int(controller_port)
 
         self.topo_name = topo_name
@@ -56,7 +58,7 @@ class MininetMan():
         elif self.topo_name == "ringline":
             self.topo = RingLineTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "clostopo":
-            self.topo = ClosTopo(fanout, core)
+            self.topo = ClosTopo(self.fanout, self.core)
             self.experiment_switches = self.topo.edge_switches.values()
         elif self.topo_name == "cliquetopo":
             self.topo = CliqueTopo(self.num_switches, self.num_hosts_per_switch, per_switch_links)
@@ -65,6 +67,10 @@ class MininetMan():
 
         self.switch = partial(OVSSwitch, protocols='OpenFlow13')
 
+        if self.num_switches and self.num_hosts_per_switch:
+            self.mininet_configuration_name = self.topo_name + str(self.num_switches) + str(self.num_hosts_per_switch)
+        elif self.fanout and self.core:
+            self.mininet_configuration_name = self.topo_name + str(self.fanout) + str(self.core)
 
     def __del__(self):
         self.cleanup_mininet()

@@ -44,12 +44,8 @@ class NetworkGraph():
 
         self.controller = controller
 
-        dir_name = self.controller + \
-                   str(self.mm.topo_name) + \
-                   str(self.mm.num_switches) + \
-                   str(self.mm.num_hosts_per_switch)
-
-        self.config_path_prefix = "../experiments/configurations/" + dir_name + "/"
+        self.config_path_prefix = "../experiments/configurations/" + self.controller + \
+                                  self.mm.mininet_configuration_name + "/"
 
         if not os.path.exists(self.config_path_prefix):
             os.makedirs(self.config_path_prefix)
