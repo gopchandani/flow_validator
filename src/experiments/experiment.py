@@ -54,7 +54,7 @@ class Experiment(object):
         if not self.load_config and self.save_config:
             self.controller_port = self.cm.get_next()
 
-        self.mm = MininetMan(self.controller_port, *topo_description)
+        self.mm = MininetMan(synthesis_scheme, self.controller_port, *topo_description)
 
         if not self.load_config and self.save_config:
             self.mm.start_mininet()

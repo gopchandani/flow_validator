@@ -16,7 +16,7 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self, mm, controller, load_config=False, save_config=False, ):
+    def __init__(self, mm, controller, load_config=False, save_config=False):
 
         self.mm = mm
 
@@ -44,7 +44,7 @@ class NetworkGraph():
 
         self.controller = controller
 
-        self.config_path_prefix = "../experiments/configurations/" + self.controller + \
+        self.config_path_prefix = "../experiments/configurations/" + self.controller + "_" + \
                                   self.mm.mininet_configuration_name + "/"
 
         if not os.path.exists(self.config_path_prefix):

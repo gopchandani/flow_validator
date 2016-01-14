@@ -46,7 +46,7 @@ class SynthesisLib():
 
     def push_change(self, url, pushed_content):
 
-        time.sleep(0.2)
+        time.sleep(0.1)
 
         if self.network_graph.controller == "odl":
 

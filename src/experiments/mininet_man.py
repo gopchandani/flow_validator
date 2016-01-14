@@ -26,6 +26,7 @@ from synthesis.synthesize_dij_qos import SynthesizeQoS
 class MininetMan():
 
     def __init__(self,
+                 synthesis_scheme,
                  controller_port,
                  topo_name,
                  num_switches,
@@ -35,6 +36,7 @@ class MininetMan():
                  per_switch_links=None):
 
         self.net = None
+        self.synthesis_scheme = synthesis_scheme
 
         self.ping_timeout = 1
         self.num_switches = num_switches
@@ -68,9 +70,15 @@ class MininetMan():
         self.switch = partial(OVSSwitch, protocols='OpenFlow13')
 
         if self.num_switches and self.num_hosts_per_switch:
-            self.mininet_configuration_name = self.topo_name + str(self.num_switches) + str(self.num_hosts_per_switch)
+            self.mininet_configuration_name = self.synthesis_scheme + "_" + \
+                                              self.topo_name + "_" + \
+                                              str(self.num_switches) + "_" + \
+                                              str(self.num_hosts_per_switch)
         elif self.fanout and self.core:
-            self.mininet_configuration_name = self.topo_name + str(self.fanout) + str(self.core)
+            self.mininet_configuration_name = self.synthesis_scheme + "_" + \
+                                              self.topo_name + "_" + \
+                                              str(self.fanout) + "_" + \
+                                              str(self.core)
 
     def __del__(self):
         self.cleanup_mininet()
