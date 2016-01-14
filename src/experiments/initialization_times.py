@@ -18,15 +18,13 @@ class InitializationTimes(Experiment):
                  total_number_of_ports_to_synthesize,
                  load_config,
                  save_config,
-                 controller,
-                 experiment_switches):
+                 controller):
 
         super(InitializationTimes, self).__init__("initialization_times",
                                                   num_iterations,
                                                   load_config,
                                                   save_config,
                                                   controller,
-                                                  experiment_switches,
                                                   len(total_number_of_hosts))
 
         self.total_number_of_hosts = total_number_of_hosts
@@ -96,15 +94,13 @@ def main():
     load_config = False
     save_config = True
     controller = "ryu"
-    experiment_switches = ["s1", "s2"]
 
     exp = InitializationTimes(num_iterations,
                               total_number_of_hosts,
                               total_number_of_ports_to_synthesize,
                               load_config,
                               save_config,
-                              controller,
-                              experiment_switches)
+                              controller)
 
     exp.trigger()
     exp.dump_data()

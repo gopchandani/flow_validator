@@ -424,7 +424,7 @@ class IntentSynthesisLDST():
 
         print "Synthesizing backup paths between all possible host pairs..."
 
-        for dst in self.network_graph.get_experiment_host_ids():
+        for dst in self.network_graph.host_ids:
 
             dst_h_obj = self.network_graph.get_node_object(dst)
 

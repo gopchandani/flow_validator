@@ -21,7 +21,6 @@ class MonteCarloSynthesisCompare(Experiment):
                  load_config,
                  save_config,
                  controller,
-                 experiment_switches,
                  fanout,
                  core,
                  total_number_of_ports_to_synthesize,
@@ -33,7 +32,6 @@ class MonteCarloSynthesisCompare(Experiment):
                                                          load_config,
                                                          save_config,
                                                          controller,
-                                                         experiment_switches,
                                                          1)
 
         self.synthesis_schemes_to_try = synthesis_schemes_to_try
@@ -122,7 +120,6 @@ def main():
     load_config = False
     save_config = True
     controller = "ryu"
-    experiment_switches = ["s1", "s4"]
 
     fanout = None
     core = None
@@ -135,7 +132,6 @@ def main():
                                      load_config,
                                      save_config,
                                      controller,
-                                     experiment_switches,
                                      fanout,
                                      core,
                                      total_number_of_ports_to_synthesize,

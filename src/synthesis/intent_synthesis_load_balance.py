@@ -415,8 +415,8 @@ class IntentSynthesisLB():
 
         print "Synthesizing backup paths between all possible host pairs..."
 
-        for src in self.network_graph.get_experiment_host_ids():
-            for dst in self.network_graph.get_experiment_host_ids():
+        for src in self.network_graph.host_ids:
+            for dst in self.network_graph.host_ids:
 
                 # Ignore paths with same src/dst
                 if src == dst:

@@ -23,7 +23,7 @@ class FlowValidator:
     def add_hosts(self):
 
         # Attach a destination port for each host.
-        for host_id in self.network_graph.get_experiment_host_ids():
+        for host_id in self.network_graph.host_ids:
 
             host_obj = self.network_graph.get_node_object(host_id)
             host_obj.switch_ingress_port = self.port_graph.get_port(host_obj.switch_id +
@@ -33,13 +33,13 @@ class FlowValidator:
 
     def remove_hosts(self):
 
-        for host_id in self.network_graph.get_experiment_host_ids():
+        for host_id in self.network_graph.host_ids:
             host_obj = self.network_graph.get_node_object(host_id)
             self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
 
     def initialize_admitted_traffic(self):
 
-        for host_id in self.network_graph.get_experiment_host_ids():
+        for host_id in self.network_graph.host_ids:
             host_obj = self.network_graph.get_node_object(host_id)
 
             admitted_traffic = Traffic(init_wildcard=True)
@@ -87,8 +87,8 @@ class FlowValidator:
 
         all_pair_connected = True
 
-        for src_h_id in self.network_graph.get_experiment_host_ids():
-            for dst_h_id in self.network_graph.get_experiment_host_ids():
+        for src_h_id in self.network_graph.host_ids:
+            for dst_h_id in self.network_graph.host_ids:
 
                 if src_h_id == dst_h_id:
                     continue
@@ -122,8 +122,8 @@ class FlowValidator:
 
     def validate_all_host_pair_backup(self, verbose=True):
 
-        for src_h_id in self.network_graph.get_experiment_host_ids():
-            for dst_h_id in self.network_graph.get_experiment_host_ids():
+        for src_h_id in self.network_graph.host_ids:
+            for dst_h_id in self.network_graph.host_ids:
 
                 if src_h_id == dst_h_id:
                     continue

@@ -20,7 +20,6 @@ class MonteCarlo(Experiment):
                  load_config,
                  save_config,
                  controller,
-                 experiment_switches,
                  fanout,
                  core,
                  total_number_of_ports_to_synthesize,
@@ -31,7 +30,6 @@ class MonteCarlo(Experiment):
                                          load_config,
                                          save_config,
                                          controller,
-                                         experiment_switches,
                                          1)
 
         self.total_number_of_ports_to_synthesize = total_number_of_ports_to_synthesize
@@ -130,10 +128,9 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
-    experiment_switches = []
 
     fanout = 2
     core = 1
@@ -144,7 +141,6 @@ def main():
                      load_config,
                      save_config,
                      controller,
-                     experiment_switches,
                      fanout,
                      core,
                      total_number_of_ports_to_synthesize,

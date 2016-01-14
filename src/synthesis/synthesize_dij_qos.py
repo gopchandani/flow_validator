@@ -5,9 +5,6 @@ from copy import deepcopy
 
 import networkx as nx
 
-
-from model.network_graph import NetworkGraph
-
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 from model.match import Match
@@ -382,8 +379,8 @@ class SynthesizeQoS():
     def synthesize_all_node_pairs(self, rate):
 
         print "Synthesizing backup paths between all possible host pairs..."
-        for src in self.network_graph.get_experiment_host_ids():
-            for dst in self.network_graph.get_experiment_host_ids():
+        for src in self.network_graph.host_ids:
+            for dst in self.network_graph.host_ids:
 
                 # Ignore paths with same src/dst
                 if src == dst:
@@ -408,12 +405,3 @@ class SynthesizeQoS():
 
         self._identify_reverse_and_balking_intents()
         self.push_switch_changes()
-
-def main():
-    ng = NetworkGraph()
-    s = SynthesizeQoS(ng)
-    s.synthesize_all_node_pairs()
-
-if __name__ == "__main__":
-    main()
-

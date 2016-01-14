@@ -19,7 +19,6 @@ class FailoverPolicyValidationRing(Experiment):
                  load_config,
                  save_config,
                  controller,
-                 experiment_switches,
                  total_number_of_switches_in_ring,
                  total_number_of_ports_to_synthesize):
 
@@ -28,7 +27,6 @@ class FailoverPolicyValidationRing(Experiment):
                                                            load_config,
                                                            save_config,
                                                            controller,
-                                                           experiment_switches,
                                                            1)
 
         self.total_number_of_ports_to_synthesize = total_number_of_ports_to_synthesize
@@ -85,7 +83,6 @@ def main():
     load_config = False
     save_config = True
     controller = "ryu"
-    experiment_switches = ["s1", "s3"]
 
     total_number_of_switches_in_ring = [4]#3, 4, 5, 6, 7, 8, 9, 10]
     total_number_of_ports_to_synthesize = 1
@@ -94,7 +91,6 @@ def main():
                                        load_config,
                                        save_config,
                                        controller,
-                                       experiment_switches,
                                        total_number_of_switches_in_ring,
                                        total_number_of_ports_to_synthesize)
 

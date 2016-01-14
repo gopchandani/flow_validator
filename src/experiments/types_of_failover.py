@@ -18,7 +18,6 @@ class TypesOfFailover(Experiment):
                  load_config,
                  save_config,
                  controller,
-                 experiment_switches,
                  total_number_of_switches,
                  total_number_of_ports_to_synthesize,
                  edges_to_break):
@@ -28,7 +27,6 @@ class TypesOfFailover(Experiment):
                                               load_config,
                                               save_config,
                                               controller,
-                                              experiment_switches,
                                               1)
 
         self.total_number_of_switches = total_number_of_switches
@@ -54,8 +52,6 @@ class TypesOfFailover(Experiment):
                 print "number_of_switches_in_ring:", number_of_switches
 
                 # Pick the last two switch numbers in the ring line topo
-                self.experiment_switches = ["s" + str(number_of_switches - 1),
-                                            "s" + str(number_of_switches)]
 
                 self.topo_description = ("ringline", number_of_switches, 1)
 
@@ -113,7 +109,6 @@ def main():
     load_config = False
     save_config = True
     controller = "ryu"
-    experiment_switches = []
 
     total_number_of_switches = [8]
     total_number_of_ports_to_synthesize = 1
@@ -123,7 +118,6 @@ def main():
                           load_config,
                           save_config,
                           controller,
-                          experiment_switches,
                           total_number_of_switches,
                           total_number_of_ports_to_synthesize,
                           edges_to_break)

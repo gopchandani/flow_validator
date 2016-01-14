@@ -42,9 +42,11 @@ class MininetMan():
         self.controller_port = int(controller_port)
 
         self.topo_name = topo_name
+        self.experiment_switches = None
 
         if self.topo_name == "ring":
             self.topo = RingTopo(self.num_switches, self.num_hosts_per_switch)
+            self.experiment_switches = self.topo.switch_names
         elif self.topo_name == "linear":
             self.topo = LinearTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "two_ring":
@@ -55,12 +57,14 @@ class MininetMan():
             self.topo = RingLineTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "clostopo":
             self.topo = ClosTopo(fanout, core)
+            self.experiment_switches = self.topo.edge_switches.values()
         elif self.topo_name == "cliquetopo":
             self.topo = CliqueTopo(self.num_switches, self.num_hosts_per_switch, per_switch_links)
         else:
             raise Exception("Invalid, unknown topology type: " % topo_name)
 
         self.switch = partial(OVSSwitch, protocols='OpenFlow13')
+
 
     def __del__(self):
         self.cleanup_mininet()
@@ -110,10 +114,10 @@ class MininetMan():
         else:
             return
 
-    def _get_experiment_host_pair(self, experiment_switches):
+    def _get_experiment_host_pair(self):
 
-        for src_switch in experiment_switches:
-            for dst_switch in experiment_switches:
+        for src_switch in self.experiment_switches:
+            for dst_switch in self.experiment_switches:
                 if src_switch == dst_switch:
                     continue
 
@@ -135,11 +139,11 @@ class MininetMan():
         else:
             return False
 
-    def is_bi_connected_manual_ping_test(self, experiment_switches):
+    def is_bi_connected_manual_ping_test(self):
 
         is_bi_connected= True
 
-        for (src_host, dst_host) in self._get_experiment_host_pair(experiment_switches):
+        for (src_host, dst_host) in self._get_experiment_host_pair():
 
             for edge in self.topo.g.edges():
 

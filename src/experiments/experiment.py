@@ -1,13 +1,11 @@
 __author__ = 'Rakesh Kumar'
 
-
 import json
 import time
 import numpy as np
 import scipy.stats as ss
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-
 
 from pprint import pprint
 from controller_man import ControllerMan
@@ -26,7 +24,6 @@ class Experiment(object):
                  load_config,
                  save_config,
                  controller,
-                 experiment_switches,
                  num_controller_instances):
 
         self.experiment_tag = experiment_name + "_" + str(num_iterations) + "_iterations_" +time.strftime("%Y%m%d_%H%M%S")
@@ -35,7 +32,6 @@ class Experiment(object):
         self.load_config = load_config
         self.save_config = save_config
         self.controller = controller
-        self.experiment_switches = experiment_switches
         self.num_controller_instances = num_controller_instances
 
         self.data = {}
@@ -66,16 +62,9 @@ class Experiment(object):
             if mininet_setup_gap:
                 time.sleep(mininet_setup_gap)
 
-        if not self.experiment_switches and self.mm.topo_name == "clostopo":
-            self.experiment_switches = self.mm.topo.edge_switches.values()
-
-        if not self.experiment_switches and self.mm.topo_name == "ring":
-            self.experiment_switches = self.mm.topo.switch_names
-
         # Get a flow validator instance
         ng = NetworkGraph(mm=self.mm,
                           controller=self.controller,
-                          experiment_switches=self.experiment_switches,
                           save_config=self.save_config,
                           load_config=self.load_config)
 
@@ -104,7 +93,7 @@ class Experiment(object):
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
                     #self.mm.net.pingAll(self.mm.ping_timeout)
-                    is_bi_connected = self.mm.is_bi_connected_manual_ping_test(self.experiment_switches)
+                    is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
                     print "is_bi_connected:", is_bi_connected
 
                 if synthesis_setup_gap:

@@ -12,15 +12,13 @@ class QosDemo(Experiment):
                  total_number_of_hosts,
                  load_config,
                  save_config,
-                 controller,
-                 experiment_switches):
+                 controller):
 
         super(QosDemo, self).__init__("number_of_hosts",
                                             num_iterations,
                                             load_config,
                                             save_config,
                                             controller,
-                                            experiment_switches,
                                             len(total_number_of_hosts))
 
         self.total_number_of_hosts = total_number_of_hosts
@@ -42,14 +40,12 @@ def main():
     load_config = False
     save_config = True
     controller = "ryu"
-    experiment_switches = ["s1", "s2"]
 
     exp = QosDemo(num_iterations,
                         total_number_of_hosts,
                         load_config,
                         save_config,
-                        controller,
-                        experiment_switches)
+                        controller)
 
     exp.trigger()
 

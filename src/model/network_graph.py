@@ -16,7 +16,7 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self, mm, controller, experiment_switches, load_config=False, save_config=False, ):
+    def __init__(self, mm, controller, load_config=False, save_config=False, ):
 
         self.mm = mm
 
@@ -42,7 +42,6 @@ class NetworkGraph():
         self.host_ids = []
         self.switch_ids = []
 
-        self.experiment_switches = experiment_switches
         self.controller = controller
 
         dir_name = self.controller + \
@@ -421,43 +420,9 @@ class NetworkGraph():
     def get_node_graph(self):
         return self.graph
 
-    def get_experiment_host_ids(self):
-
-        switch_host_ids = []
-
-        for host_id in self.host_ids:
-            host_obj = self.get_node_object(host_id)
-            if host_obj.switch_id in self.experiment_switches:
-                switch_host_ids.append(host_id)
-
-        return switch_host_ids
-
-    def get_hosts(self):
-        for host_id in self.host_ids:
-
-            host_obj = self.get_node_object(host_id)
-            if host_obj.switch_id in self.experiment_switches:
-                yield host_obj
-            else:
-                return
-
-    def get_switch_ids(self):
-        return self.switch_ids
-
     def get_switches(self):
         for switch_id in self.switch_ids:
             yield self.get_node_object(switch_id)
-
-    def get_host_id_node_with_ip(self, req_ip):
-        host_node_id = None
-
-        for host_id in self.get_experiment_host_ids():
-
-            if self.graph.node[host_id]["h"].ip_addr == req_ip:
-                host_node_id = host_id
-                break
-
-        return host_node_id
 
     def get_node_object(self, node_id):
         node_obj = None

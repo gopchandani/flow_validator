@@ -2,12 +2,8 @@ __author__ = 'Rakesh Kumar'
 
 import networkx as nx
 
-
 from collections import defaultdict
 from copy import deepcopy
-
-
-from model.network_graph import NetworkGraph
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 from model.match import Match
@@ -443,8 +439,8 @@ class IntentSynthesis():
 
         print "Synthesizing backup paths between all possible host pairs..."
 
-        for src in self.network_graph.get_experiment_host_ids():
-            for dst in self.network_graph.get_experiment_host_ids():
+        for src in self.network_graph.host_ids:
+            for dst in self.network_graph.host_ids:
 
                 # Ignore paths with same src/dst
                 if src == dst:

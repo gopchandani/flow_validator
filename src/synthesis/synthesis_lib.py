@@ -1,6 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-
 import pprint
 import time
 import httplib2
@@ -8,16 +7,11 @@ import json
 import os
 import sys
 
-from model.network_graph import NetworkGraph
-
 class SynthesisLib():
 
-    def __init__(self, controller_host, controller_port, model=None):
+    def __init__(self, controller_host, controller_port, network_graph):
 
-        if not model:
-            self.network_graph = NetworkGraph()
-        else:
-            self.network_graph = model
+        self.network_graph = network_graph
 
         self.controller_host = controller_host
         self.controller_port = controller_port
@@ -480,7 +474,7 @@ class SynthesisLib():
 
     def push_loop_preventing_drop_rules(self, sw, loop_preventing_drop_table):
 
-        for h_id in self.network_graph.get_experiment_host_ids():
+        for h_id in self.network_graph.host_ids:
 
             # Get concerned only with hosts that are directly connected to this sw
             h_obj = self.network_graph.get_node_object(h_id)
@@ -518,7 +512,7 @@ class SynthesisLib():
 
     def push_host_vlan_tagged_packets_drop_rules(self, sw, host_vlan_tagged_drop_table):
 
-        for h_id in self.network_graph.get_experiment_host_ids():
+        for h_id in self.network_graph.host_ids:
 
             # Get concerned only with hosts that are directly connected to this sw
             h_obj = self.network_graph.get_node_object(h_id)
