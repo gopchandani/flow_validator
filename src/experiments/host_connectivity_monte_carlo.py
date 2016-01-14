@@ -52,6 +52,9 @@ class MonteCarlo(Experiment):
         run_edges = []
 
         for i in xrange(num_runs):
+
+            print "Performing Run:", i + 1
+
             broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
             #broken_edges = self.fv.break_specified_edges_in_order([('s2', 's3')], verbose=True)
 
@@ -66,6 +69,9 @@ class MonteCarlo(Experiment):
         runs_mean = np.mean(run_values)
         runs_sem = ss.sem(run_values)
 
+        print run_values
+        print run_edges
+
         return run_values, runs_mean, runs_sem
 
     def trigger(self):
@@ -76,8 +82,8 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, None, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, None, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -124,15 +130,15 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
     experiment_switches = []
 
     fanout = 2
     core = 1
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = [1]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [10]#[10, 20, 30]
 
     exp = MonteCarlo(num_iterations,
                      load_config,

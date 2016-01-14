@@ -2,7 +2,6 @@ __author__ = 'Rakesh Kumar'
 
 
 import json
-import os
 import time
 import numpy as np
 import scipy.stats as ss
@@ -43,6 +42,8 @@ class Experiment(object):
 
         self.controller_port = 6633
         self.cm = None
+        self.mm = None
+
         if not self.load_config and self.save_config:
             self.cm = ControllerMan(self.num_controller_instances, controller=controller)
 
@@ -59,8 +60,11 @@ class Experiment(object):
 
         self.mm = MininetMan(self.controller_port, *topo_description)
 
-        if mininet_setup_gap:
-            time.sleep(mininet_setup_gap)
+        if not self.load_config and self.save_config:
+            self.mm.start_mininet()
+
+            if mininet_setup_gap:
+                time.sleep(mininet_setup_gap)
 
         if not self.experiment_switches and self.mm.topo_name == "clostopo":
             self.experiment_switches = self.mm.topo.edge_switches.values()
@@ -69,13 +73,14 @@ class Experiment(object):
             self.experiment_switches = self.mm.topo.switch_names
 
         # Get a flow validator instance
-        ng = NetworkGraph(mininet_man=self.mm,
+        ng = NetworkGraph(mm=self.mm,
                           controller=self.controller,
                           experiment_switches=self.experiment_switches,
                           save_config=self.save_config,
                           load_config=self.load_config)
 
         if not self.load_config and self.save_config:
+
             if self.controller == "odl":
                 self.mm.setup_mininet_with_odl(ng)
             elif self.controller == "ryu":
@@ -102,8 +107,8 @@ class Experiment(object):
                     is_bi_connected = self.mm.is_bi_connected_manual_ping_test(self.experiment_switches)
                     print "is_bi_connected:", is_bi_connected
 
-        if synthesis_setup_gap:
-            time.sleep(synthesis_setup_gap)
+                if synthesis_setup_gap:
+                    time.sleep(synthesis_setup_gap)
 
         # Refresh the network_graph
         ng.parse_switches()

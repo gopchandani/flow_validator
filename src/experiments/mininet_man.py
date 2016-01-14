@@ -12,7 +12,6 @@ from mininet.topo import LinearTopo
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
-from model.network_graph import NetworkGraph
 
 from experiments.topologies.fat_tree import FatTree
 from experiments.topologies.two_ring_topo import TwoRingTopo
@@ -21,9 +20,7 @@ from experiments.topologies.ring_line_topo import RingLineTopo
 from experiments.topologies.clos_topo import ClosTopo
 from experiments.topologies.clique_topo import CliqueTopo
 
-from synthesis.synthesize_dij import SynthesizeDij
 from synthesis.synthesize_dij_qos import SynthesizeQoS
-from synthesis.intent_synthesis import IntentSynthesis
 
 
 class MininetMan():
@@ -38,8 +35,6 @@ class MininetMan():
                  per_switch_links=None):
 
         self.net = None
-
-        self.cleanup()
 
         self.ping_timeout = 1
         self.num_switches = num_switches
@@ -67,6 +62,13 @@ class MininetMan():
 
         self.switch = partial(OVSSwitch, protocols='OpenFlow13')
 
+    def __del__(self):
+        self.cleanup_mininet()
+
+    def start_mininet(self):
+
+        self.cleanup_mininet()
+
         self.net = Mininet(topo=self.topo,
                            cleanup=True,
                            autoStaticArp=True,
@@ -74,6 +76,14 @@ class MininetMan():
                            switch=self.switch)
 
         self.net.start()
+
+    def cleanup_mininet(self):
+
+        if self.net:
+            print "Mininet cleanup..."
+            self.net.stop()
+
+        os.system("sudo mn -c")
 
     def get_all_switch_hosts(self, switch_id):
 
@@ -148,7 +158,6 @@ class MininetMan():
                         is_bi_connected = False
 
         return is_bi_connected
-
 
     def setup_mininet_with_ryu_qos(self, ng):
 
@@ -277,26 +286,3 @@ class MininetMan():
 
         # Ping from h2->h1
         print self.h2.cmd("ping -c3 172.16.20.10")
-
-    def cleanup(self):
-
-        if self.net:
-            print "Mininet cleanup..."
-            self.net.stop()
-
-        os.system("sudo mn -c")
-
-    def __del__(self):
-        self.cleanup()
-
-def main():
-
-    # topo_description = ("linear", 3, 1)
-    # mm = MininetMan(6633, *topo_description)
-    # mm.setup_mininet_with_ryu_router()
-
-    topo_description = ("ringline", 6, 1)
-    mm = MininetMan(6633, *topo_description)
-
-if __name__ == "__main__":
-    main()

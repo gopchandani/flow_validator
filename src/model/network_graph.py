@@ -16,9 +16,9 @@ from port import Port
 
 class NetworkGraph():
 
-    def __init__(self, mininet_man, controller, experiment_switches, load_config=False, save_config=False, ):
+    def __init__(self, mm, controller, experiment_switches, load_config=False, save_config=False, ):
 
-        self.mininet_man = mininet_man
+        self.mm = mm
 
         self.OFPP_CONTROLLER = 0xfffffffd
         self.OFPP_ALL = 0xfffffffc
@@ -46,9 +46,9 @@ class NetworkGraph():
         self.controller = controller
 
         dir_name = self.controller + \
-                   str(self.mininet_man.topo_name) + \
-                   str(self.mininet_man.num_switches) + \
-                   str(self.mininet_man.num_hosts_per_switch)
+                   str(self.mm.topo_name) + \
+                   str(self.mm.num_switches) + \
+                   str(self.mm.num_hosts_per_switch)
 
         self.config_path_prefix = "../experiments/configurations/" + dir_name + "/"
 
@@ -122,9 +122,9 @@ class NetworkGraph():
             with open(self.config_path_prefix + "mininet_host_nodes.json", "r") as in_file:
                 mininet_host_nodes = json.loads(in_file.read())
         else:
-            for sw in self.mininet_man.topo.switches():
+            for sw in self.mm.topo.switches():
                 mininet_host_nodes[sw] = []
-                for h in self.mininet_man.get_all_switch_hosts(sw):
+                for h in self.mm.get_all_switch_hosts(sw):
                     mininet_host_dict = {"host_switch_id": "s" + sw[1:],
                                          "host_name": h.name,
                                          "host_IP": h.IP(),
@@ -146,7 +146,7 @@ class NetworkGraph():
             with open(self.config_path_prefix + "mininet_port_edges.json", "r") as in_file:
                 mininet_port_edges = json.loads(in_file.read())
         else:
-            mininet_port_edges = self.mininet_man.topo.ports
+            mininet_port_edges = self.mm.topo.ports
 
         if self.save_config:
             with open(self.config_path_prefix + "mininet_port_edges.json", "w") as outfile:
