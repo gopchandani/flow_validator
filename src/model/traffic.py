@@ -320,6 +320,13 @@ class Traffic():
         else:
             return False
 
+    def is_equal_traffic(self, in_traffic):
+
+        if self.is_subset_traffic(in_traffic) and in_traffic.is_subset_traffic(self):
+            return True
+        else:
+            return False
+
     def intersect(self, in_traffic):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:

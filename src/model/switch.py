@@ -423,22 +423,28 @@ class Switch():
 
         return tf_changes
 
-    def count_paths(self, this_p, dst_p, verbose, path_str=""):
+    def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
+
         path_count = 0
-
         if dst_p in this_p.transfer_traffic:
-
             tt = this_p.transfer_traffic[dst_p]
-
             for succ_p in tt:
                 if succ_p:
-                    path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.port_id)
+
+                    # Try and detect a loop, if a port repeats more than twice, it is a loop
+                    indices = [i for i,x in enumerate(path_elements) if x == succ_p.port_id]
+                    if len(indices) > 2:
+                        if verbose:
+                            print "Found a loop, path_str:", path_str
+                    else:
+                        path_elements.append(succ_p.port_id)
+                        path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.port_id, path_elements)
 
                 # A none succcessor means, it originates here.
                 else:
                     if verbose:
                         print path_str
-                        
+
                     path_count += 1
 
         return path_count
@@ -452,38 +458,83 @@ class Switch():
                 dst_p = self.get_port(self.get_outgoing_port_id(self.node_id, dst_port_number))
                 if verbose:
                     print "From Port:", src_port_number, "To Port:", dst_port_number
-                path_count += self.count_paths(src_p, dst_p, verbose, src_p.port_id)
+                path_count += self.count_paths(src_p, dst_p, verbose, src_p.port_id, [src_p.port_id])
 
                 if path_count:
                     tt = src_p.transfer_traffic[dst_p]
 
         return path_count
-                
-    def test_transfer_function(self, verbose=False):
+
+    def get_path_counts_and_tt(self, verbose):
+        path_count = defaultdict(defaultdict)
+        tt = defaultdict(defaultdict)
+
+        for src_port_number in self.ports:
+            src_p = self.get_port(self.get_incoming_port_id(self.node_id, src_port_number))
+
+            for dst_port_number in self.ports:
+                dst_p = self.get_port(self.get_outgoing_port_id(self.node_id, dst_port_number))
+
+                path_count[src_p][dst_p] = self.count_paths(src_p, dst_p, verbose, src_p.port_id, [src_p.port_id])
+                tt[src_p][dst_p] = src_p.get_dst_transfer_traffic(dst_p)
+
+        return path_count, tt
+
+    def compare_path_counts_and_tt(self, path_count_before, tt_before, path_count_after, tt_after, verbose):
+
+        all_equal = True
+
+        for src_port_number in self.ports:
+            src_p = self.get_port(self.get_incoming_port_id(self.node_id, src_port_number))
+
+            for dst_port_number in self.ports:
+                dst_p = self.get_port(self.get_outgoing_port_id(self.node_id, dst_port_number))
+
+                if verbose:
+                    print "From Port:", src_port_number, "To Port:", dst_port_number
+
+                if path_count_before[src_p][dst_p] != path_count_after[src_p][dst_p]:
+                    print "Path Count mismatch - Before:", path_count_before[src_p][dst_p], \
+                        "After:", path_count_after[src_p][dst_p]
+                    all_equal = False
+                else:
+                    if verbose:
+                        print "Path Count match - Before:", path_count_before[src_p][dst_p], \
+                            "After:", path_count_after[src_p][dst_p]
+
+                if tt_before[src_p][dst_p].is_equal_traffic(tt_after[src_p][dst_p]):
+                    if verbose:
+                        print "Transfer traffic match"
+                else:
+                    print "Transfer traffic mismatch"
+                    all_equal = False
+
+        return all_equal
+
+    def test_one_port_failure_at_a_time(self, verbose=False):
+
+        test_passed = True
 
         # Loop over ports of the switch and fail and restore them one by one
         for testing_port_number in self.ports:
-
-            if testing_port_number != 3:
-                continue
-
-            path_count_1 = self.count_transfer_function_paths(verbose)
-
             testing_egress_port = self.get_port(self.get_outgoing_port_id(self.node_id, testing_port_number))
+
+            path_count_before, tt_before = self.get_path_counts_and_tt(verbose)
+
             testing_egress_port.state = "down"
             tf_changes = self.update_port_transfer_traffic(testing_port_number, "port_down")
 
-            path_count_2 = self.count_transfer_function_paths(verbose)
+            path_count_intermediate, tt_intermediate = self.get_path_counts_and_tt(verbose)
 
-            testing_egress_port = self.get_port(self.get_outgoing_port_id(self.node_id, testing_port_number))
             testing_egress_port.state = "up"
             tf_changes = self.update_port_transfer_traffic(testing_port_number, "port_up")
 
-            path_count_3 = self.count_transfer_function_paths(verbose)
+            path_count_after, tt_after = self.get_path_counts_and_tt(verbose)
 
-            if path_count_1 != path_count_3:
-                print "Path Count Mismatch, sw:", self.node_id, "port:", testing_port_number, \
-                    "Before Change:", path_count_1, "After:", path_count_3
-            else:
-                print "Path Count match, sw:", self.node_id, "port:", testing_port_number, \
-                    "Before Change:", path_count_1, "After:", path_count_3
+            all_equal = self.compare_path_counts_and_tt(path_count_before, tt_before, path_count_after, tt_after, verbose)
+
+            if not all_equal:
+                test_passed = all_equal
+                print "Test Failed."
+
+        return test_passed

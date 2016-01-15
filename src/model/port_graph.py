@@ -125,8 +125,7 @@ class PortGraph:
 
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
-            # if sw.node_id == 's2':
-            #     sw.test_transfer_function(verbose=True)
+            #test_passed = sw.test_one_port_failure_at_a_time(verbose=False)
             self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.

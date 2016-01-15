@@ -50,6 +50,16 @@ class Port():
 
         return dst_admitted_traffic
 
+    def get_dst_transfer_traffic(self, dst_p):
+
+        dst_transfer_traffic = Traffic()
+
+        if dst_p in self.transfer_traffic:
+            for succ in self.transfer_traffic[dst_p]:
+                dst_transfer_traffic.union(self.transfer_traffic[dst_p][succ])
+
+        return dst_transfer_traffic
+
     def parse_odl_port_json(self, port_json):
 
         self.port_id = str(self.sw.node_id) + ":" + str(port_json["flow-node-inventory:port-number"])

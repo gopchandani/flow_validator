@@ -3,7 +3,6 @@ __author__ = 'Rakesh Kumar'
 import sys
 sys.path.append("./")
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 from collections import defaultdict
@@ -51,8 +50,9 @@ class FailoverPolicyValidationRing(Experiment):
 
                 ng = self.setup_network_graph(self.topo_description,
                                               mininet_setup_gap=number_of_switches_in_ring,
-                                              dst_ports_to_synthesize=ports_to_synthesize,
-                                              synthesis_setup_gap=len(ports_to_synthesize))
+                                              dst_ports_to_synthesize=None,
+                                              synthesis_setup_gap=len(ports_to_synthesize),
+                                              synthesis_scheme="IntentSynthesis")
 
                 self.data["validation_time"][number_of_ports_to_synthesize][number_of_switches_in_ring] = []
 
