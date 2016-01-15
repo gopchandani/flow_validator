@@ -128,9 +128,26 @@ class FlowValidator:
                 if src_h_id == dst_h_id:
                     continue
 
+                src_h_obj = self.network_graph.get_node_object(src_h_id)
+                dst_h_obj = self.network_graph.get_node_object(dst_h_id)
+
+                specific_traffic = Traffic()
+                specific_match = Match(is_wildcard=True)
+                specific_match["ethernet_type"] = 0x0800
+                specific_match["ethernet_source"] = int(src_h_obj.mac_addr.replace(":", ""), 16)
+                specific_match["ethernet_destination"] = int(dst_h_obj.mac_addr.replace(":", ""), 16)
+                specific_match["in_port"] = int(src_h_obj.switch_port_attached)
+
+                specific_te = TrafficElement(init_match=specific_match)
+                specific_te.match_fields["vlan_id"].chop(src_h_obj.switch_obj.synthesis_tag,
+                                                         src_h_obj.switch_obj.synthesis_tag + 1)
+
+                specific_traffic.add_traffic_elements([specific_te])
+
                 baseline_at, baseline_path_count = self.validate_host_pair_reachability(src_h_id,
                                                                                         dst_h_id,
-                                                                                        verbose)
+                                                                                        verbose,
+                                                                                        specific_traffic)
 
                 # Now break the edges in the network graph, one-by-one
                 for edge in self.network_graph.graph.edges():
@@ -144,7 +161,8 @@ class FlowValidator:
                     self.port_graph.remove_node_graph_edge(edge[0], edge[1])
                     edge_removed_at, edge_remove_path_count = self.validate_host_pair_reachability(src_h_id,
                                                                                                    dst_h_id,
-                                                                                                   verbose)
+                                                                                                   verbose,
+                                                                                                   specific_traffic)
                     if verbose:
                         print "Restoring edge:", edge
 
@@ -152,7 +170,8 @@ class FlowValidator:
                     self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
                     edge_added_back_at, edge_added_back_path_count = self.validate_host_pair_reachability(src_h_id,
                                                                                                           dst_h_id,
-                                                                                                          verbose)
+                                                                                                          verbose,
+                                                                                                          specific_traffic)
 
                     # the number of elements should be same in three scenarios for each edge
 

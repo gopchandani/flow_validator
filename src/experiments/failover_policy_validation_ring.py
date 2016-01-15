@@ -80,8 +80,8 @@ class FailoverPolicyValidationRing(Experiment):
 def main():
 
     num_iterations = 1
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     total_number_of_switches_in_ring = [4]#3, 4, 5, 6, 7, 8, 9, 10]
