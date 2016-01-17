@@ -314,7 +314,7 @@ class PortGraph:
 
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
-    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes=None):
+    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst_port):
 
         # if dst_port.port_id == 's5:egress3':
         #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
@@ -324,11 +324,6 @@ class PortGraph:
 
         if not additional_traffic.is_empty():
 
-            # If it is an ingress port, it has no predecessors:
-            if curr.port_type == "ingress":
-                if tf_changes != None:
-                    tf_changes.append((curr, dst_port, "additional"))
-
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
                 pred = self.get_port(pred_id)
@@ -337,19 +332,15 @@ class PortGraph:
 
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_transfer_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
+                    self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port)
 
         if not reduced_traffic.is_empty():
-
-            if curr.port_type == "ingress":
-                if tf_changes != None:
-                    tf_changes.append((curr, dst_port, "removal"))
 
             for pred_id in self.g.predecessors_iter(curr.port_id):
                 pred = self.get_port(pred_id)
                 edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
-                self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
+                self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port)
 
     def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
 

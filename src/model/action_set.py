@@ -49,7 +49,6 @@ class Action():
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_action_json()
 
-
     def parse_odl_action_json(self):
 
         self.order = self.action_json["order"]
@@ -115,31 +114,33 @@ class Action():
 
     def perform_edge_failover(self):
 
-        muted_port_numbers = []
-        unmuted_port_number = None
+        muted_ports = []
+        unmuted_port = None
 
-        for this_bucket in self.bucket.group.bucket_list:
+        for bucket_rank in range(len(self.bucket.group.bucket_list)):
+            
+            this_bucket = self.bucket.group.bucket_list[bucket_rank]
 
             if this_bucket.is_live():
 
-                if not unmuted_port_number:
+                if not unmuted_port:
 
                     for action in this_bucket.action_list:
                         action.is_active = True
 
-                    unmuted_port_number= this_bucket.watch_port
+                    unmuted_port = (this_bucket.watch_port, bucket_rank)
                 else:
                     for action in this_bucket.action_list:
                         action.is_active = False
 
-                    muted_port_numbers.append(this_bucket.watch_port)
+                    muted_ports.append((this_bucket.watch_port, bucket_rank))
             else:
                 for action in this_bucket.action_list:
                     action.is_active = False
 
-                muted_port_numbers.append(this_bucket.watch_port)
+                muted_ports.append((this_bucket.watch_port, bucket_rank))
 
-        return muted_port_numbers, unmuted_port_number
+        return muted_ports, unmuted_port
 
 class ActionSet():
 

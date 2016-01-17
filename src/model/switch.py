@@ -172,8 +172,8 @@ class Switch():
             out_p = self.get_port(out_p_id)
 
             transfer_traffic = Traffic(init_wildcard=True)
-
-            self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p)
+            tf_changes = []
+            self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p, tf_changes)
 
     def account_port_transfer_traffic(self, port, dst_traffic_at_succ, succ, dst_port):
 
@@ -222,13 +222,7 @@ class Switch():
 
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
-    def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes=None):
-
-        # if dst_port.port_id == 's1:egress1':
-        #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
-
-        # if curr.port_id == 's3:table2' and dst_port.port_id == 's3:egress3':
-        #     pass
+    def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes):
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst_port)
@@ -238,8 +232,7 @@ class Switch():
             # If it is an ingress port, it has no predecessors:
             
             if curr.port_type == "ingress":
-                if tf_changes != None:
-                    tf_changes.append((curr, dst_port, "additional"))
+                tf_changes.append((curr, dst_port, "additional"))
 
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
@@ -254,8 +247,7 @@ class Switch():
         if not reduced_traffic.is_empty():
 
             if curr.port_type == "ingress":
-                if tf_changes != None:
-                    tf_changes.append((curr, dst_port, "removal"))
+                tf_changes.append((curr, dst_port, "removal"))
 
             for pred_id in self.g.predecessors_iter(curr.port_id):
                 pred = self.get_port(pred_id)
@@ -306,9 +298,9 @@ class Switch():
     def update_port_transfer_traffic_failover_edge_action(self, pred, edge_action, edge_filter_match, tf_changes):
 
         # See what ports are now muted and unmuted
-        muted_port_numbers, unmuted_port_number = edge_action.perform_edge_failover()
+        muted_ports, unmuted_port = edge_action.perform_edge_failover()
 
-        for muted_port_number in muted_port_numbers:
+        for muted_port_number, bucket_rank in muted_ports:
             muted_port = self.get_port(self.get_outgoing_port_id(self.node_id, muted_port_number))
 
             prop_traffic = Traffic()
@@ -320,7 +312,8 @@ class Switch():
                     prop_traffic = prop_traffic.difference(pred.transfer_traffic[muted_port][muted_port])
                     self.compute_port_transfer_traffic(pred, prop_traffic, muted_port, muted_port, tf_changes)
 
-        if unmuted_port_number:
+        if unmuted_port:
+            unmuted_port_number, bucket_rank = unmuted_port
             unmuted_port = self.get_port(self.get_outgoing_port_id(self.node_id, unmuted_port_number))
 
             prop_traffic = Traffic()
