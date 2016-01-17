@@ -55,13 +55,13 @@ class PortGraph:
         # that have changed as keys and list of egress ports as values
         change_matrix = defaultdict(defaultdict)
 
-        for change in tf_changes:
+        for tf_change in tf_changes:
 
-            ingress_p = change[0]
-            egress_p = change[1]
+            ingress_p = tf_change[0]
+            egress_p = tf_change[1]
 
             # Modify the edge filter
-            edge_data = self.modify_edge(ingress_p, egress_p)
+            edge_data = self.modify_edge(tf_change)
 
             #TODO Limit the destinations (get them passed by tf_changes)
             for dst_p in ingress_p.admitted_traffic:
@@ -144,21 +144,21 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph()
 
-    def add_edge(self, src_port, dst_port, edge_filter_traffic):
+    def add_edge(self, src_port, dst_port, edge_filter_traffic, vuln_score=None):
 
         edge_data = EdgeData(src_port, dst_port)
 
         # If the edge filter became empty, reflect that.
         if edge_filter_traffic.is_empty():
             t = Traffic()
-            edge_data.add_edge_data((t, {}))
+            edge_data.add_edge_data((t, {}, vuln_score))
         else:
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
             for te in edge_filter_traffic.traffic_elements:
                 t = Traffic()
                 t.add_traffic_elements([te])
-                edge_data.add_edge_data((t, te.switch_modifications))
+                edge_data.add_edge_data((t, te.switch_modifications, vuln_score))
 
         self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
 
@@ -174,9 +174,10 @@ class PortGraph:
         # Remove the port-graph edges corresponding to ports themselves
         self.g.remove_edge(src_port.port_id, dst_port.port_id)
 
-    def modify_edge(self, src_port, dst_port):
+    def modify_edge(self, tf_change):
 
-        #TODO: right now, just doing it up by ripping up the edge and putting it back
+        src_port = tf_change[0]
+        dst_port = tf_change[1]
 
         self.remove_edge(src_port, dst_port)
 
@@ -185,7 +186,11 @@ class PortGraph:
         for succ in traffic_filter:
             total_traffic.union(traffic_filter[succ])
 
-        edge_data = self.add_edge(src_port, dst_port, total_traffic)
+        if tf_change[2] == "additional":
+            edge_data = self.add_edge(src_port, dst_port, total_traffic, vuln_score=tf_change[3])
+        else:
+            edge_data = self.add_edge(src_port, dst_port, total_traffic)
+
         return  edge_data
 
     def add_node_graph_edge(self, node1_id, node2_id, updating=False):
@@ -244,7 +249,7 @@ class PortGraph:
 
         pred_admitted_traffic = Traffic()
 
-        for edge_filter_traffic, modifications in edge_data.edge_data_list:
+        for edge_filter_traffic, modifications, vuln_score in edge_data.edge_data_list:
 
             # At egress edges, set the in_port of the admitted match for destination to wildcard
             if edge_data.edge_type == "outside":
