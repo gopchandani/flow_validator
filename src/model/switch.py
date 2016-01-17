@@ -222,7 +222,7 @@ class Switch():
 
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
-    def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes):
+    def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes, vuln_rank=0):
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst_port)
@@ -232,7 +232,7 @@ class Switch():
             # If it is an ingress port, it has no predecessors:
             
             if curr.port_type == "ingress":
-                tf_changes.append((curr, dst_port, "additional"))
+                tf_changes.append((curr, dst_port, "additional", vuln_rank))
 
             for pred_id in self.g.predecessors_iter(curr.port_id):
 
@@ -242,7 +242,8 @@ class Switch():
 
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_transfer_traffic.is_empty():
-                    self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
+                    self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes,
+                                                       vuln_rank)
 
         if not reduced_traffic.is_empty():
 
@@ -253,7 +254,8 @@ class Switch():
                 pred = self.get_port(pred_id)
                 edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
                 pred_transfer_traffic = self.compute_edge_transfer_traffic(traffic_to_propagate, edge_data)
-                self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
+                self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes,
+                                                   vuln_rank)
 
     def compute_edge_transfer_traffic(self, traffic_to_propagate, edge_data):
 
@@ -310,7 +312,8 @@ class Switch():
             if muted_port in pred.transfer_traffic:
                 if muted_port in pred.transfer_traffic[muted_port]:
                     prop_traffic = prop_traffic.difference(pred.transfer_traffic[muted_port][muted_port])
-                    self.compute_port_transfer_traffic(pred, prop_traffic, muted_port, muted_port, tf_changes)
+                    self.compute_port_transfer_traffic(pred, prop_traffic, muted_port, muted_port, tf_changes,
+                                                       vuln_rank=bucket_rank)
 
         if unmuted_port:
             unmuted_port_number, bucket_rank = unmuted_port
@@ -324,7 +327,8 @@ class Switch():
                         prop_traffic.union(pred.transfer_traffic[unmuted_port][unmuted_port])
             except KeyError:
                 pass
-            self.compute_port_transfer_traffic(pred, prop_traffic, unmuted_port, unmuted_port, tf_changes)
+            self.compute_port_transfer_traffic(pred, prop_traffic, unmuted_port, unmuted_port, tf_changes,
+                                               vuln_rank=bucket_rank)
 
     def update_port_transfer_traffic(self, port_num, event_type):
         

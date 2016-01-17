@@ -316,9 +316,6 @@ class PortGraph:
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst_port):
 
-        # if dst_port.port_id == 's5:egress3':
-        #     print "Current Port:", curr.port_id, "Preds:", self.g.predecessors(curr.port_id), "dst:", dst_port.port_id
-
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_admitted_traffic(curr, dst_traffic_at_succ, succ, dst_port)
 
