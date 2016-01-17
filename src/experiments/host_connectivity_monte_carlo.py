@@ -80,14 +80,14 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, None, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, None, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=len(ports_to_synthesize),
-                                          synthesis_scheme="IntentSynthesisLB")
+                                          synthesis_scheme="IntentSynthesis")
 
             self.fv = FlowValidator(ng)
             self.fv.init_port_graph()
