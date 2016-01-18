@@ -67,6 +67,11 @@ class FlowValidator:
 
         at = src_host_obj.switch_ingress_port.get_dst_admitted_traffic(dst_host_obj.switch_egress_port)
         if not at.is_empty():
+
+            print "src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+            for te in at.traffic_elements:
+                print "vuln_score:", te.vuln_score
+
             if verbose:
                 print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
             

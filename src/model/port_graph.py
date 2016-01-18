@@ -158,6 +158,10 @@ class PortGraph:
             for te in edge_filter_traffic.traffic_elements:
                 t = Traffic()
                 t.add_traffic_elements([te])
+
+                if vuln_score:
+                    te.vuln_score = vuln_score
+
                 edge_data.add_edge_data((t, te.switch_modifications, vuln_score))
 
         self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
@@ -249,7 +253,7 @@ class PortGraph:
 
         pred_admitted_traffic = Traffic()
 
-        for edge_filter_traffic, modifications, vuln_score in edge_data.edge_data_list:
+        for edge_filter_traffic, modifications, edge_vuln_score in edge_data.edge_data_list:
 
             # At egress edges, set the in_port of the admitted match for destination to wildcard
             if edge_data.edge_type == "outside":

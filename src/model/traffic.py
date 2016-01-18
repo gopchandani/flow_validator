@@ -16,6 +16,8 @@ class TrafficElement():
         self.written_modifications = {}
         self.instruction_type = None
 
+        self.vuln_score = 0
+
         self.match_fields = {}
 
         # If a match has been provided to initialize with
@@ -214,6 +216,8 @@ class TrafficElement():
         orig_traffic_element.switch_modifications.update(self.switch_modifications)
         orig_traffic_element.instruction_type = self.instruction_type
 
+        orig_traffic_element.vuln_score = self.vuln_score
+
         if store_switch_modifications:
             orig_traffic_element.switch_modifications.update(mf)
 
@@ -350,6 +354,8 @@ class Traffic():
                     ei.instruction_type = e_in.instruction_type
                     ei.switch_modifications = e_in.switch_modifications
 
+                    ei.vuln_score = e_self.vuln_score + e_in.vuln_score
+
         return traffic_intersection
 
     # Computes a difference between two traffic instances and if they have changed.
@@ -397,6 +403,7 @@ class Traffic():
                 for remaining_te in remaining:
                     remaining_te.written_modifications = in_te.written_modifications
                     remaining_te.switch_modifications = in_te.switch_modifications
+                    remaining_te.vuln_score = in_te.vuln_score
 
                 diff_traffic.traffic_elements.extend(remaining)
 
