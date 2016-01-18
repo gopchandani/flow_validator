@@ -71,11 +71,12 @@ class FlowValidator:
 
             if at.is_subset_traffic(specific_traffic):
 
+                all_paths = []
                 path_count = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
                                                        dst_host_obj.switch_egress_port,
-                                                       verbose,
-                                                       path_str=src_host_obj.switch_ingress_port.port_id,
-                                                       path_elements=[src_host_obj.switch_ingress_port.port_id])
+                                                       [src_host_obj.switch_ingress_port.port_id],
+                                                       all_paths,
+                                                       verbose)
             else:
                 if verbose:
                     print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at does not pass specific_traffic check."

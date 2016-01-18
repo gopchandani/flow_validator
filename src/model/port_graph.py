@@ -348,7 +348,7 @@ class PortGraph:
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
                 self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port)
 
-    def get_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
+    def get_paths(self, this_p, dst_p, this_path, all_paths, verbose):
 
         path_count = 0
 
@@ -358,26 +358,26 @@ class PortGraph:
 
             # If destination is one of the successors, stop
             if dst_p in tt:
-                path_elements.append(dst_p.port_id)
-                path_str = path_str + " -> " + dst_p.port_id
+                this_path.append(dst_p.port_id)
+                all_paths.append(this_path)
                 if verbose:
-                    print path_str
+                    print this_path
                 path_count += 1
 
             # Otherwise explore all the successors
             else:
                 for succ_p in tt:
                     # Check for loops, if a port repeats more than twice, it is a loop
-                    indices = [i for i,x in enumerate(path_elements) if x == succ_p.port_id]
+                    indices = [i for i,x in enumerate(this_path) if x == succ_p.port_id]
                     if len(indices) > 2:
                         if verbose:
-                            print "Found a loop, path_str:", path_str
+                            print "Found a loop, this_path:", this_path
                     else:
-                        path_elements.append(succ_p.port_id)
+                        this_path.append(succ_p.port_id)
                         path_count += self.get_paths(succ_p,
                                                      dst_p,
-                                                     verbose,
-                                                     path_str + " -> " + succ_p.port_id,
-                                                     path_elements)
+                                                     this_path,
+                                                     all_paths,
+                                                     verbose)
 
         return path_count
