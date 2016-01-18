@@ -59,21 +59,22 @@ class FlowValidator:
 
         at = src_host_obj.switch_ingress_port.get_dst_admitted_traffic(dst_host_obj.switch_egress_port)
         path_count = 0
+        all_paths = []
 
         if not at.is_empty():
 
-            if verbose:
-                for te in at.traffic_elements:
-                    print "vuln_score:", te.vuln_score
+            # if verbose:
+            #     for te in at.traffic_elements:
+            #         print "vuln_score:", te.vuln_score
 
             if verbose:
                 print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
 
             if at.is_subset_traffic(specific_traffic):
 
-                all_paths = []
-                path_count = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
+                self.port_graph.get_paths(src_host_obj.switch_ingress_port,
                                                        dst_host_obj.switch_egress_port,
+                                                       specific_traffic,
                                                        [src_host_obj.switch_ingress_port.port_id],
                                                        all_paths,
                                                        verbose)
@@ -84,6 +85,7 @@ class FlowValidator:
             if verbose:
                 print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at is empty."
 
+        path_count = len(all_paths)
         return at, path_count
 
     def validate_all_host_pair_reachability(self, verbose=True):

@@ -158,7 +158,12 @@ class TrafficElement():
 
             # TODO: If this fields needs to be modified, apply the modification
             if field_name in self.switch_modifications:
-                modified_traffic_element.match_fields[field_name] = self.match_fields[field_name]
+
+                field_val = int(self.switch_modifications[field_name][1])
+                value_tree = IntervalTree()
+                value_tree.add(Interval(field_val, field_val + 1))
+
+                modified_traffic_element.match_fields[field_name] = value_tree
 
             else:
                 # Otherwise, just keep the field same as it was
