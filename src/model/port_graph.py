@@ -356,11 +356,18 @@ class PortGraph:
 
             tt = this_p.admitted_traffic[dst_p]
 
-            for succ_p in tt:
+            # If destination is one of the successors, stop
+            if dst_p in tt:
+                path_elements.append(dst_p.port_id)
+                path_str = path_str + " -> " + dst_p.port_id
+                if verbose:
+                    print path_str
+                path_count += 1
 
-                if succ_p:
-
-                    # Try and detect a loop, if a port repeats more than twice, it is a loop
+            # Otherwise explore all the successors
+            else:
+                for succ_p in tt:
+                    # Check for loops, if a port repeats more than twice, it is a loop
                     indices = [i for i,x in enumerate(path_elements) if x == succ_p.port_id]
                     if len(indices) > 2:
                         if verbose:
@@ -372,12 +379,5 @@ class PortGraph:
                                                      verbose,
                                                      path_str + " -> " + succ_p.port_id,
                                                      path_elements)
-
-                # A none succcessor means, it originates here.
-                else:
-                    if verbose:
-                        print path_str
-
-                    path_count += 1
 
         return path_count
