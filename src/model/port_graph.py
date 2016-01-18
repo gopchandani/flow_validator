@@ -348,7 +348,7 @@ class PortGraph:
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
                 self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port)
 
-    def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
+    def get_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
 
         path_count = 0
 
@@ -367,7 +367,11 @@ class PortGraph:
                             print "Found a loop, path_str:", path_str
                     else:
                         path_elements.append(succ_p.port_id)
-                        path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.port_id, path_elements)
+                        path_count += self.get_paths(succ_p,
+                                                     dst_p,
+                                                     verbose,
+                                                     path_str + " -> " + succ_p.port_id,
+                                                     path_elements)
 
                 # A none succcessor means, it originates here.
                 else:

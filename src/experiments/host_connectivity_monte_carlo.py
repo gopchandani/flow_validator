@@ -61,9 +61,6 @@ class MonteCarlo(Experiment):
             run_edges.append(broken_edges)
             run_values.append(num_edges)
 
-            # if num_edges < 2:
-            #     pass
-
         runs_mean = np.mean(run_values)
         runs_sem = ss.sem(run_values)
 
@@ -79,6 +76,7 @@ class MonteCarlo(Experiment):
         for number_of_ports_to_synthesize in range(1, self.total_number_of_ports_to_synthesize + 1):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
+
 
             self.topo_description = ("ring", 4, 1, None, None)
             #self.topo_description = ("clostopo", None, None, self.fanout, self.core)
