@@ -15,9 +15,6 @@ class TrafficElement():
         self.switch_modifications = {}
         self.written_modifications = {}
         self.instruction_type = None
-
-        self.vuln_score = 0
-
         self.match_fields = {}
 
         # If a match has been provided to initialize with
@@ -221,8 +218,6 @@ class TrafficElement():
         orig_traffic_element.switch_modifications.update(self.switch_modifications)
         orig_traffic_element.instruction_type = self.instruction_type
 
-        orig_traffic_element.vuln_score = self.vuln_score
-
         if store_switch_modifications:
             orig_traffic_element.switch_modifications.update(mf)
 
@@ -329,23 +324,6 @@ class Traffic():
         else:
             return False
 
-    # Get all the traffic elements from self, that are proper subsets of in_traffic
-    def get_subset_traffic_elements(self, in_traffic):
-
-        subset_traffic = Traffic()
-
-        for self_te in self.traffic_elements:
-
-            # Construct a traffic object representing this self_te
-            self_te_traffic = Traffic()
-            self_te_traffic.traffic_elements.append(self_te)
-
-            # See if the entire in_traffic fits in that object
-            if self_te_traffic.is_subset_traffic(in_traffic):
-                subset_traffic.traffic_elements.append(self_te)
-
-        return subset_traffic
-
     def is_equal_traffic(self, in_traffic):
 
         if self.is_subset_traffic(in_traffic) and in_traffic.is_subset_traffic(self):
@@ -375,8 +353,6 @@ class Traffic():
                     ei.written_modifications.update(e_in.written_modifications)
                     ei.instruction_type = e_in.instruction_type
                     ei.switch_modifications = e_in.switch_modifications
-
-                    ei.vuln_score = e_self.vuln_score + e_in.vuln_score
 
         return traffic_intersection
 
@@ -425,7 +401,6 @@ class Traffic():
                 for remaining_te in remaining:
                     remaining_te.written_modifications = in_te.written_modifications
                     remaining_te.switch_modifications = in_te.switch_modifications
-                    remaining_te.vuln_score = in_te.vuln_score
 
                 diff_traffic.traffic_elements.extend(remaining)
 

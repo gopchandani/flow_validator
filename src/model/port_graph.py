@@ -145,25 +145,21 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph()
 
-    def add_edge(self, src_port, dst_port, edge_filter_traffic, vuln_score=None):
+    def add_edge(self, src_port, dst_port, edge_filter_traffic, edge_vuln_rank=0):
 
         edge_data = EdgeData(src_port, dst_port)
 
         # If the edge filter became empty, reflect that.
         if edge_filter_traffic.is_empty():
             t = Traffic()
-            edge_data.add_edge_data((t, {}))
+            edge_data.add_edge_data((t, {}, edge_vuln_rank))
         else:
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
             for te in edge_filter_traffic.traffic_elements:
                 t = Traffic()
                 t.add_traffic_elements([te])
-
-                if vuln_score:
-                    te.vuln_score = vuln_score
-
-                edge_data.add_edge_data((t, te.switch_modifications))
+                edge_data.add_edge_data((t, te.switch_modifications, edge_vuln_rank))
 
         self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
 
@@ -192,7 +188,7 @@ class PortGraph:
             total_traffic.union(traffic_filter[succ])
 
         if tf_change[2] == "additional":
-            edge_data = self.add_edge(src_port, dst_port, total_traffic, vuln_score=tf_change[3])
+            edge_data = self.add_edge(src_port, dst_port, total_traffic, edge_vuln_rank=tf_change[3])
         else:
             edge_data = self.add_edge(src_port, dst_port, total_traffic)
 
@@ -254,7 +250,7 @@ class PortGraph:
 
         pred_admitted_traffic = Traffic()
 
-        for edge_filter_traffic, modifications in edge_data.edge_data_list:
+        for edge_filter_traffic, modifications, edge_vuln_rank in edge_data.edge_data_list:
 
             # At egress edges, set the in_port of the admitted match for destination to wildcard
             if edge_data.edge_type == "outside":
@@ -349,7 +345,7 @@ class PortGraph:
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
                 self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port)
 
-    def get_paths(self, this_p, dst_p, specific_traffic, this_path, all_paths, verbose):
+    def get_paths(self, this_p, dst_p, specific_traffic, this_path, all_paths, path_vuln_rank, path_vuln_ranks, verbose):
 
         if dst_p in this_p.admitted_traffic:
 
@@ -359,6 +355,7 @@ class PortGraph:
             if dst_p in at:
                 this_path.append(dst_p.port_id)
                 all_paths.append(this_path)
+                path_vuln_ranks.append(path_vuln_rank)
                 if verbose:
                     print this_path
 
@@ -371,9 +368,23 @@ class PortGraph:
                         if verbose:
                             print "Found a loop, this_path:", this_path
                     else:
+                        max_edge_vuln_rank = -1
+                        edge_data = self.g.get_edge_data(this_p.port_id, succ_p.port_id)["edge_data"]
+                        for edge_filter_traffic, modifications, edge_vuln_rank in edge_data.edge_data_list:
+
+                            if edge_vuln_rank > max_edge_vuln_rank:
+                                max_edge_vuln_rank = edge_vuln_rank
+            
                         if at[succ_p].is_subset_traffic(specific_traffic):
                             this_path.append(succ_p.port_id)
 
                             modified_specific_traffic = at[succ_p].get_modified_traffic()
 
-                            self.get_paths(succ_p, dst_p, modified_specific_traffic, this_path, all_paths, verbose)
+                            self.get_paths(succ_p,
+                                           dst_p,
+                                           modified_specific_traffic,
+                                           this_path,
+                                           all_paths,
+                                           path_vuln_rank + max_edge_vuln_rank,
+                                           path_vuln_ranks,
+                                           verbose)
