@@ -60,7 +60,7 @@ class MininetMan():
         elif self.topo_name == "ringline":
             self.topo = RingLineTopo(self.num_switches, self.num_hosts_per_switch)
         elif self.topo_name == "clostopo":
-            self.topo = ClosTopo(self.fanout, self.core)
+            self.topo = ClosTopo(self.fanout, self.core, self.num_hosts_per_switch)
             self.experiment_switches = self.topo.edge_switches.values()
         elif self.topo_name == "cliquetopo":
             self.topo = CliqueTopo(self.num_switches, self.num_hosts_per_switch, per_switch_links)
@@ -74,9 +74,10 @@ class MininetMan():
                                               self.topo_name + "_" + \
                                               str(self.num_switches) + "_" + \
                                               str(self.num_hosts_per_switch)
-        elif self.fanout and self.core:
+        elif self.fanout and self.core and self.num_hosts_per_switch:
             self.mininet_configuration_name = self.synthesis_scheme + "_" + \
                                               self.topo_name + "_" + \
+                                              str(self.num_hosts_per_switch) + "_" + \
                                               str(self.fanout) + "_" + \
                                               str(self.core)
 

@@ -63,9 +63,9 @@ class FlowValidator:
 
         if not at.is_empty():
 
-            # if verbose:
-            #     for te in at.traffic_elements:
-            #         print "vuln_score:", te.vuln_score
+            if verbose:
+                for te in at.traffic_elements:
+                    print "vuln_score:", te.vuln_score
 
             if verbose:
                 print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)

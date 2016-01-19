@@ -93,8 +93,8 @@ class Experiment(object):
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
                     #self.mm.net.pingAll(self.mm.ping_timeout)
-                    is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
-                    print "is_bi_connected:", is_bi_connected
+                    #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
+                    #print "is_bi_connected:", is_bi_connected
 
                 if synthesis_setup_gap:
                     time.sleep(synthesis_setup_gap)
