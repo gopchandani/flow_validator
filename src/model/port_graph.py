@@ -125,7 +125,8 @@ class PortGraph:
 
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
-            #test_passed = sw.test_one_port_failure_at_a_time(verbose=False)
+            # if sw.node_id == 's1':
+            #     test_passed = sw.test_one_port_failure_at_a_time(verbose=False)
             self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
@@ -151,7 +152,7 @@ class PortGraph:
         # If the edge filter became empty, reflect that.
         if edge_filter_traffic.is_empty():
             t = Traffic()
-            edge_data.add_edge_data((t, {}, vuln_score))
+            edge_data.add_edge_data((t, {}))
         else:
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
@@ -162,7 +163,7 @@ class PortGraph:
                 if vuln_score:
                     te.vuln_score = vuln_score
 
-                edge_data.add_edge_data((t, te.switch_modifications, vuln_score))
+                edge_data.add_edge_data((t, te.switch_modifications))
 
         self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
 
@@ -253,7 +254,7 @@ class PortGraph:
 
         pred_admitted_traffic = Traffic()
 
-        for edge_filter_traffic, modifications, edge_vuln_score in edge_data.edge_data_list:
+        for edge_filter_traffic, modifications in edge_data.edge_data_list:
 
             # At egress edges, set the in_port of the admitted match for destination to wildcard
             if edge_data.edge_type == "outside":

@@ -53,8 +53,8 @@ class MonteCarlo(Experiment):
 
             print "Performing Run:", i + 1
 
-            broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
-            #broken_edges = self.fv.break_specified_edges_in_order([('s1', 's2')], verbose=True)
+            #broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
+            broken_edges = self.fv.break_specified_edges_in_order([('s2', 's3 ')], verbose=True)
 
             num_edges = len(broken_edges)
 
@@ -77,8 +77,8 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -90,6 +90,8 @@ class MonteCarlo(Experiment):
             self.fv.init_port_graph()
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
+
+            print "Initialization done."
 
             for number_of_monte_carlo_runs in self.numbers_of_monte_carlo_runs:
                 print "number_of_monte_carlo_runs:", number_of_monte_carlo_runs
@@ -129,8 +131,8 @@ def main():
     save_config = False
     controller = "ryu"
 
-    fanout = 3
-    core = 3
+    fanout = 2
+    core = 2
     total_number_of_ports_to_synthesize = 1
     numbers_of_monte_carlo_runs = [1]#[10, 20, 30]
 

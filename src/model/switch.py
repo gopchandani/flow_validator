@@ -516,6 +516,9 @@ class Switch():
         for testing_port_number in self.ports:
             testing_egress_port = self.get_port(self.get_outgoing_port_id(self.node_id, testing_port_number))
 
+            # if testing_port_number != 2:
+            #     continue
+
             path_count_before, tt_before = self.get_path_counts_and_tt(verbose)
 
             testing_egress_port.state = "down"

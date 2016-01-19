@@ -60,17 +60,22 @@ class FlowValidator:
         at = src_host_obj.switch_ingress_port.get_dst_admitted_traffic(dst_host_obj.switch_egress_port)
         path_count = 0
         all_paths = []
+        min_vuln_score = sys.maxsize
 
         if not at.is_empty():
-
-            if verbose:
-                for te in at.traffic_elements:
-                    print "vuln_score:", te.vuln_score
 
             if verbose:
                 print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
 
             if at.is_subset_traffic(specific_traffic):
+
+                #at_subset = at.get_subset_traffic_elements(specific_traffic)
+                for te in at.traffic_elements:
+                    if te.vuln_score  < min_vuln_score:
+                        min_vuln_score = te.vuln_score
+
+                if verbose:
+                    print "min_vuln_score:", min_vuln_score
 
                 self.port_graph.get_paths(src_host_obj.switch_ingress_port,
                                                        dst_host_obj.switch_egress_port,

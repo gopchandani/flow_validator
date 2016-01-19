@@ -329,6 +329,23 @@ class Traffic():
         else:
             return False
 
+    # Get all the traffic elements from self, that are proper subsets of in_traffic
+    def get_subset_traffic_elements(self, in_traffic):
+
+        subset_traffic = Traffic()
+
+        for self_te in self.traffic_elements:
+
+            # Construct a traffic object representing this self_te
+            self_te_traffic = Traffic()
+            self_te_traffic.traffic_elements.append(self_te)
+
+            # See if the entire in_traffic fits in that object
+            if self_te_traffic.is_subset_traffic(in_traffic):
+                subset_traffic.traffic_elements.append(self_te)
+
+        return subset_traffic
+
     def is_equal_traffic(self, in_traffic):
 
         if self.is_subset_traffic(in_traffic) and in_traffic.is_subset_traffic(self):
