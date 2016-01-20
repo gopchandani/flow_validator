@@ -264,7 +264,27 @@ class FlowValidator:
 
         return len(edges_broken)
 
-    def break_random_edges_until_any_pair_disconnected(self, verbose):
+    def sample_edge(self, edges_broken, importance=False):
+
+        sampled_edge = None
+
+        while True:
+
+            # Randomly sample an edge to break, sample again if it has already been broken
+            sampled_edge = random.choice(self.network_graph.graph.edges())
+
+            # Ignore host edges
+            if sampled_edge[0].startswith("h") or sampled_edge[1].startswith("h"):
+                continue
+
+            if sampled_edge in edges_broken:
+                continue
+
+            break
+
+        return sampled_edge
+
+    def break_random_edges_until_any_pair_disconnected(self, verbose, importance=False):
         edges_broken = []
 
         all_pair_connected = self.process_link_status_change(verbose)
@@ -272,14 +292,7 @@ class FlowValidator:
         while all_pair_connected:
 
             # Randomly sample an edge to break, sample again if it has already been broken
-            edge = random.choice(self.network_graph.graph.edges())
-
-            # Ignore host edges
-            if edge[0].startswith("h") or edge[1].startswith("h"):
-                continue
-
-            if edge in edges_broken:
-                continue
+            edge = self.sample_edge(edges_broken, importance)
 
             print "Breaking the edge:", edge
 
