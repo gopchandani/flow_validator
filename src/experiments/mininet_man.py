@@ -154,11 +154,14 @@ class MininetMan():
         else:
             return False
 
-    def is_bi_connected_manual_ping_test(self):
+    def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check=None):
 
         is_bi_connected= True
 
-        for (src_host, dst_host) in self._get_experiment_host_pair():
+        if not experiment_host_pairs_to_check:
+            experiment_host_pairs_to_check = list(self._get_experiment_host_pair())
+
+        for (src_host, dst_host) in experiment_host_pairs_to_check:
 
             for edge in self.topo.g.edges():
 
