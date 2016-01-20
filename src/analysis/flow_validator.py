@@ -7,6 +7,7 @@ sys.path.append("./")
 from model.port_graph import PortGraph
 from model.traffic import Traffic, TrafficElement
 from model.match import Match
+from collections import defaultdict
 
 class FlowValidator:
 
@@ -58,7 +59,6 @@ class FlowValidator:
         dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
         at = src_host_obj.switch_ingress_port.get_dst_admitted_traffic(dst_host_obj.switch_egress_port)
-        path_count = 0
         path_vuln_ranks = []
         all_paths = []
 
@@ -87,8 +87,7 @@ class FlowValidator:
             if verbose:
                 print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at is empty."
 
-        path_count = len(all_paths)
-        return at, path_count, path_vuln_ranks
+        return at, all_paths, path_vuln_ranks
 
     def validate_all_host_pair_reachability(self, verbose=True):
 
@@ -105,18 +104,54 @@ class FlowValidator:
 
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-                at, path_count, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
+                at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
                                                                                        dst_h_id,
                                                                                        specific_traffic,
                                                                                        verbose)
-                if src_h_id == 'h11' and dst_h_id == 'h31':
-                    pass
-
-                if not path_count:
+                if not all_paths:
                     all_pair_connected = False
+
+        return all_pair_connected
+
+    def process_link_status_change(self, verbose=True):
+
+        all_pair_connected = True
+
+        for e in self.network_graph.graph.edges_iter():
+            self.network_graph.graph[e[0]][e[1]]["vuln_info"].clear()
+
+        for src_h_id in self.network_graph.host_ids:
+            for dst_h_id in self.network_graph.host_ids:
+
+                if src_h_id == dst_h_id:
+                    continue
+
+                if verbose:
+                    print "src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+
+                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
+
+                at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
+                                                                                       dst_h_id,
+                                                                                       specific_traffic,
+                                                                                       verbose)
+                if not all_paths:
+                    all_pair_connected = False
+                    print "Disconnected Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
                 else:
                     if path_vuln_ranks[0] > 0:
                         print "Vulnerable Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+
+                    path = all_paths[0]
+                    prev_switch = path[0][0:2]
+                    for this_path_element in path[1:]:
+                        this_switch = this_path_element[0:2]
+
+                        if prev_switch != this_switch:
+                            self.network_graph.graph[prev_switch][this_switch]\
+                                ["vuln_info"][path_vuln_ranks[0]].append(path)
+
+                        prev_switch = this_switch
 
         return all_pair_connected
 
@@ -130,7 +165,7 @@ class FlowValidator:
 
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-                baseline_at, baseline_path_count, baseline_path_vuln_ranks = \
+                baseline_at, baseline_all_paths, baseline_path_vuln_ranks = \
                     self.validate_host_pair_reachability(src_h_id,
                                                          dst_h_id,
                                                          specific_traffic,
@@ -146,7 +181,7 @@ class FlowValidator:
                         print "Failing edge:", edge
 
                     self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-                    edge_removed_at, edge_removed_path_count, edge_removed_path_vuln_ranks = \
+                    edge_removed_at, edge_removed_all_paths, edge_removed_path_vuln_ranks = \
                         self.validate_host_pair_reachability(src_h_id,
                                                              dst_h_id,
                                                              specific_traffic,
@@ -156,7 +191,7 @@ class FlowValidator:
 
                     # Add it back
                     self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
-                    edge_added_back_at, edge_added_back_path_count, edge_added_back_path_vuln_ranks = \
+                    edge_added_back_at, edge_added_back_all_paths, edge_added_back_path_vuln_ranks = \
                         self.validate_host_pair_reachability(src_h_id,
                                                              dst_h_id,
                                                              specific_traffic,
@@ -232,7 +267,7 @@ class FlowValidator:
     def break_random_edges_until_any_pair_disconnected(self, verbose):
         edges_broken = []
 
-        all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+        all_pair_connected = self.process_link_status_change(verbose)
 
         while all_pair_connected:
 
@@ -251,14 +286,14 @@ class FlowValidator:
             # Break the edge
             edges_broken.append(edge)
             self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-            all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+            all_pair_connected = self.process_link_status_change(verbose)
 
         # Restore the edges for next run
         for edge in edges_broken:
             print "Restoring the edge:", edge
             self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
 
-        all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+        all_pair_connected = self.process_link_status_change(verbose)
 
         if verbose:
             print "edges_broken:", edges_broken
