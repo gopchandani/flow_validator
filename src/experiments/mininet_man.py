@@ -169,14 +169,15 @@ class MininetMan():
                 if edge[0].startswith("h") or edge[1].startswith("h"):
                     continue
                 else:
+
                     is_connected_before_failure = self._ping_host_pair(src_host, dst_host)
-                    self.net.configLinkStatus('s1', 's2', 'down')
+                    self.net.configLinkStatus(edge[0], edge[1], 'down')
                     is_connected_after_failure = self._ping_host_pair(src_host, dst_host)
-                    self.net.configLinkStatus('s1', 's2', 'up')
+                    self.net.configLinkStatus(edge[0], edge[1], 'up')
                     is_connected_after_restoration = self._ping_host_pair(src_host, dst_host)
 
                     if is_connected_before_failure != is_connected_after_failure:
-                        print "Got a problem here for src_host:", src_host, "dst_host:", dst_host
+                        print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
                         is_bi_connected = False
 
         return is_bi_connected
