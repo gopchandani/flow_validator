@@ -92,7 +92,7 @@ class Experiment(object):
                         self.synthesis = IntentSynthesisLB(ng, master_switch=topo_description[0] == "linear")
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
-                    #self.mm.net.pingAll(self.mm.ping_timeout)
+                    #self.mm.net.pingAll()
                     is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
                     #is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h131'),
                     #                                                             self.mm.net.get('h101'))])

@@ -38,7 +38,6 @@ class MininetMan():
         self.net = None
         self.synthesis_scheme = synthesis_scheme
 
-        self.ping_timeout = 1
         self.num_switches = num_switches
         self.num_hosts_per_switch = num_hosts_per_switch
         self.fanout = fanout
@@ -147,7 +146,7 @@ class MininetMan():
 
     def _ping_host_pair(self, src_host, dst_host):
         hosts = [src_host, dst_host]
-        ping_loss_rate = self.net.ping(hosts, str(self.ping_timeout))
+        ping_loss_rate = self.net.ping(hosts)
 
         if ping_loss_rate < 100.0:
             return True
