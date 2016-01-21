@@ -147,7 +147,7 @@ class MininetMan():
 
     def _ping_host_pair(self, src_host, dst_host):
         hosts = [src_host, dst_host]
-        ping_loss_rate = self.net.ping(hosts, self.ping_timeout)
+        ping_loss_rate = self.net.ping(hosts, str(self.ping_timeout))
 
         if ping_loss_rate < 100.0:
             return True
@@ -178,7 +178,11 @@ class MininetMan():
 
                     if is_connected_before_failure != is_connected_after_failure:
                         print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
-                        is_bi_connected = False
+
+                        cmd_output = src_host.cmd("ping -c 5 " + dst_host.IP())
+                        print cmd_output
+                        if cmd_output.find("0 received") != -1:
+                            is_bi_connected = False
 
         return is_bi_connected
 

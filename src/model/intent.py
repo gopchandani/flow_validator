@@ -17,6 +17,9 @@ class Intent():
 
         self.apply_immediately = apply_immediately
 
+        self.src_host = None
+        self.dst_host = None
+
     def __hash__(self):
         return self.hash_value
 

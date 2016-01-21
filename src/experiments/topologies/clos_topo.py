@@ -38,6 +38,11 @@ class ClosTopo(Topo):
 
         for x in range(1, self.total_edge_switches + 1):
             self.total_switches += 1
+
+            edge_switch_name = 's%i' % self.total_switches
+            if not (edge_switch_name == 's7' or edge_switch_name == 's8' or edge_switch_name == 's9' or edge_switch_name == 's10'):
+                continue
+
             self.edge_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow13")
             
         print "Edge switches:",  self.edge_switches
@@ -47,7 +52,7 @@ class ClosTopo(Topo):
                 self.addLink(self.agg_switches[x], self.edge_switches[y])
 
         for edge_switch_num in self.edge_switches:
-            
+
             # add fanout number of hosts to each edge switch
             for y in xrange(self.num_hosts_per_switch):
                 host_name = self.addHost("h" + self.edge_switches[edge_switch_num][1:] + str(y+1))

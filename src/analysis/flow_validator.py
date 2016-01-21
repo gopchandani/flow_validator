@@ -47,6 +47,8 @@ class FlowValidator:
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
             admitted_traffic.set_field("ethernet_destination", dst_mac_int)
 
+            print "Initializing for host:", host_id
+
             self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
                                                      admitted_traffic,
                                                      None,

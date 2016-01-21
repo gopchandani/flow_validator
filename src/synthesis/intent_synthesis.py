@@ -42,7 +42,7 @@ class IntentSynthesis():
         # Table contains the actual forwarding rules
         self.ip_forwarding_table_id = 4
 
-    def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
+    def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type, flow_match, first_in_port, dst_switch_tag):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
 
@@ -62,6 +62,8 @@ class IntentSynthesis():
                 pass
 
             intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
+            intent.src_host = src_host
+            intent.dst_host = dst_host
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
@@ -218,7 +220,7 @@ class IntentSynthesis():
             self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
+        self._compute_path_ip_intents(src_host, dst_host, p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
@@ -238,7 +240,7 @@ class IntentSynthesis():
                 bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.switch_id)
                 print "Backup Path from src:", p[i], "to destination:", dst_host.switch_id, "is:", bp
 
-                self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
+                self._compute_path_ip_intents(src_host, dst_host, bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
             except nx.exception.NetworkXNoPath:
                 print "No backup path between:", p[i], "to:", dst_host.switch_id
 
@@ -422,18 +424,25 @@ class IntentSynthesis():
 
                 if reverse_intents:
 
-                    group_id = self.synthesis_lib.push_select_all_group(sw, [reverse_intents[0]])
+                    if len(reverse_intents) > 1:
+                        pass
 
-                    reverse_intents[0].flow_match["in_port"] = int(reverse_intents[0].in_port)
-                    reverse_intents[0].flow_match["vlan_id"] = int(dst)
+                    for reverse_intent in reverse_intents:
 
-                    flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw,
-                        self.reverse_rules_table_id,
-                        group_id,
-                        1,
-                        reverse_intents[0].flow_match,
-                        reverse_intents[0].apply_immediately)
+                        group_id = self.synthesis_lib.push_select_all_group(sw, [reverse_intent])
+
+                        reverse_intent.flow_match["in_port"] = int(reverse_intent.in_port)
+                        reverse_intent.flow_match["vlan_id"] = int(dst)
+                        source_mac_int = int(reverse_intent.src_host.mac_addr.replace(":", ""), 16)
+                        reverse_intent.flow_match["ethernet_destination"] = int(source_mac_int)
+
+                        flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                            sw,
+                            self.reverse_rules_table_id,
+                            group_id,
+                            1,
+                            reverse_intent.flow_match,
+                            reverse_intent.apply_immediately)
 
     def _synthesize_all_node_pairs(self, dst_port=None):
 
