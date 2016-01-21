@@ -353,17 +353,15 @@ class PortGraph:
 
             # If destination is one of the successors, stop
             if dst_p in at:
-                this_path.append(dst_p.port_id)
+                this_path.append(dst_p)
                 all_paths.append(this_path)
                 path_vuln_ranks.append(path_vuln_rank)
-                if verbose:
-                    print this_path
 
             # Otherwise explore all the successors
             else:
                 for succ_p in at:
                     # Check for loops, if a port repeats more than twice, it is a loop
-                    indices = [i for i,x in enumerate(this_path) if x == succ_p.port_id]
+                    indices = [i for i,x in enumerate(this_path) if x == succ_p]
                     if len(indices) > 2:
                         if verbose:
                             print "Found a loop, this_path:", this_path
@@ -376,7 +374,7 @@ class PortGraph:
                                 max_edge_vuln_rank = edge_vuln_rank
             
                         if at[succ_p].is_subset_traffic(specific_traffic):
-                            this_path.append(succ_p.port_id)
+                            this_path.append(succ_p)
 
                             modified_specific_traffic = at[succ_p].get_modified_traffic()
 

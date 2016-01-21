@@ -243,7 +243,7 @@ class IntentSynthesis():
                 print "No backup path between:", p[i], "to:", dst_host.switch_id
 
             # Add the edge back and the data that goes along with it
-            self.network_graph.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
+            self.network_graph.add_edge(p[i], edge_ports_dict[p[i]], p[i + 1], edge_ports_dict[p[i + 1]])
             in_port = edge_ports_dict[p[i+1]]
 
     def push_switch_changes(self):

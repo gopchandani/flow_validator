@@ -7,7 +7,6 @@ sys.path.append("./")
 from model.port_graph import PortGraph
 from model.traffic import Traffic, TrafficElement
 from model.match import Match
-from collections import defaultdict
 
 class FlowValidator:
 
@@ -72,7 +71,7 @@ class FlowValidator:
                 self.port_graph.get_paths(src_host_obj.switch_ingress_port,
                                           dst_host_obj.switch_egress_port,
                                           specific_traffic,
-                                          [src_host_obj.switch_ingress_port.port_id],
+                                          [src_host_obj.switch_ingress_port],
                                           all_paths,
                                           0,
                                           path_vuln_ranks,
@@ -126,6 +125,9 @@ class FlowValidator:
                 if src_h_id == dst_h_id:
                     continue
 
+                if src_h_id == 'h131' and dst_h_id == 'h101':
+                    pass
+
                 if verbose:
                     print "src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
 
@@ -143,9 +145,9 @@ class FlowValidator:
                         print "Vulnerable Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
 
                     path = all_paths[0]
-                    prev_switch = path[0][0:2]
+                    prev_switch = path[0].sw.node_id
                     for this_path_element in path[1:]:
-                        this_switch = this_path_element[0:2]
+                        this_switch = this_path_element.sw.node_id
 
                         if prev_switch != this_switch:
                             self.network_graph.graph[prev_switch][this_switch]\
@@ -324,6 +326,7 @@ class FlowValidator:
         edges_broken = []
 
         all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+        self.process_link_status_change(verbose)
 
         for edge in edges:
 

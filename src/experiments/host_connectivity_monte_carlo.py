@@ -135,7 +135,7 @@ def main():
     controller = "ryu"
 
     fanout = 2
-    core = 1
+    core = 2
     total_number_of_ports_to_synthesize = 1
     numbers_of_monte_carlo_runs = [30]#[10, 20, 30]
 
