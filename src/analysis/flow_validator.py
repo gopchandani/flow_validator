@@ -327,7 +327,7 @@ class FlowValidator:
 
         edges_broken = []
 
-        all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+        # all_pair_connected = self.validate_all_host_pair_reachability(verbose)
         # self.process_link_status_change(verbose)
 
         for edge in edges:

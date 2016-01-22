@@ -396,7 +396,7 @@ class IntentSynthesis():
 
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                             sw,
-                            self.ip_forwarding_table_id,
+                            self.reverse_rules_table_id,
                             group_id,
                             1,
                             separate_intent.flow_match,
