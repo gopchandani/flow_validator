@@ -63,7 +63,7 @@ class FlowValidator:
         path_vuln_ranks = []
         all_paths = []
 
-        if src_h_id == 'h21' and dst_h_id == 'h31':
+        if src_h_id == 'h11' and dst_h_id == 'h41':
             pass
 
         if not at.is_empty():

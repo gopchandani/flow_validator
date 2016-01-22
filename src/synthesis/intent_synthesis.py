@@ -78,15 +78,32 @@ class IntentSynthesis():
                 edge_ports_dict = self.network_graph.get_edge_port_dict(p[i+1], p[i+2])
                 out_port = edge_ports_dict[p[i+1]]
 
-    def get_intents(self, dst_intents, intent_type):
+    def get_intents(self, dst_intents, required_intent_type):
 
-        return_intent = []
+        required_intents = []
 
-        for intent in dst_intents:
-            if intent.intent_type == intent_type:
-                return_intent.append(intent)
+        expanded_dst_intents = []
 
-        return return_intent
+        for intent_key in dst_intents:
+            expanded_dst_intents.extend(dst_intents[intent_key])
+
+        for intent in expanded_dst_intents:
+            if intent.intent_type == required_intent_type:
+
+                required_intents.append(intent)
+
+                # if intent.intent_type == "failover":
+                #     return_intents.extend(dst_intents[intent])
+                # elif intent.intent_type == "reverse":
+                #     intents_here = dst_intents[intent]
+                #
+                #     for ih in intents_here:
+                #         if ih.intent_type == "failover" and intent_type == "failover":
+                #             return_intents.append(ih)
+                # else:
+                #     return_intents.append(intent)
+
+        return required_intents
 
     def _identify_reverse_and_balking_intents(self):
 
@@ -94,13 +111,10 @@ class IntentSynthesis():
 
             sw_obj = self.network_graph.get_node_object(sw)
 
-            intents = self.network_graph.graph.node[sw]["sw"].intents
+            intents = sw_obj.intents
 
             for dst in intents:
                 dst_intents = intents[dst]
-
-                if sw == 's2' and dst == 3:
-                    pass
 
                 primary_intents = self.get_intents(dst_intents, "primary")
 
@@ -134,8 +148,11 @@ class IntentSynthesis():
                         #  There are two ways to identify reverse intents
                         #  1. at the source switch, with intent's source port equal to destination port of the primary intent
                         if reverse_candidate_intent.in_port == primary_intent.out_port:
-                            reverse_candidate_intent.intent_type = "reverse"
-                            continue
+
+                            # If the intent is in fact related to a flow that originates on this switch
+                            if reverse_candidate_intent.src_host.switch_id == sw:
+                                reverse_candidate_intent.intent_type = "reverse"
+                                continue
 
                         #  2. At any other switch
                         # with intent's destination port equal to source port of primary intent
@@ -149,10 +166,10 @@ class IntentSynthesis():
         intents = self.network_graph.graph.node[switch_id]["sw"].intents
 
         if key in intents:
-            intents[key][intent] += 1
+            intents[key][intent].append(intent)
         else:
-            intents[key] = defaultdict(int)
-            intents[key][intent] = 1
+            intents[key] = defaultdict(list)
+            intents[key][intent] = [intent]
 
     def _compute_destination_host_mac_intents(self, h_obj, flow_match, matching_tag):
 
@@ -287,6 +304,10 @@ class IntentSynthesis():
                                                           self.get_intents(dst_intents, "push_vlan"),
                                                           self.vlan_tag_push_rules_table_id)
 
+
+                if sw == 's2' and dst == 4:
+                    pass
+
                 primary_intents = self.get_intents(dst_intents, "primary")
                 reverse_intents = self.get_intents(dst_intents, "reverse")
                 balking_intents = self.get_intents(dst_intents, "balking")
@@ -330,8 +351,14 @@ class IntentSynthesis():
                         consolidation_found = False
 
                         for primary_intent in primary_intents:
+
+                            if sw == 's2' and dst == 4:
+                                pass
+
                             if (primary_intent.in_port == failover_intent.in_port and
                                         primary_intent.out_port != failover_intent.out_port):
+
+                                if failover_intent.src_host.switch_id == sw:
                                     consolidation_found = True
 
                         if consolidation_found:
@@ -363,6 +390,9 @@ class IntentSynthesis():
 
                         separate_intent.flow_match["vlan_id"] = int(dst)
                         separate_intent.flow_match["in_port"] = int(separate_intent.in_port)
+
+                        source_mac_int = int(separate_intent.src_host.mac_addr.replace(":", ""), 16)
+                        separate_intent.flow_match["ethernet_source"] = int(source_mac_int)
 
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                             sw,
@@ -427,12 +457,6 @@ class IntentSynthesis():
                                 balking_intent.apply_immediately)
 
                 if reverse_intents:
-
-                    if sw == 's2' and dst == 3:
-                        pass
-
-                    if len(reverse_intents) > 1:
-                        pass
 
                     for reverse_intent in reverse_intents:
 
