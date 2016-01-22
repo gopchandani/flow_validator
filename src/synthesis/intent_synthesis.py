@@ -92,24 +92,22 @@ class IntentSynthesis():
 
         for sw in self.s:
 
+            sw_obj = self.network_graph.get_node_object(sw)
+
             intents = self.network_graph.graph.node[sw]["sw"].intents
 
             for dst in intents:
                 dst_intents = intents[dst]
 
-                primary_intent = None
+                if sw == 's2' and dst == 3:
+                    pass
+
                 primary_intents = self.get_intents(dst_intents, "primary")
-                if primary_intents:
-                    primary_intent = primary_intents[0]
 
                 for intent in dst_intents:
 
                     #  Nothing needs to be done for primary intent
-                    if intent == primary_intent:
-                        continue
-
-                    # Nothing needs to be done for vlan intents either
-                    if intent.intent_type == "push_vlan":
+                    if intent in primary_intents:
                         continue
 
                     # A balking intent happens on the switch where reversal begins,
@@ -120,24 +118,30 @@ class IntentSynthesis():
                         intent.intent_type = "balking"
                         continue
 
-                    #  Processing from this point onwards require presence of a primary intent
-                    if not primary_intent:
-                        continue
+                # Identifying reverse intents separately out of remaining failover intents.
+                #
+                remaining_failover_intents = self.get_intents(dst_intents, "failover")
+                reverse_candidate_intents = []
+                for rfi in remaining_failover_intents:
+                    if rfi.in_port not in sw_obj.host_ports:
+                        reverse_candidate_intents.append(rfi)
 
-                    #  If this intent is at a reverse flow carrier switch
+                for primary_intent in primary_intents:
+                    for reverse_candidate_intent in reverse_candidate_intents:
 
-                    #  There are two ways to identify reverse intents
+                        #  If this intent is at a reverse flow carrier switch
 
-                    #  1. at the source switch, with intent's source port equal to destination port of the primary intent
-                    if intent.in_port == primary_intent.out_port:
-                        intent.intent_type = "reverse"
-                        continue
+                        #  There are two ways to identify reverse intents
+                        #  1. at the source switch, with intent's source port equal to destination port of the primary intent
+                        if reverse_candidate_intent.in_port == primary_intent.out_port:
+                            reverse_candidate_intent.intent_type = "reverse"
+                            continue
 
-                    #  2. At any other switch
-                    # with intent's destination port equal to source port of primary intent
-                    if intent.out_port == primary_intent.in_port:
-                        intent.intent_type = "reverse"
-                        continue
+                        #  2. At any other switch
+                        # with intent's destination port equal to source port of primary intent
+                        if reverse_candidate_intent.out_port == primary_intent.in_port:
+                            reverse_candidate_intent.intent_type = "reverse"
+                            continue
 
     def _add_intent(self, switch_id, key, intent):
 
@@ -424,6 +428,9 @@ class IntentSynthesis():
 
                 if reverse_intents:
 
+                    if sw == 's2' and dst == 3:
+                        pass
+
                     if len(reverse_intents) > 1:
                         pass
 
@@ -434,7 +441,7 @@ class IntentSynthesis():
                         reverse_intent.flow_match["in_port"] = int(reverse_intent.in_port)
                         reverse_intent.flow_match["vlan_id"] = int(dst)
                         source_mac_int = int(reverse_intent.src_host.mac_addr.replace(":", ""), 16)
-                        reverse_intent.flow_match["ethernet_destination"] = int(source_mac_int)
+                        reverse_intent.flow_match["ethernet_source"] = int(source_mac_int)
 
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                             sw,

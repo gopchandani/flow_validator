@@ -194,6 +194,7 @@ class NetworkGraph():
 
                 # Add the host to the graph
                 self.host_ids.append(mininet_host_dict["host_name"])
+                sw_obj = self.get_node_object(sw)
 
                 if self.load_config:
                     h_obj = Host(mininet_host_dict["host_name"],
@@ -203,6 +204,9 @@ class NetworkGraph():
                                  mininet_host_dict["host_switch_id"],
                                  host_switch_obj,
                                  mininet_port_edges[mininet_host_dict["host_name"]]['0'][1])
+
+                    sw_obj.host_ports.append(mininet_port_edges[mininet_host_dict["host_name"]]['0'][1])
+
                 else:
                     h_obj = Host(mininet_host_dict["host_name"],
                                  self,
@@ -211,6 +215,8 @@ class NetworkGraph():
                                  mininet_host_dict["host_switch_id"],
                                  host_switch_obj,
                                  mininet_port_edges[mininet_host_dict["host_name"]][0][1])
+
+                    sw_obj.host_ports.append(mininet_port_edges[mininet_host_dict["host_name"]][0][1])
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 

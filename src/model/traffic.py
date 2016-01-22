@@ -423,6 +423,9 @@ class Traffic():
             orig_traffic.traffic_elements.append(orig_te)
         return orig_traffic
 
+    def get_intersecting_modifications(self):
+        pass
+
     def get_modified_traffic(self):
 
         modified_traffic = Traffic()

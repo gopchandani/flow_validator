@@ -17,6 +17,7 @@ class Switch():
         self.flow_tables = []
         self.group_table = None
         self.ports = None
+        self.host_ports = []
 
         # Synthesis stuff
         self.intents = defaultdict(dict)

@@ -359,6 +359,9 @@ class PortGraph:
 
             # Otherwise explore all the successors
             else:
+
+                this_path_continues = False
+
                 for succ_p in at:
                     # Check for loops, if a port repeats more than twice, it is a loop
                     indices = [i for i,x in enumerate(this_path) if x == succ_p]
@@ -376,7 +379,10 @@ class PortGraph:
                         if at[succ_p].is_subset_traffic(specific_traffic):
                             this_path.append(succ_p)
 
-                            modified_specific_traffic = at[succ_p].get_modified_traffic()
+                            #modified_specific_traffic = at[succ_p].get_modified_traffic()
+
+                            modified_specific_traffic = specific_traffic.intersect(at[succ_p])
+                            modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
 
                             self.get_paths(succ_p,
                                            dst_p,
@@ -386,3 +392,8 @@ class PortGraph:
                                            path_vuln_rank + max_edge_vuln_rank,
                                            path_vuln_ranks,
                                            verbose)
+
+                            this_path_continues = True
+
+                if not this_path_continues:
+                    pass
