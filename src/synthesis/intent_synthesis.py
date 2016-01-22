@@ -92,17 +92,6 @@ class IntentSynthesis():
 
                 required_intents.append(intent)
 
-                # if intent.intent_type == "failover":
-                #     return_intents.extend(dst_intents[intent])
-                # elif intent.intent_type == "reverse":
-                #     intents_here = dst_intents[intent]
-                #
-                #     for ih in intents_here:
-                #         if ih.intent_type == "failover" and intent_type == "failover":
-                #             return_intents.append(ih)
-                # else:
-                #     return_intents.append(intent)
-
         return required_intents
 
     def _identify_reverse_and_balking_intents(self):
@@ -304,10 +293,6 @@ class IntentSynthesis():
                                                           self.get_intents(dst_intents, "push_vlan"),
                                                           self.vlan_tag_push_rules_table_id)
 
-
-                if sw == 's2' and dst == 4:
-                    pass
-
                 primary_intents = self.get_intents(dst_intents, "primary")
                 reverse_intents = self.get_intents(dst_intents, "reverse")
                 balking_intents = self.get_intents(dst_intents, "balking")
@@ -351,9 +336,6 @@ class IntentSynthesis():
                         consolidation_found = False
 
                         for primary_intent in primary_intents:
-
-                            if sw == 's2' and dst == 4:
-                                pass
 
                             if (primary_intent.in_port == failover_intent.in_port and
                                         primary_intent.out_port != failover_intent.out_port):

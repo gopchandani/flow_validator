@@ -366,8 +366,7 @@ class PortGraph:
                     # Check for loops, if a port repeats more than twice, it is a loop
                     indices = [i for i,x in enumerate(this_path) if x == succ_p]
                     if len(indices) > 2:
-                        if verbose:
-                            print "Found a loop, this_path:", this_path
+                        print "Found a loop, this_path:", this_path
                     else:
                         max_edge_vuln_rank = -1
                         edge_data = self.g.get_edge_data(this_p.port_id, succ_p.port_id)["edge_data"]
