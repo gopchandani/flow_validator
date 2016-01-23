@@ -287,8 +287,8 @@ class FlowValidator:
             if sampled_edge in edges_broken:
                 continue
 
-            if not self.is_edge_vulnerable(sampled_edge) and edges_broken:
-                continue
+            # if not self.is_edge_vulnerable(sampled_edge) and edges_broken:
+            #     continue
 
             break
 
