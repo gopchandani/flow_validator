@@ -325,12 +325,9 @@ class IntentSynthesis():
 
                 if primary_intents and failover_intents:
 
-                    # TODO: This leaves out the case when there is a primary intent for which failover
-                    # intent cannot be found and might need to be handled separately
-
                     # Find intents to consolidate, they should have same in_port and different out_port
                     consolidated_failover_intents = []
-                    handled_separately_intents = []
+                    handled_separately_failover_intents = []
 
                     for failover_intent in failover_intents:
                         consolidation_found = False
@@ -340,8 +337,11 @@ class IntentSynthesis():
                             if (primary_intent.in_port == failover_intent.in_port and
                                         primary_intent.out_port != failover_intent.out_port):
 
-                                if failover_intent.src_host.switch_id == sw:
+                                # Consolidate for failover only when the source host in both intents match
+                                if failover_intent.src_host.switch_id == primary_intent.src_host.switch_id:
                                     consolidation_found = True
+
+                                    primary_intent.consolidated_in_a_failover_group = True
 
                         if consolidation_found:
                             already_exists = [(x,y) for x, y in consolidated_failover_intents
@@ -352,7 +352,7 @@ class IntentSynthesis():
                             if not already_exists:
                                 consolidated_failover_intents.append((primary_intent, failover_intent))
                         else:
-                            handled_separately_intents.append(failover_intent)
+                            handled_separately_failover_intents.append(failover_intent)
 
                     for primary_intent, failover_intent in consolidated_failover_intents:
                         group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intent, failover_intent)
@@ -367,7 +367,7 @@ class IntentSynthesis():
                             primary_intent.flow_match,
                             primary_intent.apply_immediately)
 
-                    for separate_intent in handled_separately_intents:
+                    for separate_intent in handled_separately_failover_intents:
                         group_id = self.synthesis_lib.push_select_all_group(sw, [separate_intent])
 
                         separate_intent.flow_match["vlan_id"] = int(dst)
@@ -383,6 +383,15 @@ class IntentSynthesis():
                             1,
                             separate_intent.flow_match,
                             separate_intent.apply_immediately)
+
+                    # TODO: This leaves out the case when there is a primary intent for which failover
+                    # intent cannot be found and might need to be handled separately
+
+                    unconsolidated_primary_intents = [x for x in primary_intents
+                                                      if x.consolidated_in_a_failover_group == False]
+
+                    for upi in unconsolidated_primary_intents:
+                        pass
 
                 #  Handle the case when switch only participates in carrying the failover traffic in-transit
                 if not primary_intents and failover_intents:

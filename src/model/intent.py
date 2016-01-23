@@ -20,6 +20,8 @@ class Intent():
         self.src_host = None
         self.dst_host = None
 
+        self.consolidated_in_a_failover_group = False
+
     def __hash__(self):
         return self.hash_value
 
