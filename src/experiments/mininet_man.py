@@ -144,14 +144,21 @@ class MininetMan():
 
                 yield (src_host_node, dst_host_node)
 
-    def _ping_host_pair(self, src_host, dst_host):
+    def is_host_pair_pingable(self, src_host, dst_host):
         hosts = [src_host, dst_host]
         ping_loss_rate = self.net.ping(hosts, '1')
 
+        # If some packets get through, then declare pingable
         if ping_loss_rate < 100.0:
             return True
         else:
-            return False
+            # If not, do a double check:
+            cmd_output = src_host.cmd("ping -c 3 " + dst_host.IP())
+            print cmd_output
+            if cmd_output.find("0 received") != -1:            
+                return False
+            else:
+                return True
 
     def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check=None):
 
@@ -162,12 +169,9 @@ class MininetMan():
 
         for (src_host, dst_host) in experiment_host_pairs_to_check:
 
-            if src_host.name == 'h61' and dst_host.name == 'h71':
-                pass
+            is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
 
-            is_connected_before_failure = self._ping_host_pair(src_host, dst_host)
-
-            if not is_connected_before_failure:
+            if not is_pingable_before_failure:
                 print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
                 is_bi_connected = False
                 break
@@ -179,19 +183,13 @@ class MininetMan():
                     continue
                 else:
                     self.net.configLinkStatus(edge[0], edge[1], 'down')
-                    is_connected_after_failure = self._ping_host_pair(src_host, dst_host)
-
-                    if not is_connected_after_failure == True:
-
-                        cmd_output = src_host.cmd("ping -c 3 " + dst_host.IP())
-                        print cmd_output
-                        if cmd_output.find("0 received") != -1:
-                            is_bi_connected = False
-                            print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
-                            break
-
+                    is_pingable_after_failure = self.is_host_pair_pingable(src_host, dst_host)
                     self.net.configLinkStatus(edge[0], edge[1], 'up')
 
+                    if not is_pingable_after_failure == True:
+                        is_bi_connected = False
+                        print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
+                        break
 
         return is_bi_connected
 

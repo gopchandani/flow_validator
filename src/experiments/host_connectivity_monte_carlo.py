@@ -55,8 +55,7 @@ class MonteCarlo(Experiment):
 
             #broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
             #broken_edges = self.fv.break_specified_edges_in_order([('s2', 's7'), ('s3', 's7')], verbose=True)
-            broken_edges = self.fv.break_specified_edges_in_order([('s3', 's7')], verbose=True)
-
+            broken_edges = self.fv.break_specified_edges_in_order([('s1', 's4')], verbose=True)
 
             num_edges = len(broken_edges)
 
@@ -82,8 +81,8 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
