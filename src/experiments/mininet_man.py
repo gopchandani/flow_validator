@@ -5,6 +5,8 @@ import json
 import time
 import os
 import httplib2
+import fcntl, struct
+from socket import *
 
 from functools import partial
 
@@ -160,7 +162,46 @@ class MininetMan():
             else:
                 return True
 
-    def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check=None):
+    def get_intf_status(self, ifname):
+
+        # set some symbolic constants
+        SIOCGIFFLAGS = 0x8913
+        null256 = '\0'*256
+
+        # create a socket so we have a handle to query
+        s = socket(AF_INET, SOCK_DGRAM)
+
+        # call ioctl() to get the flags for the given interface
+        result = fcntl.ioctl(s.fileno(), SIOCGIFFLAGS, ifname + null256)
+
+        # extract the interface's flags from the return value
+        flags, = struct.unpack('H', result[16:18])
+
+        # check "UP" bit and print a message
+        up = flags & 1
+
+        return ('down', 'up')[up]
+
+    def wait_until_link_status(self, sw_i, sw_j, intended_status):
+
+        num_seconds = 0
+
+        for link in self.net.links:
+            if (sw_i in link.intf1.name and sw_j in link.intf2.name) or (sw_i in link.intf2.name and sw_j in link.intf1.name):
+
+                while True:
+                    status_i = self.get_intf_status(link.intf1.name)
+                    status_j = self.get_intf_status(link.intf2.name)
+
+                    if status_i == intended_status and status_j == intended_status:
+                        break
+
+                    time.sleep(1)
+                    num_seconds +=1
+
+        return num_seconds
+
+    def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check=None, edges_to_try=None):
 
         is_bi_connected= True
 
@@ -176,20 +217,29 @@ class MininetMan():
                 is_bi_connected = False
                 break
 
-            for edge in self.topo.g.edges():
+            if not edges_to_try:
+                edges_to_try = self.topo.g.edges()
+
+            for edge in edges_to_try:
 
                 # Only try and break switch-switch edges
                 if edge[0].startswith("h") or edge[1].startswith("h"):
                     continue
                 else:
                     self.net.configLinkStatus(edge[0], edge[1], 'down')
+                    num_seconds = self.wait_until_link_status(edge[0], edge[1], 'down')
+                    print num_seconds
                     is_pingable_after_failure = self.is_host_pair_pingable(src_host, dst_host)
                     self.net.configLinkStatus(edge[0], edge[1], 'up')
+                    num_seconds = self.wait_until_link_status(edge[0], edge[1], 'up')
+                    print num_seconds
+                    is_pingable_after_restoration = self.is_host_pair_pingable(src_host, dst_host)
 
                     if not is_pingable_after_failure == True:
                         is_bi_connected = False
                         print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
                         break
+
 
         return is_bi_connected
 
