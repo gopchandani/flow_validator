@@ -29,6 +29,8 @@ class Switch():
 
     def init_switch_port_graph(self):
 
+        print "Initializing Port Graph for switch:", self.node_id
+
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
 
@@ -166,6 +168,8 @@ class Switch():
 
     def compute_switch_transfer_traffic(self):
 
+        print "Computing Transfer Function for switch:", self.node_id
+
         # Inject wildcard traffic at each ingress port of the switch
         for port in self.ports:
 
@@ -174,6 +178,10 @@ class Switch():
 
             transfer_traffic = Traffic(init_wildcard=True)
             tf_changes = []
+
+            if out_p.port_id == 's3:egress5':
+                pass
+
             self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p, tf_changes)
 
     def account_port_transfer_traffic(self, port, dst_traffic_at_succ, succ, dst_port):
@@ -224,6 +232,9 @@ class Switch():
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
     def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes, vuln_rank=0):
+
+        if curr.port_id == 's3:table4' and dst_port.port_id == 's3:egress5':
+            pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst_port)

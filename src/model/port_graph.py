@@ -122,11 +122,10 @@ class PortGraph:
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
-
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
-            # if sw.node_id == 's1':
-            #     test_passed = sw.test_one_port_failure_at_a_time(verbose=False)
+            #if sw.node_id == 's3':
+                #test_passed = sw.test_one_port_failure_at_a_time(verbose=False)
             self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
