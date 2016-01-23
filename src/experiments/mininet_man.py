@@ -227,12 +227,10 @@ class MininetMan():
                     continue
                 else:
                     self.net.configLinkStatus(edge[0], edge[1], 'down')
-                    num_seconds = self.wait_until_link_status(edge[0], edge[1], 'down')
-                    print num_seconds
+                    self.wait_until_link_status(edge[0], edge[1], 'down')
                     is_pingable_after_failure = self.is_host_pair_pingable(src_host, dst_host)
                     self.net.configLinkStatus(edge[0], edge[1], 'up')
-                    num_seconds = self.wait_until_link_status(edge[0], edge[1], 'up')
-                    print num_seconds
+                    self.wait_until_link_status(edge[0], edge[1], 'up')
                     is_pingable_after_restoration = self.is_host_pair_pingable(src_host, dst_host)
 
                     if not is_pingable_after_failure == True:
