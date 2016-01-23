@@ -53,9 +53,9 @@ class MonteCarlo(Experiment):
 
             print "Performing Run:", i + 1
 
-            #broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
+            broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
             #broken_edges = self.fv.break_specified_edges_in_order([('s2', 's7'), ('s3', 's7')], verbose=True)
-            broken_edges = self.fv.break_specified_edges_in_order([('s1', 's4')], verbose=True)
+            #broken_edges = self.fv.break_specified_edges_in_order([('s1', 's4')], verbose=True)
 
             num_edges = len(broken_edges)
 

@@ -205,39 +205,52 @@ class MininetMan():
 
         is_bi_connected= True
 
-        if not experiment_host_pairs_to_check:
-            experiment_host_pairs_to_check = list(self._get_experiment_host_pair())
+        # if not experiment_host_pairs_to_check:
+        #     experiment_host_pairs_to_check = list(self._get_experiment_host_pair())
+        #
+        # for (src_host, dst_host) in experiment_host_pairs_to_check:
+        #
+        #     is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
+        #
+        #     if not is_pingable_before_failure:
+        #         print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
+        #         is_bi_connected = False
+        #         break
 
-        for (src_host, dst_host) in experiment_host_pairs_to_check:
+        if not edges_to_try:
+            edges_to_try = self.topo.g.edges()
 
-            is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
+        for edge in edges_to_try:
 
-            if not is_pingable_before_failure:
-                print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
-                is_bi_connected = False
-                break
+            # Only try and break switch-switch edges
+            if edge[0].startswith("h") or edge[1].startswith("h"):
+                continue
 
-            if not edges_to_try:
-                edges_to_try = self.topo.g.edges()
+            if not experiment_host_pairs_to_check:
+                experiment_host_pairs_to_check = list(self._get_experiment_host_pair())
 
-            for edge in edges_to_try:
+            for (src_host, dst_host) in experiment_host_pairs_to_check:
 
-                # Only try and break switch-switch edges
-                if edge[0].startswith("h") or edge[1].startswith("h"):
-                    continue
-                else:
-                    self.net.configLinkStatus(edge[0], edge[1], 'down')
-                    self.wait_until_link_status(edge[0], edge[1], 'down')
-                    is_pingable_after_failure = self.is_host_pair_pingable(src_host, dst_host)
-                    self.net.configLinkStatus(edge[0], edge[1], 'up')
-                    self.wait_until_link_status(edge[0], edge[1], 'up')
-                    is_pingable_after_restoration = self.is_host_pair_pingable(src_host, dst_host)
+                is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
 
-                    if not is_pingable_after_failure == True:
-                        is_bi_connected = False
-                        print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
-                        break
+                if not is_pingable_before_failure:
+                    print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
+                    is_bi_connected = False
+                    break
 
+                self.net.configLinkStatus(edge[0], edge[1], 'down')
+                #self.wait_until_link_status(edge[0], edge[1], 'down')
+                time.sleep(30)
+                is_pingable_after_failure = self.is_host_pair_pingable(src_host, dst_host)
+                self.net.configLinkStatus(edge[0], edge[1], 'up')
+                #self.wait_until_link_status(edge[0], edge[1], 'up')
+                time.sleep(30)
+                is_pingable_after_restoration = self.is_host_pair_pingable(src_host, dst_host)
+
+                if not is_pingable_after_failure == True:
+                    is_bi_connected = False
+                    print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
+                    break
 
         return is_bi_connected
 
