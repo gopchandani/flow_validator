@@ -40,8 +40,8 @@ class ClosTopo(Topo):
             self.total_switches += 1
 
             edge_switch_name = 's%i' % self.total_switches
-            if not (edge_switch_name == 's7' or edge_switch_name == 's8' or edge_switch_name == 's9' or edge_switch_name == 's10'):
-                continue
+            # if not (edge_switch_name == 's7' or edge_switch_name == 's8' or edge_switch_name == 's9' or edge_switch_name == 's10'):
+            #     continue
 
             self.edge_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow13")
             

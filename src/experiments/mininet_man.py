@@ -162,26 +162,36 @@ class MininetMan():
 
         for (src_host, dst_host) in experiment_host_pairs_to_check:
 
+            if src_host.name == 'h61' and dst_host.name == 'h71':
+                pass
+
+            is_connected_before_failure = self._ping_host_pair(src_host, dst_host)
+
+            if not is_connected_before_failure:
+                print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
+                is_bi_connected = False
+                break
+
             for edge in self.topo.g.edges():
 
                 # Only try and break switch-switch edges
                 if edge[0].startswith("h") or edge[1].startswith("h"):
                     continue
                 else:
-
-                    is_connected_before_failure = self._ping_host_pair(src_host, dst_host)
                     self.net.configLinkStatus(edge[0], edge[1], 'down')
                     is_connected_after_failure = self._ping_host_pair(src_host, dst_host)
-                    self.net.configLinkStatus(edge[0], edge[1], 'up')
-                    is_connected_after_restoration = self._ping_host_pair(src_host, dst_host)
 
-                    if is_connected_before_failure != is_connected_after_failure:
+                    if not is_connected_after_failure == True:
 
                         cmd_output = src_host.cmd("ping -c 3 " + dst_host.IP())
                         print cmd_output
                         if cmd_output.find("0 received") != -1:
                             is_bi_connected = False
                             print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
+                            break
+
+                    self.net.configLinkStatus(edge[0], edge[1], 'up')
+
 
         return is_bi_connected
 
