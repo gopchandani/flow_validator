@@ -98,12 +98,18 @@ class IntentSynthesis():
 
         for sw in self.s:
 
+            # if sw != 's4':
+            #     continue
+
             sw_obj = self.network_graph.get_node_object(sw)
 
             intents = sw_obj.intents
 
             for dst in intents:
                 dst_intents = intents[dst]
+
+                if sw == 's4' and dst == 11:
+                    pass
 
                 primary_intents = self.get_intents(dst_intents, "primary")
 
@@ -126,28 +132,33 @@ class IntentSynthesis():
                 remaining_failover_intents = self.get_intents(dst_intents, "failover")
                 reverse_candidate_intents = []
                 for rfi in remaining_failover_intents:
+
+                    # Assert that a reverse intent can only be coming in from another switch
                     if rfi.in_port not in sw_obj.host_ports:
                         reverse_candidate_intents.append(rfi)
 
                 for primary_intent in primary_intents:
                     for reverse_candidate_intent in reverse_candidate_intents:
 
-                        #  If this intent is at a reverse flow carrier switch
+                        # Only consider an intent a reverse if the two intents' origin is same switch
+                        if primary_intent.src_host.switch_id == reverse_candidate_intent.src_host.switch_id:
 
-                        #  There are two ways to identify reverse intents
-                        #  1. at the source switch, with intent's source port equal to destination port of the primary intent
-                        if reverse_candidate_intent.in_port == primary_intent.out_port:
+                            #  If this intent is at a reverse flow carrier switch
 
-                            # If the intent is in fact related to a flow that originates on this switch
-                            if reverse_candidate_intent.src_host.switch_id == sw:
+                            #  There are two ways to identify reverse intents
+                            #  1. at the source switch, with intent's source port equal to destination port of the primary intent
+                            if reverse_candidate_intent.in_port == primary_intent.out_port:
+
+                                # If the intent is in fact related to a flow that originates on this switch
+                                if reverse_candidate_intent.src_host.switch_id == sw:
+                                    reverse_candidate_intent.intent_type = "reverse"
+                                    continue
+
+                            #  2. At any other switch
+                            # with intent's destination port equal to source port of primary intent
+                            if reverse_candidate_intent.out_port == primary_intent.in_port:
                                 reverse_candidate_intent.intent_type = "reverse"
                                 continue
-
-                        #  2. At any other switch
-                        # with intent's destination port equal to source port of primary intent
-                        if reverse_candidate_intent.out_port == primary_intent.in_port:
-                            reverse_candidate_intent.intent_type = "reverse"
-                            continue
 
     def _add_intent(self, switch_id, key, intent):
 
@@ -262,6 +273,9 @@ class IntentSynthesis():
 
         for sw in self.s:
 
+            # if sw != 's4':
+            #     continue
+
             print "-- Pushing at Switch:", sw
 
             # Push rules at the switch that drop packets from hosts that are connected to the switch
@@ -280,6 +294,9 @@ class IntentSynthesis():
             self.network_graph.graph.node[sw]["sw"].intents = defaultdict(dict)
 
             for dst in intents:
+
+                if sw == 's4' and dst == 11:
+                    pass
 
                 dst_intents = intents[dst]
 
