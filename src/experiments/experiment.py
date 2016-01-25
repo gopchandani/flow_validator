@@ -39,6 +39,7 @@ class Experiment(object):
         self.controller_port = 6633
         self.cm = None
         self.mm = None
+        self.ng = None
 
         if not self.load_config and self.save_config:
             self.cm = ControllerMan(self.num_controller_instances, controller=controller)
@@ -63,7 +64,7 @@ class Experiment(object):
                 time.sleep(mininet_setup_gap)
 
         # Get a flow validator instance
-        ng = NetworkGraph(mm=self.mm,
+        self.ng = NetworkGraph(mm=self.mm,
                           controller=self.controller,
                           save_config=self.save_config,
                           load_config=self.load_config)
@@ -71,27 +72,27 @@ class Experiment(object):
         if not self.load_config and self.save_config:
 
             if self.controller == "odl":
-                self.mm.setup_mininet_with_odl(ng)
+                self.mm.setup_mininet_with_odl(self.ng)
             elif self.controller == "ryu":
                 #self.mm.setup_mininet_with_ryu_router()
 
                 if qos:
-                    self.mm.setup_mininet_with_ryu_qos(ng)
+                    self.mm.setup_mininet_with_ryu_qos(self.ng)
                 else:
                     #self.mm.setup_mininet_with_ryu(ng, dst_ports_to_synthesize)
 
                     if synthesis_scheme == "IntentSynthesis":
-                        self.synthesis = IntentSynthesis(ng, master_switch=topo_description[0] == "linear",
-                                                         primary_paths_save_directory=ng.config_path_prefix)
+                        self.synthesis = IntentSynthesis(self.ng, master_switch=topo_description[0] == "linear",
+                                                         primary_paths_save_directory=self.ng.config_path_prefix)
 
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
                     elif synthesis_scheme == "IntentSynthesisLDST":
-                        self.synthesis = IntentSynthesisLDST(ng, master_switch=topo_description[0] == "linear")
+                        self.synthesis = IntentSynthesisLDST(self.ng, master_switch=topo_description[0] == "linear")
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
                     elif synthesis_scheme == "IntentSynthesisLB":
-                        self.synthesis = IntentSynthesisLB(ng, master_switch=topo_description[0] == "linear")
+                        self.synthesis = IntentSynthesisLB(self.ng, master_switch=topo_description[0] == "linear")
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
 
@@ -108,9 +109,51 @@ class Experiment(object):
                     time.sleep(synthesis_setup_gap)
 
         # Refresh the network_graph
-        ng.parse_switches()
+        self.ng.parse_switches()
 
-        return ng
+        return self.ng
+
+    def compare_host_pair_paths_with_synthesis(self, analyzed_host_pair_paths, verbose=False):
+
+        all_paths_match = True
+
+        synthesized_primary_paths = None
+
+        if not self.load_config and self.save_config:
+            synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
+        else:
+            with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
+                synthesized_primary_paths = json.loads(in_file.read())
+
+        for src_host in synthesized_primary_paths:
+            for dst_host in synthesized_primary_paths[src_host]:
+
+                path_matches = True
+
+                analyzed_path = [path_port.port_id for path_port in analyzed_host_pair_paths[src_host][dst_host]]
+
+                if len(analyzed_path) == len(synthesized_primary_paths[src_host][dst_host]):
+                    for i in range(len(synthesized_primary_paths)):
+                        if synthesized_primary_paths[src_host][dst_host][i] != analyzed_path[i]:
+                            path_matches = False
+                            break
+                else:
+                    path_matches = False
+
+                if verbose:
+                    print "analyzed_path:", analyzed_path
+                    print "synthesized path:", synthesized_primary_paths[src_host][dst_host]
+
+                if not path_matches:
+                    if verbose:
+                        print "Path for src_host:", src_host, "dst_host:", dst_host, "does not match."
+
+                    all_paths_match = False
+                else:
+                    if verbose:
+                        print "Path for src_host:", src_host, "dst_host:", dst_host, "match."
+
+        return all_paths_match
 
     def dump_data(self):
         pprint(self.data)

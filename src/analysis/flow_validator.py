@@ -4,9 +4,12 @@ import sys
 import random
 sys.path.append("./")
 
+from collections import defaultdict
+
 from model.port_graph import PortGraph
 from model.traffic import Traffic, TrafficElement
 from model.match import Match
+
 
 class FlowValidator:
 
@@ -92,6 +95,30 @@ class FlowValidator:
                 print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at is empty."
 
         return at, all_paths, path_vuln_ranks
+
+    def get_all_host_pair_paths(self, verbose=False):
+
+        host_pair_paths = defaultdict(defaultdict)
+
+        for src_h_id in self.network_graph.host_ids:
+            for dst_h_id in self.network_graph.host_ids:
+
+                if src_h_id == dst_h_id:
+                    continue
+
+                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
+
+                at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
+                                                                                       dst_h_id,
+                                                                                       specific_traffic,
+                                                                                       verbose)
+                if not all_paths:
+                    host_pair_paths[src_h_id][dst_h_id] = []
+                else:
+                    host_pair_paths[src_h_id][dst_h_id] = all_paths[0]
+
+        return host_pair_paths
+
 
     def validate_all_host_pair_reachability(self, verbose=True):
 

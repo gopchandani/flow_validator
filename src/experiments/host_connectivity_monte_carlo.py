@@ -95,9 +95,9 @@ class MonteCarlo(Experiment):
             self.fv.initialize_admitted_traffic()
 
 
-            # import objgraph
-            # objgraph.show_most_common_types()
-
+            analyzed_host_pair_paths = self.fv.get_all_host_pair_paths()
+            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths, verbose=True)
+            print "all_paths_match:", all_paths_match
 
             print "Initialization done."
 
@@ -135,8 +135,8 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     # fanout = 2
