@@ -327,19 +327,19 @@ class FlowValidator:
 
         edges_broken = []
 
-        self.process_link_status_change(verbose)
+        all_pair_connected = self.process_link_status_change(verbose)
 
         for edge in edges:
 
             # Break the edge
             edges_broken.append(edge)
             self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-            all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+            all_pair_connected = self.process_link_status_change(verbose)
 
         # Restore the edges for next run
         for edge in edges_broken:
             self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
-            all_pair_connected = self.validate_all_host_pair_reachability(verbose)
+            all_pair_connected = self.process_link_status_change(verbose)
 
         if verbose:
             print "edges_broken:", edges_broken

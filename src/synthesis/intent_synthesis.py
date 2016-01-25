@@ -39,8 +39,11 @@ class IntentSynthesis():
         # Table contains any rules associated with forwarding host traffic
         self.mac_forwarding_table_id = 3
 
-        # Table contains the actual forwarding rules
-        self.ip_forwarding_table_id = 4
+        # Table contains the primary and failover forwarding rules
+        self.balking_forwarding_table_id = 4
+
+        # Table contains the primary and failover forwarding rules
+        self.primary_failover_forwarding_table_id = 5
 
     def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type, flow_match, first_in_port, dst_switch_tag):
 
@@ -288,6 +291,7 @@ class IntentSynthesis():
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 1)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 2)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 3)
+            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 4)
 
             intents = self.network_graph.graph.node[sw]["sw"].intents
 
@@ -334,7 +338,7 @@ class IntentSynthesis():
 
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                                 sw,
-                                self.ip_forwarding_table_id,
+                                self.primary_failover_forwarding_table_id,
                                 group_id,
                                 1,
                                 pi.flow_match,
@@ -378,7 +382,7 @@ class IntentSynthesis():
 
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                             sw,
-                            self.ip_forwarding_table_id,
+                            self.primary_failover_forwarding_table_id,
                             group_id,
                             1,
                             primary_intent.flow_match,
@@ -419,7 +423,7 @@ class IntentSynthesis():
                         failover_intent.flow_match["in_port"] = int(failover_intent.in_port)
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                             sw,
-                            self.ip_forwarding_table_id,
+                            self.primary_failover_forwarding_table_id,
                             group_id,
                             1,
                             failover_intent.flow_match,
@@ -444,7 +448,7 @@ class IntentSynthesis():
                             corresponding_primary_intent.flow_match["in_port"] = int(corresponding_primary_intent.in_port)
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                                 sw,
-                                self.ip_forwarding_table_id,
+                                self.balking_forwarding_table_id,
                                 group_id,
                                 1,
                                 corresponding_primary_intent.flow_match,
@@ -458,7 +462,7 @@ class IntentSynthesis():
 
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                                 sw,
-                                self.ip_forwarding_table_id,
+                                self.balking_forwarding_table_id,
                                 group_id,
                                 1,
                                 balking_intent.flow_match,
