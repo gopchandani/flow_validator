@@ -81,7 +81,9 @@ class Experiment(object):
                     #self.mm.setup_mininet_with_ryu(ng, dst_ports_to_synthesize)
 
                     if synthesis_scheme == "IntentSynthesis":
-                        self.synthesis = IntentSynthesis(ng, master_switch=topo_description[0] == "linear")
+                        self.synthesis = IntentSynthesis(ng, master_switch=topo_description[0] == "linear",
+                                                         primary_paths_save_directory=ng.config_path_prefix)
+
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
                     elif synthesis_scheme == "IntentSynthesisLDST":

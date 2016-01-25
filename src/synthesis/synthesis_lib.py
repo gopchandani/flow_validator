@@ -7,9 +7,11 @@ import json
 import os
 import sys
 
+from collections import  defaultdict
+
 class SynthesisLib():
 
-    def __init__(self, controller_host, controller_port, network_graph):
+    def __init__(self, controller_host, controller_port, network_graph, primary_paths_save_directory=None):
 
         self.network_graph = network_graph
 
@@ -26,6 +28,21 @@ class SynthesisLib():
         # Cleanup all Queue/QoS records from OVSDB
         os.system("sudo ovs-vsctl -- --all destroy QoS")
         os.system("sudo ovs-vsctl -- --all destroy Queue")
+
+        self.synthesized_primary_paths = defaultdict(defaultdict)
+
+    def record_primary_path(self, src_host, dst_host, switch_port_tuple_list):
+
+        port_path = []
+        for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
+            port_path.append(sw_name + ":ingress" + str(ingress_port_number))
+            port_path.append(sw_name + ":egress" + str(ingress_port_number))
+
+        self.synthesized_primary_paths[src_host.node_id][dst_host.node_id] = port_path
+
+    def save_primary_paths(self, primary_paths_save_directory):
+        with open(primary_paths_save_directory + "synthesized_primary_paths.json", "w") as outfile:
+            json.dump(self.synthesized_primary_paths, outfile)
 
     def push_queue(self, sw, port, min_rate, max_rate):
 

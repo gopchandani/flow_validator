@@ -10,7 +10,9 @@ from model.match import Match
 
 class IntentSynthesis():
 
-    def __init__(self, network_graph, master_switch=False):
+    def __init__(self, network_graph, master_switch=False, primary_paths_save_directory=None):
+
+        self.primary_paths_save_directory = primary_paths_save_directory
 
         self.network_graph = network_graph
         self.master_switch = master_switch
@@ -22,7 +24,6 @@ class IntentSynthesis():
         self.s = set()
 
         self.primary_path_edges = []
-        self.primary_path_edge_dict = {}
 
         self.apply_tag_intents_immediately = True
         self.apply_other_intents_immediately = False
@@ -49,6 +50,8 @@ class IntentSynthesis():
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
 
+        switch_port_tuple_list = []
+
         in_port = first_in_port
         out_port = edge_ports_dict[p[0]]
 
@@ -68,6 +71,8 @@ class IntentSynthesis():
             intent.src_host = src_host
             intent.dst_host = dst_host
 
+            switch_port_tuple_list.append((p[i], in_port, out_port))
+
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
 
@@ -80,6 +85,15 @@ class IntentSynthesis():
 
                 edge_ports_dict = self.network_graph.get_edge_port_dict(p[i+1], p[i+2])
                 out_port = edge_ports_dict[p[i+1]]
+
+        last_switch = p[len(p) - 1]
+        last_edge_ports_dict = self.network_graph.get_edge_port_dict(p[len(p)-2], p[len(p)-1])
+        last_switch_in_port = edge_ports_dict[last_switch]
+
+        switch_port_tuple_list.append((last_switch, last_switch_in_port, dst_host.switch_port_attached))
+
+        if intent_type == "primary":
+            self.synthesis_lib.record_primary_path(src_host, dst_host, switch_port_tuple_list)
 
     def get_intents(self, dst_intents, required_intent_type):
 
@@ -234,14 +248,10 @@ class IntentSynthesis():
 
         print "Primary Path:", p
 
-        self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)] = []
-
         for i in range(len(p)-1):
 
             if (p[i], p[i+1]) not in self.primary_path_edges and (p[i+1], p[i]) not in self.primary_path_edges:
                 self.primary_path_edges.append((p[i], p[i+1]))
-
-            self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
 
         #  Compute all forwarding intents as a result of primary path
         self._compute_path_ip_intents(src_host, dst_host, p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
@@ -529,3 +539,6 @@ class IntentSynthesis():
         else:
             for dst_port in dst_ports_to_synthesize:
                 self._synthesize_all_node_pairs(dst_port)
+
+        if self.primary_paths_save_directory:
+            self.synthesis_lib.save_primary_paths(self.primary_paths_save_directory)
