@@ -44,6 +44,9 @@ class SynthesisLib():
         
     def record_failover_path(self, src_host, dst_host, e, switch_port_tuple_list):
 
+        if src_host == 'h11' and dst_host == 'h31':
+            pass
+
         port_path = []
         
         if e[0] not in self.synthesized_failover_paths:

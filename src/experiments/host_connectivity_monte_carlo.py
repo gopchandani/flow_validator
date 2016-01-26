@@ -53,17 +53,9 @@ class MonteCarlo(Experiment):
 
             print "Performing Run:", i + 1
 
-            #broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
+            broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
 
-            broken_edges = self.fv.break_specified_edges_in_order([('s3', 's12')], verbose=True)
-
-
-            analyzed_host_pair_paths = self.fv.get_all_host_pair_paths()
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths,
-                                                                          verbose=True,
-                                                                          failed_edge=('s3', 's12'))
-            print "all_paths_match:", all_paths_match
-
+            #broken_edges = self.fv.break_specified_edges_in_order([('s3', 's4')], verbose=True)
 
             num_edges = len(broken_edges)
 
@@ -89,8 +81,8 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -103,10 +95,14 @@ class MonteCarlo(Experiment):
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
 
+            #
+            # analyzed_host_pair_paths = self.fv.get_all_host_pair_paths()
+            # all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths, verbose=False)
+            # print "all_paths_match:", all_paths_match
 
-            analyzed_host_pair_paths = self.fv.get_all_host_pair_paths()
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths, verbose=False)
+            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv, verbose=True)
             print "all_paths_match:", all_paths_match
+
 
             print "Initialization done."
 
@@ -152,7 +148,7 @@ def main():
     # core = 3
 
     fanout = 2
-    core = 2
+    core = 1
 
     total_number_of_ports_to_synthesize = 1
     numbers_of_monte_carlo_runs = [1]#[10, 20, 30]

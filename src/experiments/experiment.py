@@ -129,41 +129,78 @@ class Experiment(object):
             with open(self.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
                 synthesized_failover_paths = json.loads(in_file.read())
 
-        if failed_edge:
-            synthesized_paths_to_compare = synthesized_failover_paths[failed_edge[0]][failed_edge[1]]
-        else:
-            synthesized_paths_to_compare = synthesized_primary_paths
-
-
         for src_host in analyzed_host_pair_paths:
             for dst_host in analyzed_host_pair_paths[src_host]:
 
                 path_matches = True
 
                 analyzed_path = [path_port.port_id for path_port in analyzed_host_pair_paths[src_host][dst_host]]
+                synthesized_path = None
 
-                if len(analyzed_path) == len(synthesized_paths_to_compare[src_host][dst_host]):
+                # If an edge has not been failed, then refer to synthesized paths.
+                # If an edge has been failed, first check both permutation of edge switches, if neither is found,
+                # then refer to primary path by assuming that the given edge did not participate in the failover of
+                # the given host pair.
+
+                if failed_edge:
+                    try:
+                        synthesized_path = synthesized_failover_paths[failed_edge[0]][failed_edge[1]][src_host][dst_host]
+                    except:
+                        try:
+                            synthesized_path = synthesized_failover_paths[failed_edge[1]][failed_edge[0]][src_host][dst_host]
+                        except:
+                            synthesized_path = synthesized_primary_paths[src_host][dst_host]
+                else:
+                     synthesized_path = synthesized_primary_paths[src_host][dst_host]
+
+                if len(analyzed_path) == len(synthesized_path):
                     for i in range(len(analyzed_path)):
-                        if analyzed_path[i] != synthesized_paths_to_compare[src_host][dst_host][i]:
+                        if analyzed_path[i] != synthesized_path[i]:
                             path_matches = False
                             break
                 else:
                     path_matches = False
 
-                if verbose:
-                    print "analyzed_path:", analyzed_path
-                    print "synthesized path:", synthesized_paths_to_compare[src_host][dst_host]
-
                 if not path_matches:
-                    if verbose:
-                        print "Path for src_host:", src_host, "dst_host:", dst_host, "does not match."
+                    print "analyzed_path:", analyzed_path
+                    print "synthesized path:", synthesized_path
+                    print "Path for src_host:", src_host, "dst_host:", dst_host, "does not match."
 
                     all_paths_match = False
                 else:
                     if verbose:
+                        print "analyzed_path:", analyzed_path
+                        print "synthesized path:", synthesized_path
                         print "Path for src_host:", src_host, "dst_host:", dst_host, "match."
 
         return all_paths_match
+
+    def compare_failover_host_pair_paths_with_synthesis(self, fv, verbose=False):
+
+        all_paths_match = False
+
+        for edge in fv.network_graph.graph.edges():
+
+            # Ignore host edges
+            if edge[0].startswith("h") or edge[1].startswith("h"):
+                continue
+
+
+            fv.port_graph.remove_node_graph_edge(edge[0], edge[1])
+
+            analyzed_host_pair_paths = fv.get_all_host_pair_paths()
+
+            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths,
+                                                                          verbose=verbose,
+                                                                          failed_edge=edge)
+
+            if not all_paths_match:
+                break
+
+            fv.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
+
+        return all_paths_match
+
 
     def dump_data(self):
         pprint(self.data)
