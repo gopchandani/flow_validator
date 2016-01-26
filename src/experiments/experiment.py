@@ -133,7 +133,7 @@ class Experiment(object):
                 analyzed_path = [path_port.port_id for path_port in analyzed_host_pair_paths[src_host][dst_host]]
 
                 if len(analyzed_path) == len(synthesized_primary_paths[src_host][dst_host]):
-                    for i in range(len(synthesized_primary_paths)):
+                    for i in range(len(analyzed_path)):
                         if synthesized_primary_paths[src_host][dst_host][i] != analyzed_path[i]:
                             path_matches = False
                             break
