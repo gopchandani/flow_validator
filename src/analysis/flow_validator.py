@@ -96,7 +96,7 @@ class FlowValidator:
 
         return at, all_paths, path_vuln_ranks
 
-    def get_all_host_pair_paths(self, verbose=False):
+    def get_all_host_pairs_path_information(self, verbose=False):
 
         host_pair_paths = defaultdict(defaultdict)
 
@@ -115,7 +115,7 @@ class FlowValidator:
                 if not all_paths:
                     host_pair_paths[src_h_id][dst_h_id] = []
                 else:
-                    host_pair_paths[src_h_id][dst_h_id] = all_paths[0]
+                    host_pair_paths[src_h_id][dst_h_id] = (all_paths[0], path_vuln_ranks[0])
 
         return host_pair_paths
 

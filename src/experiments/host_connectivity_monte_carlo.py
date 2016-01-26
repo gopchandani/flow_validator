@@ -95,13 +95,12 @@ class MonteCarlo(Experiment):
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
 
-            #
-            # analyzed_host_pair_paths = self.fv.get_all_host_pair_paths()
-            # all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths, verbose=False)
-            # print "all_paths_match:", all_paths_match
+            analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_path_information()
+            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
+            print "Primary paths test, all_paths_match:", all_paths_match
 
             all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv, verbose=True)
-            print "all_paths_match:", all_paths_match
+            print "Failover paths test, all_paths_match:", all_paths_match
 
 
             print "Initialization done."
@@ -148,7 +147,7 @@ def main():
     # core = 3
 
     fanout = 2
-    core = 1
+    core = 2
 
     total_number_of_ports_to_synthesize = 1
     numbers_of_monte_carlo_runs = [1]#[10, 20, 30]

@@ -113,7 +113,33 @@ class Experiment(object):
 
         return self.ng
 
-    def compare_host_pair_paths_with_synthesis(self, analyzed_host_pair_paths, failed_edge=None, verbose=False):
+    def compare_paths(self, src_host, dst_host, analyzed_path, synthesized_path, verbose):
+
+        analyzed_path = [path_port.port_id for path_port in analyzed_path]
+
+        path_matches = True
+
+        if len(analyzed_path) == len(synthesized_path):
+            for i in range(len(analyzed_path)):
+                if analyzed_path[i] != synthesized_path[i]:
+                    path_matches = False
+                    break
+        else:
+            path_matches = False
+
+        if not path_matches:
+            print "analyzed_path:", analyzed_path
+            print "synthesized path:", synthesized_path
+            print "Path for src_host:", src_host, "dst_host:", dst_host, "does not match."
+        else:
+            if verbose:
+                print "analyzed_path:", analyzed_path
+                print "synthesized path:", synthesized_path
+                print "Path for src_host:", src_host, "dst_host:", dst_host, "match."
+
+        return path_matches
+
+    def compare_host_pair_paths_with_synthesis(self, analyzed_host_pairs_path_info, failed_edge=None, verbose=False):
 
         all_paths_match = True
 
@@ -129,13 +155,13 @@ class Experiment(object):
             with open(self.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
                 synthesized_failover_paths = json.loads(in_file.read())
 
-        for src_host in analyzed_host_pair_paths:
-            for dst_host in analyzed_host_pair_paths[src_host]:
+        for src_host in analyzed_host_pairs_path_info:
+            for dst_host in analyzed_host_pairs_path_info[src_host]:
 
-                path_matches = True
+                analyzed_path, analyzed_path_vuln_score = analyzed_host_pairs_path_info[src_host][dst_host]
 
-                analyzed_path = [path_port.port_id for path_port in analyzed_host_pair_paths[src_host][dst_host]]
                 synthesized_path = None
+                synthesized_path_vuln_score = None
 
                 # If an edge has not been failed, then refer to synthesized paths.
                 # If an edge has been failed, first check both permutation of edge switches, if neither is found,
@@ -145,33 +171,25 @@ class Experiment(object):
                 if failed_edge:
                     try:
                         synthesized_path = synthesized_failover_paths[failed_edge[0]][failed_edge[1]][src_host][dst_host]
+                        synthesized_path_vuln_score = 1
                     except:
                         try:
                             synthesized_path = synthesized_failover_paths[failed_edge[1]][failed_edge[0]][src_host][dst_host]
+                            synthesized_path_vuln_score = 1
                         except:
                             synthesized_path = synthesized_primary_paths[src_host][dst_host]
+                            synthesized_path_vuln_score = 0
                 else:
                      synthesized_path = synthesized_primary_paths[src_host][dst_host]
+                     synthesized_path_vuln_score = 0
 
-                if len(analyzed_path) == len(synthesized_path):
-                    for i in range(len(analyzed_path)):
-                        if analyzed_path[i] != synthesized_path[i]:
-                            path_matches = False
-                            break
-                else:
-                    path_matches = False
+                path_matches = self.compare_paths(src_host, dst_host, analyzed_path, synthesized_path, verbose)
 
                 if not path_matches:
-                    print "analyzed_path:", analyzed_path
-                    print "synthesized path:", synthesized_path
-                    print "Path for src_host:", src_host, "dst_host:", dst_host, "does not match."
-
                     all_paths_match = False
                 else:
-                    if verbose:
-                        print "analyzed_path:", analyzed_path
-                        print "synthesized path:", synthesized_path
-                        print "Path for src_host:", src_host, "dst_host:", dst_host, "match."
+                    if analyzed_path_vuln_score != synthesized_path_vuln_score:
+                        print "src_host:", src_host, "dst_host:", dst_host, "vulnerability scores do not match."
 
         return all_paths_match
 
@@ -185,12 +203,13 @@ class Experiment(object):
             if edge[0].startswith("h") or edge[1].startswith("h"):
                 continue
 
+            print "Testing for edge:", edge
 
             fv.port_graph.remove_node_graph_edge(edge[0], edge[1])
 
-            analyzed_host_pair_paths = fv.get_all_host_pair_paths()
+            analyzed_host_pairs_path_info = fv.get_all_host_pairs_path_information()
 
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths,
+            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info,
                                                                           verbose=verbose,
                                                                           failed_edge=edge)
 
@@ -200,7 +219,6 @@ class Experiment(object):
             fv.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
 
         return all_paths_match
-
 
     def dump_data(self):
         pprint(self.data)
