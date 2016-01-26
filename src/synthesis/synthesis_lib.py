@@ -46,18 +46,18 @@ class SynthesisLib():
 
         port_path = []
         
-        if src_host.node_id not in self.synthesized_failover_paths:
-            if dst_host.node_id not in self.synthesized_failover_paths[src_host.node_id]:
-                self.synthesized_failover_paths[src_host.node_id][dst_host.node_id] = defaultdict(defaultdict)
+        if e[0] not in self.synthesized_failover_paths:
+            if e[1] not in self.synthesized_failover_paths[e[0]]:
+                self.synthesized_failover_paths[e[0]][e[1]] = defaultdict(defaultdict)
         else:
-            if dst_host.node_id not in self.synthesized_failover_paths[src_host.node_id]:
-                self.synthesized_failover_paths[src_host.node_id][dst_host.node_id] = defaultdict(defaultdict)
+            if e[1] not in self.synthesized_failover_paths[e[0]]:
+                self.synthesized_failover_paths[e[0]][e[1]] = defaultdict(defaultdict)
 
         for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
             port_path.append(sw_name + ":ingress" + str(ingress_port_number))
             port_path.append(sw_name + ":egress" + str(egress_port_number))
 
-        self.synthesized_failover_paths[src_host.node_id][dst_host.node_id][e[0]][e[1]] = port_path
+        self.synthesized_failover_paths[e[0]][e[1]][src_host.node_id][dst_host.node_id] = port_path
 
     def save_synthesized_paths(self, synthesized_paths_save_directory):
         with open(synthesized_paths_save_directory + "synthesized_primary_paths.json", "w") as outfile:

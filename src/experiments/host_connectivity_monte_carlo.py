@@ -53,8 +53,17 @@ class MonteCarlo(Experiment):
 
             print "Performing Run:", i + 1
 
-            broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
-            #broken_edges = self.fv.break_specified_edges_in_order([('s3', 's12')], verbose=True)
+            #broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
+
+            broken_edges = self.fv.break_specified_edges_in_order([('s3', 's12')], verbose=True)
+
+
+            analyzed_host_pair_paths = self.fv.get_all_host_pair_paths()
+            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths,
+                                                                          verbose=True,
+                                                                          failed_edge=('s3', 's12'))
+            print "all_paths_match:", all_paths_match
+
 
             num_edges = len(broken_edges)
 
@@ -80,8 +89,8 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -96,7 +105,7 @@ class MonteCarlo(Experiment):
 
 
             analyzed_host_pair_paths = self.fv.get_all_host_pair_paths()
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths, verbose=True)
+            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pair_paths, verbose=False)
             print "all_paths_match:", all_paths_match
 
             print "Initialization done."
@@ -135,8 +144,8 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     # fanout = 2

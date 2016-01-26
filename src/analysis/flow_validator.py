@@ -119,7 +119,6 @@ class FlowValidator:
 
         return host_pair_paths
 
-
     def validate_all_host_pair_reachability(self, verbose=True):
 
         all_pair_connected = True

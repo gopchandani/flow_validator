@@ -113,7 +113,7 @@ class Experiment(object):
 
         return self.ng
 
-    def compare_host_pair_paths_with_synthesis(self, analyzed_host_pair_paths, verbose=False):
+    def compare_host_pair_paths_with_synthesis(self, analyzed_host_pair_paths, failed_edge=None, verbose=False):
 
         all_paths_match = True
 
@@ -121,20 +121,30 @@ class Experiment(object):
 
         if not self.load_config and self.save_config:
             synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
+            synthesized_failover_paths = self.synthesis.synthesis_lib.synthesized_failover_paths
         else:
             with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
 
-        for src_host in synthesized_primary_paths:
-            for dst_host in synthesized_primary_paths[src_host]:
+            with open(self.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
+                synthesized_failover_paths = json.loads(in_file.read())
+
+        if failed_edge:
+            synthesized_paths_to_compare = synthesized_failover_paths[failed_edge[0]][failed_edge[1]]
+        else:
+            synthesized_paths_to_compare = synthesized_primary_paths
+
+
+        for src_host in analyzed_host_pair_paths:
+            for dst_host in analyzed_host_pair_paths[src_host]:
 
                 path_matches = True
 
                 analyzed_path = [path_port.port_id for path_port in analyzed_host_pair_paths[src_host][dst_host]]
 
-                if len(analyzed_path) == len(synthesized_primary_paths[src_host][dst_host]):
+                if len(analyzed_path) == len(synthesized_paths_to_compare[src_host][dst_host]):
                     for i in range(len(analyzed_path)):
-                        if synthesized_primary_paths[src_host][dst_host][i] != analyzed_path[i]:
+                        if analyzed_path[i] != synthesized_paths_to_compare[src_host][dst_host][i]:
                             path_matches = False
                             break
                 else:
@@ -142,7 +152,7 @@ class Experiment(object):
 
                 if verbose:
                     print "analyzed_path:", analyzed_path
-                    print "synthesized path:", synthesized_primary_paths[src_host][dst_host]
+                    print "synthesized path:", synthesized_paths_to_compare[src_host][dst_host]
 
                 if not path_matches:
                     if verbose:
