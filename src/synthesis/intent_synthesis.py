@@ -10,9 +10,9 @@ from model.match import Match
 
 class IntentSynthesis():
 
-    def __init__(self, network_graph, master_switch=False, primary_paths_save_directory=None):
+    def __init__(self, network_graph, master_switch=False, synthesized_paths_save_directory=None):
 
-        self.primary_paths_save_directory = primary_paths_save_directory
+        self.synthesized_paths_save_directory = synthesized_paths_save_directory
 
         self.network_graph = network_graph
         self.master_switch = master_switch
@@ -46,7 +46,8 @@ class IntentSynthesis():
         # Table contains the primary and failover forwarding rules
         self.primary_failover_forwarding_table_id = 5
 
-    def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type, flow_match, first_in_port, dst_switch_tag):
+    def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type, flow_match, first_in_port, dst_switch_tag,
+                                 edge_broken=None, switch_port_tuple_prefix_list=None):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
 
@@ -94,6 +95,11 @@ class IntentSynthesis():
 
         if intent_type == "primary":
             self.synthesis_lib.record_primary_path(src_host, dst_host, switch_port_tuple_list)
+
+        elif intent_type == "failover":
+            self.synthesis_lib.record_failover_path(src_host, dst_host, edge_broken,
+                                                    switch_port_tuple_prefix_list + switch_port_tuple_list)
+
 
     def get_intents(self, dst_intents, required_intent_type):
 
@@ -260,10 +266,19 @@ class IntentSynthesis():
         #  and accumulate desired action buckets in the resulting path
 
         #  Go through the path, one edge at a time
+
+        switch_port_tuple_prefix_list = []
+        prev_in_port = None
+        prev_out_port = None
+
         for i in range(len(p) - 1):
 
             # Keep a copy of this handy
             edge_ports_dict = self.network_graph.get_edge_port_dict(p[i], p[i+1])
+
+            # Build up the prefixes
+            if i > 0:
+                switch_port_tuple_prefix_list.append((p[i-1], prev_in_port, prev_out_port))
 
             # Delete the edge
             self.network_graph.graph.remove_edge(p[i], p[i + 1])
@@ -274,12 +289,19 @@ class IntentSynthesis():
                 bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.switch_id)
                 print "Backup Path from src:", p[i], "to destination:", dst_host.switch_id, "is:", bp
 
-                self._compute_path_ip_intents(src_host, dst_host, bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
+                self._compute_path_ip_intents(src_host, dst_host, bp, "failover", flow_match, in_port,
+                                              dst_sw_obj.synthesis_tag, edge_broken=(p[i], p[i+1]),
+                                              switch_port_tuple_prefix_list=switch_port_tuple_prefix_list)
+
             except nx.exception.NetworkXNoPath:
                 print "No backup path between:", p[i], "to:", dst_host.switch_id
 
             # Add the edge back and the data that goes along with it
             self.network_graph.add_edge(p[i], edge_ports_dict[p[i]], p[i + 1], edge_ports_dict[p[i + 1]])
+
+            prev_in_port = in_port
+            prev_out_port = edge_ports_dict[p[i]]
+
             in_port = edge_ports_dict[p[i+1]]
 
     def push_switch_changes(self):
@@ -540,5 +562,5 @@ class IntentSynthesis():
             for dst_port in dst_ports_to_synthesize:
                 self._synthesize_all_node_pairs(dst_port)
 
-        if self.primary_paths_save_directory:
-            self.synthesis_lib.save_primary_paths(self.primary_paths_save_directory)
+        if self.synthesized_paths_save_directory:
+            self.synthesis_lib.save_synthesized_paths(self.synthesized_paths_save_directory)

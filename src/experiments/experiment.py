@@ -83,7 +83,7 @@ class Experiment(object):
 
                     if synthesis_scheme == "IntentSynthesis":
                         self.synthesis = IntentSynthesis(self.ng, master_switch=topo_description[0] == "linear",
-                                                         primary_paths_save_directory=self.ng.config_path_prefix)
+                                                         synthesized_paths_save_directory=self.ng.config_path_prefix)
 
                         self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
