@@ -96,7 +96,7 @@ class MonteCarlo(Experiment):
             self.fv.initialize_admitted_traffic()
 
             analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_path_information()
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
+            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=True)
             print "Primary paths test, all_paths_match:", all_paths_match
 
             all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv, verbose=True)
