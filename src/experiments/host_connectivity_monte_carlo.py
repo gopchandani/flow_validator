@@ -99,7 +99,8 @@ class MonteCarlo(Experiment):
             all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=True)
             print "Primary paths test, all_paths_match:", all_paths_match
 
-            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv, verbose=True)
+            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv, edges_to_try=[('s3', 's2')],
+                                                                                   verbose=True)
             print "Failover paths test, all_paths_match:", all_paths_match
 
 

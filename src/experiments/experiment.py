@@ -198,11 +198,13 @@ class Experiment(object):
 
         return all_paths_match
 
-    def compare_failover_host_pair_paths_with_synthesis(self, fv, verbose=False):
+    def compare_failover_host_pair_paths_with_synthesis(self, fv, edges_to_try=None, verbose=False):
 
         all_paths_match = False
 
-        for edge in fv.network_graph.graph.edges():
+        edges_to_try = fv.network_graph.graph.edges()
+
+        for edge in edges_to_try:
 
             # Ignore host edges
             if edge[0].startswith("h") or edge[1].startswith("h"):
