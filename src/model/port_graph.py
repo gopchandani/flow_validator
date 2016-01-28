@@ -91,6 +91,7 @@ class PortGraph:
 
                     edge_data = self.g.get_edge_data(ingress_p.port_id, egress_p.port_id)["edge_data"]
                     egress_p_traffic = egress_p.get_dst_admitted_traffic(dst_p)
+
                     ingress_p_traffic = self.compute_edge_admitted_traffic(egress_p_traffic, edge_data)
 
                     ingress_p_egress_p_traffic_now[egress_p] = ingress_p_traffic
@@ -103,6 +104,7 @@ class PortGraph:
                 # Decide if to propagate it, if more_now or less_now is not empty...
                 if not more_now.is_empty() or not less_now.is_empty():
                     for egress_p in ingress_p_egress_p_traffic_now:
+
                         self.compute_admitted_traffic(ingress_p,
                                                       ingress_p_egress_p_traffic_now[egress_p],
                                                       egress_p,
@@ -122,10 +124,13 @@ class PortGraph:
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
+
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
+
             #if sw.node_id == 's3':
                 #test_passed = sw.test_one_port_failure_at_a_time(verbose=False)
+
             self.add_switch_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
@@ -373,11 +378,12 @@ class PortGraph:
                             modified_specific_traffic = specific_traffic.intersect(at[succ_p])
                             modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
 
-                            max_vuln_rank = 0
+                            max_vuln_rank = at[succ_p].get_max_vuln_rank()
 
-                            for te in at[succ_p].traffic_elements:
-                                if te.vuln_rank > max_vuln_rank:
-                                    max_vuln_rank = te.vuln_rank
+                            if succ_p.port_id == 's3:egress4' and max_vuln_rank:
+                                pass
+
+                            #print "this_p:", this_p.port_id, "succ_p:", succ_p.port_id, "max_vuln_rank:", max_vuln_rank
 
                             self.get_paths(succ_p,
                                            dst_p,

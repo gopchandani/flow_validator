@@ -59,6 +59,9 @@ class FlowValidator:
 
     def validate_host_pair_reachability(self, src_h_id, dst_h_id, specific_traffic, verbose=True):
 
+        if src_h_id == 'h71' and dst_h_id == 'h81':
+            pass
+
         src_host_obj = self.network_graph.get_node_object(src_h_id)
         dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 

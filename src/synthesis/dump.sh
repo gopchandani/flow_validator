@@ -22,5 +22,13 @@ ovs-ofctl dump-groups s7 -O OpenFlow13
 echo "--- s8"
 ovs-ofctl dump-flows s8 -O OpenFlow13
 ovs-ofctl dump-groups s8 -O OpenFlow13
+echo "--- s9"
+ovs-ofctl dump-flows s9 -O OpenFlow13
+ovs-ofctl dump-groups s9 -O OpenFlow13
+echo "--- s10"
+ovs-ofctl dump-flows s10 -O OpenFlow13
+ovs-ofctl dump-groups s10 -O OpenFlow13
+
+
 
 

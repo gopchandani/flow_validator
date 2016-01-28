@@ -233,7 +233,7 @@ class Switch():
 
     def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes):
 
-        if curr.port_id == 's3:ingress1' and dst_port.port_id == 's3:egress3':
+        if curr.port_id == 's3:table0' and dst_port.port_id == 's3:egress5':
             pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
@@ -532,7 +532,7 @@ class Switch():
         for testing_port_number in self.ports:
             testing_egress_port = self.get_port(self.get_outgoing_port_id(self.node_id, testing_port_number))
 
-            # if testing_port_number != 2:
+            # if testing_port_number != 5:
             #     continue
 
             path_count_before, tt_before = self.get_path_counts_and_tt(verbose)

@@ -208,7 +208,8 @@ class Experiment(object):
 
         all_paths_match = False
 
-        edges_to_try = fv.network_graph.graph.edges()
+        if not edges_to_try:
+            edges_to_try = fv.network_graph.graph.edges()
 
         for edge in edges_to_try:
 

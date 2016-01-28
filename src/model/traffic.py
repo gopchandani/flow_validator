@@ -462,10 +462,20 @@ class Traffic():
 
         return retval
 
+    def get_max_vuln_rank(self):
+        max_vuln_rank = 0
+
+        for te in self.traffic_elements:
+            if te.vuln_rank > max_vuln_rank:
+                max_vuln_rank = te.vuln_rank
+
+        return max_vuln_rank
+
     def print_port_paths(self):
 
         for te in self.traffic_elements:
             print te.get_port_path_str()
+
 
 def main():
     m1 = Traffic()
