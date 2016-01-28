@@ -160,9 +160,6 @@ class Experiment(object):
 
                 analyzed_path, analyzed_path_vuln_score = analyzed_host_pairs_path_info[src_host][dst_host]
 
-                if src_host == 'h31' and dst_host == 'h11':
-                    print analyzed_path_vuln_score
-
                 synthesized_path = None
                 synthesized_path_vuln_score = None
 

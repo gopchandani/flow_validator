@@ -144,21 +144,21 @@ class PortGraph:
         for sw in self.network_graph.get_switches():
             sw.de_init_switch_port_graph()
 
-    def add_edge(self, src_port, dst_port, edge_filter_traffic, edge_vuln_rank=0):
+    def add_edge(self, src_port, dst_port, edge_filter_traffic):
 
         edge_data = EdgeData(src_port, dst_port)
 
         # If the edge filter became empty, reflect that.
         if edge_filter_traffic.is_empty():
             t = Traffic()
-            edge_data.add_edge_data((t, {}, edge_vuln_rank))
+            edge_data.add_edge_data((t, {}))
         else:
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
             for te in edge_filter_traffic.traffic_elements:
                 t = Traffic()
                 t.add_traffic_elements([te])
-                edge_data.add_edge_data((t, te.switch_modifications, edge_vuln_rank))
+                edge_data.add_edge_data((t, te.switch_modifications))
 
         self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
 
@@ -187,7 +187,7 @@ class PortGraph:
             total_traffic.union(traffic_filter[succ])
 
         if tf_change[2] == "additional":
-            edge_data = self.add_edge(src_port, dst_port, total_traffic, edge_vuln_rank=tf_change[3])
+            edge_data = self.add_edge(src_port, dst_port, total_traffic)
         else:
             edge_data = self.add_edge(src_port, dst_port, total_traffic)
 
@@ -249,7 +249,7 @@ class PortGraph:
 
         pred_admitted_traffic = Traffic()
 
-        for edge_filter_traffic, modifications, edge_vuln_rank in edge_data.edge_data_list:
+        for edge_filter_traffic, modifications in edge_data.edge_data_list:
 
             # At egress edges, set the in_port of the admitted match for destination to wildcard
             if edge_data.edge_type == "outside":
@@ -265,7 +265,7 @@ class PortGraph:
             else:
                 ttp = traffic_to_propagate
 
-            i = edge_filter_traffic.intersect(ttp)
+            i = edge_filter_traffic.intersect(ttp, take_self_vuln_rank=True)
 
             if not i.is_empty():
                 pred_admitted_traffic.union(i)
@@ -367,27 +367,24 @@ class PortGraph:
                     if len(indices) > 2:
                         print "Found a loop, this_path:", this_path
                     else:
-                        max_edge_vuln_rank = -1
-                        edge_data = self.g.get_edge_data(this_p.port_id, succ_p.port_id)["edge_data"]
-                        for edge_filter_traffic, modifications, edge_vuln_rank in edge_data.edge_data_list:
-
-                            if edge_vuln_rank > max_edge_vuln_rank:
-                                max_edge_vuln_rank = edge_vuln_rank
-            
                         if at[succ_p].is_subset_traffic(specific_traffic):
                             this_path.append(succ_p)
 
-                            #modified_specific_traffic = at[succ_p].get_modified_traffic()
-
                             modified_specific_traffic = specific_traffic.intersect(at[succ_p])
                             modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
+
+                            max_vuln_rank = 0
+
+                            for te in at[succ_p].traffic_elements:
+                                if te.vuln_rank > max_vuln_rank:
+                                    max_vuln_rank = te.vuln_rank
 
                             self.get_paths(succ_p,
                                            dst_p,
                                            modified_specific_traffic,
                                            this_path,
                                            all_paths,
-                                           path_vuln_rank + max_edge_vuln_rank,
+                                           path_vuln_rank + max_vuln_rank,
                                            path_vuln_ranks,
                                            verbose)
 
