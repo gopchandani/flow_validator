@@ -142,6 +142,7 @@ class Experiment(object):
     def compare_host_pair_paths_with_synthesis(self, analyzed_host_pairs_path_info, failed_edge=None, verbose=False):
 
         all_paths_match = True
+        all_paths_vuln_match = True
 
         synthesized_primary_paths = None
 
@@ -187,11 +188,19 @@ class Experiment(object):
 
                 if not path_matches:
                     all_paths_match = False
+
+                if analyzed_path_vuln_score != synthesized_path_vuln_score:
+                    all_paths_vuln_match = False
+
+                    print "Path vulnerability scores do not match. src_host:", src_host, "dst_host:", dst_host, \
+                        "analyzed_path_vuln_score:", analyzed_path_vuln_score, \
+                        "synthesized_path_vuln_score:", synthesized_path_vuln_score
                 else:
-                    if analyzed_path_vuln_score != synthesized_path_vuln_score:
-                        print "src_host:", src_host, "dst_host:", dst_host, \
+                    if verbose:
+                        print "Path vulnerability scores match. src_host:", src_host, "dst_host:", dst_host, \
                             "analyzed_path_vuln_score:", analyzed_path_vuln_score, \
                             "synthesized_path_vuln_score:", synthesized_path_vuln_score
+
 
         return all_paths_match
 

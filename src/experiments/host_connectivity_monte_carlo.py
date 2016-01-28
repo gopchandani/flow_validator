@@ -81,8 +81,8 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -99,12 +99,12 @@ class MonteCarlo(Experiment):
             all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
             print "Primary paths test, all_paths_match:", all_paths_match
 
-            # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-            #                                                                        edges_to_try=[('s3', 's2')],
-            #                                                                        verbose=False)
-
             all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-                                                                                   verbose=False)
+                                                                                   edges_to_try=[('s9', 's3')],
+                                                                                   verbose=True)
+
+            # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
+            #                                                                        verbose=False)
 
             print "Failover paths test, all_paths_match:", all_paths_match
 
@@ -144,8 +144,8 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     # fanout = 2
