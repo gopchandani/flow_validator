@@ -44,31 +44,6 @@ ryu_field_names_mapping_reverse = {"in_port": "in_port",
                                    "udp_source_port": "udp_src",
                                    "vlan_id": "dl_vlan"}
 
-sel_field_names_mapping = {"in_port": "in_port",
-                           "eth_type": "ethernet_type",
-                           "eth_src": "ethernet_source",
-                           "eth_dst":"ethernet_destination",
-                           "ipv4_src": "src_ip_addr",
-                           "ipv4_dst":"dst_ip_addr",
-                           "ip_proto": "ip_protocol",
-                           "tcp_dst": "tcp_destination_port",
-                           "tcp_src": "tcp_source_port",
-                           "udp_dst": "udp_destination_port",
-                           "udp_src": "udp_source_port",
-                           "vlan_vid": "vlan_id"}
-
-sel_field_names_mapping_reverse = {'dst_ip_addr': 'ipv4_dst',
-                                     'ethernet_destination': 'eth_dst',
-                                     'ethernet_source': 'eth_src',
-                                     'ethernet_type': 'eth_type',
-                                     'in_port': 'in_port',
-                                     'ip_protocol': 'ip_proto',
-                                     'src_ip_addr': 'ipv4_src',
-                                     'tcp_destination_port': 'tcp_dst',
-                                     'tcp_source_port': 'tcp_src',
-                                     'udp_destination_port': 'udp_dst',
-                                     'udp_source_port': 'udp_src',
-                                     'vlan_id': 'vlan_vid'}
 
 class OdlMatchJsonParser():
 
@@ -213,44 +188,39 @@ class Match(DictMixin):
         for field_name in field_names:
             try:
                 if field_name == "in_port":
-                    try:
-                        self[field_name] = int(match_json["in_port"])
-
-                    except ValueError:
-                        parsed_in_port = match_json["in-port"].split(":")[2]
-                        self[field_name] = int(parsed_in_port)
+                    self[field_name] = int(match_json["inPort"])
 
                 elif field_name == "ethernet_type":
-                    self[field_name] = match_json["dl_type"]
+                    self[field_name] = int(match_json["ethType"])
 
                 elif field_name == "ethernet_source":
-                    mac_int = int(match_json[u"dl_src"].replace(":", ""), 16)
+                    mac_int = int(match_json["ethSrc"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 elif field_name == "ethernet_destination":
-                    mac_int = int(match_json[u"dl_dst"].replace(":", ""), 16)
+                    mac_int = int(match_json["ethDst"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 #TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
-                    self[field_name] = IPNetwork(match_json["nw_src"])
+                    self[field_name] = IPNetwork(match_json["ipv4Src"])
                 elif field_name == "dst_ip_addr":
-                    self[field_name] = IPNetwork(match_json["nw_dst"])
+                    self[field_name] = IPNetwork(match_json["ipv4Dst"])
 
                 elif field_name == "ip_protocol":
-                    self[field_name] = int(match_json["ip-match"]["ip-protocol"])
+                    self[field_name] = int(match_json["ipProto"])
                 elif field_name == "tcp_destination_port":
-                    self[field_name] = int(match_json["tcp-destination-port"])
+                    self[field_name] = int(match_json["tcpDst"])
                 elif field_name == "tcp_source_port":
-                    self[field_name] = int(match_json["tcp-source-port"])
+                    self[field_name] = int(match_json["tcpSrc"])
                 elif field_name == "udp_destination_port":
-                    self[field_name] = int(match_json["udp-destination-port"])
+                    self[field_name] = int(match_json["udpDst"])
                 elif field_name == "udp_source_port":
-                    self[field_name] = (match_json["udp-source-port"])
+                    self[field_name] = int(match_json["udpSrc"])
                 elif field_name == "vlan_id":
-                    self[field_name] = str(match_json[u"dl_vlan"])
+                    self[field_name] = int(match_json[u"vlanVid"])
 
-            except KeyError:
+            except (AttributeError, TypeError, ValueError):
                 self[field_name] = sys.maxsize
                 continue
 

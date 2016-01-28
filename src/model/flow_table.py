@@ -111,14 +111,9 @@ class FlowTable():
         self.flows = []
         self.input_port = None
 
-        if sw.node_id == 's1':
-            pass
-
         for f in flow_list:
             f = Flow(sw, f)
             self.flows.append(f)
-
-
 
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)

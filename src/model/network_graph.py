@@ -35,7 +35,7 @@ class NetworkGraph():
         # Initialize things to talk to controller
         self.baseUrlOdl = "http://localhost:8181/restconf/"
         self.baseUrlRyu = "http://localhost:8080/"
-        self.baseUrlSel = "http://192.168.5.6:1234/"
+        self.baseUrlSel = "http://selcontroller:1234/"
 
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
