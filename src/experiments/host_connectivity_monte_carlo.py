@@ -131,8 +131,8 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     # fanout = 2

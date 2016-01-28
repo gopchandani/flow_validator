@@ -54,11 +54,11 @@ class TestExperiment(Experiment):
             print "Initialization done."
 
 
-            analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_path_information()
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
-            print "Primary paths TestExperiment, all_paths_match:", all_paths_match
+            # analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_path_information()
+            # all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
+            # print "Primary paths TestExperiment, all_paths_match:", all_paths_match
 
-            #
+
             # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
             #                                                                        edges_to_try=[('s3', 's9')],
             #                                                                        verbose=True)
@@ -78,7 +78,7 @@ def main():
     controller = "ryu"
 
     fanout = 2
-    core = 2
+    core = 1
 
     total_number_of_ports_to_synthesize = 1
 

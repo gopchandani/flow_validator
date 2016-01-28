@@ -378,19 +378,14 @@ class PortGraph:
                             modified_specific_traffic = specific_traffic.intersect(at[succ_p])
                             modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
 
-                            max_vuln_rank = at[succ_p].get_max_vuln_rank()
-
-                            if succ_p.port_id == 's3:egress4' and max_vuln_rank:
-                                pass
-
-                            #print "this_p:", this_p.port_id, "succ_p:", succ_p.port_id, "max_vuln_rank:", max_vuln_rank
+                            max_vuln_rank_modified = modified_specific_traffic.get_max_vuln_rank()
 
                             self.get_paths(succ_p,
                                            dst_p,
                                            modified_specific_traffic,
                                            this_path,
                                            all_paths,
-                                           path_vuln_rank + max_vuln_rank,
+                                           path_vuln_rank + max_vuln_rank_modified,
                                            path_vuln_ranks,
                                            verbose)
 
