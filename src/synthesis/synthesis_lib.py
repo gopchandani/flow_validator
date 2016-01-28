@@ -19,7 +19,7 @@ class SynthesisLib():
         else:
             self.network_graph = model
 
-        self.controller_host = "192.168.56.1"
+        self.controller_host = "172.17.224.135"
         self.controller_port = 6653
 
         self.group_id_cntr = 0

@@ -96,15 +96,15 @@ class Action():
             else:
                 self.out_port = int(self.action_json["outPort"])
 
-        if self.action_json["actionType"] == 'GroupAction':
+        if self.action_json["actionType"] == 'Group':
             self.action_type = "group"
             self.group_id = int(self.action_json["groupId"])
 
-        # if self.action_json["actionType"] == 'PushVlanAction':
+        # if self.action_json["actionType"] == 'PushVlan':
         #     self.action_type = "push_vlan"
         #     self.vlan_ethernet_type = self.action_json['ethernetType']
-
-        # if self.action_json["actionType"] == 'PopVlanAction':
+        #
+        # if self.action_json["actionType"] == 'PopVlan':
         #     self.action_type = "pop_vlan"
 
         if self.action_json["actionType"] == 'SetField':

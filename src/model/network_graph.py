@@ -35,7 +35,7 @@ class NetworkGraph():
         # Initialize things to talk to controller
         self.baseUrlOdl = "http://localhost:8181/restconf/"
         self.baseUrlRyu = "http://localhost:8080/"
-        self.baseUrlSel = "http://selcontroller:1234/"
+        self.baseUrlSel = "http://192.168.5.6:1234/"
 
         self.h = httplib2.Http(".cache")
         self.h.add_credentials('admin', 'admin')
@@ -397,21 +397,20 @@ class NetworkGraph():
 
     def get_sel_switches(self):
        # nodes = OperationalTree.nodesHttpAccess(self.sel_session)
-        nodes = OperationalTree.NodesEntityAccess(self.sel_session)
+        nodes = ConfigTree.NodesEntityAccess(self.sel_session)
         sel_switches = {}
         for each in nodes.read_collection():
             this_switch = {}
-            if isinstance(each, OperationalTree.OpenFlowNode):
-                switch_id = each.data_path_id
+            if each.linked_key.startswith("OpenFlow"):
+                switch_id = each.linked_key.split(':')[1]
 
                 #ports = OperationalTree.portsHttpAccess(self.sel_session)
                 ports = OperationalTree.PortsEntityAccess(self.sel_session)
                 sw_ports = []
 
                 for port in ports.read_collection():
-
                     if isinstance(port, OperationalTree.OpenFlowPort):
-                        if port.data_path_id == switch_id:
+                        if port.parent_node == each.linked_key:
                             sw_ports.append(port.to_pyson())
 
                 this_switch["ports"] = sw_ports
@@ -421,7 +420,8 @@ class NetworkGraph():
 
                 sw_groups = []
                 for group in groups.read_collection():
-                    sw_groups.append(group.to_pyson())
+                    if group.node == each.id:
+                        sw_groups.append(group.to_pyson())
 
                 this_switch["groups"] = sw_groups
 
@@ -429,7 +429,9 @@ class NetworkGraph():
                 flow_tables = ConfigTree.FlowsEntityAccess(self.sel_session)
                 switch_flow_tables = defaultdict(list)
                 for flow_rule in flow_tables.read_collection():
-                    switch_flow_tables[flow_rule.to_pyson()["tableId"]].append(flow_rule.to_pyson())
+                    if flow_rule.node == each.id:
+                        flow_rule = flow_rule.to_pyson()
+                        switch_flow_tables[flow_rule["tableId"]].append(flow_rule)
 
                 this_switch["flow_tables"] = switch_flow_tables
 

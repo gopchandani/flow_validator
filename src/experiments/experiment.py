@@ -49,13 +49,13 @@ class Experiment(object):
         # Hard coding the port for now, need to remove this later.
         if self.controller == "sel":
             self.controller_port = 6653
-            controller_host = "10.214.154.38"
+            controller_host = "selcontroller"
         self.mm = MininetMan(self.controller_port, controller_host, *topo_description)
 
         if self.controller == "sel":
             time.sleep(5)
             print("Trying to adopt all hosts on {0}:{1}".format(controller_host, 1234))
-            #adopt_all.main("http://selcontroller:1234/")
+            adopt_all.main("http://selcontroller:1234/")
         # Get a flow validator instance
         ng = NetworkGraph(mininet_man=self.mm,
                           controller=self.controller,
