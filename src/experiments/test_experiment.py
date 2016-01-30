@@ -64,7 +64,7 @@ class TestExperiment(Experiment):
             #                                                                        verbose=True)
 
             all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-                                                                                   verbose=False)
+                                                                                   verbose=True)
 
             print "Failover paths TestExperiment, all_paths_match:", all_paths_match
 
@@ -73,12 +73,12 @@ class TestExperiment(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     fanout = 2
-    core = 1
+    core = 2
 
     total_number_of_ports_to_synthesize = 1
 

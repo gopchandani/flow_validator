@@ -171,11 +171,11 @@ class Experiment(object):
 
                 if failed_edge:
                     try:
-                        synthesized_path = synthesized_failover_paths[failed_edge[0]][failed_edge[1]][src_host][dst_host]
+                        synthesized_path = synthesized_failover_paths[src_host][dst_host][failed_edge[0]][failed_edge[1]]
                         synthesized_path_vuln_score = 1
                     except:
                         try:
-                            synthesized_path = synthesized_failover_paths[failed_edge[1]][failed_edge[0]][src_host][dst_host]
+                            synthesized_path = synthesized_failover_paths[src_host][dst_host][failed_edge[1]][failed_edge[0]]
                             synthesized_path_vuln_score = 1
                         except:
                             synthesized_path = synthesized_primary_paths[src_host][dst_host]
