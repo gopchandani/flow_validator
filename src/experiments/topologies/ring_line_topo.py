@@ -31,13 +31,13 @@ class RingLineTopo(Topo):
         self.target_switch_name = ''
 
         #  Add ring switches and hosts under them
-        for i in range(self.num_ring_switches):
+        for i in xrange(self.num_ring_switches):
             switch_name = self.add_switch_and_host(i+1)
             self.ring_switch_names.append(switch_name)
 
         #  Add links between ring switches
         if self.num_ring_switches > 1:
-            for i in range(self.num_ring_switches - 1):
+            for i in xrange(self.num_ring_switches - 1):
                 self.addLink(self.ring_switch_names[i], self.ring_switch_names[i+1])
 
             #  Form a ring only when there are more than two switches
@@ -63,7 +63,7 @@ class RingLineTopo(Topo):
     
         switch_name = self.addSwitch("s" + str(switch_num), protocols="OpenFlow13")
 
-        for j in range(self.num_hosts_per_switch):
+        for j in xrange(self.num_hosts_per_switch):
             host_name = self.addHost("h" + str(switch_num) + str(j+1))
             self.addLink(switch_name, host_name)
         

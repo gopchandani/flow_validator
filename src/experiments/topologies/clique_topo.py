@@ -22,18 +22,18 @@ class CliqueTopo(Topo):
         self.switch_names = []
 
         #  Add switches and hosts under them
-        for i in range(self.num_switches):
+        for i in xrange(self.num_switches):
             curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow13")
             self.switch_names.append(curr_switch)
 
-            for j in range(self.num_hosts_per_switch):
+            for j in xrange(self.num_hosts_per_switch):
                 curr_switch_host = self.addHost("h" + str(i+1) + str(j+1))
                 self.addLink(curr_switch, curr_switch_host)
 
         #  Add links between switches
-        for i in range(self.num_switches - 1):
+        for i in xrange(self.num_switches - 1):
 
-            dst_switch_offsets = range(1, per_switch_links)
+            dst_switch_offsets = xrange(1, per_switch_links)
             for j in dst_switch_offsets:
 
                 try:

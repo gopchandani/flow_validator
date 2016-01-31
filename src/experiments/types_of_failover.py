@@ -44,8 +44,8 @@ class TypesOfFailover(Experiment):
 
         print "Starting experiment..."
 
-        for number_of_ports_to_synthesize in range(1, self.total_number_of_ports_to_synthesize + 1):
-            ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize )
+        for number_of_ports_to_synthesize in xrange(1, self.total_number_of_ports_to_synthesize + 1):
+            ports_to_synthesize = xrange(5000, 5000 + number_of_ports_to_synthesize )
             print "ports_to_synthesize:", ports_to_synthesize
 
             for number_of_switches in self.total_number_of_switches:
@@ -65,7 +65,7 @@ class TypesOfFailover(Experiment):
                     s2 = node2[1:]
                     self.data["edges_broken"][s1 + "<->" + s2] = []
 
-                for i in range(self.num_iterations):
+                for i in xrange(self.num_iterations):
 
                     print "iteration:", i + 1
 

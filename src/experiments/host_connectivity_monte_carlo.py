@@ -77,8 +77,8 @@ class MonteCarlo(Experiment):
 
         print "Starting experiment..."
 
-        for number_of_ports_to_synthesize in range(1, self.total_number_of_ports_to_synthesize + 1):
-            ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
+        for number_of_ports_to_synthesize in xrange(1, self.total_number_of_ports_to_synthesize + 1):
+            ports_to_synthesize = xrange(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
             #self.topo_description = ("ring", 4, 1, None, None)
@@ -104,7 +104,7 @@ class MonteCarlo(Experiment):
                 self.data["number_of_edges_to_break_estimate"][number_of_ports_to_synthesize][number_of_monte_carlo_runs] = []
                 self.data["number_of_edges_to_break_estimate_data"][number_of_ports_to_synthesize][number_of_monte_carlo_runs] = []
 
-                for i in range(self.num_iterations):
+                for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
 
                     with Timer(verbose=True) as t:

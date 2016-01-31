@@ -135,7 +135,7 @@ class IntentSynthesisLB():
         out_port = edge_ports_dict[p[0]]
 
         # This loop always starts at a switch
-        for i in range(len(p) - 1):
+        for i in xrange(len(p) - 1):
 
             fwd_flow_match = deepcopy(flow_match)
             src_mac_int = int(src_host_mac.replace(":", ""), 16)
@@ -171,7 +171,7 @@ class IntentSynthesisLB():
 
         self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)] = []
 
-        for i in range(len(primary_path)-1):
+        for i in xrange(len(primary_path)-1):
 
             if (primary_path[i], primary_path[i+1]) not in self.primary_path_edges and (primary_path[i+1], primary_path[i]) not in self.primary_path_edges:
                 self.primary_path_edges.append((primary_path[i], primary_path[i+1]))
@@ -185,7 +185,7 @@ class IntentSynthesisLB():
         #  and accumulate desired action buckets in the resulting path
 
         #  Go through the path, one edge at a time
-        for i in range(len(primary_path) - 1):
+        for i in xrange(len(primary_path) - 1):
 
             # Keep a copy of this handy
             edge_ports_dict = self.network_graph.get_edge_port_dict(primary_path[i], primary_path[i+1])

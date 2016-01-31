@@ -242,7 +242,7 @@ def contour_of_union_of_rectangles(rectangle_list):
     A.sort(key=lambda endpoint: (endpoint.y, endpoint.x))
 
     # Pick out all the horizontal and vertical edges
-    for k in range(len(A)/2):
+    for k in xrange(len(A)/2):
 
         # Report edges only when there is something there...
 

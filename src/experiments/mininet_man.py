@@ -124,7 +124,7 @@ class MininetMan():
     def get_experiment_switch_hosts(self, switch_id, experiment_switches):
 
         if switch_id in experiment_switches:
-            for i in range(0, self.num_hosts_per_switch):
+            for i in xrange(0, self.num_hosts_per_switch):
                 host_name = "h" + switch_id[1:] + str(i+1)
                 yield self.net.get(host_name)
         else:
@@ -259,7 +259,7 @@ class MininetMan():
         def parse_iperf_output(iperf_output_string):
             data_lines =  iperf_output_string.split('\r\n')
             interesting_line_index = None
-            for i in range(len(data_lines)):
+            for i in xrange(len(data_lines)):
                 if data_lines[i].endswith('Server Report:'):
                     interesting_line_index = i + 1
             data_tokens =  data_lines[interesting_line_index].split()
@@ -270,7 +270,7 @@ class MininetMan():
 
             data_lines =  ping_output_string.split('\r\n')
             interesting_line_index = None
-            for i in range(len(data_lines)):
+            for i in xrange(len(data_lines)):
                 if data_lines[i].startswith('5 packets transmitted'):
                     interesting_line_index = i + 1
             data_tokens =  data_lines[interesting_line_index].split()

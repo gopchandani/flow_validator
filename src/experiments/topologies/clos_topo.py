@@ -20,13 +20,13 @@ class ClosTopo(Topo):
         self.agg_switches = {}
         self.edge_switches = {}
 
-        for x in range(1, self.total_core_switches + 1):
+        for x in xrange(1, self.total_core_switches + 1):
             self.total_switches += 1
             self.core_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow13")
             
         print "Core switches:", self.core_switches
         
-        for x in range(1, self.total_agg_switches + 1):
+        for x in xrange(1, self.total_agg_switches + 1):
             self.total_switches += 1
             self.agg_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow13")
             
@@ -36,7 +36,7 @@ class ClosTopo(Topo):
             for y in self.agg_switches:
                 self.addLink(self.core_switches[x], self.agg_switches[y])
 
-        for x in range(1, self.total_edge_switches + 1):
+        for x in xrange(1, self.total_edge_switches + 1):
             self.total_switches += 1
             edge_switch_name = 's%i' % self.total_switches
             self.edge_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow13")

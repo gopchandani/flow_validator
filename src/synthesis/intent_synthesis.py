@@ -57,7 +57,7 @@ class IntentSynthesis():
         out_port = edge_ports_dict[p[0]]
 
         # This loop always starts at a switch
-        for i in range(len(p) - 1):
+        for i in xrange(len(p) - 1):
 
             fwd_flow_match = deepcopy(flow_match)
 
@@ -254,7 +254,7 @@ class IntentSynthesis():
 
         print "Primary Path:", p
 
-        for i in range(len(p)-1):
+        for i in xrange(len(p)-1):
 
             if (p[i], p[i+1]) not in self.primary_path_edges and (p[i+1], p[i]) not in self.primary_path_edges:
                 self.primary_path_edges.append((p[i], p[i+1]))
@@ -271,7 +271,7 @@ class IntentSynthesis():
         prev_in_port = None
         prev_out_port = None
 
-        for i in range(len(p) - 1):
+        for i in xrange(len(p) - 1):
 
             # Keep a copy of this handy
             edge_ports_dict = self.network_graph.get_edge_port_dict(p[i], p[i+1])

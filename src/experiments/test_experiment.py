@@ -46,6 +46,7 @@ class TestExperiment(Experiment):
                                           synthesis_setup_gap=60,
                                           synthesis_scheme="IntentSynthesis")
 
+
             self.fv = FlowValidator(ng)
             self.fv.init_port_graph()
             self.fv.add_hosts()
@@ -63,18 +64,18 @@ class TestExperiment(Experiment):
             #                                                                        edges_to_try=[('s3', 's9')],
             #                                                                        verbose=True)
 
-            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-                                                                                   verbose=True)
-
-            print "Failover paths TestExperiment, all_paths_match:", all_paths_match
+            # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
+            #                                                                        verbose=True)
+            #
+            # print "Failover paths TestExperiment, all_paths_match:", all_paths_match
 
 
             self.fv.de_init_port_graph()
 
 def main():
     num_iterations = 1#20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     fanout = 2

@@ -120,7 +120,7 @@ class Experiment(object):
         path_matches = True
 
         if len(analyzed_path) == len(synthesized_path):
-            for i in range(len(analyzed_path)):
+            for i in xrange(len(analyzed_path)):
                 if analyzed_path[i] != synthesized_path[i]:
                     path_matches = False
                     break
@@ -343,13 +343,13 @@ class Experiment(object):
         high_xlim = x_max
         #
         # plt.xlim((low_xlim, high_xlim))
-        # plt.xticks(range(low_xlim, high_xlim), fontsize=16)
+        # plt.xticks(xrange(low_xlim, high_xlim), fontsize=16)
         #
         # low_ylim = (0.9 * y_min) / 1000
         # high_ylim = (1.1 * y_max) / 1000
         #
         # plt.ylim((low_ylim, high_ylim))
-        # plt.yticks(range(int(high_ylim/10), int(high_ylim), int(high_ylim/10)), fontsize=16)
+        # plt.yticks(xrange(int(high_ylim/10), int(high_ylim), int(high_ylim/10)), fontsize=16)
 
         low_xlim, high_xlim = plt.xlim()
         plt.xlim(xmax=(high_xlim) *1.05)

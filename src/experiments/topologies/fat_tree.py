@@ -29,31 +29,31 @@ class FatTree(Topo):
         bottoms_attached_to_middles = [0] * self.num_middle_switches # max = bottoms_per_middle
 
         #  Add switches and hosts under them
-        for k in range(self.num_bottom_switches):
+        for k in xrange(self.num_bottom_switches):
             curr_bottom_switch = self.addSwitch("s" + str(switch_name_index), protocols="OpenFlow13")
             bottom_switches.append(curr_bottom_switch)
 
-            for l in range(self.num_hosts_per_switch):
+            for l in xrange(self.num_hosts_per_switch):
                 curr_switch_host = self.addHost("h" + str(switch_name_index) + str(l+1))
                 self.addLink(curr_bottom_switch, curr_switch_host)
 
             switch_name_index += 1
 
-        for j in range(self.num_middle_switches):
+        for j in xrange(self.num_middle_switches):
             curr_middle_switch = self.addSwitch("s" + str(switch_name_index), protocols="OpenFlow13")
             switch_name_index += 1
             middle_switches.append(curr_middle_switch)
 
 
-        for i in range(2):
+        for i in xrange(2):
             curr_top_switch = self.addSwitch("s" + str(switch_name_index), protocols="OpenFlow13")
             top_switches.append(curr_top_switch)
             switch_name_index += 1
 
-            for m in range(self.num_middle_switches):
+            for m in xrange(self.num_middle_switches):
                 self.addLink(top_switches[i], middle_switches[m])
 
-        for n in range(self.num_bottom_switches):
+        for n in xrange(self.num_bottom_switches):
             self.addLink(bottom_switches[n], middle_switches[first_open_index])
 
             print "Attaching bottom switch: " + bottom_switches[n] + \

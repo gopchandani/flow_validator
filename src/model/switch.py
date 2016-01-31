@@ -2,6 +2,12 @@ __author__ = 'Rakesh Kumar'
 
 import networkx as nx
 
+
+import objgraph
+import gc
+import weakref
+from guppy import hpy
+
 from collections import defaultdict
 from traffic import Traffic
 from port import Port
@@ -184,6 +190,7 @@ class Switch():
 
             self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p, tf_changes)
 
+
     def account_port_transfer_traffic(self, port, dst_traffic_at_succ, succ, dst_port):
 
         # Keep track of what traffic looks like before any changes occur
@@ -233,9 +240,6 @@ class Switch():
 
     def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes):
 
-        if curr.port_id == 's3:table0' and dst_port.port_id == 's3:egress5':
-            pass
-
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst_port)
 
@@ -256,6 +260,23 @@ class Switch():
                 if not pred_transfer_traffic.is_empty():
                     self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
 
+                # refs = gc.get_referrers(pred_transfer_traffic)
+                #
+                # for ref in refs:
+                #     print ref
+
+                # hp = hpy()
+                # before = hp.heap()
+                # del pred_transfer_traffic
+                # after = hp.heap()
+                # leftover = after - before
+                # import pdb; pdb.set_trace()
+
+
+                # objgraph.show_growth(limit=3)
+                # del pred_transfer_traffic
+                # objgraph.show_growth(limit=3)
+
         if not reduced_traffic.is_empty():
 
             if curr.port_type == "ingress":
@@ -266,6 +287,8 @@ class Switch():
                 edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
                 pred_transfer_traffic = self.compute_edge_transfer_traffic(traffic_to_propagate, edge_data)
                 self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
+
+                #del pred_transfer_traffic
 
     def compute_edge_transfer_traffic(self, traffic_to_propagate, edge_data):
 
