@@ -10,7 +10,6 @@ class TrafficElement():
 
     def __init__(self, init_match=None, init_field_wildcard=False):
 
-        self.traffic = None
         self.vuln_rank = 0
 
         self.switch_modifications = {}
@@ -287,7 +286,6 @@ class Traffic():
     def add_traffic_elements(self, te_list):
         for te in te_list:
             self.traffic_elements.append(te)
-            te.traffic = self
 
     def is_empty(self):
         return len(self.traffic_elements) == 0
@@ -355,7 +353,6 @@ class Traffic():
                         continue
 
                     # Add this and do the necessary book-keeping...
-                    ei.traffic = traffic_intersection
                     traffic_intersection.traffic_elements.append(ei)
 
                     ei.written_modifications.update(e_in.written_modifications)
@@ -426,7 +423,6 @@ class Traffic():
     def union(self, in_traffic):
 
         for union_te in in_traffic.traffic_elements:
-            union_te.traffic = self
             self.traffic_elements.append(union_te)
         return self
 
@@ -435,7 +431,6 @@ class Traffic():
         orig_traffic = Traffic()
         for te in self.traffic_elements:
             orig_te = te.get_orig_traffic_element(modifications, store_switch_modifications)
-            orig_te.traffic = orig_traffic
             orig_traffic.traffic_elements.append(orig_te)
         return orig_traffic
 
@@ -448,7 +443,6 @@ class Traffic():
 
         for te in self.traffic_elements:
             modified_te = te.get_modified_traffic_element()
-            modified_te.traffic = modified_traffic
             modified_traffic.traffic_elements.append(modified_te)
         return modified_traffic
 

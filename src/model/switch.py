@@ -2,7 +2,6 @@ __author__ = 'Rakesh Kumar'
 
 import networkx as nx
 
-
 import objgraph
 import gc
 import weakref
@@ -264,6 +263,11 @@ class Switch():
                 #
                 # for ref in refs:
                 #     print ref
+                #
+                # objgraph.show_growth(limit=3)
+                # del pred_transfer_traffic
+                # objgraph.show_growth(limit=3)
+
 
                 # hp = hpy()
                 # before = hp.heap()
@@ -271,11 +275,6 @@ class Switch():
                 # after = hp.heap()
                 # leftover = after - before
                 # import pdb; pdb.set_trace()
-
-
-                # objgraph.show_growth(limit=3)
-                # del pred_transfer_traffic
-                # objgraph.show_growth(limit=3)
 
         if not reduced_traffic.is_empty():
 

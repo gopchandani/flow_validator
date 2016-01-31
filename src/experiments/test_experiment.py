@@ -64,10 +64,10 @@ class TestExperiment(Experiment):
             #                                                                        edges_to_try=[('s3', 's9')],
             #                                                                        verbose=True)
 
-            # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-            #                                                                        verbose=True)
-            #
-            # print "Failover paths TestExperiment, all_paths_match:", all_paths_match
+            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
+                                                                                   verbose=True)
+
+            print "Failover paths TestExperiment, all_paths_match:", all_paths_match
 
 
             self.fv.de_init_port_graph()
