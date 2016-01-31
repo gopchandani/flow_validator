@@ -59,24 +59,44 @@ class TrafficElement():
 
     def get_field_intersection(self, tree1, tree2):
 
-        matched_tree = IntervalTree()
+        #field_intersection = IntervalTree()
+        field_intersection_intervals = []
+
         for iv in tree1:
             for matched_iv in tree2.search(iv.begin, iv.end):
 
-                # Take the smaller interval of the two and put it in the matched_tree
+                # Take the smaller interval of the two and put it in the field_intersection
                 if matched_iv.contains_interval(iv):
-                    matched_tree.add(iv)
+                    #field_intersection.add(iv)
+
+                    field_intersection_intervals.append(iv)
 
                 elif iv.contains_interval(matched_iv):
-                    matched_tree.add(matched_iv)
+                    #field_intersection.add(matched_iv)
+
+                    field_intersection_intervals.append(iv)
 
                 elif iv.overlaps(matched_iv.begin, matched_iv.end):
                     overlapping_interval = Interval(max(matched_iv.begin, iv.begin), min(matched_iv.end, iv.end))
-                    matched_tree.append(overlapping_interval)
+                    #field_intersection.append(overlapping_interval)
+
+                    field_intersection_intervals.append(overlapping_interval)
+
                 else:
                     raise Exception("Probably should never get here")
 
-        return matched_tree
+        if field_intersection_intervals:
+
+            if len(field_intersection_intervals) > 1:
+                pass
+
+            field_intersection = IntervalTree()
+            for iv in field_intersection_intervals:
+                field_intersection.add(iv)
+            return field_intersection
+
+        else:
+            return None
 
     def intersect(self, in_traffic_element):
 
@@ -421,10 +441,7 @@ class Traffic():
 
     # Returns the new traffic that just got added
     def union(self, in_traffic):
-
-        for union_te in in_traffic.traffic_elements:
-            self.traffic_elements.append(union_te)
-        return self
+        self.traffic_elements.extend(in_traffic.traffic_elements)
 
     def get_orig_traffic(self, modifications=None, store_switch_modifications=True):
 
