@@ -37,8 +37,8 @@ class TestExperiment(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -51,9 +51,6 @@ class TestExperiment(Experiment):
             self.fv.init_port_graph()
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
-
-            import objgraph
-            objgraph.show_growth(limit=5)
 
             print "Initialization done."
 
@@ -82,7 +79,7 @@ def main():
     controller = "ryu"
 
     fanout = 2
-    core = 2
+    core = 3
 
     total_number_of_ports_to_synthesize = 1
 

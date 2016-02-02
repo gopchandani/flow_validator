@@ -3,7 +3,6 @@ __author__ = 'Rakesh Kumar'
 import networkx as nx
 
 import sys
-import objgraph
 import gc
 import weakref
 from guppy import hpy
