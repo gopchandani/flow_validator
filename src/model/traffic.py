@@ -3,8 +3,8 @@ __author__ = 'Rakesh Kumar'
 import sys
 
 from netaddr import IPNetwork
-from match import Match, field_names
-from external.intervaltree import Interval, IntervalTree
+from match import field_names
+from intervaltree_modified import IntervalTree, Interval
 
 class TrafficElement():
 
@@ -66,10 +66,12 @@ class TrafficElement():
 
                 # Take the smaller interval of the two and put it in the field_intersection
                 if matched_iv.contains_interval(iv):
-                    field_intersection_intervals.append(iv)
+                    small_iv = Interval(iv.begin, iv.end)
+                    field_intersection_intervals.append(small_iv)
 
                 elif iv.contains_interval(matched_iv):
-                    field_intersection_intervals.append(matched_iv)
+                    small_iv = Interval(matched_iv.begin, matched_iv.end)
+                    field_intersection_intervals.append(small_iv)
 
                 elif iv.overlaps(matched_iv.begin, matched_iv.end):
                     overlapping_interval = Interval(max(matched_iv.begin, iv.begin), min(matched_iv.end, iv.end))
@@ -287,6 +289,11 @@ class Traffic():
         # If initialized as wildcard, add one to the list
         if init_wildcard:
             self.traffic_elements.append(TrafficElement(init_field_wildcard=True))
+
+    def __del__(self):
+
+        for te in self.traffic_elements:
+            del te
 
     def add_traffic_elements(self, te_list):
         for te in te_list:

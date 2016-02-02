@@ -62,9 +62,6 @@ class TestExperiment(Experiment):
             all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
             print "Primary paths TestExperiment, all_paths_match:", all_paths_match
 
-
-
-
             # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
             #                                                                        edges_to_try=[('s3', 's9')],
             #                                                                        verbose=True)
