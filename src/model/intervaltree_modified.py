@@ -10,14 +10,6 @@ from operator import attrgetter
 from math import floor, log
 
 
-def l2(num):
-    """
-    log base 2
-    :rtype real
-    """
-    return log(num, 2)
-
-
 class Node(object):
     def __init__(self,
                  x_center=None,
@@ -533,7 +525,7 @@ class Node(object):
             return 0.0
 
         # dopt is the optimal maximum depth of the tree
-        dopt = 1 + int(floor(l2(m)))
+        dopt = 1 + int(floor(log(m, 2)))
         f = 1 / float(1 + n - dopt)
         return f * self.depth_score_helper(1, dopt)
 
