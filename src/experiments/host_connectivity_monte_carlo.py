@@ -142,7 +142,7 @@ def main():
     core = 2
 
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = [5]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [1]#[10, 20, 30]
 
     exp = MonteCarlo(num_iterations,
                      load_config,
