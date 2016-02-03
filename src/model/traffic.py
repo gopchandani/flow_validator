@@ -35,10 +35,7 @@ class TrafficElement():
 
     def set_traffic_field(self, field_name, value=None, is_wildcard=False):
 
-        # First remove all current intervals
-        prev_intervals = list(self.traffic_fields[field_name])
-        for iv in prev_intervals:
-            self.traffic_fields[field_name].remove(iv)
+        self.traffic_fields[field_name].clear()
 
         if is_wildcard:
             self.traffic_fields[field_name].add(Interval(0, sys.maxsize))
