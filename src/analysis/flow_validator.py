@@ -235,18 +235,12 @@ class FlowValidator:
         src_h_obj = self.network_graph.get_node_object(src_h_id)
         dst_h_obj = self.network_graph.get_node_object(dst_h_id)
 
-        specific_traffic = Traffic()
-        specific_match = Match(is_wildcard=True)
-        specific_match["ethernet_type"] = 0x0800
-        specific_match["ethernet_source"] = int(src_h_obj.mac_addr.replace(":", ""), 16)
-        specific_match["ethernet_destination"] = int(dst_h_obj.mac_addr.replace(":", ""), 16)
-        specific_match["in_port"] = int(src_h_obj.switch_port_attached)
-
-        specific_te = TrafficElement(init_match=specific_match)
-        specific_te.traffic_fields["vlan_id"].chop(src_h_obj.switch_obj.synthesis_tag,
-                                                 src_h_obj.switch_obj.synthesis_tag + 1)
-
-        specific_traffic.add_traffic_elements([specific_te])
+        specific_traffic = Traffic(init_wildcard=True)
+        specific_traffic.set_field("ethernet_type", 0x0800)
+        specific_traffic.set_field("ethernet_source", int(src_h_obj.mac_addr.replace(":", ""), 16))
+        specific_traffic.set_field("ethernet_destination", int(dst_h_obj.mac_addr.replace(":", ""), 16))
+        specific_traffic.set_field("in_port", int(src_h_obj.switch_port_attached))
+        specific_traffic.set_field("vlan_id", src_h_obj.switch_obj.synthesis_tag, is_exception_value=True)
 
         return specific_traffic
 

@@ -111,17 +111,15 @@ class FlowTable():
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
-        # if self.sw.node_id == 's1' and self.table_id == 3:
-        #     print len(self.flows)
-
     def init_flow_table_port_graph(self):
 
-        # if self.sw.node_id == 's1' and self.table_id == 3:
-        #     print len(self.flows)
+        #print "flow_table:", self.table_id
 
         remaining_traffic = Traffic(init_wildcard=True)
 
         for flow in self.flows:
+
+            #print "flow:", flow.flow_json
 
             intersection = flow.traffic.intersect(remaining_traffic)
 

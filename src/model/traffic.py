@@ -20,59 +20,90 @@ class TrafficElement():
         # If a match has been provided to initialize with
         if init_match:
             for field_name in field_names:
-                self.traffic_fields[field_name] = IntervalTree()
-
                 if init_match.is_match_field_wildcard(field_name):
-                    self.set_traffic_field(field_name, is_wildcard=True)
+                    self.set_traffic_field(field_name, set_wildcard=True)
                 else:
                     self.set_traffic_field(field_name, init_match[field_name])
 
         # Create one IntervalTree per field and put the wildcard interval in it
-        if init_field_wildcard:
+        elif init_field_wildcard:
             for field_name in field_names:
-                self.traffic_fields[field_name] = IntervalTree()
-                self.set_traffic_field(field_name, is_wildcard=True)
+                self.set_traffic_field(field_name, set_wildcard=True)
 
-    def set_traffic_field(self, field_name, value=None, is_wildcard=False):
+    def is_traffic_field_wildcard(self, field_val):
 
-        self.traffic_fields[field_name].clear()
-
-        if is_wildcard:
-            self.traffic_fields[field_name].add(Interval(0, sys.maxsize))
-
+        if isinstance(field_val, Interval):
+            return True
         else:
+            return False
+
+    def set_traffic_field(self, field_name, value=None, set_wildcard=False, is_exception_value=False):
+
+        if set_wildcard:
+            self.traffic_fields[field_name] = Interval(0, sys.maxsize)
+
+        elif not is_exception_value:
+
+            # If the field already exists in the Traffic Element, then clear it, otherwise spin up an IntervalTree
+            if field_name not in self.traffic_fields:
+                self.traffic_fields[field_name] = IntervalTree()
+            else:
+
+                if self.is_traffic_field_wildcard(self.traffic_fields[field_name]):
+                    self.traffic_fields[field_name] = IntervalTree()
+                else:
+                    self.traffic_fields[field_name].clear()
+
             if isinstance(value, IPNetwork):
                 self.traffic_fields[field_name].add(Interval(value.first, value.last + 1))
             else:
                 self.traffic_fields[field_name].add(Interval(value, value + 1))
 
-    def get_field_intersection(self, tree1, tree2):
+        elif is_exception_value:
 
-        field_intersection_intervals = []
+            if self.is_traffic_field_wildcard(self.traffic_fields[field_name]):
+                self.traffic_fields[field_name] = IntervalTree()
+            else:
+                self.traffic_fields[field_name].clear()
 
-        for iv in tree1:
-            for matched_iv in tree2.search(iv.begin, iv.end):
+            self.traffic_fields[field_name].add(Interval(0, sys.maxsize))
+            self.traffic_fields[field_name].chop(value, value + 1)
 
-                # Take the smaller interval of the two and put it in the field_intersection
-                if matched_iv.contains_interval(iv):
-                    small_iv = Interval(iv.begin, iv.end)
-                    field_intersection_intervals.append(small_iv)
 
-                elif iv.contains_interval(matched_iv):
-                    small_iv = Interval(matched_iv.begin, matched_iv.end)
-                    field_intersection_intervals.append(small_iv)
+    def get_field_intersection(self, field1, field2):
 
-                elif iv.overlaps(matched_iv.begin, matched_iv.end):
-                    overlapping_interval = Interval(max(matched_iv.begin, iv.begin), min(matched_iv.end, iv.end))
-                    field_intersection_intervals.append(overlapping_interval)
-
-                else:
-                    raise Exception("Probably should never get here")
-
-        if field_intersection_intervals:
-            return IntervalTree(field_intersection_intervals)
+        # If either one of fields is a wildcard, other is the answer
+        if self.is_traffic_field_wildcard(field1):
+            return field2
+        elif self.is_traffic_field_wildcard(field2):
+            return field1
         else:
-            return None
+            # If neither is a wildcard, then we have to get down to brasstacks and do the intersection
+            field_intersection_intervals = []
+
+            for iv in field1:
+                for matched_iv in field2.search(iv.begin, iv.end):
+
+                    # Take the smaller interval of the two and put it in the field_intersection
+                    if matched_iv.contains_interval(iv):
+                        small_iv = Interval(iv.begin, iv.end)
+                        field_intersection_intervals.append(small_iv)
+
+                    elif iv.contains_interval(matched_iv):
+                        small_iv = Interval(matched_iv.begin, matched_iv.end)
+                        field_intersection_intervals.append(small_iv)
+
+                    elif iv.overlaps(matched_iv.begin, matched_iv.end):
+                        overlapping_interval = Interval(max(matched_iv.begin, iv.begin), min(matched_iv.end, iv.end))
+                        field_intersection_intervals.append(overlapping_interval)
+
+                    else:
+                        raise Exception("Probably should never get here")
+
+            if field_intersection_intervals:
+                return IntervalTree(field_intersection_intervals)
+            else:
+                return None
 
     def intersect(self, in_traffic_element):
 
@@ -94,8 +125,10 @@ class TrafficElement():
         for field_name in field_names:
 
             # If the field is not a wildcard, then chop it from the wildcard initialized Traffic
-            if not (Interval(0, sys.maxsize) in self.traffic_fields[field_name]):
+            if not self.is_traffic_field_wildcard(self.traffic_fields[field_name]):
                 te = TrafficElement(init_field_wildcard=True)
+                te.traffic_fields[field_name] = IntervalTree()
+                te.traffic_fields[field_name].add(Interval(0, sys.maxsize))
 
                 # Chop out each interval from te[field_name]
                 for interval in self.traffic_fields[field_name]:
@@ -246,15 +279,19 @@ class Traffic():
     def is_empty(self):
         return len(self.traffic_elements) == 0
 
-    def set_field(self, key, value=None, is_wildcard=False):
+    def set_field(self, key, value=None, is_wildcard=False, is_exception_value=False):
 
-        if key and value:
+        if key and value and is_exception_value:
+            for te in self.traffic_elements:
+                te.set_traffic_field(key, value, is_exception_value=is_exception_value)
+
+        elif key and value:
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value)
 
         elif is_wildcard:
             for te in self.traffic_elements:
-                te.set_traffic_field(key, is_wildcard=True)
+                te.set_traffic_field(key, set_wildcard=True)
 
     # Checks if in_te is subset of self (any one of its te)
     def is_subset_te(self, in_te):
