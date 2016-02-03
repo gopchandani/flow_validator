@@ -15,12 +15,12 @@ class TrafficElement():
         self.switch_modifications = {}
         self.written_modifications = {}
         self.instruction_type = None
-        self.match_fields = {}
+        self.traffic_fields = {}
 
         # If a match has been provided to initialize with
         if init_match:
             for field_name in field_names:
-                self.match_fields[field_name] = IntervalTree()
+                self.traffic_fields[field_name] = IntervalTree()
 
                 if init_match[field_name] == sys.maxsize:
                     self.set_match_field_element(field_name, is_wildcard=True)
@@ -30,24 +30,24 @@ class TrafficElement():
         # Create one IntervalTree per field and put the wildcard interval in it
         if init_field_wildcard:
             for field_name in field_names:
-                self.match_fields[field_name] = IntervalTree()
+                self.traffic_fields[field_name] = IntervalTree()
                 self.set_match_field_element(field_name, is_wildcard=True)
 
     def set_match_field_element(self, key, value=None, is_wildcard=False):
 
         # First remove all current intervals
-        prev_intervals = list(self.match_fields[key])
+        prev_intervals = list(self.traffic_fields[key])
         for iv in prev_intervals:
-            self.match_fields[key].remove(iv)
+            self.traffic_fields[key].remove(iv)
 
         if is_wildcard:
-            self.match_fields[key].add(Interval(0, sys.maxsize))
+            self.traffic_fields[key].add(Interval(0, sys.maxsize))
 
         else:
             if isinstance(value, IPNetwork):
-                self.match_fields[key].add(Interval(value.first, value.last + 1))
+                self.traffic_fields[key].add(Interval(value.first, value.last + 1))
             else:
-                self.match_fields[key].add(Interval(value, value + 1))
+                self.traffic_fields[key].add(Interval(value, value + 1))
 
     def get_field_intersection(self, tree1, tree2):
 
@@ -82,14 +82,11 @@ class TrafficElement():
         intersection_element = TrafficElement()
 
         for field_name in field_names:
-            intersection_element.match_fields[field_name] = self.get_field_intersection(
-                in_traffic_element.match_fields[field_name], self.match_fields[field_name])
+            intersection_element.traffic_fields[field_name] = self.get_field_intersection(
+                in_traffic_element.traffic_fields[field_name], self.traffic_fields[field_name])
 
             # If the resulting tree has no intervals in it, then balk:
-            if not intersection_element.match_fields[field_name]:
-                #print field_name, \
-                #    "self:", self.match_fields[field_name], \
-                #    "in_match:", in_traffic_element.match_fields[field_name]
+            if not intersection_element.traffic_fields[field_name]:
                 return None
 
         return intersection_element
@@ -100,12 +97,12 @@ class TrafficElement():
         for field_name in field_names:
 
             # If the field is not a wildcard, then chop it from the wildcard initialized Traffic
-            if not (Interval(0, sys.maxsize) in self.match_fields[field_name]):
+            if not (Interval(0, sys.maxsize) in self.traffic_fields[field_name]):
                 te = TrafficElement(init_field_wildcard=True)
 
                 # Chop out each interval from te[field_name]
-                for interval in self.match_fields[field_name]:
-                    te.match_fields[field_name].chop(interval.begin, interval.end)
+                for interval in self.traffic_fields[field_name]:
+                    te.traffic_fields[field_name].chop(interval.begin, interval.end)
 
                 complement_traffic_elements.append(te)
 
@@ -150,7 +147,7 @@ class TrafficElement():
 
         modified_traffic_element = TrafficElement()
 
-        for field_name in self.match_fields:
+        for field_name in self.traffic_fields:
 
             # TODO: If this fields needs to be modified, apply the modification
             if field_name in self.switch_modifications:
@@ -159,11 +156,11 @@ class TrafficElement():
                 value_tree = IntervalTree()
                 value_tree.add(Interval(field_val, field_val + 1))
 
-                modified_traffic_element.match_fields[field_name] = value_tree
+                modified_traffic_element.traffic_fields[field_name] = value_tree
 
             else:
                 # Otherwise, just keep the field same as it was
-                modified_traffic_element.match_fields[field_name] = self.match_fields[field_name]
+                modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
         # Accumulate field modifications
         modified_traffic_element.written_modifications = self.written_modifications
@@ -207,16 +204,16 @@ class TrafficElement():
                 value_tree = IntervalTree()
                 value_tree.add(Interval(field_val, field_val + 1))
 
-                intersection = self.get_field_intersection(value_tree, self.match_fields[field_name])
+                intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
 
                 if intersection:
-                    orig_traffic_element.match_fields[field_name] = mf[field_name][0].match_fields[field_name]
+                    orig_traffic_element.traffic_fields[field_name] = mf[field_name][0].traffic_fields[field_name]
                 else:
-                    orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
+                    orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
             else:
                 # Otherwise, just keep the field same as it was
-                orig_traffic_element.match_fields[field_name] = self.match_fields[field_name]
+                orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
         # Accumulate field modifications
         orig_traffic_element.written_modifications.update(self.written_modifications)

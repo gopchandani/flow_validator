@@ -206,11 +206,8 @@ class ActionSet():
     def get_modified_fields_dict(self, flow_match_element):
         modified_fields_dict = {}
 
+        # Capture the value before (in principle and after) the modification in a tuple
         for set_action in self.action_dict["set_field"]:
-            # Capture the value before (in principle and after) the modification in a tuple
-            #modified_fields_dict[set_action.modified_field] = \
-            #    (flow_match_element.match_fields[set_action.modified_field], set_action.field_modified_to, flow_match_element)
-
             modified_fields_dict[set_action.modified_field] = (flow_match_element, set_action.field_modified_to)
 
         return modified_fields_dict

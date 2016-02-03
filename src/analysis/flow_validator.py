@@ -243,7 +243,7 @@ class FlowValidator:
         specific_match["in_port"] = int(src_h_obj.switch_port_attached)
 
         specific_te = TrafficElement(init_match=specific_match)
-        specific_te.match_fields["vlan_id"].chop(src_h_obj.switch_obj.synthesis_tag,
+        specific_te.traffic_fields["vlan_id"].chop(src_h_obj.switch_obj.synthesis_tag,
                                                  src_h_obj.switch_obj.synthesis_tag + 1)
 
         specific_traffic.add_traffic_elements([specific_te])
