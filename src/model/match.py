@@ -132,7 +132,7 @@ class Match(DictMixin):
             for field_name in field_names:
                 self.match_field_values[field_name] = sys.maxsize
 
-    def is_field_wildcard(self, field_name):
+    def is_match_field_wildcard(self, field_name):
         return self.match_field_values[field_name] == sys.maxsize
 
     def add_element_from_odl_match_json(self, match_json):

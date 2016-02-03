@@ -22,32 +22,32 @@ class TrafficElement():
             for field_name in field_names:
                 self.traffic_fields[field_name] = IntervalTree()
 
-                if init_match[field_name] == sys.maxsize:
-                    self.set_match_field_element(field_name, is_wildcard=True)
+                if init_match.is_match_field_wildcard(field_name):
+                    self.set_traffic_field(field_name, is_wildcard=True)
                 else:
-                    self.set_match_field_element(field_name, init_match[field_name])
+                    self.set_traffic_field(field_name, init_match[field_name])
 
         # Create one IntervalTree per field and put the wildcard interval in it
         if init_field_wildcard:
             for field_name in field_names:
                 self.traffic_fields[field_name] = IntervalTree()
-                self.set_match_field_element(field_name, is_wildcard=True)
+                self.set_traffic_field(field_name, is_wildcard=True)
 
-    def set_match_field_element(self, key, value=None, is_wildcard=False):
+    def set_traffic_field(self, field_name, value=None, is_wildcard=False):
 
         # First remove all current intervals
-        prev_intervals = list(self.traffic_fields[key])
+        prev_intervals = list(self.traffic_fields[field_name])
         for iv in prev_intervals:
-            self.traffic_fields[key].remove(iv)
+            self.traffic_fields[field_name].remove(iv)
 
         if is_wildcard:
-            self.traffic_fields[key].add(Interval(0, sys.maxsize))
+            self.traffic_fields[field_name].add(Interval(0, sys.maxsize))
 
         else:
             if isinstance(value, IPNetwork):
-                self.traffic_fields[key].add(Interval(value.first, value.last + 1))
+                self.traffic_fields[field_name].add(Interval(value.first, value.last + 1))
             else:
-                self.traffic_fields[key].add(Interval(value, value + 1))
+                self.traffic_fields[field_name].add(Interval(value, value + 1))
 
     def get_field_intersection(self, tree1, tree2):
 
@@ -253,11 +253,11 @@ class Traffic():
 
         if key and value:
             for te in self.traffic_elements:
-                te.set_match_field_element(key, value)
+                te.set_traffic_field(key, value)
 
         elif is_wildcard:
             for te in self.traffic_elements:
-                te.set_match_field_element(key, is_wildcard=True)
+                te.set_traffic_field(key, is_wildcard=True)
 
     # Checks if in_te is subset of self (any one of its te)
     def is_subset_te(self, in_te):
