@@ -247,49 +247,6 @@ class Match(DictMixin):
                 self[field_name] = sys.maxsize
                 continue
 
-    def set_fields_with_match_json(self, match_json):
-
-        for match_field in match_json:
-
-            if match_field == 'in-port':
-                self["in_port"] = int(match_json[match_field])
-
-            elif match_field == "ethernet-match":
-                if "ethernet-type" in match_json[match_field]:
-                    self["ethernet_type"] = int(match_json[match_field]["ethernet-type"]["type"])
-
-                if "ethernet-source" in match_json[match_field]:
-                    self["ethernet_source"] = int(match_json[match_field]["ethernet-source"]["address"])
-
-                if "ethernet-destination" in match_json[match_field]:
-                    self["ethernet_destination"] = int(match_json[match_field]["ethernet-destination"]["address"])
-
-            elif match_field == 'ipv4-destination':
-                self["dst_ip_addr"] = IPNetwork(match_json[match_field])
-
-            elif match_field == 'ipv4-source':
-                self["src_ip_addr"] = IPNetwork(match_json[match_field])
-
-            elif match_field == "ip-match":
-                if "ip-protocol" in match_json[match_field]:
-                    self["ip_protocol"] = int(match_json[match_field]["ip-protocol"])
-
-            elif match_field == "tcp-destination-port":
-                self["tcp_destination_port"] = int(match_json[match_field])
-
-            elif match_field == "tcp-source-port":
-                self["tcp_source_port"] = int(match_json[match_field])
-
-            elif match_field == "udp-destination-port":
-                self["udp_destination_port"] = int(match_json[match_field])
-
-            elif match_field == "udp-source-port":
-                self["udp_source_port"] = int(match_json[match_field])
-
-            elif match_field == "vlan-match":
-                if "vlan-id" in match_json[match_field]:
-                    self["vlan_id"] = int(match_json[match_field]["vlan-id"]["vlan-id"])
-
     def generate_odl_match_json(self, match_json):
 
         if "in_port" in self and self["in_port"] != sys.maxsize:

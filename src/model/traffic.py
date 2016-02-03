@@ -33,18 +33,14 @@ class TrafficElement():
                 self.match_fields[field_name] = IntervalTree()
                 self.set_match_field_element(field_name, is_wildcard=True)
 
-    def set_match_field_element(self, key, value=None, is_wildcard=False, exception=False):
+    def set_match_field_element(self, key, value=None, is_wildcard=False):
 
         # First remove all current intervals
         prev_intervals = list(self.match_fields[key])
         for iv in prev_intervals:
             self.match_fields[key].remove(iv)
 
-        if exception:
-            self.match_fields[key].add(Interval(0, value))
-            self.match_fields[key].add(Interval(value + 1, sys.maxsize))
-
-        elif is_wildcard:
+        if is_wildcard:
             self.match_fields[key].add(Interval(0, sys.maxsize))
 
         else:
@@ -52,10 +48,6 @@ class TrafficElement():
                 self.match_fields[key].add(Interval(value.first, value.last + 1))
             else:
                 self.match_fields[key].add(Interval(value, value + 1))
-
-    #TODO: Does not cover the cases of fragmented wildcard
-    def is_field_wildcard(self, field_name):
-        return Interval(0, sys.maxsize) in self.match_fields[field_name]
 
     def get_field_intersection(self, tree1, tree2):
 
@@ -237,48 +229,6 @@ class TrafficElement():
 
         return orig_traffic_element
 
-    def set_fields_with_match_json(self, match_json):
-
-        for match_field in match_json:
-
-            if match_field == 'in-port':
-                self.set_match_field_element("in_port", int(match_json[match_field]))
-
-            elif match_field == "ethernet-match":
-                if "ethernet-type" in match_json[match_field]:
-                    self.set_match_field_element("ethernet_type", int(match_json[match_field]["ethernet-type"]["type"]))
-
-                if "ethernet-source" in match_json[match_field]:
-                    self.set_match_field_element("ethernet_source", int(match_json[match_field]["ethernet-source"]["address"]))
-
-                if "ethernet-destination" in match_json[match_field]:
-                    self.set_match_field_element("ethernet_destination", int(match_json[match_field]["ethernet-destination"]["address"]))
-
-            elif match_field == 'ipv4-destination':
-                self.set_match_field_element("dst_ip_addr", IPNetwork(match_json[match_field]))
-
-            elif match_field == 'ipv4-source':
-                self.set_match_field_element("src_ip_addr", IPNetwork(match_json[match_field]))
-
-            elif match_field == "ip-match":
-                if "ip-protocol" in match_json[match_field]:
-                    self.set_match_field_element("ip_protocol", int(match_json[match_field]["ip-protocol"]))
-
-            elif match_field == "tcp-destination-port":
-                self.set_match_field_element("tcp_destination_port", int(match_json[match_field]))
-
-            elif match_field == "tcp-source-port":
-                self.set_match_field_element("tcp_source_port", int(match_json[match_field]))
-
-            elif match_field == "udp-destination-port":
-                self.set_match_field_element("udp_destination_port", int(match_json[match_field]))
-
-            elif match_field == "udp-source-port":
-                self.set_match_field_element("udp_source_port", int(match_json[match_field]))
-
-            elif match_field == "vlan-match":
-                if "vlan-id" in match_json[match_field]:
-                    self.set_match_field_element("vlan_id", int(match_json[match_field]["vlan-id"]["vlan-id"]))
 
 class Traffic():
 
@@ -302,13 +252,9 @@ class Traffic():
     def is_empty(self):
         return len(self.traffic_elements) == 0
 
-    def set_field(self, key, value=None, match_json=None, is_wildcard=False, exception=False):
+    def set_field(self, key, value=None, is_wildcard=False):
 
-        if key and value and exception:
-            for te in self.traffic_elements:
-                te.set_match_field_element(key, value, exception=True)
-
-        elif key and value:
+        if key and value:
             for te in self.traffic_elements:
                 te.set_match_field_element(key, value)
 
@@ -316,12 +262,7 @@ class Traffic():
             for te in self.traffic_elements:
                 te.set_match_field_element(key, is_wildcard=True)
 
-        elif match_json:
-            for te in self.traffic_elements:
-                te.set_fields_with_match_json(match_json)
-
     # Checks if in_te is subset of self (any one of its te)
-
     def is_subset_te(self, in_te):
 
         in_traffic = Traffic()
@@ -454,16 +395,6 @@ class Traffic():
             modified_te = te.get_modified_traffic_element()
             modified_traffic.traffic_elements.append(modified_te)
         return modified_traffic
-
-    def is_field_wildcard(self, field_name):
-        retval = True
-
-        for te in self.traffic_elements:
-            retval = te.is_field_wildcard(field_name)
-            if not retval:
-                break
-
-        return retval
 
     def get_max_vuln_rank(self):
         max_vuln_rank = 0
