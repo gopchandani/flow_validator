@@ -37,8 +37,8 @@ class TestExperiment(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -52,9 +52,6 @@ class TestExperiment(Experiment):
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
 
-            import objgraph
-            objgraph.show_growth(limit=5)
-
             print "Initialization done."
 
 
@@ -66,9 +63,9 @@ class TestExperiment(Experiment):
             #                                                                        edges_to_try=[('s3', 's9')],
             #                                                                        verbose=True)
             #
-
-            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-                                                                                   verbose=False)
+            #
+            # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
+            #                                                                        verbose=False)
 
             print "Failover paths TestExperiment, all_paths_match:", all_paths_match
 
@@ -81,7 +78,7 @@ def main():
     save_config = False
     controller = "ryu"
 
-    fanout = 2
+    fanout = 3
     core = 2
 
     total_number_of_ports_to_synthesize = 1

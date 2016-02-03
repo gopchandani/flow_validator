@@ -131,14 +131,14 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     # fanout = 2
     # core = 3
 
-    fanout = 2
+    fanout = 3
     core = 2
 
     total_number_of_ports_to_synthesize = 1

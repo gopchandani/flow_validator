@@ -111,6 +111,9 @@ class Experiment(object):
         # Refresh the network_graph
         self.ng.parse_switches()
 
+        # import sys
+        # sys.exit()
+
         return self.ng
 
     def compare_paths(self, src_host, dst_host, analyzed_path, synthesized_path, verbose):
