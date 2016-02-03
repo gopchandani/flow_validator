@@ -78,7 +78,7 @@ def main():
     save_config = False
     controller = "ryu"
 
-    fanout = 2
+    fanout = 3
     core = 3
 
     total_number_of_ports_to_synthesize = 1
