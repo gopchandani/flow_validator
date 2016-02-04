@@ -71,14 +71,14 @@ class TestExperiment(Experiment):
 
             self.fv.de_init_port_graph()
 
-def main():
+def main():=
     num_iterations = 1#20
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
-    fanout = 3
-    core = 3
+    fanout = 4
+    core = 4
 
     total_number_of_ports_to_synthesize = 1
 
