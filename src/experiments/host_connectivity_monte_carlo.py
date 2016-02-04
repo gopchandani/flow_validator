@@ -131,18 +131,18 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     # fanout = 2
     # core = 3
 
     fanout = 3
-    core = 2
+    core = 3
 
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = [1]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [5]#[10, 20, 30]
 
     exp = MonteCarlo(num_iterations,
                      load_config,

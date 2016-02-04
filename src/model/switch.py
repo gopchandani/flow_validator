@@ -2,11 +2,6 @@ __author__ = 'Rakesh Kumar'
 
 import networkx as nx
 
-import sys
-import gc
-import weakref
-from guppy import hpy
-
 from collections import defaultdict
 from traffic import Traffic
 from port import Port
@@ -258,44 +253,6 @@ class Switch():
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_transfer_traffic.is_empty():
                     self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
-
-                # r = sys.getrefcount(pred_transfer_traffic)
-                # print r
-
-                # refs = gc.get_referrers(pred_transfer_traffic)
-                #
-                # for ref in refs:
-                #     print ref
-                #
-                #
-                # import inspect
-                # current_frame = inspect.currentframe()
-                # print current_frame
-
-
-                #objgraph.show_growth(limit=3)
-
-                # print id(pred_transfer_traffic.traffic_elements)
-                #
-                # for te in pred_transfer_traffic.traffic_elements:
-                #     te_refs = gc.get_referrers(te)
-                #     print te_refs
-                #     for te_ref in te_refs:
-                #         print id(te_ref), type(te_ref)
-                #
-                #         if type(te_ref) == list:
-                #             print "here"
-                #
-                #
-                #     r = sys.getrefcount(pred_transfer_traffic)
-                #     print r
-                #     del te
-                #
-                # del pred_transfer_traffic
-
-                #objgraph.show_growth(limit=3)
-
-
 
         if not reduced_traffic.is_empty():
 
