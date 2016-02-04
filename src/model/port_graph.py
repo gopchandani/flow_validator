@@ -13,11 +13,20 @@ class PortGraph:
         self.network_graph = network_graph
         self.g = nx.DiGraph()
 
+    def get_table_port_id(self, switch_id, table_number):
+        return switch_id + ":table" + str(table_number)
+
     def get_incoming_port_id(self, node_id, port_number):
         return node_id + ":ingress" + str(port_number)
 
+    def get_incoming_port(self, node_id, port_number):
+        return self.get_port(node_id + ":ingress" + str(port_number))
+
     def get_outgoing_port_id(self, node_id, port_number):
         return node_id + ":egress" + str(port_number)
+
+    def get_outgoing_port(self, node_id, port_number):
+        return self.get_port(node_id + ":egress" + str(port_number))
 
     def add_port(self, port):
         self.g.add_node(port.port_id, p=port)
@@ -33,13 +42,13 @@ class PortGraph:
         # First grab the port objects from the sw's node graph and add them to port_graph's node graph
         for port in sw.ports:
 
-            self.add_port(sw.get_port(self.get_incoming_port_id(sw.node_id, port)))
-            self.add_port(sw.get_port(self.get_outgoing_port_id(sw.node_id, port)))
+            self.add_port(sw.get_incoming_port(sw.node_id, port))
+            self.add_port(sw.get_outgoing_port(sw.node_id, port))
 
         # Add edges from all possible source/destination ports
         for src_port_number in sw.ports:
 
-            src_p = self.get_port(self.get_incoming_port_id(sw.node_id, src_port_number))
+            src_p = self.get_incoming_port(sw.node_id, src_port_number)
 
             for dst_p in src_p.transfer_traffic:
 
@@ -202,14 +211,14 @@ class PortGraph:
 
         edge_port_dict = self.network_graph.get_edge_port_dict(node1_id, node2_id)
 
-        from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_port_dict[node1_id]))
-        to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_port_dict[node2_id]))
+        from_port = self.get_outgoing_port(node1_id, edge_port_dict[node1_id])
+        to_port = self.get_incoming_port(node2_id, edge_port_dict[node2_id])
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, Traffic(init_wildcard=True))
 
-        from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
-        to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
+        from_port = self.get_outgoing_port(node2_id, edge_port_dict[node2_id])
+        to_port = self.get_incoming_port(node1_id, edge_port_dict[node1_id])
         from_port.state = "up"
         to_port.state = "up"
         self.add_edge(from_port, to_port, Traffic(init_wildcard=True))
@@ -228,15 +237,15 @@ class PortGraph:
 
         edge_port_dict = self.network_graph.get_edge_port_dict(node1_id, node2_id)
 
-        from_port = self.get_port(self.get_outgoing_port_id(node1_id, edge_port_dict[node1_id]))
-        to_port = self.get_port(self.get_incoming_port_id(node2_id, edge_port_dict[node2_id]))
+        from_port = self.get_outgoing_port(node1_id, edge_port_dict[node1_id])
+        to_port = self.get_incoming_port(node2_id, edge_port_dict[node2_id])
 
         from_port.state = "down"
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
-        from_port = self.get_port(self.get_outgoing_port_id(node2_id, edge_port_dict[node2_id]))
-        to_port = self.get_port(self.get_incoming_port_id(node1_id, edge_port_dict[node1_id]))
+        from_port = self.get_outgoing_port(node2_id, edge_port_dict[node2_id])
+        to_port = self.get_incoming_port(node1_id, edge_port_dict[node1_id])
         from_port.state = "down"
         to_port.state = "down"
         self.remove_edge(from_port, to_port)
