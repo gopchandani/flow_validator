@@ -220,7 +220,7 @@ class Experiment(object):
             if edge[0].startswith("h") or edge[1].startswith("h"):
                 continue
 
-            print "Testing for edge:", edge
+            print "Breaking edge:", edge
 
             fv.port_graph.remove_node_graph_edge(edge[0], edge[1])
 
@@ -232,6 +232,8 @@ class Experiment(object):
 
             if not all_paths_match:
                 break
+
+            print "Restoring edge:", edge
 
             fv.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
 
