@@ -60,9 +60,9 @@ class TestExperiment(Experiment):
 
 
             # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-            #                                                                        edges_to_try=[('s10', 's23')],
+            #                                                                        edges_to_try=[('s9', 's19')],
             #                                                                        verbose=True)
-            #
+
 
             all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
                                                                                    verbose=False)
@@ -79,7 +79,7 @@ def main():
     controller = "ryu"
 
     fanout = 2
-    core = 2
+    core = 3
 
     total_number_of_ports_to_synthesize = 1
 

@@ -239,6 +239,11 @@ class Switch():
 
     def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes):
 
+        #print "curr:", curr.port_id, "dst_port:", dst_port.port_id
+
+        if curr.port_id == 's19:ingress1' and dst_port.port_id == 's19:egress6':
+            pass
+
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst_port)
 
@@ -364,21 +369,20 @@ class Switch():
                     pred = self.get_port(pred_id)
                     edge_data = self.g.get_edge_data(pred_id, outgoing_port.port_id)["edge_data"]
 
+                    prop_traffic = Traffic()
                     for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
                             in edge_data.edge_data_list:
 
                         if edge_action.is_failover_action():
                             self.update_port_transfer_traffic_failover_edge_action(pred, edge_action, edge_filter_match, tf_changes)
                         else:
-
-                            prop_traffic = Traffic()
                             prop_traffic.union(edge_filter_match)
 
-                            # Mute only if pred has some transfer traffic for the muted_port
-                            if outgoing_port in pred.transfer_traffic:
-                                if outgoing_port in pred.transfer_traffic[outgoing_port]:
-                                    prop_traffic = prop_traffic.difference(pred.transfer_traffic[outgoing_port][outgoing_port])
-                                    self.compute_port_transfer_traffic(pred, Traffic(), outgoing_port, dst, tf_changes)
+                    # Mute only if pred has some transfer traffic for the muted_port
+                    if outgoing_port in pred.transfer_traffic:
+                        if outgoing_port in pred.transfer_traffic[outgoing_port]:
+                            prop_traffic = prop_traffic.difference(pred.transfer_traffic[outgoing_port][outgoing_port])
+                            self.compute_port_transfer_traffic(pred, prop_traffic, outgoing_port, dst, tf_changes)
 
             for succ_id in self.g.successors(incoming_port.port_id):
                 edge_data = self.g.get_edge_data(incoming_port.port_id, succ_id)["edge_data"]
@@ -400,6 +404,7 @@ class Switch():
                 for pred_id in self.g.predecessors(outgoing_port.port_id):
                     pred = self.get_port(pred_id)
                     edge_data = self.g.get_edge_data(pred_id, outgoing_port.port_id)["edge_data"]
+                    prop_traffic = Traffic()
 
                     for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
                             in edge_data.edge_data_list:
@@ -407,17 +412,16 @@ class Switch():
                         if edge_action.is_failover_action():
                             self.update_port_transfer_traffic_failover_edge_action(pred, edge_action, edge_filter_match, tf_changes)
                         else:
-
-                            prop_traffic = Traffic()
                             prop_traffic.union(edge_filter_match)
-                            try:
-                                if outgoing_port in pred.transfer_traffic:
-                                    if outgoing_port in pred.transfer_traffic[outgoing_port]:
-                                        prop_traffic.union(pred.transfer_traffic[outgoing_port][outgoing_port])
-                            except KeyError:
-                                pass
 
-                            self.compute_port_transfer_traffic(pred, prop_traffic, outgoing_port, dst, tf_changes)
+                    try:
+                        if outgoing_port in pred.transfer_traffic:
+                            if outgoing_port in pred.transfer_traffic[outgoing_port]:
+                                prop_traffic.union(pred.transfer_traffic[outgoing_port][outgoing_port])
+                    except KeyError:
+                        pass
+
+                    self.compute_port_transfer_traffic(pred, prop_traffic, outgoing_port, dst, tf_changes)
 
             for succ_id in self.g.successors(incoming_port.port_id):
                 edge_data = self.g.get_edge_data(incoming_port.port_id, succ_id)["edge_data"]

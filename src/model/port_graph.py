@@ -224,6 +224,7 @@ class PortGraph:
         self.add_edge(from_port, to_port, Traffic(init_wildcard=True))
 
         if updating:
+
             sw1 = self.network_graph.get_node_object(node1_id)
             sw2 = self.network_graph.get_node_object(node2_id)
 
