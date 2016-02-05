@@ -190,12 +190,12 @@ class Switch():
             self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p, tf_changes)
 
 
-    def account_port_transfer_traffic(self, port, dst_traffic_at_succ, succ, dst_port):
+    def account_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port):
 
         # Keep track of what traffic looks like before any changes occur
         traffic_before_changes = Traffic()
-        for sp in port.transfer_traffic[dst_port]:
-            traffic_before_changes.union(port.transfer_traffic[dst_port][sp])
+        for sp in curr.transfer_traffic[dst_port]:
+            traffic_before_changes.union(curr.transfer_traffic[dst_port][sp])
 
         # Compute what additional traffic is being admitted overall
         additional_traffic = traffic_before_changes.difference(dst_traffic_at_succ)
@@ -203,35 +203,35 @@ class Switch():
         # Do the changes...
         try:
             # First accumulate any more traffic that has arrived from this sucessor
-            more_from_succ = port.transfer_traffic[dst_port][succ].difference(dst_traffic_at_succ)
+            more_from_succ = curr.transfer_traffic[dst_port][succ].difference(dst_traffic_at_succ)
             if not more_from_succ.is_empty():
-                port.transfer_traffic[dst_port][succ].union(more_from_succ)
+                curr.transfer_traffic[dst_port][succ].union(more_from_succ)
 
             # Then get rid of traffic that this particular successor does not admit anymore
-            less_from_succ = dst_traffic_at_succ.difference(port.transfer_traffic[dst_port][succ])
+            less_from_succ = dst_traffic_at_succ.difference(curr.transfer_traffic[dst_port][succ])
             if not less_from_succ.is_empty():
-                port.transfer_traffic[dst_port][succ] = less_from_succ.difference(port.transfer_traffic[dst_port][succ])
-                if port.transfer_traffic[dst_port][succ].is_empty():
-                    del port.transfer_traffic[dst_port][succ]
+                curr.transfer_traffic[dst_port][succ] = less_from_succ.difference(curr.transfer_traffic[dst_port][succ])
+                if curr.transfer_traffic[dst_port][succ].is_empty():
+                    del curr.transfer_traffic[dst_port][succ]
 
         # If there is no traffic for this dst-succ combination prior to this propagation, 
         # setup a traffic object for successor
         except KeyError:
             if not dst_traffic_at_succ.is_empty():
-                port.transfer_traffic[dst_port][succ] = Traffic()
-                port.transfer_traffic[dst_port][succ].union(dst_traffic_at_succ)
+                curr.transfer_traffic[dst_port][succ] = Traffic()
+                curr.transfer_traffic[dst_port][succ].union(dst_traffic_at_succ)
 
         # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
         traffic_after_changes = Traffic()
-        for sp in port.transfer_traffic[dst_port]:
-            traffic_after_changes.union(port.transfer_traffic[dst_port][sp])
+        for sp in curr.transfer_traffic[dst_port]:
+            traffic_after_changes.union(curr.transfer_traffic[dst_port][sp])
 
         # Compute what reductions (if any) in traffic has occured due to all the changes
         reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
 
         # If nothing is left behind then clean up the dictionary.
         if traffic_after_changes.is_empty():
-            del port.transfer_traffic[dst_port]
+            del curr.transfer_traffic[dst_port]
 
         traffic_to_propagate = traffic_after_changes
 
@@ -241,8 +241,8 @@ class Switch():
 
         #print "curr:", curr.port_id, "dst_port:", dst_port.port_id
 
-        if curr.port_id == 's19:ingress1' and dst_port.port_id == 's19:egress6':
-            pass
+        # if curr.port_id == 's19:ingress1' and dst_port.port_id == 's19:egress6':
+        #     pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst_port)

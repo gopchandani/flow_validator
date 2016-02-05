@@ -79,7 +79,7 @@ def main():
     controller = "ryu"
 
     fanout = 2
-    core = 3
+    core = 1
 
     total_number_of_ports_to_synthesize = 1
 
