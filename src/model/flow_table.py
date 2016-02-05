@@ -1,8 +1,11 @@
 __author__ = 'Rakesh Kumar'
 
+from port_graph_node import PortGraphNode
 from match import Match
 from traffic import Traffic, TrafficElement
 from instruction_set import InstructionSet
+
+from port_graph import get_table_node_id
 
 class Flow():
 
@@ -58,10 +61,10 @@ class Flow():
             for out_port, output_action in port_graph_edges:
 
                 output_action.instruction_type = "applied"
-                outgoing_port = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
+                egress_node = self.sw.get_egress_node(self.sw.node_id, out_port)
 
-                e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
-                                     outgoing_port,
+                e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port_graph_node,
+                                     egress_node,
                                      output_action,
                                      self.applied_traffic,
                                      self.applied_modifications,
@@ -72,10 +75,10 @@ class Flow():
             for out_port, output_action in port_graph_edges:
 
                 output_action.instruction_type = "written"
-                outgoing_port = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, out_port))
+                egress_node = self.sw.get_egress_node(self.sw.node_id, out_port)
 
-                e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
-                                     outgoing_port,
+                e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port_graph_node,
+                                     egress_node,
                                      output_action,
                                      self.applied_traffic,
                                      self.applied_modifications,
@@ -85,8 +88,8 @@ class Flow():
             if self.instruction_set.goto_table:
 
                 if self.instruction_set.goto_table < len(self.sw.flow_tables):
-                    e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port,
-                                         self.sw.flow_tables[self.instruction_set.goto_table].port,
+                    e = self.sw.add_edge(self.sw.flow_tables[self.table_id].port_graph_node,
+                                         self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node,
                                          None,
                                          self.applied_traffic,
                                          self.applied_modifications,
@@ -102,7 +105,10 @@ class FlowTable():
         self.network_graph = sw.network_graph
         self.table_id = table_id
         self.flows = []
-        self.input_port = None
+
+        self.port_graph_node = PortGraphNode(self.sw,
+                                             get_table_node_id(self.sw.node_id, self.table_id),
+                                             "table")
 
         for f in flow_list:
             f = Flow(sw, f)

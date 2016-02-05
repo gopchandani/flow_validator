@@ -29,9 +29,9 @@ class FlowValidator:
         for host_id in self.network_graph.host_ids:
 
             host_obj = self.network_graph.get_node_object(host_id)
-            host_obj.switch_ingress_port = self.port_graph.get_port(host_obj.switch_id +
+            host_obj.switch_ingress_port = self.port_graph.get_node(host_obj.switch_id +
                                                                     ":ingress" + str(host_obj.switch_port_attached))
-            host_obj.switch_egress_port = self.port_graph.get_port(host_obj.switch_id +
+            host_obj.switch_egress_port = self.port_graph.get_node(host_obj.switch_id +
                                                                    ":egress" + str(host_obj.switch_port_attached))
 
     def remove_hosts(self):

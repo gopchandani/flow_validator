@@ -118,7 +118,7 @@ class Experiment(object):
 
     def compare_paths(self, src_host, dst_host, analyzed_path, synthesized_path, verbose):
 
-        analyzed_path = [path_port.port_id for path_port in analyzed_path]
+        analyzed_path = [path_port.node_id for path_port in analyzed_path]
 
         path_matches = True
 

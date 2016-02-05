@@ -4,8 +4,8 @@ import networkx as nx
 
 from collections import defaultdict
 from traffic import Traffic
-from port import Port
-from edge_data import EdgeData
+from port_graph_edge import PortGraphEdge
+from port_graph import get_ingress_node_id, get_egress_node_id
 
 class Switch():
 
@@ -33,40 +33,22 @@ class Switch():
 
         # Add a node per table in the port graph
         for flow_table in self.flow_tables:
-
-            tp = Port(self,
-                      port_type="table",
-                      port_id=self.get_table_port_id(self.node_id, flow_table.table_id))
-
-            self.add_port(tp)
-            flow_table.port = tp
+            self.add_node(flow_table.port_graph_node)
 
         # Add two nodes per physical port in port graph one for incoming and outgoing direction
         # Connect incoming direction port to table 0's port
-        for port in self.ports:
+        for port_num in self.ports:
 
-            in_p = Port(self,
-                        port_type="ingress",
-                        port_id=self.get_incoming_port_id(self.node_id, port))
+            port = self.ports[port_num]
 
-            out_p = Port(self,
-                         port_type="egress",
-                         port_id=self.get_outgoing_port_id(self.node_id, port))
-
-            in_p.state = "up"
-            out_p.state = "up"
-
-            in_p.port_number = int(port)
-            out_p.port_number = int(port)
-
-            self.add_port(in_p)
-            self.add_port(out_p)
+            self.add_node(port.port_graph_ingress_node)
+            self.add_node(port.port_graph_egress_node)
 
             incoming_port_match = Traffic(init_wildcard=True)
-            incoming_port_match.set_field("in_port", int(port))
+            incoming_port_match.set_field("in_port", int(port_num))
 
-            self.add_edge(in_p,
-                          self.flow_tables[0].port,
+            self.add_edge(port.port_graph_ingress_node,
+                          self.flow_tables[0].port_graph_node,
                           None,
                           incoming_port_match,
                           None,
@@ -87,62 +69,51 @@ class Switch():
             flow_table.de_init_flow_table_port_graph()
 
         # Remove nodes for physical ports
-        for port in self.ports:
+        for port_num in self.ports:
 
-            in_p = self.get_incoming_port(self.node_id, port)
-            out_p = self.get_outgoing_port(self.node_id, port)
+            port = self.ports[port_num]
 
-            self.remove_edge(in_p, self.flow_tables[0].port)
+            in_p = self.get_ingress_node(self.node_id, port_num)
+            out_p = self.get_egress_node(self.node_id, port_num)
 
-            self.remove_port(in_p)
-            self.remove_port(out_p)
+            self.remove_edge(in_p, self.flow_tables[0].port_graph_node)
+
+            self.remove_node(in_p)
+            self.remove_node(out_p)
 
             del in_p
             del out_p
 
         # Remove table ports
-        # Add a node per table in the port graph
         for flow_table in self.flow_tables:
-
-            tp = self.get_port(self.get_table_port_id(self.node_id, flow_table.table_id))
-            self.remove_port(tp)
+            self.remove_node(flow_table.port_graph_node)
             flow_table.port = None
             flow_table.port_graph = None
-            del tp
 
-    def get_table_port_id(self, switch_id, table_number):
-        return switch_id + ":table" + str(table_number)
+    def get_ingress_node(self, node_id, port_number):
+        return self.get_node(get_ingress_node_id(node_id, port_number))
 
-    def get_incoming_port_id(self, node_id, port_number):
-        return node_id + ":ingress" + str(port_number)
+    def get_egress_node(self, node_id, port_number):
+        return self.get_node(get_egress_node_id(node_id, port_number))
 
-    def get_incoming_port(self, node_id, port_number):
-        return self.get_port(node_id + ":ingress" + str(port_number))
+    def add_node(self, node):
+        self.g.add_node(node.node_id, p=node)
 
-    def get_outgoing_port_id(self, node_id, port_number):
-        return node_id + ":egress" + str(port_number)
-    
-    def get_outgoing_port(self, node_id, port_number):
-        return self.get_port(node_id + ":egress" + str(port_number))
+    def remove_node(self, node):
+        self.g.remove_node(node.node_id)
 
-    def add_port(self, port):
-        self.g.add_node(port.port_id, p=port)
-
-    def remove_port(self, port):
-        self.g.remove_node(port.port_id)
-
-    def get_port(self, port_id):
-        return self.g.node[port_id]["p"]
+    def get_node(self, node_id):
+        return self.g.node[node_id]["p"]
 
     def add_edge(self,
-                 port1,
-                 port2,
+                 node1,
+                 node2,
                  edge_action,
                  edge_filter_match,
                  applied_modifications,
                  written_modifications):
 
-        edge_data = self.g.get_edge_data(port1.port_id, port2.port_id)
+        edge_data = self.g.get_edge_data(node1.node_id, node2.node_id)
         backup_edge_filter_match = Traffic()
 
         if edge_data:
@@ -151,43 +122,40 @@ class Switch():
                                                  applied_modifications,
                                                  written_modifications, backup_edge_filter_match))
         else:
-            edge_data = EdgeData(port1, port2)
+            edge_data = PortGraphEdge(node1, node2)
             edge_data.add_edge_data((edge_filter_match,
                                     edge_action,
                                     applied_modifications,
                                     written_modifications, backup_edge_filter_match))
 
-            self.g.add_edge(port1.port_id, port2.port_id, edge_data=edge_data)
+            self.g.add_edge(node1.node_id, node2.node_id, edge_data=edge_data)
 
-        # Take care of any changes that need to be made to the predecessors of port1
+        # Take care of any changes that need to be made to the predecessors of node1
         # due to addition of this edge
-        #self.update_port_transfer_traffic(port1)
+        #self.update_port_transfer_traffic(node1)
 
-        return (port1.port_id, port2.port_id, edge_action)
+        return (node1.node_id, node2.node_id, edge_action)
 
-    def remove_edge(self, port1, port2):
+    def remove_edge(self, node1, node2):
 
         # Remove the port-graph edges corresponding to ports themselves
-        self.g.remove_edge(port1.port_id, port2.port_id)
+        self.g.remove_edge(node1.node_id, node2.node_id)
 
-        #self.update_port_transfer_traffic(port1)
+        #self.update_port_transfer_traffic(node1)
 
     def compute_switch_transfer_traffic(self):
 
         print "Computing Transfer Function for switch:", self.node_id
 
         # Inject wildcard traffic at each ingress port of the switch
-        for port in self.ports:
+        for port_num in self.ports:
 
-            out_p = self.get_outgoing_port(self.node_id, port)
+            egress_node = self.get_egress_node(self.node_id, port_num)
 
             transfer_traffic = Traffic(init_wildcard=True)
             tf_changes = []
 
-            if out_p.port_id == 's3:egress5':
-                pass
-
-            self.compute_port_transfer_traffic(out_p, transfer_traffic, None, out_p, tf_changes)
+            self.compute_port_transfer_traffic(egress_node, transfer_traffic, None, egress_node, tf_changes)
 
 
     def account_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port):
@@ -239,9 +207,9 @@ class Switch():
 
     def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst_port, tf_changes):
 
-        #print "curr:", curr.port_id, "dst_port:", dst_port.port_id
+        #print "curr:", curr.node_id, "dst_port:", dst_port.node_id
 
-        # if curr.port_id == 's19:ingress1' and dst_port.port_id == 's19:egress6':
+        # if curr.node_id == 's19:ingress1' and dst_port.node_id == 's19:egress6':
         #     pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
@@ -251,13 +219,13 @@ class Switch():
             
             # If it is an ingress port, it has no predecessors:
             
-            if curr.port_type == "ingress":
+            if curr.node_type == "ingress":
                 tf_changes.append((curr, dst_port, "additional"))
 
-            for pred_id in self.g.predecessors_iter(curr.port_id):
+            for pred_id in self.g.predecessors_iter(curr.node_id):
 
-                pred = self.get_port(pred_id)
-                edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+                pred = self.get_node(pred_id)
+                edge_data = self.g.get_edge_data(pred.node_id, curr.node_id)["edge_data"]
                 pred_transfer_traffic = self.compute_edge_transfer_traffic(traffic_to_propagate, edge_data)
 
                 # Base case: No traffic left to propagate to predecessors
@@ -266,12 +234,12 @@ class Switch():
 
         if not reduced_traffic.is_empty():
 
-            if curr.port_type == "ingress":
+            if curr.node_type == "ingress":
                 tf_changes.append((curr, dst_port, "removal"))
 
-            for pred_id in self.g.predecessors_iter(curr.port_id):
-                pred = self.get_port(pred_id)
-                edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+            for pred_id in self.g.predecessors_iter(curr.node_id):
+                pred = self.get_node(pred_id)
+                edge_data = self.g.get_edge_data(pred.node_id, curr.node_id)["edge_data"]
                 pred_transfer_traffic = self.compute_edge_transfer_traffic(traffic_to_propagate, edge_data)
                 self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst_port, tf_changes)
 
@@ -318,56 +286,57 @@ class Switch():
     def update_port_transfer_traffic_failover_edge_action(self, pred, edge_action, edge_filter_match, tf_changes):
 
         # See what ports are now muted and unmuted
-        muted_ports, unmuted_port = edge_action.perform_edge_failover()
+        muted_port_tuples, unmuted_port_tuple = edge_action.perform_edge_failover()
 
-        for muted_port_number, bucket_rank in muted_ports:
-            muted_port = self.get_outgoing_port(self.node_id, muted_port_number)
+        for muted_port, bucket_rank in muted_port_tuples:
 
             prop_traffic = Traffic()
             prop_traffic.union(edge_filter_match)
 
+            muted_egress_node = self.get_egress_node(self.node_id, muted_port.port_number)
+
             # Mute only if pred has some transfer traffic for the muted_port
-            if muted_port in pred.transfer_traffic:
-                if muted_port in pred.transfer_traffic[muted_port]:
-                    prop_traffic = prop_traffic.difference(pred.transfer_traffic[muted_port][muted_port])
+            if muted_egress_node in pred.transfer_traffic:
+                if muted_egress_node in pred.transfer_traffic[muted_egress_node]:
+                    prop_traffic = prop_traffic.difference(pred.transfer_traffic[muted_egress_node][muted_egress_node])
 
                     for te in prop_traffic.traffic_elements:
                         te.vuln_rank = bucket_rank
 
-                    self.compute_port_transfer_traffic(pred, prop_traffic, muted_port, muted_port, tf_changes)
+                    self.compute_port_transfer_traffic(pred, prop_traffic, muted_egress_node, muted_egress_node, tf_changes)
 
-        if unmuted_port:
-            unmuted_port_number, bucket_rank = unmuted_port
-            unmuted_port = self.get_outgoing_port(self.node_id, unmuted_port_number)
+        if unmuted_port_tuple:
+            unmuted_port, bucket_rank = unmuted_port_tuple
+            unmuted_egress_node = self.get_egress_node(self.node_id, unmuted_port.port_number)
 
             prop_traffic = Traffic()
             prop_traffic.union(edge_filter_match)
             try:
-                if unmuted_port in pred.transfer_traffic:
-                    if unmuted_port in pred.transfer_traffic[unmuted_port]:
-                        prop_traffic.union(pred.transfer_traffic[unmuted_port][unmuted_port])
+                if unmuted_egress_node in pred.transfer_traffic:
+                    if unmuted_egress_node in pred.transfer_traffic[unmuted_egress_node]:
+                        prop_traffic.union(pred.transfer_traffic[unmuted_egress_node][unmuted_egress_node])
             except KeyError:
                 pass
 
             for te in prop_traffic.traffic_elements:
                 te.vuln_rank = bucket_rank
 
-            self.compute_port_transfer_traffic(pred, prop_traffic, unmuted_port, unmuted_port, tf_changes)
+            self.compute_port_transfer_traffic(pred, prop_traffic, unmuted_egress_node, unmuted_egress_node, tf_changes)
 
     def update_port_transfer_traffic(self, port_num, event_type):
         
         tf_changes = []
 
-        incoming_port = self.get_incoming_port(self.node_id, port_num)
-        outgoing_port = self.get_outgoing_port(self.node_id, port_num)
+        incoming_port = self.get_ingress_node(self.node_id, port_num)
+        egress_node = self.get_egress_node(self.node_id, port_num)
 
         if event_type == "port_down":
 
-            for dst in outgoing_port.transfer_traffic:
+            for dst in egress_node.transfer_traffic:
 
-                for pred_id in self.g.predecessors(outgoing_port.port_id):
-                    pred = self.get_port(pred_id)
-                    edge_data = self.g.get_edge_data(pred_id, outgoing_port.port_id)["edge_data"]
+                for pred_id in self.g.predecessors(egress_node.node_id):
+                    pred = self.get_node(pred_id)
+                    edge_data = self.g.get_edge_data(pred_id, egress_node.node_id)["edge_data"]
 
                     prop_traffic = Traffic()
                     for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
@@ -379,13 +348,13 @@ class Switch():
                             prop_traffic.union(edge_filter_match)
 
                     # Mute only if pred has some transfer traffic for the muted_port
-                    if outgoing_port in pred.transfer_traffic:
-                        if outgoing_port in pred.transfer_traffic[outgoing_port]:
-                            prop_traffic = prop_traffic.difference(pred.transfer_traffic[outgoing_port][outgoing_port])
-                            self.compute_port_transfer_traffic(pred, prop_traffic, outgoing_port, dst, tf_changes)
+                    if egress_node in pred.transfer_traffic:
+                        if egress_node in pred.transfer_traffic[egress_node]:
+                            prop_traffic = prop_traffic.difference(pred.transfer_traffic[egress_node][egress_node])
+                            self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, dst, tf_changes)
 
-            for succ_id in self.g.successors(incoming_port.port_id):
-                edge_data = self.g.get_edge_data(incoming_port.port_id, succ_id)["edge_data"]
+            for succ_id in self.g.successors(incoming_port.node_id):
+                edge_data = self.g.get_edge_data(incoming_port.node_id, succ_id)["edge_data"]
                 for edge_data_tuple in edge_data.edge_data_list:
                     temp = edge_data_tuple[4].traffic_elements
                     edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
@@ -393,17 +362,17 @@ class Switch():
 
             dsts = incoming_port.transfer_traffic.keys()
             for dst in dsts:
-                for succ_id in self.g.successors(incoming_port.port_id):
-                    succ = self.get_port(succ_id)
+                for succ_id in self.g.successors(incoming_port.node_id):
+                    succ = self.get_node(succ_id)
                     self.compute_port_transfer_traffic(incoming_port, Traffic(), succ, dst, tf_changes)
 
         elif event_type == "port_up":
 
-            for dst in outgoing_port.transfer_traffic:
+            for dst in egress_node.transfer_traffic:
 
-                for pred_id in self.g.predecessors(outgoing_port.port_id):
-                    pred = self.get_port(pred_id)
-                    edge_data = self.g.get_edge_data(pred_id, outgoing_port.port_id)["edge_data"]
+                for pred_id in self.g.predecessors(egress_node.node_id):
+                    pred = self.get_node(pred_id)
+                    edge_data = self.g.get_edge_data(pred_id, egress_node.node_id)["edge_data"]
                     prop_traffic = Traffic()
 
                     for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
@@ -415,29 +384,29 @@ class Switch():
                             prop_traffic.union(edge_filter_match)
 
                     try:
-                        if outgoing_port in pred.transfer_traffic:
-                            if outgoing_port in pred.transfer_traffic[outgoing_port]:
-                                prop_traffic.union(pred.transfer_traffic[outgoing_port][outgoing_port])
+                        if egress_node in pred.transfer_traffic:
+                            if egress_node in pred.transfer_traffic[egress_node]:
+                                prop_traffic.union(pred.transfer_traffic[egress_node][egress_node])
                     except KeyError:
                         pass
 
-                    self.compute_port_transfer_traffic(pred, prop_traffic, outgoing_port, dst, tf_changes)
+                    self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, dst, tf_changes)
 
-            for succ_id in self.g.successors(incoming_port.port_id):
-                edge_data = self.g.get_edge_data(incoming_port.port_id, succ_id)["edge_data"]
+            for succ_id in self.g.successors(incoming_port.node_id):
+                edge_data = self.g.get_edge_data(incoming_port.node_id, succ_id)["edge_data"]
                 for edge_data_tuple in edge_data.edge_data_list:
                     temp = edge_data_tuple[4].traffic_elements
                     edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
                     edge_data_tuple[0].traffic_elements = temp
 
-                succ = self.get_port(succ_id)
+                succ = self.get_node(succ_id)
 
                 for dst in succ.transfer_traffic.keys():
                     traffic_to_propagate = Traffic()
                     for succ_succ in succ.transfer_traffic[dst]:
                         traffic_to_propagate.union(succ.transfer_traffic[dst][succ_succ])
 
-                    edge_data = self.g.get_edge_data(incoming_port.port_id, succ_id)["edge_data"]
+                    edge_data = self.g.get_edge_data(incoming_port.node_id, succ_id)["edge_data"]
                     traffic_to_propagate = self.compute_edge_transfer_traffic(traffic_to_propagate, edge_data)
                     self.compute_port_transfer_traffic(incoming_port, traffic_to_propagate, succ, dst, tf_changes)
 
@@ -452,13 +421,13 @@ class Switch():
                 if succ_p:
 
                     # Try and detect a loop, if a port repeats more than twice, it is a loop
-                    indices = [i for i,x in enumerate(path_elements) if x == succ_p.port_id]
+                    indices = [i for i,x in enumerate(path_elements) if x == succ_p.node_id]
                     if len(indices) > 2:
                         if verbose:
                             print "Found a loop, path_str:", path_str
                     else:
-                        path_elements.append(succ_p.port_id)
-                        path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.port_id, path_elements)
+                        path_elements.append(succ_p.node_id)
+                        path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.node_id, path_elements)
 
                 # A none succcessor means, it originates here.
                 else:
@@ -473,12 +442,12 @@ class Switch():
         path_count = 0
 
         for src_port_number in self.ports:
-            src_p = self.get_incoming_port(self.node_id, src_port_number)
+            src_p = self.get_ingress_node(self.node_id, src_port_number)
             for dst_port_number in self.ports:
-                dst_p = self.get_outgoing_port(self.node_id, dst_port_number)
+                dst_p = self.get_egress_node(self.node_id, dst_port_number)
                 if verbose:
                     print "From Port:", src_port_number, "To Port:", dst_port_number
-                path_count += self.count_paths(src_p, dst_p, verbose, src_p.port_id, [src_p.port_id])
+                path_count += self.count_paths(src_p, dst_p, verbose, src_p.node_id, [src_p.node_id])
 
                 if path_count:
                     tt = src_p.transfer_traffic[dst_p]
@@ -490,12 +459,12 @@ class Switch():
         tt = defaultdict(defaultdict)
 
         for src_port_number in self.ports:
-            src_p = self.get_incoming_port(self.node_id, src_port_number)
+            src_p = self.get_ingress_node(self.node_id, src_port_number)
 
             for dst_port_number in self.ports:
-                dst_p = self.get_outgoing_port(self.node_id, dst_port_number)
+                dst_p = self.get_egress_node(self.node_id, dst_port_number)
 
-                path_count[src_p][dst_p] = self.count_paths(src_p, dst_p, verbose, src_p.port_id, [src_p.port_id])
+                path_count[src_p][dst_p] = self.count_paths(src_p, dst_p, verbose, src_p.node_id, [src_p.node_id])
                 tt[src_p][dst_p] = src_p.get_dst_transfer_traffic(dst_p)
 
         return path_count, tt
@@ -505,10 +474,10 @@ class Switch():
         all_equal = True
 
         for src_port_number in self.ports:
-            src_p = self.get_incoming_port(self.node_id, src_port_number)
+            src_p = self.get_ingress_node(self.node_id, src_port_number)
 
             for dst_port_number in self.ports:
-                dst_p = self.get_outgoing_port(self.node_id, dst_port_number)
+                dst_p = self.get_egress_node(self.node_id, dst_port_number)
 
                 if verbose:
                     print "From Port:", src_port_number, "To Port:", dst_port_number
@@ -537,19 +506,17 @@ class Switch():
 
         # Loop over ports of the switch and fail and restore them one by one
         for testing_port_number in self.ports:
-            testing_egress_port = self.get_outgoing_port(self.node_id, testing_port_number)
 
-            # if testing_port_number != 5:
-            #     continue
+            testing_port = self.ports[testing_port_number]
 
             path_count_before, tt_before = self.get_path_counts_and_tt(verbose)
 
-            testing_egress_port.state = "down"
+            testing_port.state = "down"
             tf_changes = self.update_port_transfer_traffic(testing_port_number, "port_down")
 
             path_count_intermediate, tt_intermediate = self.get_path_counts_and_tt(verbose)
 
-            testing_egress_port.state = "up"
+            testing_port.state = "up"
             tf_changes = self.update_port_transfer_traffic(testing_port_number, "port_up")
 
             path_count_after, tt_after = self.get_path_counts_and_tt(verbose)

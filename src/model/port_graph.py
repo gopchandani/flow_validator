@@ -1,10 +1,20 @@
 __author__ = 'Rakesh Kumar'
 
 import networkx as nx
-from port import Port
-from edge_data import EdgeData
+from port_graph_edge import PortGraphEdge
 from traffic import Traffic
 from collections import defaultdict
+
+
+def get_table_node_id(switch_id, table_number):
+    return switch_id + ":table" + str(table_number)
+
+def get_ingress_node_id(node_id, port_number):
+    return node_id + ":ingress" + str(port_number)
+
+def get_egress_node_id(node_id, port_number):
+    return node_id + ":egress" + str(port_number)
+
 
 class PortGraph:
 
@@ -13,37 +23,28 @@ class PortGraph:
         self.network_graph = network_graph
         self.g = nx.DiGraph()
 
-    def get_table_port_id(self, switch_id, table_number):
-        return switch_id + ":table" + str(table_number)
-
-    def get_incoming_port_id(self, node_id, port_number):
-        return node_id + ":ingress" + str(port_number)
-
     def get_incoming_port(self, node_id, port_number):
-        return self.get_port(node_id + ":ingress" + str(port_number))
-
-    def get_outgoing_port_id(self, node_id, port_number):
-        return node_id + ":egress" + str(port_number)
+        return self.get_node(get_ingress_node_id(node_id, port_number))
 
     def get_outgoing_port(self, node_id, port_number):
-        return self.get_port(node_id + ":egress" + str(port_number))
+        return self.get_node(get_egress_node_id(node_id, port_number))
 
-    def add_port(self, port):
-        self.g.add_node(port.port_id, p=port)
+    def add_node(self, node):
+        self.g.add_node(node.node_id, p=node)
 
-    def remove_port(self, port):
-        self.g.remove_node(port.port_id)
+    def remove_node(self, node):
+        self.g.remove_node(node.node_id)
 
-    def get_port(self, port_id):
-        return self.g.node[port_id]["p"]
+    def get_node(self, node_id):
+        return self.g.node[node_id]["p"]
 
     def add_switch_transfer_function(self, sw):
 
         # First grab the port objects from the sw's node graph and add them to port_graph's node graph
         for port in sw.ports:
 
-            self.add_port(sw.get_incoming_port(sw.node_id, port))
-            self.add_port(sw.get_outgoing_port(sw.node_id, port))
+            self.add_node(sw.get_ingress_node(sw.node_id, port))
+            self.add_node(sw.get_egress_node(sw.node_id, port))
 
         # Add edges from all possible source/destination ports
         for src_port_number in sw.ports:
@@ -98,7 +99,7 @@ class PortGraph:
 
                 for succ_p in change_matrix[pred_p][dst_p]:
 
-                    edge_data = self.g.get_edge_data(pred_p.port_id, succ_p.port_id)["edge_data"]
+                    edge_data = self.g.get_edge_data(pred_p.node_id, succ_p.node_id)["edge_data"]
                     succ_p_traffic = succ_p.get_dst_admitted_traffic(dst_p)
 
                     pred_p_traffic = self.compute_edge_admitted_traffic(succ_p_traffic, edge_data)
@@ -137,8 +138,7 @@ class PortGraph:
             sw.init_switch_port_graph()
             sw.compute_switch_transfer_traffic()
 
-            #if sw.node_id == 's3':
-                #test_passed = sw.test_one_port_failure_at_a_time(verbose=False)
+            #test_passed = sw.test_one_port_failure_at_a_time(verbose=False)
 
             self.add_switch_transfer_function(sw)
 
@@ -160,7 +160,7 @@ class PortGraph:
 
     def add_edge(self, src_port, dst_port, edge_filter_traffic):
 
-        edge_data = EdgeData(src_port, dst_port)
+        edge_data = PortGraphEdge(src_port, dst_port)
 
         # If the edge filter became empty, reflect that.
         if edge_filter_traffic.is_empty():
@@ -174,7 +174,7 @@ class PortGraph:
                 t.add_traffic_elements([te])
                 edge_data.add_edge_data((t, te.switch_modifications))
 
-        self.g.add_edge(src_port.port_id, dst_port.port_id, edge_data=edge_data)
+        self.g.add_edge(src_port.node_id, dst_port.node_id, edge_data=edge_data)
 
         return edge_data
 
@@ -182,11 +182,11 @@ class PortGraph:
 
     def remove_edge(self, src_port, dst_port):
 
-        if not self.g.has_edge(src_port.port_id, dst_port.port_id):
+        if not self.g.has_edge(src_port.node_id, dst_port.node_id):
             return
 
         # Remove the port-graph edges corresponding to ports themselves
-        self.g.remove_edge(src_port.port_id, dst_port.port_id)
+        self.g.remove_edge(src_port.node_id, dst_port.node_id)
 
     def modify_edge(self, tf_change):
 
@@ -209,25 +209,24 @@ class PortGraph:
 
     def add_node_graph_edge(self, node1_id, node2_id, updating=False):
 
+        # Update the physical port representations in network graph objects
         edge_port_dict = self.network_graph.get_edge_port_dict(node1_id, node2_id)
+        sw1 = self.network_graph.get_node_object(node1_id)
+        sw2 = self.network_graph.get_node_object(node2_id)
+        sw1.ports[edge_port_dict[node1_id]].state = "up"
+        sw2.ports[edge_port_dict[node2_id]].state = "up"
 
+        # Update port graph
         from_port = self.get_outgoing_port(node1_id, edge_port_dict[node1_id])
         to_port = self.get_incoming_port(node2_id, edge_port_dict[node2_id])
-        from_port.state = "up"
-        to_port.state = "up"
         self.add_edge(from_port, to_port, Traffic(init_wildcard=True))
 
         from_port = self.get_outgoing_port(node2_id, edge_port_dict[node2_id])
         to_port = self.get_incoming_port(node1_id, edge_port_dict[node1_id])
-        from_port.state = "up"
-        to_port.state = "up"
         self.add_edge(from_port, to_port, Traffic(init_wildcard=True))
 
+        # Update transfer and admitted traffic
         if updating:
-
-            sw1 = self.network_graph.get_node_object(node1_id)
-            sw2 = self.network_graph.get_node_object(node2_id)
-
             tf_changes = sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_up")
             self.update_admitted_traffic(tf_changes)
 
@@ -236,24 +235,23 @@ class PortGraph:
 
     def remove_node_graph_edge(self, node1_id, node2_id):
 
+        # Update the physical port representations in network graph objects
         edge_port_dict = self.network_graph.get_edge_port_dict(node1_id, node2_id)
+        sw1 = self.network_graph.get_node_object(node1_id)
+        sw2 = self.network_graph.get_node_object(node2_id)
+        sw1.ports[edge_port_dict[node1_id]].state = "down"
+        sw2.ports[edge_port_dict[node2_id]].state = "down"
 
+        # Update port graph
         from_port = self.get_outgoing_port(node1_id, edge_port_dict[node1_id])
         to_port = self.get_incoming_port(node2_id, edge_port_dict[node2_id])
-
-        from_port.state = "down"
-        to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
         from_port = self.get_outgoing_port(node2_id, edge_port_dict[node2_id])
         to_port = self.get_incoming_port(node1_id, edge_port_dict[node1_id])
-        from_port.state = "down"
-        to_port.state = "down"
         self.remove_edge(from_port, to_port)
 
-        sw1 = self.network_graph.get_node_object(node1_id)
-        sw2 = self.network_graph.get_node_object(node2_id)
-
+        # Update transfer and admitted traffic
         tf_changes = sw1.update_port_transfer_traffic(edge_port_dict[node1_id], "port_down")
         self.update_admitted_traffic(tf_changes)
 
@@ -341,10 +339,10 @@ class PortGraph:
 
         if not additional_traffic.is_empty():
 
-            for pred_id in self.g.predecessors_iter(curr.port_id):
+            for pred_id in self.g.predecessors_iter(curr.node_id):
 
-                pred = self.get_port(pred_id)
-                edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+                pred = self.get_node(pred_id)
+                edge_data = self.g.get_edge_data(pred.node_id, curr.node_id)["edge_data"]
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
 
                 # Base case: No traffic left to propagate to predecessors
@@ -353,9 +351,9 @@ class PortGraph:
 
         if not reduced_traffic.is_empty():
 
-            for pred_id in self.g.predecessors_iter(curr.port_id):
-                pred = self.get_port(pred_id)
-                edge_data = self.g.get_edge_data(pred.port_id, curr.port_id)["edge_data"]
+            for pred_id in self.g.predecessors_iter(curr.node_id):
+                pred = self.get_node(pred_id)
+                edge_data = self.g.get_edge_data(pred.node_id, curr.node_id)["edge_data"]
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge_data)
                 self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst_port)
 

@@ -10,6 +10,7 @@ class Bucket():
         self.sw = sw
         self.action_list = []
         self.watch_port = None
+
         self.weight = None
         self.group = group
 
@@ -22,7 +23,7 @@ class Bucket():
 
             if "watch_port" in bucket_json:
                 if bucket_json["watch_port"] != 4294967295:
-                    self.watch_port = str(bucket_json["watch_port"])
+                    self.watch_port = self.sw.ports[int(bucket_json["watch_port"])]
 
             if "weight" in bucket_json:
                 self.weight = str(bucket_json["weight"])
@@ -37,7 +38,7 @@ class Bucket():
 
             if "watch_port" in bucket_json:
                 if bucket_json["watch_port"] != 4294967295:
-                    self.watch_port = str(bucket_json["watch_port"])
+                    self.watch_port = self.sw.ports[int(bucket_json["watch_port"])]
 
             if "weight" in bucket_json:
                 self.weight = str(bucket_json["weight"])
@@ -49,8 +50,7 @@ class Bucket():
 
         # Check if the watch port is up.
         if self.watch_port:
-            watch_port_obj = self.sw.get_port(self.sw.get_outgoing_port_id(self.sw.node_id, str(self.watch_port)))
-            return watch_port_obj.state == "up"
+            return self.watch_port.state == "up"
 
         # If no watch_port was specified, then assume the bucket is always live
         else:
@@ -66,7 +66,7 @@ class Bucket():
             if self == self.group.bucket_list[i]:
                 break
 
-            prior_failed_ports.append(int(self.group.bucket_list[i].watch_port))
+            prior_failed_ports.append(int(self.group.bucket_list[i].watch_port.port_number))
             i += 1
 
         return prior_failed_ports

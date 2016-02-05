@@ -1,7 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-
-class EdgeData():
+class PortGraphEdge():
 
     def __init__(self, port1, port2):
 
@@ -10,14 +9,13 @@ class EdgeData():
 
         self.edge_type = None
 
-        if (port1.port_type == "table") and (port2.port_type == "egress"):
+        if (port1.node_type == "table") and (port2.node_type == "egress"):
             self.edge_type = "egress"
-        elif (port1.port_type == "ingress") and (port2.port_type == "table"):
+        elif (port1.node_type == "ingress") and (port2.node_type == "table"):
             self.edge_type = "ingress"
-
-        elif (port1.port_type == "egress") and (port2.port_type == "ingress"):
+        elif (port1.node_type == "egress") and (port2.node_type == "ingress"):
             self.edge_type = "outside"
-        elif (port1.port_type == "ingress") and (port2.port_type == "egress"):
+        elif (port1.node_type == "ingress") and (port2.node_type == "egress"):
             self.edge_type = "inside"
 
         self.edge_data_list = []
