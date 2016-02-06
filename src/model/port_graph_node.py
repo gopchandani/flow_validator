@@ -24,23 +24,23 @@ class PortGraphNode:
 
         return " Id: " + str(self.node_id)
 
-    def get_dst_admitted_traffic(self, dst_p):
+    def get_dst_admitted_traffic(self, dst):
 
         dst_admitted_traffic = Traffic()
 
-        if dst_p in self.admitted_traffic:
-            for succ in self.admitted_traffic[dst_p]:
-                dst_admitted_traffic.union(self.admitted_traffic[dst_p][succ])
+        if dst in self.admitted_traffic:
+            for succ in self.admitted_traffic[dst]:
+                dst_admitted_traffic.union(self.admitted_traffic[dst][succ])
 
         return dst_admitted_traffic
 
 
-    def get_dst_transfer_traffic(self, dst_p):
+    def get_dst_transfer_traffic(self, dst):
 
         dst_transfer_traffic = Traffic()
 
-        if dst_p in self.transfer_traffic:
-            for succ in self.transfer_traffic[dst_p]:
-                dst_transfer_traffic.union(self.transfer_traffic[dst_p][succ])
+        if dst in self.transfer_traffic:
+            for succ in self.transfer_traffic[dst]:
+                dst_transfer_traffic.union(self.transfer_traffic[dst][succ])
 
         return dst_transfer_traffic
