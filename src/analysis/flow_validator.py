@@ -60,7 +60,8 @@ class FlowValidator:
         src_host_obj = self.network_graph.get_node_object(src_h_id)
         dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
-        at = src_host_obj.switch_ingress_port.get_dst_admitted_traffic(dst_host_obj.switch_egress_port)
+        at = self.port_graph.get_admitted_traffic(src_host_obj.switch_ingress_port, dst_host_obj.switch_egress_port)
+
         path_vuln_ranks = []
         all_paths = []
 

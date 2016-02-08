@@ -2,6 +2,8 @@ __author__ = 'Rakesh Kumar'
 
 import networkx as nx
 
+from traffic import Traffic
+
 class PortGraph(object):
 
     def __init__(self, network_graph):
@@ -59,3 +61,23 @@ class PortGraph(object):
             return self.g.get_edge_data(pred.node_id, succ.node_id)["e"]
         else:
             return None
+
+    def get_admitted_traffic(self, node, dst):
+
+        dst_admitted_traffic = Traffic()
+
+        if dst in node.admitted_traffic:
+            for succ in node.admitted_traffic[dst]:
+                dst_admitted_traffic.union(node.admitted_traffic[dst][succ])
+
+        return dst_admitted_traffic
+
+    def get_transfer_traffic(self, node, dst):
+
+        dst_transfer_traffic = Traffic()
+
+        if dst in node.transfer_traffic:
+            for succ in node.transfer_traffic[dst]:
+                dst_transfer_traffic.union(node.transfer_traffic[dst][succ])
+
+        return dst_transfer_traffic

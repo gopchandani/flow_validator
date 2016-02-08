@@ -65,7 +65,7 @@ class NetworkPortGraph(PortGraph):
             # For each destination that may have been affected at the pred port
             for dst in change_matrix[pred]:
 
-                prev_pred_traffic = pred.get_dst_admitted_traffic(dst)
+                prev_pred_traffic = self.get_admitted_traffic(pred, dst)
                 now_pred_traffic = Traffic()
 
                 pred_succ_traffic_now = {}
@@ -73,7 +73,7 @@ class NetworkPortGraph(PortGraph):
                 for succ in change_matrix[pred][dst]:
 
                     edge = self.get_edge(pred, succ)
-                    succ_traffic = succ.get_dst_admitted_traffic(dst)
+                    succ_traffic = self.get_admitted_traffic(succ, dst)
 
                     pred_traffic = self.compute_edge_admitted_traffic(succ_traffic, edge)
 
@@ -250,7 +250,7 @@ class NetworkPortGraph(PortGraph):
     def account_port_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst):
 
         # Keep track of what traffic looks like before any changes occur
-        traffic_before_changes = curr.get_dst_admitted_traffic(dst)
+        traffic_before_changes = self.get_admitted_traffic(curr, dst)
 
         # Compute what additional traffic is being admitted overall
         additional_traffic = traffic_before_changes.difference(dst_traffic_at_succ)
@@ -277,7 +277,7 @@ class NetworkPortGraph(PortGraph):
                 curr.admitted_traffic[dst][succ].union(dst_traffic_at_succ)
 
         # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
-        traffic_after_changes = curr.get_dst_admitted_traffic(dst)
+        traffic_after_changes = self.get_admitted_traffic(curr, dst)
 
         # Compute what reductions (if any) in traffic has occured due to all the changes
         reduced_traffic = traffic_after_changes.difference(traffic_before_changes)

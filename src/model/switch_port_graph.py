@@ -120,7 +120,7 @@ class SwitchPortGraph(PortGraph):
     def account_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst):
 
         # Keep track of what traffic looks like before any changes occur
-        traffic_before_changes = curr.get_dst_transfer_traffic(dst)
+        traffic_before_changes = self.get_transfer_traffic(curr, dst)
 
         # Compute what additional traffic is being admitted overall
         additional_traffic = traffic_before_changes.difference(dst_traffic_at_succ)
@@ -147,7 +147,7 @@ class SwitchPortGraph(PortGraph):
                 curr.transfer_traffic[dst][succ].union(dst_traffic_at_succ)
 
         # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
-        traffic_after_changes = curr.get_dst_transfer_traffic(dst)
+        traffic_after_changes = self.get_transfer_traffic(curr, dst)
 
         # Compute what reductions (if any) in traffic has occured due to all the changes
         reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
@@ -408,7 +408,7 @@ class SwitchPortGraph(PortGraph):
                 dst_p = self.get_egress_node(self.sw.node_id, dst_port_number)
 
                 path_count[src_p][dst_p] = self.count_paths(src_p, dst_p, verbose, src_p.node_id, [src_p.node_id])
-                tt[src_p][dst_p] = src_p.get_dst_transfer_traffic(dst_p)
+                tt[src_p][dst_p] = self.get_transfer_traffic(src_p, dst_p)
 
         return path_count, tt
 
