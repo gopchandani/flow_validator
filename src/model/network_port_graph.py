@@ -297,9 +297,8 @@ class NetworkPortGraph(PortGraph):
 
         if not additional_traffic.is_empty():
 
-            for pred_id in self.g.predecessors_iter(curr.node_id):
+            for pred in self.predecessors_iter(curr):
 
-                pred = self.get_node(pred_id)
                 edge = self.get_edge(pred, curr)
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
 
@@ -309,8 +308,7 @@ class NetworkPortGraph(PortGraph):
 
         if not reduced_traffic.is_empty():
 
-            for pred_id in self.g.predecessors_iter(curr.node_id):
-                pred = self.get_node(pred_id)
+            for pred in self.predecessors_iter(curr):
                 edge = self.get_edge(pred, curr)
                 pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
                 self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst)

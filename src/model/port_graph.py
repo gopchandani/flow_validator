@@ -33,6 +33,14 @@ class PortGraph(object):
     def get_node(self, node_id):
         return self.g.node[node_id]["p"]
 
+    def predecessors_iter(self, node):
+        for pred_id in self.g.predecessors_iter(node.node_id):
+            yield self.get_node(pred_id)
+
+    def successors_iter(self, node):
+        for succ_id in self.g.successors_iter(node.node_id):
+            yield self.get_node(succ_id)
+
     def add_edge(self, pred, succ, edge_data):
         self.g.add_edge(pred.node_id, succ.node_id, e=edge_data)
 
