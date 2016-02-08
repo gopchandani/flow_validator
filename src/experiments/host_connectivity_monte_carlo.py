@@ -81,8 +81,8 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = xrange(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -91,7 +91,7 @@ class MonteCarlo(Experiment):
                                           synthesis_scheme="IntentSynthesis")
 
             self.fv = FlowValidator(ng)
-            self.fv.init_port_graph()
+            self.fv.init_network_port_graph()
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
 
@@ -114,7 +114,7 @@ class MonteCarlo(Experiment):
                     self.data["number_of_edges_to_break_estimate"][number_of_ports_to_synthesize][number_of_monte_carlo_runs].append(est[1])
                     self.data["number_of_edges_to_break_estimate_data"][number_of_ports_to_synthesize][number_of_monte_carlo_runs].append(est)
 
-            self.fv.de_init_port_graph()
+            self.fv.de_init_network_port_graph()
 
     def plot_monte_carlo(self):
         fig = plt.figure(0)

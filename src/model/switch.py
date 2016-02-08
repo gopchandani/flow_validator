@@ -22,4 +22,4 @@ class Switch():
         self.synthesis_tag = int(self.node_id[1:])
 
         # Analysis stuff
-        self.port_graph = SwitchPortGraph(self)
+        self.port_graph = SwitchPortGraph(network_graph, self)

@@ -5,8 +5,6 @@ from match import Match
 from traffic import Traffic, TrafficElement
 from instruction_set import InstructionSet
 
-from port_graph import get_table_node_id
-
 class Flow():
 
     def __hash__(self):
@@ -107,7 +105,7 @@ class FlowTable():
         self.flows = []
 
         self.port_graph_node = PortGraphNode(self.sw,
-                                             get_table_node_id(self.sw.node_id, self.table_id),
+                                             self.sw.port_graph.get_table_node_id(self.sw.node_id, self.table_id),
                                              "table")
 
         for f in flow_list:

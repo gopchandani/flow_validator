@@ -95,7 +95,7 @@ class IncrementalTimes(Experiment):
                                               synthesis_setup_gap=len(ports_to_synthesize))
 
                 self.fv = FlowValidator(ng)
-                self.fv.init_port_graph()
+                self.fv.init_network_port_graph()
                 self.fv.add_hosts()
                 self.fv.initialize_admitted_traffic()
 
@@ -112,7 +112,7 @@ class IncrementalTimes(Experiment):
                     self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(restore)
                     self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(fail_restore)
 
-            self.fv.de_init_port_graph()
+            self.fv.de_init_network_port_graph()
 
     def plot_incremental_times(self):
         #fig = plt.figure(0)

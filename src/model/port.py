@@ -1,7 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
 from port_graph_node import PortGraphNode
-from port_graph import get_ingress_node_id, get_egress_node_id
 
 class Port():
 
@@ -25,11 +24,13 @@ class Port():
 
         # Need port_number parsed in before this is called
         self.port_graph_ingress_node = PortGraphNode(self.sw,
-                                                     get_ingress_node_id(self.sw.node_id, self.port_number),
+                                                     self.sw.port_graph.get_ingress_node_id(self.sw.node_id,
+                                                                                            self.port_number),
                                                      "ingress")
 
         self.port_graph_egress_node = PortGraphNode(self.sw,
-                                                    get_egress_node_id(self.sw.node_id, self.port_number),
+                                                    self.sw.port_graph.get_egress_node_id(self.sw.node_id,
+                                                                                          self.port_number),
                                                     "egress")
 
     def parse_odl_port_json(self, port_json):

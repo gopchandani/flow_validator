@@ -70,7 +70,7 @@ class TypesOfFailover(Experiment):
                     print "iteration:", i + 1
 
                     fv = FlowValidator(ng)
-                    fv.init_port_graph()
+                    fv.init_network_port_graph()
                     fv.add_hosts()
                     fv.initialize_admitted_traffic()
                     fv.validate_all_host_pair_reachability()
@@ -97,7 +97,7 @@ class TypesOfFailover(Experiment):
                     #     fv.port_graph.add_node_graph_edge(node1, node2, updating=True)
                     #     fv.validate_all_host_pair_reachability(verbose=True)
 
-                    fv.de_init_port_graph()
+                    fv.de_init_network_port_graph()
 
     def plot_types_of_failover(self):
         fig = plt.figure(0)

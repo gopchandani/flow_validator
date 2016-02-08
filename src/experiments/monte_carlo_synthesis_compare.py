@@ -79,7 +79,7 @@ class MonteCarloSynthesisCompare(Experiment):
                                               synthesis_scheme=synthesis_scheme)
     
                 self.fv = FlowValidator(ng)
-                self.fv.init_port_graph()
+                self.fv.init_network_port_graph()
                 self.fv.add_hosts()
                 self.fv.initialize_admitted_traffic()
     
@@ -100,7 +100,7 @@ class MonteCarloSynthesisCompare(Experiment):
                         self.data["number_of_edges_to_break_estimate"][number_of_ports_to_synthesize][number_of_monte_carlo_runs].append(est[1])
                         self.data["number_of_edges_to_break_estimate_data"][number_of_ports_to_synthesize][number_of_monte_carlo_runs].append(est)
     
-                self.fv.de_init_port_graph()
+                self.fv.de_init_network_port_graph()
 
     def plot_monte_carlo(self):
         fig = plt.figure(0)

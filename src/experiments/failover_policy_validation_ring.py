@@ -59,7 +59,7 @@ class FailoverPolicyValidationRing(Experiment):
                 for i in xrange(self.num_iterations):
 
                     fv = FlowValidator(ng)
-                    fv.init_port_graph()
+                    fv.init_network_port_graph()
                     fv.add_hosts()
                     fv.initialize_admitted_traffic()
 
@@ -68,7 +68,7 @@ class FailoverPolicyValidationRing(Experiment):
 
                     self.data["validation_time"][number_of_ports_to_synthesize][number_of_switches_in_ring].append(t.msecs)
 
-                    fv.de_init_port_graph()
+                    fv.de_init_network_port_graph()
 
     def plot_failover_policy_validation_ring(self):
 

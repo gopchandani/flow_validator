@@ -60,7 +60,7 @@ class InitializationTimes(Experiment):
 
                     fv = FlowValidator(ng)
                     with Timer(verbose=True) as t:
-                        fv.init_port_graph()
+                        fv.init_network_port_graph()
 
                     self.data["construction_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(t.msecs)
 
@@ -71,7 +71,7 @@ class InitializationTimes(Experiment):
                     self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(t.msecs)
                     fv.validate_all_host_pair_reachability(verbose=False)
 
-                    fv.de_init_port_graph()
+                    fv.de_init_network_port_graph()
 
         print "Done..."
 

@@ -37,8 +37,8 @@ class TestExperiment(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -48,7 +48,7 @@ class TestExperiment(Experiment):
 
 
             self.fv = FlowValidator(ng)
-            self.fv.init_port_graph()
+            self.fv.init_network_port_graph()
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
 
@@ -70,7 +70,7 @@ class TestExperiment(Experiment):
             print "Failover paths TestExperiment, all_paths_match:", all_paths_match
 
 
-            self.fv.de_init_port_graph()
+            self.fv.de_init_network_port_graph()
 
 def main():
     num_iterations = 1#20

@@ -1,17 +1,16 @@
 __author__ = 'Rakesh Kumar'
 
-import networkx as nx
-
 from collections import defaultdict
 from traffic import Traffic
 from port_graph_edge import PortGraphEdge
-from port_graph import get_ingress_node_id, get_egress_node_id
+from port_graph import PortGraph
 
-class SwitchPortGraph():
+class SwitchPortGraph(PortGraph):
 
-    def __init__(self, sw):
+    def __init__(self, network_graph, sw):
 
-        self.g = nx.DiGraph()
+        super(SwitchPortGraph, self).__init__(network_graph)
+
         self.sw = sw
 
     def init_switch_port_graph(self):
@@ -76,21 +75,6 @@ class SwitchPortGraph():
             self.remove_node(flow_table.port_graph_node)
             flow_table.port = None
             flow_table.port_graph = None
-
-    def get_ingress_node(self, node_id, port_number):
-        return self.get_node(get_ingress_node_id(node_id, port_number))
-
-    def get_egress_node(self, node_id, port_number):
-        return self.get_node(get_egress_node_id(node_id, port_number))
-
-    def add_node(self, node):
-        self.g.add_node(node.node_id, p=node)
-
-    def remove_node(self, node):
-        self.g.remove_node(node.node_id)
-
-    def get_node(self, node_id):
-        return self.g.node[node_id]["p"]
 
     def add_edge(self,
                  node1,

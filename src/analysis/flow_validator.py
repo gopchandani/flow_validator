@@ -6,22 +6,20 @@ sys.path.append("./")
 
 from collections import defaultdict
 
-from model.port_graph import PortGraph
-from model.traffic import Traffic, TrafficElement
-from model.match import Match
-
+from model.network_port_graph import NetworkPortGraph
+from model.traffic import Traffic
 
 class FlowValidator:
 
     def __init__(self, network_graph):
         self.network_graph = network_graph
-        self.port_graph = PortGraph(network_graph)
+        self.port_graph = NetworkPortGraph(network_graph)
 
-    def init_port_graph(self):
-        self.port_graph.init_port_graph()
+    def init_network_port_graph(self):
+        self.port_graph.init_network_port_graph()
 
-    def de_init_port_graph(self):
-        self.port_graph.de_init_port_graph()
+    def de_init_network_port_graph(self):
+        self.port_graph.de_init_network_port_graph()
 
     def add_hosts(self):
 
