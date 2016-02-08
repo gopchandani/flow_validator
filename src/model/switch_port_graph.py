@@ -31,7 +31,7 @@ class SwitchPortGraph(PortGraph):
             self.add_node(port.port_graph_egress_node)
 
             incoming_port_match = Traffic(init_wildcard=True)
-            incoming_port_match.set_field("in_port", int(port_num))
+            incoming_port_match.set_field("ingress_nodeort", int(port_num))
 
             self.add_edge_switch_port_graph(port.port_graph_ingress_node,
                           self.sw.flow_tables[0].port_graph_node,
@@ -59,16 +59,16 @@ class SwitchPortGraph(PortGraph):
 
             port = self.sw.ports[port_num]
 
-            in_p = self.get_ingress_node(self.sw.node_id, port_num)
-            out_p = self.get_egress_node(self.sw.node_id, port_num)
+            ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
+            egress_node = self.get_egress_node(self.sw.node_id, port_num)
 
-            self.remove_edge(in_p, self.sw.flow_tables[0].port_graph_node)
+            self.remove_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
 
-            self.remove_node(in_p)
-            self.remove_node(out_p)
+            self.remove_node(ingress_node)
+            self.remove_node(egress_node)
 
-            del in_p
-            del out_p
+            del ingress_node
+            del egress_node
 
         # Remove table ports
         for flow_table in self.sw.flow_tables:
@@ -204,7 +204,7 @@ class SwitchPortGraph(PortGraph):
             if edge.edge_type == "egress":
 
                 # Case when traffic changes switch boundary
-                traffic_to_propagate.set_field("in_port", is_wildcard=True)
+                traffic_to_propagate.set_field("ingress_nodeort", is_wildcard=True)
 
                 for te in traffic_to_propagate.traffic_elements:
                     te.instruction_type = edge_action.instruction_type
@@ -274,7 +274,7 @@ class SwitchPortGraph(PortGraph):
 
         tf_changes = []
 
-        incoming_port = self.get_ingress_node(self.sw.node_id, port_num)
+        ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
         egress_node = self.get_egress_node(self.sw.node_id, port_num)
 
         if event_type == "port_down":
@@ -299,18 +299,18 @@ class SwitchPortGraph(PortGraph):
                             prop_traffic = prop_traffic.difference(pred.transfer_traffic[egress_node][egress_node])
                             self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, dst, tf_changes)
 
-            for succ in self.successors_iter(incoming_port):
-                edge = self.get_edge(incoming_port, succ)
+            for succ in self.successors_iter(ingress_node):
+                edge = self.get_edge(ingress_node, succ)
 
                 for edge_data_tuple in edge.edge_data_list:
                     temp = edge_data_tuple[4].traffic_elements
                     edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
                     edge_data_tuple[0].traffic_elements = temp
 
-            dsts = incoming_port.transfer_traffic.keys()
+            dsts = ingress_node.transfer_traffic.keys()
             for dst in dsts:
-                for succ in self.successors_iter(incoming_port):
-                    self.compute_port_transfer_traffic(incoming_port, Traffic(), succ, dst, tf_changes)
+                for succ in self.successors_iter(ingress_node):
+                    self.compute_port_transfer_traffic(ingress_node, Traffic(), succ, dst, tf_changes)
 
         elif event_type == "port_up":
 
@@ -337,8 +337,8 @@ class SwitchPortGraph(PortGraph):
 
                     self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, dst, tf_changes)
 
-            for succ in self.successors_iter(incoming_port):
-                edge = self.get_edge(incoming_port, succ)
+            for succ in self.successors_iter(ingress_node):
+                edge = self.get_edge(ingress_node, succ)
                 for edge_data_tuple in edge.edge_data_list:
                     temp = edge_data_tuple[4].traffic_elements
                     edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
@@ -349,9 +349,9 @@ class SwitchPortGraph(PortGraph):
                     for succ_succ in succ.transfer_traffic[dst]:
                         traffic_to_propagate.union(succ.transfer_traffic[dst][succ_succ])
 
-                    edge = self.get_edge(incoming_port, succ)
+                    edge = self.get_edge(ingress_node, succ)
                     traffic_to_propagate = self.compute_edge_transfer_traffic(traffic_to_propagate, edge)
-                    self.compute_port_transfer_traffic(incoming_port, traffic_to_propagate, succ, dst, tf_changes)
+                    self.compute_port_transfer_traffic(ingress_node, traffic_to_propagate, succ, dst, tf_changes)
 
         return tf_changes
 
