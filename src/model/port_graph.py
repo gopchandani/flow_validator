@@ -32,3 +32,25 @@ class PortGraph(object):
 
     def get_node(self, node_id):
         return self.g.node[node_id]["p"]
+
+    def add_edge(self, pred, succ, edge_data):
+        self.g.add_edge(pred.node_id, succ.node_id, e=edge_data)
+
+    def remove_edge(self, pred, succ):
+
+        # First check if the edge exists
+        if not self.g.has_edge(pred.node_id, succ.node_id):
+            print "Trying to remove edge that does not exist."
+            raise
+            return None
+
+        # Remove the port-graph edges corresponding to ports themselves
+        self.g.remove_edge(pred.node_id, succ.node_id)
+
+    def get_edge(self, pred, succ):
+
+        if self.g.has_edge(pred.node_id, succ.node_id):
+            return self.g.get_edge_data(pred.node_id, succ.node_id)["e"]
+        else:
+            print "Trying to get edge that does not exist."
+            return None

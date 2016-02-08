@@ -61,7 +61,7 @@ class Flow():
                 output_action.instruction_type = "applied"
                 egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
 
-                e = self.sw.port_graph.add_edge(self.sw.flow_tables[self.table_id].port_graph_node,
+                e = self.sw.port_graph.add_edge_switch_port_graph(self.sw.flow_tables[self.table_id].port_graph_node,
                                      egress_node,
                                      output_action,
                                      self.applied_traffic,
@@ -86,7 +86,7 @@ class Flow():
             if self.instruction_set.goto_table:
 
                 if self.instruction_set.goto_table < len(self.sw.flow_tables):
-                    e = self.sw.port_graph.add_edge(self.sw.flow_tables[self.table_id].port_graph_node,
+                    e = self.sw.port_graph.add_edge_switch_port_graph(self.sw.flow_tables[self.table_id].port_graph_node,
                                          self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node,
                                          None,
                                          self.applied_traffic,
