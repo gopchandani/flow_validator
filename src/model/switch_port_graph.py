@@ -84,11 +84,11 @@ class SwitchPortGraph(PortGraph):
                  applied_modifications,
                  written_modifications):
 
-        edge = self.g.get_edge_data(node1.node_id, node2.node_id)
+        edge = self.get_edge(node1, node2)
         backup_edge_filter_match = Traffic()
 
         if edge:
-            edge["e"].add_edge_data((edge_filter_match,
+            edge.add_edge_data((edge_filter_match,
                                                  edge_action,
                                                  applied_modifications,
                                                  written_modifications, backup_edge_filter_match))

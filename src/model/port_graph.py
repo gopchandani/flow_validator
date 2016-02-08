@@ -40,8 +40,6 @@ class PortGraph(object):
 
         # First check if the edge exists
         if not self.g.has_edge(pred.node_id, succ.node_id):
-            print "Trying to remove edge that does not exist."
-            raise
             return None
 
         # Remove the port-graph edges corresponding to ports themselves
@@ -52,5 +50,4 @@ class PortGraph(object):
         if self.g.has_edge(pred.node_id, succ.node_id):
             return self.g.get_edge_data(pred.node_id, succ.node_id)["e"]
         else:
-            print "Trying to get edge that does not exist."
             return None

@@ -154,17 +154,18 @@ class NetworkPortGraph(PortGraph):
         src_port = tf_change[0]
         dst = tf_change[1]
 
-        self.remove_edge(src_port, dst)
+        # First remove the edge
+        edge = self.get_edge(src_port, dst)
+        if edge:
+            self.remove_edge(src_port, dst)
 
+        # Then, add the right edge
         traffic_filter = src_port.transfer_traffic[dst]
         total_traffic = Traffic()
         for succ in traffic_filter:
             total_traffic.union(traffic_filter[succ])
 
-        if tf_change[2] == "additional":
-            edge = self.add_edge_network_port_graph(src_port, dst, total_traffic)
-        else:
-            edge = self.add_edge_network_port_graph(src_port, dst, total_traffic)
+        edge = self.add_edge_network_port_graph(src_port, dst, total_traffic)
 
         return  edge
 
