@@ -282,10 +282,18 @@ class Traffic():
     def set_field(self, key, value=None, is_wildcard=False, is_exception_value=False):
 
         if key and value and is_exception_value:
+
+            if key not in field_names:
+                raise
+
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value, is_exception_value=is_exception_value)
 
         elif key and value:
+
+            if key not in field_names:
+                raise
+
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value)
 

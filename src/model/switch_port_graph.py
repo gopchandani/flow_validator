@@ -31,7 +31,7 @@ class SwitchPortGraph(PortGraph):
             self.add_node(port.port_graph_egress_node)
 
             incoming_port_match = Traffic(init_wildcard=True)
-            incoming_port_match.set_field("ingress_nodeort", int(port_num))
+            incoming_port_match.set_field("in_port", int(port_num))
 
             self.add_edge_switch_port_graph(port.port_graph_ingress_node,
                           self.sw.flow_tables[0].port_graph_node,
@@ -279,25 +279,23 @@ class SwitchPortGraph(PortGraph):
 
         if event_type == "port_down":
 
-            for dst in egress_node.transfer_traffic:
+            for pred in self.predecessors_iter(egress_node):
+                edge = self.get_edge(pred, egress_node)
 
-                for pred in self.predecessors_iter(egress_node):
-                    edge = self.get_edge(pred, egress_node)
+                prop_traffic = Traffic()
+                for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
+                        in edge.edge_data_list:
 
-                    prop_traffic = Traffic()
-                    for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
-                            in edge.edge_data_list:
+                    if edge_action.is_failover_action():
+                        self.update_port_transfer_traffic_failover_edge_action(pred, edge_action, edge_filter_match, tf_changes)
+                    else:
+                        prop_traffic.union(edge_filter_match)
 
-                        if edge_action.is_failover_action():
-                            self.update_port_transfer_traffic_failover_edge_action(pred, edge_action, edge_filter_match, tf_changes)
-                        else:
-                            prop_traffic.union(edge_filter_match)
-
-                    # Mute only if pred has some transfer traffic for the muted_port
-                    if egress_node in pred.transfer_traffic:
-                        if egress_node in pred.transfer_traffic[egress_node]:
-                            prop_traffic = prop_traffic.difference(pred.transfer_traffic[egress_node][egress_node])
-                            self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, dst, tf_changes)
+                # Mute only if pred has some transfer traffic for the muted_port
+                if egress_node in pred.transfer_traffic:
+                    if egress_node in pred.transfer_traffic[egress_node]:
+                        prop_traffic = prop_traffic.difference(pred.transfer_traffic[egress_node][egress_node])
+                        self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, tf_changes)
 
             for succ in self.successors_iter(ingress_node):
                 edge = self.get_edge(ingress_node, succ)
@@ -314,28 +312,26 @@ class SwitchPortGraph(PortGraph):
 
         elif event_type == "port_up":
 
-            for dst in egress_node.transfer_traffic:
+            for pred in self.predecessors_iter(egress_node):
+                edge = self.get_edge(pred, egress_node)
+                prop_traffic = Traffic()
 
-                for pred in self.predecessors_iter(egress_node):
-                    edge = self.get_edge(pred, egress_node)
-                    prop_traffic = Traffic()
+                for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
+                        in edge.edge_data_list:
 
-                    for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
-                            in edge.edge_data_list:
+                    if edge_action.is_failover_action():
+                        self.update_port_transfer_traffic_failover_edge_action(pred, edge_action, edge_filter_match, tf_changes)
+                    else:
+                        prop_traffic.union(edge_filter_match)
 
-                        if edge_action.is_failover_action():
-                            self.update_port_transfer_traffic_failover_edge_action(pred, edge_action, edge_filter_match, tf_changes)
-                        else:
-                            prop_traffic.union(edge_filter_match)
+                try:
+                    if egress_node in pred.transfer_traffic:
+                        if egress_node in pred.transfer_traffic[egress_node]:
+                            prop_traffic.union(pred.transfer_traffic[egress_node][egress_node])
+                except KeyError:
+                    pass
 
-                    try:
-                        if egress_node in pred.transfer_traffic:
-                            if egress_node in pred.transfer_traffic[egress_node]:
-                                prop_traffic.union(pred.transfer_traffic[egress_node][egress_node])
-                    except KeyError:
-                        pass
-
-                    self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, dst, tf_changes)
+                self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, tf_changes)
 
             for succ in self.successors_iter(ingress_node):
                 edge = self.get_edge(ingress_node, succ)
