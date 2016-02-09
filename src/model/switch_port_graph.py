@@ -282,6 +282,8 @@ class SwitchPortGraph(PortGraph):
             for pred in self.predecessors_iter(egress_node):
                 edge = self.get_edge(pred, egress_node)
 
+                # Go through the edge_data_list, and see if there are any failover actions involved.
+
                 prop_traffic = Traffic()
                 for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
                         in edge.edge_data_list:
@@ -291,12 +293,16 @@ class SwitchPortGraph(PortGraph):
                     else:
                         prop_traffic.union(edge_filter_match)
 
-                # Mute only if pred has some transfer traffic for the muted_port
+                # Take the propagating traffic out of traffic that exists at pred for this egress node
+                # The remaining traffic is propagated back from pred.
+
                 if egress_node in pred.transfer_traffic:
                     if egress_node in pred.transfer_traffic[egress_node]:
                         prop_traffic = prop_traffic.difference(pred.transfer_traffic[egress_node][egress_node])
-                        self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, tf_changes)
 
+                self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, tf_changes)
+
+            # Handle the case of cleaning out muted ports ingress node
             for succ in self.successors_iter(ingress_node):
                 edge = self.get_edge(ingress_node, succ)
 
@@ -316,6 +322,7 @@ class SwitchPortGraph(PortGraph):
                 edge = self.get_edge(pred, egress_node)
                 prop_traffic = Traffic()
 
+                # Go through the edge_data_list, and see if there are any failover actions involved.
                 for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
                         in edge.edge_data_list:
 
@@ -324,12 +331,12 @@ class SwitchPortGraph(PortGraph):
                     else:
                         prop_traffic.union(edge_filter_match)
 
-                try:
-                    if egress_node in pred.transfer_traffic:
-                        if egress_node in pred.transfer_traffic[egress_node]:
-                            prop_traffic.union(pred.transfer_traffic[egress_node][egress_node])
-                except KeyError:
-                    pass
+                # Take the propagating traffic and union any traffic at already exists at the predecessor it
+                # and propagate that combined union back from pred.
+
+                if egress_node in pred.transfer_traffic:
+                    if egress_node in pred.transfer_traffic[egress_node]:
+                        prop_traffic.union(pred.transfer_traffic[egress_node][egress_node])
 
                 self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, tf_changes)
 
