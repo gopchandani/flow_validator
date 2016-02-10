@@ -84,6 +84,9 @@ class MininetMan():
                                               str(self.num_hosts_per_switch) + "_" + \
                                               str(self.fanout) + "_" + \
                                               str(self.core)
+        else:
+            self.mininet_configuration_name = self.synthesis_scheme + "_" + \
+                                              self.topo_name
 
     def __del__(self):
         self.cleanup_mininet()

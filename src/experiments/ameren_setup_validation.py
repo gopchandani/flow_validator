@@ -17,64 +17,50 @@ class AmerenSetupValidation(Experiment):
                  num_iterations,
                  load_config,
                  save_config,
-                 controller,
-                 total_number_of_switches_in_ring,
-                 total_number_of_ports_to_synthesize):
+                 controller):
 
         super(AmerenSetupValidation, self).__init__("ameren_setup_validation",
-                                                           num_iterations,
-                                                           load_config,
-                                                           save_config,
-                                                           controller,
-                                                           1)
-
-        self.total_number_of_ports_to_synthesize = total_number_of_ports_to_synthesize
-        self.total_number_of_switches_in_ring = total_number_of_switches_in_ring
+                                                    num_iterations,
+                                                    load_config,
+                                                    save_config,
+                                                    controller,
+                                                    1)
 
         self.data = {
-            "validation_time": defaultdict(defaultdict),
+            "validation_time": defaultdict(list),
         }
 
     def trigger(self):
 
         print "Starting experiment..."
 
-        for number_of_ports_to_synthesize in xrange(1, self.total_number_of_ports_to_synthesize + 1):
-            ports_to_synthesize = xrange(5000, 5000 + number_of_ports_to_synthesize)
-            print "ports_to_synthesize:", ports_to_synthesize
+        self.topo_description = ("amerentopo", None, None)
 
-            for number_of_switches_in_ring in self.total_number_of_switches_in_ring:
-                print "number_of_switches_in_ring:", number_of_switches_in_ring
+        ng = self.setup_network_graph(self.topo_description,
+                                      mininet_setup_gap=4,
+                                      dst_ports_to_synthesize=None,
+                                      synthesis_setup_gap=4,
+                                      synthesis_scheme="IntentSynthesis")
 
-                self.topo_description = ("amerentopo", number_of_switches_in_ring, 1)
+        for i in xrange(self.num_iterations):
 
-                ng = self.setup_network_graph(self.topo_description,
-                                              mininet_setup_gap=number_of_switches_in_ring,
-                                              dst_ports_to_synthesize=None,
-                                              synthesis_setup_gap=len(ports_to_synthesize),
-                                              synthesis_scheme="IntentSynthesis")
+            fv = FlowValidator(ng)
+            fv.init_network_port_graph()
+            fv.add_hosts()
+            fv.initialize_admitted_traffic()
 
-                self.data["validation_time"][number_of_ports_to_synthesize][number_of_switches_in_ring] = []
+            with Timer(verbose=True) as t:
+                fv.validate_all_host_pair_backup(verbose=True)
 
-                for i in xrange(self.num_iterations):
+            self.data["validation_time"][i].append(t.msecs)
 
-                    fv = FlowValidator(ng)
-                    fv.init_network_port_graph()
-                    fv.add_hosts()
-                    fv.initialize_admitted_traffic()
-
-                    with Timer(verbose=True) as t:
-                        fv.validate_all_host_pair_backup(verbose=False)
-
-                    self.data["validation_time"][number_of_ports_to_synthesize][number_of_switches_in_ring].append(t.msecs)
-
-                    fv.de_init_network_port_graph()
+            fv.de_init_network_port_graph()
 
     def plot_failover_policy_validation_ring(self):
 
         fig = plt.figure(0)
         self.plot_line_error_bars("validation_time",
-                                  "Total number of switches in ring",
+                                  "Ameren Setup",
                                   "Failover Validation Time (ms)", y_scale="linear")
 def main():
 
@@ -83,15 +69,10 @@ def main():
     save_config = False
     controller = "ryu"
 
-    total_number_of_switches_in_ring = [4]
-    total_number_of_ports_to_synthesize = 1
-
     exp = AmerenSetupValidation(num_iterations,
                                 load_config,
                                 save_config,
-                                controller,
-                                total_number_of_switches_in_ring,
-                                total_number_of_ports_to_synthesize)
+                                controller)
 
     exp.trigger()
     exp.dump_data()
