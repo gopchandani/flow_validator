@@ -204,7 +204,7 @@ class SwitchPortGraph(PortGraph):
             if edge.edge_type == "egress":
 
                 # Case when traffic changes switch boundary
-                traffic_to_propagate.set_field("ingress_nodeort", is_wildcard=True)
+                traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
                 for te in traffic_to_propagate.traffic_elements:
                     te.instruction_type = edge_action.instruction_type

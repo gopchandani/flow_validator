@@ -281,23 +281,18 @@ class Traffic():
 
     def set_field(self, key, value=None, is_wildcard=False, is_exception_value=False):
 
+        if key not in field_names:
+            raise Exception('Invalid field name for set_field')
+
         if key and value and is_exception_value:
-
-            if key not in field_names:
-                raise
-
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value, is_exception_value=is_exception_value)
 
         elif key and value:
-
-            if key not in field_names:
-                raise
-
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value)
 
-        elif is_wildcard:
+        elif key and is_wildcard:
             for te in self.traffic_elements:
                 te.set_traffic_field(key, set_wildcard=True)
 

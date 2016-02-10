@@ -79,8 +79,8 @@ class AmerenSetupValidation(Experiment):
 def main():
 
     num_iterations = 1
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     total_number_of_switches_in_ring = [4]
