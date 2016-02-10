@@ -30,15 +30,12 @@ class SwitchPortGraph(PortGraph):
             self.add_node(port.port_graph_ingress_node)
             self.add_node(port.port_graph_egress_node)
 
-            incoming_port_match = Traffic(init_wildcard=True)
-            incoming_port_match.set_field("in_port", int(port_num))
+            ingress_node_traffic = Traffic(init_wildcard=True)
+            ingress_node_traffic.set_field("in_port", int(port_num))
 
-            self.add_edge_switch_port_graph(port.port_graph_ingress_node,
-                          self.sw.flow_tables[0].port_graph_node,
-                          None,
-                          incoming_port_match,
-                          None,
-                          None)
+            edge = PortGraphEdge(port.port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node)
+            edge.add_edge_data((ingress_node_traffic, None, None, None, Traffic()))
+            self.add_edge(port.port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node, edge)
 
         # Try passing a wildcard through the flow table
         for flow_table in self.sw.flow_tables:

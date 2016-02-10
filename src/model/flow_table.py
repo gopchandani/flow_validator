@@ -34,8 +34,6 @@ class Flow():
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
 
-
-
         self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
         self.complement_traffic = Traffic()
