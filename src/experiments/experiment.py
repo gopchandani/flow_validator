@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+
 import json
 import time
 import numpy as np
@@ -64,13 +65,13 @@ class Experiment(object):
                 time.sleep(mininet_setup_gap)
 
         # Get a flow validator instance
-        self.ng = NetworkGraph(mm=self.mm,
+        ng = NetworkGraph(mininet_man=self.mm,
                           controller=self.controller,
+                          experiment_switches=self.experiment_switches,
                           save_config=self.save_config,
                           load_config=self.load_config)
 
         if not self.load_config and self.save_config:
-
             if self.controller == "odl":
                 self.mm.setup_mininet_with_odl(self.ng)
             elif self.controller == "ryu":

@@ -32,6 +32,9 @@ class ControllerMan():
         elif controller == "ryu":
             self.ryu_proc = None
 
+        elif controller == "sel":
+            pass
+
     def initialize_odl_containers(self):
 
         print "Initializing, number of containers:", self.num_cons
@@ -115,6 +118,8 @@ class ControllerMan():
 
         if self.controller == "ryu":
             self.ryu_proc.kill()
+        elif self.controller == "sel":
+            pass
         else:
             print "Docker cleanup..."
             self.kill_all()

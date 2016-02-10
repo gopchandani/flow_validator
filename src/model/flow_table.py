@@ -29,6 +29,13 @@ class Flow():
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
 
+        elif self.sw.network_graph.controller == "sel":
+            self.table_id = self.flow_json["tableId"]
+            self.priority = int(self.flow_json["priority"])
+            self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
+
+
+
         self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
         self.complement_traffic = Traffic()
@@ -44,9 +51,12 @@ class Flow():
         else:
             if self.sw.network_graph.controller == "odl":
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
-
+            elif self.sw.network_graph.controller == "sel":
+                self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
             elif self.sw.network_graph.controller == "ryu":
                 self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
+            else:
+                raise NotImplementedError
 
             self.applied_modifications = \
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
@@ -114,6 +124,7 @@ class FlowTable():
 
         #  Sort the flows list by priority
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
+
 
     def init_flow_table_port_graph(self):
 

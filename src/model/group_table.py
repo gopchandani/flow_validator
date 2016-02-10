@@ -31,6 +31,21 @@ class Bucket():
             # Sort the action_list by order
             self.action_list = sorted(self.action_list, key=lambda action: action.order)
 
+        elif self.sw.network_graph.controller == "sel":
+            self.bucket_id = bucket_json['id']
+
+            for action_json in bucket_json["actions"]:
+                self.action_list.append(Action(sw, action_json))
+
+            if "watchPort" in bucket_json:
+                if bucket_json["watchPort"] != 4294967293:
+                    self.watch_port = str(bucket_json["watchPort"])
+
+            if "weight" in bucket_json:
+                self.weight = str(bucket_json["weight"])
+
+            self.action_list = sorted(self.action_list, key=lambda action: action.order)
+
         elif self.sw.network_graph.controller == "ryu":
 
             for action_json in bucket_json["actions"]:
@@ -42,6 +57,9 @@ class Bucket():
 
             if "weight" in bucket_json:
                 self.weight = str(bucket_json["weight"])
+
+        else:
+            raise NotImplementedError
 
         for action in self.action_list:
             action.bucket = self
@@ -137,6 +155,19 @@ class Group():
             for bucket_json in group_json["buckets"]:
                 self.bucket_list.append(Bucket(sw, bucket_json, self))
 
+		elif self.sw.network_graph.controller == "sel":
+            self.group_id = group_json["groupId"]
+            self.group_type = group_json["groupType"]
+
+            if group_json["groupType"] == u"FastFailover":
+                self.group_type = self.sw.network_graph.GROUP_FF
+            elif group_json["groupType"] == u"All":
+                self.group_type = self.sw.network_graph.GROUP_ALL
+
+            for bucket_json in group_json["buckets"]:
+                self.bucket_list.append(Bucket(sw, bucket_json, self))
+
+            self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
         #TODO: For now, assume that all edges would be up at the system initialization and failure events
         # will occur subsequently
         if self.group_type == self.sw.network_graph.GROUP_FF:

@@ -354,12 +354,14 @@ class MininetMan():
         router_conf_requests.append(({"destination": "192.168.30.0/24", "gateway": "192.168.10.20"},
                                      "/router/0000000000000002"))
 
+
         router_conf_requests.append(({"address": "192.168.30.1/24"},
                                      "/router/0000000000000003"))
         router_conf_requests.append(({"address": "192.168.10.20/24"},
                                      "/router/0000000000000003"))
         router_conf_requests.append(({"gateway": "192.168.10.1"},
                                      "/router/0000000000000003"))
+
 
         for data, remainingUrl in router_conf_requests:
 

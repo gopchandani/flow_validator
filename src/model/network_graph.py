@@ -13,6 +13,7 @@ from host import Host
 from flow_table import FlowTable
 from group_table import GroupTable
 from port import Port
+from sel_controller import Session, OperationalTree, ConfigTree
 
 class NetworkGraph():
 
@@ -397,6 +398,90 @@ class NetworkGraph():
             for table_id in ryu_switches[dpid]["flow_tables"]:
                 switch_flow_tables.append(FlowTable(sw, table_id, ryu_switches[dpid]["flow_tables"][table_id]))
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+
+    def print_sel_flow_stats(self):
+       # for each in OperationalTree.flowStatsHttpAccess(self.sel_session).read_collection():
+       for each in OperationalTree.FlowStatsEntityAccess(self.sel_session).read_collection():
+            print (each.to_pyson())
+
+    def get_sel_switches(self):
+       # nodes = OperationalTree.nodesHttpAccess(self.sel_session)
+        nodes = ConfigTree.NodesEntityAccess(self.sel_session)
+        sel_switches = {}
+        for each in nodes.read_collection():
+            this_switch = {}
+            if each.linked_key.startswith("OpenFlow"):
+                switch_id = each.linked_key.split(':')[1]
+
+                #ports = OperationalTree.portsHttpAccess(self.sel_session)
+                ports = OperationalTree.PortsEntityAccess(self.sel_session)
+                sw_ports = []
+
+                for port in ports.read_collection():
+                    if isinstance(port, OperationalTree.OpenFlowPort):
+                        if port.parent_node == each.linked_key:
+                            sw_ports.append(port.to_pyson())
+
+                this_switch["ports"] = sw_ports
+
+              #  groups = ConfigTree.groupsHttpAccess(self.sel_session)
+                groups = ConfigTree.GroupsEntityAccess(self.sel_session)
+
+                sw_groups = []
+                for group in groups.read_collection():
+                    if group.node == each.id:
+                        sw_groups.append(group.to_pyson())
+
+                this_switch["groups"] = sw_groups
+
+                #flow_tables = ConfigTree.flowsHttpAccess(self.sel_session)
+                flow_tables = ConfigTree.FlowsEntityAccess(self.sel_session)
+                switch_flow_tables = defaultdict(list)
+                for flow_rule in flow_tables.read_collection():
+                    if flow_rule.node == each.id:
+                        flow_rule = flow_rule.to_pyson()
+                        switch_flow_tables[flow_rule["tableId"]].append(flow_rule)
+
+                this_switch["flow_tables"] = switch_flow_tables
+
+                sel_switches[switch_id] = this_switch
+
+        if self.save_config:
+            with open(self.config_path_prefix + "sel_switches.json", "w") as outfile:
+                json.dump(sel_switches, outfile)
+
+        return sel_switches
+
+    def parse_sel_switches(self, sel_switches):
+        for each_id, switch in sel_switches.iteritems():
+            # prepare the switch id
+            switch_id = "s" + str(each_id)
+
+            sw = self.get_node_object(switch_id)
+            # Check to see if a switch with this id already exists in the graph,
+            # if so grab it, otherwise create it
+            if not sw:
+                sw = Switch(switch_id, self)
+                self.graph.add_node(switch_id, node_type="switch", sw=sw)
+                self.switch_ids.append(switch_id)
+            # Parse out the information about all the ports in the switch
+            switch_ports = {}
+            for port in switch["ports"]:
+                switch_ports[port["portId"]] = Port(sw, port_json=port)
+
+            sw.ports = switch_ports
+
+            # Parse group table if one is available
+            if "groups" in sel_switches[each_id]:
+                sw.group_table = GroupTable(sw, sel_switches[each_id]["groups"])
+
+            # Parse all the flow tables and sort them by table_id in the list
+            switch_flow_tables = []
+            for table_id in sel_switches[each_id]["flow_tables"]:
+                switch_flow_tables.append(FlowTable(sw, table_id,
+                                                    sel_switches[each_id]["flow_tables"][table_id]))
+
+            sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
     def parse_switches(self):
         
