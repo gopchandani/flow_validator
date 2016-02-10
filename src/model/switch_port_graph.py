@@ -40,6 +40,7 @@ class SwitchPortGraph(PortGraph):
         # Try passing a wildcard through the flow table
         for flow_table in self.sw.flow_tables:
             flow_table.init_flow_table_port_graph()
+            self.add_flow_table_edges(flow_table)
 
         # Initialize all groups' active buckets
         for group_id in self.sw.group_table.groups:
@@ -72,6 +73,13 @@ class SwitchPortGraph(PortGraph):
             self.remove_node(flow_table.port_graph_node)
             flow_table.port = None
             flow_table.port_graph = None
+
+    def add_flow_table_edges(self, flow_table):
+
+        for flow in flow_table.flows:
+            if flow.applied_traffic:
+                flow.add_port_graph_edges()
+
 
     def add_edge_switch_port_graph(self,
                  node1,

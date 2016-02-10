@@ -142,8 +142,6 @@ class FlowTable():
                 remaining_traffic = flow.complement_traffic.intersect(remaining_traffic)
                 flow.applied_traffic = intersection
 
-                # Add the edges in the portgraph
-                flow.add_port_graph_edges()
             else:
                 # Say that this flow does not matter
                 flow.applied_traffic = None
