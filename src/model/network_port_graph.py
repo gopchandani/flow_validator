@@ -29,6 +29,23 @@ class NetworkPortGraph(PortGraph):
                 edge = self.get_edge_from_transfer_traffic(src_p, dst, transfer_traffic)
                 self.add_edge(src_p, dst, edge)
 
+    def modify_switch_transfer_function(self, sw, tf_changes):
+
+        for tf_change in tf_changes:
+            src_port = tf_change[0]
+            dst = tf_change[1]
+
+            # First remove the edge
+            edge = self.get_edge(src_port, dst)
+            if edge:
+                self.remove_edge(src_port, dst)
+
+            # Then, add the edge back by using the new transfer traffic now
+            transfer_traffic = sw.port_graph.get_transfer_traffic(src_port, dst)
+            edge = self.get_edge_from_transfer_traffic(src_port, dst, transfer_traffic)
+            self.add_edge(src_port, dst, edge)
+
+
     def update_admitted_traffic(self, tf_changes):
 
         # This object holds for each pred/dst combinations
@@ -39,9 +56,6 @@ class NetworkPortGraph(PortGraph):
 
             pred = tf_change[0]
             succ = tf_change[1]
-
-            # Modify the edge filter
-            edge = self.modify_edge(tf_change)
 
             #TODO Limit the destinations
             for dst in pred.admitted_traffic:
@@ -144,27 +158,6 @@ class NetworkPortGraph(PortGraph):
 
         return edge
 
-    def modify_edge(self, tf_change):
-
-        src_port = tf_change[0]
-        dst = tf_change[1]
-
-        # First remove the edge
-        edge = self.get_edge(src_port, dst)
-        if edge:
-            self.remove_edge(src_port, dst)
-
-        # Then, add the right edge
-        traffic_filter = src_port.transfer_traffic[dst]
-        total_traffic = Traffic()
-        for succ in traffic_filter:
-            total_traffic.union(traffic_filter[succ])
-
-        edge = self.get_edge_from_transfer_traffic(src_port, dst, total_traffic)
-        self.add_edge(src_port, dst, edge)
-
-        return  edge
-
     def add_node_graph_edge(self, node1_id, node2_id, updating=False):
 
         # Update the physical port representations in network graph objects
@@ -188,9 +181,11 @@ class NetworkPortGraph(PortGraph):
         # Update transfer and admitted traffic
         if updating:
             tf_changes = sw1.port_graph.update_port_transfer_traffic(edge_port_dict[node1_id], "port_up")
+            self.modify_switch_transfer_function(sw1, tf_changes)
             self.update_admitted_traffic(tf_changes)
 
             tf_changes = sw2.port_graph.update_port_transfer_traffic(edge_port_dict[node2_id], "port_up")
+            self.modify_switch_transfer_function(sw2, tf_changes)
             self.update_admitted_traffic(tf_changes)
 
     def remove_node_graph_edge(self, node1_id, node2_id):
@@ -213,10 +208,13 @@ class NetworkPortGraph(PortGraph):
 
         # Update transfer and admitted traffic
         tf_changes = sw1.port_graph.update_port_transfer_traffic(edge_port_dict[node1_id], "port_down")
+        self.modify_switch_transfer_function(sw1, tf_changes)
         self.update_admitted_traffic(tf_changes)
 
         tf_changes = sw2.port_graph.update_port_transfer_traffic(edge_port_dict[node2_id], "port_down")
+        self.modify_switch_transfer_function(sw2, tf_changes)
         self.update_admitted_traffic(tf_changes)
+
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 
