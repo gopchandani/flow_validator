@@ -557,13 +557,13 @@ class SynthesisLib():
             flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"])
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
-        action_list = [output_action]
+            action_list = [output_action]
 
-        self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
-        self.push_flow(sw, flow)
+            self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
+            self.push_flow(sw, flow)
 		
-		elif sel.network_graph.controller == "sel":
-			raise NotImplementedError
+        elif self.network_graph.controller == "sel":
+            raise NotImplementedError
 
         return flow
 
@@ -773,8 +773,8 @@ class SynthesisLib():
 
                 # Empty list for drop action
                 action_list = []
-			elif self.network_graph.controller = "sel":
-				raise NotImplementedError
+            elif self.network_graph.controller == "sel":
+                raise NotImplementedError
 
             # Make and push the flow
             self.populate_flow_action_instruction(flow, action_list, True)

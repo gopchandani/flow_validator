@@ -65,11 +65,10 @@ class Experiment(object):
                 time.sleep(mininet_setup_gap)
 
         # Get a flow validator instance
-        ng = NetworkGraph(mininet_man=self.mm,
+        self.ng = NetworkGraph(mm=self.mm,
                           controller=self.controller,
-                          experiment_switches=self.experiment_switches,
-                          save_config=self.save_config,
-                          load_config=self.load_config)
+                          load_config=self.load_config,
+                          save_config=self.save_config)
 
         if not self.load_config and self.save_config:
             if self.controller == "odl":

@@ -155,7 +155,7 @@ class Group():
             for bucket_json in group_json["buckets"]:
                 self.bucket_list.append(Bucket(sw, bucket_json, self))
 
-		elif self.sw.network_graph.controller == "sel":
+        elif self.sw.network_graph.controller == "sel":
             self.group_id = group_json["groupId"]
             self.group_type = group_json["groupType"]
 

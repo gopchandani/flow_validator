@@ -62,7 +62,7 @@ class Port():
         #TODO: Peep into port_json["state"]
         self.state = "up"
 
-	def parse_sel_port_json(self, port_json):
+    def parse_sel_port_json(self, port_json):
         self.port_id = str(self.sw.node_id) + ":" + str(port_json["portId"])
         self.port_number = port_json["portId"]
         self.mac_address = port_json["hardwareAddress"]
