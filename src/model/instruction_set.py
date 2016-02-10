@@ -19,6 +19,12 @@ class Instruction():
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction()
 
+        elif self.sw.network_graph.controller == "sel":
+            self.parse_sel_instruction()
+
+        else:
+            raise NotImplementedError
+
     def parse_odl_instruction(self):
 
         if "write-actions" in self.instruction_json:
@@ -56,6 +62,24 @@ class Instruction():
             self.go_to_table = int(self.instruction_json[1])
 
         #TODO: Other instructions...
+
+
+    def parse_sel_instruction(self):
+
+        if self.instruction_json['instructionType'] == "WriteActions":
+            self.instruction_type = "write-actions"
+            for action in self.instruction_json['actions']:
+                self.actions_list.append(Action(self.sw, action))
+        elif self.instruction_json['instructionType'] == "ApplyActions":
+            self.instruction_type = "apply-actions"
+            for action in self.instruction_json['actions']:
+                self.actions_list.append(Action(self.sw, action))
+        elif self.instruction_json['instructionType'] == "GotoTable":
+            self.go_to_table = int(self.instruction_json['tableId'])
+            self.instruction_type = "go-to-table"
+        else:
+            raise NotImplementedError
+
 
 class InstructionSet():
 
@@ -113,6 +137,12 @@ class InstructionSet():
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction_set()
 
+        elif self.sw.network_graph.controller == "sel":
+            self.parse_sel_instruction_set()
+
+        else:
+            raise NotImplementedError
+
     def parse_odl_instruction_set(self):
 
         for instruction_json in self.instructions_json:
@@ -162,3 +192,25 @@ class InstructionSet():
             # TODO: Handle clear-actions case
             # TODO: Handle meter instruction
             # TODO: Write meta-data case
+
+    def parse_sel_instruction_set(self):
+
+        for instruction in self.instructions_json:
+            instruction = Instruction(self.sw, instruction)
+            if instruction.instruction_type == "apply-actions":
+                self.instruction_list.insert(0, instruction)
+
+                # Add all the actions to the applied_action_set
+                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
+
+            else:
+                self.instruction_list.append(instruction)
+
+            if instruction.instruction_type == "write-actions":
+                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
+
+            elif instruction.instruction_type == "go-to-table":
+                self.goto_table = instruction.go_to_table
+
+
+

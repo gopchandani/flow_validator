@@ -19,7 +19,10 @@ class Switch():
 
         # Synthesis stuff
         self.intents = defaultdict(dict)
-        self.synthesis_tag = int(self.node_id[1:])
+        try:
+            self.synthesis_tag = int(self.node_id[1:])
+        except ValueError:
+            self.synthesis_tag = self.node_id
 
         # Analysis stuff
         self.port_graph = SwitchPortGraph(network_graph, self)

@@ -49,6 +49,10 @@ class Action():
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_action_json()
 
+        elif self.sw.network_graph.controller == "sel":
+            self.parse_sel_action_json()
+
+
     def parse_odl_action_json(self):
 
         self.order = self.action_json["order"]
@@ -81,6 +85,38 @@ class Action():
             if mjp.keys():
                 self.modified_field = mjp.keys()[0]
                 self.field_modified_to = mjp[self.modified_field]
+
+
+    def parse_sel_action_json(self):
+        self.order = self.action_json["setOrder"]
+
+        if self.action_json["actionType"] == 'Output':
+            self.action_type = "output"
+            if int(self.action_json["outPort"]) == 4294967293:
+                self.out_port = self.sw.network_graph.OFPP_CONTROLLER
+            else:
+                self.out_port = int(self.action_json["outPort"])
+
+        if self.action_json["actionType"] == 'Group':
+            self.action_type = "group"
+            self.group_id = int(self.action_json["groupId"])
+
+        # if self.action_json["actionType"] == 'PushVlan':
+        #     self.action_type = "push_vlan"
+        #     self.vlan_ethernet_type = self.action_json['ethernetType']
+        #
+        # if self.action_json["actionType"] == 'PopVlan':
+        #     self.action_type = "pop_vlan"
+
+        if self.action_json["actionType"] == 'SetField':
+            self.action_type = "set_field"
+            if self.action_json["field"]["@odata.type"] == "#Sel.Sel5056.OpenFlowPlugin.DataTreeObjects.MatchFields.VlanVid":
+                self.modified_field = "vlan_id"
+                self.field_modified_to = int(self.action_json["field"]["value"])
+            else:
+                raise NotImplementedError
+
+
 
     def parse_ryu_action_json(self):
 

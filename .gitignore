@@ -7,3 +7,6 @@ src/experiments/.cache/*
 src/analysis/.cache/*
 src/synthesis/.cache/*
 *pyc
+*.bak
+*~
+*.json
