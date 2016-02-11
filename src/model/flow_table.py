@@ -1,9 +1,12 @@
 __author__ = 'Rakesh Kumar'
 
+from collections import defaultdict
+
 from port_graph_node import PortGraphNode
 from match import Match
 from traffic import Traffic, TrafficElement
 from instruction_set import InstructionSet
+
 
 class Flow():
 
@@ -92,6 +95,11 @@ class FlowTable():
                                              self.sw.port_graph.get_table_node_id(self.sw.node_id, self.table_id),
                                              "table")
 
+        # Edges from this table's node to port egress nodes and other tables' nodes are stored in this dictionary
+        # The key is the succ node, and the list contains edge contents
+
+        self.port_graph_edges = defaultdict(list)
+
         for f in flow_list:
             f = Flow(sw, f)
             self.flows.append(f)
@@ -100,7 +108,7 @@ class FlowTable():
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
 
-    def init_flow_table_port_graph(self):
+    def compute_flow_table_port_graph_edges(self):
 
         #print "flow_table:", self.table_id
 
@@ -118,6 +126,34 @@ class FlowTable():
                 remaining_traffic = flow.complement_traffic.intersect(remaining_traffic)
                 flow.applied_traffic = intersection
 
+                flow.prepare_port_graph_edges()
+
+                for out_port, output_action in flow.applied_port_graph_edges:
+
+                    output_action.instruction_type = "applied"
+                    egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
+
+                    self.port_graph_edges[egress_node].append((flow.applied_traffic,
+                                                               output_action,
+                                                               flow.applied_modifications,
+                                                               flow.written_modifications))
+
+                for out_port, output_action in flow.written_port_graph_edges:
+
+                    output_action.instruction_type = "written"
+                    egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
+
+                    self.port_graph_edges[egress_node].append((flow.applied_traffic,
+                                                               output_action,
+                                                               flow.applied_modifications,
+                                                               flow.written_modifications))
+
+                if flow.goto_table_port_graph_edge:
+
+                    self.port_graph_edges[flow.goto_table_port_graph_edge[1]].append((flow.applied_traffic,
+                                                                                      None,
+                                                                                      flow.applied_modifications,
+                                                                                      flow.written_modifications))
             else:
                 # Say that this flow does not matter
                 flow.applied_traffic = None

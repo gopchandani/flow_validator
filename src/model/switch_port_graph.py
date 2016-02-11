@@ -39,7 +39,7 @@ class SwitchPortGraph(PortGraph):
 
         # Try passing a wildcard through the flow table
         for flow_table in self.sw.flow_tables:
-            flow_table.init_flow_table_port_graph()
+            flow_table.compute_flow_table_port_graph_edges()
             self.add_flow_table_edges(flow_table)
 
         # Initialize all groups' active buckets
@@ -76,73 +76,21 @@ class SwitchPortGraph(PortGraph):
 
     def add_flow_table_edges(self, flow_table):
 
-        for flow in flow_table.flows:
-            if flow.applied_traffic:
-                flow.prepare_port_graph_edges()
+        for succ in flow_table.port_graph_edges:
+            edge = PortGraphEdge(flow_table.port_graph_node, succ)
 
-                for out_port, output_action in flow.applied_port_graph_edges:
+            for edge_data in flow_table.port_graph_edges[succ]:
+                backup_edge_filter_match = Traffic()
+                edge.add_edge_data((edge_data[0],
+                                    edge_data[1],
+                                    edge_data[2],
+                                    edge_data[3],
+                                    backup_edge_filter_match))
 
-                    output_action.instruction_type = "applied"
-                    egress_node = self.get_egress_node(self.sw.node_id, out_port)
-
-                    e = self.add_edge_switch_port_graph(self.sw.flow_tables[flow.table_id].port_graph_node,
-                                                        egress_node,
-                                                        output_action,
-                                                        flow.applied_traffic,
-                                                        flow.applied_modifications,
-                                                        flow.written_modifications)
-
-
-                for out_port, output_action in flow.written_port_graph_edges:
-
-                    output_action.instruction_type = "written"
-                    egress_node = self.get_egress_node(self.sw.node_id, out_port)
-
-                    e = self.add_edge_switch_port_graph(self.sw.flow_tables[flow.table_id].port_graph_node,
-                                                        egress_node,
-                                                        output_action,
-                                                        flow.applied_traffic,
-                                                        flow.applied_modifications,
-                                                        flow.written_modifications)
-
-                if flow.goto_table_port_graph_edge:
-
-                    e = self.add_edge_switch_port_graph(flow.goto_table_port_graph_edge[0],
-                                                        flow.goto_table_port_graph_edge[1],
-                                                        None,
-                                                        flow.applied_traffic,
-                                                        flow.applied_modifications,
-                                                        flow.written_modifications)
+            self.add_edge(flow_table.port_graph_node, succ, edge)
 
     def modify_flow_table_edges(self, flow_table):
         pass
-
-    def add_edge_switch_port_graph(self,
-                                   node1,
-                                   node2,
-                                   edge_action,
-                                   edge_filter_match,
-                                   applied_modifications,
-                                   written_modifications):
-
-        edge = self.get_edge(node1, node2)
-        backup_edge_filter_match = Traffic()
-
-        if edge:
-            edge.add_edge_data((edge_filter_match,
-                                edge_action,
-                                applied_modifications,
-                                written_modifications, backup_edge_filter_match))
-        else:
-            edge = PortGraphEdge(node1, node2)
-            edge.add_edge_data((edge_filter_match,
-                                edge_action,
-                                applied_modifications,
-                                written_modifications, backup_edge_filter_match))
-
-            self.add_edge(node1, node2, edge)
-
-        return (node1.node_id, node2.node_id, edge_action)
 
     def compute_switch_transfer_traffic(self):
 
