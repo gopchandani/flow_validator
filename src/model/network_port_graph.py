@@ -1,9 +1,11 @@
 __author__ = 'Rakesh Kumar'
 
+from collections import defaultdict
+
 from port_graph import PortGraph
 from port_graph_edge import PortGraphEdge
 from traffic import Traffic
-from collections import defaultdict
+
 
 class NetworkPortGraph(PortGraph):
 

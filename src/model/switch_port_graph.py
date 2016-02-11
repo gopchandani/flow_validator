@@ -78,31 +78,67 @@ class SwitchPortGraph(PortGraph):
 
         for flow in flow_table.flows:
             if flow.applied_traffic:
-                flow.add_port_graph_edges()
+                flow.prepare_port_graph_edges()
 
+                for out_port, output_action in flow.applied_port_graph_edges:
+
+                    output_action.instruction_type = "applied"
+                    egress_node = self.get_egress_node(self.sw.node_id, out_port)
+
+                    e = self.add_edge_switch_port_graph(self.sw.flow_tables[flow.table_id].port_graph_node,
+                                                        egress_node,
+                                                        output_action,
+                                                        flow.applied_traffic,
+                                                        flow.applied_modifications,
+                                                        flow.written_modifications)
+
+
+                for out_port, output_action in flow.written_port_graph_edges:
+
+                    output_action.instruction_type = "written"
+                    egress_node = self.get_egress_node(self.sw.node_id, out_port)
+
+                    e = self.add_edge_switch_port_graph(self.sw.flow_tables[flow.table_id].port_graph_node,
+                                                        egress_node,
+                                                        output_action,
+                                                        flow.applied_traffic,
+                                                        flow.applied_modifications,
+                                                        flow.written_modifications)
+
+                if flow.goto_table_port_graph_edge:
+
+                    e = self.add_edge_switch_port_graph(flow.goto_table_port_graph_edge[0],
+                                                        flow.goto_table_port_graph_edge[1],
+                                                        None,
+                                                        flow.applied_traffic,
+                                                        flow.applied_modifications,
+                                                        flow.written_modifications)
+
+    def modify_flow_table_edges(self, flow_table):
+        pass
 
     def add_edge_switch_port_graph(self,
-                 node1,
-                 node2,
-                 edge_action,
-                 edge_filter_match,
-                 applied_modifications,
-                 written_modifications):
+                                   node1,
+                                   node2,
+                                   edge_action,
+                                   edge_filter_match,
+                                   applied_modifications,
+                                   written_modifications):
 
         edge = self.get_edge(node1, node2)
         backup_edge_filter_match = Traffic()
 
         if edge:
             edge.add_edge_data((edge_filter_match,
-                                                 edge_action,
-                                                 applied_modifications,
-                                                 written_modifications, backup_edge_filter_match))
+                                edge_action,
+                                applied_modifications,
+                                written_modifications, backup_edge_filter_match))
         else:
             edge = PortGraphEdge(node1, node2)
             edge.add_edge_data((edge_filter_match,
-                                    edge_action,
-                                    applied_modifications,
-                                    written_modifications, backup_edge_filter_match))
+                                edge_action,
+                                applied_modifications,
+                                written_modifications, backup_edge_filter_match))
 
             self.add_edge(node1, node2, edge)
 
@@ -199,7 +235,7 @@ class SwitchPortGraph(PortGraph):
 
         pred_transfer_traffic = Traffic()
 
-        for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match\
+        for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
                 in edge.edge_data_list:
 
             if edge_action:

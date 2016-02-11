@@ -42,7 +42,7 @@ class Flow():
         self.traffic.add_traffic_elements([self.traffic_element])
         self.complement_traffic.add_traffic_elements(self.traffic_element.get_complement_traffic_elements())
 
-    def add_port_graph_edges(self):
+    def prepare_port_graph_edges(self):
 
         if not "instructions" in self.flow_json:
             print "Assuming this means to drop."
@@ -62,44 +62,20 @@ class Flow():
             self.written_modifications = \
                 self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
 
-            port_graph_edges = self.instruction_set.applied_action_set.get_port_graph_edges()
+            self.applied_port_graph_edges = self.instruction_set.applied_action_set.get_port_graph_edges()
 
-            for out_port, output_action in port_graph_edges:
-
-                output_action.instruction_type = "applied"
-                egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
-
-                e = self.sw.port_graph.add_edge_switch_port_graph(self.sw.flow_tables[self.table_id].port_graph_node,
-                                     egress_node,
-                                     output_action,
-                                     self.applied_traffic,
-                                     self.applied_modifications,
-                                     self.written_modifications)
-
-            port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
-
-            for out_port, output_action in port_graph_edges:
-
-                output_action.instruction_type = "written"
-                egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
-
-                e = self.sw.port_graph.add_edge(self.sw.flow_tables[self.table_id].port_graph_node,
-                                     egress_node,
-                                     output_action,
-                                     self.applied_traffic,
-                                     self.applied_modifications,
-                                     self.written_modifications)
+            self.written_port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
 
             # See the edge impact of any go-to-table instruction
+
+            self.goto_table_port_graph_edge = None
+
             if self.instruction_set.goto_table:
 
                 if self.instruction_set.goto_table < len(self.sw.flow_tables):
-                    e = self.sw.port_graph.add_edge_switch_port_graph(self.sw.flow_tables[self.table_id].port_graph_node,
-                                         self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node,
-                                         None,
-                                         self.applied_traffic,
-                                         self.applied_modifications,
-                                         self.written_modifications)
+
+                    self.goto_table_port_graph_edge = (self.sw.flow_tables[self.table_id].port_graph_node,
+                                                       self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node)
                 else:
                     print "At switch:", self.sw.node_id, ", couldn't find flow table goto:", self.instruction_set.goto_table
 
