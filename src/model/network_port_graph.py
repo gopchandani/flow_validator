@@ -152,14 +152,14 @@ class NetworkPortGraph(PortGraph):
         # If the edge filter became empty, reflect that.
         if transfer_traffic.is_empty():
             t = Traffic()
-            edge.add_edge_data((t, {}))
+            edge.add_edge_data((t, {}, 0))
         else:
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
             for te in transfer_traffic.traffic_elements:
                 t = Traffic()
                 t.add_traffic_elements([te])
-                edge.add_edge_data((t, te.switch_modifications))
+                edge.add_edge_data((t, te.switch_modifications, te.vuln_rank))
 
         return edge
 
@@ -227,7 +227,7 @@ class NetworkPortGraph(PortGraph):
 
         pred_admitted_traffic = Traffic()
 
-        for edge_filter_traffic, modifications in edge.edge_data_list:
+        for edge_filter_traffic, modifications, vuln_rank in edge.edge_data_list:
 
             # At succ edges, set the in_port of the admitted match for destination to wildcard
             if edge.edge_type == "outside":
