@@ -259,7 +259,30 @@ class SwitchPortGraph(PortGraph):
 
             self.compute_port_transfer_traffic(pred, prop_traffic, unmuted_egress_node, unmuted_egress_node, tf_changes)
 
-    def update_port_transfer_traffic(self, port_num, event_type):
+    def update_transfer_traffic_due_to_port_state_change_2(self, port_num, event_type):
+
+        tf_changes = []
+
+        ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
+        egress_node = self.get_egress_node(self.sw.node_id, port_num)
+
+        for pred in self.predecessors_iter(egress_node):
+            edge = self.get_edge(pred, egress_node)
+            flow_table = pred.parent_obj
+
+            print pred
+            print flow_table
+            print flow_table.port_graph_edges
+
+            flow_table.update_port_graph_edges()
+
+
+        return tf_changes
+
+
+    def update_transfer_traffic_due_to_port_state_change(self, port_num, event_type):
+
+        #self.update_transfer_traffic_due_to_port_state_change_2(port_num, event_type)
 
         tf_changes = []
 
@@ -447,12 +470,12 @@ class SwitchPortGraph(PortGraph):
             path_count_before, tt_before = self.get_path_counts_and_tt(verbose)
 
             testing_port.state = "down"
-            tf_changes = self.update_port_transfer_traffic(testing_port_number, "port_down")
+            tf_changes = self.update_transfer_traffic_due_to_port_state_change(testing_port_number, "port_down")
 
             path_count_intermediate, tt_intermediate = self.get_path_counts_and_tt(verbose)
 
             testing_port.state = "up"
-            tf_changes = self.update_port_transfer_traffic(testing_port_number, "port_up")
+            tf_changes = self.update_transfer_traffic_due_to_port_state_change(testing_port_number, "port_up")
 
             path_count_after, tt_after = self.get_path_counts_and_tt(verbose)
 

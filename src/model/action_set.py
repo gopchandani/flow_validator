@@ -33,7 +33,6 @@ class Action():
 
         self.action_json = action_json
         self.sw = sw
-        self.matched_flow = None
         self.action_type = None
         self.is_active = is_active
         self.bucket = None
@@ -236,7 +235,6 @@ class ActionSet():
                 else:
                     raise Exception("Odd that a group_id is not provided in a group action")
             else:
-                action.matched_flow = intersection
                 self.action_dict[action.action_type].append(action)
 
     def get_modified_fields_dict(self, flow_match_element):
@@ -259,6 +257,11 @@ class ActionSet():
 
             if int(output_action.out_port) == self.sw.network_graph.OFPP_NORMAL:
                 continue
+
+            if output_action.is_failover_action():
+                pass
+            else:
+                pass
 
             # If the output port is specified to be same as input port
             if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):

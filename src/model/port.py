@@ -35,6 +35,10 @@ class Port():
                                                                                           self.port_number),
                                                     "egress")
 
+        self.port_graph_ingress_node.parent_obj = self
+        self.port_graph_egress_node.parent_obj = self
+
+
     def parse_odl_port_json(self, port_json):
 
         self.port_id = str(self.sw.node_id) + ":" + str(port_json["flow-node-inventory:port-number"])

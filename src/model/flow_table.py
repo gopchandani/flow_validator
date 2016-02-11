@@ -95,6 +95,8 @@ class FlowTable():
                                              self.sw.port_graph.get_table_node_id(self.sw.node_id, self.table_id),
                                              "table")
 
+        self.port_graph_node.parent_obj = self
+
         # Edges from this table's node to port egress nodes and other tables' nodes are stored in this dictionary
         # The key is the succ node, and the list contains edge contents
 
@@ -157,6 +159,15 @@ class FlowTable():
             else:
                 # Say that this flow does not matter
                 flow.applied_traffic = None
+
+    def update_port_graph_edges(self):
+
+        # Compute what these edges would look like now.
+        new_port_graph_edges = defaultdict(list)
+
+        for flow in self.flows:
+            if flow.applied_traffic:
+                pass
 
     def de_init_flow_table_port_graph(self):
         pass
