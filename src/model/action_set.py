@@ -38,6 +38,8 @@ class Action():
         self.bucket = None
         self.instruction_type = None
 
+        self.vuln_rank = 0
+
         # Captures what the action is doing.
         self.modified_field = None
         self.field_modified_to = None
@@ -246,9 +248,9 @@ class ActionSet():
 
         return modified_fields_dict
 
-    def get_port_graph_edges(self):
+    def get_action_set_port_graph_edges(self):
 
-        port_graph_edge_status = []
+        port_graph_edges = []
 
         for output_action in self.action_dict["output"]:
 
@@ -259,31 +261,46 @@ class ActionSet():
                 continue
 
             if output_action.is_failover_action():
-                pass
-            else:
-                pass
 
-            # If the output port is specified to be same as input port
-            if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):
+                # If the output port is specified to be same as input port
+                if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):
 
-                # Consider all possible ports
-                for in_port in self.sw.ports:
+                    # Consider all possible ports
+                    for in_port in self.sw.ports:
 
-                    # if they are currently up
-                    if self.sw.ports[in_port].state != "up":
-                        continue
+                        # if they are currently up
+                        if self.sw.ports[in_port].state != "up":
+                            continue
 
-                    # If they are not the watch port of actions that may have come before this action in a failover rule
-                    if output_action.is_failover_action():
+                        # If they are not the watch port of actions that may have come before
+                        # this action in a failover rule, because that port has failed already, no need to
+                        # add an edge going there
                         if in_port in output_action.bucket.prior_failed_ports():
                             continue
 
-                    port_graph_edge_status.append((str(in_port), output_action))
+                        port_graph_edges.append((str(in_port), output_action))
+
+                else:
+                    # Add an edge, only if the output_port is currently up
+                    if self.sw.ports[output_action.out_port].state == "up":
+                        port_graph_edges.append((str(output_action.out_port), output_action))
 
             else:
+                # If the output port is specified to be same as input port
+                if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):
 
-                # Add an edge, only if the output_port is currently up
-                if self.sw.ports[output_action.out_port].state == "up":
-                    port_graph_edge_status.append((str(output_action.out_port), output_action))
+                    # Consider all possible ports
+                    for in_port in self.sw.ports:
+                        # if they are currently up
+                        if self.sw.ports[in_port].state != "up":
+                            continue
+                        port_graph_edges.append((str(in_port), output_action))
 
-        return port_graph_edge_status
+                else:
+
+                    # Add an edge, only if the output_port is currently up
+                    if self.sw.ports[output_action.out_port].state == "up":
+                        port_graph_edges.append((str(output_action.out_port), output_action))
+
+
+        return port_graph_edges

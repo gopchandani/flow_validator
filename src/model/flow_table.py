@@ -65,9 +65,9 @@ class Flow():
             self.written_modifications = \
                 self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
 
-            self.applied_port_graph_edges = self.instruction_set.applied_action_set.get_port_graph_edges()
+            self.applied_port_graph_edges = self.instruction_set.applied_action_set.get_action_set_port_graph_edges()
 
-            self.written_port_graph_edges = self.instruction_set.written_action_set.get_port_graph_edges()
+            self.written_port_graph_edges = self.instruction_set.written_action_set.get_action_set_port_graph_edges()
 
             # See the edge impact of any go-to-table instruction
 

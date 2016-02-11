@@ -194,6 +194,7 @@ class Group():
                 if this_bucket.is_live():
                     for action in this_bucket.action_list:
                         action.is_active = True
+                        action.vuln_rank = i
                     action_list.extend(this_bucket.action_list)
                     i += 1
                     break
@@ -201,6 +202,7 @@ class Group():
                     # Also adding any non-live buckets encountered until then to be as such
                     for action in this_bucket.action_list:
                         action.is_active = False
+                        action.vuln_rank = i
 
                     action_list.extend(this_bucket.action_list)
                     i += 1
@@ -210,6 +212,7 @@ class Group():
                 this_bucket = self.bucket_list[i]
                 for action in this_bucket.action_list:
                     action.is_active = False
+                    action.vuln_rank = i
 
                 action_list.extend(this_bucket.action_list)
                 i += 1
