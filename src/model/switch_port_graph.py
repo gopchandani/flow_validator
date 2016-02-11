@@ -34,7 +34,7 @@ class SwitchPortGraph(PortGraph):
             ingress_node_traffic.set_field("in_port", int(port_num))
 
             edge = PortGraphEdge(port.port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node)
-            edge.add_edge_data((ingress_node_traffic, None, None, None, Traffic()))
+            edge.add_edge_data((ingress_node_traffic, None, None, None, 0, Traffic()))
             self.add_edge(port.port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node, edge)
 
         # Try passing a wildcard through the flow table
@@ -85,6 +85,7 @@ class SwitchPortGraph(PortGraph):
                                     edge_data[1],
                                     edge_data[2],
                                     edge_data[3],
+                                    edge_data[4],
                                     backup_edge_filter_match))
 
             self.add_edge(flow_table.port_graph_node, succ, edge)
@@ -183,7 +184,7 @@ class SwitchPortGraph(PortGraph):
 
         pred_transfer_traffic = Traffic()
 
-        for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
+        for edge_filter_match, edge_action, applied_modifications, written_modifications, vuln_rank, backup_edge_filter_match \
                 in edge.edge_data_list:
 
             if edge_action:
@@ -297,7 +298,7 @@ class SwitchPortGraph(PortGraph):
                 # Go through the edge_data_list, and see if there are any failover actions involved.
 
                 prop_traffic = Traffic()
-                for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
+                for edge_filter_match, edge_action, applied_modifications, written_modifications, vuln_rank, backup_edge_filter_match \
                         in edge.edge_data_list:
 
                     if edge_action.is_failover_action():
@@ -319,8 +320,8 @@ class SwitchPortGraph(PortGraph):
                 edge = self.get_edge(ingress_node, succ)
 
                 for edge_data_tuple in edge.edge_data_list:
-                    temp = edge_data_tuple[4].traffic_elements
-                    edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
+                    temp = edge_data_tuple[5].traffic_elements
+                    edge_data_tuple[5].traffic_elements = edge_data_tuple[0].traffic_elements
                     edge_data_tuple[0].traffic_elements = temp
 
             dsts = ingress_node.transfer_traffic.keys()
@@ -335,7 +336,7 @@ class SwitchPortGraph(PortGraph):
                 prop_traffic = Traffic()
 
                 # Go through the edge_data_list, and see if there are any failover actions involved.
-                for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
+                for edge_filter_match, edge_action, applied_modifications, written_modifications, vuln_rank, backup_edge_filter_match \
                         in edge.edge_data_list:
 
                     if edge_action.is_failover_action():
@@ -355,8 +356,8 @@ class SwitchPortGraph(PortGraph):
             for succ in self.successors_iter(ingress_node):
                 edge = self.get_edge(ingress_node, succ)
                 for edge_data_tuple in edge.edge_data_list:
-                    temp = edge_data_tuple[4].traffic_elements
-                    edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
+                    temp = edge_data_tuple[5].traffic_elements
+                    edge_data_tuple[5].traffic_elements = edge_data_tuple[0].traffic_elements
                     edge_data_tuple[0].traffic_elements = temp
 
                 for dst in succ.transfer_traffic.keys():

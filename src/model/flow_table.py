@@ -138,7 +138,8 @@ class FlowTable():
                     self.port_graph_edges[egress_node].append((flow.applied_traffic,
                                                                output_action,
                                                                flow.applied_modifications,
-                                                               flow.written_modifications))
+                                                               flow.written_modifications,
+                                                               output_action.vuln_rank))
 
                 for out_port, output_action in flow.written_port_graph_edges:
 
@@ -148,14 +149,16 @@ class FlowTable():
                     self.port_graph_edges[egress_node].append((flow.applied_traffic,
                                                                output_action,
                                                                flow.applied_modifications,
-                                                               flow.written_modifications))
+                                                               flow.written_modifications,
+                                                               output_action.vuln_rank))
 
                 if flow.goto_table_port_graph_edge:
 
                     self.port_graph_edges[flow.goto_table_port_graph_edge[1]].append((flow.applied_traffic,
                                                                                       None,
                                                                                       flow.applied_modifications,
-                                                                                      flow.written_modifications))
+                                                                                      flow.written_modifications,
+                                                                                      0))
             else:
                 # Say that this flow does not matter
                 flow.applied_traffic = None
