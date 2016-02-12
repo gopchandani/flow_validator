@@ -81,6 +81,7 @@ class SwitchPortGraph(PortGraph):
 
             for edge_data in flow_table.port_graph_edges[succ]:
                 backup_edge_filter_match = Traffic()
+
                 edge.add_edge_data((edge_data[0],
                                     edge_data[1],
                                     edge_data[2],
@@ -214,6 +215,8 @@ class SwitchPortGraph(PortGraph):
                         te.written_modifications.update(written_modifications)
 
             i = edge_filter_match.intersect(ttp)
+            # for te in i.traffic_elements:
+            #     te.vuln_rank = vuln_rank
 
             if not i.is_empty():
                 pred_transfer_traffic.union(i)

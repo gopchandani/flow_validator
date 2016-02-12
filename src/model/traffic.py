@@ -344,13 +344,13 @@ class Traffic():
 
                     ei.written_modifications.update(e_in.written_modifications)
                     ei.instruction_type = e_in.instruction_type
+                    ei.switch_modifications = e_in.switch_modifications
 
                     if take_self_vuln_rank:
                         ei.vuln_rank = e_self.vuln_rank
                     else:
                         ei.vuln_rank = e_in.vuln_rank
 
-                    ei.switch_modifications = e_in.switch_modifications
 
         return traffic_intersection
 

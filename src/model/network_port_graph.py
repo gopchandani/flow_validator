@@ -244,6 +244,8 @@ class NetworkPortGraph(PortGraph):
                 ttp = traffic_to_propagate
 
             i = edge_filter_traffic.intersect(ttp, take_self_vuln_rank=True)
+            # for te in i.traffic_elements:
+            #     te.vuln_rank = vuln_rank
 
             if not i.is_empty():
                 pred_admitted_traffic.union(i)
