@@ -631,7 +631,7 @@ class SynthesisLib():
 
             self.push_destination_host_mac_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 10)
 
-    def push_vlan_push_intents_2(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):
+    def push_vlan_push_intents(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):
 
         for push_vlan_intent in push_vlan_intents:
             flow = self.create_base_flow(sw, vlan_tag_push_rules_table_id, 1)
@@ -652,11 +652,14 @@ class SynthesisLib():
 
                 action2 = {'order': 1, 'set-field': set_vlan_id_action}
 
-                action3 = {'order': 2, "output-action": {"output-node-connector": push_vlan_intent.out_port}}
-
-                action_list = [action1, action2, action3]
+                action_list = [action1, action2]
 
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
+
+                # Also, punt such packets to the next table
+                go_to_table_instruction = {"go-to-table": {"table_id": vlan_tag_push_rules_table_id + 1}, "order": 1}
+
+                flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
 
             elif self.network_graph.controller == "ryu":
 
@@ -666,8 +669,7 @@ class SynthesisLib():
 
                 action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
                                {"type": "SET_FIELD", "field": "vlan_vid", "value": push_vlan_intent.required_vlan_id + 0x1000},
-                               {"type": "OUTPUT", "port": push_vlan_intent.out_port}]
-
+                               {"type": "GOTO_TABLE",  "table_id": str(vlan_tag_push_rules_table_id + 1)}]
 
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
@@ -686,17 +688,85 @@ class SynthesisLib():
                 push_vlan_action.ether_type = 0x8100
                 push_vlan_action.action_type = ConfigTree.OfpActionType.push_vlan()
 
-                output_action = ConfigTree.OutputAction()
-                output_action.out_port = push_vlan_intent.out_port
-                output_action.action_type = ConfigTree.OfpActionType.output()
+                go_to_table_instruction = ConfigTree.GoToTable()
+                go_to_table_instruction.instruction_type = ConfigTree.OfpInstructionType.goto_table()
+                go_to_table_instruction.table_id = str(vlan_tag_push_rules_table_id + 1)
 
-                action_list = [push_vlan_action, set_vlan_id_action, output_action]
+                flow.instructions.append(go_to_table_instruction)
+                action_list = [push_vlan_action, set_vlan_id_action]
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
             else:
                 raise NotImplementedError
 
             self.push_flow(sw, flow)
+
+    def push_vlan_push_intents_2(self, sw, push_vlan_intent, vlan_tag_push_rules_table_id, group_id, apply_immediately):
+
+        flow = self.create_base_flow(sw, vlan_tag_push_rules_table_id, 1)
+
+        # Compile instructions
+        if self.network_graph.controller == "odl":
+
+            # Compile match
+            flow["flow-node-inventory:flow"]["match"] = \
+                push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                flow["flow-node-inventory:flow"]["match"])
+
+            action1 = {'order': 0, 'push-vlan-action': {"ethernet-type": 0x8100,
+                                                        "vlan-id": push_vlan_intent.required_vlan_id}}
+
+            set_vlan_id_action = {'vlan-match': {"vlan-id": {"vlan-id": push_vlan_intent.required_vlan_id,
+                                                             "vlan-id-present": True}}}
+
+            action2 = {'order': 1, 'set-field': set_vlan_id_action}
+
+            action3 = {"group-action": {"group-id": group_id}, "order": 0}
+
+            action_list = [action1, action2, action3]
+
+            self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
+
+        elif self.network_graph.controller == "ryu":
+
+            # Compile match
+            flow["match"] = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                            flow["match"])
+
+            action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
+                           {"type": "SET_FIELD", "field": "vlan_vid", "value": push_vlan_intent.required_vlan_id + 0x1000},
+                           {"type": "GROUP", "group_id": group_id}]
+
+
+            self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
+
+        elif self.network_graph.controller == "sel":
+            flow.match = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                            flow.match)
+            set_vlan_id_action = ConfigTree.SetFieldAction()
+            set_vlan_id_action.action_type = ConfigTree.OfpActionType.set_field()
+
+            vlan_set_match = ConfigTree.VlanVid()
+            vlan_set_match.value = str(push_vlan_intent.required_vlan_id)
+
+            set_vlan_id_action.field = vlan_set_match
+
+            push_vlan_action = ConfigTree.PushVlanAction()
+            push_vlan_action.ether_type = 0x8100
+            push_vlan_action.action_type = ConfigTree.OfpActionType.push_vlan()
+
+            group_action = ConfigTree.GroupAction()
+            group_action.action_type = "Group"
+            group_action.set_order = 0
+            group_action.group_id = group_id
+
+            action_list = [push_vlan_action, set_vlan_id_action, group_action]
+            self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
+
+        else:
+            raise NotImplementedError
+
+        self.push_flow(sw, flow)
 
     def push_loop_preventing_drop_rules(self, sw, loop_preventing_drop_table):
 

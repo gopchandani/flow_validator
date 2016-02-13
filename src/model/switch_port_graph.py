@@ -80,24 +80,24 @@ class SwitchPortGraph(PortGraph):
                  node1,
                  node2,
                  edge_action,
-                 edge_filter_match,
+                 edge_filter_traffic,
                  applied_modifications,
                  written_modifications):
 
         edge = self.get_edge(node1, node2)
-        backup_edge_filter_match = Traffic()
+        backup_edge_filter_traffic = Traffic()
 
         if edge:
-            edge.add_edge_data((edge_filter_match,
+            edge.add_edge_data((edge_filter_traffic,
                                                  edge_action,
                                                  applied_modifications,
-                                                 written_modifications, backup_edge_filter_match))
+                                                 written_modifications, backup_edge_filter_traffic))
         else:
             edge = PortGraphEdge(node1, node2)
-            edge.add_edge_data((edge_filter_match,
+            edge.add_edge_data((edge_filter_traffic,
                                     edge_action,
                                     applied_modifications,
-                                    written_modifications, backup_edge_filter_match))
+                                    written_modifications, backup_edge_filter_traffic))
 
             self.add_edge(node1, node2, edge)
 
@@ -194,7 +194,7 @@ class SwitchPortGraph(PortGraph):
 
         pred_transfer_traffic = Traffic()
 
-        for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match\
+        for edge_filter_traffic, edge_action, applied_modifications, written_modifications, backup_edge_filter_traffic\
                 in edge.edge_data_list:
 
             if edge_action:
@@ -223,14 +223,15 @@ class SwitchPortGraph(PortGraph):
                     for te in ttp.traffic_elements:
                         te.written_modifications.update(written_modifications)
 
-            i = edge_filter_match.intersect(ttp)
+            i = edge_filter_traffic.intersect(ttp)
 
             if not i.is_empty():
                 pred_transfer_traffic.union(i)
 
         return pred_transfer_traffic
 
-    def update_port_transfer_traffic_failover_edge_action(self, pred, edge_action, edge_filter_match, tf_changes):
+    def update_port_transfer_traffic_failover_edge_action(self, pred, edge_action, applied_modifications,
+                                                          written_modifications, edge_filter_traffic, tf_changes):
 
         # See what ports are now muted and unmuted
         muted_port_tuples, unmuted_port_tuple = edge_action.perform_edge_failover()
@@ -238,7 +239,11 @@ class SwitchPortGraph(PortGraph):
         for muted_port, bucket_rank in muted_port_tuples:
 
             prop_traffic = Traffic()
-            prop_traffic.union(edge_filter_match)
+            prop_traffic.union(edge_filter_traffic)
+            
+            for te in prop_traffic.traffic_elements:
+                te.written_modifications.update(written_modifications)
+                te.switch_modifications.update(applied_modifications)
 
             muted_egress_node = self.get_egress_node(self.sw.node_id, muted_port.port_number)
 
@@ -257,7 +262,12 @@ class SwitchPortGraph(PortGraph):
             unmuted_egress_node = self.get_egress_node(self.sw.node_id, unmuted_port.port_number)
 
             prop_traffic = Traffic()
-            prop_traffic.union(edge_filter_match)
+            prop_traffic.union(edge_filter_traffic)
+
+            for te in prop_traffic.traffic_elements:
+                te.written_modifications.update(written_modifications)
+                te.switch_modifications.update(applied_modifications)
+
             try:
                 if unmuted_egress_node in pred.transfer_traffic:
                     if unmuted_egress_node in pred.transfer_traffic[unmuted_egress_node]:
@@ -285,13 +295,16 @@ class SwitchPortGraph(PortGraph):
                 # Go through the edge_data_list, and see if there are any failover actions involved.
 
                 prop_traffic = Traffic()
-                for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
+                for edge_filter_traffic, edge_action, applied_modifications, written_modifications, backup_edge_filter_traffic \
                         in edge.edge_data_list:
 
                     if edge_action.is_failover_action():
-                        self.update_port_transfer_traffic_failover_edge_action(pred, edge_action, edge_filter_match, tf_changes)
+                        self.update_port_transfer_traffic_failover_edge_action(pred, edge_action,
+                                                                               applied_modifications,
+                                                                               written_modifications,
+                                                                               edge_filter_traffic, tf_changes)
                     else:
-                        prop_traffic.union(edge_filter_match)
+                        prop_traffic.union(edge_filter_traffic)
 
                 # Take the propagating traffic out of traffic that exists at pred for this egress node
                 # The remaining traffic is propagated back from pred.
@@ -323,13 +336,16 @@ class SwitchPortGraph(PortGraph):
                 prop_traffic = Traffic()
 
                 # Go through the edge_data_list, and see if there are any failover actions involved.
-                for edge_filter_match, edge_action, applied_modifications, written_modifications, backup_edge_filter_match \
+                for edge_filter_traffic, edge_action, applied_modifications, written_modifications, backup_edge_filter_traffic \
                         in edge.edge_data_list:
 
                     if edge_action.is_failover_action():
-                        self.update_port_transfer_traffic_failover_edge_action(pred, edge_action, edge_filter_match, tf_changes)
+                        self.update_port_transfer_traffic_failover_edge_action(pred, edge_action,
+                                                                               applied_modifications,
+                                                                               written_modifications,
+                                                                               edge_filter_traffic, tf_changes)
                     else:
-                        prop_traffic.union(edge_filter_match)
+                        prop_traffic.union(edge_filter_traffic)
 
                 # Take the propagating traffic and union any traffic at already exists at the predecessor it
                 # and propagate that combined union back from pred.
@@ -452,6 +468,9 @@ class SwitchPortGraph(PortGraph):
 
         # Loop over ports of the switch and fail and restore them one by one
         for testing_port_number in self.sw.ports:
+
+            if testing_port_number != 2:
+                continue
 
             testing_port = self.sw.ports[testing_port_number]
 

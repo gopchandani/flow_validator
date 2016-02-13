@@ -99,9 +99,9 @@ class Experiment(object):
                     self.mm.net.pingAll()
                     #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
 
-                    # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h61'),
-                    #                                                             self.mm.net.get('h71'))],
-                    #                                                            [('s1', 's4')])
+                    # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),
+                    #                                                             self.mm.net.get('h21'))],
+                    #                                                            [('s3', 's2')])
 
                     #print "is_bi_connected:", is_bi_connected
 
@@ -161,8 +161,6 @@ class Experiment(object):
 
         for src_host in analyzed_host_pairs_path_info:
             for dst_host in analyzed_host_pairs_path_info[src_host]:
-
-                print src_host, dst_host
 
                 analyzed_path, analyzed_path_vuln_score = analyzed_host_pairs_path_info[src_host][dst_host]
 

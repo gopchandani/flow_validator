@@ -57,7 +57,7 @@ class IntentSynthesis():
         out_port = edge_ports_dict[p[0]]
 
         # Save it for returning
-        first_out_port = out_port
+        first_path_intent = None
 
         # This loop always starts at a switch
         for i in xrange(len(p) - 1):
@@ -76,6 +76,9 @@ class IntentSynthesis():
             intent.dst_host = dst_host
 
             switch_port_tuple_list.append((p[i], in_port, out_port))
+
+            if i == 0:
+                first_path_intent = intent
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
@@ -103,7 +106,7 @@ class IntentSynthesis():
             self.synthesis_lib.record_failover_path(src_host, dst_host, edge_broken,
                                                     switch_port_tuple_prefix_list + switch_port_tuple_list)
 
-        return first_out_port
+        return first_path_intent
 
     def get_intents(self, dst_intents, required_intent_type):
 
@@ -215,32 +218,44 @@ class IntentSynthesis():
         self._add_intent(h_obj.switch_id, h_obj.mac_addr, host_mac_intent)
 
     def compute_and_push_vlan_tag_intents(self, src_h_obj, dst_h_obj, flow_match, required_tag,
-                                          primary_out_port, failover_out_port):
+                                          primary_first_intent, failover_first_intent):
 
-        if primary_out_port and failover_out_port:
-            pass
+        group_id = None
+        sw = src_h_obj.switch_id
 
-        elif primary_out_port:
+        if primary_first_intent and failover_first_intent:
+            group_id = self.synthesis_lib.push_fast_failover_group(sw,
+                                                                   primary_first_intent,
+                                                                   failover_first_intent)
 
-            push_vlan_match= deepcopy(flow_match)
-            mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
-            push_vlan_match["ethernet_destination"] = int(mac_int)
-            push_vlan_match["in_port"] = int(src_h_obj.switch_port_attached)
-            push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port_attached, out_port,
-                                          apply_immediately=False)
+        elif primary_first_intent:
 
-            push_vlan_tag_intent.required_vlan_id = required_tag
+            group_id = self.synthesis_lib.push_select_all_group(sw, [primary_first_intent])
 
-            # Avoiding adding a new intent for every departing flow for this switch,
-            # by adding the tag as the key
 
-            self._add_intent(src_h_obj.switch_id, required_tag, push_vlan_tag_intent)
+        push_vlan_match= deepcopy(flow_match)
+        mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
+        push_vlan_match["ethernet_destination"] = int(mac_int)
+        push_vlan_match["in_port"] = int(src_h_obj.switch_port_attached)
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port_attached, "all",
+                                      apply_immediately=False)
 
+        push_vlan_tag_intent.required_vlan_id = required_tag
+
+        flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                sw,
+                self.vlan_tag_push_rules_table_id,
+                group_id,
+                1,
+                push_vlan_match,
+                True)
 
         # Take care of vlan tag push intents for this destination
-        self.synthesis_lib.push_vlan_push_intents(sw, dst_intents,
-                                                  self.get_intents(dst_intents, "push_vlan"),
-                                                  self.vlan_tag_push_rules_table_id)
+        self.synthesis_lib.push_vlan_push_intents_2(src_h_obj.switch_id,
+                                                    push_vlan_tag_intent,
+                                                    self.vlan_tag_push_rules_table_id,
+                                                    group_id, True)
+
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
@@ -249,8 +264,8 @@ class IntentSynthesis():
         in_port = edge_ports_dict[src_host.switch_id]
         dst_sw_obj = self.network_graph.get_node_object(dst_host.switch_id)
 
-        primary_first_out_port = None
-        failover_first_out_port= None
+        primary_first_intent = None
+        failover_first_intent= None
 
         # Add a MAC based forwarding rule for the destination host at the last hop
         self._compute_destination_host_mac_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
@@ -276,7 +291,7 @@ class IntentSynthesis():
                 self.primary_path_edges.append((p[i], p[i+1]))
 
         #  Compute all forwarding intents as a result of primary path
-        primary_first_out_port = self._compute_path_ip_intents(src_host, dst_host, p,
+        primary_first_intent = self._compute_path_ip_intents(src_host, dst_host, p,
                                                                "primary", flow_match, in_port,
                                                                dst_sw_obj.synthesis_tag)
 
@@ -308,7 +323,7 @@ class IntentSynthesis():
                 print "Backup Path from src:", p[i], "to destination:", dst_host.switch_id, "is:", bp
 
                 if i == 0:
-                    failover_first_out_port = self._compute_path_ip_intents(src_host, dst_host, bp, "failover",
+                    failover_first_intent = self._compute_path_ip_intents(src_host, dst_host, bp, "failover",
                                                                             flow_match, in_port,
                                                                             dst_sw_obj.synthesis_tag,
                                                                             edge_broken=(p[i], p[i+1]),
@@ -332,7 +347,7 @@ class IntentSynthesis():
 
             # Tag packets leaving the source host with a vlan tag of the destination switch
             self.compute_and_push_vlan_tag_intents(src_host, dst_host, flow_match, dst_sw_obj.synthesis_tag,
-                                                   primary_first_out_port, failover_first_out_port)
+                                                   primary_first_intent, failover_first_intent)
 
     def push_switch_changes(self):
 
