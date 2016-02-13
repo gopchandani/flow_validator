@@ -128,7 +128,6 @@ class NetworkPortGraph(PortGraph):
             sw.port_graph.compute_switch_transfer_traffic()
             #test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
             self.add_switch_transfer_edges(sw)
-
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
