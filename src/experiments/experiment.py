@@ -162,6 +162,8 @@ class Experiment(object):
         for src_host in analyzed_host_pairs_path_info:
             for dst_host in analyzed_host_pairs_path_info[src_host]:
 
+                print src_host, dst_host
+
                 analyzed_path, analyzed_path_vuln_score = analyzed_host_pairs_path_info[src_host][dst_host]
 
                 synthesized_path = None

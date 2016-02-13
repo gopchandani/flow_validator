@@ -631,7 +631,7 @@ class SynthesisLib():
 
             self.push_destination_host_mac_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 10)
 
-    def push_vlan_push_intents(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):
+    def push_vlan_push_intents_2(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):
 
         for push_vlan_intent in push_vlan_intents:
             flow = self.create_base_flow(sw, vlan_tag_push_rules_table_id, 1)
@@ -652,14 +652,11 @@ class SynthesisLib():
 
                 action2 = {'order': 1, 'set-field': set_vlan_id_action}
 
-                action_list = [action1, action2]
+                action3 = {'order': 2, "output-action": {"output-node-connector": push_vlan_intent.out_port}}
+
+                action_list = [action1, action2, action3]
 
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
-
-                # Also, punt such packets to the next table
-                go_to_table_instruction = {"go-to-table": {"table_id": vlan_tag_push_rules_table_id + 1}, "order": 1}
-
-                flow["flow-node-inventory:flow"]["instructions"]["instruction"].append(go_to_table_instruction)
 
             elif self.network_graph.controller == "ryu":
 
@@ -669,7 +666,8 @@ class SynthesisLib():
 
                 action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
                                {"type": "SET_FIELD", "field": "vlan_vid", "value": push_vlan_intent.required_vlan_id + 0x1000},
-                               {"type": "GOTO_TABLE",  "table_id": str(vlan_tag_push_rules_table_id + 1)}]
+                               {"type": "OUTPUT", "port": push_vlan_intent.out_port}]
+
 
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
@@ -688,12 +686,11 @@ class SynthesisLib():
                 push_vlan_action.ether_type = 0x8100
                 push_vlan_action.action_type = ConfigTree.OfpActionType.push_vlan()
 
-                go_to_table_instruction = ConfigTree.GoToTable()
-                go_to_table_instruction.instruction_type = ConfigTree.OfpInstructionType.goto_table()
-                go_to_table_instruction.table_id = str(vlan_tag_push_rules_table_id + 1)
+                output_action = ConfigTree.OutputAction()
+                output_action.out_port = push_vlan_intent.out_port
+                output_action.action_type = ConfigTree.OfpActionType.output()
 
-                flow.instructions.append(go_to_table_instruction)
-                action_list = [push_vlan_action, set_vlan_id_action]
+                action_list = [push_vlan_action, set_vlan_id_action, output_action]
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
             else:
