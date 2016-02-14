@@ -182,6 +182,11 @@ class FlowTable():
 
 
         # Compare where the differences are return the edges that got affected
+        # This ought to be a three prong comparison
+        # 1. The edges that existed previously and now don;t
+        # 2. The edges that did not exist previously but now do.
+        # 3. The eges that existted previously and now do as well, but the contents of traffic filters/modifications
+        # have changed
 
 
         return modified_edges
