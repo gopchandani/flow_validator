@@ -22,20 +22,26 @@ class Flow():
         self.applied_actions = []
         self.go_to_table = None
 
+        self.instruction_set = None
+
         if self.sw.network_graph.controller == "odl":
             self.table_id = self.flow_json["table_id"]
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="odl", flow=self)
+            self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
 
         elif self.sw.network_graph.controller == "ryu":
             self.table_id = self.flow_json["table_id"]
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
+            self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
         elif self.sw.network_graph.controller == "sel":
             self.table_id = self.flow_json["tableId"]
             self.priority = int(self.flow_json["priority"])
             self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
+            self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
+
 
         self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
@@ -45,19 +51,12 @@ class Flow():
         self.traffic.add_traffic_elements([self.traffic_element])
         self.complement_traffic.add_traffic_elements(self.traffic_element.get_complement_traffic_elements())
 
+
     def prepare_port_graph_edges(self):
 
-        if not "instructions" in self.flow_json:
-            print "Assuming this means to drop."
-        else:
-            if self.sw.network_graph.controller == "odl":
-                self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
-            elif self.sw.network_graph.controller == "sel":
-                self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
-            elif self.sw.network_graph.controller == "ryu":
-                self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
-            else:
-                raise NotImplementedError
+        if self.instruction_set:
+
+            self.instruction_set.populate_action_sets_for_port_graph_edges()
 
             self.applied_modifications = \
                 self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
@@ -81,6 +80,9 @@ class Flow():
                                                        self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node)
                 else:
                     print "At switch:", self.sw.node_id, ", couldn't find flow table goto:", self.instruction_set.goto_table
+
+        else:
+            print "Assuming this means to drop."
 
 
 class FlowTable():

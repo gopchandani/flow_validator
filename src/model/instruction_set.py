@@ -144,7 +144,6 @@ class InstructionSet():
 
         self.applied_action_set = ActionSet(self.sw)
         self.written_action_set = ActionSet(self.sw)
-        self.populate_action_sets_for_port_graph_edges()
 
     def parse_odl_instruction_set(self):
 
