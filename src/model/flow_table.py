@@ -100,7 +100,7 @@ class FlowTable():
         # Edges from this table's node to port egress nodes and other tables' nodes are stored in this dictionary
         # The key is the succ node, and the list contains edge contents
 
-        self.port_graph_edges = defaultdict(list)
+        self.port_graph_edges = None
 
         for f in flow_list:
             f = Flow(sw, f)
@@ -110,7 +110,8 @@ class FlowTable():
         self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
 
-    def compute_flow_table_port_graph_edges(self):
+    def _get_port_graph_edges_dict(self):
+        port_graph_edges = defaultdict(list)
 
         #print "flow_table:", self.table_id
 
@@ -135,7 +136,7 @@ class FlowTable():
                     output_action.instruction_type = "applied"
                     egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
 
-                    self.port_graph_edges[egress_node].append((flow.applied_traffic,
+                    port_graph_edges[egress_node].append((flow.applied_traffic,
                                                                output_action,
                                                                flow.applied_modifications,
                                                                flow.written_modifications,
@@ -146,7 +147,7 @@ class FlowTable():
                     output_action.instruction_type = "written"
                     egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
 
-                    self.port_graph_edges[egress_node].append((flow.applied_traffic,
+                    port_graph_edges[egress_node].append((flow.applied_traffic,
                                                                output_action,
                                                                flow.applied_modifications,
                                                                flow.written_modifications,
@@ -154,7 +155,7 @@ class FlowTable():
 
                 if flow.goto_table_port_graph_edge:
 
-                    self.port_graph_edges[flow.goto_table_port_graph_edge[1]].append((flow.applied_traffic,
+                    port_graph_edges[flow.goto_table_port_graph_edge[1]].append((flow.applied_traffic,
                                                                                       None,
                                                                                       flow.applied_modifications,
                                                                                       flow.written_modifications,
@@ -163,14 +164,25 @@ class FlowTable():
                 # Say that this flow does not matter
                 flow.applied_traffic = None
 
+        return port_graph_edges
+
+    def compute_flow_table_port_graph_edges(self):
+
+        self.port_graph_edges = self._get_port_graph_edges_dict()
+
+
     def update_port_graph_edges(self):
 
-        # Compute what these edges would look like now.
-        new_port_graph_edges = defaultdict(list)
+        modified_edges = []
 
-        for flow in self.flows:
-            if flow.applied_traffic:
-                pass
+        # Compute what these edges would look like now.
+        new_port_graph_edges = self._get_port_graph_edges_dict()
+
+
+        # Compare where the differences are return the edges that got affected
+
+
+        return modified_edges
 
     def de_init_flow_table_port_graph(self):
         pass
