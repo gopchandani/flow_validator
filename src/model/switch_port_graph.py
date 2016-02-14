@@ -91,8 +91,11 @@ class SwitchPortGraph(PortGraph):
 
             self.add_edge(flow_table.port_graph_node, succ, edge)
 
-    def modify_flow_table_edges(self, flow_table):
+    def modify_flow_table_edges(self, flow_table, changed_node_pairs):
         pass
+
+        # For each changed_node_pair, rip of the previous edge, and add the one as it exists now
+
 
 
     def compute_switch_transfer_traffic(self):
@@ -105,9 +108,9 @@ class SwitchPortGraph(PortGraph):
             egress_node = self.get_egress_node(self.sw.node_id, port_num)
 
             transfer_traffic = Traffic(init_wildcard=True)
-            tf_changes = []
+            modified_edges = []
 
-            self.compute_port_transfer_traffic(egress_node, transfer_traffic, None, egress_node, tf_changes)
+            self.compute_port_transfer_traffic(egress_node, transfer_traffic, None, egress_node, modified_edges)
 
     def account_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst):
 
@@ -152,7 +155,7 @@ class SwitchPortGraph(PortGraph):
 
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
-    def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst, tf_changes):
+    def compute_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst, modified_edges):
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst)
@@ -162,7 +165,7 @@ class SwitchPortGraph(PortGraph):
             # If it is an ingress port, it has no predecessors:
 
             if curr.node_type == "ingress":
-                tf_changes.append((curr, dst, "additional"))
+                modified_edges.append((curr, dst))
 
             for pred in self.predecessors_iter(curr):
                 edge = self.get_edge(pred, curr)
@@ -170,17 +173,17 @@ class SwitchPortGraph(PortGraph):
 
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_transfer_traffic.is_empty():
-                    self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst, tf_changes)
+                    self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst, modified_edges)
 
         if not reduced_traffic.is_empty():
 
             if curr.node_type == "ingress":
-                tf_changes.append((curr, dst, "removal"))
+                modified_edges.append((curr, dst))
 
             for pred in self.predecessors_iter(curr):
                 edge = self.get_edge(pred, curr)
                 pred_transfer_traffic = self.compute_edge_transfer_traffic(traffic_to_propagate, edge)
-                self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst, tf_changes)
+                self.compute_port_transfer_traffic(pred, pred_transfer_traffic, curr, dst, modified_edges)
 
     def compute_edge_transfer_traffic(self, traffic_to_propagate, edge):
 
@@ -225,7 +228,7 @@ class SwitchPortGraph(PortGraph):
         return pred_transfer_traffic
 
     def update_port_transfer_traffic_failover_edge_action(self, pred, edge_action, applied_modifications,
-                                                          written_modifications, edge_filter_traffic, tf_changes):
+                                                          written_modifications, edge_filter_traffic, modified_edges):
 
         # See what ports are now muted and unmuted
         muted_port_tuples, unmuted_port_tuple = edge_action.perform_edge_failover()
@@ -249,7 +252,7 @@ class SwitchPortGraph(PortGraph):
                     for te in prop_traffic.traffic_elements:
                         te.vuln_rank = bucket_rank
 
-                    self.compute_port_transfer_traffic(pred, prop_traffic, muted_egress_node, muted_egress_node, tf_changes)
+                    self.compute_port_transfer_traffic(pred, prop_traffic, muted_egress_node, muted_egress_node, modified_edges)
 
         if unmuted_port_tuple:
             unmuted_port, bucket_rank = unmuted_port_tuple
@@ -272,11 +275,11 @@ class SwitchPortGraph(PortGraph):
             for te in prop_traffic.traffic_elements:
                 te.vuln_rank = bucket_rank
 
-            self.compute_port_transfer_traffic(pred, prop_traffic, unmuted_egress_node, unmuted_egress_node, tf_changes)
+            self.compute_port_transfer_traffic(pred, prop_traffic, unmuted_egress_node, unmuted_egress_node, modified_edges)
 
     def update_transfer_traffic_due_to_port_state_change_2(self, port_num, event_type):
 
-        tf_changes = []
+        modified_edges = []
 
         ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
         egress_node = self.get_egress_node(self.sw.node_id, port_num)
@@ -292,14 +295,14 @@ class SwitchPortGraph(PortGraph):
             flow_table.update_port_graph_edges()
 
 
-        return tf_changes
+        return modified_edges
 
 
     def update_transfer_traffic_due_to_port_state_change(self, port_num, event_type):
 
         #self.update_transfer_traffic_due_to_port_state_change_2(port_num, event_type)
 
-        tf_changes = []
+        modified_edges = []
 
         ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
         egress_node = self.get_egress_node(self.sw.node_id, port_num)
@@ -319,7 +322,7 @@ class SwitchPortGraph(PortGraph):
                         self.update_port_transfer_traffic_failover_edge_action(pred, edge_action,
                                                                                applied_modifications,
                                                                                written_modifications,
-                                                                               edge_filter_traffic, tf_changes)
+                                                                               edge_filter_traffic, modified_edges)
                     else:
                         prop_traffic.union(edge_filter_traffic)
 
@@ -330,7 +333,7 @@ class SwitchPortGraph(PortGraph):
                     if egress_node in pred.transfer_traffic[egress_node]:
                         prop_traffic = prop_traffic.difference(pred.transfer_traffic[egress_node][egress_node])
 
-                self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, tf_changes)
+                self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, modified_edges)
 
             # Handle the case of cleaning out muted ports ingress node
             for succ in self.successors_iter(ingress_node):
@@ -344,7 +347,7 @@ class SwitchPortGraph(PortGraph):
             dsts = ingress_node.transfer_traffic.keys()
             for dst in dsts:
                 for succ in self.successors_iter(ingress_node):
-                    self.compute_port_transfer_traffic(ingress_node, Traffic(), succ, dst, tf_changes)
+                    self.compute_port_transfer_traffic(ingress_node, Traffic(), succ, dst, modified_edges)
 
         elif event_type == "port_up":
 
@@ -360,7 +363,7 @@ class SwitchPortGraph(PortGraph):
                         self.update_port_transfer_traffic_failover_edge_action(pred, edge_action,
                                                                                applied_modifications,
                                                                                written_modifications,
-                                                                               edge_filter_traffic, tf_changes)
+                                                                               edge_filter_traffic, modified_edges)
                     else:
                         prop_traffic.union(edge_filter_traffic)
 
@@ -371,7 +374,7 @@ class SwitchPortGraph(PortGraph):
                     if egress_node in pred.transfer_traffic[egress_node]:
                         prop_traffic.union(pred.transfer_traffic[egress_node][egress_node])
 
-                self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, tf_changes)
+                self.compute_port_transfer_traffic(pred, prop_traffic, egress_node, egress_node, modified_edges)
 
             for succ in self.successors_iter(ingress_node):
                 edge = self.get_edge(ingress_node, succ)
@@ -387,9 +390,9 @@ class SwitchPortGraph(PortGraph):
 
                     edge = self.get_edge(ingress_node, succ)
                     traffic_to_propagate = self.compute_edge_transfer_traffic(traffic_to_propagate, edge)
-                    self.compute_port_transfer_traffic(ingress_node, traffic_to_propagate, succ, dst, tf_changes)
+                    self.compute_port_transfer_traffic(ingress_node, traffic_to_propagate, succ, dst, modified_edges)
 
-        return tf_changes
+        return modified_edges
 
     def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
 
@@ -494,12 +497,12 @@ class SwitchPortGraph(PortGraph):
             path_count_before, tt_before = self.get_path_counts_and_tt(verbose)
 
             testing_port.state = "down"
-            tf_changes = self.update_transfer_traffic_due_to_port_state_change(testing_port_number, "port_down")
+            modified_edges = self.update_transfer_traffic_due_to_port_state_change(testing_port_number, "port_down")
 
             path_count_intermediate, tt_intermediate = self.get_path_counts_and_tt(verbose)
 
             testing_port.state = "up"
-            tf_changes = self.update_transfer_traffic_due_to_port_state_change(testing_port_number, "port_up")
+            modified_edges = self.update_transfer_traffic_due_to_port_state_change(testing_port_number, "port_up")
 
             path_count_after, tt_after = self.get_path_counts_and_tt(verbose)
 
