@@ -25,6 +25,7 @@ class Instruction():
         else:
             raise NotImplementedError
 
+
     def parse_odl_instruction(self):
 
         if "write-actions" in self.instruction_json:
@@ -127,8 +128,6 @@ class InstructionSet():
         self.network_graph = self.sw.network_graph
         self.instruction_list = []
 
-        self.applied_action_set = ActionSet(self.sw)
-        self.written_action_set = ActionSet(self.sw)
         self.goto_table = None
 
         if self.sw.network_graph.controller == "odl":
@@ -143,74 +142,40 @@ class InstructionSet():
         else:
             raise NotImplementedError
 
+        self.applied_action_set = ActionSet(self.sw)
+        self.written_action_set = ActionSet(self.sw)
+        self.populate_action_sets_for_port_graph_edges()
+
     def parse_odl_instruction_set(self):
 
         for instruction_json in self.instructions_json:
             instruction = Instruction(self.sw, instruction_json)
-
-            # Apply-Action has to be the first one, so reorganizing that...
-            if instruction.instruction_type == "apply-actions":
-                self.instruction_list.insert(0, instruction)
-
-                # Add all the actions to the applied_action_set
-                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
-
-            else:
-                self.instruction_list.append(instruction)
-
-            if instruction.instruction_type == "write-actions":
-                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
-
-            elif instruction.instruction_type == "go-to-table":
-                self.goto_table = instruction.go_to_table
-
-            # TODO: Handle clear-actions case
-            # TODO: Handle meter instruction
-            # TODO: Write meta-data case
+            self.instruction_list.append(instruction)
 
     def parse_ryu_instruction_set(self):
 
         for instruction_name in self.instructions_json:
             instruction = Instruction(self.sw, (instruction_name, self.instructions_json[instruction_name]))
+            self.instruction_list.append(instruction)
 
-            #Apply-Action has to be the first one, so reorganizing that...
+
+    def parse_sel_instruction_set(self):
+
+        for instruction in self.instructions_json:
+            instruction = Instruction(self.sw, instruction)
+            self.instruction_list.append(instruction)
+
+
+    def populate_action_sets_for_port_graph_edges(self):
+
+        for instruction in self.instruction_list:
             if instruction.instruction_type == "apply-actions":
-                self.instruction_list.insert(0, instruction)
-
-                # Add all the actions to the applied_action_set
                 self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
-
-            else:
-                self.instruction_list.append(instruction)
-
-            if instruction.instruction_type == "write-actions":
+            elif instruction.instruction_type == "write-actions":
                 self.written_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
-
             elif instruction.instruction_type == "go-to-table":
                 self.goto_table = instruction.go_to_table
 
             # TODO: Handle clear-actions case
             # TODO: Handle meter instruction
             # TODO: Write meta-data case
-
-    def parse_sel_instruction_set(self):
-
-        for instruction in self.instructions_json:
-            instruction = Instruction(self.sw, instruction)
-            if instruction.instruction_type == "apply-actions":
-                self.instruction_list.insert(0, instruction)
-
-                # Add all the actions to the applied_action_set
-                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
-
-            else:
-                self.instruction_list.append(instruction)
-
-            if instruction.instruction_type == "write-actions":
-                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
-
-            elif instruction.instruction_type == "go-to-table":
-                self.goto_table = instruction.go_to_table
-
-
-
