@@ -29,12 +29,11 @@ class Action():
                             supported.
     '''
 
-    def __init__(self, sw, action_json, is_active=True):
+    def __init__(self, sw, action_json):
 
         self.action_json = action_json
         self.sw = sw
         self.action_type = None
-        self.is_active = is_active
         self.bucket = None
         self.instruction_type = None
 
@@ -161,20 +160,10 @@ class Action():
             if this_bucket.is_live():
 
                 if not unmuted_port:
-
-                    for action in this_bucket.action_list:
-                        action.is_active = True
-
                     unmuted_port = (this_bucket.watch_port, bucket_rank)
                 else:
-                    for action in this_bucket.action_list:
-                        action.is_active = False
-
                     muted_ports.append((this_bucket.watch_port, bucket_rank))
             else:
-                for action in this_bucket.action_list:
-                    action.is_active = False
-
                 muted_ports.append((this_bucket.watch_port, bucket_rank))
 
         return muted_ports, unmuted_port

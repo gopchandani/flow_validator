@@ -13,6 +13,24 @@ class NetworkPortGraph(PortGraph):
 
         super(NetworkPortGraph, self).__init__(network_graph)
 
+    def get_edge_from_transfer_traffic(self, pred, dst, transfer_traffic):
+
+        edge = PortGraphEdge(pred, dst)
+
+        # If the edge filter became empty, reflect that.
+        if transfer_traffic.is_empty():
+            t = Traffic()
+            edge.add_edge_data((t, {}, 0))
+        else:
+            # Each traffic element has its own edge_data, because of how it might have
+            # traveled through the switch and what modifications it may have accumulated
+            for te in transfer_traffic.traffic_elements:
+                t = Traffic()
+                t.add_traffic_elements([te])
+                edge.add_edge_data((t, te.switch_modifications, te.vuln_rank))
+
+        return edge
+
     def add_switch_transfer_edges(self, sw):
 
         # First grab the port objects from the sw's node graph and add them to port_graph's node graph
@@ -126,7 +144,8 @@ class NetworkPortGraph(PortGraph):
 
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.compute_switch_transfer_traffic()
-            #test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
+            test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
+            print test_passed
             self.add_switch_transfer_edges(sw)
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
@@ -143,24 +162,6 @@ class NetworkPortGraph(PortGraph):
         # Then de-initialize switch port graph
         for sw in self.network_graph.get_switches():
             sw.port_graph.de_init_switch_port_graph()
-
-    def get_edge_from_transfer_traffic(self, pred, dst, transfer_traffic):
-
-        edge = PortGraphEdge(pred, dst)
-
-        # If the edge filter became empty, reflect that.
-        if transfer_traffic.is_empty():
-            t = Traffic()
-            edge.add_edge_data((t, {}, 0))
-        else:
-            # Each traffic element has its own edge_data, because of how it might have
-            # traveled through the switch and what modifications it may have accumulated
-            for te in transfer_traffic.traffic_elements:
-                t = Traffic()
-                t.add_traffic_elements([te])
-                edge.add_edge_data((t, te.switch_modifications, te.vuln_rank))
-
-        return edge
 
     def add_node_graph_edge(self, node1_id, node2_id, updating=False):
 

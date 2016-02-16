@@ -190,7 +190,6 @@ class FlowTable():
         # 3. The eges that existted previously and now do as well, but the contents of traffic filters/modifications
         # have changed
 
-
         return modified_edges
 
     def de_init_flow_table_port_graph(self):

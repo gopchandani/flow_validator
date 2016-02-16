@@ -48,12 +48,15 @@ class PortGraph(object):
 
     def remove_edge(self, pred, succ):
 
-        # First check if the edge exists
-        if not self.g.has_edge(pred.node_id, succ.node_id):
-            return None
+        edge_to_remove = self.get_edge(pred, succ)
 
-        # Remove the port-graph edges corresponding to ports themselves
-        self.g.remove_edge(pred.node_id, succ.node_id)
+        # First check if the edge exists
+        if edge_to_remove:
+
+            # Remove the port-graph edges corresponding to ports themselves
+            self.g.remove_edge(pred.node_id, succ.node_id)
+
+        return edge_to_remove
 
     def get_edge(self, pred, succ):
 
