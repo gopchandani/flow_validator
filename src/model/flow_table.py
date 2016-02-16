@@ -52,9 +52,11 @@ class Flow():
         self.complement_traffic.add_traffic_elements(self.traffic_element.get_complement_traffic_elements())
 
 
-    def prepare_port_graph_edges(self):
+    def get_port_graph_edges(self, port_graph_edges):
 
         if self.instruction_set:
+
+            # Prepare the raw material for edges
 
             self.instruction_set.populate_action_sets_for_port_graph_edges()
 
@@ -68,8 +70,6 @@ class Flow():
 
             self.written_port_graph_edges = self.instruction_set.written_action_set.get_action_set_port_graph_edges()
 
-            # See the edge impact of any go-to-table instruction
-
             self.goto_table_port_graph_edge = None
 
             if self.instruction_set.goto_table:
@@ -80,6 +80,37 @@ class Flow():
                                                        self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node)
                 else:
                     print "At switch:", self.sw.node_id, ", couldn't find flow table goto:", self.instruction_set.goto_table
+
+
+            for out_port, output_action in self.applied_port_graph_edges:
+
+                output_action.instruction_type = "applied"
+                egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
+
+                port_graph_edges[egress_node].append((self.applied_traffic,
+                                                           output_action,
+                                                           self.applied_modifications,
+                                                           self.written_modifications,
+                                                           output_action.vuln_rank))
+
+            for out_port, output_action in self.written_port_graph_edges:
+
+                output_action.instruction_type = "written"
+                egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
+
+                port_graph_edges[egress_node].append((self.applied_traffic,
+                                                           output_action,
+                                                           self.applied_modifications,
+                                                           self.written_modifications,
+                                                           output_action.vuln_rank))
+
+            if self.goto_table_port_graph_edge:
+
+                port_graph_edges[self.goto_table_port_graph_edge[1]].append((self.applied_traffic,
+                                                                                  None,
+                                                                                  self.applied_modifications,
+                                                                                  self.written_modifications,
+                                                                                  0))
 
         else:
             print "Assuming this means to drop."
@@ -131,37 +162,8 @@ class FlowTable():
                 remaining_traffic = flow.complement_traffic.intersect(remaining_traffic)
                 flow.applied_traffic = intersection
 
-                flow.prepare_port_graph_edges()
+                flow.get_port_graph_edges(port_graph_edges)
 
-                for out_port, output_action in flow.applied_port_graph_edges:
-
-                    output_action.instruction_type = "applied"
-                    egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
-
-                    port_graph_edges[egress_node].append((flow.applied_traffic,
-                                                               output_action,
-                                                               flow.applied_modifications,
-                                                               flow.written_modifications,
-                                                               output_action.vuln_rank))
-
-                for out_port, output_action in flow.written_port_graph_edges:
-
-                    output_action.instruction_type = "written"
-                    egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
-
-                    port_graph_edges[egress_node].append((flow.applied_traffic,
-                                                               output_action,
-                                                               flow.applied_modifications,
-                                                               flow.written_modifications,
-                                                               output_action.vuln_rank))
-
-                if flow.goto_table_port_graph_edge:
-
-                    port_graph_edges[flow.goto_table_port_graph_edge[1]].append((flow.applied_traffic,
-                                                                                      None,
-                                                                                      flow.applied_modifications,
-                                                                                      flow.written_modifications,
-                                                                                      0))
             else:
                 # Say that this flow does not matter
                 flow.applied_traffic = None
