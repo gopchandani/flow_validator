@@ -78,23 +78,27 @@ class SwitchPortGraph(PortGraph):
 
         edge = PortGraphEdge(flow_table.port_graph_node, succ)
 
-        for edge_data in flow_table.port_graph_edges[succ]:
+        if succ not in flow_table.current_port_graph_edges[succ]:
+            t = Traffic()
             backup_edge_filter_traffic = Traffic()
 
-            edge.add_edge_data((edge_data[0],
-                                edge_data[1],
-                                edge_data[2],
-                                edge_data[3],
-                                edge_data[4],
-                                backup_edge_filter_traffic))
+            edge.add_edge_data((t, None, None, None, 0, backup_edge_filter_traffic))
+        else:
+            for edge_data in flow_table.current_port_graph_edges[succ]:
+                backup_edge_filter_traffic = Traffic()
 
-        self.add_edge(flow_table.port_graph_node, succ, edge)
+                edge.add_edge_data((edge_data[0],
+                                    edge_data[1],
+                                    edge_data[2],
+                                    edge_data[3],
+                                    edge_data[4],
+                                    backup_edge_filter_traffic))
 
         return edge
 
     def add_flow_table_edges(self, flow_table):
 
-        for succ in flow_table.port_graph_edges:
+        for succ in flow_table.current_port_graph_edges:
             edge = self.get_edges_from_flow_table_edges(flow_table, succ)
             self.add_edge(flow_table.port_graph_node, succ, edge)
 
@@ -285,7 +289,8 @@ class SwitchPortGraph(PortGraph):
                 traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
                 for te in traffic_to_propagate.traffic_elements:
-                    te.instruction_type = edge_action.instruction_type
+                    if edge_action:
+                        te.instruction_type = edge_action.instruction_type
 
             if applied_modifications:
                 ttp = traffic_to_propagate.get_orig_traffic(applied_modifications)

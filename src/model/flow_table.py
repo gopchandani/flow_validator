@@ -133,7 +133,7 @@ class FlowTable():
         # Edges from this table's node to port egress nodes and other tables' nodes are stored in this dictionary
         # The key is the succ node, and the list contains edge contents
 
-        self.port_graph_edges = None
+        self.current_port_graph_edges = None
 
         for f in flow_list:
             f = Flow(sw, f)
@@ -172,23 +172,40 @@ class FlowTable():
 
     def compute_flow_table_port_graph_edges(self):
 
-        self.port_graph_edges = self._get_port_graph_edges_dict()
+        self.current_port_graph_edges = self._get_port_graph_edges_dict()
 
 
     def update_port_graph_edges(self):
 
+        modified_keys = []
         modified_edges = []
 
         # Compute what these edges would look like now.
         new_port_graph_edges = self._get_port_graph_edges_dict()
 
-
         # Compare where the differences are return the edges that got affected
         # This ought to be a three prong comparison
-        # 1. The edges that existed previously and now don;t
+
+        self.set_new = set(new_port_graph_edges.keys())
+        self.set_current = set(self.current_port_graph_edges.keys())
+
+        self.intersect = self.set_new.intersection(self.set_current)
+
+        # 1. The edges that existed previously and now don't
+        modified_keys.extend((self.set_current - self.intersect))
+
         # 2. The edges that did not exist previously but now do.
-        # 3. The eges that existted previously and now do as well, but the contents of traffic filters/modifications
-        # have changed
+        modified_keys.extend((self.set_new - self.intersect))
+
+        # 3. The edges that existed previously and now do as well
+        # TODO: but the contents of traffic filters/modifications
+        modified_values = [k for k in self.intersect if len(new_port_graph_edges[k]) != len(self.current_port_graph_edges[k])]
+        modified_keys.extend(modified_values)
+
+        # Set the flow table's port graph edges to now modified ones
+        if modified_keys:
+            self.current_port_graph_edges = new_port_graph_edges
+            modified_edges = [(self.port_graph_node, k) for k in modified_keys]
 
         return modified_edges
 
