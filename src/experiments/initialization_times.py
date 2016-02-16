@@ -69,7 +69,8 @@ class InitializationTimes(Experiment):
                         fv.initialize_admitted_traffic()
 
                     self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(t.msecs)
-                    fv.validate_all_host_pair_reachability(verbose=False)
+
+                    fv.validate_all_host_pair_reachability(verbose=True)
 
                     fv.de_init_network_port_graph()
 
@@ -92,7 +93,7 @@ def main():
     total_number_of_hosts = [2, 4, 6, 8]
     total_number_of_ports_to_synthesize = 3
     load_config = False
-    save_config = True
+    save_config = False
     controller = "ryu"
 
     exp = InitializationTimes(num_iterations,

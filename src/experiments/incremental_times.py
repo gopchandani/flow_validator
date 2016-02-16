@@ -30,7 +30,6 @@ class IncrementalTimes(Experiment):
                                                load_config,
                                                save_config,
                                                controller,
-                                               [],
                                                1)
 
         self.total_number_of_hosts = total_number_of_hosts
@@ -38,7 +37,6 @@ class IncrementalTimes(Experiment):
 
         self.fanout = fanout
         self.core = core
-        self.possible_experiment_switches = ['s4', 's5', 's6', 's7']
 
         self.data = {
             "incremental_avg_edge_failure_time": defaultdict(defaultdict),
@@ -85,13 +83,11 @@ class IncrementalTimes(Experiment):
             for total_number_of_hosts in self.total_number_of_hosts:
                 print "total_number_of_hosts:", total_number_of_hosts
 
-                self.experiment_switches = self.possible_experiment_switches[0:total_number_of_hosts/2]
-
-                self.topo_description = ("clostopo", None, None, self.fanout, self.core)
+                self.topo_description = ("clostopo", None, total_number_of_hosts/4, self.fanout, self.core)
 
                 ng = self.setup_network_graph(self.topo_description,
                                               mininet_setup_gap=1,
-                                              dst_ports_to_synthesize=None,
+                                              dst_ports_to_synthesize=ports_to_synthesize,
                                               synthesis_setup_gap=len(ports_to_synthesize))
 
                 self.fv = FlowValidator(ng)
@@ -134,8 +130,8 @@ class IncrementalTimes(Experiment):
                                   y_scale='linear')
 
 def main():
-    num_iterations = 5
-    total_number_of_hosts = [4, 6, 8]
+    num_iterations = 2
+    total_number_of_hosts = [4, 8]
     load_config = False
     save_config = True
     controller = "ryu"
@@ -153,10 +149,10 @@ def main():
                            core,
                            total_number_of_ports_to_synthesize)
 
-    #exp.trigger()
-    #exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    exp.load_data("data/incremental_times_5_iterations_20151206_141249.json")
+    #exp.load_data("data/incremental_times_5_iterations_20151206_141249.json")
 
     exp.plot_incremental_times()
 
