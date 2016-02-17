@@ -136,13 +136,15 @@ class SwitchPortGraph(PortGraph):
                 if dst not in change_matrix[pred]:
                     change_matrix[pred][dst] = [succ]
                 else:
-                    change_matrix[pred][dst].append(succ)
+                    if succ not in change_matrix[pred][dst]:
+                        change_matrix[pred][dst].append(succ)
 
             for dst in succ.transfer_traffic:
                 if dst not in change_matrix[pred]:
                     change_matrix[pred][dst] = [succ]
                 else:
-                    change_matrix[pred][dst].append(succ)
+                    if succ not in change_matrix[pred][dst]:
+                        change_matrix[pred][dst].append(succ)
 
         # Do this for each pred port that has changed
         for pred in change_matrix:
@@ -387,7 +389,6 @@ class SwitchPortGraph(PortGraph):
 
             self.update_transfer_traffic(modified_flow_table_edges, modified_edges)
 
-
         if event_type == "port_down":
 
             # Handle the case of cleaning out muted ports ingress node
@@ -422,7 +423,6 @@ class SwitchPortGraph(PortGraph):
                     edge = self.get_edge(ingress_node, succ)
                     traffic_to_propagate = self.compute_edge_transfer_traffic(traffic_to_propagate, edge)
                     self.compute_transfer_traffic(ingress_node, traffic_to_propagate, succ, dst, modified_edges)
-
 
         return modified_edges
 
