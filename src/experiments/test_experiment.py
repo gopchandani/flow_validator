@@ -37,7 +37,8 @@ class TestExperiment(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("linear", 2, 1)
+            #self.topo_description = ("ring", 4, 1, None, None)
             #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,

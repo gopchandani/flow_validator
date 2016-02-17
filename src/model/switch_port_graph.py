@@ -387,6 +387,43 @@ class SwitchPortGraph(PortGraph):
 
             self.update_transfer_traffic(modified_flow_table_edges, modified_edges)
 
+
+        if event_type == "port_down":
+
+            # Handle the case of cleaning out muted ports ingress node
+            for succ in self.successors_iter(ingress_node):
+                edge = self.get_edge(ingress_node, succ)
+
+                for edge_data_tuple in edge.edge_data_list:
+                    temp = edge_data_tuple[5].traffic_elements
+                    edge_data_tuple[5].traffic_elements = edge_data_tuple[0].traffic_elements
+                    edge_data_tuple[0].traffic_elements = temp
+
+            dsts = ingress_node.transfer_traffic.keys()
+            for dst in dsts:
+                for succ in self.successors_iter(ingress_node):
+                    self.compute_transfer_traffic(ingress_node, Traffic(), succ, dst, modified_edges)
+
+        elif event_type == "port_up":
+
+            ##
+            for succ in self.successors_iter(ingress_node):
+                edge = self.get_edge(ingress_node, succ)
+                for edge_data_tuple in edge.edge_data_list:
+                    temp = edge_data_tuple[5].traffic_elements
+                    edge_data_tuple[5].traffic_elements = edge_data_tuple[0].traffic_elements
+                    edge_data_tuple[0].traffic_elements = temp
+
+                for dst in succ.transfer_traffic.keys():
+                    traffic_to_propagate = Traffic()
+                    for succ_succ in succ.transfer_traffic[dst]:
+                        traffic_to_propagate.union(succ.transfer_traffic[dst][succ_succ])
+
+                    edge = self.get_edge(ingress_node, succ)
+                    traffic_to_propagate = self.compute_edge_transfer_traffic(traffic_to_propagate, edge)
+                    self.compute_transfer_traffic(ingress_node, traffic_to_propagate, succ, dst, modified_edges)
+
+
         return modified_edges
 
 
