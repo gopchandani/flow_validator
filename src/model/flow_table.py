@@ -146,8 +146,6 @@ class FlowTable():
     def _get_port_graph_edges_dict(self):
         port_graph_edges = defaultdict(list)
 
-        #print "flow_table:", self.table_id
-
         remaining_traffic = Traffic(init_wildcard=True)
 
         for flow in self.flows:

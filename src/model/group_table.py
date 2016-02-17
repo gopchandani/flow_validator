@@ -186,8 +186,6 @@ class Group():
         elif self.group_type == self.sw.network_graph.GROUP_FF:
 
             # at any point in time, only those actions are active that belong to the first live bucket
-
-            # We begin by scanning the action buckets for the first live bucket, once found we break
             i = 0
             while i < len(self.bucket_list):
                 this_bucket = self.bucket_list[i]
@@ -195,24 +193,38 @@ class Group():
                     for action in this_bucket.action_list:
                         action.vuln_rank = i
                     action_list.extend(this_bucket.action_list)
-                    i += 1
                     break
-                else:
-                    # Also adding any non-live buckets encountered until then to be as such
-                    for action in this_bucket.action_list:
-                        action.vuln_rank = i
 
-                    action_list.extend(this_bucket.action_list)
-                    i += 1
-
-            # If there are any buckets left, we add them as inactive buckets
-            while i < len(self.bucket_list):
-                this_bucket = self.bucket_list[i]
-                for action in this_bucket.action_list:
-                    action.vuln_rank = i
-
-                action_list.extend(this_bucket.action_list)
                 i += 1
+
+            # at any point in time, only those actions are active that belong to the first live bucket
+
+            # We begin by scanning the action buckets for the first live bucket, once found we break
+            # i = 0
+            # while i < len(self.bucket_list):
+            #     this_bucket = self.bucket_list[i]
+            #     if this_bucket.is_live():
+            #         for action in this_bucket.action_list:
+            #             action.vuln_rank = i
+            #         action_list.extend(this_bucket.action_list)
+            #         i += 1
+            #         break
+            #     else:
+            #         # Also adding any non-live buckets encountered until then to be as such
+            #         for action in this_bucket.action_list:
+            #             action.vuln_rank = i
+            #
+            #         action_list.extend(this_bucket.action_list)
+            #         i += 1
+
+            # # If there are any buckets left, we add them as inactive buckets
+            # while i < len(self.bucket_list):
+            #     this_bucket = self.bucket_list[i]
+            #     for action in this_bucket.action_list:
+            #         action.vuln_rank = i
+            #
+            #     action_list.extend(this_bucket.action_list)
+            #     i += 1
 
         return action_list
 

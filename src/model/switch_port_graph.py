@@ -616,8 +616,8 @@ class SwitchPortGraph(PortGraph):
         # Loop over ports of the switch and fail and restore them one by one
         for testing_port_number in self.sw.ports:
 
-            # if testing_port_number != 2:
-            #     continue
+            if testing_port_number != 2:
+                continue
 
             testing_port = self.sw.ports[testing_port_number]
 
