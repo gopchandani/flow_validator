@@ -78,7 +78,7 @@ class SwitchPortGraph(PortGraph):
 
         edge = PortGraphEdge(flow_table.port_graph_node, succ)
 
-        if succ not in flow_table.current_port_graph_edges[succ]:
+        if succ not in flow_table.current_port_graph_edges:
             t = Traffic()
             backup_edge_filter_traffic = Traffic()
 
@@ -186,8 +186,11 @@ class SwitchPortGraph(PortGraph):
                             if dst in pred.transfer_traffic:
                                 if succ in pred.transfer_traffic[dst]:
                                     del pred.transfer_traffic[dst][succ]
+
+                                    modified_edges.append((pred, dst))
                         else:
                             pred.transfer_traffic[dst][succ] = pred_traffic
+
 
 
     def compute_switch_transfer_traffic(self):
