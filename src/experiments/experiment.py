@@ -192,17 +192,17 @@ class Experiment(object):
                 if not path_matches:
                     all_paths_match = False
 
-                if analyzed_path_vuln_score != synthesized_path_vuln_score:
-                    all_paths_vuln_match = False
-
-                    print "Path vulnerability scores do not match. src_host:", src_host, "dst_host:", dst_host, \
-                        "analyzed_path_vuln_score:", analyzed_path_vuln_score, \
-                        "synthesized_path_vuln_score:", synthesized_path_vuln_score
-                else:
-                    if verbose:
-                        print "Path vulnerability scores match. src_host:", src_host, "dst_host:", dst_host, \
-                            "analyzed_path_vuln_score:", analyzed_path_vuln_score, \
-                            "synthesized_path_vuln_score:", synthesized_path_vuln_score
+                # if analyzed_path_vuln_score != synthesized_path_vuln_score:
+                #     all_paths_vuln_match = False
+                #
+                #     print "Path vulnerability scores do not match. src_host:", src_host, "dst_host:", dst_host, \
+                #         "analyzed_path_vuln_score:", analyzed_path_vuln_score, \
+                #         "synthesized_path_vuln_score:", synthesized_path_vuln_score
+                # else:
+                #     if verbose:
+                #         print "Path vulnerability scores match. src_host:", src_host, "dst_host:", dst_host, \
+                #             "analyzed_path_vuln_score:", analyzed_path_vuln_score, \
+                #             "synthesized_path_vuln_score:", synthesized_path_vuln_score
 
 
         return all_paths_match

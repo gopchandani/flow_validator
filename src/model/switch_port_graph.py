@@ -297,6 +297,9 @@ class SwitchPortGraph(PortGraph):
                     if edge_action:
                         te.instruction_type = edge_action.instruction_type
 
+                for te in traffic_to_propagate.traffic_elements:
+                    te.vuln_rank = vuln_rank
+
             if applied_modifications:
                 ttp = traffic_to_propagate.get_orig_traffic(applied_modifications)
             else:
@@ -312,63 +315,11 @@ class SwitchPortGraph(PortGraph):
                         te.written_modifications.update(written_modifications)
 
             i = edge_filter_traffic.intersect(ttp)
-            # for te in i.traffic_elements:
-            #     te.vuln_rank = vuln_rank
 
             if not i.is_empty():
                 pred_transfer_traffic.union(i)
 
         return pred_transfer_traffic
-
-    def update_port_transfer_traffic_failover_edge_action(self, pred, edge_action, applied_modifications,
-                                                          written_modifications, edge_filter_traffic, modified_edges):
-
-        # See what ports are now muted and unmuted
-        muted_port_tuples, unmuted_port_tuple = edge_action.perform_edge_failover()
-
-        for muted_port, bucket_rank in muted_port_tuples:
-
-            prop_traffic = Traffic()
-            prop_traffic.union(edge_filter_traffic)
-            
-            for te in prop_traffic.traffic_elements:
-                te.written_modifications.update(written_modifications)
-                te.switch_modifications.update(applied_modifications)
-
-            muted_egress_node = self.get_egress_node(self.sw.node_id, muted_port.port_number)
-
-            # Mute only if pred has some transfer traffic for the muted_port
-            if muted_egress_node in pred.transfer_traffic:
-                if muted_egress_node in pred.transfer_traffic[muted_egress_node]:
-                    prop_traffic = prop_traffic.difference(pred.transfer_traffic[muted_egress_node][muted_egress_node])
-
-                    for te in prop_traffic.traffic_elements:
-                        te.vuln_rank = bucket_rank
-
-                    self.compute_transfer_traffic(pred, prop_traffic, muted_egress_node, muted_egress_node, modified_edges)
-
-        if unmuted_port_tuple:
-            unmuted_port, bucket_rank = unmuted_port_tuple
-            unmuted_egress_node = self.get_egress_node(self.sw.node_id, unmuted_port.port_number)
-
-            prop_traffic = Traffic()
-            prop_traffic.union(edge_filter_traffic)
-
-            for te in prop_traffic.traffic_elements:
-                te.written_modifications.update(written_modifications)
-                te.switch_modifications.update(applied_modifications)
-
-            try:
-                if unmuted_egress_node in pred.transfer_traffic:
-                    if unmuted_egress_node in pred.transfer_traffic[unmuted_egress_node]:
-                        prop_traffic.union(pred.transfer_traffic[unmuted_egress_node][unmuted_egress_node])
-            except KeyError:
-                pass
-
-            for te in prop_traffic.traffic_elements:
-                te.vuln_rank = bucket_rank
-
-            self.compute_transfer_traffic(pred, prop_traffic, unmuted_egress_node, unmuted_egress_node, modified_edges)
 
     def update_transfer_traffic_due_to_port_state_change(self, port_num, event_type):
 
@@ -407,7 +358,6 @@ class SwitchPortGraph(PortGraph):
 
         elif event_type == "port_up":
 
-            ##
             for succ in self.successors_iter(ingress_node):
                 edge = self.get_edge(ingress_node, succ)
                 for edge_data_tuple in edge.edge_data_list:
@@ -425,101 +375,6 @@ class SwitchPortGraph(PortGraph):
                     self.compute_transfer_traffic(ingress_node, traffic_to_propagate, succ, dst, modified_edges)
 
         return modified_edges
-
-
-    # def update_transfer_traffic_due_to_port_state_change(self, port_num, event_type):
-    #
-    #     modified_edges = []
-    #
-    #     ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
-    #     egress_node = self.get_egress_node(self.sw.node_id, port_num)
-    #
-    #     if event_type == "port_down":
-    #
-    #         for pred in self.predecessors_iter(egress_node):
-    #             edge = self.get_edge(pred, egress_node)
-    #
-    #             # Go through the edge_data_list, and see if there are any failover actions involved.
-    #
-    #             prop_traffic = Traffic()
-    #             for edge_filter_traffic, edge_action, applied_modifications, written_modifications, vuln_rank, \
-    #                 backup_edge_filter_traffic in edge.edge_data_list:
-    #
-    #                 if edge_action.is_failover_action():
-    #                     self.update_port_transfer_traffic_failover_edge_action(pred, edge_action,
-    #                                                                            applied_modifications,
-    #                                                                            written_modifications,
-    #                                                                            edge_filter_traffic, modified_edges)
-    #                 else:
-    #                     prop_traffic.union(edge_filter_traffic)
-    #
-    #             # Take the propagating traffic out of traffic that exists at pred for this egress node
-    #             # The remaining traffic is propagated back from pred.
-    #
-    #             if egress_node in pred.transfer_traffic:
-    #                 if egress_node in pred.transfer_traffic[egress_node]:
-    #                     prop_traffic = prop_traffic.difference(pred.transfer_traffic[egress_node][egress_node])
-    #
-    #             self.compute_transfer_traffic(pred, prop_traffic, egress_node, egress_node, modified_edges)
-    #
-    #         # Handle the case of cleaning out muted ports ingress node
-    #         for succ in self.successors_iter(ingress_node):
-    #             edge = self.get_edge(ingress_node, succ)
-    #
-    #             for edge_data_tuple in edge.edge_data_list:
-    #                 temp = edge_data_tuple[5].traffic_elements
-    #                 edge_data_tuple[5].traffic_elements = edge_data_tuple[0].traffic_elements
-    #                 edge_data_tuple[0].traffic_elements = temp
-    #
-    #         dsts = ingress_node.transfer_traffic.keys()
-    #         for dst in dsts:
-    #             for succ in self.successors_iter(ingress_node):
-    #                 self.compute_transfer_traffic(ingress_node, Traffic(), succ, dst, modified_edges)
-    #
-    #     elif event_type == "port_up":
-    #
-    #         for pred in self.predecessors_iter(egress_node):
-    #             edge = self.get_edge(pred, egress_node)
-    #             prop_traffic = Traffic()
-    #
-    #             # Go through the edge_data_list, and see if there are any failover actions involved.
-    #             for edge_filter_traffic, edge_action, applied_modifications, written_modifications, vuln_rank, \
-    #                 backup_edge_filter_traffic in edge.edge_data_list:
-    #
-    #                 if edge_action.is_failover_action():
-    #                     self.update_port_transfer_traffic_failover_edge_action(pred, edge_action,
-    #                                                                            applied_modifications,
-    #                                                                            written_modifications,
-    #                                                                            edge_filter_traffic, modified_edges)
-    #                 else:
-    #                     prop_traffic.union(edge_filter_traffic)
-    #
-    #             # Take the propagating traffic and union any traffic at already exists at the predecessor it
-    #             # and propagate that combined union back from pred.
-    #
-    #             if egress_node in pred.transfer_traffic:
-    #                 if egress_node in pred.transfer_traffic[egress_node]:
-    #                     prop_traffic.union(pred.transfer_traffic[egress_node][egress_node])
-    #
-    #             self.compute_transfer_traffic(pred, prop_traffic, egress_node, egress_node, modified_edges)
-    #
-    #         for succ in self.successors_iter(ingress_node):
-    #             edge = self.get_edge(ingress_node, succ)
-    #             for edge_data_tuple in edge.edge_data_list:
-    #                 temp = edge_data_tuple[5].traffic_elements
-    #                 edge_data_tuple[5].traffic_elements = edge_data_tuple[0].traffic_elements
-    #                 edge_data_tuple[0].traffic_elements = temp
-    #
-    #             for dst in succ.transfer_traffic.keys():
-    #                 traffic_to_propagate = Traffic()
-    #                 for succ_succ in succ.transfer_traffic[dst]:
-    #                     traffic_to_propagate.union(succ.transfer_traffic[dst][succ_succ])
-    #
-    #                 edge = self.get_edge(ingress_node, succ)
-    #                 traffic_to_propagate = self.compute_edge_transfer_traffic(traffic_to_propagate, edge)
-    #                 self.compute_transfer_traffic(ingress_node, traffic_to_propagate, succ, dst, modified_edges)
-    #
-    #     return modified_edges
 
     def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
 
