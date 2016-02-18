@@ -34,7 +34,7 @@ class SwitchPortGraph(PortGraph):
             ingress_node_traffic.set_field("in_port", int(port_num))
 
             edge = PortGraphEdge(port.port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node)
-            edge.add_edge_data((ingress_node_traffic, None, None, None, 0, Traffic()))
+            edge.add_edge_data((ingress_node_traffic, None, None, None, Traffic()))
             self.add_edge(port.port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node, edge)
 
         # Try passing a wildcard through the flow table
@@ -81,8 +81,6 @@ class SwitchPortGraph(PortGraph):
         if succ not in flow_table.current_port_graph_edges:
             t = Traffic()
             backup_edge_filter_traffic = Traffic()
-
-            edge.add_edge_data((t, None, None, None, 0, backup_edge_filter_traffic))
         else:
             for edge_data in flow_table.current_port_graph_edges[succ]:
                 backup_edge_filter_traffic = Traffic()
@@ -91,7 +89,6 @@ class SwitchPortGraph(PortGraph):
                                     edge_data[1],
                                     edge_data[2],
                                     edge_data[3],
-                                    edge_data[4],
                                     backup_edge_filter_traffic))
 
         return edge
@@ -285,7 +282,7 @@ class SwitchPortGraph(PortGraph):
 
         pred_transfer_traffic = Traffic()
 
-        for edge_filter_traffic, edge_action, applied_modifications, written_modifications, vuln_rank, \
+        for edge_filter_traffic, edge_action, applied_modifications, written_modifications, \
             backup_edge_filter_traffic in edge.edge_data_list:
 
             if edge.edge_type == "egress":
@@ -297,8 +294,11 @@ class SwitchPortGraph(PortGraph):
                     if edge_action:
                         te.instruction_type = edge_action.instruction_type
 
+                if not edge_action:
+                    pass
+
                 for te in traffic_to_propagate.traffic_elements:
-                    te.vuln_rank = vuln_rank
+                    te.vuln_rank = edge_action.vuln_rank
 
             if applied_modifications:
                 ttp = traffic_to_propagate.get_orig_traffic(applied_modifications)
@@ -347,8 +347,8 @@ class SwitchPortGraph(PortGraph):
                 edge = self.get_edge(ingress_node, succ)
 
                 for edge_data_tuple in edge.edge_data_list:
-                    temp = edge_data_tuple[5].traffic_elements
-                    edge_data_tuple[5].traffic_elements = edge_data_tuple[0].traffic_elements
+                    temp = edge_data_tuple[4].traffic_elements
+                    edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
                     edge_data_tuple[0].traffic_elements = temp
 
             dsts = ingress_node.transfer_traffic.keys()
@@ -361,8 +361,8 @@ class SwitchPortGraph(PortGraph):
             for succ in self.successors_iter(ingress_node):
                 edge = self.get_edge(ingress_node, succ)
                 for edge_data_tuple in edge.edge_data_list:
-                    temp = edge_data_tuple[5].traffic_elements
-                    edge_data_tuple[5].traffic_elements = edge_data_tuple[0].traffic_elements
+                    temp = edge_data_tuple[4].traffic_elements
+                    edge_data_tuple[4].traffic_elements = edge_data_tuple[0].traffic_elements
                     edge_data_tuple[0].traffic_elements = temp
 
                 for dst in succ.transfer_traffic.keys():

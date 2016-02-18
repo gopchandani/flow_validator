@@ -90,8 +90,7 @@ class Flow():
                 port_graph_edges[egress_node].append((self.applied_traffic,
                                                            output_action,
                                                            self.applied_modifications,
-                                                           self.written_modifications,
-                                                           output_action.vuln_rank))
+                                                           self.written_modifications))
 
             for out_port, output_action in self.written_port_graph_edges:
 
@@ -101,16 +100,14 @@ class Flow():
                 port_graph_edges[egress_node].append((self.applied_traffic,
                                                            output_action,
                                                            self.applied_modifications,
-                                                           self.written_modifications,
-                                                           output_action.vuln_rank))
+                                                           self.written_modifications))
 
             if self.goto_table_port_graph_edge:
 
                 port_graph_edges[self.goto_table_port_graph_edge[1]].append((self.applied_traffic,
                                                                                   None,
                                                                                   self.applied_modifications,
-                                                                                  self.written_modifications,
-                                                                                  0))
+                                                                                  self.written_modifications))
 
         else:
             print "Assuming this means to drop."
