@@ -215,7 +215,7 @@ class ActionSet():
         self.action_dict = defaultdict(list)
         self.sw = sw
 
-    def _add_all_actions(self, action_list, intersection):
+    def add_all_actions(self, action_list, intersection):
 
         for action in action_list:
 
@@ -228,11 +228,8 @@ class ActionSet():
             else:
                 self.action_dict[action.action_type].append(action)
 
-    def add_all_actions(self, action_list, intersection):
-
+    def remove_all_actions(self):
         self.action_dict.clear()
-        self._add_all_actions(action_list, intersection)
-
 
     def get_modified_fields_dict(self, flow_match_element):
         modified_fields_dict = {}
