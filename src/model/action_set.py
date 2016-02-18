@@ -215,7 +215,7 @@ class ActionSet():
         self.action_dict = defaultdict(list)
         self.sw = sw
 
-    def add_all_actions(self, action_list, intersection):
+    def _add_all_actions(self, action_list, intersection):
 
         for action in action_list:
 
@@ -227,6 +227,12 @@ class ActionSet():
                     raise Exception("Odd that a group_id is not provided in a group action")
             else:
                 self.action_dict[action.action_type].append(action)
+
+    def add_all_actions(self, action_list, intersection):
+
+        self.action_dict.clear()
+        self._add_all_actions(action_list, intersection)
+
 
     def get_modified_fields_dict(self, flow_match_element):
         modified_fields_dict = {}
