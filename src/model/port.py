@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 from port_graph_node import PortGraphNode
+from traffic import Traffic
 
 class Port():
 
@@ -38,6 +39,9 @@ class Port():
         self.port_graph_ingress_node.parent_obj = self
         self.port_graph_egress_node.parent_obj = self
 
+
+        self.ingress_node_traffic = Traffic(init_wildcard=True)
+        self.ingress_node_traffic.set_field("in_port", int(self.port_number))
 
     def parse_odl_port_json(self, port_json):
 

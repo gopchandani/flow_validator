@@ -19,7 +19,7 @@ class NetworkPortGraph(PortGraph):
 
         # If the edge filter became empty, reflect that.
         if transfer_traffic.is_empty():
-            t = Traffic()
+            pass
         else:
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
