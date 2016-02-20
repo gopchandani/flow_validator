@@ -188,9 +188,9 @@ class SwitchPortGraph(PortGraph):
 
             egress_node = self.get_egress_node(self.sw.node_id, port_num)
 
-            transfer_traffic = Traffic(init_wildcard=True)
+            dst_traffic_at_succ = Traffic(init_wildcard=True)
             modified_edges = []
-            self.compute_transfer_traffic(egress_node, transfer_traffic, None, egress_node, modified_edges)
+            self.compute_transfer_traffic(egress_node, dst_traffic_at_succ, None, egress_node, modified_edges)
 
     def account_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst):
 
@@ -341,7 +341,7 @@ class SwitchPortGraph(PortGraph):
 
             for dst in self.get_transfer_traffic_dsts(self.sw.flow_tables[0].port_graph_node):
                 traffic_to_propagate = Traffic()
-                for succ_succ in  self.sw.flow_tables[0].port_graph_node.transfer_traffic[dst]:
+                for succ_succ in self.get_transfer_traffic_succ(self.sw.flow_tables[0].port_graph_node, dst):
                     more = self.get_transfer_traffic_via_succ(self.sw.flow_tables[0].port_graph_node, dst, succ_succ)
                     traffic_to_propagate.union(more)
 
@@ -355,9 +355,9 @@ class SwitchPortGraph(PortGraph):
     def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
 
         path_count = 0
-        if dst_p in this_p.transfer_traffic:
-            tt = this_p.transfer_traffic[dst_p]
-            for succ_p in tt:
+        if dst_p in self.get_transfer_traffic_dsts(this_p):
+            for succ_p in self.get_transfer_traffic_succ(this_p, dst_p):
+
                 if succ_p:
 
                     # Try and detect a loop, if a port repeats more than twice, it is a loop
@@ -388,9 +388,6 @@ class SwitchPortGraph(PortGraph):
                 if verbose:
                     print "From Port:", src_port_number, "To Port:", dst_port_number
                 path_count += self.count_paths(src_p, dst_p, verbose, src_p.node_id, [src_p.node_id])
-
-                if path_count:
-                    tt = src_p.transfer_traffic[dst_p]
 
         return path_count
 
