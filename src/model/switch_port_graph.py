@@ -192,7 +192,7 @@ class SwitchPortGraph(PortGraph):
             modified_edges = []
             self.compute_transfer_traffic(egress_node, dst_traffic_at_succ, None, egress_node, modified_edges)
 
-    def account_port_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst):
+    def account_node_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst):
 
         # Keep track of what traffic looks like before any changes occur
         traffic_before_changes = self.get_transfer_traffic(curr, dst)
@@ -235,7 +235,7 @@ class SwitchPortGraph(PortGraph):
     def compute_transfer_traffic(self, curr, dst_traffic_at_succ, succ, dst, modified_edges):
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
-            self.account_port_transfer_traffic(curr, dst_traffic_at_succ, succ, dst)
+            self.account_node_transfer_traffic(curr, dst_traffic_at_succ, succ, dst)
 
         if not additional_traffic.is_empty():
 

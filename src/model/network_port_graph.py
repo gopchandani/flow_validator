@@ -249,7 +249,7 @@ class NetworkPortGraph(PortGraph):
 
         return pred_admitted_traffic
 
-    def account_port_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst):
+    def account_node_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst):
 
         # Keep track of what traffic looks like before any changes occur
         traffic_before_changes = self.get_admitted_traffic(curr, dst)
@@ -260,33 +260,30 @@ class NetworkPortGraph(PortGraph):
         # Do the changes...
         try:
             # First accumulate any more traffic that has arrived from this sucessor
-            more_from_succ = curr.admitted_traffic[dst][succ].difference(dst_traffic_at_succ)
+            prev_dst_traffic_at_succ = self.get_admitted_traffic_via_succ(curr, dst, succ)
+            more_from_succ = prev_dst_traffic_at_succ.difference(dst_traffic_at_succ)
             if not more_from_succ.is_empty():
-                curr.admitted_traffic[dst][succ].union(more_from_succ)
+                prev_dst_traffic_at_succ.union(more_from_succ)
 
             # Then get rid of traffic that this particular successor does not admit anymore
-            less_from_succ = dst_traffic_at_succ.difference(curr.admitted_traffic[dst][succ])
+            less_from_succ = dst_traffic_at_succ.difference(self.get_admitted_traffic_via_succ(curr, dst, succ))
             if not less_from_succ.is_empty():
-                curr.admitted_traffic[dst][succ] = less_from_succ.difference(curr.admitted_traffic[dst][succ])
-                if curr.admitted_traffic[dst][succ].is_empty():
-                    del curr.admitted_traffic[dst][succ]
+                remaining = less_from_succ.difference(self.get_admitted_traffic_via_succ(curr, dst, succ))
+                self.set_admitted_traffic_via_succ(curr, dst, succ, remaining)
 
         # If there is no traffic for this dst-succ combination prior to this propagation,
         # setup a traffic object for successor
         except KeyError:
             if not dst_traffic_at_succ.is_empty():
-                curr.admitted_traffic[dst][succ] = Traffic()
-                curr.admitted_traffic[dst][succ].union(dst_traffic_at_succ)
+                new_traffic = Traffic()
+                new_traffic.union(dst_traffic_at_succ)
+                self.set_admitted_traffic_via_succ(curr, dst, succ, new_traffic)
 
         # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
         traffic_after_changes = self.get_admitted_traffic(curr, dst)
 
         # Compute what reductions (if any) in traffic has occured due to all the changes
         reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
-
-        # If nothing is left behind then clean up the dictionary.
-        if traffic_after_changes.is_empty():
-            del curr.admitted_traffic[dst]
 
         traffic_to_propagate = traffic_after_changes
 
@@ -295,28 +292,29 @@ class NetworkPortGraph(PortGraph):
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst):
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
-            self.account_port_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
+            self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
 
         if not additional_traffic.is_empty():
 
             for pred in self.predecessors_iter(curr):
 
                 edge = self.get_edge(pred, curr)
-                pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
+                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
 
                 # Base case: No traffic left to propagate to predecessors
-                if not pred_transfer_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst)
+                if not pred_admitted_traffic.is_empty():
+                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst)
 
         if not reduced_traffic.is_empty():
 
             for pred in self.predecessors_iter(curr):
                 edge = self.get_edge(pred, curr)
-                pred_transfer_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-                self.compute_admitted_traffic(pred, pred_transfer_traffic, curr, dst)
+                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
+                self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst)
 
     def get_paths(self, this_p, dst, specific_traffic, this_path, all_paths, path_vuln_rank, path_vuln_ranks, verbose):
 
+#        if dst in self.get_admitted_traffic_dsts(this_p)
         if dst in this_p.admitted_traffic:
 
             at = this_p.admitted_traffic[dst]
