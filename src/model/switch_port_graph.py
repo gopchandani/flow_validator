@@ -341,7 +341,7 @@ class SwitchPortGraph(PortGraph):
 
             for dst in self.get_transfer_traffic_dsts(self.sw.flow_tables[0].port_graph_node):
                 traffic_to_propagate = Traffic()
-                for succ_succ in self.get_transfer_traffic_succ(self.sw.flow_tables[0].port_graph_node, dst):
+                for succ_succ in self.get_transfer_traffic_succs(self.sw.flow_tables[0].port_graph_node, dst):
                     more = self.get_transfer_traffic_via_succ(self.sw.flow_tables[0].port_graph_node, dst, succ_succ)
                     traffic_to_propagate.union(more)
 
@@ -356,7 +356,7 @@ class SwitchPortGraph(PortGraph):
 
         path_count = 0
         if dst_p in self.get_transfer_traffic_dsts(this_p):
-            for succ_p in self.get_transfer_traffic_succ(this_p, dst_p):
+            for succ_p in self.get_transfer_traffic_succs(this_p, dst_p):
 
                 if succ_p:
 

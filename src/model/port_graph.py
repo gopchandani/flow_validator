@@ -84,7 +84,7 @@ class PortGraph(object):
     def get_admitted_traffic_dsts(self, node):
         return node.admitted_traffic.keys()
 
-    def get_admitted_traffic_succ(self, node, dst):
+    def get_admitted_traffic_succs(self, node, dst):
         succ_list = None
         if dst in node.admitted_traffic:
             succ_list = node.admitted_traffic[dst].keys()
@@ -110,7 +110,7 @@ class PortGraph(object):
     def get_transfer_traffic_dsts(self, node):
         return node.transfer_traffic.keys()
 
-    def get_transfer_traffic_succ(self, node, dst):
+    def get_transfer_traffic_succs(self, node, dst):
         succ_list = None
         if dst in node.transfer_traffic:
             succ_list = node.transfer_traffic[dst].keys()
