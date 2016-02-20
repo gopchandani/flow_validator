@@ -84,13 +84,15 @@ class NetworkPortGraph(PortGraph):
                 if dst not in change_matrix[pred]:
                     change_matrix[pred][dst] = [succ]
                 else:
-                    change_matrix[pred][dst].append(succ)
+                    if succ not in change_matrix[pred][dst]:
+                        change_matrix[pred][dst].append(succ)
 
             for dst in succ.admitted_traffic:
                 if dst not in change_matrix[pred]:
                     change_matrix[pred][dst] = [succ]
                 else:
-                    change_matrix[pred][dst].append(succ)
+                    if succ not in change_matrix[pred][dst]:
+                        change_matrix[pred][dst].append(succ)
 
         # Do this for each pred port that has changed
         for pred in change_matrix:
