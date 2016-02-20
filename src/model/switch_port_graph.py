@@ -177,14 +177,7 @@ class SwitchPortGraph(PortGraph):
                     # Update admitted traffic at ingress port to reflect any and all changes
                     for succ in pred_succ_traffic_now:
                         pred_traffic = pred_succ_traffic_now[succ]
-                        if pred_traffic.is_empty():
-                            if dst in self.get_transfer_traffic_dsts(pred):
-                                if succ in pred.transfer_traffic[dst]:
-                                    del pred.transfer_traffic[dst][succ]
-
-                                    modified_edges.append((pred, dst))
-                        else:
-                            self.set_transfer_traffic_via_succ(pred, dst, succ, pred_traffic)
+                        self.set_transfer_traffic_via_succ(pred, dst, succ, pred_traffic)
 
     def compute_switch_transfer_traffic(self):
 
@@ -210,9 +203,10 @@ class SwitchPortGraph(PortGraph):
         # Do the changes...
         try:
             # First accumulate any more traffic that has arrived from this sucessor
-            more_from_succ = curr.transfer_traffic[dst][succ].difference(dst_traffic_at_succ)
+            prev_dst_traffic_at_succ = self.get_transfer_traffic_via_succ(curr, dst, succ)
+            more_from_succ = prev_dst_traffic_at_succ.difference(dst_traffic_at_succ)
             if not more_from_succ.is_empty():
-                curr.transfer_traffic[dst][succ].union(more_from_succ)
+                prev_dst_traffic_at_succ.union(more_from_succ)
 
             # Then get rid of traffic that this particular successor does not admit anymore
             less_from_succ = dst_traffic_at_succ.difference(self.get_transfer_traffic_via_succ(curr, dst, succ))
@@ -220,25 +214,19 @@ class SwitchPortGraph(PortGraph):
                 remaining = less_from_succ.difference(self.get_transfer_traffic_via_succ(curr, dst, succ))
                 self.set_transfer_traffic_via_succ(curr, dst, succ, remaining)
 
-                if curr.transfer_traffic[dst][succ].is_empty():
-                    del curr.transfer_traffic[dst][succ]
-
         # If there is no traffic for this dst-succ combination prior to this propagation,
         # setup a traffic object for successor
         except KeyError:
             if not dst_traffic_at_succ.is_empty():
-                self.set_transfer_traffic_via_succ(curr, dst, succ, Traffic())
-                curr.transfer_traffic[dst][succ].union(dst_traffic_at_succ)
+                new_traffic = Traffic()
+                new_traffic.union(dst_traffic_at_succ)
+                self.set_transfer_traffic_via_succ(curr, dst, succ, new_traffic)
 
         # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
         traffic_after_changes = self.get_transfer_traffic(curr, dst)
 
         # Compute what reductions (if any) in traffic has occured due to all the changes
         reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
-
-        # If nothing is left behind then clean up the dictionary.
-        if traffic_after_changes.is_empty():
-            del curr.transfer_traffic[dst]
 
         traffic_to_propagate = traffic_after_changes
 
