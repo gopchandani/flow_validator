@@ -43,15 +43,15 @@ class FlowValidator:
         for host_id in self.network_graph.host_ids:
             host_obj = self.network_graph.get_node_object(host_id)
 
-            admitted_traffic = Traffic(init_wildcard=True)
-            admitted_traffic.set_field("ethernet_type", 0x0800)
+            dst_traffic_at_succ = Traffic(init_wildcard=True)
+            dst_traffic_at_succ.set_field("ethernet_type", 0x0800)
             dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
-            admitted_traffic.set_field("ethernet_destination", dst_mac_int)
+            dst_traffic_at_succ.set_field("ethernet_destination", dst_mac_int)
 
             print "Initializing for host:", host_id
 
             self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
-                                                     admitted_traffic,
+                                                     dst_traffic_at_succ,
                                                      None,
                                                      host_obj.switch_egress_port)
 

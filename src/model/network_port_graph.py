@@ -64,7 +64,6 @@ class NetworkPortGraph(PortGraph):
             edge = self.get_edge_from_transfer_traffic(pred, succ, transfer_traffic)
             self.add_edge(pred, succ, edge)
 
-
     def update_admitted_traffic(self, modified_edges):
 
         # This object holds for each pred/dst combinations
@@ -76,18 +75,18 @@ class NetworkPortGraph(PortGraph):
             pred = modified_edge[0]
             succ = modified_edge[1]
 
-            # TODO Limit the destinations by using markets in modified_edges
+            # TODO Limit the destinations by using markets in modified_flow_table_edges
             # Right now, just go to the pred/succ and snap up all destinations, without regard to
             # whether the admitted traffic actually could have gotten affected by modified_edge.
 
-            for dst in pred.admitted_traffic:
+            for dst in self.get_admitted_traffic_dsts(pred):
                 if dst not in change_matrix[pred]:
                     change_matrix[pred][dst] = [succ]
                 else:
                     if succ not in change_matrix[pred][dst]:
                         change_matrix[pred][dst].append(succ)
 
-            for dst in succ.admitted_traffic:
+            for dst in self.get_admitted_traffic_dsts(succ):
                 if dst not in change_matrix[pred]:
                     change_matrix[pred][dst] = [succ]
                 else:
@@ -131,12 +130,7 @@ class NetworkPortGraph(PortGraph):
                     # Update admitted traffic at ingress port to reflect any and all changes
                     for succ in pred_succ_traffic_now:
                         pred_traffic = pred_succ_traffic_now[succ]
-                        if pred_traffic.is_empty():
-                            if dst in pred.admitted_traffic:
-                                if succ in pred.admitted_traffic[dst]:
-                                    del pred.admitted_traffic[dst][succ]
-                        else:
-                            pred.admitted_traffic[dst][succ] = pred_traffic
+                        self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
 
     def init_network_port_graph(self):
 
