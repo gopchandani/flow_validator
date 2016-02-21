@@ -90,30 +90,3 @@ class PortGraph(object):
             succ_list = node.admitted_traffic[dst].keys()
 
         return succ_list
-
-    def get_transfer_traffic(self, node, dst):
-
-        dst_transfer_traffic = Traffic()
-
-        if dst in node.transfer_traffic:
-            for succ in node.transfer_traffic[dst]:
-                dst_transfer_traffic.union(node.transfer_traffic[dst][succ])
-
-        return dst_transfer_traffic
-
-    def get_transfer_traffic_via_succ(self, node, dst, succ):
-        return node.transfer_traffic[dst][succ]
-
-    def set_transfer_traffic_via_succ(self, node, dst, succ, transfer_traffic):
-        node.transfer_traffic[dst][succ] = transfer_traffic
-
-    def get_transfer_traffic_dsts(self, node):
-        return node.transfer_traffic.keys()
-
-    def get_transfer_traffic_succs(self, node, dst):
-        succ_list = None
-        if dst in node.transfer_traffic:
-            succ_list = node.transfer_traffic[dst].keys()
-
-        return succ_list
-

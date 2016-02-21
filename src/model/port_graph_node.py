@@ -15,7 +15,6 @@ class PortGraphNode:
             self.parent_obj = None
 
             # This nested dictionary is to hold Traffic objects per successor, per destination
-            self.transfer_traffic = defaultdict(defaultdict)
             self.admitted_traffic = defaultdict(defaultdict)
 
         else:

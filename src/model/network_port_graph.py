@@ -13,17 +13,17 @@ class NetworkPortGraph(PortGraph):
 
         super(NetworkPortGraph, self).__init__(network_graph)
 
-    def get_edge_from_transfer_traffic(self, pred, dst, transfer_traffic):
+    def get_edge_from_admitted_traffic(self, pred, dst, admitted_traffic):
 
         edge = PortGraphEdge(pred, dst)
 
         # If the edge filter became empty, reflect that.
-        if transfer_traffic.is_empty():
+        if admitted_traffic.is_empty():
             pass
         else:
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
-            for te in transfer_traffic.traffic_elements:
+            for te in admitted_traffic.traffic_elements:
                 t = Traffic()
                 t.add_traffic_elements([te])
                 edge.add_edge_data((t, te.switch_modifications, te.vuln_rank))
@@ -43,9 +43,9 @@ class NetworkPortGraph(PortGraph):
 
             pred = sw.port_graph.get_ingress_node(sw.node_id, src_port_number)
 
-            for succ in pred.transfer_traffic:
-                transfer_traffic = sw.port_graph.get_transfer_traffic(pred, succ)
-                edge = self.get_edge_from_transfer_traffic(pred, succ, transfer_traffic)
+            for succ in pred.admitted_traffic:
+                admitted_traffic = sw.port_graph.get_admitted_traffic(pred, succ)
+                edge = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic)
                 self.add_edge(pred, succ, edge)
 
     def modify_switch_transfer_edges(self, sw, modified_edges):
@@ -61,8 +61,8 @@ class NetworkPortGraph(PortGraph):
                 self.remove_edge(pred, succ)
 
             # Then, add the edge back by using the new transfer traffic now
-            transfer_traffic = sw.port_graph.get_transfer_traffic(pred, succ)
-            edge = self.get_edge_from_transfer_traffic(pred, succ, transfer_traffic)
+            admitted_traffic = sw.port_graph.get_admitted_traffic(pred, succ)
+            edge = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic)
             self.add_edge(pred, succ, edge)
 
     def update_admitted_traffic(self, modified_edges):
@@ -139,7 +139,7 @@ class NetworkPortGraph(PortGraph):
         for sw in self.network_graph.get_switches():
 
             sw.port_graph.init_switch_port_graph()
-            sw.port_graph.compute_switch_transfer_traffic()
+            sw.port_graph.compute_switch_admitted_traffic()
             # test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
             # print test_passed
             self.add_switch_transfer_edges(sw)
@@ -168,7 +168,7 @@ class NetworkPortGraph(PortGraph):
         sw1.ports[edge_port_dict[node1_id]].state = "up"
         sw2.ports[edge_port_dict[node2_id]].state = "up"
 
-        edge = self.get_edge_from_transfer_traffic(sw1.ports[edge_port_dict[node1_id]].switch_port_graph_egress_node,
+        edge = self.get_edge_from_admitted_traffic(sw1.ports[edge_port_dict[node1_id]].switch_port_graph_egress_node,
                                                    sw2.ports[edge_port_dict[node2_id]].switch_port_graph_ingress_node,
                                                    Traffic(init_wildcard=True))
 
@@ -176,7 +176,7 @@ class NetworkPortGraph(PortGraph):
                       sw2.ports[edge_port_dict[node2_id]].network_port_graph_ingress_node,
                       edge)
 
-        edge = self.get_edge_from_transfer_traffic(sw2.ports[edge_port_dict[node2_id]].switch_port_graph_egress_node,
+        edge = self.get_edge_from_admitted_traffic(sw2.ports[edge_port_dict[node2_id]].switch_port_graph_egress_node,
                                                    sw1.ports[edge_port_dict[node1_id]].switch_port_graph_ingress_node,
                                                    Traffic(init_wildcard=True))
 
@@ -186,12 +186,12 @@ class NetworkPortGraph(PortGraph):
 
         # Update transfer and admitted traffic
         if updating:
-            modified_edges = sw1.port_graph.update_transfer_traffic_due_to_port_state_change(edge_port_dict[node1_id],
+            modified_edges = sw1.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node1_id],
                                                                                          "port_up")
             self.modify_switch_transfer_edges(sw1, modified_edges)
             self.update_admitted_traffic(modified_edges)
 
-            modified_edges = sw2.port_graph.update_transfer_traffic_due_to_port_state_change(edge_port_dict[node2_id],
+            modified_edges = sw2.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node2_id],
                                                                                          "port_up")
             self.modify_switch_transfer_edges(sw2, modified_edges)
             self.update_admitted_traffic(modified_edges)
@@ -213,11 +213,11 @@ class NetworkPortGraph(PortGraph):
                          sw1.ports[edge_port_dict[node1_id]].network_port_graph_ingress_node)
 
         # Update transfer and admitted traffic
-        modified_edges = sw1.port_graph.update_transfer_traffic_due_to_port_state_change(edge_port_dict[node1_id], "port_down")
+        modified_edges = sw1.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node1_id], "port_down")
         self.modify_switch_transfer_edges(sw1, modified_edges)
         self.update_admitted_traffic(modified_edges)
 
-        modified_edges = sw2.port_graph.update_transfer_traffic_due_to_port_state_change(edge_port_dict[node2_id], "port_down")
+        modified_edges = sw2.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node2_id], "port_down")
         self.modify_switch_transfer_edges(sw2, modified_edges)
         self.update_admitted_traffic(modified_edges)
 
