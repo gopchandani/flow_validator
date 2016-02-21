@@ -27,14 +27,14 @@ class SwitchPortGraph(PortGraph):
 
             port = self.sw.ports[port_num]
 
-            self.add_node(port.port_graph_ingress_node)
-            self.add_node(port.port_graph_egress_node)
+            self.add_node(port.switch_port_graph_ingress_node)
+            self.add_node(port.switch_port_graph_egress_node)
 
-            edge = PortGraphEdge(port.port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node)
+            edge = PortGraphEdge(port.switch_port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node)
             edge_traffic_filter = Traffic()
             edge_traffic_filter.union(port.ingress_node_traffic)
             edge.add_edge_data((edge_traffic_filter, None, None, None))
-            self.add_edge(port.port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node, edge)
+            self.add_edge(port.switch_port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node, edge)
 
         # Try passing a wildcard through the flow table
         for flow_table in self.sw.flow_tables:
@@ -242,7 +242,7 @@ class SwitchPortGraph(PortGraph):
             # If it is an ingress port, it has no predecessors:
 
             if curr.node_type == "ingress":
-                modified_edges.append((curr, dst))
+                modified_edges.append((curr.node_id, dst.node_id))
 
             for pred in self.predecessors_iter(curr):
                 edge = self.get_edge(pred, curr)
@@ -255,7 +255,7 @@ class SwitchPortGraph(PortGraph):
         if not reduced_traffic.is_empty():
 
             if curr.node_type == "ingress":
-                modified_edges.append((curr, dst))
+                modified_edges.append((curr.node_id, dst.node_id))
 
             for pred in self.predecessors_iter(curr):
                 edge = self.get_edge(pred, curr)

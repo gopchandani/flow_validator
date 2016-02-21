@@ -26,19 +26,30 @@ class Port():
             self.parse_sel_port_json(port_json)
 
         # Need port_number parsed in before this is called
-        self.port_graph_ingress_node = PortGraphNode(self.sw,
-                                                     self.sw.port_graph.get_ingress_node_id(self.sw.node_id,
+        self.switch_port_graph_ingress_node = PortGraphNode(self.sw,
+                                                            self.sw.port_graph.get_ingress_node_id(self.sw.node_id,
                                                                                             self.port_number),
                                                      "ingress")
 
-        self.port_graph_egress_node = PortGraphNode(self.sw,
-                                                    self.sw.port_graph.get_egress_node_id(self.sw.node_id,
+        self.switch_port_graph_egress_node = PortGraphNode(self.sw,
+                                                           self.sw.port_graph.get_egress_node_id(self.sw.node_id,
                                                                                           self.port_number),
                                                     "egress")
 
-        self.port_graph_ingress_node.parent_obj = self
-        self.port_graph_egress_node.parent_obj = self
+        self.network_port_graph_ingress_node = PortGraphNode(self.sw,
+                                                            self.sw.port_graph.get_ingress_node_id(self.sw.node_id,
+                                                                                            self.port_number),
+                                                     "ingress")
 
+        self.network_port_graph_egress_node = PortGraphNode(self.sw,
+                                                           self.sw.port_graph.get_egress_node_id(self.sw.node_id,
+                                                                                          self.port_number),
+                                                    "egress")
+
+        self.switch_port_graph_ingress_node.parent_obj = self
+        self.switch_port_graph_egress_node.parent_obj = self
+        self.network_port_graph_ingress_node.parent_obj = self
+        self.network_port_graph_egress_node.parent_obj = self
 
         self.ingress_node_traffic = Traffic(init_wildcard=True)
         self.ingress_node_traffic.set_field("in_port", int(self.port_number))
