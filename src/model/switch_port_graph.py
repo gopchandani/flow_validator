@@ -120,20 +120,18 @@ class SwitchPortGraph(PortGraph):
             egress_node = self.get_egress_node(self.sw.node_id, port_num)
 
             dst_traffic_at_succ = Traffic(init_wildcard=True)
-            modified_edges = []
-            self.compute_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, modified_edges)
+            end_to_end_modified_edges = []
+            self.compute_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, end_to_end_modified_edges)
 
-    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, modified_edges):
+    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
 
         if not additional_traffic.is_empty():
 
-            # If it is an ingress port, it has no predecessors:
-
             if curr.node_type == "ingress":
-                modified_edges.append((curr.node_id, dst.node_id))
+                end_to_end_modified_edges.append((curr.node_id, dst.node_id))
 
             for pred in self.predecessors_iter(curr):
                 edge = self.get_edge(pred, curr)
@@ -141,17 +139,17 @@ class SwitchPortGraph(PortGraph):
 
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_admitted_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, modified_edges)
+                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
 
         if not reduced_traffic.is_empty():
 
             if curr.node_type == "ingress":
-                modified_edges.append((curr.node_id, dst.node_id))
+                end_to_end_modified_edges.append((curr.node_id, dst.node_id))
 
             for pred in self.predecessors_iter(curr):
                 edge = self.get_edge(pred, curr)
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-                self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, modified_edges)
+                self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 
@@ -197,7 +195,7 @@ class SwitchPortGraph(PortGraph):
 
     def update_admitted_traffic_due_to_port_state_change(self, port_num, event_type):
 
-        modified_edges = []
+        end_to_end_modified_edges = []
 
         ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
         egress_node = self.get_egress_node(self.sw.node_id, port_num)
@@ -212,7 +210,7 @@ class SwitchPortGraph(PortGraph):
 
             self.modify_flow_table_edges(flow_table, modified_flow_table_edges)
 
-            self.update_admitted_traffic(modified_flow_table_edges, modified_edges)
+            self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
 
         if event_type == "port_down":
 
@@ -222,7 +220,7 @@ class SwitchPortGraph(PortGraph):
 
             dsts = self.get_admitted_traffic_dsts(ingress_node)
             for dst in dsts:
-                self.compute_admitted_traffic(ingress_node, Traffic(), self.sw.flow_tables[0].port_graph_node, dst, modified_edges)
+                self.compute_admitted_traffic(ingress_node, Traffic(), self.sw.flow_tables[0].port_graph_node, dst, end_to_end_modified_edges)
 
         elif event_type == "port_up":
 
@@ -239,9 +237,9 @@ class SwitchPortGraph(PortGraph):
                 edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
                 traffic_to_propagate = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
                 self.compute_admitted_traffic(ingress_node, traffic_to_propagate,
-                                              self.sw.flow_tables[0].port_graph_node, dst, modified_edges)
+                                              self.sw.flow_tables[0].port_graph_node, dst, end_to_end_modified_edges)
 
-        return modified_edges
+        return end_to_end_modified_edges
 
     def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
 
@@ -343,12 +341,12 @@ class SwitchPortGraph(PortGraph):
             path_count_before, tt_before = self.get_path_counts_and_tt(verbose)
 
             testing_port.state = "down"
-            modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number, "port_down")
+            end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number, "port_down")
 
             path_count_intermediate, tt_intermediate = self.get_path_counts_and_tt(verbose)
 
             testing_port.state = "up"
-            modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number, "port_up")
+            end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number, "port_up")
 
             path_count_after, tt_after = self.get_path_counts_and_tt(verbose)
 
