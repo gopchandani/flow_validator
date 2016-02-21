@@ -192,46 +192,6 @@ class SwitchPortGraph(PortGraph):
             modified_edges = []
             self.compute_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, modified_edges)
 
-    def account_node_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst):
-
-        # Keep track of what traffic looks like before any changes occur
-        traffic_before_changes = self.get_admitted_traffic(curr, dst)
-
-        # Compute what additional traffic is being admitted overall
-        additional_traffic = traffic_before_changes.difference(dst_traffic_at_succ)
-
-        # Do the changes...
-        try:
-            # First accumulate any more traffic that has arrived from this sucessor
-            prev_dst_traffic_at_succ = self.get_admitted_traffic_via_succ(curr, dst, succ)
-            more_from_succ = prev_dst_traffic_at_succ.difference(dst_traffic_at_succ)
-            if not more_from_succ.is_empty():
-                prev_dst_traffic_at_succ.union(more_from_succ)
-
-            # Then get rid of traffic that this particular successor does not admit anymore
-            less_from_succ = dst_traffic_at_succ.difference(self.get_admitted_traffic_via_succ(curr, dst, succ))
-            if not less_from_succ.is_empty():
-                remaining = less_from_succ.difference(self.get_admitted_traffic_via_succ(curr, dst, succ))
-                self.set_admitted_traffic_via_succ(curr, dst, succ, remaining)
-
-        # If there is no traffic for this dst-succ combination prior to this propagation,
-        # setup a traffic object for successor
-        except KeyError:
-            if not dst_traffic_at_succ.is_empty():
-                new_traffic = Traffic()
-                new_traffic.union(dst_traffic_at_succ)
-                self.set_admitted_traffic_via_succ(curr, dst, succ, new_traffic)
-
-        # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
-        traffic_after_changes = self.get_admitted_traffic(curr, dst)
-
-        # Compute what reductions (if any) in traffic has occured due to all the changes
-        reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
-
-        traffic_to_propagate = traffic_after_changes
-
-        return additional_traffic, reduced_traffic, traffic_to_propagate
-
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, modified_edges):
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
