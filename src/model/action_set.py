@@ -148,26 +148,6 @@ class Action():
     def is_failover_action(self):
         return (self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF)
 
-    def perform_edge_failover(self):
-
-        muted_ports = []
-        unmuted_port = None
-
-        for bucket_rank in range(len(self.bucket.group.bucket_list)):
-            
-            this_bucket = self.bucket.group.bucket_list[bucket_rank]
-
-            if this_bucket.is_live():
-
-                if not unmuted_port:
-                    unmuted_port = (this_bucket.watch_port, bucket_rank)
-                else:
-                    muted_ports.append((this_bucket.watch_port, bucket_rank))
-            else:
-                muted_ports.append((this_bucket.watch_port, bucket_rank))
-
-        return muted_ports, unmuted_port
-
 class ActionSet():
 
     '''
