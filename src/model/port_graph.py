@@ -13,6 +13,11 @@ class PortGraph(object):
         self.network_graph = network_graph
         self.g = nx.DiGraph()
 
+        # These are used to measure the points where changes are measured
+        self.boundary_ingress_nodes = []
+        self.boundary_egress_nodes = []
+
+
     def get_table_node_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
 
@@ -133,6 +138,33 @@ class PortGraph(object):
 
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
+    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
+
+        additional_traffic, reduced_traffic, traffic_to_propagate = \
+            self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
+
+        if not additional_traffic.is_empty():
+
+            if curr in self.boundary_ingress_nodes:
+                end_to_end_modified_edges.append((curr.node_id, dst.node_id))
+
+            for pred in self.predecessors_iter(curr):
+                edge = self.get_edge(pred, curr)
+                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
+
+                # Base case: No traffic left to propagate to predecessors
+                if not pred_admitted_traffic.is_empty():
+                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
+
+        if not reduced_traffic.is_empty():
+
+            if curr in self.boundary_ingress_nodes:
+                end_to_end_modified_edges.append((curr.node_id, dst.node_id))
+
+            for pred in self.predecessors_iter(curr):
+                edge = self.get_edge(pred, curr)
+                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
+                self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
 
     def update_admitted_traffic(self, modified_edges, end_to_end_modified_edges):
 

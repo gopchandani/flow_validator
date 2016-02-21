@@ -50,10 +50,13 @@ class FlowValidator:
 
             print "Initializing for host:", host_id
 
+            end_to_end_modified_edges = []
+
             self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
                                                      dst_traffic_at_succ,
                                                      None,
-                                                     host_obj.switch_egress_port)
+                                                     host_obj.switch_egress_port,
+                                                     end_to_end_modified_edges)
 
     def validate_host_pair_reachability(self, src_h_id, dst_h_id, specific_traffic, verbose=True):
 

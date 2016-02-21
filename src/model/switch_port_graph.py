@@ -30,6 +30,9 @@ class SwitchPortGraph(PortGraph):
             self.add_node(port.switch_port_graph_ingress_node)
             self.add_node(port.switch_port_graph_egress_node)
 
+            self.boundary_ingress_nodes.append(port.switch_port_graph_ingress_node)
+            self.boundary_egress_nodes.append(port.switch_port_graph_egress_node)
+
             edge = PortGraphEdge(port.switch_port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node)
             edge_traffic_filter = Traffic()
             edge_traffic_filter.union(port.ingress_node_traffic)
@@ -122,34 +125,6 @@ class SwitchPortGraph(PortGraph):
             dst_traffic_at_succ = Traffic(init_wildcard=True)
             end_to_end_modified_edges = []
             self.compute_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, end_to_end_modified_edges)
-
-    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
-
-        additional_traffic, reduced_traffic, traffic_to_propagate = \
-            self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
-
-        if not additional_traffic.is_empty():
-
-            if curr.node_type == "ingress":
-                end_to_end_modified_edges.append((curr.node_id, dst.node_id))
-
-            for pred in self.predecessors_iter(curr):
-                edge = self.get_edge(pred, curr)
-                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-
-                # Base case: No traffic left to propagate to predecessors
-                if not pred_admitted_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
-
-        if not reduced_traffic.is_empty():
-
-            if curr.node_type == "ingress":
-                end_to_end_modified_edges.append((curr.node_id, dst.node_id))
-
-            for pred in self.predecessors_iter(curr):
-                edge = self.get_edge(pred, curr)
-                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-                self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 

@@ -1,11 +1,8 @@
 __author__ = 'Rakesh Kumar'
 
-from collections import defaultdict
-
 from port_graph import PortGraph
 from port_graph_edge import PortGraphEdge
 from traffic import Traffic
-
 
 class NetworkPortGraph(PortGraph):
 
@@ -158,7 +155,6 @@ class NetworkPortGraph(PortGraph):
         self.modify_switch_transfer_edges(sw2, modified_switch_edges)
         self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
 
-
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 
         pred_admitted_traffic = Traffic()
@@ -189,29 +185,6 @@ class NetworkPortGraph(PortGraph):
                 pred_admitted_traffic.union(i)
 
         return pred_admitted_traffic
-
-    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges=[]):
-
-        additional_traffic, reduced_traffic, traffic_to_propagate = \
-            self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
-
-        if not additional_traffic.is_empty():
-
-            for pred in self.predecessors_iter(curr):
-
-                edge = self.get_edge(pred, curr)
-                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-
-                # Base case: No traffic left to propagate to predecessors
-                if not pred_admitted_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst)
-
-        if not reduced_traffic.is_empty():
-
-            for pred in self.predecessors_iter(curr):
-                edge = self.get_edge(pred, curr)
-                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-                self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst)
 
     def get_paths(self, this_p, dst, specific_traffic, this_path, all_paths, path_vuln_rank, path_vuln_ranks, verbose):
 
