@@ -200,7 +200,7 @@ class FlowTable():
         # Set the flow table's port graph edges to now modified ones
         if modified_keys:
             self.current_port_graph_edges = new_port_graph_edges
-            modified_edges = [(self.port_graph_node, k) for k in modified_keys]
+            modified_edges = [(self.port_graph_node.node_id, k.node_id) for k in modified_keys]
 
         return modified_edges
 

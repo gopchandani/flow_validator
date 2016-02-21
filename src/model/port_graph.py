@@ -4,6 +4,8 @@ import networkx as nx
 
 from traffic import Traffic
 
+from collections import defaultdict
+
 class PortGraph(object):
 
     def __init__(self, network_graph):
@@ -130,3 +132,72 @@ class PortGraph(object):
         traffic_to_propagate = traffic_after_changes
 
         return additional_traffic, reduced_traffic, traffic_to_propagate
+
+
+    def update_admitted_traffic(self, modified_edges, end_to_end_modified_edges):
+
+        # This object holds for each pred/dst combinations
+        # that have changed as keys and list of succ ports as values
+        change_matrix = defaultdict(defaultdict)
+
+        for modified_edge in modified_edges:
+
+            pred = self.get_node(modified_edge[0])
+            succ = self.get_node(modified_edge[1])
+
+            # TODO Limit the destinations by using markets in modified_flow_table_edges
+            # Right now, just go to the pred/succ and snap up all destinations, without regard to
+            # whether the admitted traffic actually could have gotten affected by modified_edge.
+
+            for dst in self.get_admitted_traffic_dsts(pred):
+                if dst not in change_matrix[pred]:
+                    change_matrix[pred][dst] = [succ]
+                else:
+                    if succ not in change_matrix[pred][dst]:
+                        change_matrix[pred][dst].append(succ)
+
+            for dst in self.get_admitted_traffic_dsts(succ):
+                if dst not in change_matrix[pred]:
+                    change_matrix[pred][dst] = [succ]
+                else:
+                    if succ not in change_matrix[pred][dst]:
+                        change_matrix[pred][dst].append(succ)
+
+        # Do this for each pred port that has changed
+        for pred in change_matrix:
+
+            # For each destination that may have been affected at the pred port
+            for dst in change_matrix[pred]:
+
+                prev_pred_traffic = self.get_admitted_traffic(pred, dst)
+                now_pred_traffic = Traffic()
+
+                pred_succ_traffic_now = {}
+
+                for succ in change_matrix[pred][dst]:
+
+                    edge = self.get_edge(pred, succ)
+                    succ_traffic = self.get_admitted_traffic(succ, dst)
+
+                    pred_traffic = self.compute_edge_admitted_traffic(succ_traffic, edge)
+
+                    pred_succ_traffic_now[succ] = pred_traffic
+
+                    now_pred_traffic.union(pred_traffic)
+
+                more_now = prev_pred_traffic.difference(now_pred_traffic)
+                less_now = now_pred_traffic.difference(prev_pred_traffic)
+
+                # Decide if to propagate it, if more_now or less_now is not empty...
+                if not more_now.is_empty() or not less_now.is_empty():
+                    for succ in pred_succ_traffic_now:
+
+                        self.compute_admitted_traffic(pred,
+                                                      pred_succ_traffic_now[succ],
+                                                      succ,
+                                                      dst, end_to_end_modified_edges)
+                else:
+                    # Update admitted traffic at ingress port to reflect any and all changes
+                    for succ in pred_succ_traffic_now:
+                        pred_traffic = pred_succ_traffic_now[succ]
+                        self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
