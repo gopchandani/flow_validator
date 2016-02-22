@@ -234,6 +234,18 @@ class PortGraph(object):
                         pred_traffic = pred_succ_traffic_now[succ]
                         self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
 
+    def path_has_loop(self, path, succ):
+
+        # Check for loops, if a node repeats more than twice, it is a loop
+        indices = [i for i,x in enumerate(path) if x == succ]
+
+        has_loop = len(indices) > 2
+
+        if has_loop:
+            print "Found a loop in the path:", path
+
+        return has_loop
+
     def get_paths(self, this_p, dst, specific_traffic, this_path, all_paths, verbose):
 
         if dst in self.get_admitted_traffic_dsts(this_p):
@@ -249,15 +261,17 @@ class PortGraph(object):
             else:
 
                 for succ in at_succs:
-                    # Check for loops, if a node repeats more than twice, it is a loop
-                    indices = [i for i,x in enumerate(this_path) if x == succ]
-                    if len(indices) > 2:
-                        print "Found a loop, this_path:", this_path
-                    else:
+
+                    # Make sure no loops will be caused by going down this successor
+                    if not self.path_has_loop(this_path, succ):
+
                         at_dst_succ = self.get_admitted_traffic_via_succ(this_p, dst, succ)
+
+                        # Check to see if the specified traffic check is passed
                         if at_dst_succ.is_subset_traffic(specific_traffic):
                             this_path.append(succ)
 
+                            # modify specific_traffic to adjust to the modifications in traffic along the succ
                             modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
                             modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
 
@@ -267,3 +281,6 @@ class PortGraph(object):
                                            this_path,
                                            all_paths,
                                            verbose)
+                    else:
+                        # If there was a loop stop exploring further in this branch
+                        return
