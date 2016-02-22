@@ -270,47 +270,17 @@ class PortGraph(object):
 
         return all_equal
 
-    def count_paths(self, this_p, dst_p, verbose, path_elements=[]):
-
-        path_count = 0
-        if dst_p in self.get_admitted_traffic_dsts(this_p):
-            for succ_p in self.get_admitted_traffic_succs(this_p, dst_p):
-
-                if succ_p:
-
-                    # Try and detect a loop, if a port repeats more than twice, it is a loop
-                    indices = [i for i,x in enumerate(path_elements) if x == succ_p.node_id]
-                    if len(indices) > 2:
-                        if verbose:
-                            print "Found a loop, path_elements:", path_elements
-                    else:
-                        path_elements.append(succ_p.node_id)
-
-                        succ_at = self.get_admitted_traffic_via_succ(this_p, dst_p, succ_p)
-                        if not succ_at.is_empty():
-                            path_count += self.count_paths(succ_p, dst_p, verbose, path_elements)
-
-                # A none succcessor means, it originates here.
-                else:
-                    path_count += 1
-
-        return path_count
-
-    def get_graph_path_counts(self, verbose):
-        graph_path_counts = defaultdict(defaultdict)
+    def get_graph_paths(self, verbose):
+        graph_paths = defaultdict(defaultdict)
 
         for src in self.boundary_ingress_nodes:
             for dst in self.boundary_egress_nodes:
-                at = self.get_admitted_traffic(src, dst)
 
-                if not at.is_empty():
-                    graph_path_counts[src][dst] = self.count_paths(src, dst, verbose, [src.node_id])
-                else:
-                    graph_path_counts[src][dst] = 0
+                graph_paths[src][dst] = self.get_paths(src, dst, None, [src], verbose)
 
-        return graph_path_counts
+        return graph_paths
 
-    def compare_graph_path_counts(self, graph_path_counts_before, graph_path_counts_after, verbose):
+    def compare_graph_paths(self, graph_paths_before, graph_paths_after, verbose):
 
         all_equal = True
 
@@ -318,19 +288,23 @@ class PortGraph(object):
             for dst in self.boundary_egress_nodes:
 
                 if verbose:
-                    print "From Port:", src, "To Port:", dst
+                    print
 
-                if graph_path_counts_before[src][dst] != graph_path_counts_after[src][dst]:
-                    print "Path Count mismatch - Before:", graph_path_counts_before[src][dst], \
-                        "After:", graph_path_counts_after[src][dst]
+                if len(graph_paths_before[src][dst]) != len(graph_paths_after[src][dst]):
+                    print "From Port:", src, "To Port:", dst, \
+                        "Path Count mismatch - Before:", graph_paths_before[src][dst], \
+                        "After:", graph_paths_after[src][dst]
                     all_equal = False
                 else:
                     if verbose:
-                        print "Path Count match - Before:", graph_path_counts_before[src][dst], \
-                            "After:", graph_path_counts_after[src][dst]
+                        print "From Port:", src, "To Port:", dst, \
+                            "Path Count match - Before:", graph_paths_before[src][dst], \
+                            "After:", graph_paths_after[src][dst]
         return all_equal
 
-    def get_paths(self, this_p, dst, specific_traffic, this_path, all_paths, verbose):
+    def get_paths(self, this_p, dst, specific_traffic, this_path, verbose):
+
+        all_paths = []
 
         if dst in self.get_admitted_traffic_dsts(this_p):
 
@@ -351,20 +325,37 @@ class PortGraph(object):
 
                         at_dst_succ = self.get_admitted_traffic_via_succ(this_p, dst, succ)
 
-                        # Check to see if the specified traffic check is passed
-                        if at_dst_succ.is_subset_traffic(specific_traffic):
-                            this_path.append(succ)
+                        # Check to see if what is admitted via this succ is  not empty
+                        if not at_dst_succ.is_empty():
 
-                            # modify specific_traffic to adjust to the modifications in traffic along the succ
-                            modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
-                            modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
+                            # Check to see if the specified traffic check is passed
 
-                            self.get_paths(succ,
-                                           dst,
-                                           modified_specific_traffic,
-                                           this_path,
-                                           all_paths,
-                                           verbose)
+                            if specific_traffic:
+
+                                if at_dst_succ.is_subset_traffic(specific_traffic):
+                                    this_path.append(succ)
+
+                                    # modify specific_traffic to adjust to the modifications in traffic along the succ
+                                    modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
+                                    modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
+
+                                    all_paths.extend(self.get_paths(succ,
+                                                                    dst,
+                                                                    modified_specific_traffic,
+                                                                    this_path,
+                                                                    verbose))
+                            else:
+                                this_path.append(succ)
+                                all_paths.extend(self.get_paths(succ,
+                                                                dst,
+                                                                specific_traffic,
+                                                                this_path,
+                                                                verbose))
+                        else:
+                            # Do not go further if there is no traffic admitted via this succ
+                            pass
                     else:
-                        # If there was a loop stop exploring further in this branch
-                        return
+                        # If there was a loop stop exploring further via this succ
+                        pass
+
+        return all_paths

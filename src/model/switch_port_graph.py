@@ -219,29 +219,29 @@ class SwitchPortGraph(PortGraph):
 
             testing_port = self.sw.ports[testing_port_number]
 
-            graph_path_counts_before = self.get_graph_path_counts(verbose)
+            graph_paths_before = self.get_graph_paths(verbose)
             graph_ats_before = self.get_graph_ats()
 
             testing_port.state = "down"
             end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number,
                                                                                               "port_down")
 
-            graph_path_counts_intermediate = self.get_graph_path_counts(verbose)
+            graph_paths_intermediate = self.get_graph_paths(verbose)
             graph_ats_intermediate = self.get_graph_ats()
 
             testing_port.state = "up"
             end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number,
                                                                                               "port_up")
 
-            graph_path_counts_after = self.get_graph_path_counts(verbose)
+            graph_paths_after = self.get_graph_paths(verbose)
             graph_ats_after = self.get_graph_ats()
 
-            all_graph_path_counts_equal = self.compare_graph_path_counts(graph_path_counts_before,
-                                                                         graph_path_counts_after,
-                                                                         verbose)
+            all_graph_paths_equal = self.compare_graph_paths(graph_paths_before,
+                                                             graph_paths_after,
+                                                             verbose)
 
-            if not all_graph_path_counts_equal:
-                test_passed = all_graph_path_counts_equal
+            if not all_graph_paths_equal:
+                test_passed = all_graph_paths_equal
                 print "Test Failed."
 
             all_graph_ats_equal = self.compare_graph_ats(graph_ats_before,
