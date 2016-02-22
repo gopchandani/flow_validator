@@ -75,14 +75,14 @@ class FlowValidator:
 
             if at.is_subset_traffic(specific_traffic):
 
-                self.port_graph.get_paths(src_host_obj.switch_ingress_port,
-                                          dst_host_obj.switch_egress_port,
-                                          specific_traffic,
-                                          [src_host_obj.switch_ingress_port],
-                                          all_paths,
-                                          0,
-                                          path_vuln_ranks,
-                                          verbose)
+                self.port_graph.get_paths_with_vuln_ranks(src_host_obj.switch_ingress_port,
+                                                          dst_host_obj.switch_egress_port,
+                                                          specific_traffic,
+                                                          [src_host_obj.switch_ingress_port],
+                                                          all_paths,
+                                                          0,
+                                                          path_vuln_ranks,
+                                                          verbose)
 
                 if verbose:
                     print "Path vulnerability ranks:", path_vuln_ranks
@@ -108,9 +108,9 @@ class FlowValidator:
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
                 at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
-                                                                                       dst_h_id,
-                                                                                       specific_traffic,
-                                                                                       verbose)
+                                                                                      dst_h_id,
+                                                                                      specific_traffic,
+                                                                                      verbose)
                 if not all_paths:
                     host_pair_paths[src_h_id][dst_h_id] = []
                 else:
@@ -134,9 +134,9 @@ class FlowValidator:
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
                 at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
-                                                                                       dst_h_id,
-                                                                                       specific_traffic,
-                                                                                       verbose)
+                                                                                      dst_h_id,
+                                                                                      specific_traffic,
+                                                                                      verbose)
                 if not all_paths:
                     all_pair_connected = False
 
@@ -161,9 +161,9 @@ class FlowValidator:
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
                 at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
-                                                                                       dst_h_id,
-                                                                                       specific_traffic,
-                                                                                       verbose)
+                                                                                      dst_h_id,
+                                                                                      specific_traffic,
+                                                                                      verbose)
                 if not all_paths:
                     all_pair_connected = False
                     print "Disconnected Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
@@ -177,7 +177,7 @@ class FlowValidator:
                         this_switch = this_path_element.sw.node_id
 
                         if prev_switch != this_switch:
-                            self.network_graph.graph[prev_switch][this_switch]\
+                            self.network_graph.graph[prev_switch][this_switch] \
                                 ["vuln_info"][path_vuln_ranks[0]].append(path)
 
                         prev_switch = this_switch

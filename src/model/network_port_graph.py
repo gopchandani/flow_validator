@@ -186,7 +186,7 @@ class NetworkPortGraph(PortGraph):
 
         return pred_admitted_traffic
 
-    def get_paths(self, this_p, dst, specific_traffic, this_path, all_paths, path_vuln_rank, path_vuln_ranks, verbose):
+    def get_paths_with_vuln_ranks(self, this_p, dst, specific_traffic, this_path, all_paths, path_vuln_rank, path_vuln_ranks, verbose):
 
         if dst in self.get_admitted_traffic_dsts(this_p):
 
@@ -218,14 +218,14 @@ class NetworkPortGraph(PortGraph):
 
                             max_vuln_rank_modified = modified_specific_traffic.get_max_vuln_rank()
 
-                            self.get_paths(succ,
-                                           dst,
-                                           modified_specific_traffic,
-                                           this_path,
-                                           all_paths,
-                                           path_vuln_rank + max_vuln_rank_modified,
-                                           path_vuln_ranks,
-                                           verbose)
+                            self.get_paths_with_vuln_ranks(succ,
+                                                           dst,
+                                                           modified_specific_traffic,
+                                                           this_path,
+                                                           all_paths,
+                                                           path_vuln_rank + max_vuln_rank_modified,
+                                                           path_vuln_ranks,
+                                                           verbose)
 
                             this_path_continues = True
 

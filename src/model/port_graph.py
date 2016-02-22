@@ -233,3 +233,37 @@ class PortGraph(object):
                     for succ in pred_succ_traffic_now:
                         pred_traffic = pred_succ_traffic_now[succ]
                         self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
+
+    def get_paths(self, this_p, dst, specific_traffic, this_path, all_paths, verbose):
+
+        if dst in self.get_admitted_traffic_dsts(this_p):
+
+            at_succs = self.get_admitted_traffic_succs(this_p, dst)
+
+            # If destination is one of the successors, stop
+            if dst in at_succs:
+                this_path.append(dst)
+                all_paths.append(this_path)
+
+            # Otherwise explore all the successors
+            else:
+
+                for succ in at_succs:
+                    # Check for loops, if a node repeats more than twice, it is a loop
+                    indices = [i for i,x in enumerate(this_path) if x == succ]
+                    if len(indices) > 2:
+                        print "Found a loop, this_path:", this_path
+                    else:
+                        at_dst_succ = self.get_admitted_traffic_via_succ(this_p, dst, succ)
+                        if at_dst_succ.is_subset_traffic(specific_traffic):
+                            this_path.append(succ)
+
+                            modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
+                            modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
+
+                            self.get_paths(succ,
+                                           dst,
+                                           modified_specific_traffic,
+                                           this_path,
+                                           all_paths,
+                                           verbose)

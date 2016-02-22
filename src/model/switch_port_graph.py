@@ -242,19 +242,6 @@ class SwitchPortGraph(PortGraph):
 
         return path_count
 
-    def count_transfer_function_paths(self, verbose=False):
-        path_count = 0
-
-        for src_port_number in self.sw.ports:
-            src_p = self.get_ingress_node(self.sw.node_id, src_port_number)
-            for dst_port_number in self.sw.ports:
-                dst_p = self.get_egress_node(self.sw.node_id, dst_port_number)
-                if verbose:
-                    print "From Port:", src_port_number, "To Port:", dst_port_number
-                path_count += self.count_paths(src_p, dst_p, verbose, src_p.node_id, [src_p.node_id])
-
-        return path_count
-
     def get_path_counts_and_tt(self, verbose):
         path_count = defaultdict(defaultdict)
         tt = defaultdict(defaultdict)
