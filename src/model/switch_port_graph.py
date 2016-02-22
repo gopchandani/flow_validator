@@ -193,9 +193,8 @@ class SwitchPortGraph(PortGraph):
             for edge_data_tuple in edge.edge_data_list:
                  del edge_data_tuple[0].traffic_elements[:]
 
-            dsts = self.get_admitted_traffic_dsts(ingress_node)
-            for dst in dsts:
-                self.compute_admitted_traffic(ingress_node, Traffic(), self.sw.flow_tables[0].port_graph_node, dst, end_to_end_modified_edges)
+            modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
+            self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
 
         elif event_type == "port_up":
 
@@ -203,20 +202,12 @@ class SwitchPortGraph(PortGraph):
             for edge_data_tuple in edge.edge_data_list:
                 edge_data_tuple[0].union(ingress_node.parent_obj.ingress_node_traffic)
 
-            for dst in self.get_admitted_traffic_dsts(self.sw.flow_tables[0].port_graph_node):
-                traffic_to_propagate = Traffic()
-                for succ_succ in self.get_admitted_traffic_succs(self.sw.flow_tables[0].port_graph_node, dst):
-                    more = self.get_admitted_traffic_via_succ(self.sw.flow_tables[0].port_graph_node, dst, succ_succ)
-                    traffic_to_propagate.union(more)
-
-                edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
-                traffic_to_propagate = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-                self.compute_admitted_traffic(ingress_node, traffic_to_propagate,
-                                              self.sw.flow_tables[0].port_graph_node, dst, end_to_end_modified_edges)
+            modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
+            self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
 
         return end_to_end_modified_edges
 
-    def count_paths(self, this_p, dst_p, verbose, path_str="", path_elements=[]):
+    def count_paths(self, this_p, dst_p, verbose, path_elements=[]):
 
         path_count = 0
         if dst_p in self.get_admitted_traffic_dsts(this_p):
@@ -228,16 +219,16 @@ class SwitchPortGraph(PortGraph):
                     indices = [i for i,x in enumerate(path_elements) if x == succ_p.node_id]
                     if len(indices) > 2:
                         if verbose:
-                            print "Found a loop, path_str:", path_str
+                            print "Found a loop, path_elements:", path_elements
                     else:
                         path_elements.append(succ_p.node_id)
-                        path_count += self.count_paths(succ_p, dst_p, verbose, path_str + " -> " + succ_p.node_id, path_elements)
+
+                        succ_at = self.get_admitted_traffic_via_succ(this_p, dst_p, succ_p)
+                        if not succ_at.is_empty():
+                            path_count += self.count_paths(succ_p, dst_p, verbose, path_elements)
 
                 # A none succcessor means, it originates here.
                 else:
-                    if verbose:
-                        print path_str
-
                     path_count += 1
 
         return path_count
@@ -252,8 +243,15 @@ class SwitchPortGraph(PortGraph):
             for dst_port_number in self.sw.ports:
                 dst_p = self.get_egress_node(self.sw.node_id, dst_port_number)
 
-                path_count[src_p][dst_p] = self.count_paths(src_p, dst_p, verbose, src_p.node_id, [src_p.node_id])
                 tt[src_p][dst_p] = self.get_admitted_traffic(src_p, dst_p)
+
+                if src_p.node_id == 's1:ingress1' and dst_p.node_id == 's1:egress2':
+                    pass
+
+                if not tt[src_p][dst_p].is_empty():
+                    path_count[src_p][dst_p] = self.count_paths(src_p, dst_p, verbose, [src_p.node_id])
+                else:
+                    path_count[src_p][dst_p] = 0
 
         return path_count, tt
 
@@ -295,8 +293,8 @@ class SwitchPortGraph(PortGraph):
         # Loop over ports of the switch and fail and restore them one by one
         for testing_port_number in self.sw.ports:
 
-            # if testing_port_number != 2:
-            #     continue
+            if testing_port_number != 3:
+                continue
 
             testing_port = self.sw.ports[testing_port_number]
 
