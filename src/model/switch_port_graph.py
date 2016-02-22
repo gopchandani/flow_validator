@@ -191,7 +191,7 @@ class SwitchPortGraph(PortGraph):
 
             edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
             for edge_data_tuple in edge.edge_data_list:
-                 del edge_data_tuple[0].traffic_elements[:]
+                del edge_data_tuple[0].traffic_elements[:]
 
             modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
             self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
@@ -207,85 +207,6 @@ class SwitchPortGraph(PortGraph):
 
         return end_to_end_modified_edges
 
-    def count_paths(self, this_p, dst_p, verbose, path_elements=[]):
-
-        path_count = 0
-        if dst_p in self.get_admitted_traffic_dsts(this_p):
-            for succ_p in self.get_admitted_traffic_succs(this_p, dst_p):
-
-                if succ_p:
-
-                    # Try and detect a loop, if a port repeats more than twice, it is a loop
-                    indices = [i for i,x in enumerate(path_elements) if x == succ_p.node_id]
-                    if len(indices) > 2:
-                        if verbose:
-                            print "Found a loop, path_elements:", path_elements
-                    else:
-                        path_elements.append(succ_p.node_id)
-
-                        succ_at = self.get_admitted_traffic_via_succ(this_p, dst_p, succ_p)
-                        if not succ_at.is_empty():
-                            path_count += self.count_paths(succ_p, dst_p, verbose, path_elements)
-
-                # A none succcessor means, it originates here.
-                else:
-                    path_count += 1
-
-        return path_count
-
-    def get_path_counts_and_tt(self, verbose):
-        path_count = defaultdict(defaultdict)
-        tt = defaultdict(defaultdict)
-
-        for src_port_number in self.sw.ports:
-            src_p = self.get_ingress_node(self.sw.node_id, src_port_number)
-
-            for dst_port_number in self.sw.ports:
-                dst_p = self.get_egress_node(self.sw.node_id, dst_port_number)
-
-                tt[src_p][dst_p] = self.get_admitted_traffic(src_p, dst_p)
-
-                if src_p.node_id == 's1:ingress1' and dst_p.node_id == 's1:egress2':
-                    pass
-
-                if not tt[src_p][dst_p].is_empty():
-                    path_count[src_p][dst_p] = self.count_paths(src_p, dst_p, verbose, [src_p.node_id])
-                else:
-                    path_count[src_p][dst_p] = 0
-
-        return path_count, tt
-
-    def compare_path_counts_and_tt(self, path_count_before, tt_before, path_count_after, tt_after, verbose):
-
-        all_equal = True
-
-        for src_port_number in self.sw.ports:
-            src_p = self.get_ingress_node(self.sw.node_id, src_port_number)
-
-            for dst_port_number in self.sw.ports:
-                dst_p = self.get_egress_node(self.sw.node_id, dst_port_number)
-
-                if verbose:
-                    print "From Port:", src_port_number, "To Port:", dst_port_number
-
-                if path_count_before[src_p][dst_p] != path_count_after[src_p][dst_p]:
-                    print "Path Count mismatch - Before:", path_count_before[src_p][dst_p], \
-                        "After:", path_count_after[src_p][dst_p]
-                    all_equal = False
-                else:
-                    if verbose:
-                        print "Path Count match - Before:", path_count_before[src_p][dst_p], \
-                            "After:", path_count_after[src_p][dst_p]
-
-                if tt_before[src_p][dst_p].is_equal_traffic(tt_after[src_p][dst_p]):
-                    if verbose:
-                        print "Transfer traffic match"
-                else:
-                    print "Transfer traffic mismatch"
-                    all_equal = False
-
-        return all_equal
-
     def test_one_port_failure_at_a_time(self, verbose=False):
 
         test_passed = True
@@ -293,27 +214,41 @@ class SwitchPortGraph(PortGraph):
         # Loop over ports of the switch and fail and restore them one by one
         for testing_port_number in self.sw.ports:
 
-            if testing_port_number != 3:
-                continue
+            # if testing_port_number != 3:
+            #     continue
 
             testing_port = self.sw.ports[testing_port_number]
 
-            path_count_before, tt_before = self.get_path_counts_and_tt(verbose)
+            graph_path_counts_before = self.get_graph_path_counts(verbose)
+            graph_ats_before = self.get_graph_ats()
 
             testing_port.state = "down"
-            end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number, "port_down")
+            end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number,
+                                                                                              "port_down")
 
-            path_count_intermediate, tt_intermediate = self.get_path_counts_and_tt(verbose)
+            graph_path_counts_intermediate = self.get_graph_path_counts(verbose)
+            graph_ats_intermediate = self.get_graph_ats()
 
             testing_port.state = "up"
-            end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number, "port_up")
+            end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number,
+                                                                                              "port_up")
 
-            path_count_after, tt_after = self.get_path_counts_and_tt(verbose)
+            graph_path_counts_after = self.get_graph_path_counts(verbose)
+            graph_ats_after = self.get_graph_ats()
 
-            all_equal = self.compare_path_counts_and_tt(path_count_before, tt_before, path_count_after, tt_after, verbose)
+            all_graph_path_counts_equal = self.compare_graph_path_counts(graph_path_counts_before,
+                                                                         graph_path_counts_after,
+                                                                         verbose)
 
-            if not all_equal:
-                test_passed = all_equal
+            if not all_graph_path_counts_equal:
+                test_passed = all_graph_path_counts_equal
+                print "Test Failed."
+
+            all_graph_ats_equal = self.compare_graph_ats(graph_ats_before,
+                                                         graph_ats_after,
+                                                         verbose)
+            if not all_graph_ats_equal:
+                test_passed = all_graph_ats_equal
                 print "Test Failed."
 
         return test_passed

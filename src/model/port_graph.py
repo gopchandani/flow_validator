@@ -246,6 +246,90 @@ class PortGraph(object):
 
         return has_loop
 
+    def get_graph_ats(self):
+        graph_ats = defaultdict(defaultdict)
+
+        for src in self.boundary_ingress_nodes:
+            for dst in self.boundary_egress_nodes:
+                graph_ats[src][dst] = self.get_admitted_traffic(src, dst)
+
+        return graph_ats
+
+    def compare_graph_ats(self, graph_at_before, graph_at_after, verbose):
+        all_equal = True
+
+        for src in self.boundary_ingress_nodes:
+            for dst in self.boundary_egress_nodes:
+
+                if graph_at_before[src][dst].is_equal_traffic(graph_at_after[src][dst]):
+                    if verbose:
+                        print "From Port:", src, "To Port:", dst, "Admitted traffic match"
+                else:
+                    print "From Port:", src, "To Port:", dst, "Admitted traffic mismatch"
+                    all_equal = False
+
+        return all_equal
+
+    def count_paths(self, this_p, dst_p, verbose, path_elements=[]):
+
+        path_count = 0
+        if dst_p in self.get_admitted_traffic_dsts(this_p):
+            for succ_p in self.get_admitted_traffic_succs(this_p, dst_p):
+
+                if succ_p:
+
+                    # Try and detect a loop, if a port repeats more than twice, it is a loop
+                    indices = [i for i,x in enumerate(path_elements) if x == succ_p.node_id]
+                    if len(indices) > 2:
+                        if verbose:
+                            print "Found a loop, path_elements:", path_elements
+                    else:
+                        path_elements.append(succ_p.node_id)
+
+                        succ_at = self.get_admitted_traffic_via_succ(this_p, dst_p, succ_p)
+                        if not succ_at.is_empty():
+                            path_count += self.count_paths(succ_p, dst_p, verbose, path_elements)
+
+                # A none succcessor means, it originates here.
+                else:
+                    path_count += 1
+
+        return path_count
+
+    def get_graph_path_counts(self, verbose):
+        graph_path_counts = defaultdict(defaultdict)
+
+        for src in self.boundary_ingress_nodes:
+            for dst in self.boundary_egress_nodes:
+                at = self.get_admitted_traffic(src, dst)
+
+                if not at.is_empty():
+                    graph_path_counts[src][dst] = self.count_paths(src, dst, verbose, [src.node_id])
+                else:
+                    graph_path_counts[src][dst] = 0
+
+        return graph_path_counts
+
+    def compare_graph_path_counts(self, graph_path_counts_before, graph_path_counts_after, verbose):
+
+        all_equal = True
+
+        for src in self.boundary_ingress_nodes:
+            for dst in self.boundary_egress_nodes:
+
+                if verbose:
+                    print "From Port:", src, "To Port:", dst
+
+                if graph_path_counts_before[src][dst] != graph_path_counts_after[src][dst]:
+                    print "Path Count mismatch - Before:", graph_path_counts_before[src][dst], \
+                        "After:", graph_path_counts_after[src][dst]
+                    all_equal = False
+                else:
+                    if verbose:
+                        print "Path Count match - Before:", graph_path_counts_before[src][dst], \
+                            "After:", graph_path_counts_after[src][dst]
+        return all_equal
+
     def get_paths(self, this_p, dst, specific_traffic, this_path, all_paths, verbose):
 
         if dst in self.get_admitted_traffic_dsts(this_p):
