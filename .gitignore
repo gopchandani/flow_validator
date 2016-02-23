@@ -1,4 +1,5 @@
 .idea/
+src/experiments/configurations/*
 src/experiments/data/*
 src/experiments/plots/*
 src/topo/.cache/*
