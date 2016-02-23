@@ -270,34 +270,41 @@ class PortGraph(object):
 
         return has_loop
 
-    def should_add_succ(self, this_node, succ, dst, specific_traffic):
+    def should_add_succ(self, this_node, succ, dst, specific_traffic, path_prefix):
 
         should = False
         traffic_at_succ = None
 
         at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
 
-        # Check to see if what is admitted via this succ is  not empty
-        if not at_dst_succ.is_empty():
+        # Make sure no loops will be caused by going down this successor
+        if not self.path_has_loop(path_prefix, succ):
 
-            if specific_traffic:
+            # Check to see if what is admitted via this succ is  not empty
+            if not at_dst_succ.is_empty():
 
-                if at_dst_succ.is_subset_traffic(specific_traffic):
+                if specific_traffic:
+
+                    if at_dst_succ.is_subset_traffic(specific_traffic):
+                        should = True
+
+                        # modify specific_traffic to adjust to the modifications in traffic along the succ
+                        modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
+                        modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
+                        traffic_at_succ = modified_specific_traffic
+                    else:
+                        # Do not go further if the specified specific traffic is not handled by at_dst_succ
+                        pass
+
+                else:
+                    traffic_at_succ = specific_traffic
                     should = True
 
-                    # modify specific_traffic to adjust to the modifications in traffic along the succ
-                    modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
-                    modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
-                    traffic_at_succ = modified_specific_traffic
-                else:
-                    # Do not go further if the specified specific traffic is not handled by at_dst_succ
-                    pass
-
             else:
-                traffic_at_succ = specific_traffic
-
+                # Do not go further if there is no traffic admitted via this succ
+                pass
         else:
-            # Do not go further if there is no traffic admitted via this succ
+            # Do not add if this succ would cause a loop
             pass
 
         return should, traffic_at_succ
@@ -316,52 +323,35 @@ class PortGraph(object):
             # If destination is one of the successors, stop
             if dst in remaining_succs:
 
-                this_path = list(path_prefix)
-                this_path.append(dst)
-                this_level_paths.append(this_path)
+                should, traffic_at_succ = self.should_add_succ(this_node, dst, dst, specific_traffic, path_prefix)
+                if should:
+                    this_path = list(path_prefix)
+                    this_path.append(dst)
+                    this_level_paths.append(this_path)
 
-                remaining_succs.remove(dst)
+                    remaining_succs.remove(dst)
 
             # Explore all the remaining successors
             for succ in remaining_succs:
 
-                # Make sure no loops will be caused by going down this successor
-                if not self.path_has_loop(path_prefix, succ):
+                should, traffic_at_succ = self.should_add_succ(this_node, succ, dst, specific_traffic, path_prefix)
 
-                    at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
+                if should:
+                    path_prefix.append(succ)
 
-                    # Check to see if what is admitted via this succ is  not empty
-                    if not at_dst_succ.is_empty():
+                    if specific_traffic:
 
-                        # Check to see if the specified traffic check is passed
-
-                        if specific_traffic:
-
-                            if at_dst_succ.is_subset_traffic(specific_traffic):
-                                path_prefix.append(succ)
-
-                                # modify specific_traffic to adjust to the modifications in traffic along the succ
-                                modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
-                                modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
-
-                                this_level_paths.extend(self.get_paths(succ,
-                                                                       dst,
-                                                                       modified_specific_traffic,
-                                                                       path_prefix,
-                                                                       verbose))
-                        else:
-                            path_prefix.append(succ)
-                            this_level_paths.extend(self.get_paths(succ,
-                                                                   dst,
-                                                                   specific_traffic,
-                                                                   path_prefix,
-                                                                   verbose))
+                        this_level_paths.extend(self.get_paths(succ,
+                                                               dst,
+                                                               traffic_at_succ,
+                                                               path_prefix,
+                                                               verbose))
                     else:
-                        # Do not go further if there is no traffic admitted via this succ
-                        pass
-                else:
-                    # If there was a loop stop exploring further via this succ
-                    pass
+                        this_level_paths.extend(self.get_paths(succ,
+                                                               dst,
+                                                               specific_traffic,
+                                                               path_prefix,
+                                                               verbose))
 
         return this_level_paths
 
