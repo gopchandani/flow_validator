@@ -26,11 +26,11 @@ class InitialIncrementalTimes(Experiment):
                  total_number_of_ports_to_synthesize):
 
         super(InitialIncrementalTimes, self).__init__("initial_incremental_times",
-                                               num_iterations,
-                                               load_config,
-                                               save_config,
-                                               controller,
-                                               1)
+                                                      num_iterations,
+                                                      load_config,
+                                                      save_config,
+                                                      controller,
+                                                      1)
 
         self.total_number_of_hosts = total_number_of_hosts
         self.total_number_of_ports_to_synthesize = total_number_of_ports_to_synthesize
@@ -145,23 +145,23 @@ class InitialIncrementalTimes(Experiment):
 
 def main():
     num_iterations = 5
-    total_number_of_hosts = [4]#, 8]
+    total_number_of_hosts = [4]
     load_config = False
     save_config = True
     controller = "ryu"
 
     fanout = 2
     core = 1
-    total_number_of_ports_to_synthesize = 3
+    total_number_of_ports_to_synthesize = 2
 
     exp = InitialIncrementalTimes(num_iterations,
-                           total_number_of_hosts,
-                           load_config,
-                           save_config,
-                           controller,
-                           fanout,
-                           core,
-                           total_number_of_ports_to_synthesize)
+                                  total_number_of_hosts,
+                                  load_config,
+                                  save_config,
+                                  controller,
+                                  fanout,
+                                  core,
+                                  total_number_of_ports_to_synthesize)
 
     exp.trigger()
     exp.dump_data()
