@@ -270,7 +270,42 @@ class PortGraph(object):
 
         return has_loop
 
+    def should_add_succ(self, this_node, succ, dst, specific_traffic):
+
+        should = False
+        traffic_at_succ = None
+
+        at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
+
+        # Check to see if what is admitted via this succ is  not empty
+        if not at_dst_succ.is_empty():
+
+            if specific_traffic:
+
+                if at_dst_succ.is_subset_traffic(specific_traffic):
+                    should = True
+
+                    # modify specific_traffic to adjust to the modifications in traffic along the succ
+                    modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
+                    modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
+                    traffic_at_succ = modified_specific_traffic
+                else:
+                    # Do not go further if the specified specific traffic is not handled by at_dst_succ
+                    pass
+
+            else:
+                traffic_at_succ = specific_traffic
+
+        else:
+            # Do not go further if there is no traffic admitted via this succ
+            pass
+
+        return should, traffic_at_succ
+
     def get_paths(self, this_node, dst, specific_traffic, path_prefix, verbose):
+
+        if this_node.node_id == 's1:table4' and dst.node_id == 's1:egress2':
+            pass
 
         this_level_paths = []
 
@@ -288,7 +323,6 @@ class PortGraph(object):
                 remaining_succs.remove(dst)
 
             # Explore all the remaining successors
-
             for succ in remaining_succs:
 
                 # Make sure no loops will be caused by going down this successor
