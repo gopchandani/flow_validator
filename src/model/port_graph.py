@@ -311,9 +311,6 @@ class PortGraph(object):
 
     def get_paths(self, this_node, dst, specific_traffic, path_prefix, verbose):
 
-        if this_node.node_id == 's1:table4' and dst.node_id == 's1:egress2':
-            pass
-
         this_level_paths = []
 
         if dst in self.get_admitted_traffic_dsts(this_node):
