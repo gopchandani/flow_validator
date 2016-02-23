@@ -270,9 +270,9 @@ class PortGraph(object):
 
         return has_loop
 
-    def get_paths(self, this_node, dst, specific_traffic, this_path, verbose):
+    def get_paths(self, this_node, dst, specific_traffic, path_prefix, verbose):
 
-        all_paths = []
+        this_level_paths = []
 
         if dst in self.get_admitted_traffic_dsts(this_node):
 
@@ -280,8 +280,10 @@ class PortGraph(object):
 
             # If destination is one of the successors, stop
             if dst in remaining_succs:
+
+                this_path = list(path_prefix)
                 this_path.append(dst)
-                all_paths.append(this_path)
+                this_level_paths.append(this_path)
 
                 remaining_succs.remove(dst)
 
@@ -290,7 +292,7 @@ class PortGraph(object):
             for succ in remaining_succs:
 
                 # Make sure no loops will be caused by going down this successor
-                if not self.path_has_loop(this_path, succ):
+                if not self.path_has_loop(path_prefix, succ):
 
                     at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
 
@@ -302,24 +304,24 @@ class PortGraph(object):
                         if specific_traffic:
 
                             if at_dst_succ.is_subset_traffic(specific_traffic):
-                                this_path.append(succ)
+                                path_prefix.append(succ)
 
                                 # modify specific_traffic to adjust to the modifications in traffic along the succ
                                 modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
                                 modified_specific_traffic = modified_specific_traffic.get_modified_traffic()
 
-                                all_paths.extend(self.get_paths(succ,
-                                                                dst,
-                                                                modified_specific_traffic,
-                                                                this_path,
-                                                                verbose))
+                                this_level_paths.extend(self.get_paths(succ,
+                                                                       dst,
+                                                                       modified_specific_traffic,
+                                                                       path_prefix,
+                                                                       verbose))
                         else:
-                            this_path.append(succ)
-                            all_paths.extend(self.get_paths(succ,
-                                                            dst,
-                                                            specific_traffic,
-                                                            this_path,
-                                                            verbose))
+                            path_prefix.append(succ)
+                            this_level_paths.extend(self.get_paths(succ,
+                                                                   dst,
+                                                                   specific_traffic,
+                                                                   path_prefix,
+                                                                   verbose))
                     else:
                         # Do not go further if there is no traffic admitted via this succ
                         pass
@@ -327,7 +329,7 @@ class PortGraph(object):
                     # If there was a loop stop exploring further via this succ
                     pass
 
-        return all_paths
+        return this_level_paths
 
     def get_graph_paths(self, verbose):
         graph_paths = defaultdict(defaultdict)
@@ -348,12 +350,12 @@ class PortGraph(object):
 
                 if len(graph_paths_before[src][dst]) != len(graph_paths_after[src][dst]):
                     print "From Port:", src, "To Port:", dst, \
-                        "Path Count mismatch - Before:", graph_paths_before[src][dst], \
-                        "After:", graph_paths_after[src][dst]
+                        "Path Count mismatch - Before:", len(graph_paths_before[src][dst]), \
+                        "After:", len(graph_paths_after[src][dst])
                     all_equal = False
                 else:
                     if verbose:
                         print "From Port:", src, "To Port:", dst, \
-                            "Path Count match - Before:", graph_paths_before[src][dst], \
-                            "After:", graph_paths_after[src][dst]
+                            "Path Count match - Before:", len(graph_paths_before[src][dst]), \
+                            "After:", len(graph_paths_after[src][dst])
         return all_equal
