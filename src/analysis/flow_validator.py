@@ -75,15 +75,11 @@ class FlowValidator:
 
             if at.is_subset_traffic(specific_traffic):
 
-                self.port_graph.get_paths_with_vuln_ranks(src_host_obj.switch_ingress_port,
-                                                          dst_host_obj.switch_egress_port,
-                                                          specific_traffic,
-                                                          [src_host_obj.switch_ingress_port],
-                                                          all_paths,
-                                                          0,
-                                                          path_vuln_ranks,
-                                                          verbose)
-
+                all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
+                                                      dst_host_obj.switch_egress_port,
+                                                      specific_traffic,
+                                                      [src_host_obj.switch_ingress_port],
+                                                      verbose)
                 if verbose:
                     print "Path vulnerability ranks:", path_vuln_ranks
             else:
@@ -114,7 +110,7 @@ class FlowValidator:
                 if not all_paths:
                     host_pair_paths[src_h_id][dst_h_id] = []
                 else:
-                    host_pair_paths[src_h_id][dst_h_id] = (all_paths[0], path_vuln_ranks[0])
+                    host_pair_paths[src_h_id][dst_h_id] = (all_paths[0], 0)
 
         return host_pair_paths
 
