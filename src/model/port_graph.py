@@ -170,7 +170,7 @@ class PortGraph(object):
 
         # This object holds for each pred/dst combinations
         # that have changed as keys and list of succ ports as values
-        change_matrix = defaultdict(defaultdict)
+        admitted_traffic_changes = defaultdict(defaultdict)
 
         for modified_edge in modified_edges:
 
@@ -182,23 +182,23 @@ class PortGraph(object):
             # whether the admitted traffic actually could have gotten affected by modified_edge.
 
             for dst in self.get_admitted_traffic_dsts(succ):
-                if dst not in change_matrix[pred]:
-                    change_matrix[pred][dst] = [succ]
+                if dst not in admitted_traffic_changes[pred]:
+                    admitted_traffic_changes[pred][dst] = [succ]
                 else:
-                    change_matrix[pred][dst].append(succ)
+                    admitted_traffic_changes[pred][dst].append(succ)
 
         # Do this for each pred port that has changed
-        for pred in change_matrix:
+        for pred in admitted_traffic_changes:
 
             # For each destination that may have been affected at the pred port
-            for dst in change_matrix[pred]:
+            for dst in admitted_traffic_changes[pred]:
 
                 prev_pred_traffic = self.get_admitted_traffic(pred, dst)
                 now_pred_traffic = Traffic()
 
                 pred_succ_traffic_now = {}
 
-                for succ in change_matrix[pred][dst]:
+                for succ in admitted_traffic_changes[pred][dst]:
 
                     edge = self.get_edge(pred, succ)
                     succ_traffic = self.get_admitted_traffic(succ, dst)
