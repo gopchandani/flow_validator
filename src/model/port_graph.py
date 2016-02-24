@@ -178,22 +178,14 @@ class PortGraph(object):
             succ = self.get_node(modified_edge[1])
 
             # TODO Limit the destinations by using markets in modified_flow_table_edges
-            # Right now, just go to the pred/succ and snap up all destinations, without regard to
+            # Go to the succ and snap up all destinations, without regard to
             # whether the admitted traffic actually could have gotten affected by modified_edge.
-
-            for dst in self.get_admitted_traffic_dsts(pred):
-                if dst not in change_matrix[pred]:
-                    change_matrix[pred][dst] = [succ]
-                else:
-                    if succ not in change_matrix[pred][dst]:
-                        change_matrix[pred][dst].append(succ)
 
             for dst in self.get_admitted_traffic_dsts(succ):
                 if dst not in change_matrix[pred]:
                     change_matrix[pred][dst] = [succ]
                 else:
-                    if succ not in change_matrix[pred][dst]:
-                        change_matrix[pred][dst].append(succ)
+                    change_matrix[pred][dst].append(succ)
 
         # Do this for each pred port that has changed
         for pred in change_matrix:
