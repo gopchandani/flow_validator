@@ -301,9 +301,9 @@ class MininetMan():
         self.synthesis_dij.synthesize_all_node_pairs(last_hop_queue_rate)
 
         num_traffic_profiles = 6
-        size_of_send = [1024, 1024, 1024, 1024, 1024, 1024]
-        number_of_sends_in_a_burst = [100, 200, 300, 400, 500, 600]
-        inter_burst_times =  [1000, 1000, 1000, 1000, 1000, 1000]
+        size_of_send = [1024, 1024, 1024, 1024, 1024, 1024, 1024]
+        number_of_sends_in_a_burst = [50, 100, 200, 300, 400, 500, 600]
+        inter_burst_times =  [500, 1000, 1000, 1000, 1000, 1000, 1000]
 
         # Get all the nodes
         self.h1s1 = self.net.getNodeByName("h1s1")
