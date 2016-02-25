@@ -293,7 +293,8 @@ class MininetMan():
             print 'Mean Latency:', output_line_tokens[1]
             print 'Stddev Latency:', output_line_tokens[2]
             print '99th Latency:', output_line_tokens[3]
-
+            print 'Min Latency:', output_line_tokens[4]
+            print 'Max Latency:', output_line_tokens[5]
 
         self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear")
         last_hop_queue_rate = 5
@@ -322,7 +323,7 @@ class MininetMan():
                                                    " -b " + str(number_of_sends_in_a_burst[i]) +
                                                    " -l 1 " +
                                                    "-t omni -- -d send -o " +
-                                                   "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY'" +
+                                                   "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
                                                    " -T UDP " +
                                                    "-m " + str(size_of_send[i])
                                                    )
