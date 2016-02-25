@@ -74,7 +74,6 @@ class Experiment(object):
             if self.controller == "odl":
                 self.mm.setup_mininet_with_odl(self.ng)
             elif self.controller == "ryu":
-                #self.mm.setup_mininet_with_ryu_router()
 
                 if qos:
                     self.mm.setup_mininet_with_ryu_qos(self.ng)
