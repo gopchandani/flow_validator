@@ -163,7 +163,7 @@ class MininetMan():
             # If not, do a double check:
             cmd_output = src_host.cmd("ping -c 3 " + dst_host.IP())
             print cmd_output
-            if cmd_output.find("0 received") != -1:            
+            if cmd_output.find("0 received") != -1:
                 return False
             else:
                 return True
@@ -285,11 +285,24 @@ class MininetMan():
             print 'Avg Delay:', data_tokens[1]
             print 'Max Delay:', data_tokens[2]
 
+        def parse_netperf_output(netperf_output_string):
+            data_lines =  netperf_output_string.split('\r\n')
+
+            output_line_tokens =  data_lines[2].split(',')
+            print "Throughput:", output_line_tokens[0]
+            print 'Mean Latency:', output_line_tokens[1]
+            print 'Stddev Latency:', output_line_tokens[2]
+            print '99th Latency:', output_line_tokens[3]
+
+
         self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear")
         last_hop_queue_rate = 5
-        send_rates_to_try = ['1M', '2M', '3M', '4M', '5M', '6M']
-
         self.synthesis_dij.synthesize_all_node_pairs(last_hop_queue_rate)
+
+        num_traffic_profiles = 6
+        size_of_send = [1024, 1024, 1024, 1024, 1024, 1024]
+        number_of_sends_in_a_burst = [100, 200, 300, 400, 500, 600]
+        inter_burst_times =  [1000, 1000, 1000, 1000, 1000, 1000]
 
         # Get all the nodes
         self.h1s1 = self.net.getNodeByName("h1s1")
@@ -297,24 +310,34 @@ class MininetMan():
         self.h2s1 = self.net.getNodeByName("h2s1")
         self.h2s2 = self.net.getNodeByName("h2s2")
 
-        # Start the server at h1s1
-        h1s1_output = self.h1s1.cmd("iperf -s -u -i 1 5001&")
+        h1s1_output = self.h1s1.cmd("/usr/local/bin/netserver")
         print h1s1_output
 
-        iperf_output_dict = {}
-        ping_output_dict = {}
+        netperf_output_dict = {}
 
-        for rate in send_rates_to_try:
-            self.h1s2.cmd("iperf -c " + self.h1s1.IP() + " -p 5001 -u -b " + rate + " -t 5&")
-            time.sleep(1)
-            ping_output_dict[rate] = self.h1s2.cmd("ping -c 5 " + self.h1s1.IP())
-            time.sleep(3)
-            iperf_output_dict[rate] = self.h1s2.read()
+        for i in range(num_traffic_profiles):
+
+            netperf_output_dict[i] = self.h1s2.cmd("/usr/local/bin/netperf -H " + self.h1s1.IP() +
+                                                   " -w " + str(inter_burst_times[i]) +
+                                                   " -b " + str(number_of_sends_in_a_burst[i]) +
+                                                   " -l 1 " +
+                                                   "-t omni -- -d send -o " +
+                                                   "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY'" +
+                                                   " -T UDP " +
+                                                   "-m " + str(size_of_send[i])
+                                                   )
+            print netperf_output_dict[i]
+
 
         # Parse the output for jitter and delay
         print "Last-Hop Queue Rate:", str(last_hop_queue_rate), "M"
-        for rate in send_rates_to_try:
-            print "Sending Rate:", rate
+        for i in range(num_traffic_profiles):
 
-            parse_iperf_output(iperf_output_dict[rate])
-            parse_ping_output(ping_output_dict[rate])
+            print "Size of send (bytes):", size_of_send[i]
+            print "Number of sends in a burst:", number_of_sends_in_a_burst[i]
+            print "Inter-burst time (miliseconds):", inter_burst_times[i]
+
+            rate = (size_of_send[i] * 8 * number_of_sends_in_a_burst[i]) / (inter_burst_times[i] * 1000.0)
+            print "Sending Rate:", str(rate), 'Mbps'
+
+            parse_netperf_output(netperf_output_dict[i])
