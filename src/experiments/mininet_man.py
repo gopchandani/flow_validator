@@ -300,10 +300,10 @@ class MininetMan():
         last_hop_queue_rate = 5
         self.synthesis_dij.synthesize_all_node_pairs(last_hop_queue_rate)
 
-        num_traffic_profiles = 6
-        size_of_send = [1024, 1024, 1024, 1024, 1024, 1024, 1024]
-        number_of_sends_in_a_burst = [50, 100, 200, 300, 400, 500, 600]
-        inter_burst_times =  [500, 1000, 1000, 1000, 1000, 1000, 1000]
+        num_traffic_profiles = 10
+        size_of_send = [1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024]
+        number_of_sends_in_a_burst = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        inter_burst_times = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
 
         # Get all the nodes
         self.h1s1 = self.net.getNodeByName("h1s1")
@@ -321,7 +321,7 @@ class MininetMan():
             netperf_output_dict[i] = self.h1s2.cmd("/usr/local/bin/netperf -H " + self.h1s1.IP() +
                                                    " -w " + str(inter_burst_times[i]) +
                                                    " -b " + str(number_of_sends_in_a_burst[i]) +
-                                                   " -l 1 " +
+                                                   " -l 10 " +
                                                    "-t omni -- -d send -o " +
                                                    "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
                                                    " -T UDP " +
@@ -334,6 +334,7 @@ class MininetMan():
         print "Last-Hop Queue Rate:", str(last_hop_queue_rate), "M"
         for i in range(num_traffic_profiles):
 
+            print "--"
             print "Size of send (bytes):", size_of_send[i]
             print "Number of sends in a burst:", number_of_sends_in_a_burst[i]
             print "Inter-burst time (miliseconds):", inter_burst_times[i]
