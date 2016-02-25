@@ -75,34 +75,29 @@ class Experiment(object):
                 self.mm.setup_mininet_with_odl(self.ng)
             elif self.controller == "ryu":
 
-                if qos:
-                    self.mm.setup_mininet_with_ryu_qos(self.ng)
-                else:
-                    #self.mm.setup_mininet_with_ryu(ng, dst_ports_to_synthesize)
+                if synthesis_scheme == "IntentSynthesis":
+                    self.synthesis = IntentSynthesis(self.ng, master_switch=topo_description[0] == "linear",
+                                                     synthesized_paths_save_directory=self.ng.config_path_prefix)
 
-                    if synthesis_scheme == "IntentSynthesis":
-                        self.synthesis = IntentSynthesis(self.ng, master_switch=topo_description[0] == "linear",
-                                                         synthesized_paths_save_directory=self.ng.config_path_prefix)
+                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
-                        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+                elif synthesis_scheme == "IntentSynthesisLDST":
+                    self.synthesis = IntentSynthesisLDST(self.ng, master_switch=topo_description[0] == "linear")
+                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
-                    elif synthesis_scheme == "IntentSynthesisLDST":
-                        self.synthesis = IntentSynthesisLDST(self.ng, master_switch=topo_description[0] == "linear")
-                        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-
-                    elif synthesis_scheme == "IntentSynthesisLB":
-                        self.synthesis = IntentSynthesisLB(self.ng, master_switch=topo_description[0] == "linear")
-                        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+                elif synthesis_scheme == "IntentSynthesisLB":
+                    self.synthesis = IntentSynthesisLB(self.ng, master_switch=topo_description[0] == "linear")
+                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
 
-                    #self.mm.net.pingAll()
-                    #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
+                #self.mm.net.pingAll()
+                #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
 
-                    # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),
-                    #                                                             self.mm.net.get('h21'))],
-                    #                                                            [('s3', 's2')])
+                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),
+                #                                                             self.mm.net.get('h21'))],
+                #                                                            [('s3', 's2')])
 
-                    #print "is_bi_connected:", is_bi_connected
+                #print "is_bi_connected:", is_bi_connected
 
                 if synthesis_setup_gap:
                     time.sleep(synthesis_setup_gap)

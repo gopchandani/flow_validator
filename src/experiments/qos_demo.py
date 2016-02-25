@@ -30,6 +30,7 @@ class QosDemo(Experiment):
 
             self.topo_description = ("linear", 2, total_number_of_hosts/2)
             ng = self.setup_network_graph(self.topo_description, qos=True)
+            self.mm.setup_mininet_with_ryu_qos(ng)
 
         print "Done..."
 
