@@ -3,6 +3,7 @@ __author__ = 'Rakesh Kumar'
 import networkx as nx
 
 from traffic import Traffic
+from traffic_path import TrafficPath
 
 from collections import defaultdict
 
@@ -314,8 +315,7 @@ class PortGraph(object):
 
                 should, traffic_at_succ = self.should_add_succ(this_node, dst, dst, specific_traffic, path_prefix)
                 if should:
-                    this_path = list(path_prefix)
-                    this_path.append(dst)
+                    this_path = TrafficPath(list(path_prefix) + [dst])
                     this_level_paths.append(this_path)
 
                     remaining_succs.remove(dst)
