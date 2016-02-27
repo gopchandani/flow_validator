@@ -367,7 +367,23 @@ class PortGraph(object):
                         "After:", len(graph_paths_after[src][dst])
                     all_equal = False
                 else:
-                    if verbose:
+
+                    all_before_paths_matched = True
+                    for i in range(len(graph_paths_before[src][dst])):
+
+                        this_before_path_matched = False
+                        for j in range(len(graph_paths_after[src][dst])):
+                            if graph_paths_before[src][dst][i] == graph_paths_after[src][dst][j]:
+                                this_before_path_matched = True
+                                break
+
+                        if not this_before_path_matched:
+                            all_before_paths_matched = False
+                            break
+
+                    if not all_before_paths_matched:
+                        print "Before and after path contents don't match."
+                    elif  verbose:
                         print "From Port:", src, "To Port:", dst, \
                             "Path Count match - Before:", len(graph_paths_before[src][dst]), \
                             "After:", len(graph_paths_after[src][dst])
