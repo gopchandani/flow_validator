@@ -23,7 +23,9 @@ class NetworkPortGraph(PortGraph):
             for te in admitted_traffic.traffic_elements:
                 t = Traffic()
                 t.add_traffic_elements([te])
-                edge.add_edge_data((t, te.switch_modifications, te.vuln_rank))
+
+                #TODO: Gather the vuln_rank  from the traffic path
+                edge.add_edge_data((t, te.switch_modifications, 0))#te.vuln_rank))
 
         return edge
 
@@ -69,8 +71,8 @@ class NetworkPortGraph(PortGraph):
 
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.compute_switch_admitted_traffic()
-            # test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
-            # print test_passed
+            test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
+            print test_passed
             self.add_switch_transfer_edges(sw)
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
@@ -165,10 +167,6 @@ class NetworkPortGraph(PortGraph):
             if edge.edge_type == "outside":
                 traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
-            if edge.edge_type == "inside":
-                for te in traffic_to_propagate.traffic_elements:
-                    te.vuln_rank = vuln_rank
-
             # If there were modifications along the way...
             if modifications:
                 # If the edge ports belong to the same switch, keep the modifications, otherwise get rid of them.
@@ -179,7 +177,7 @@ class NetworkPortGraph(PortGraph):
             else:
                 ttp = traffic_to_propagate
 
-            i = edge_filter_traffic.intersect(ttp, take_self_vuln_rank=True)
+            i = edge_filter_traffic.intersect(ttp)
 
             if not i.is_empty():
                 pred_admitted_traffic.union(i)

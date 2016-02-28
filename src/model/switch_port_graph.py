@@ -141,12 +141,6 @@ class SwitchPortGraph(PortGraph):
                     if edge_action:
                         te.instruction_type = edge_action.instruction_type
 
-                if not edge_action:
-                    pass
-
-                for te in traffic_to_propagate.traffic_elements:
-                    te.vuln_rank = edge_action.vuln_rank
-
             if applied_modifications:
                 ttp = traffic_to_propagate.get_orig_traffic(applied_modifications)
             else:
@@ -214,8 +208,8 @@ class SwitchPortGraph(PortGraph):
         # Loop over ports of the switch and fail and restore them one by one
         for testing_port_number in self.sw.ports:
 
-            # if testing_port_number != 3:
-            #     continue
+            if testing_port_number != 3:
+                continue
 
             testing_port = self.sw.ports[testing_port_number]
 

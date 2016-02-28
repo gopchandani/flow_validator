@@ -10,8 +10,6 @@ class TrafficElement():
 
     def __init__(self, init_match=None, init_field_wildcard=False):
 
-        self.vuln_rank = 0
-
         self.switch_modifications = {}
         self.written_modifications = {}
         self.instruction_type = None
@@ -196,7 +194,6 @@ class TrafficElement():
         modified_traffic_element.written_modifications = self.written_modifications
         modified_traffic_element.switch_modifications = self.switch_modifications
         modified_traffic_element.instruction_type = self.instruction_type
-        modified_traffic_element.vuln_rank = self.vuln_rank
 
         return modified_traffic_element
 
@@ -249,7 +246,6 @@ class TrafficElement():
         orig_traffic_element.written_modifications.update(self.written_modifications)
         orig_traffic_element.switch_modifications.update(self.switch_modifications)
         orig_traffic_element.instruction_type = self.instruction_type
-        orig_traffic_element.vuln_rank = self.vuln_rank
 
         if store_switch_modifications:
             orig_traffic_element.switch_modifications.update(mf)
@@ -324,7 +320,7 @@ class Traffic():
         else:
             return False
 
-    def intersect(self, in_traffic, take_self_vuln_rank=False):
+    def intersect(self, in_traffic):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:
             for e_self in self.traffic_elements:
@@ -345,12 +341,6 @@ class Traffic():
                     ei.written_modifications.update(e_in.written_modifications)
                     ei.instruction_type = e_in.instruction_type
                     ei.switch_modifications = e_in.switch_modifications
-
-                    if take_self_vuln_rank:
-                        ei.vuln_rank = e_self.vuln_rank
-                    else:
-                        ei.vuln_rank = e_in.vuln_rank
-
 
         return traffic_intersection
 
@@ -400,7 +390,6 @@ class Traffic():
                     remaining_te.written_modifications = in_te.written_modifications
                     remaining_te.switch_modifications = in_te.switch_modifications
                     remaining_te.instruction_type = in_te.instruction_type
-                    remaining_te.vuln_rank = in_te.vuln_rank
 
                 diff_traffic.traffic_elements.extend(remaining)
 
@@ -429,15 +418,6 @@ class Traffic():
             modified_te = te.get_modified_traffic_element()
             modified_traffic.traffic_elements.append(modified_te)
         return modified_traffic
-
-    def get_max_vuln_rank(self):
-        max_vuln_rank = 0
-
-        for te in self.traffic_elements:
-            if te.vuln_rank > max_vuln_rank:
-                max_vuln_rank = te.vuln_rank
-
-        return max_vuln_rank
 
     def print_port_paths(self):
 
