@@ -1,7 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 from port_graph import PortGraph
-from port_graph_edge import PortGraphEdge
+from port_graph_edge import PortGraphEdge, NetworkPortGraphEdgeData
 from traffic import Traffic
 
 class NetworkPortGraph(PortGraph):
@@ -24,8 +24,10 @@ class NetworkPortGraph(PortGraph):
                 t = Traffic()
                 t.add_traffic_elements([te])
 
-                #TODO: Gather the vuln_rank  from the traffic path
-                edge.add_edge_data((t, te.switch_modifications, 0))#te.vuln_rank))
+                #TODO: Gather the vuln_rank from the traffic path
+                edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, 0)#te.vuln_rank)
+                edge.add_edge_data(edge_data)
+
 
         return edge
 
@@ -161,23 +163,23 @@ class NetworkPortGraph(PortGraph):
 
         pred_admitted_traffic = Traffic()
 
-        for edge_filter_traffic, modifications, vuln_rank in edge.edge_data_list:
+        for ed in edge.edge_data_list:
 
             # At succ edges, set the in_port of the admitted match for destination to wildcard
             if edge.edge_type == "outside":
                 traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
             # If there were modifications along the way...
-            if modifications:
+            if ed.modifications:
                 # If the edge ports belong to the same switch, keep the modifications, otherwise get rid of them.
                 if edge.port1.sw == edge.port2.sw:
-                    ttp = traffic_to_propagate.get_orig_traffic(modifications, store_switch_modifications=True)
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.modifications, store_switch_modifications=True)
                 else:
-                    ttp = traffic_to_propagate.get_orig_traffic(modifications, store_switch_modifications=False)
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.modifications, store_switch_modifications=False)
             else:
                 ttp = traffic_to_propagate
 
-            i = edge_filter_traffic.intersect(ttp)
+            i = ed.edge_filter_traffic.intersect(ttp)
 
             if not i.is_empty():
                 pred_admitted_traffic.union(i)

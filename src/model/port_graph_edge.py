@@ -20,5 +20,23 @@ class PortGraphEdge():
 
         self.edge_data_list = []
 
-    def add_edge_data(self, edge_data_tuple):
-        self.edge_data_list.append(edge_data_tuple)
+    def add_edge_data(self, edge_data):
+        self.edge_data_list.append(edge_data)
+
+
+class NetworkPortGraphEdgeData():
+
+    def __init__(self, edge_filter_traffic, modifications, vuln_rank):
+
+        self.edge_filter_traffic = edge_filter_traffic
+        self.modifications = modifications
+        self.vuln_rank = vuln_rank
+
+class SwitchPortGraphEdgeData():
+
+    def __init__(self, edge_filter_traffic, edge_action, applied_modifications, written_modifications):
+
+        self.edge_filter_traffic = edge_filter_traffic
+        self.edge_action = edge_action
+        self.applied_modifications = applied_modifications
+        self.written_modifications = written_modifications

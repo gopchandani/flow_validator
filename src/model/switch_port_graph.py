@@ -1,8 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
-from collections import defaultdict
 from traffic import Traffic
-from port_graph_edge import PortGraphEdge
+from port_graph_edge import PortGraphEdge, SwitchPortGraphEdgeData
 from port_graph import PortGraph
 
 class SwitchPortGraph(PortGraph):
@@ -36,7 +35,8 @@ class SwitchPortGraph(PortGraph):
             edge = PortGraphEdge(port.switch_port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node)
             edge_traffic_filter = Traffic()
             edge_traffic_filter.union(port.ingress_node_traffic)
-            edge.add_edge_data((edge_traffic_filter, None, None, None))
+            edge_data = SwitchPortGraphEdgeData(edge_traffic_filter, None, None, None)
+            edge.add_edge_data(edge_data)
             self.add_edge(port.switch_port_graph_ingress_node, self.sw.flow_tables[0].port_graph_node, edge)
 
         # Try passing a wildcard through the flow table
@@ -85,10 +85,8 @@ class SwitchPortGraph(PortGraph):
         else:
             for edge_data in flow_table.current_port_graph_edges[succ]:
 
-                edge.add_edge_data((edge_data[0],
-                                    edge_data[1],
-                                    edge_data[2],
-                                    edge_data[3]))
+                edge_data = SwitchPortGraphEdgeData(edge_data[0], edge_data[1], edge_data[2], edge_data[3])
+                edge.add_edge_data(edge_data)
 
         return edge
 
@@ -130,7 +128,7 @@ class SwitchPortGraph(PortGraph):
 
         pred_admitted_traffic = Traffic()
 
-        for edge_filter_traffic, edge_action, applied_modifications, written_modifications in edge.edge_data_list:
+        for ed in edge.edge_data_list:
 
             if edge.edge_type == "egress":
 
@@ -138,11 +136,11 @@ class SwitchPortGraph(PortGraph):
                 traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
                 for te in traffic_to_propagate.traffic_elements:
-                    if edge_action:
-                        te.instruction_type = edge_action.instruction_type
+                    if ed.edge_action:
+                        te.instruction_type = ed.edge_action.instruction_type
 
-            if applied_modifications:
-                ttp = traffic_to_propagate.get_orig_traffic(applied_modifications)
+            if ed.applied_modifications:
+                ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications)
             else:
                 ttp = traffic_to_propagate
 
@@ -151,11 +149,11 @@ class SwitchPortGraph(PortGraph):
             else:
                 # At all the non-ingress edges accumulate written modifications
                 # But these are useless if the instruction_type is applied.
-                if written_modifications:
+                if ed.written_modifications:
                     for te in ttp.traffic_elements:
-                        te.written_modifications.update(written_modifications)
+                        te.written_modifications.update(ed.written_modifications)
 
-            i = edge_filter_traffic.intersect(ttp)
+            i = ed.edge_filter_traffic.intersect(ttp)
 
             if not i.is_empty():
                 pred_admitted_traffic.union(i)
@@ -184,8 +182,8 @@ class SwitchPortGraph(PortGraph):
         if event_type == "port_down":
 
             edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
-            for edge_data_tuple in edge.edge_data_list:
-                del edge_data_tuple[0].traffic_elements[:]
+            for ed in edge.edge_data_list:
+                del ed.edge_filter_traffic.traffic_elements[:]
 
             modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
             self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
@@ -193,8 +191,8 @@ class SwitchPortGraph(PortGraph):
         elif event_type == "port_up":
 
             edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
-            for edge_data_tuple in edge.edge_data_list:
-                edge_data_tuple[0].union(ingress_node.parent_obj.ingress_node_traffic)
+            for ed in edge.edge_data_list:
+                ed.edge_filter_traffic.union(ingress_node.parent_obj.ingress_node_traffic)
 
             modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
             self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)

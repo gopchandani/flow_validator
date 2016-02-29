@@ -14,6 +14,7 @@ class TrafficElement():
         self.written_modifications = {}
         self.instruction_type = None
         self.traffic_fields = {}
+        self.edge_data = None
 
         # If a match has been provided to initialize with
         if init_match:
@@ -419,10 +420,10 @@ class Traffic():
             modified_traffic.traffic_elements.append(modified_te)
         return modified_traffic
 
-    def print_port_paths(self):
+    def set_edge_data(self, edge_data):
 
         for te in self.traffic_elements:
-            print te.get_port_path_str()
+            te.edge_data = edge_data
 
 
 def main():
