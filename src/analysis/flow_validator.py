@@ -186,53 +186,57 @@ class FlowValidator:
 
         return all_pair_connected
 
-    def validate_all_host_pair_backup(self, verbose=True):
+    def validate_host_pair_backup(self, src_h_id, dst_h_id, verbose=True):
+        specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-        for src_h_id in self.network_graph.host_ids:
-            for dst_h_id in self.network_graph.host_ids:
+        baseline_at, baseline_all_paths, baseline_path_vuln_ranks = \
+            self.validate_host_pair_reachability(src_h_id,
+                                                 dst_h_id,
+                                                 specific_traffic,
+                                                 verbose)
+
+        # Now break the edges in the network graph, one-by-one
+        for edge in self.network_graph.graph.edges():
+
+            if edge[0].startswith("h") or edge[1].startswith("h"):
+                continue
+
+            if verbose:
+                print "Failing edge:", edge
+
+            self.port_graph.remove_node_graph_edge(edge[0], edge[1])
+            edge_removed_at, edge_removed_all_paths, edge_removed_path_vuln_ranks = \
+                self.validate_host_pair_reachability(src_h_id,
+                                                     dst_h_id,
+                                                     specific_traffic,
+                                                     verbose)
+            if verbose:
+                print "Restoring edge:", edge
+
+            # Add it back
+            self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
+            edge_added_back_at, edge_added_back_all_paths, edge_added_back_path_vuln_ranks = \
+                self.validate_host_pair_reachability(src_h_id,
+                                                     dst_h_id,
+                                                     specific_traffic,
+                                                     verbose)
+
+            # the number of elements should be same in three scenarios for each edge
+
+            if not(baseline_at.is_subset_traffic(edge_removed_at) and
+                       edge_added_back_at.is_subset_traffic(edge_removed_at)):
+                print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
+
+
+    def validate_all_host_pair_backup(self, src_host_ids, dst_host_ids, verbose=True):
+
+        for src_h_id in src_host_ids:
+            for dst_h_id in dst_host_ids:
 
                 if src_h_id == dst_h_id:
                     continue
 
-                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
-
-                baseline_at, baseline_all_paths, baseline_path_vuln_ranks = \
-                    self.validate_host_pair_reachability(src_h_id,
-                                                         dst_h_id,
-                                                         specific_traffic,
-                                                         verbose)
-
-                # Now break the edges in the network graph, one-by-one
-                for edge in self.network_graph.graph.edges():
-
-                    if edge[0].startswith("h") or edge[1].startswith("h"):
-                        continue
-
-                    if verbose:
-                        print "Failing edge:", edge
-
-                    self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-                    edge_removed_at, edge_removed_all_paths, edge_removed_path_vuln_ranks = \
-                        self.validate_host_pair_reachability(src_h_id,
-                                                             dst_h_id,
-                                                             specific_traffic,
-                                                             verbose)
-                    if verbose:
-                        print "Restoring edge:", edge
-
-                    # Add it back
-                    self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
-                    edge_added_back_at, edge_added_back_all_paths, edge_added_back_path_vuln_ranks = \
-                        self.validate_host_pair_reachability(src_h_id,
-                                                             dst_h_id,
-                                                             specific_traffic,
-                                                             verbose)
-
-                    # the number of elements should be same in three scenarios for each edge
-
-                    if not(baseline_at.is_subset_traffic(edge_removed_at) and
-                               edge_added_back_at.is_subset_traffic(edge_removed_at)):
-                        print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
+                self.validate_host_pair_backup(src_h_id, dst_h_id)
 
     def get_specific_traffic(self, src_h_id, dst_h_id):
 

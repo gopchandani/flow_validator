@@ -1,7 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-from port import Port
-
 class Host():
 
     def __init__(self, host_id, model, ip_addr, mac_addr=None, switch_id=None, switch_obj=None, switch_port_attached=None):

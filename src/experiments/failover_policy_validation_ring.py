@@ -64,7 +64,9 @@ class FailoverPolicyValidationRing(Experiment):
                     fv.initialize_admitted_traffic()
 
                     with Timer(verbose=True) as t:
-                        fv.validate_all_host_pair_backup(verbose=False)
+                        fv.validate_all_host_pair_backup(fv.network_graph.host_ids,
+                                                         fv.network_graph.host_ids,
+                                                         verbose=False)
 
                     self.data["validation_time"][number_of_ports_to_synthesize][number_of_switches_in_ring].append(t.msecs)
 

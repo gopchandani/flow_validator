@@ -50,7 +50,11 @@ class AmerenSetupValidation(Experiment):
             fv.initialize_admitted_traffic()
 
             with Timer(verbose=True) as t:
-                fv.validate_all_host_pair_backup(verbose=True)
+                # fv.validate_all_host_pair_backup(['h20', 'h30'],
+                #                                  ['h100', '41'],
+                #                                  verbose=True)
+
+                fv.validate_host_pair_backup('h20', 'h100', verbose=True)
 
             self.data["validation_time"][i].append(t.msecs)
 
