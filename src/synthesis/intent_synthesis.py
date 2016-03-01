@@ -260,8 +260,7 @@ class IntentSynthesis():
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         # Handy info
-        edge_ports_dict = self.network_graph.get_edge_port_dict(src_host.node_id, src_host.switch_id)
-        in_port = edge_ports_dict[src_host.switch_id]
+        in_port = src_host.switch_port_attached
         dst_sw_obj = self.network_graph.get_node_object(dst_host.switch_id)
 
         primary_first_intent = None

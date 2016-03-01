@@ -209,11 +209,6 @@ class NetworkGraph():
                     sw_obj.host_ports.append(mininet_port_edges[mininet_host_dict["host_name"]]['0'][1])
 
                 else:
-                    print mininet_host_dict["host_name"]
-                    print mininet_port_edges[mininet_host_dict["host_name"]]
-                    print mininet_port_edges[mininet_host_dict["host_name"]][0]
-                    print mininet_port_edges[mininet_host_dict["host_name"]][0][1]
-
                     h_obj = Host(mininet_host_dict["host_name"],
                                  self,
                                  mininet_host_dict["host_IP"],

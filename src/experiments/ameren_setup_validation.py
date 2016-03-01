@@ -69,8 +69,8 @@ class AmerenSetupValidation(Experiment):
 def main():
 
     num_iterations = 1
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = AmerenSetupValidation(num_iterations,
