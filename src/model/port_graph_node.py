@@ -22,4 +22,4 @@ class PortGraphNode:
 
     def __str__(self):
 
-        return " Id: " + str(self.node_id)
+        return str(self.node_id)

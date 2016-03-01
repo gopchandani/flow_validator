@@ -25,6 +25,16 @@ class TrafficPath(object):
 
         return equal_paths
 
+    def __str__(self):
+        path_str = ''
+
+        for i in range(len(self.path_elements) - 1):
+            path_str += str(self.path_elements[i]) + ' -> '
+
+        path_str += str(self.path_elements[len(self.path_elements) - 1])
+
+        return path_str
+
     def __iter__(self):
         for elem in self.path_elements:
             yield elem

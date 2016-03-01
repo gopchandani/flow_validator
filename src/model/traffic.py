@@ -28,6 +28,22 @@ class TrafficElement():
             for field_name in field_names:
                 self.set_traffic_field(field_name, set_wildcard=True)
 
+    def __str__(self):
+
+        te_str = ''
+        for i in range(len(field_names) - 1):
+
+            if not self.is_traffic_field_wildcard(self.traffic_fields[field_names[i]]):
+                te_str += field_names[i] + ":" + str(self.traffic_fields[field_names[i]]) + "\r\n"
+            else:
+                pass
+                #te_str += field_names[i] + ":" + "*" + "\r\n"
+
+        te_str += field_names[len(field_names) - 1] + ":" + str(self.traffic_fields[field_names[len(field_names) - 1]])
+        te_str += "\r\n"
+
+        return te_str
+
     def is_traffic_field_wildcard(self, field_val):
 
         if isinstance(field_val, Interval):
@@ -262,6 +278,16 @@ class Traffic():
         # If initialized as wildcard, add one to the list
         if init_wildcard:
             self.traffic_elements.append(TrafficElement(init_field_wildcard=True))
+
+    def __str__(self):
+        t_str = ''
+
+        for te in self.traffic_elements:
+            t_str += "-----\r\n"
+            t_str += str(te)
+
+        t_str += "-----\r\n"
+        return t_str
 
     def __del__(self):
 

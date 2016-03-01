@@ -71,7 +71,11 @@ class FlowValidator:
         if not at.is_empty():
 
             if verbose:
+                print "-------------------"
+                print src_h_id, "->", dst_h_id
                 print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
+
+                print at
 
             if at.is_subset_traffic(specific_traffic):
 
@@ -80,8 +84,10 @@ class FlowValidator:
                                                       specific_traffic,
                                                       [src_host_obj.switch_ingress_port],
                                                       verbose)
-                if verbose:
-                    print "Path vulnerability ranks:", path_vuln_ranks
+
+                if all_paths:
+                    for path in all_paths:
+                        print path
             else:
                 if verbose:
                     print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at does not pass specific_traffic check."
