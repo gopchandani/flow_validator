@@ -44,7 +44,7 @@ class SynthesizeQoS():
         # Table contains the actual forwarding rules
         self.ip_forwarding_table_id = 4
 
-    def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag):
+    def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag, min_rate, max_rate):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
         
@@ -60,10 +60,9 @@ class SynthesizeQoS():
             if not (i == 0 and intent_type == "primary"):
                 fwd_flow_match["vlan_id"] = int(dst_switch_tag)
 
-            if in_port == out_port:
-                pass
-
-            intent = Intent(intent_type, fwd_flow_match, in_port, out_port, self.apply_other_intents_immediately)
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port,
+                            self.apply_other_intents_immediately,
+                            min_rate=min_rate, max_rate=max_rate)
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
@@ -87,58 +86,6 @@ class SynthesizeQoS():
                 return_intent.append(intent)
 
         return return_intent
-
-    def _identify_reverse_and_balking_intents(self):
-
-        for sw in self.s:
-
-            intents = self.network_graph.graph.node[sw]["sw"].intents
-
-            for dst in intents:
-                dst_intents = intents[dst]
-
-                # Assume that there is always one primary intent
-                primary_intent = None
-                primary_intents = self.get_intents(dst_intents, "primary")
-                if primary_intents:
-                    primary_intent = primary_intents[0]
-
-                for intent in dst_intents:
-
-                    #  Nothing needs to be done for primary intent
-                    if intent == primary_intent:
-                        continue
-
-                    # Nothing needs to be done for vlan intents either
-                    if intent.intent_type == "push_vlan":
-                        continue
-
-                    # A balking intent happens on the switch where reversal begins,
-                    # it is characterized by the fact that the traffic exits the same port where it came from
-                    if intent.in_port == intent.out_port:
-
-                        # Add a new intent with modified key
-                        intent.intent_type = "balking"
-                        continue
-
-                    #  Processing from this point onwards require presence of a primary intent
-                    if not primary_intent:
-                        continue
-
-                    #  If this intent is at a reverse flow carrier switch
-
-                    #  There are two ways to identify reverse intents
-
-                    #  1. at the source switch, with intent's source port equal to destination port of the primary intent
-                    if intent.in_port == primary_intent.out_port:
-                        intent.intent_type = "reverse"
-                        continue
-
-                    #  2. At any other switch
-                    # with intent's destination port equal to source port of primary intent
-                    if intent.out_port == primary_intent.in_port:
-                        intent.intent_type = "reverse"
-                        continue
 
     def _add_intent(self, switch_id, key, intent):
 
@@ -173,7 +120,9 @@ class SynthesizeQoS():
 
         push_vlan_match= deepcopy(flow_match)
         push_vlan_match["in_port"] = int(h_obj.switch_port_attached)
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all", self.apply_tag_intents_immediately)
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, h_obj.switch_port_attached, "all",
+                                      self.apply_tag_intents_immediately)
+
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         # Avoiding adding a new intent for every departing flow for this switch,
@@ -209,45 +158,14 @@ class SynthesizeQoS():
 
             self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
 
-
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag)
-
-        #  Along the shortest path, break a link one-by-one
-        #  and accumulate desired action buckets in the resulting path
-
-        #  Go through the path, one edge at a time
-        for i in range(len(p) - 1):
-
-            # Keep a copy of this handy
-            edge_ports_dict = self.network_graph.get_edge_port_dict(p[i], p[i+1])
-
-            # Delete the edge
-            self.network_graph.graph.remove_edge(p[i], p[i + 1])
-
-            # Find the shortest path that results when the link breaks
-            # and compute forwarding intents for that
-            try:
-                bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.switch_id)
-                print "Backup Path", bp
-
-                self._compute_path_ip_intents(bp, "failover", flow_match, in_port, dst_sw_obj.synthesis_tag)
-            except nx.exception.NetworkXNoPath:
-                print "No backup path between:", p[i], "to:", dst_host.switch_id
-
-            # Add the edge back and the data that goes along with it
-            self.network_graph.graph.add_edge(p[i], p[i + 1], edge_ports_dict=edge_ports_dict)
-            in_port = edge_ports_dict[p[i+1]]
+        self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag, min_rate, max_rate)
 
     def push_switch_changes(self):
 
         for sw in self.s:
 
             print "-- Pushing at Switch:", sw
-
-            # Push rules at the switch that drop packets from hosts that are connected to the switch
-            # and have the same MAC address as originating hosts
-            self.synthesis_lib.push_loop_preventing_drop_rules(sw, self.loop_preventing_drop_table)
 
             # Push table miss entries at all Tables
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 0)
@@ -271,12 +189,9 @@ class SynthesizeQoS():
                                                           self.vlan_tag_push_rules_table_id)
 
                 primary_intents = self.get_intents(dst_intents, "primary")
-                reverse_intents = self.get_intents(dst_intents, "reverse")
-                balking_intents = self.get_intents(dst_intents, "balking")
-                failover_intents = self.get_intents(dst_intents, "failover")
 
                 #  Handle the case when the switch does not have to carry any failover traffic
-                if primary_intents and not failover_intents:
+                if primary_intents:
 
                     group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
 
@@ -290,91 +205,6 @@ class SynthesizeQoS():
                         1,
                         primary_intents[0].flow_match,
                         primary_intents[0].apply_immediately)
-
-                if primary_intents and failover_intents:
-
-                    #  See if both want same destination
-                    if primary_intents[0].out_port != failover_intents[0].out_port:
-                        group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], failover_intents[0])
-                    else:
-                        group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
-
-                    # Push the rule that refers to the group
-                    in_port = None
-                    #Sanity check
-                    if primary_intents[0].in_port != failover_intents[0].in_port:
-                        #  This can only happen if the host is directly connected to the switch, so check that.
-                        sw_obj = self.network_graph.get_node_object(sw)
-                        if not int(sw_obj.synthesis_tag) == int(dst):
-                            raise Exception("Primary and failover intents' src port mismatch")
-                    else:
-                        in_port = primary_intents[0].in_port
-
-                    primary_intents[0].flow_match["in_port"] = int(in_port)
-                    flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw,
-                        self.ip_forwarding_table_id,
-                        group_id,
-                        1,
-                        primary_intents[0].flow_match,
-                        primary_intents[0].apply_immediately)
-
-                    if len(failover_intents) > 1:
-                        #raise Exception ("Hitting an unexpected case.")
-                        failover_intents = failover_intents[1:]
-
-                #  Handle the case when switch only participates in carrying the failover traffic in-transit
-                if not primary_intents and failover_intents:
-
-                    for failover_intent in failover_intents:
-
-                        group_id = self.synthesis_lib.push_select_all_group(sw, [failover_intent])
-                        failover_intent.flow_match["in_port"] = int(failover_intent.in_port)
-                        flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                            sw,
-                            self.ip_forwarding_table_id,
-                            group_id,
-                            1,
-                            failover_intent.flow_match,
-                            failover_intent.apply_immediately)
-
-                if primary_intents and balking_intents:
-
-                    group_id = self.synthesis_lib.push_fast_failover_group(sw, primary_intents[0], balking_intents[0])
-                    in_port = None
-
-                    #Sanity check
-                    if primary_intents[0].in_port != balking_intents[0].in_port:
-
-                        #  This can only happen if the host is directly connected to the switch, so check that.
-                        sw_obj = self.network_graph.get_node_object(sw)
-                        if not int(sw_obj.synthesis_tag) == int(dst):
-                            raise Exception("Primary and balking intents' src port mismatch")
-
-                    else:
-                        in_port = primary_intents[0].in_port
-
-                    primary_intents[0].flow_match["in_port"] = int(in_port)
-                    flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw,
-                        self.ip_forwarding_table_id,
-                        group_id,
-                        1,
-                        primary_intents[0].flow_match,
-                        primary_intents[0].apply_immediately)
-
-                if reverse_intents:
-
-                    group_id = self.synthesis_lib.push_select_all_group(sw, [reverse_intents[0]])
-
-                    reverse_intents[0].flow_match["in_port"] = int(reverse_intents[0].in_port)
-                    flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        sw,
-                        self.reverse_rules_table_id,
-                        group_id,
-                        1,
-                        reverse_intents[0].flow_match,
-                        reverse_intents[0].apply_immediately)
 
     def synthesize_all_node_pairs(self, rate):
 
@@ -403,5 +233,4 @@ class SynthesizeQoS():
                 self.synthesize_flow_qos(src_h_obj, dst_h_obj, flow_match, rate, rate)
                 print "-----------------------------------------------------------------------------------------------"
 
-        self._identify_reverse_and_balking_intents()
         self.push_switch_changes()

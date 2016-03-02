@@ -513,8 +513,19 @@ class SynthesisLib():
 
             for intent in intent_list:
                 this_bucket = {}
-                out_port, watch_port = self.get_out_and_watch_port(intent)
-                this_bucket["actions"] = [{"type": "OUTPUT", "port": out_port}]
+
+                output_action = {"type": "OUTPUT", "port": intent.out_port}
+
+                if intent.min_rate and intent.max_rate:
+                    q_id = self.push_queue(sw, intent.out_port, intent.min_rate, intent.max_rate)
+                    enqueue_action = {"type": "SET_QUEUE", "queue_id": q_id, "port": intent.out_port}
+                    action_list = [enqueue_action, output_action]
+                    this_bucket["actions"] = [output_action]
+                else:
+                    out_port, watch_port = self.get_out_and_watch_port(intent)
+                    action_list = [output_action]
+
+                this_bucket["actions"] = action_list
                 group["buckets"].append(this_bucket)
 
             group_id = group["group_id"]

@@ -328,10 +328,21 @@ class MininetMan():
                                                    "-t omni -- -d send -o " +
                                                    "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
                                                    " -T UDP_RR " +
-                                                   "-m " + str(size_of_send[i])
+                                                   "-m " + str(size_of_send[i]) #+ " &"
                                                    )
             print netperf_output_dict[i]
 
+
+            netperf_output_dict[i] = self.h2s2.cmd("/usr/local/bin/netperf -H " + self.h1s1.IP() +
+                                                   " -w " + str(inter_burst_times[i]) +
+                                                   " -b " + str(number_of_sends_in_a_burst[i]) +
+                                                   " -l 10 " +
+                                                   "-t omni -- -d send -o " +
+                                                   "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
+                                                   " -T UDP_RR " +
+                                                   "-m " + str(size_of_send[i])  #+ " &"
+                                                   )
+            print netperf_output_dict[i]
 
         # Parse the output for jitter and delay
         print "Last-Hop Queue Rate:", str(last_hop_queue_rate), "M"
