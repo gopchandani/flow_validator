@@ -297,13 +297,16 @@ class MininetMan():
             print 'Max Latency:', output_line_tokens[5]
 
         self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear")
-        last_hop_queue_rate = 5
+        last_hop_queue_rate = 50
         self.synthesis_dij.synthesize_all_node_pairs(last_hop_queue_rate)
 
         num_traffic_profiles = 10
         size_of_send = [1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024]
+        # number_of_sends_in_a_burst = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        # inter_burst_times = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+
         number_of_sends_in_a_burst = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        inter_burst_times = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+        inter_burst_times = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
         # Get all the nodes
         self.h1s1 = self.net.getNodeByName("h1s1")
@@ -324,7 +327,7 @@ class MininetMan():
                                                    " -l 10 " +
                                                    "-t omni -- -d send -o " +
                                                    "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
-                                                   " -T UDP " +
+                                                   " -T UDP_RR " +
                                                    "-m " + str(size_of_send[i])
                                                    )
             print netperf_output_dict[i]
