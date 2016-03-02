@@ -11,10 +11,9 @@ from model.match import Match
 
 class SynthesizeQoS():
 
-    def __init__(self, network_graph, master_switch=False, same_output_queue=False):
+    def __init__(self, network_graph, same_output_queue=False):
 
         self.network_graph = network_graph
-        self.master_switch = master_switch
         self.same_output_queue = same_output_queue
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
@@ -33,17 +32,14 @@ class SynthesizeQoS():
         # Table contains the rules that drop packets destined to the same MAC address as host of origin
         self.loop_preventing_drop_table = 0
 
-        # Table contains the reverse rules (they should be examined first)
-        self.reverse_rules_table_id = 1
-
         # Table contains any rules that have to do with vlan tag push
-        self.vlan_tag_push_rules_table_id = 2
+        self.vlan_tag_push_rules_table_id = 1
 
         # Table contains any rules associated with forwarding host traffic
-        self.mac_forwarding_table_id = 3
+        self.mac_forwarding_table_id = 2
 
         # Table contains the actual forwarding rules
-        self.ip_forwarding_table_id = 4
+        self.ip_forwarding_table_id = 3
 
     def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type,
                                  flow_match, first_in_port, dst_switch_tag, min_rate, max_rate):
@@ -58,11 +54,12 @@ class SynthesizeQoS():
 
             fwd_flow_match = deepcopy(flow_match)
 
-            mac_int = int(dst_host.mac_addr.replace(":", ""), 16)
-            fwd_flow_match["ethernet_destination"] = int(mac_int)
+            if not self.same_output_queue:
+                mac_int = int(dst_host.mac_addr.replace(":", ""), 16)
+                fwd_flow_match["ethernet_destination"] = int(mac_int)
 
             intent = Intent(intent_type,
-                            fwd_flow_match, 
+                            fwd_flow_match,
                             in_port,
                             out_port,
                             self.apply_other_intents_immediately,
@@ -71,8 +68,10 @@ class SynthesizeQoS():
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
-
-            self._add_intent(p[i], (dst_switch_tag, dst_host.mac_addr), intent)
+            if self.same_output_queue:
+                self._add_intent(p[i], dst_switch_tag, intent)
+            else:
+                self._add_intent(p[i], (dst_switch_tag, dst_host.mac_addr), intent)
 
             # Prep for next switch
             if i < len(p) - 2:
@@ -177,7 +176,6 @@ class SynthesizeQoS():
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 0)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 1)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 2)
-            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw, 3)
 
             intents = self.network_graph.graph.node[sw]["sw"].intents
 
@@ -199,18 +197,25 @@ class SynthesizeQoS():
                 #  Handle the case when the switch does not have to carry any failover traffic
                 if primary_intents:
 
-                    group_id = self.synthesis_lib.push_select_all_group(sw, [primary_intents[0]])
+                    combined_intent = deepcopy(primary_intents[0])
 
-                    if not self.master_switch:
-                        primary_intents[0].flow_match["in_port"] = int(primary_intents[0].in_port)
+                    if self.same_output_queue:
+                        combined_intent.min_rate = 0
+                        combined_intent.max_rate = 0
+
+                        for primary_intent in primary_intents:
+                            combined_intent.min_rate += primary_intent.min_rate
+                            combined_intent.max_rate += primary_intent.max_rate
+
+                    group_id = self.synthesis_lib.push_select_all_group(sw, [combined_intent])
 
                     flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         sw,
                         self.ip_forwarding_table_id,
                         group_id,
                         1,
-                        primary_intents[0].flow_match,
-                        primary_intents[0].apply_immediately)
+                        combined_intent.flow_match,
+                        combined_intent.apply_immediately)
 
     def synthesize_all_node_pairs(self, rate):
 

@@ -297,7 +297,7 @@ class MininetMan():
 
     def qos_setup_single_flow_test(self, ng):
 
-        self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear")
+        self.synthesis_dij = SynthesizeQoS(ng)
         last_hop_queue_rate = 50
         self.synthesis_dij.synthesize_all_node_pairs(last_hop_queue_rate)
 
@@ -347,9 +347,9 @@ class MininetMan():
 
             self.parse_netperf_output(netperf_output_dict[i])
 
-    def qos_setup_two_flows_on_separate_queues_to_two_different_hosts(self, ng):
+    def qos_setup_two_flows_on_separate_queues_to_two_different_hosts(self, ng, same_output_queue=False):
 
-        self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear", same_output_queue=True)
+        self.synthesis_dij = SynthesizeQoS(ng, same_output_queue=same_output_queue)
         last_hop_queue_rate = 50
         self.synthesis_dij.synthesize_all_node_pairs(last_hop_queue_rate)
 
@@ -416,11 +416,12 @@ class MininetMan():
             print "Sending Rate:", str(rate), 'Mbps'
 
             self.parse_netperf_output(netperf_output_dict_h1s2[i])
+            print "--"
             self.parse_netperf_output(netperf_output_dict_h2s2[i])
 
-    def qos_setup_two_flows_on_separate_queues_to_same_host(self, ng):
+    def qos_setup_two_flows_on_separate_queues_to_same_host(self, ng, same_output_queue=False):
 
-        self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear", same_output_queue=True)
+        self.synthesis_dij = SynthesizeQoS(ng, same_output_queue=same_output_queue)
         last_hop_queue_rate = 50
         self.synthesis_dij.synthesize_all_node_pairs(last_hop_queue_rate)
 
@@ -487,4 +488,5 @@ class MininetMan():
             print "Sending Rate:", str(rate), 'Mbps'
 
             self.parse_netperf_output(netperf_output_dict_h1s2[i])
+            print "--"
             self.parse_netperf_output(netperf_output_dict_h2s2[i])

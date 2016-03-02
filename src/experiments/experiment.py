@@ -50,7 +50,7 @@ class Experiment(object):
                             mininet_setup_gap=None,
                             dst_ports_to_synthesize=None,
                             synthesis_setup_gap=None,
-                            synthesis_scheme="IntentSynthesis"):
+                            synthesis_scheme=None):
 
         if not self.load_config and self.save_config:
             self.controller_port = self.cm.get_next()
@@ -86,6 +86,14 @@ class Experiment(object):
                 elif synthesis_scheme == "IntentSynthesisLB":
                     self.synthesis = IntentSynthesisLB(self.ng, master_switch=topo_description[0] == "linear")
                     self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+
+                elif synthesis_scheme == "QoS_Synthesis":
+                    #self.mm.qos_setup_single_flow_test(ng)
+
+                    self.mm.qos_setup_two_flows_on_separate_queues_to_two_different_hosts(self.ng,
+                                                                                          same_output_queue=False)
+                    #self.mm.qos_setup_two_flows_on_separate_queues_to_same_host(self.ng)
+
 
 
                 #self.mm.net.pingAll()

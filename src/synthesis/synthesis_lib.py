@@ -80,6 +80,7 @@ class SynthesisLib():
               " other-config:max-rate=" + max_rate_str
 
         os.system(queue_cmd)
+        time.sleep(1)
 
         return self.queue_id_cntr
 
@@ -439,6 +440,7 @@ class SynthesisLib():
 
             out_port, watch_port = self.get_out_and_watch_port(failover_intent)
             bucket_failover["actions"] = [{"type": "OUTPUT", "port": out_port}]
+            bucket_failover["weight"] = 20
             bucket_failover["weight"] = 20
             bucket_failover["watch_port"] = watch_port
 
