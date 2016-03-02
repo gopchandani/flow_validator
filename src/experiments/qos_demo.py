@@ -31,7 +31,9 @@ class QosDemo(Experiment):
             self.topo_description = ("linear", 2, total_number_of_hosts/2)
             ng = self.setup_network_graph(self.topo_description)
             #self.mm.qos_setup_single_flow_test(ng)
-            self.mm.qos_setup_two_flow_test(self.ng)
+
+            self.mm.qos_setup_two_flows_on_separate_queues_to_two_different_hosts(self.ng)
+            #self.mm.qos_setup_two_flows_on_separate_queues_to_same_host(self.ng)
 
         print "Done..."
 

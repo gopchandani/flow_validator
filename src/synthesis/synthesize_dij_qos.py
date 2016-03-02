@@ -11,10 +11,11 @@ from model.match import Match
 
 class SynthesizeQoS():
 
-    def __init__(self, network_graph, master_switch=False):
+    def __init__(self, network_graph, master_switch=False, same_output_queue=False):
 
         self.network_graph = network_graph
         self.master_switch = master_switch
+        self.same_output_queue = same_output_queue
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
@@ -60,9 +61,13 @@ class SynthesizeQoS():
             mac_int = int(dst_host.mac_addr.replace(":", ""), 16)
             fwd_flow_match["ethernet_destination"] = int(mac_int)
 
-            intent = Intent(intent_type, fwd_flow_match, in_port, out_port,
+            intent = Intent(intent_type,
+                            fwd_flow_match, 
+                            in_port,
+                            out_port,
                             self.apply_other_intents_immediately,
-                            min_rate=min_rate, max_rate=max_rate)
+                            min_rate=min_rate,
+                            max_rate=max_rate)
 
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
