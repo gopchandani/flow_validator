@@ -29,8 +29,9 @@ class QosDemo(Experiment):
         for total_number_of_hosts in self.total_number_of_hosts:
 
             self.topo_description = ("linear", 2, total_number_of_hosts/2)
-            ng = self.setup_network_graph(self.topo_description, qos=True)
-            self.mm.setup_mininet_with_ryu_qos(ng)
+            ng = self.setup_network_graph(self.topo_description)
+            #self.mm.qos_setup_single_flow_test(ng)
+            self.mm.qos_setup_two_flow_test(self.ng)
 
         print "Done..."
 

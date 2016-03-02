@@ -44,7 +44,8 @@ class SynthesizeQoS():
         # Table contains the actual forwarding rules
         self.ip_forwarding_table_id = 4
 
-    def _compute_path_ip_intents(self, p, intent_type, flow_match, first_in_port, dst_switch_tag, min_rate, max_rate):
+    def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type,
+                                 flow_match, first_in_port, dst_switch_tag, min_rate, max_rate):
 
         edge_ports_dict = self.network_graph.get_edge_port_dict(p[0], p[1])
         
@@ -56,9 +57,8 @@ class SynthesizeQoS():
 
             fwd_flow_match = deepcopy(flow_match)
 
-            # All intents except the first one in the primary path must specify the vlan tag
-            if not (i == 0 and intent_type == "primary"):
-                fwd_flow_match["vlan_id"] = int(dst_switch_tag)
+            mac_int = int(dst_host.mac_addr.replace(":", ""), 16)
+            fwd_flow_match["ethernet_destination"] = int(mac_int)
 
             intent = Intent(intent_type, fwd_flow_match, in_port, out_port,
                             self.apply_other_intents_immediately,
@@ -67,7 +67,7 @@ class SynthesizeQoS():
             # Using dst_switch_tag as key here to
             # avoid adding multiple intents for the same destination
 
-            self._add_intent(p[i], dst_switch_tag, intent)
+            self._add_intent(p[i], (dst_switch_tag, dst_host.mac_addr), intent)
 
             # Prep for next switch
             if i < len(p) - 2:
@@ -159,7 +159,8 @@ class SynthesizeQoS():
             self.primary_path_edge_dict[(src_host.node_id, dst_host.node_id)].append((p[i], p[i+1]))
 
         #  Compute all forwarding intents as a result of primary path
-        self._compute_path_ip_intents(p, "primary", flow_match, in_port, dst_sw_obj.synthesis_tag, min_rate, max_rate)
+        self._compute_path_ip_intents(src_host, dst_host, p, "primary",
+                                      flow_match, in_port, dst_sw_obj.synthesis_tag, min_rate, max_rate)
 
     def push_switch_changes(self):
 

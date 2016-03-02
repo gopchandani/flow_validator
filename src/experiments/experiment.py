@@ -47,7 +47,6 @@ class Experiment(object):
 
     def setup_network_graph(self,
                             topo_description,
-                            qos=False,
                             mininet_setup_gap=None,
                             dst_ports_to_synthesize=None,
                             synthesis_setup_gap=None,
@@ -74,23 +73,19 @@ class Experiment(object):
             if self.controller == "odl":
                 self.mm.setup_mininet_with_odl(self.ng)
             elif self.controller == "ryu":
+                if synthesis_scheme == "IntentSynthesis":
+                    self.synthesis = IntentSynthesis(self.ng, master_switch=topo_description[0] == "linear",
+                                                     synthesized_paths_save_directory=self.ng.config_path_prefix)
 
-                if qos:
-                    self.mm.setup_mininet_with_ryu_qos(self.ng)
-                else:
-                    if synthesis_scheme == "IntentSynthesis":
-                        self.synthesis = IntentSynthesis(self.ng, master_switch=topo_description[0] == "linear",
-                                                         synthesized_paths_save_directory=self.ng.config_path_prefix)
+                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
-                        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+                elif synthesis_scheme == "IntentSynthesisLDST":
+                    self.synthesis = IntentSynthesisLDST(self.ng, master_switch=topo_description[0] == "linear")
+                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
-                    elif synthesis_scheme == "IntentSynthesisLDST":
-                        self.synthesis = IntentSynthesisLDST(self.ng, master_switch=topo_description[0] == "linear")
-                        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-
-                    elif synthesis_scheme == "IntentSynthesisLB":
-                        self.synthesis = IntentSynthesisLB(self.ng, master_switch=topo_description[0] == "linear")
-                        self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+                elif synthesis_scheme == "IntentSynthesisLB":
+                    self.synthesis = IntentSynthesisLB(self.ng, master_switch=topo_description[0] == "linear")
+                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
 
                 #self.mm.net.pingAll()

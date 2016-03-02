@@ -260,41 +260,42 @@ class MininetMan():
 
         return is_bi_connected
 
-    def setup_mininet_with_ryu_qos(self, ng):
+    def parse_iperf_output(self, iperf_output_string):
+        data_lines =  iperf_output_string.split('\r\n')
+        interesting_line_index = None
+        for i in xrange(len(data_lines)):
+            if data_lines[i].endswith('Server Report:'):
+                interesting_line_index = i + 1
+        data_tokens =  data_lines[interesting_line_index].split()
+        print "Transferred Rate:", data_tokens[7]
+        print "Jitter:", data_tokens[9]
 
-        def parse_iperf_output(iperf_output_string):
-            data_lines =  iperf_output_string.split('\r\n')
-            interesting_line_index = None
-            for i in xrange(len(data_lines)):
-                if data_lines[i].endswith('Server Report:'):
-                    interesting_line_index = i + 1
-            data_tokens =  data_lines[interesting_line_index].split()
-            print "Transferred Rate:", data_tokens[7]
-            print "Jitter:", data_tokens[9]
+    def parse_ping_output(self,ping_output_string):
 
-        def parse_ping_output(ping_output_string):
+        data_lines =  ping_output_string.split('\r\n')
+        interesting_line_index = None
+        for i in xrange(len(data_lines)):
+            if data_lines[i].startswith('5 packets transmitted'):
+                interesting_line_index = i + 1
+        data_tokens =  data_lines[interesting_line_index].split()
+        data_tokens =  data_tokens[3].split('/')
+        print 'Min Delay:', data_tokens[0]
+        print 'Avg Delay:', data_tokens[1]
+        print 'Max Delay:', data_tokens[2]
 
-            data_lines =  ping_output_string.split('\r\n')
-            interesting_line_index = None
-            for i in xrange(len(data_lines)):
-                if data_lines[i].startswith('5 packets transmitted'):
-                    interesting_line_index = i + 1
-            data_tokens =  data_lines[interesting_line_index].split()
-            data_tokens =  data_tokens[3].split('/')
-            print 'Min Delay:', data_tokens[0]
-            print 'Avg Delay:', data_tokens[1]
-            print 'Max Delay:', data_tokens[2]
+    def parse_netperf_output(self,netperf_output_string):
+        data_lines =  netperf_output_string.split('\r\n')
 
-        def parse_netperf_output(netperf_output_string):
-            data_lines =  netperf_output_string.split('\r\n')
+        output_line_tokens =  data_lines[2].split(',')
+        print "Throughput:", output_line_tokens[0]
+        print 'Mean Latency:', output_line_tokens[1]
+        print 'Stddev Latency:', output_line_tokens[2]
+        print '99th Latency:', output_line_tokens[3]
+        print 'Min Latency:', output_line_tokens[4]
+        print 'Max Latency:', output_line_tokens[5]
 
-            output_line_tokens =  data_lines[2].split(',')
-            print "Throughput:", output_line_tokens[0]
-            print 'Mean Latency:', output_line_tokens[1]
-            print 'Stddev Latency:', output_line_tokens[2]
-            print '99th Latency:', output_line_tokens[3]
-            print 'Min Latency:', output_line_tokens[4]
-            print 'Max Latency:', output_line_tokens[5]
+
+    def qos_setup_single_flow_test(self, ng):
 
         self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear")
         last_hop_queue_rate = 50
@@ -328,19 +329,7 @@ class MininetMan():
                                                    "-t omni -- -d send -o " +
                                                    "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
                                                    " -T UDP_RR " +
-                                                   "-m " + str(size_of_send[i]) #+ " &"
-                                                   )
-            print netperf_output_dict[i]
-
-
-            netperf_output_dict[i] = self.h2s2.cmd("/usr/local/bin/netperf -H " + self.h1s1.IP() +
-                                                   " -w " + str(inter_burst_times[i]) +
-                                                   " -b " + str(number_of_sends_in_a_burst[i]) +
-                                                   " -l 10 " +
-                                                   "-t omni -- -d send -o " +
-                                                   "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
-                                                   " -T UDP_RR " +
-                                                   "-m " + str(size_of_send[i])  #+ " &"
+                                                   "-m " + str(size_of_send[i])
                                                    )
             print netperf_output_dict[i]
 
@@ -356,4 +345,90 @@ class MininetMan():
             rate = (size_of_send[i] * 8 * number_of_sends_in_a_burst[i]) / (inter_burst_times[i] * 1000.0)
             print "Sending Rate:", str(rate), 'Mbps'
 
-            parse_netperf_output(netperf_output_dict[i])
+            self.parse_netperf_output(netperf_output_dict[i])
+
+
+    def qos_setup_two_flow_test(self, ng):
+
+        self.synthesis_dij = SynthesizeQoS(ng, master_switch=self.topo_name == "linear")
+        last_hop_queue_rate = 50
+        self.synthesis_dij.synthesize_all_node_pairs(last_hop_queue_rate)
+
+        num_traffic_profiles = 10
+        size_of_send = [1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024]
+
+        number_of_sends_in_a_burst = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        inter_burst_times = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+        # Get all the nodes
+        self.h1s1 = self.net.getNodeByName("h1s1")
+        self.h1s2 = self.net.getNodeByName("h1s2")
+        self.h2s1 = self.net.getNodeByName("h2s1")
+        self.h2s2 = self.net.getNodeByName("h2s2")
+
+        h1s1_output = self.h1s1.cmd("/usr/local/bin/netserver")
+        print h1s1_output
+
+        h2s1_output = self.h2s1.cmd("/usr/local/bin/netserver")
+        print h2s1_output
+
+        netperf_output_dict_h1s2 = {}
+        netperf_output_dict_h2s2 = {}
+
+        for i in range(num_traffic_profiles):
+
+            # Interferring
+
+            # netperf_output_dict_h1s2[i] = self.h1s2.cmd("/usr/local/bin/netperf -H " + self.h2s1.IP() +
+            #                                        " -w " + str(inter_burst_times[i]) +
+            #                                        " -b " + str(number_of_sends_in_a_burst[i]) +
+            #                                        " -l 10 " +
+            #                                        "-t omni -- -d send -o " +
+            #                                        "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
+            #                                        " -T UDP_RR " +
+            #                                        "-m " + str(size_of_send[i]) + " &"
+            #                                        )
+
+
+            # Non-interferring
+            netperf_output_dict_h1s2[i] = self.h1s2.cmd("/usr/local/bin/netperf -H " + self.h1s1.IP() +
+                                                   " -w " + str(inter_burst_times[i]) +
+                                                   " -b " + str(number_of_sends_in_a_burst[i]) +
+                                                   " -l 10 " +
+                                                   "-t omni -- -d send -o " +
+                                                   "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
+                                                   " -T UDP_RR " +
+                                                   "-m " + str(size_of_send[i]) + " &"
+                                                   )
+
+            netperf_output_dict_h2s2[i] = self.h2s2.cmd("/usr/local/bin/netperf -H " + self.h2s1.IP() +
+                                                   " -w " + str(inter_burst_times[i]) +
+                                                   " -b " + str(number_of_sends_in_a_burst[i]) +
+                                                   " -l 10 " +
+                                                   "-t omni -- -d send -o " +
+                                                   "'THROUGHPUT, MEAN_LATENCY, STDDEV_LATENCY, P99_LATENCY, MIN_LATENCY, MAX_LATENCY'" +
+                                                   " -T UDP_RR " +
+                                                   "-m " + str(size_of_send[i]) + " &"
+                                                   )
+            time.sleep(15)
+
+            netperf_output_dict_h1s2[i] = self.h1s2.read()
+            netperf_output_dict_h2s2[i] = self.h2s2.read()
+
+            print netperf_output_dict_h1s2[i]
+            print netperf_output_dict_h2s2[i]
+
+        # Parse the output for jitter and delay
+        print "Last-Hop Queue Rate:", str(last_hop_queue_rate), "M"
+        for i in range(num_traffic_profiles):
+
+            print "--"
+            print "Size of send (bytes):", size_of_send[i]
+            print "Number of sends in a burst:", number_of_sends_in_a_burst[i]
+            print "Inter-burst time (miliseconds):", inter_burst_times[i]
+
+            rate = (size_of_send[i] * 8 * number_of_sends_in_a_burst[i]) / (inter_burst_times[i] * 1000.0)
+            print "Sending Rate:", str(rate), 'Mbps'
+
+            self.parse_netperf_output(netperf_output_dict_h1s2[i])
+            self.parse_netperf_output(netperf_output_dict_h2s2[i])
