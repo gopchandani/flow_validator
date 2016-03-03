@@ -6,8 +6,15 @@ class TrafficPath(object):
         self.path_nodes = nodes
         self.path_edges = path_edges
 
-    def path_length(self):
-        return len(self.path_nodes)
+    def get_max_vuln_rank(self):
+        max_vuln_rank = -1
+
+        for edge, enabling_edge_data_list in self.path_edges:
+            for enabling_edge_data in enabling_edge_data_list:
+                if enabling_edge_data.vuln_rank > max_vuln_rank:
+                    max_vuln_rank = enabling_edge_data.vuln_rank
+
+        return max_vuln_rank
 
     def __eq__(self, other):
 
@@ -31,9 +38,9 @@ class TrafficPath(object):
 
         path_str += str(self.path_nodes[len(self.path_nodes) - 1])
 
-        for edge, enabling_edge_data_list in self.path_edges:
-            path_str += "\n" + str(edge[0]) + "->" + str(edge[1]) + "\n"
-
+        # for edge, enabling_edge_data_list in self.path_edges:
+        #     path_str += "\n" + str(edge[0]) + "->" + str(edge[1]) + "\n"
+        #
 
         return path_str
 

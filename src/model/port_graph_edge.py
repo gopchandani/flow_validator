@@ -40,3 +40,8 @@ class SwitchPortGraphEdgeData():
         self.edge_action = edge_action
         self.applied_modifications = applied_modifications
         self.written_modifications = written_modifications
+
+        if edge_action:
+            self.vuln_rank = edge_action.vuln_rank
+        else:
+            self.vuln_rank = 0

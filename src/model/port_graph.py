@@ -281,8 +281,8 @@ class PortGraph(object):
 
                     if at_dst_succ.is_subset_traffic(specific_traffic):
 
-                        enabling_edge_data_list = specific_traffic.intersect(at_dst_succ).get_enabling_edge_data()
                         should = True
+                        enabling_edge_data_list = specific_traffic.intersect(at_dst_succ).get_enabling_edge_data()
 
                         # modify specific_traffic to adjust to the modifications in traffic along the succ
                         modified_specific_traffic = specific_traffic.intersect(at_dst_succ)
@@ -295,7 +295,7 @@ class PortGraph(object):
                 else:
                     traffic_at_succ = specific_traffic
                     should = True
-
+                    enabling_edge_data_list = at_dst_succ.get_enabling_edge_data()
             else:
                 # Do not go further if there is no traffic admitted via this succ
                 pass
