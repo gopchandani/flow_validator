@@ -211,6 +211,7 @@ class TrafficElement():
         modified_traffic_element.written_modifications = self.written_modifications
         modified_traffic_element.switch_modifications = self.switch_modifications
         modified_traffic_element.instruction_type = self.instruction_type
+        modified_traffic_element.enabling_edge_data = self.enabling_edge_data
 
         return modified_traffic_element
 
@@ -263,6 +264,7 @@ class TrafficElement():
         orig_traffic_element.written_modifications.update(self.written_modifications)
         orig_traffic_element.switch_modifications.update(self.switch_modifications)
         orig_traffic_element.instruction_type = self.instruction_type
+        orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
         if store_switch_modifications:
             orig_traffic_element.switch_modifications.update(mf)
@@ -368,6 +370,7 @@ class Traffic():
                     ei.written_modifications.update(e_in.written_modifications)
                     ei.instruction_type = e_in.instruction_type
                     ei.switch_modifications = e_in.switch_modifications
+                    ei.enabling_edge_data = e_in.enabling_edge_data
 
         return traffic_intersection
 
@@ -417,6 +420,7 @@ class Traffic():
                     remaining_te.written_modifications = in_te.written_modifications
                     remaining_te.switch_modifications = in_te.switch_modifications
                     remaining_te.instruction_type = in_te.instruction_type
+                    remaining_te.enabling_edge_data = in_te.enabling_edge_data
 
                 diff_traffic.traffic_elements.extend(remaining)
 
@@ -449,6 +453,14 @@ class Traffic():
     def set_enabling_edge_data(self, enabling_edge_data):
         for te in self.traffic_elements:
             te.enabling_edge_data = enabling_edge_data
+
+    def get_enabling_edge_data(self):
+        enabling_edge_data_list = []
+
+        for te in self.traffic_elements:
+            enabling_edge_data_list.append(te.enabling_edge_data)
+
+        return enabling_edge_data_list
 
 def main():
     m1 = Traffic()

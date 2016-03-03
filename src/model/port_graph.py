@@ -267,6 +267,7 @@ class PortGraph(object):
 
         should = False
         traffic_at_succ = None
+        enabling_edge_data_list = []
 
         at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
 
@@ -279,6 +280,8 @@ class PortGraph(object):
                 if specific_traffic:
 
                     if at_dst_succ.is_subset_traffic(specific_traffic):
+
+                        enabling_edge_data_list = specific_traffic.intersect(at_dst_succ).get_enabling_edge_data()
                         should = True
 
                         # modify specific_traffic to adjust to the modifications in traffic along the succ
@@ -300,7 +303,7 @@ class PortGraph(object):
             # Do not add if this succ would cause a loop
             pass
 
-        return should, [], traffic_at_succ
+        return should, enabling_edge_data_list, traffic_at_succ
 
     def get_paths(self, this_node, dst, specific_traffic, path_prefix, path_edges, verbose):
 
