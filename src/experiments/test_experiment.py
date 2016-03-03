@@ -38,8 +38,8 @@ class TestExperiment(Experiment):
             print "ports_to_synthesize:", ports_to_synthesize
 
             #self.topo_description = ("linear", 2, 1)
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -59,14 +59,7 @@ class TestExperiment(Experiment):
             all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
             print "Primary paths TestExperiment, all_paths_match:", all_paths_match
 
-
-            # all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-            #                                                                        edges_to_try=[('s9', 's19')],
-            #                                                                        verbose=True)
-
-
-            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv,
-                                                                                   verbose=False)
+            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv, verbose=False)
 
             print "Failover paths TestExperiment, all_paths_match:", all_paths_match
 

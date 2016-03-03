@@ -86,9 +86,9 @@ class FlowValidator:
                                                       [],
                                                       verbose)
 
-                if all_paths and verbose:
-                    for path in all_paths:
-                        print path
+                for path in all_paths:
+                    path_vuln_ranks.append(path.get_max_vuln_rank())
+
             else:
                 if verbose:
                     print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at does not pass specific_traffic check."
@@ -117,7 +117,7 @@ class FlowValidator:
                 if not all_paths:
                     host_pair_paths[src_h_id][dst_h_id] = []
                 else:
-                    host_pair_paths[src_h_id][dst_h_id] = (all_paths[0], 0)
+                    host_pair_paths[src_h_id][dst_h_id] = (all_paths[0], path_vuln_ranks[0])
 
         return host_pair_paths
 
