@@ -10,9 +10,9 @@ class NetworkPortGraph(PortGraph):
 
         super(NetworkPortGraph, self).__init__(network_graph)
 
-    def get_edge_from_admitted_traffic(self, pred, dst, admitted_traffic):
+    def get_edge_from_admitted_traffic(self, pred, succ, admitted_traffic, edge_sw=None):
 
-        edge = PortGraphEdge(pred, dst)
+        edge = PortGraphEdge(pred, succ)
 
         # If the edge filter became empty, reflect that.
         if admitted_traffic.is_empty():
@@ -24,8 +24,24 @@ class NetworkPortGraph(PortGraph):
                 t = Traffic()
                 t.add_traffic_elements([te])
 
+                max_vuln_rank = None
+
+                if edge_sw:
+                    # Check to see the exact path of this traffic through the switch
+                    traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
+
+                    # If there is more than one paths for this small chunk of traffic in te, then
+                    # Pick the path of least resistance, i.e. min(all _ max_vuln_rank)
+                    max_vuln_rank = 100000
+                    for tp in traffic_paths:
+                        path_max_vuln_rank = tp.get_max_vuln_rank()
+                        if path_max_vuln_rank < max_vuln_rank:
+                            max_vuln_rank = path_max_vuln_rank
+                else:
+                    max_vuln_rank = 0
+
                 #TODO: Gather the vuln_rank from the traffic path
-                edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, 0)#te.vuln_rank)
+                edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, max_vuln_rank)
                 edge.add_edge_data(edge_data)
 
 
@@ -46,7 +62,7 @@ class NetworkPortGraph(PortGraph):
 
             for succ in pred.admitted_traffic:
                 admitted_traffic = sw.port_graph.get_admitted_traffic(pred, succ)
-                edge = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic)
+                edge = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic, edge_sw=sw)
                 self.add_edge(pred, succ, edge)
 
     def modify_switch_transfer_edges(self, sw, modified_switch_edges):
@@ -63,7 +79,7 @@ class NetworkPortGraph(PortGraph):
 
             # Then, add the edge back by using the new transfer traffic now
             admitted_traffic = sw.port_graph.get_admitted_traffic(pred, succ)
-            edge = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic)
+            edge = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic, edge_sw=sw)
             self.add_edge(pred, succ, edge)
 
     def init_network_port_graph(self):
