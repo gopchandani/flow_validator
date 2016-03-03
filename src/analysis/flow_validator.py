@@ -83,9 +83,10 @@ class FlowValidator:
                                                       dst_host_obj.switch_egress_port,
                                                       specific_traffic,
                                                       [src_host_obj.switch_ingress_port],
+                                                      [],
                                                       verbose)
 
-                if all_paths:
+                if all_paths and verbose:
                     for path in all_paths:
                         print path
             else:

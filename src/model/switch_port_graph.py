@@ -154,6 +154,7 @@ class SwitchPortGraph(PortGraph):
                         te.written_modifications.update(ed.written_modifications)
 
             i = ed.edge_filter_traffic.intersect(ttp)
+            i.set_enabling_edge_data(ed)
 
             if not i.is_empty():
                 pred_admitted_traffic.union(i)

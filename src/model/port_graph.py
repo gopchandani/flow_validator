@@ -300,9 +300,9 @@ class PortGraph(object):
             # Do not add if this succ would cause a loop
             pass
 
-        return should, traffic_at_succ
+        return should, [], traffic_at_succ
 
-    def get_paths(self, this_node, dst, specific_traffic, path_prefix, verbose):
+    def get_paths(self, this_node, dst, specific_traffic, path_prefix, path_edges, verbose):
 
         this_level_paths = []
 
@@ -313,9 +313,16 @@ class PortGraph(object):
             # If destination is one of the successors, stop
             if dst in remaining_succs:
 
-                should, traffic_at_succ = self.should_add_succ(this_node, dst, dst, specific_traffic, path_prefix)
+                should, enabling_edge_data_list, traffic_at_succ = self.should_add_succ(this_node,
+                                                                                   dst,
+                                                                                   dst,
+                                                                                   specific_traffic,
+                                                                                   path_prefix)
                 if should:
-                    this_path = TrafficPath(list(path_prefix) + [dst])
+                    path_edges.append(((this_node, dst), enabling_edge_data_list))
+                    path_nodes = list(path_prefix) + [dst]
+
+                    this_path = TrafficPath(path_nodes, path_edges)
                     this_level_paths.append(this_path)
 
                     remaining_succs.remove(dst)
@@ -323,9 +330,14 @@ class PortGraph(object):
             # Explore all the remaining successors
             for succ in remaining_succs:
 
-                should, traffic_at_succ = self.should_add_succ(this_node, succ, dst, specific_traffic, path_prefix)
+                should, enabling_edge_data_list, traffic_at_succ = self.should_add_succ(this_node,
+                                                                                   succ,
+                                                                                   dst,
+                                                                                   specific_traffic,
+                                                                                   path_prefix)
 
                 if should:
+                    path_edges.append(((this_node, succ), enabling_edge_data_list))
                     path_prefix.append(succ)
 
                     if specific_traffic:
@@ -334,12 +346,14 @@ class PortGraph(object):
                                                                dst,
                                                                traffic_at_succ,
                                                                path_prefix,
+                                                               path_edges,
                                                                verbose))
                     else:
                         this_level_paths.extend(self.get_paths(succ,
                                                                dst,
                                                                specific_traffic,
                                                                path_prefix,
+                                                               path_edges,
                                                                verbose))
 
         return this_level_paths
@@ -350,7 +364,7 @@ class PortGraph(object):
         for src in self.boundary_ingress_nodes:
             for dst in self.boundary_egress_nodes:
 
-                graph_paths[src][dst] = self.get_paths(src, dst, None, [src], verbose)
+                graph_paths[src][dst] = self.get_paths(src, dst, None, [src], [], verbose)
 
         return graph_paths
 

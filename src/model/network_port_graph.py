@@ -180,6 +180,7 @@ class NetworkPortGraph(PortGraph):
                 ttp = traffic_to_propagate
 
             i = ed.edge_filter_traffic.intersect(ttp)
+            i.set_enabling_edge_data(ed)
 
             if not i.is_empty():
                 pred_admitted_traffic.union(i)
