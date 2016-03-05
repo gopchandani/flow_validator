@@ -10,9 +10,8 @@ import scipy.stats as ss
 
 from collections import defaultdict
 from timer import Timer
-from analysis.flow_validator import FlowValidator
+from analysis.monte_carlo_analysis import MonteCarloAnalysis
 from experiment import Experiment
-
 
 class MonteCarlo(Experiment):
     def __init__(self,
@@ -49,7 +48,7 @@ class MonteCarlo(Experiment):
         run_values = []
 
         for i in xrange(num_runs):
-            num_edges = self.fv.break_random_edges_until_pair_disconnected("h41", "h71", verbose=False)
+            num_edges = self.mca.break_random_edges_until_pair_disconnected("h41", "h71", verbose=False)
             run_values.append(num_edges)
 
         runs_mean = np.mean(run_values)
@@ -65,17 +64,18 @@ class MonteCarlo(Experiment):
             ports_to_synthesize = range(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            self.topo_description = ("clostopo", None, None, self.fanout, self.core)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
-                                          synthesis_setup_gap=len(ports_to_synthesize))
+                                          synthesis_setup_gap=len(ports_to_synthesize),
+                                          synthesis_scheme="IntentSynthesis")
 
-            self.fv = FlowValidator(ng)
-            self.fv.init_network_port_graph()
-            self.fv.add_hosts()
-            self.fv.initialize_admitted_traffic()
+            self.mca = MonteCarloAnalysis(ng)
+            self.mca.init_network_port_graph()
+            self.mca.add_hosts()
+            self.mca.initialize_admitted_traffic()
 
             for number_of_monte_carlo_runs in self.numbers_of_monte_carlo_runs:
                 print "number_of_monte_carlo_runs:", number_of_monte_carlo_runs
@@ -94,7 +94,7 @@ class MonteCarlo(Experiment):
                     self.data["number_of_edges_to_break_estimate"][number_of_ports_to_synthesize][number_of_monte_carlo_runs].append(est[1])
                     self.data["number_of_edges_to_break_estimate_data"][number_of_ports_to_synthesize][number_of_monte_carlo_runs].append(est)
 
-            self.fv.de_init_network_port_graph()
+            self.mca.de_init_network_port_graph()
 
     def plot_monte_carlo(self):
         fig = plt.figure(0)
@@ -111,8 +111,8 @@ class MonteCarlo(Experiment):
 
 def main():
     num_iterations = 20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     fanout = 2

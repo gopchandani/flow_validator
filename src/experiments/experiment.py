@@ -96,7 +96,7 @@ class Experiment(object):
 
 
 
-                #self.mm.net.pingAll()
+                self.mm.net.pingAll()
                 #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
 
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),

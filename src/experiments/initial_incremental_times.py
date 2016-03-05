@@ -100,7 +100,8 @@ class InitialIncrementalTimes(Experiment):
                     ng = self.setup_network_graph(self.topo_description,
                                                   mininet_setup_gap=1,
                                                   dst_ports_to_synthesize=ports_to_synthesize,
-                                                  synthesis_setup_gap=len(ports_to_synthesize))
+                                                  synthesis_setup_gap=len(ports_to_synthesize),
+                                                  synthesis_scheme="IntentSynthesis")
 
 
                     self.fv = FlowValidator(ng)

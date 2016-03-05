@@ -10,9 +10,8 @@ import scipy.stats as ss
 
 from collections import defaultdict
 from timer import Timer
-from analysis.flow_validator import FlowValidator
+from analysis.monte_carlo_analysis import MonteCarloAnalysis
 from experiment import Experiment
-
 
 class MonteCarlo(Experiment):
     def __init__(self,
@@ -53,9 +52,9 @@ class MonteCarlo(Experiment):
 
             print "Performing Run:", i + 1
 
-            broken_edges = self.fv.break_random_edges_until_any_pair_disconnected(verbose=False)
+            broken_edges = self.mca.break_random_edges_until_any_pair_disconnected(verbose=False)
 
-            #broken_edges = self.fv.break_specified_edges_in_order([('s3', 's4')], verbose=True)
+            #broken_edges = self.mca.break_specified_edges_in_order([('s3', 's4')], verbose=True)
 
             num_edges = len(broken_edges)
 
@@ -90,10 +89,10 @@ class MonteCarlo(Experiment):
                                           synthesis_setup_gap=60,
                                           synthesis_scheme="IntentSynthesis")
 
-            self.fv = FlowValidator(ng)
-            self.fv.init_network_port_graph()
-            self.fv.add_hosts()
-            self.fv.initialize_admitted_traffic()
+            self.mca = MonteCarloAnalysis(ng)
+            self.mca.init_network_port_graph()
+            self.mca.add_hosts()
+            self.mca.initialize_admitted_traffic()
 
             print "Initialization done."
 
@@ -114,7 +113,7 @@ class MonteCarlo(Experiment):
                     self.data["number_of_edges_to_break_estimate"][number_of_ports_to_synthesize][number_of_monte_carlo_runs].append(est[1])
                     self.data["number_of_edges_to_break_estimate_data"][number_of_ports_to_synthesize][number_of_monte_carlo_runs].append(est)
 
-            self.fv.de_init_network_port_graph()
+            self.mca.de_init_network_port_graph()
 
     def plot_monte_carlo(self):
         fig = plt.figure(0)
