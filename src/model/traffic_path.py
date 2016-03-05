@@ -17,6 +17,13 @@ class TrafficPath(object):
 
         return max_vuln_rank
 
+    def get_path_switches(self):
+        path_switches = []
+
+
+
+        return path_switches
+
     def __eq__(self, other):
 
         equal_paths = True

@@ -8,6 +8,37 @@ from analysis.flow_validator import FlowValidator
 
 class MonteCarloAnalysis(FlowValidator):
 
+    def __init__(self, network_graph):
+        super(MonteCarloAnalysis, self).__init__(network_graph)
+
+    def process_link_status_change(self, verbose=True):
+
+        all_pair_connected = True
+
+        for src_h_id in self.network_graph.host_ids:
+            for dst_h_id in self.network_graph.host_ids:
+
+                if src_h_id == dst_h_id:
+                    continue
+
+                if verbose:
+                    print "src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+
+                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
+
+                at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
+                                                                                      dst_h_id,
+                                                                                      specific_traffic,
+                                                                                      verbose)
+                if not all_paths:
+                    all_pair_connected = False
+                    print "Disconnected Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+                else:
+                    if path_vuln_ranks[0] > 0:
+                        print "Vulnerable Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+
+        return all_pair_connected
+
     # Return number of edges it took to break
     def break_random_edges_until_pair_disconnected(self, src_h_id, dst_h_id, verbose):
         edges_broken = []
