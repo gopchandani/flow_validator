@@ -87,9 +87,6 @@ class FlowValidator(object):
                                                       verbose)
 
                 for path in all_paths:
-                    path_links = path.get_path_links()
-                    print path
-                    print path_links
                     path_vuln_ranks.append(path.get_max_vuln_rank())
 
             else:

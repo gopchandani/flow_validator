@@ -11,6 +11,11 @@ class MonteCarloAnalysis(FlowValidator):
     def __init__(self, network_graph):
         super(MonteCarloAnalysis, self).__init__(network_graph)
 
+        self.classify_network_graph_links()
+
+    def classify_network_graph_links(self):
+        pass
+
     def process_link_status_change(self, verbose=True):
 
         all_pair_connected = True
