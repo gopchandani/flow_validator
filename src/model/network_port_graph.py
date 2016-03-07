@@ -111,7 +111,7 @@ class NetworkPortGraph(PortGraph):
     def add_node_graph_edge(self, node1_id, node2_id, updating=False):
 
         # Update the physical port representations in network graph objects
-        edge_port_dict = self.network_graph.get_link_data(node1_id, node2_id)
+        edge_port_dict = self.network_graph.get_link_ports_dict(node1_id, node2_id)
         sw1 = self.network_graph.get_node_object(node1_id)
         sw2 = self.network_graph.get_node_object(node2_id)
         sw1.ports[edge_port_dict[node1_id]].state = "up"
@@ -151,7 +151,7 @@ class NetworkPortGraph(PortGraph):
     def remove_node_graph_edge(self, node1_id, node2_id):
 
         # Update the physical port representations in network graph objects
-        edge_port_dict = self.network_graph.get_link_data(node1_id, node2_id)
+        edge_port_dict = self.network_graph.get_link_ports_dict(node1_id, node2_id)
         sw1 = self.network_graph.get_node_object(node1_id)
         sw2 = self.network_graph.get_node_object(node2_id)
         sw1.ports[edge_port_dict[node1_id]].state = "down"

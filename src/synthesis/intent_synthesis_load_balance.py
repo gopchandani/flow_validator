@@ -114,7 +114,7 @@ class IntentSynthesisLB():
 
     def _compute_destination_host_mac_intents(self, h_obj, flow_match, matching_tag):
 
-        edge_ports_dict = self.network_graph.get_link_data(h_obj.switch_id, h_obj.node_id)
+        edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.switch_id, h_obj.node_id)
         out_port = edge_ports_dict[h_obj.switch_id]
 
         host_mac_match = deepcopy(flow_match)
@@ -129,7 +129,7 @@ class IntentSynthesisLB():
 
     def _compute_path_intents(self, p, intent_type, flow_match, first_in_port, src_host_mac, dst_host_mac):
 
-        edge_ports_dict = self.network_graph.get_link_data(p[0], p[1])
+        edge_ports_dict = self.network_graph.get_link_ports_dict(p[0], p[1])
 
         in_port = first_in_port
         out_port = edge_ports_dict[p[0]]
@@ -152,10 +152,10 @@ class IntentSynthesisLB():
 
             # Prep for next switch
             if i < len(p) - 2:
-                edge_ports_dict = self.network_graph.get_link_data(p[i], p[i + 1])
+                edge_ports_dict = self.network_graph.get_link_ports_dict(p[i], p[i + 1])
                 in_port = edge_ports_dict[p[i+1]]
 
-                edge_ports_dict = self.network_graph.get_link_data(p[i + 1], p[i + 2])
+                edge_ports_dict = self.network_graph.get_link_ports_dict(p[i + 1], p[i + 2])
                 out_port = edge_ports_dict[p[i+1]]
 
     def synthesize_flow(self, src_host, dst_host, flow_match, primary_path):
@@ -163,7 +163,7 @@ class IntentSynthesisLB():
         print "Primary Path:", primary_path
 
         # Handy info
-        edge_ports_dict = self.network_graph.get_link_data(src_host.node_id, src_host.switch_id)
+        edge_ports_dict = self.network_graph.get_link_ports_dict(src_host.node_id, src_host.switch_id)
         in_port = edge_ports_dict[src_host.switch_id]
 
         # Add a MAC based forwarding rule for the destination host at the last hop
@@ -188,7 +188,7 @@ class IntentSynthesisLB():
         for i in xrange(len(primary_path) - 1):
 
             # Keep a copy of this handy
-            edge_ports_dict = self.network_graph.get_link_data(primary_path[i], primary_path[i + 1])
+            edge_ports_dict = self.network_graph.get_link_ports_dict(primary_path[i], primary_path[i + 1])
 
             # Delete the edge
             self.network_graph.graph.remove_edge(primary_path[i], primary_path[i + 1])

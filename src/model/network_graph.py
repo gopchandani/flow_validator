@@ -15,6 +15,12 @@ from group_table import GroupTable
 from port import Port
 from sel_controller import Session, OperationalTree, ConfigTree
 
+class NetworkGraphLinkData():
+
+    def __init__(self, link_ports_dict):
+        self.link_ports_dict = link_ports_dict
+
+
 class NetworkGraph():
 
     def __init__(self, mm, controller, load_config=False, save_config=False):
@@ -259,10 +265,12 @@ class NetworkGraph():
 
     def add_link(self, node1_id, node1_port, node2_id, node2_port):
 
+        link_ports_dict = {node1_id: node1_port, node2_id: node2_port}
+        link_data = NetworkGraphLinkData(link_ports_dict)
+
         self.graph.add_edge(node1_id,
                             node2_id,
-                            link_data={node1_id: node1_port, node2_id: node2_port},
-                            vuln_info = defaultdict(list))
+                            link_data=link_data)
 
         # Ensure that the ports are set up
         if self.graph.node[node1_id]["node_type"] == "switch":
@@ -282,8 +290,9 @@ class NetworkGraph():
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
 
-    def get_link_data(self, node1_id, node2_id):
-        return self.graph[node1_id][node2_id]['link_data']
+    def get_link_ports_dict(self, node1_id, node2_id):
+        link_data =  self.graph[node1_id][node2_id]['link_data']
+        return link_data.link_ports_dict
 
     def dump_model(self):
 

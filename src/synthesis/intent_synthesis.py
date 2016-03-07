@@ -49,7 +49,7 @@ class IntentSynthesis():
     def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type, flow_match, first_in_port, dst_switch_tag,
                                  edge_broken=None, switch_port_tuple_prefix_list=None):
 
-        edge_ports_dict = self.network_graph.get_link_data(p[0], p[1])
+        edge_ports_dict = self.network_graph.get_link_ports_dict(p[0], p[1])
 
         switch_port_tuple_list = []
 
@@ -87,14 +87,14 @@ class IntentSynthesis():
 
             # Prep for next switch
             if i < len(p) - 2:
-                edge_ports_dict = self.network_graph.get_link_data(p[i], p[i + 1])
+                edge_ports_dict = self.network_graph.get_link_ports_dict(p[i], p[i + 1])
                 in_port = edge_ports_dict[p[i+1]]
 
-                edge_ports_dict = self.network_graph.get_link_data(p[i + 1], p[i + 2])
+                edge_ports_dict = self.network_graph.get_link_ports_dict(p[i + 1], p[i + 2])
                 out_port = edge_ports_dict[p[i+1]]
 
         last_switch = p[len(p) - 1]
-        last_edge_ports_dict = self.network_graph.get_link_data(p[len(p) - 2], p[len(p) - 1])
+        last_edge_ports_dict = self.network_graph.get_link_ports_dict(p[len(p) - 2], p[len(p) - 1])
         last_switch_in_port = edge_ports_dict[last_switch]
 
         switch_port_tuple_list.append((last_switch, last_switch_in_port, dst_host.switch_port_attached))
@@ -203,7 +203,7 @@ class IntentSynthesis():
 
     def _compute_destination_host_mac_intents(self, h_obj, flow_match, matching_tag):
 
-        edge_ports_dict = self.network_graph.get_link_data(h_obj.switch_id, h_obj.node_id)
+        edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.switch_id, h_obj.node_id)
         out_port = edge_ports_dict[h_obj.switch_id]
 
         host_mac_match = deepcopy(flow_match)
@@ -306,7 +306,7 @@ class IntentSynthesis():
         for i in xrange(len(p) - 1):
 
             # Keep a copy of this handy
-            edge_ports_dict = self.network_graph.get_link_data(p[i], p[i + 1])
+            edge_ports_dict = self.network_graph.get_link_ports_dict(p[i], p[i + 1])
 
             # Build up the prefixes
             if i > 0:

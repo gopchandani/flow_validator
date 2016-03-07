@@ -91,9 +91,6 @@ class MonteCarloAnalysis(FlowValidator):
 
         return len(edges_broken)
 
-    def is_edge_vulnerable(self, e):
-        return 1 in self.network_graph.graph[e[0]][e[1]]["vuln_info"]
-
     def sample_edge(self, edges_broken, importance=False):
 
         sampled_edge = None
@@ -109,9 +106,6 @@ class MonteCarloAnalysis(FlowValidator):
 
             if sampled_edge in edges_broken:
                 continue
-
-            # if not self.is_edge_vulnerable(sampled_edge) and edges_broken:
-            #     continue
 
             break
 
