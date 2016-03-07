@@ -17,8 +17,9 @@ from sel_controller import Session, OperationalTree, ConfigTree
 
 class NetworkGraphLinkData():
 
-    def __init__(self, link_ports_dict):
-        self.link_ports_dict = link_ports_dict
+    def __init__(self, node1_id, node1_port, node2_id, node2_port, link_type):
+        self.link_ports_dict = {node1_id: node1_port, node2_id: node2_port}
+        self.link_type = link_type
 
 
 class NetworkGraph():
@@ -265,8 +266,18 @@ class NetworkGraph():
 
     def add_link(self, node1_id, node1_port, node2_id, node2_port):
 
-        link_ports_dict = {node1_id: node1_port, node2_id: node2_port}
-        link_data = NetworkGraphLinkData(link_ports_dict)
+        link_type = None
+
+        if self.graph.node[node1_id]["node_type"] == "switch" and self.graph.node[node2_id]["node_type"] == "switch":
+            link_type = "switch"
+        elif self.graph.node[node1_id]["node_type"] == "host" and self.graph.node[node2_id]["node_type"] == "switch":
+            link_type = "host"
+        elif self.graph.node[node1_id]["node_type"] == "switch" and self.graph.node[node2_id]["node_type"] == "host":
+            link_type = "host"
+        else:
+            raise Exception("Unknown Link Type")
+
+        link_data = NetworkGraphLinkData(node1_id, node1_port, node2_id, node2_port, link_type)
 
         self.graph.add_edge(node1_id,
                             node2_id,
@@ -281,7 +292,6 @@ class NetworkGraph():
 
     def remove_link(self, node1_id, node1_port, node2_id, node2_port):
 
-        #TODO: Not really need to remove it
         self.graph.remove_edge(node1_id, node2_id)
 
         if self.graph.node[node1_id]["node_type"] == "switch":
@@ -289,10 +299,6 @@ class NetworkGraph():
 
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
-
-    def get_link_ports_dict(self, node1_id, node2_id):
-        link_data =  self.graph[node1_id][node2_id]['link_data']
-        return link_data.link_ports_dict
 
     def dump_model(self):
 
@@ -520,8 +526,16 @@ class NetworkGraph():
         for switch_id in self.switch_ids:
             yield self.get_node_object(switch_id)
 
-    def get_links(self):
-        pass
+    def get_link_ports_dict(self, node1_id, node2_id):
+        link_data =  self.graph[node1_id][node2_id]['link_data']
+        return link_data.link_ports_dict
+
+    def get_switch_link_data(self):
+        for edge in self.graph.edges_iter():
+            link_data =  self.graph[edge[0]][edge[1]]['link_data']
+            if link_data.link_type == "switch":
+                yield link_data
+
 
     def get_node_object(self, node_id):
         node_obj = None

@@ -94,6 +94,8 @@ class MonteCarlo(Experiment):
             self.mca.add_hosts()
             self.mca.initialize_admitted_traffic()
 
+            self.mca.classify_network_graph_links()
+
             print "Initialization done."
 
             for number_of_monte_carlo_runs in self.numbers_of_monte_carlo_runs:
