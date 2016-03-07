@@ -20,6 +20,7 @@ class NetworkGraphLinkData():
     def __init__(self, node1_id, node1_port, node2_id, node2_port, link_type):
         self.link_ports_dict = {node1_id: node1_port, node2_id: node2_port}
         self.link_type = link_type
+        self.traffic_paths = []
 
 
 class NetworkGraph():
@@ -530,12 +531,15 @@ class NetworkGraph():
         link_data =  self.graph[node1_id][node2_id]['link_data']
         return link_data.link_ports_dict
 
+    def get_link_data(self, node1_id, node2_id):
+        link_data =  self.graph[node1_id][node2_id]['link_data']
+        return link_data
+
     def get_switch_link_data(self):
         for edge in self.graph.edges_iter():
             link_data =  self.graph[edge[0]][edge[1]]['link_data']
             if link_data.link_type == "switch":
                 yield link_data
-
 
     def get_node_object(self, node_id):
         node_obj = None

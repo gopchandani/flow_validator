@@ -11,12 +11,40 @@ class MonteCarloAnalysis(FlowValidator):
     def __init__(self, network_graph):
         super(MonteCarloAnalysis, self).__init__(network_graph)
 
+    def initialize_per_link_traffic_paths(self, verbose=False):
+
+        for src_h_id in self.network_graph.host_ids:
+            for dst_h_id in self.network_graph.host_ids:
+
+                if src_h_id == dst_h_id:
+                    continue
+
+                src_host_obj = self.network_graph.get_node_object(src_h_id)
+                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
+
+                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
+
+                all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
+                                                      dst_host_obj.switch_egress_port,
+                                                      specific_traffic,
+                                                      [src_host_obj.switch_ingress_port],
+                                                      [],
+                                                      verbose)
+
+                for path in all_paths:
+                    if verbose:
+                        print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "path:", path
+
+                    path_links = path.get_path_links()
+                    for path_link in path_links:
+                        ld = self.network_graph.get_link_data(path_link[0], path_link[1])
+                        ld.traffic_paths.append(path)
+
     def classify_network_graph_links(self):
         for ld in self.network_graph.get_switch_link_data():
             print ld.link_ports_dict.keys()
             print ld.link_type
-
-            pass
+            print ld.traffic_paths
 
     def process_link_status_change(self, verbose=True):
 

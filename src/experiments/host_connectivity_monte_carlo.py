@@ -94,6 +94,7 @@ class MonteCarlo(Experiment):
             self.mca.add_hosts()
             self.mca.initialize_admitted_traffic()
 
+            self.mca.initialize_per_link_traffic_paths(verbose=False)
             self.mca.classify_network_graph_links()
 
             print "Initialization done."
