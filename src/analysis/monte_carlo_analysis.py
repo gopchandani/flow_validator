@@ -19,6 +19,9 @@ class MonteCarloAnalysis(FlowValidator):
                 if src_h_id == dst_h_id:
                     continue
 
+                if src_h_id == 'h11' and dst_h_id == 'h31':
+                    pass
+
                 src_host_obj = self.network_graph.get_node_object(src_h_id)
                 dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
@@ -44,7 +47,8 @@ class MonteCarloAnalysis(FlowValidator):
         for ld in self.network_graph.get_switch_link_data():
             print ld.link_ports_dict.keys()
             print ld.link_type
-            print ld.traffic_paths
+            for path in ld.traffic_paths:
+                print path
 
     def process_link_status_change(self, verbose=True):
 

@@ -55,7 +55,7 @@ class TestExperiment(Experiment):
 
             print "Initialization done."
 
-            analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_path_information()
+            analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_traffic_paths()
             all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
             print "Primary paths TestExperiment, all_paths_match:", all_paths_match
 

@@ -65,7 +65,6 @@ class FlowValidator(object):
 
         at = self.port_graph.get_admitted_traffic(src_host_obj.switch_ingress_port, dst_host_obj.switch_egress_port)
 
-        path_vuln_ranks = []
         all_paths = []
 
         if not at.is_empty():
@@ -79,15 +78,15 @@ class FlowValidator(object):
 
             if at.is_subset_traffic(specific_traffic):
 
+                if src_h_id == 'h11' and dst_h_id == 'h41':
+                    pass
+
                 all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
                                                       dst_host_obj.switch_egress_port,
                                                       specific_traffic,
                                                       [src_host_obj.switch_ingress_port],
                                                       [],
                                                       verbose)
-
-                for path in all_paths:
-                    path_vuln_ranks.append(path.get_max_vuln_rank())
 
             else:
                 if verbose:
@@ -96,9 +95,9 @@ class FlowValidator(object):
             if verbose:
                 print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at is empty."
 
-        return at, all_paths, path_vuln_ranks
+        return at, all_paths
 
-    def get_all_host_pairs_path_information(self, verbose=False):
+    def get_all_host_pairs_traffic_paths(self, verbose=False):
 
         host_pair_paths = defaultdict(defaultdict)
 
@@ -110,14 +109,14 @@ class FlowValidator(object):
 
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-                at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
-                                                                                      dst_h_id,
-                                                                                      specific_traffic,
-                                                                                      verbose)
+                at, all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                                     dst_h_id,
+                                                                     specific_traffic,
+                                                                     verbose)
                 if not all_paths:
                     host_pair_paths[src_h_id][dst_h_id] = []
                 else:
-                    host_pair_paths[src_h_id][dst_h_id] = (all_paths[0], path_vuln_ranks[0])
+                    host_pair_paths[src_h_id][dst_h_id] = all_paths
 
         return host_pair_paths
 
@@ -136,10 +135,10 @@ class FlowValidator(object):
 
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-                at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
-                                                                                      dst_h_id,
-                                                                                      specific_traffic,
-                                                                                      verbose)
+                at, all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                                     dst_h_id,
+                                                                     specific_traffic,
+                                                                     verbose)
                 if not all_paths:
                     all_pair_connected = False
 
@@ -148,11 +147,10 @@ class FlowValidator(object):
     def validate_host_pair_backup(self, src_h_id, dst_h_id, verbose=True):
         specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-        baseline_at, baseline_all_paths, baseline_path_vuln_ranks = \
-            self.validate_host_pair_reachability(src_h_id,
-                                                 dst_h_id,
-                                                 specific_traffic,
-                                                 verbose)
+        baseline_at, baseline_all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                                               dst_h_id,
+                                                                               specific_traffic,
+                                                                               verbose)
 
         # Now break the edges in the network graph, one-by-one
         for edge in self.network_graph.graph.edges():
@@ -164,21 +162,19 @@ class FlowValidator(object):
                 print "Failing edge:", edge
 
             self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-            edge_removed_at, edge_removed_all_paths, edge_removed_path_vuln_ranks = \
-                self.validate_host_pair_reachability(src_h_id,
-                                                     dst_h_id,
-                                                     specific_traffic,
-                                                     verbose)
+            edge_removed_at, edge_removed_all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                                                           dst_h_id,
+                                                                                           specific_traffic,
+                                                                                           verbose)
             if verbose:
                 print "Restoring edge:", edge
 
             # Add it back
             self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
-            edge_added_back_at, edge_added_back_all_paths, edge_added_back_path_vuln_ranks = \
-                self.validate_host_pair_reachability(src_h_id,
-                                                     dst_h_id,
-                                                     specific_traffic,
-                                                     verbose)
+            edge_added_back_at, edge_added_back_all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                                                                 dst_h_id,
+                                                                                                 specific_traffic,
+                                                                                                 verbose)
 
             # The number of elements should be same in three scenarios for each edge
 
