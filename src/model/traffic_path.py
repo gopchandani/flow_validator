@@ -7,7 +7,6 @@ class TrafficPath(object):
         self.path_edges = path_edges
 
         self.max_vuln_rank = self.get_max_vuln_rank()
-        #self.path_links = self.get_path_links()
 
     def get_max_vuln_rank(self):
         max_vuln_rank = -1
@@ -18,11 +17,6 @@ class TrafficPath(object):
                     max_vuln_rank = enabling_edge_data.vuln_rank
 
         return max_vuln_rank
-
-    def get_path_switches(self):
-        path_switches = []
-
-        return path_switches
 
     def get_path_links(self):
         path_links = []
@@ -62,3 +56,6 @@ class TrafficPath(object):
     def __iter__(self):
         for node in self.path_nodes:
             yield node
+
+    def get_len(self):
+        return len(self.path_nodes)

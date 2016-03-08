@@ -73,12 +73,11 @@ class FlowValidator(object):
                 print "-------------------"
                 print src_h_id, "->", dst_h_id
                 print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
-
                 print at
 
             if at.is_subset_traffic(specific_traffic):
 
-                if src_h_id == 'h11' and dst_h_id == 'h41':
+                if src_h_id == 'h21' and dst_h_id == 'h41':
                     pass
 
                 all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,

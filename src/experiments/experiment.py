@@ -116,17 +116,18 @@ class Experiment(object):
 
         return self.ng
 
-    def compare_paths(self, src_host, dst_host, analyzed_path, synthesized_path, verbose):
+    def compare_paths(self, src_host, dst_host, analyzed_path, synthesized_path, synthesized_path_vuln_rank, verbose):
 
-        analyzed_path = [path_port.node_id for path_port in analyzed_path]
-
+        analyzed_path_vuln_rank = analyzed_path.max_vuln_rank
         path_matches = True
 
-        if len(analyzed_path) == len(synthesized_path):
-            for i in xrange(len(analyzed_path)):
-                if analyzed_path[i] != synthesized_path[i]:
+        if analyzed_path.get_len() == len(synthesized_path):
+            i = 0
+            for path_node in analyzed_path:
+                if path_node.node_id != synthesized_path[i]:
                     path_matches = False
                     break
+                i += 1
         else:
             path_matches = False
 
@@ -135,17 +136,23 @@ class Experiment(object):
             print "synthesized path:", synthesized_path
             print "Path for src_host:", src_host, "dst_host:", dst_host, "does not match."
         else:
-            if verbose:
-                print "analyzed_path:", analyzed_path
-                print "synthesized path:", synthesized_path
-                print "Path for src_host:", src_host, "dst_host:", dst_host, "match."
+
+            if analyzed_path_vuln_rank != synthesized_path_vuln_rank:
+                path_matches = False
+
+                print "Path vulnerability ranks do not match. src_host:", src_host, "dst_host:", dst_host, \
+                    "analyzed_path_vuln_rank:", analyzed_path_vuln_rank, \
+                    "synthesized_path_vuln_rank:", synthesized_path_vuln_rank
+
+            else:
+                if verbose:
+                    print "Path for src_host:", src_host, "dst_host:", dst_host, "match."
 
         return path_matches
 
     def compare_host_pair_paths_with_synthesis(self, analyzed_host_pairs_traffic_paths, failed_edge=None, verbose=False):
 
         all_paths_match = True
-        all_paths_vuln_match = True
 
         synthesized_primary_paths = None
 
@@ -161,11 +168,6 @@ class Experiment(object):
 
         for src_host in analyzed_host_pairs_traffic_paths:
             for dst_host in analyzed_host_pairs_traffic_paths[src_host]:
-
-                analyzed_paths = analyzed_host_pairs_traffic_paths[src_host][dst_host]
-
-                analyzed_path = analyzed_paths[0]
-                analyzed_path_vuln_rank = analyzed_path.max_vuln_rank
 
                 synthesized_path = None
                 synthesized_path_vuln_rank = None
@@ -190,23 +192,15 @@ class Experiment(object):
                      synthesized_path = synthesized_primary_paths[src_host][dst_host]
                      synthesized_path_vuln_rank = 0
 
-                path_matches = self.compare_paths(src_host, dst_host, analyzed_path, synthesized_path, verbose)
+                # Need to find at least one matching path
+                for analyzed_path in analyzed_host_pairs_traffic_paths[src_host][dst_host]:
+                    path_matches = self.compare_paths(src_host, dst_host, analyzed_path, synthesized_path, synthesized_path_vuln_rank, verbose)
+
+                    if path_matches:
+                        break
 
                 if not path_matches:
                     all_paths_match = False
-
-                if analyzed_path_vuln_rank != synthesized_path_vuln_rank:
-                    all_paths_vuln_match = False
-
-                    print "Path vulnerability ranks do not match. src_host:", src_host, "dst_host:", dst_host, \
-                        "analyzed_path_vuln_rank:", analyzed_path_vuln_rank, \
-                        "synthesized_path_vuln_rank:", synthesized_path_vuln_rank
-                else:
-                    if verbose:
-                        print "Path vulnerability ranks match. src_host:", src_host, "dst_host:", dst_host, \
-                            "analyzed_path_vuln_rank:", analyzed_path_vuln_rank, \
-                            "synthesized_path_vuln_rank:", synthesized_path_vuln_rank
-
 
         return all_paths_match
 
