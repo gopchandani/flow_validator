@@ -342,8 +342,6 @@ class PortGraph(object):
                                                                                         this_level_prefix)
 
                 if should:
-                    #path_edges.append(((this_node, succ), enabling_edge_data_list))
-                    #this_level_prefix.append(succ)
 
                     if specific_traffic:
 

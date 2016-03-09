@@ -77,9 +77,6 @@ class FlowValidator(object):
 
             if at.is_subset_traffic(specific_traffic):
 
-                if src_h_id == 'h41' and dst_h_id == 'h11':
-                    pass
-
                 all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
                                                       dst_host_obj.switch_egress_port,
                                                       specific_traffic,

@@ -131,11 +131,7 @@ class Experiment(object):
         else:
             path_matches = False
 
-        if not path_matches:
-            print "analyzed_path:", analyzed_path
-            print "synthesized path:", synthesized_path
-            print "Path for src_host:", src_host, "dst_host:", dst_host, "does not match."
-        else:
+        if path_matches:
 
             if analyzed_path_vuln_rank != synthesized_path_vuln_rank:
                 path_matches = False
@@ -143,10 +139,6 @@ class Experiment(object):
                 print "Path vulnerability ranks do not match. src_host:", src_host, "dst_host:", dst_host, \
                     "analyzed_path_vuln_rank:", analyzed_path_vuln_rank, \
                     "synthesized_path_vuln_rank:", synthesized_path_vuln_rank
-
-            else:
-                if verbose:
-                    print "Path for src_host:", src_host, "dst_host:", dst_host, "match."
 
         return path_matches
 
@@ -200,6 +192,7 @@ class Experiment(object):
                         break
 
                 if not path_matches:
+                    print "No analyzed path matched for:", synthesized_path
                     all_paths_match = False
 
         return all_paths_match
