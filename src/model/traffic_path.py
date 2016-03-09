@@ -11,7 +11,7 @@ class TrafficPath(object):
     def get_max_vuln_rank(self):
         max_vuln_rank = -1
 
-        for edge, enabling_edge_data_list in self.path_edges:
+        for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
             for enabling_edge_data in enabling_edge_data_list:
                 if enabling_edge_data.vuln_rank > max_vuln_rank:
                     max_vuln_rank = enabling_edge_data.vuln_rank
@@ -23,7 +23,7 @@ class TrafficPath(object):
 
         if len(self.path_edges) > 1:
             for i in range(0, len(self.path_edges)):
-                edge, enabling_edge_data = self.path_edges[i]
+                edge, enabling_edge_data, traffic_at_pred = self.path_edges[i]
                 if edge[0].node_type == 'egress' and edge[1].node_type == 'ingress':
                     path_links.append((edge[0].sw.node_id, edge[1].sw.node_id))
 
@@ -63,10 +63,17 @@ class TrafficPath(object):
     # Returns if the given link fails, the path would have an alternative way to get around
     def path_backup_link(self, ld):
 
-        # Translate the link into equivalent port_graph_node pairs
+        # Find the path_edges that actually get affected by the failure of given link
+        for edge, enabling_edge_data, traffic_at_pred in self.path_edges:
+            edge_tuple = (edge[0].node_id, edge[1].node_id)
+            print edge_tuple
+            if edge_tuple == ld.forward_port_graph_edge or edge_tuple == ld.reverse_port_graph_edge:
+                print "found"
 
-        # Go to the switch and ask if a backup edge exists in the transfer function
-        #  for the traffic carried by this path at that link
+                # Go to the switch and ask if a backup edge exists in the transfer function
+                #  for the traffic carried by this path at that link
+
+                print edge[0], traffic_at_pred
 
 
         # If so, return the ingress node on the next switch, where that edge leads to

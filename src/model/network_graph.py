@@ -23,6 +23,12 @@ class NetworkGraphLinkData():
         self.traffic_paths = []
         self.causes_disconnect = None
 
+        self.forward_port_graph_edge = (str(node1_id) + ':' + "egress" + str(node1_port),
+                                        str(node2_id) + ':' + "ingress" + str(node2_port))
+
+        self.reverse_port_graph_edge = (str(node2_id) + ':' + "egress" + str(node2_port),
+                                        str(node1_id) + ':' + "ingress" + str(node1_port))
+
 
 class NetworkGraph():
 
