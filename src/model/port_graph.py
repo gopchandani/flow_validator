@@ -265,6 +265,12 @@ class PortGraph(object):
 
     def should_add_succ(self, this_node, succ, dst, specific_traffic, path_prefix):
 
+        # For traffic going from ingress->egress node on any switch, set the ingress traffic
+        # of specific traffic to simulate that the traffic would arrive on that port.
+
+        if this_node.node_type == "ingress" and succ.node_type == "egress":
+            specific_traffic.set_field("in_port", int(this_node.parent_obj.port_number))
+
         should = False
         traffic_at_succ = None
         enabling_edge_data_list = []
