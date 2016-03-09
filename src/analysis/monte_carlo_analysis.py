@@ -19,9 +19,6 @@ class MonteCarloAnalysis(FlowValidator):
                 if src_h_id == dst_h_id:
                     continue
 
-                if src_h_id == 'h11' and dst_h_id == 'h31':
-                    pass
-
                 src_host_obj = self.network_graph.get_node_object(src_h_id)
                 dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
@@ -43,12 +40,42 @@ class MonteCarloAnalysis(FlowValidator):
                         ld = self.network_graph.get_link_data(path_link[0], path_link[1])
                         ld.traffic_paths.append(path)
 
+    def path_backup_link(self, path, ld):
+        return True
+
+    def backup_link_checks_out(self, path, backup_link):
+        return True
+
     def classify_network_graph_links(self):
+
+        # Go through every switch-switch link
         for ld in self.network_graph.get_switch_link_data():
             print ld.link_ports_dict.keys()
             print ld.link_type
+
+            ld.causes_disconnect = False
+
+            # For each primary traffic path that goes through that link, check
             for path in ld.traffic_paths:
-                print path
+
+                # Check to see if the path is primary
+                if not path.max_vuln_rank:
+                    print path
+                    backup_link = self.path_backup_link(path, ld)
+                    if backup_link:
+
+                        # If the backup link does not check out, then say that link causes a disconnect and break
+                        backup_link_checks_out = self.backup_link_checks_out(path, backup_link)
+                        if not backup_link_checks_out:
+                            ld.causes_disconnect = True
+                            break
+
+                    # If any of the flow going through this link does not have a backup, then break
+                    else:
+                        ld.causes_disconnect = True
+                        break
+
+            print ld.causes_disconnect
 
     def process_link_status_change(self, verbose=True):
 
@@ -65,16 +92,13 @@ class MonteCarloAnalysis(FlowValidator):
 
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-                at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
-                                                                                      dst_h_id,
-                                                                                      specific_traffic,
-                                                                                      verbose)
+                at, all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                                     dst_h_id,
+                                                                     specific_traffic,
+                                                                     verbose)
                 if not all_paths:
                     all_pair_connected = False
                     print "Disconnected Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
-                else:
-                    if path_vuln_ranks[0] > 0:
-                        print "Vulnerable Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
 
         return all_pair_connected
 
@@ -83,10 +107,10 @@ class MonteCarloAnalysis(FlowValidator):
         edges_broken = []
 
         specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
-        at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id,
-                                                                              dst_h_id,
-                                                                              specific_traffic,
-                                                                              verbose)
+        at, all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                             dst_h_id,
+                                                             specific_traffic,
+                                                             verbose)
 
         orig_at = at
         orig_all_paths = all_paths
@@ -106,8 +130,10 @@ class MonteCarloAnalysis(FlowValidator):
             # Break the edge
             edges_broken.append(edge)
             self.port_graph.remove_node_graph_edge(edge[0], edge[1])
-            at, all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id, dst_h_id,
-                                                                                  specific_traffic, verbose)
+            at, all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                                 dst_h_id,
+                                                                 specific_traffic,
+                                                                 verbose)
 
         # Restore the edges for next run
         for edge in edges_broken:
@@ -117,8 +143,10 @@ class MonteCarloAnalysis(FlowValidator):
             print "edges_broken:", edges_broken
 
         # For comparison sake:
-        now_at, now_all_paths, path_vuln_ranks = self.validate_host_pair_reachability(src_h_id, dst_h_id,
-                                                                                      specific_traffic, verbose)
+        now_at, now_all_paths = self.validate_host_pair_reachability(src_h_id,
+                                                                     dst_h_id,
+                                                                     specific_traffic,
+                                                                     verbose)
 
         if now_all_paths != orig_all_paths or not(orig_at.is_subset_traffic(now_at)):
             print "Something went wrong:", src_h_id, "<->", dst_h_id, "due to edges_broken:", edges_broken

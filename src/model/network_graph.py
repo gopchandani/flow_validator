@@ -21,6 +21,7 @@ class NetworkGraphLinkData():
         self.link_ports_dict = {node1_id: node1_port, node2_id: node2_port}
         self.link_type = link_type
         self.traffic_paths = []
+        self.causes_disconnect = None
 
 
 class NetworkGraph():
