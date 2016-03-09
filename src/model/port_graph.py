@@ -309,6 +309,7 @@ class PortGraph(object):
 
         this_level_paths = []
         this_level_prefix = path_prefix[:]
+        this_level_path_edges = path_edges[:]
 
         if dst in self.get_admitted_traffic_dsts(this_node):
 
@@ -323,10 +324,10 @@ class PortGraph(object):
                                                                                         specific_traffic,
                                                                                         path_prefix)
                 if should:
-                    path_edges.append(((this_node, dst), enabling_edge_data_list))
+                    this_level_path_edges.append(((this_node, dst), enabling_edge_data_list))
                     path_nodes = list(this_level_prefix) + [dst]
 
-                    this_path = TrafficPath(path_nodes, path_edges)
+                    this_path = TrafficPath(path_nodes, this_level_path_edges)
                     this_level_paths.append(this_path)
 
                     remaining_succs.remove(dst)
@@ -341,7 +342,7 @@ class PortGraph(object):
                                                                                         this_level_prefix)
 
                 if should:
-                    path_edges.append(((this_node, succ), enabling_edge_data_list))
+                    #path_edges.append(((this_node, succ), enabling_edge_data_list))
                     #this_level_prefix.append(succ)
 
                     if specific_traffic:
@@ -350,14 +351,14 @@ class PortGraph(object):
                                                                dst,
                                                                traffic_at_succ,
                                                                this_level_prefix + [succ],
-                                                               path_edges,
+                                                               this_level_path_edges + [((this_node, succ), enabling_edge_data_list)],
                                                                verbose))
                     else:
                         this_level_paths.extend(self.get_paths(succ,
                                                                dst,
                                                                specific_traffic,
                                                                this_level_prefix + [succ],
-                                                               path_edges,
+                                                               this_level_path_edges + [((this_node, succ), enabling_edge_data_list)],
                                                                verbose))
 
         return this_level_paths
