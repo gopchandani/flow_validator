@@ -59,3 +59,36 @@ class TrafficPath(object):
 
     def get_len(self):
         return len(self.path_nodes)
+
+    # Returns if the given link fails, the path would have an alternative way to get around
+    def path_backup_link(self, ld):
+
+        # Translate the link into equivalent port_graph_node pairs
+
+        # Go to the switch and ask if a backup edge exists in the transfer function
+        #  for the traffic carried by this path at that link
+
+
+        # If so, return the ingress node on the next switch, where that edge leads to
+        return True
+
+    def backup_link_checks_out(self, backup_link):
+        return True
+
+    def link_failure_causes_disconnect(self, ld):
+
+        causes_disconnect = False
+        backup_link = self.path_backup_link(ld)
+
+        if backup_link:
+
+            # If the backup link does not check out, then say that link causes a disconnect and break
+            backup_link_checks_out = self.backup_link_checks_out(backup_link)
+            if not backup_link_checks_out:
+                causes_disconnect = True
+
+        # If any of the flow going through this link does not have a backup, then break
+        else:
+            causes_disconnect = True
+
+        return causes_disconnect

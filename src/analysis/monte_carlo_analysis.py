@@ -40,12 +40,6 @@ class MonteCarloAnalysis(FlowValidator):
                         ld = self.network_graph.get_link_data(path_link[0], path_link[1])
                         ld.traffic_paths.append(path)
 
-    def path_backup_link(self, path, ld):
-        return True
-
-    def backup_link_checks_out(self, path, backup_link):
-        return True
-
     def classify_network_graph_links(self):
 
         # Go through every switch-switch link
@@ -61,17 +55,8 @@ class MonteCarloAnalysis(FlowValidator):
                 # Check to see if the path is primary
                 if not path.max_vuln_rank:
                     print path
-                    backup_link = self.path_backup_link(path, ld)
-                    if backup_link:
 
-                        # If the backup link does not check out, then say that link causes a disconnect and break
-                        backup_link_checks_out = self.backup_link_checks_out(path, backup_link)
-                        if not backup_link_checks_out:
-                            ld.causes_disconnect = True
-                            break
-
-                    # If any of the flow going through this link does not have a backup, then break
-                    else:
+                    if path.link_failure_causes_disconnect(ld):
                         ld.causes_disconnect = True
                         break
 
