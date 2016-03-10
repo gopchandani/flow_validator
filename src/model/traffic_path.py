@@ -12,7 +12,7 @@ class TrafficPath(object):
         self.dst_node = self.path_nodes[len(self.path_nodes) - 1]
 
         self.max_vuln_rank = self.get_max_vuln_rank()
-        self.max_active_rank = self.get_max_active_rank()
+        self.min_active_rank = self.get_max_active_rank()
 
 
     def get_max_vuln_rank(self):

@@ -56,8 +56,12 @@ class MonteCarloAnalysis(FlowValidator):
             # For each primary traffic path that goes through that link, check
             for path in ld.traffic_paths:
 
+                print path.max_vuln_rank, path.min_active_rank
+
                 # Check to see if the path is primary
-                if not path.max_vuln_rank:
+                #if not path.max_vuln_rank:
+
+                if path.min_active_rank == 0:
 
                     print "Considering Primary Path: ", path
 
