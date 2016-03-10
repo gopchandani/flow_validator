@@ -45,7 +45,6 @@ class MonteCarloAnalysis(FlowValidator):
         # Go through every switch-switch link
         for ld in self.network_graph.get_switch_link_data():
             print ld.link_ports_dict.keys()
-            print ld.link_type
 
             ld.causes_disconnect = False
 
