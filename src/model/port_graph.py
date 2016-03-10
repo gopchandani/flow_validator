@@ -86,8 +86,8 @@ class PortGraph(object):
     def get_succs_with_admitted_traffic_and_vuln_rank(self, pred, at, vuln_rank, dst):
 
         succs_traffic = []
-
-        for succ in self.successors_iter(pred):
+        possible_succs = self.get_admitted_traffic_succs(pred, dst)
+        for succ in possible_succs:
 
             # First check if the successor would carry this traffic at all
             should, enabling_edge_data_list, traffic_at_pred, traffic_at_succ = self.should_add_succ(pred,
