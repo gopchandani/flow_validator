@@ -52,6 +52,13 @@ class Action():
         elif self.sw.network_graph.controller == "sel":
             self.parse_sel_action_json()
 
+    def get_active_rank(self):
+
+        prior_active_watch_ports = []
+        if self.bucket:
+            prior_active_watch_ports = self.bucket.prior_active_watch_ports()
+
+        return len(prior_active_watch_ports)
 
     def parse_odl_action_json(self):
 

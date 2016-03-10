@@ -26,11 +26,12 @@ class PortGraphEdge():
 
 class NetworkPortGraphEdgeData():
 
-    def __init__(self, edge_filter_traffic, modifications, vuln_rank):
+    def __init__(self, edge_filter_traffic, modifications, vuln_rank, active_rank):
 
         self.edge_filter_traffic = edge_filter_traffic
         self.modifications = modifications
         self.vuln_rank = vuln_rank
+        self.active_rank = active_rank
 
 class SwitchPortGraphEdgeData():
 
@@ -43,5 +44,7 @@ class SwitchPortGraphEdgeData():
 
         if edge_action:
             self.vuln_rank = edge_action.vuln_rank
+            self.active_rank = edge_action.get_active_rank()
         else:
             self.vuln_rank = 0
+            self.active_rank = 0

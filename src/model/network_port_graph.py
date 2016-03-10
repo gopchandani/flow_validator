@@ -24,26 +24,30 @@ class NetworkPortGraph(PortGraph):
                 t = Traffic()
                 t.add_traffic_elements([te])
 
-                max_vuln_rank = None
+                min_vuln_rank = None
+                min_active_rank = None
 
                 if edge_sw:
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
 
-                    # If there is more than one paths for this small chunk of traffic in te, then
-                    # Pick the path of least resistance, i.e. min(all _ max_vuln_rank)
-                    max_vuln_rank = 100000
+                    # Do a min over paths for getting vuln_rank/active_rank
+
+                    min_vuln_rank = 100000
                     for tp in traffic_paths:
-                        path_max_vuln_rank = tp.get_max_vuln_rank()
-                        if path_max_vuln_rank < max_vuln_rank:
-                            max_vuln_rank = path_max_vuln_rank
+                        if tp.max_vuln_rank < min_vuln_rank:
+                            min_vuln_rank = tp.max_vuln_rank
+
+                    min_active_rank= 100000
+                    for tp in traffic_paths:
+                        if tp.max_active_rank < min_active_rank:
+                            min_active_rank = tp.max_active_rank
                 else:
-                    max_vuln_rank = 0
+                    min_vuln_rank = 0
+                    min_active_rank = 0
 
-                #TODO: Gather the vuln_rank from the traffic path
-                edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, max_vuln_rank)
+                edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, min_vuln_rank, min_active_rank)
                 edge.add_edge_data(edge_data)
-
 
         return edge
 

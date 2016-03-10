@@ -12,6 +12,8 @@ class TrafficPath(object):
         self.dst_node = self.path_nodes[len(self.path_nodes) - 1]
 
         self.max_vuln_rank = self.get_max_vuln_rank()
+        self.max_active_rank = self.get_max_active_rank()
+
 
     def get_max_vuln_rank(self):
         max_vuln_rank = -1
@@ -22,6 +24,17 @@ class TrafficPath(object):
                     max_vuln_rank = enabling_edge_data.vuln_rank
 
         return max_vuln_rank
+
+    def get_max_active_rank(self):
+        max_active_rank = -1
+
+        for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
+            for enabling_edge_data in enabling_edge_data_list:
+                if enabling_edge_data.active_rank > max_active_rank:
+                    max_active_rank = enabling_edge_data.active_rank
+
+        return max_active_rank
+
 
     def get_path_links(self):
         path_links = []
@@ -99,14 +112,19 @@ class TrafficPath(object):
         causes_disconnect = False
         backup_ingress_nodes_and_traffic = self.get_backup_ingress_nodes_and_traffic(ld)
 
-        for ingress_node, traffic_to_carry in backup_ingress_nodes_and_traffic:
+        # If there is no backup successors, ld failure causes disconnect
+        if not backup_ingress_nodes_and_traffic:
+            causes_disconnect = True
+        # If there are backup successors, but they are not adequately carrying traffic, ld failure causes disconnect
+        else:
+            for ingress_node, traffic_to_carry in backup_ingress_nodes_and_traffic:
 
-            # First get what is admitted at this node
-            ingress_at = self.port_graph.get_admitted_traffic(ingress_node, self.dst_node)
+                # First get what is admitted at this node
+                ingress_at = self.port_graph.get_admitted_traffic(ingress_node, self.dst_node)
 
-            # The check if it carries the required traffic
-            if not ingress_at.is_subset_traffic(traffic_to_carry):
-                causes_disconnect = True
-                break
+                # The check if it carries the required traffic
+                if not ingress_at.is_subset_traffic(traffic_to_carry):
+                    causes_disconnect = True
+                    break
 
         return causes_disconnect

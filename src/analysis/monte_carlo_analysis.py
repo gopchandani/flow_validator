@@ -48,7 +48,10 @@ class MonteCarloAnalysis(FlowValidator):
         # Go through every switch-switch link
         for ld in self.network_graph.get_switch_link_data():
 
+            num_primary_paths = 0
+
             ld.causes_disconnect = False
+            print "Considering Failure of Edge:", ld.link_ports_dict.keys()
 
             # For each primary traffic path that goes through that link, check
             for path in ld.traffic_paths:
@@ -56,11 +59,16 @@ class MonteCarloAnalysis(FlowValidator):
                 # Check to see if the path is primary
                 if not path.max_vuln_rank:
 
+                    print "Considering Primary Path: ", path
+
+                    num_primary_paths += 1
+
                     if path.link_failure_causes_disconnect(ld):
                         ld.causes_disconnect = True
                         break
 
-            print ld.link_ports_dict.keys(), ld.causes_disconnect
+            print "Total Paths:", len(ld.traffic_paths), "Primary Paths:", num_primary_paths
+            print "Causes Disconnect:", ld.causes_disconnect
 
     def check_all_host_pair_connected(self, verbose=True):
 

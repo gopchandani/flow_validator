@@ -79,7 +79,7 @@ class Bucket():
         prior_failed_ports = []
         i = 0
 
-        while(i < len(self.group.bucket_list)):
+        while i < len(self.group.bucket_list):
 
             if self == self.group.bucket_list[i]:
                 break
@@ -88,6 +88,23 @@ class Bucket():
             i += 1
 
         return prior_failed_ports
+
+    def prior_active_watch_ports(self):
+        prior_active_watch_ports = []
+        i = 0
+
+        while i < len(self.group.bucket_list):
+
+            if self == self.group.bucket_list[i]:
+                break
+
+            prior_watch_port = self.group.bucket_list[i].watch_port
+            if prior_watch_port.state == "up":
+                prior_active_watch_ports.append(prior_watch_port)
+
+            i += 1
+
+        return prior_active_watch_ports
 
 class Group():
     '''
