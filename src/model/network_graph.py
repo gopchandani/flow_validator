@@ -18,7 +18,7 @@ from sel_controller import Session, OperationalTree, ConfigTree
 class NetworkGraphLinkData():
 
     def __init__(self, node1_id, node1_port, node2_id, node2_port, link_type):
-        self.link_ports_dict = {node1_id: node1_port, node2_id: node2_port}
+        self.link_ports_dict = {str(node1_id): node1_port, str(node2_id): node2_port}
         self.link_type = link_type
         self.traffic_paths = []
         self.causes_disconnect = None
@@ -29,6 +29,8 @@ class NetworkGraphLinkData():
         self.reverse_port_graph_edge = (str(node2_id) + ':' + "egress" + str(node2_port),
                                         str(node1_id) + ':' + "ingress" + str(node1_port))
 
+        self.forward_link = (str(node1_id), str(node2_id))
+        self.reverse_link = (str(node2_id), str(node1_id))
 
 class NetworkGraph():
 

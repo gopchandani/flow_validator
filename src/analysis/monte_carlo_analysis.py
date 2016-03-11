@@ -11,6 +11,8 @@ class MonteCarloAnalysis(FlowValidator):
     def __init__(self, network_graph):
         super(MonteCarloAnalysis, self).__init__(network_graph)
 
+        self.links_broken = []
+
     def initialize_per_link_traffic_paths(self, verbose=False):
 
         for ld in self.network_graph.get_switch_link_data():
@@ -51,8 +53,11 @@ class MonteCarloAnalysis(FlowValidator):
         # Go through every switch-switch link
         for ld in self.network_graph.get_switch_link_data():
 
+            if ld.forward_link in self.links_broken or ld.reverse_link in self.links_broken:
+                continue
+
             ld.causes_disconnect = False
-            print "Considering Failure of Edge:", ld.link_ports_dict.keys()
+            print "Considering Failure of Link:", ld.forward_link
 
             # For each primary traffic path that goes through that link, check
             for path in ld.traffic_paths:
@@ -99,7 +104,7 @@ class MonteCarloAnalysis(FlowValidator):
 
     # Return number of edges it took to break
     def break_random_edges_until_pair_disconnected(self, src_h_id, dst_h_id, verbose):
-        edges_broken = []
+        del self.links_broken[:]
 
         specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
         at, all_paths = self.validate_host_pair_reachability(src_h_id,
@@ -119,11 +124,11 @@ class MonteCarloAnalysis(FlowValidator):
             if edge[0].startswith("h") or edge[1].startswith("h"):
                 continue
 
-            if edge in edges_broken:
+            if edge in self.links_broken:
                 continue
 
             # Break the edge
-            edges_broken.append(edge)
+            self.links_broken.append((str(edge[0]), str(edge[1])))
             self.port_graph.remove_node_graph_edge(edge[0], edge[1])
             at, all_paths = self.validate_host_pair_reachability(src_h_id,
                                                                  dst_h_id,
@@ -131,11 +136,11 @@ class MonteCarloAnalysis(FlowValidator):
                                                                  verbose)
 
         # Restore the edges for next run
-        for edge in edges_broken:
+        for edge in self.links_broken:
             self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
 
         if verbose:
-            print "edges_broken:", edges_broken
+            print "self.links_broken:", self.links_broken
 
         # For comparison sake:
         now_at, now_all_paths = self.validate_host_pair_reachability(src_h_id,
@@ -144,11 +149,11 @@ class MonteCarloAnalysis(FlowValidator):
                                                                      verbose)
 
         if now_all_paths != orig_all_paths or not(orig_at.is_subset_traffic(now_at)):
-            print "Something went wrong:", src_h_id, "<->", dst_h_id, "due to edges_broken:", edges_broken
+            print "Something went wrong:", src_h_id, "<->", dst_h_id, "due to self.links_broken:", self.links_broken
 
-        return len(edges_broken)
+        return len(self.links_broken)
 
-    def sample_edge(self, edges_broken, importance=False):
+    def sample_edge(self, importance=False):
 
         sampled_edge = None
 
@@ -161,7 +166,7 @@ class MonteCarloAnalysis(FlowValidator):
             if sampled_edge[0].startswith("h") or sampled_edge[1].startswith("h"):
                 continue
 
-            if sampled_edge in edges_broken:
+            if sampled_edge in self.links_broken:
                 continue
 
             break
@@ -169,19 +174,19 @@ class MonteCarloAnalysis(FlowValidator):
         return sampled_edge
 
     def break_random_edges_until_any_pair_disconnected(self, verbose, importance=False):
-        edges_broken = []
+        del self.links_broken[:]
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
         while all_host_pair_connected:
 
             # Randomly sample an edge to break, sample again if it has already been broken
-            edge = self.sample_edge(edges_broken, importance)
+            edge = self.sample_edge(importance)
 
             print "Breaking the edge:", edge
 
             # Break the edge
-            edges_broken.append(edge)
+            self.links_broken.append((str(edge[0]), str(edge[1])))
             self.port_graph.remove_node_graph_edge(edge[0], edge[1])
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
@@ -189,7 +194,7 @@ class MonteCarloAnalysis(FlowValidator):
             self.classify_network_graph_links()
 
         # Restore the edges for next run
-        for edge in edges_broken:
+        for edge in self.links_broken:
             print "Restoring the edge:", edge
             self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
 
@@ -199,29 +204,29 @@ class MonteCarloAnalysis(FlowValidator):
         self.classify_network_graph_links()
 
         if verbose:
-            print "edges_broken:", edges_broken
+            print "self.links_broken:", self.links_broken
 
-        return edges_broken
+        return self.links_broken
 
     def break_specified_edges_in_order(self, edges, verbose):
 
-        edges_broken = []
+        del self.links_broken[:]
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
         for edge in edges:
 
             # Break the edge
-            edges_broken.append(edge)
+            self.links_broken.append((str(edge[0]), str(edge[1])))
             self.port_graph.remove_node_graph_edge(edge[0], edge[1])
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
         # Restore the edges for next run
-        for edge in edges_broken:
+        for edge in self.links_broken:
             self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
         if verbose:
-            print "edges_broken:", edges_broken
+            print "self.links_broken:", self.links_broken
 
-        return edges_broken
+        return self.links_broken
