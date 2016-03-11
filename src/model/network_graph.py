@@ -32,6 +32,9 @@ class NetworkGraphLinkData():
         self.forward_link = (str(node1_id), str(node2_id))
         self.reverse_link = (str(node2_id), str(node1_id))
 
+    def __str__(self):
+        return str(self.forward_link)
+
 class NetworkGraph():
 
     def __init__(self, mm, controller, load_config=False, save_config=False):

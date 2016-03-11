@@ -13,6 +13,9 @@ class MonteCarloAnalysis(FlowValidator):
 
         self.links_broken = []
 
+        self.remaining_links_causing_disconnect = []
+        self.remaining_links_not_causing_disconnect = []
+
     def initialize_per_link_traffic_paths(self, verbose=False):
 
         for ld in self.network_graph.get_switch_link_data():
@@ -48,7 +51,10 @@ class MonteCarloAnalysis(FlowValidator):
                         if path not in ld.traffic_paths:
                             ld.traffic_paths.append(path)
 
-    def classify_network_graph_links(self):
+    def classify_network_graph_links(self, verbose=False):
+
+        del self.remaining_links_not_causing_disconnect[:]
+        del self.remaining_links_causing_disconnect[:]
 
         # Go through every switch-switch link
         for ld in self.network_graph.get_switch_link_data():
@@ -57,7 +63,8 @@ class MonteCarloAnalysis(FlowValidator):
                 continue
 
             ld.causes_disconnect = False
-            print "Considering Failure of Link:", ld.forward_link
+            if verbose:
+                print "Considering Failure of Link:", ld.forward_link
 
             # For each primary traffic path that goes through that link, check
             for path in ld.traffic_paths:
@@ -65,13 +72,20 @@ class MonteCarloAnalysis(FlowValidator):
                 # Check to see if the path is current active
                 if path.get_max_active_rank() == 0:
 
-                    print "Considering Path: ", path
+                    if verbose:
+                        print "Considering Path: ", path
 
                     if path.link_failure_causes_disconnect(ld):
                         ld.causes_disconnect = True
                         break
 
-            print "Causes Disconnect:", ld.causes_disconnect
+            if ld.causes_disconnect:
+                self.remaining_links_causing_disconnect.append(ld)
+            else:
+                self.remaining_links_not_causing_disconnect.append(ld)
+
+            if verbose:
+                print "Causes Disconnect:", ld.causes_disconnect
 
     def check_all_host_pair_connected(self, verbose=True):
 
@@ -176,6 +190,14 @@ class MonteCarloAnalysis(FlowValidator):
 
         while all_host_pair_connected:
 
+            print "remaining_links_not_causing_disconnect:"
+            for ld in self.remaining_links_not_causing_disconnect:
+                print ld
+
+            print "remaining_links_causing_disconnect: "
+            for ld in self.remaining_links_causing_disconnect:
+                print ld
+
             # Randomly sample an edge to break, sample again if it has already been broken
             edge = self.sample_edge(importance)
 
@@ -187,7 +209,7 @@ class MonteCarloAnalysis(FlowValidator):
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
             self.initialize_per_link_traffic_paths()
-            self.classify_network_graph_links()
+            self.classify_network_graph_links(verbose)
 
         # Restore the edges for next run
         for edge in self.links_broken:
@@ -197,7 +219,7 @@ class MonteCarloAnalysis(FlowValidator):
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
         self.initialize_per_link_traffic_paths()
-        self.classify_network_graph_links()
+        self.classify_network_graph_links(verbose)
 
         if verbose:
             print "self.links_broken:", self.links_broken
