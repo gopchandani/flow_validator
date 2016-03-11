@@ -11,17 +11,15 @@ class TrafficPath(object):
         self.src_node = self.path_nodes[0]
         self.dst_node = self.path_nodes[len(self.path_nodes) - 1]
 
-        self.max_vuln_rank = self.get_max_vuln_rank()
-        self.min_active_rank = self.get_max_active_rank()
-
-
     def get_max_vuln_rank(self):
         max_vuln_rank = -1
 
         for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
             for enabling_edge_data in enabling_edge_data_list:
-                if enabling_edge_data.vuln_rank > max_vuln_rank:
-                    max_vuln_rank = enabling_edge_data.vuln_rank
+
+                current_edge_data_vuln_rank = enabling_edge_data.get_vuln_rank()
+                if current_edge_data_vuln_rank > max_vuln_rank:
+                    max_vuln_rank = current_edge_data_vuln_rank
 
         return max_vuln_rank
 
@@ -30,11 +28,12 @@ class TrafficPath(object):
 
         for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
             for enabling_edge_data in enabling_edge_data_list:
-                if enabling_edge_data.active_rank > max_active_rank:
-                    max_active_rank = enabling_edge_data.active_rank
+
+                current_edge_data_active_rank = enabling_edge_data.get_active_rank()
+                if current_edge_data_active_rank > max_active_rank:
+                    max_active_rank = current_edge_data_active_rank
 
         return max_active_rank
-
 
     def get_path_links(self):
         path_links = []

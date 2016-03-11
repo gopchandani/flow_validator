@@ -104,7 +104,7 @@ class PortGraph(object):
                 # traffic carried but with different vuln_ranks)
 
                 for ed in enabling_edge_data_list:
-                    if ed.vuln_rank != vuln_rank:
+                    if ed.get_vuln_rank() != vuln_rank:
                         vuln_rank_check = False
                         break
 

@@ -26,12 +26,41 @@ class PortGraphEdge():
 
 class NetworkPortGraphEdgeData():
 
-    def __init__(self, edge_filter_traffic, modifications, vuln_rank, active_rank):
+    def __init__(self, edge_filter_traffic, modifications, switch_port_graph_paths):
 
         self.edge_filter_traffic = edge_filter_traffic
         self.modifications = modifications
-        self.vuln_rank = vuln_rank
-        self.active_rank = active_rank
+        self.switch_port_graph_paths = switch_port_graph_paths
+
+    def get_vuln_rank(self):
+
+        # If it is an edge that does not depend on switch_port_graph_paths, then say zero
+        if self.switch_port_graph_paths == None:
+            return 0
+
+        # Do a min over paths for getting vuln_rank
+        min_vuln_rank = 100000
+        for tp in self.switch_port_graph_paths:
+            path_max_vuln_rank = tp.get_max_vuln_rank()
+            if path_max_vuln_rank < min_vuln_rank:
+                min_vuln_rank = path_max_vuln_rank
+
+        return min_vuln_rank
+
+    def get_active_rank(self):
+
+        # If it is an edge that does not depend on switch_port_graph_paths, then say zero
+        if self.switch_port_graph_paths == None:
+            return 0
+
+        # Do a max over paths for getting active_rank
+        max_active_rank= -1
+        for tp in self.switch_port_graph_paths:
+            path_max_active_rank = tp.get_max_active_rank()
+            if path_max_active_rank > max_active_rank:
+                max_active_rank = path_max_active_rank
+
+        return max_active_rank
 
 class SwitchPortGraphEdgeData():
 
@@ -42,9 +71,14 @@ class SwitchPortGraphEdgeData():
         self.applied_modifications = applied_modifications
         self.written_modifications = written_modifications
 
-        if edge_action:
-            self.vuln_rank = edge_action.vuln_rank
-            self.active_rank = edge_action.get_active_rank()
+    def get_vuln_rank(self):
+        if self.edge_action:
+            return self.edge_action.vuln_rank
         else:
-            self.vuln_rank = 0
-            self.active_rank = 0
+            return 0
+
+    def get_active_rank(self):
+        if self.edge_action:
+            return self.edge_action.get_active_rank()
+        else:
+            return 0
