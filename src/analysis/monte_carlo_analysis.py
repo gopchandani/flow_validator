@@ -12,7 +12,7 @@ class MonteCarloAnalysis(FlowValidator):
         super(MonteCarloAnalysis, self).__init__(network_graph)
 
         self.links_broken = []
-
+        self.remaining_all_links = []
         self.remaining_links_causing_disconnect = []
         self.remaining_links_not_causing_disconnect = []
 
@@ -55,6 +55,7 @@ class MonteCarloAnalysis(FlowValidator):
 
         del self.remaining_links_not_causing_disconnect[:]
         del self.remaining_links_causing_disconnect[:]
+        del self.remaining_all_links[:]
 
         # Go through every switch-switch link
         for ld in self.network_graph.get_switch_link_data():
@@ -83,6 +84,8 @@ class MonteCarloAnalysis(FlowValidator):
                 self.remaining_links_causing_disconnect.append(ld)
             else:
                 self.remaining_links_not_causing_disconnect.append(ld)
+
+            self.remaining_all_links.append(ld)
 
             if verbose:
                 print "Causes Disconnect:", ld.causes_disconnect
@@ -163,31 +166,24 @@ class MonteCarloAnalysis(FlowValidator):
 
         return len(self.links_broken)
 
-    def sample_edge(self, importance=False):
+    def sample_link(self, importance=False):
 
-        sampled_edge = None
+        # Randomly sample a link to break
+        sampled_ld = random.choice(self.remaining_all_links)
+        sampled_link = sampled_ld.forward_link
 
-        while True:
+        if sampled_link in self.links_broken:
+            raise("Something wrong is happening with link sampling")
 
-            # Randomly sample an edge to break, sample again if it has already been broken
-            sampled_edge = random.choice(self.network_graph.graph.edges())
-
-            # Ignore host edges
-            if sampled_edge[0].startswith("h") or sampled_edge[1].startswith("h"):
-                continue
-
-            if sampled_edge in self.links_broken:
-                continue
-
-            break
-
-        return sampled_edge
+        return sampled_link
 
     def break_random_edges_until_any_pair_disconnected(self, verbose, importance=False):
         del self.links_broken[:]
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
+        self.initialize_per_link_traffic_paths(verbose=False)
+        self.classify_network_graph_links()
+        
         while all_host_pair_connected:
 
             print "remaining_links_not_causing_disconnect:"
@@ -199,7 +195,7 @@ class MonteCarloAnalysis(FlowValidator):
                 print ld
 
             # Randomly sample an edge to break, sample again if it has already been broken
-            edge = self.sample_edge(importance)
+            edge = self.sample_link(importance)
 
             print "Breaking the edge:", edge
 
