@@ -41,7 +41,10 @@ class MonteCarloAnalysis(FlowValidator):
                     path_links = path.get_path_links()
                     for path_link in path_links:
                         ld = self.network_graph.get_link_data(path_link[0], path_link[1])
-                        ld.traffic_paths.append(path)
+
+                        # Avoid adding the same path twice for cases when a link is repeated
+                        if path not in ld.traffic_paths:
+                            ld.traffic_paths.append(path)
 
     def classify_network_graph_links(self):
 
@@ -67,7 +70,6 @@ class MonteCarloAnalysis(FlowValidator):
                         ld.causes_disconnect = True
                         break
 
-            print "Total Paths:", len(ld.traffic_paths)
             print "Causes Disconnect:", ld.causes_disconnect
 
     def check_all_host_pair_connected(self, verbose=True):

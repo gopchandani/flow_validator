@@ -101,7 +101,12 @@ class TrafficPath(object):
                 # TODO: Compute the ingress node from successor (Assumption, there is always one succ on egress node)
                 for succ, traffic in backup_succs:
                     ingress_node = list(self.port_graph.successors_iter(succ))[0]
-                    ingress_nodes_and_traffic.append((ingress_node, traffic))
+
+                    # Avoid adding as possible successor if it is for the link that has failed
+                    # This can happen for 'reversing' paths
+                    if not (ingress_node.node_id == ld.forward_port_graph_edge[1] or
+                                    ingress_node.node_id == ld.reverse_port_graph_edge[1]):
+                        ingress_nodes_and_traffic.append((ingress_node, traffic))
 
         # If so, return the ingress node on the next switch, where that edge leads to
         return ingress_nodes_and_traffic
