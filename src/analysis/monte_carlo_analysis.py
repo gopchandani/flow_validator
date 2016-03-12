@@ -192,8 +192,8 @@ class MonteCarloAnalysis(FlowValidator):
 
         return p_l
 
-    def get_alpha(self):
-        pass
+    def get_alpha(self, u, b):
+        return 0.5
 
     def sample_link_uniform(self):
 
@@ -208,7 +208,16 @@ class MonteCarloAnalysis(FlowValidator):
 
     def sample_link_skewed(self, u, b):
 
-        sampled_ld = random.choice(self.all_links)
+        # Compute the probability of choosing from the links_causing_disconnect
+        alpha = self.get_alpha(u, b)
+
+        # Flip a coin
+        unif = random.uniform(0, 1)
+
+        if unif < alpha:
+            sampled_ld = random.choice(self.links_causing_disconnect)
+        else:
+            sampled_ld = random.choice(self.links_not_causing_disconnect)
 
         sampled_link = sampled_ld.forward_link
 

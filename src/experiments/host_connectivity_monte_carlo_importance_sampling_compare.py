@@ -90,7 +90,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
             if num_links < 2:
                 pass
 
-            skewed_run_values.append(broken_links)
+            skewed_run_values.append(num_links)
             skewed_run_links.append(num_links)
 
         runs_mean = np.mean(skewed_run_values)
