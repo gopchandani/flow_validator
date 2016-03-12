@@ -48,7 +48,7 @@ class MonteCarlo(Experiment):
         run_values = []
 
         for i in xrange(num_runs):
-            num_edges = self.mca.break_random_edges_until_pair_disconnected("h41", "h71", verbose=False)
+            num_edges = self.mca.break_random_links_until_pair_disconnected("h41", "h71", verbose=False)
             run_values.append(num_edges)
 
         runs_mean = np.mean(run_values)

@@ -212,7 +212,7 @@ class Experiment(object):
 
             print "Breaking edge:", edge
 
-            fv.port_graph.remove_node_graph_edge(edge[0], edge[1])
+            fv.port_graph.remove_node_graph_link(edge[0], edge[1])
 
             analyzed_host_pairs_path_info = fv.get_all_host_pairs_traffic_paths()
 
@@ -225,7 +225,7 @@ class Experiment(object):
 
             print "Restoring edge:", edge
 
-            fv.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
+            fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
 
         return all_paths_match
 

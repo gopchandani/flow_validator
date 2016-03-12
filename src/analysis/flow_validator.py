@@ -36,7 +36,7 @@ class FlowValidator(object):
 
         for host_id in self.network_graph.host_ids:
             host_obj = self.network_graph.get_node_object(host_id)
-            self.port_graph.remove_node_graph_edge(host_id, host_obj.switch_id)
+            self.port_graph.remove_node_graph_link(host_id, host_obj.switch_id)
 
     def initialize_admitted_traffic(self):
 
@@ -157,7 +157,7 @@ class FlowValidator(object):
             if verbose:
                 print "Failing edge:", edge
 
-            self.port_graph.remove_node_graph_edge(edge[0], edge[1])
+            self.port_graph.remove_node_graph_link(edge[0], edge[1])
             edge_removed_at, edge_removed_all_paths = self.validate_host_pair_reachability(src_h_id,
                                                                                            dst_h_id,
                                                                                            specific_traffic,
@@ -166,7 +166,7 @@ class FlowValidator(object):
                 print "Restoring edge:", edge
 
             # Add it back
-            self.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
+            self.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
             edge_added_back_at, edge_added_back_all_paths = self.validate_host_pair_reachability(src_h_id,
                                                                                                  dst_h_id,
                                                                                                  specific_traffic,

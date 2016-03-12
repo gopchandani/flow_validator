@@ -57,13 +57,13 @@ class IncrementalTimes(Experiment):
                 continue
 
             with Timer(verbose=True) as t:
-                self.fv.port_graph.remove_node_graph_edge(edge[0], edge[1])
+                self.fv.port_graph.remove_node_graph_link(edge[0], edge[1])
 
             fail_time = t.msecs
             fail_values.append(fail_time)
 
             with Timer(verbose=True) as t:
-                self.fv.port_graph.add_node_graph_edge(edge[0], edge[1], updating=True)
+                self.fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
 
             restore_time = t.msecs
             restore_values.append(restore_time)

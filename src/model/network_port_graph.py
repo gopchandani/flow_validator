@@ -82,20 +82,20 @@ class NetworkPortGraph(PortGraph):
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
-                self.add_node_graph_edge(node_edge[0], node_edge[1])
+                self.add_node_graph_link(node_edge[0], node_edge[1])
 
     def de_init_network_port_graph(self):
 
         # Then get rid of the edges in the port graph
         for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
-                self.remove_node_graph_edge(node_edge[0], node_edge[1])
+                self.remove_node_graph_link(node_edge[0], node_edge[1])
 
         # Then de-initialize switch port graph
         for sw in self.network_graph.get_switches():
             sw.port_graph.de_init_switch_port_graph()
 
-    def add_node_graph_edge(self, node1_id, node2_id, updating=False):
+    def add_node_graph_link(self, node1_id, node2_id, updating=False):
 
         # Update the physical port representations in network graph objects
         edge_port_dict = self.network_graph.get_link_ports_dict(node1_id, node2_id)
@@ -135,7 +135,7 @@ class NetworkPortGraph(PortGraph):
             self.modify_switch_transfer_edges(sw2, modified_switch_edges)
             self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
 
-    def remove_node_graph_edge(self, node1_id, node2_id):
+    def remove_node_graph_link(self, node1_id, node2_id):
 
         # Update the physical port representations in network graph objects
         edge_port_dict = self.network_graph.get_link_ports_dict(node1_id, node2_id)
