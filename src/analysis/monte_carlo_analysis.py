@@ -16,6 +16,35 @@ class MonteCarloAnalysis(FlowValidator):
         self.remaining_links_causing_disconnect = []
         self.remaining_links_not_causing_disconnect = []
 
+    def get_p_f(self):
+
+        p_f = None
+
+        num_links_causing_disconnect = len(self.remaining_links_causing_disconnect)
+
+        if num_links_causing_disconnect > 0:
+            p_f = 1.0/num_links_causing_disconnect
+        else:
+            p_f = 0.0
+
+        return p_f
+
+    def get_p_l(self):
+
+        p_l = None
+
+        num_links_not_causing_disconnect = len(self.remaining_links_not_causing_disconnect)
+
+        if num_links_not_causing_disconnect > 0:
+            p_l = 1.0/num_links_not_causing_disconnect
+        else:
+            p_l = 0.0
+
+        return p_l
+
+    def get_p_norm(self):
+        pass
+
     def initialize_per_link_traffic_paths(self, verbose=False):
 
         for ld in self.network_graph.get_switch_link_data():
