@@ -240,13 +240,14 @@ class MonteCarloAnalysis(FlowValidator):
         
         while all_host_pair_connected:
 
-            print "links_not_causing_disconnect:"
-            for ld in self.links_not_causing_disconnect:
-                print ld
+            if verbose:
+                print "links_not_causing_disconnect:"
+                for ld in self.links_not_causing_disconnect:
+                    print ld
 
-            print "links_causing_disconnect: "
-            for ld in self.links_causing_disconnect:
-                print ld
+                print "links_causing_disconnect: "
+                for ld in self.links_causing_disconnect:
+                    print ld
 
             self.size_links_causing_disconnect.append(len(self.links_causing_disconnect))
             self.size_links_not_causing_disconnect.append(len(self.links_not_causing_disconnect))

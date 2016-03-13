@@ -55,7 +55,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
             broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
             print "broken_links:", broken_links
             run_links.append(broken_links)
-            run_values.append(len(run_links))
+            run_values.append(len(broken_links))
 
         run_mean = np.mean(run_values)
         run_sem = ss.sem(run_values)
