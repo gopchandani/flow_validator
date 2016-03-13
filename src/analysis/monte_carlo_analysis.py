@@ -31,7 +31,7 @@ class MonteCarloAnalysis(FlowValidator):
     def initialize_per_link_traffic_paths(self, verbose=False):
 
         for ld in self.network_graph.get_switch_link_data():
-            del ld.traffic_paths[:]
+            ld.traffic_paths = []
 
         for src_h_id in self.network_graph.host_ids:
             for dst_h_id in self.network_graph.host_ids:
@@ -65,9 +65,9 @@ class MonteCarloAnalysis(FlowValidator):
 
     def classify_network_graph_links(self, verbose=False):
 
-        del self.links_not_causing_disconnect[:]
-        del self.links_causing_disconnect[:]
-        del self.all_links[:]
+        self.links_not_causing_disconnect = []
+        self.links_causing_disconnect = []
+        self.all_links = []
 
         # Go through every switch-switch link
         for ld in self.network_graph.get_switch_link_data():
@@ -129,7 +129,7 @@ class MonteCarloAnalysis(FlowValidator):
 
     # Return number of edges it took to break
     def break_random_links_until_pair_disconnected(self, src_h_id, dst_h_id, verbose):
-        del self.links_broken[:]
+        self.links_broken = []
 
         specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
         at, all_paths = self.validate_host_pair_reachability(src_h_id,
@@ -193,7 +193,7 @@ class MonteCarloAnalysis(FlowValidator):
 
             alpha_j = (j/u) * ((self.size_links_causing_disconnect[j-1]) / (self.N - j + 1)) * (p)
 
-        print alpha_j
+        print "alpha_j:", alpha_j
 
         return alpha_j
 
@@ -226,10 +226,10 @@ class MonteCarloAnalysis(FlowValidator):
         return sampled_link
 
     def break_random_links_until_any_pair_disconnected(self, verbose, importance=False, unskewed_run_mean=None):
-        del self.links_broken[:]
-        del self.alpha_j[:]
-        del self.size_links_causing_disconnect[:]
-        del self.size_links_not_causing_disconnect[:]
+        self.links_broken = []
+        self.alpha_j = []
+        self.size_links_causing_disconnect = []
+        self.size_links_not_causing_disconnect = []
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
         self.initialize_per_link_traffic_paths(verbose=False)
@@ -306,7 +306,7 @@ class MonteCarloAnalysis(FlowValidator):
 
     def break_specified_links_in_order(self, links, verbose):
 
-        del self.links_broken[:]
+        self.links_broken = []
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 

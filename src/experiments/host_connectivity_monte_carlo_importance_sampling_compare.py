@@ -45,38 +45,30 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
         }
 
     def perform_monte_carlo(self, num_runs):
-        run_values = []
         run_links = []
+        run_values = []
 
         for i in xrange(num_runs):
 
             print "Performing Run:", i + 1
 
             broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
-            #broken_links = self.mca.break_specified_links_in_order([('s3', 's4')], verbose=True)
-
-            num_links = len(broken_links)
-
-            if num_links < 2:
-                pass
-
+            print "broken_links:", broken_links
             run_links.append(broken_links)
-            run_values.append(num_links)
+            run_values.append(len(run_links))
 
-        runs_mean = np.mean(run_values)
-        runs_sem = ss.sem(run_values)
+        run_mean = np.mean(run_values)
+        run_sem = ss.sem(run_values)
 
-        print run_values
-        print run_links
-
-        return run_values, runs_mean, runs_sem
+        return run_links, run_values, run_mean, run_sem
 
     def perform_monte_carlo_importance_sampling(self, num_unskewed_runs, num_runs):
 
-        unskewed_run_values, unskewed_run_mean, unskewed_run_sem  = self.perform_monte_carlo(num_unskewed_runs)
+        unskewed_run_links, unskewed_run_values, unskewed_run_mean, unskewed_run_sem = self.perform_monte_carlo(num_unskewed_runs)
 
-        skewed_run_values = []
         skewed_run_links = []
+        skewed_run_values = []
+
         for i in xrange(num_runs - num_unskewed_runs):
 
             print "Performing Run:", i + 1 + num_unskewed_runs
@@ -84,22 +76,16 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
             broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False,
                                                                                    importance=True,
                                                                                    unskewed_run_mean=unskewed_run_mean)
+            skewed_run_links.append(broken_links)
+            skewed_run_values.append(len(broken_links))
 
-            num_links = len(broken_links)
+        run_links = unskewed_run_links + skewed_run_links
+        run_values = unskewed_run_values + skewed_run_values
 
-            if num_links < 2:
-                pass
+        run_mean = np.mean(run_values)
+        run_sem = ss.sem(run_values)
 
-            skewed_run_values.append(num_links)
-            skewed_run_links.append(num_links)
-
-        runs_mean = np.mean(skewed_run_values)
-        runs_sem = ss.sem(skewed_run_values)
-
-        print skewed_run_values
-        print skewed_run_links
-
-        return skewed_run_links, runs_mean, runs_sem
+        return run_links, run_values, run_mean, run_sem
 
     def trigger(self):
 
@@ -135,15 +121,20 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
 
-                    # with Timer(verbose=True) as t:
-                    #     est = self.perform_monte_carlo(total_runs)
-                    #
+                    with Timer(verbose=True) as t:
+                        est = self.perform_monte_carlo(total_runs)
+
+                    print "est:", est[2], est[3]
+
                     # self.data["execution_time"][number_of_ports_to_synthesize][total_runs].append(t.msecs)
                     # self.data["number_of_links_to_break_estimate"][number_of_ports_to_synthesize][total_runs].append(est[1])
                     # self.data["number_of_links_to_break_estimate_data"][number_of_ports_to_synthesize][total_runs].append(est)
 
                     with Timer(verbose=True) as t:
                         est = self.perform_monte_carlo_importance_sampling(5, total_runs)
+
+                    print "est:", est[2], est[3]
+
 
             self.mca.de_init_network_port_graph()
 
