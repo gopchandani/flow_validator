@@ -17,7 +17,7 @@ class MonteCarloAnalysis(FlowValidator):
         self.links_not_causing_disconnect = []
 
         # Contains for each step (link failure), the alpha that was considered in computation
-        self.alpha_j = []
+        self.alpha = []
 
         # Contains for each step (link failure), the size of set of links causing disconnect
         self.size_links_causing_disconnect = []
@@ -182,20 +182,20 @@ class MonteCarloAnalysis(FlowValidator):
 
         #return 0.5
 
-        alpha_j = None
+        alpha = None
 
         if j == b + 1:
-            alpha_j = ((b + 1)/(u)) * ((self.size_links_causing_disconnect[b])/(self.N - b))
+            alpha = ((b + 1)/(u)) * ((self.size_links_causing_disconnect[b])/(self.N - b))
         elif j > b + 1:
             p = 1.0
             for i in xrange(0, j-2 + 1):
-                p = p * ((self.size_links_not_causing_disconnect[i]) / ((1 - self.alpha_j[i+1]) * (self.N - i)))
+                p = p * ((self.size_links_not_causing_disconnect[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
 
-            alpha_j = (j/u) * ((self.size_links_causing_disconnect[j-1]) / (self.N - j + 1)) * (p)
+            alpha = (j/u) * ((self.size_links_causing_disconnect[j-1]) / (self.N - j + 1)) * (p)
 
-        print "alpha_j:", alpha_j
+        print "alpha:", alpha
 
-        return alpha_j
+        return alpha
 
     def sample_link_uniform(self):
 
@@ -225,9 +225,24 @@ class MonteCarloAnalysis(FlowValidator):
 
         return sampled_link
 
-    def break_random_links_until_any_pair_disconnected(self, verbose, importance=False, unskewed_run_mean=None):
+    def get_importance_sampling_experiment_result(self, k):
+        result = 0.0
+        
+        prod = 1.0
+        
+        for i in xrange(0, k-2 + 1):
+            
+            first_factor = (self.size_links_not_causing_disconnect[i]) / ((1 - self.alpha[i+1]) * (self.N - i))
+            second_factor = (self.size_links_causing_disconnect[k-1]) / ((self.alpha[k]) * (self.N - k + 1))
+            prod = prod * first_factor * second_factor
+        
+        result = k * prod
+        
+        return result
+
+    def break_random_links_until_any_pair_disconnected(self, verbose, importance=False, u=None):
         self.links_broken = []
-        self.alpha_j = []
+        self.alpha = []
         self.size_links_causing_disconnect = []
         self.size_links_not_causing_disconnect = []
 
@@ -253,18 +268,18 @@ class MonteCarloAnalysis(FlowValidator):
             self.size_links_not_causing_disconnect.append(len(self.links_not_causing_disconnect))
 
             if b == None:
-                self.alpha_j.append(0.0)
+                self.alpha.append(0.0)
 
                 if self.links_causing_disconnect:
                     # b is the smallest index j, for which self.links_causing_disconnect is empty
                     b = j
             else:
                 if importance:
-                    alpha = self.get_alpha(unskewed_run_mean, b, j)
+                    alpha = self.get_alpha(u, b, j)
                 else:
                     alpha = None
 
-                self.alpha_j.append(alpha)
+                self.alpha.append(alpha)
 
             if importance:
                 # Do a skewed sample when:
@@ -272,7 +287,7 @@ class MonteCarloAnalysis(FlowValidator):
                 # 2. There are links that do not cause disconnect, otherwise skeweing is moot.
 
                 if self.size_links_causing_disconnect[j] > 0 and self.size_links_not_causing_disconnect[j] > 0:
-                    link = self.sample_link_skewed(self.alpha_j[j])
+                    link = self.sample_link_skewed(self.alpha[j])
                 else:
                     link = self.sample_link_uniform()
             else:
@@ -303,7 +318,10 @@ class MonteCarloAnalysis(FlowValidator):
         if verbose:
             print "self.links_broken:", self.links_broken
 
-        return self.links_broken
+        if importance:
+            return self.get_importance_sampling_experiment_result(j - 1), self.links_broken
+        else:
+            return len(self.links_broken), self.links_broken
 
     def break_specified_links_in_order(self, links, verbose):
 
