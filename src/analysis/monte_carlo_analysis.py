@@ -186,14 +186,15 @@ class MonteCarloAnalysis(FlowValidator):
 
         if j == b + 1:
             alpha_j = ((b + 1)/(u)) * ((self.size_links_causing_disconnect[b])/(self.N - b))
-        else:
+        elif j > b + 1:
             p = 1.0
-            for i in xrange(b, j-2 + 1):
+            for i in xrange(0, j-2 + 1):
                 p = p * ((self.size_links_not_causing_disconnect[i]) / ((1 - self.alpha_j[i+1]) * (self.N - i)))
 
             alpha_j = (j/u) * ((self.size_links_causing_disconnect[j-1]) / (self.N - j + 1)) * (p)
+        else:
+            alpha_j = 0.0
 
-        print alpha_j
         return alpha_j
 
     def sample_link_uniform(self):
