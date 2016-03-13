@@ -192,6 +192,11 @@ class MonteCarloAnalysis(FlowValidator):
                 p = p * ((self.size_links_not_causing_disconnect[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
 
             alpha = (j/u) * ((self.size_links_causing_disconnect[j-1]) / (self.N - j + 1)) * (p)
+        else:
+            alpha = 0.0
+
+        if alpha < 0.1:
+            pass
 
         print "alpha:", alpha
 
@@ -237,7 +242,10 @@ class MonteCarloAnalysis(FlowValidator):
             prod = prod * first_factor * second_factor
         
         result = k * prod
-        
+
+        if result > 100:
+            pass
+
         return result
 
     def break_random_links_until_any_pair_disconnected(self, verbose, importance=False, u=None):
