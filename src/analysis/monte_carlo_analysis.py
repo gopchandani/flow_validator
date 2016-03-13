@@ -192,8 +192,8 @@ class MonteCarloAnalysis(FlowValidator):
                 p = p * ((self.size_links_not_causing_disconnect[i]) / ((1 - self.alpha_j[i+1]) * (self.N - i)))
 
             alpha_j = (j/u) * ((self.size_links_causing_disconnect[j-1]) / (self.N - j + 1)) * (p)
-        else:
-            alpha_j = 0.0
+
+        print alpha_j
 
         return alpha_j
 
@@ -252,7 +252,7 @@ class MonteCarloAnalysis(FlowValidator):
             self.size_links_not_causing_disconnect.append(len(self.links_not_causing_disconnect))
 
             if b == None:
-                self.alpha_j.append(None)
+                self.alpha_j.append(0.0)
 
                 if self.links_causing_disconnect:
                     # b is the smallest index j, for which self.links_causing_disconnect is empty
