@@ -20,10 +20,10 @@ class MonteCarloAnalysis(FlowValidator):
         self.alpha = []
 
         # Contains for each step (link failure), the size of set of links causing disconnect
-        self.size_links_causing_disconnect = []
+        self.F_j = []
 
         # Contains for each step (link failure), the size of set of links not causing disconnect
-        self.size_links_not_causing_disconnect = []
+        self.F_bar_j = []
 
         # Total number of links (a constant)
         self.N = len(list(self.network_graph.get_switch_link_data())) * 1.0
@@ -185,18 +185,18 @@ class MonteCarloAnalysis(FlowValidator):
         alpha = None
 
         if j == b + 1:
-            alpha = ((b + 1)/(u)) * ((self.size_links_causing_disconnect[b])/(self.N - b))
+            alpha = ((b + 1)/(u)) * ((self.F_j[b])/(self.N - b))
         elif j > b + 1:
             p = 1.0
             for i in xrange(0, j-2 + 1):
-                p = p * ((self.size_links_not_causing_disconnect[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
+                p = p * ((self.F_bar_j[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
 
-            alpha = (j/u) * ((self.size_links_causing_disconnect[j-1]) / (self.N - j + 1)) * (p)
+            alpha = (j/u) * ((self.F_j[j-1]) / (self.N - j + 1)) * (p)
         else:
             alpha = 0.0
 
         if alpha < 0.1:
-            pass
+            print "j:", j, "b+1:", b+1
 
         print "alpha:", alpha
 
@@ -237,8 +237,8 @@ class MonteCarloAnalysis(FlowValidator):
         
         for i in xrange(0, k-2 + 1):
             
-            first_factor = (self.size_links_not_causing_disconnect[i]) / ((1 - self.alpha[i+1]) * (self.N - i))
-            second_factor = (self.size_links_causing_disconnect[k-1]) / ((self.alpha[k]) * (self.N - k + 1))
+            first_factor = (self.F_bar_j[i]) / ((1 - self.alpha[i+1]) * (self.N - i))
+            second_factor = (self.F_j[k-1]) / ((self.alpha[k]) * (self.N - k + 1))
             prod = prod * first_factor * second_factor
         
         result = k * prod
@@ -251,8 +251,8 @@ class MonteCarloAnalysis(FlowValidator):
     def break_random_links_until_any_pair_disconnected(self, verbose, importance=False, u=None):
         self.links_broken = []
         self.alpha = []
-        self.size_links_causing_disconnect = []
-        self.size_links_not_causing_disconnect = []
+        self.F_j = []
+        self.F_bar_j = []
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
         self.initialize_per_link_traffic_paths(verbose=False)
@@ -272,8 +272,8 @@ class MonteCarloAnalysis(FlowValidator):
                 for ld in self.links_causing_disconnect:
                     print ld
 
-            self.size_links_causing_disconnect.append(len(self.links_causing_disconnect))
-            self.size_links_not_causing_disconnect.append(len(self.links_not_causing_disconnect))
+            self.F_j.append(len(self.links_causing_disconnect))
+            self.F_bar_j.append(len(self.links_not_causing_disconnect))
 
             if b == None:
                 self.alpha.append(0.0)
@@ -294,7 +294,7 @@ class MonteCarloAnalysis(FlowValidator):
                 # 1. There are links that can cause disconnect, thus you would skew to sample from them
                 # 2. There are links that do not cause disconnect, otherwise skeweing is moot.
 
-                if self.size_links_causing_disconnect[j] > 0 and self.size_links_not_causing_disconnect[j] > 0:
+                if self.F_j[j] > 0 and self.F_bar_j[j] > 0:
                     link = self.sample_link_skewed(self.alpha[j])
                 else:
                     link = self.sample_link_uniform()
