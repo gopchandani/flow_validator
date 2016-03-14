@@ -198,9 +198,13 @@ class MonteCarloAnalysis(FlowValidator):
         if alpha < 0.1:
             print "j:", j, "b+1:", b+1
 
+        if alpha < 0 or alpha >= 1.0:
+            raise
+
         print "alpha:", alpha
 
         return alpha
+
 
     def sample_link_uniform(self):
 

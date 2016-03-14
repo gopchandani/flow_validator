@@ -75,7 +75,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
 
             run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected(verbose=False,
                                                                                                    importance=True,
-                                                                                                   u=unskewed_run_mean)
+                                                                                                   u=unskewed_run_mean * 1.5)
             skewed_run_links.append(run_broken_links)
             skewed_run_values.append(run_value)
 
@@ -95,8 +95,8 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
             ports_to_synthesize = xrange(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -121,10 +121,10 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
 
-                    # with Timer(verbose=True) as t:
-                    #     est = self.perform_monte_carlo(total_runs)
-                    #
-                    # print "est:", est[2], est[3]
+                    with Timer(verbose=True) as t:
+                        est = self.perform_monte_carlo(total_runs)
+
+                    print "est:", est[2], est[3]
 
                     # self.data["execution_time"][number_of_ports_to_synthesize][total_runs].append(t.msecs)
                     # self.data["number_of_links_to_break_estimate"][number_of_ports_to_synthesize][total_runs].append(est[1])
