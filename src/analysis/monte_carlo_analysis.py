@@ -279,21 +279,21 @@ class MonteCarloAnalysis(FlowValidator):
             self.F_j.append(len(self.links_causing_disconnect))
             self.F_bar_j.append(len(self.links_not_causing_disconnect))
 
+            # b is the smallest index j, for which self.F_j[j] > 0
             if b == None:
-                self.alpha.append(0.0)
-
-                if self.links_causing_disconnect:
-                    # b is the smallest index j, for which self.links_causing_disconnect is empty
+                if self.F_j[j] > 0:
                     b = j
-            else:
-                if importance:
+
+            if importance:
+
+                # Get a value for alpha
+                if b:
                     alpha = self.get_alpha(u, b, j)
                 else:
-                    alpha = None
+                    alpha = 0.0
 
                 self.alpha.append(alpha)
 
-            if importance:
                 # Do a skewed sample when:
                 # 1. There are links that can cause disconnect, thus you would skew to sample from them
                 # 2. There are links that do not cause disconnect, otherwise skeweing is moot.
