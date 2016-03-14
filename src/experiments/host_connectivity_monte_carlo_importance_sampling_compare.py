@@ -68,20 +68,17 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
         skewed_run_links = []
         skewed_run_values = []
 
-        for i in xrange(num_runs - num_unskewed_runs):
+        for i in xrange(num_unskewed_runs):
 
             print "Performing Run:", i + 1 + num_unskewed_runs
-            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(4.5, verbose=False)
+            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(unskewed_run_mean * 1.0, verbose=False)
             skewed_run_links.append(run_broken_links)
             skewed_run_values.append(run_value)
 
-        run_links = unskewed_run_links + skewed_run_links
-        run_values = unskewed_run_values + skewed_run_values
+        run_mean = np.mean(skewed_run_values)
+        run_sem = ss.sem(skewed_run_values)
 
-        run_mean = np.mean(run_values)
-        run_sem = ss.sem(run_values)
-
-        return run_links, run_values, run_mean, run_sem
+        return skewed_run_links, skewed_run_values, run_mean, run_sem
 
     def trigger(self):
 
@@ -157,7 +154,7 @@ def main():
     core = 1
 
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = [50]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [10]#[10, 20, 30]
 
     exp = HostConnectivityMonteCarloImportanceSamplingCompare(num_iterations,
                                                               load_config,
