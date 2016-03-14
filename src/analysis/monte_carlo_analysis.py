@@ -243,12 +243,10 @@ class MonteCarloAnalysis(FlowValidator):
         else:
             sampled_ld = random.choice(self.links_not_causing_disconnect)
 
-        sampled_link = sampled_ld.forward_link
-
-        if sampled_link in self.links_broken:
+        if sampled_ld in self.links_broken:
             raise("Something wrong is happening with skewed link sampling")
 
-        return sampled_link
+        return sampled_ld
 
     def get_importance_sampling_experiment_result(self, k):
         result = 0.0
@@ -297,14 +295,14 @@ class MonteCarloAnalysis(FlowValidator):
             self.alpha.append(self.get_alpha(u, b, j))
 
             # Do a skewed sample using alpha:
-            link = self.sample_link_skewed(self.alpha[j])
+            sampled_ld = self.sample_link_skewed(self.alpha[j])
 
             if verbose:
-                print "Breaking the link:", link
+                print "Breaking the link:", sampled_ld
 
             # Break the link
-            self.links_broken.append((str(link[0]), str(link[1])))
-            self.port_graph.remove_node_graph_link(link[0], link[1])
+            self.links_broken.append(sampled_ld)
+            self.port_graph.remove_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1])
 
             # Check to see current state of affairs before doing anything for next step
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
@@ -325,7 +323,8 @@ class MonteCarloAnalysis(FlowValidator):
         for link in self.links_broken:
             if verbose:
                 print "Restoring the link:", link
-            self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
+
+            self.port_graph.add_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1], updating=True)
 
         return self.get_importance_sampling_experiment_result(j - 1), self.links_broken
 
@@ -349,9 +348,6 @@ class MonteCarloAnalysis(FlowValidator):
 
             # Check to see current state of affairs before doing anything for next step
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        #if verbose:
-        print "len(self.links_broken)", len(self.links_broken)
 
         # Restore the links for next run
         for link in self.links_broken:
