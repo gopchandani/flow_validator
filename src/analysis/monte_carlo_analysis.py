@@ -12,7 +12,7 @@ class MonteCarloAnalysis(FlowValidator):
         super(MonteCarloAnalysis, self).__init__(network_graph)
 
         self.links_broken = []
-        self.all_links = []
+        self.all_links = list(self.network_graph.get_switch_link_data())
         self.links_causing_disconnect = []
         self.links_not_causing_disconnect = []
 
@@ -67,7 +67,7 @@ class MonteCarloAnalysis(FlowValidator):
 
         self.links_not_causing_disconnect = []
         self.links_causing_disconnect = []
-        self.all_links = []
+        self.all_links = list(self.network_graph.get_switch_link_data())
 
         # Go through every switch-switch link
         for ld in self.network_graph.get_switch_link_data():
@@ -97,10 +97,17 @@ class MonteCarloAnalysis(FlowValidator):
             else:
                 self.links_not_causing_disconnect.append(ld)
 
-            self.all_links.append(ld)
-
             if verbose:
                 print "Causes Disconnect:", ld.causes_disconnect
+
+        if verbose:
+            print "links_not_causing_disconnect:"
+            for ld in self.links_not_causing_disconnect:
+                print ld
+
+            print "links_causing_disconnect: "
+            for ld in self.links_causing_disconnect:
+                print ld
 
     def check_all_host_pair_connected(self, verbose=True):
 
@@ -184,38 +191,47 @@ class MonteCarloAnalysis(FlowValidator):
 
         alpha = None
 
-        if j == b + 1:
-            alpha = ((b + 1)/(u)) * ((self.F_j[b])/(self.N - b))
-        elif j > b + 1:
-            p = 1.0
-            for i in xrange(0, j-2 + 1):
-                p = p * ((self.F_bar_j[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
+        # If after previous link failure, both F and F_bar have some members...
+        if self.F_j[j-1] > 0 and self.F_bar_j[j-1] > 0:
 
-            alpha = (j/u) * ((self.F_j[j-1]) / (self.N - j + 1)) * (p)
-        else:
+            if j == b + 1:
+                beta = ((b + 1)/(u)) * ((self.F_j[b])/(self.N - b))
+            elif j > b + 1:
+                p = 1.0
+                for i in xrange(0, j-2 + 1):
+                    p = p * ((self.F_bar_j[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
+
+                beta = (j/u) * ((self.F_j[j-1]) / (self.N - j + 1)) * (p)
+
+            print  "j:", j, "b+1:", b+1
+            print "beta:", beta
+            if beta < 0 or beta >= 1.0:
+                raise
+            else:
+                alpha = beta
+
+        # If after previous failure, F has members, but F_bar has none, then sample only from F (i.e. alpha = 1.0)
+        elif self.F_j[j-1] > 0 and self.F_bar_j[j-1] == 0:
+            alpha = 1.0
+        # If after previous failure, F_bar has members, but F has none, then sample only from F_bar (i.e. alpha = 0.0)
+        elif self.F_j[j-1] == 0 and self.F_bar_j[j-1] > 0:
             alpha = 0.0
-
-        if alpha < 0.1:
-            print "j:", j, "b+1:", b+1
-
-        if alpha < 0 or alpha >= 1.0:
-            raise
+        else:
+            raise ("No need to compute alpha for this case.")
 
         print "alpha:", alpha
 
         return alpha
 
-
     def sample_link_uniform(self):
 
+        # Construct where to sample from
+        sample_from = list(set(self.all_links) - set(self.links_broken))
+
         # Randomly sample a link to break
-        sampled_ld = random.choice(self.all_links)
-        sampled_link = sampled_ld.forward_link
+        sampled_ld = random.choice(sample_from)
 
-        if sampled_link in self.links_broken:
-            raise("Something wrong is happening with uniform link sampling")
-
-        return sampled_link
+        return sampled_ld
 
     def sample_link_skewed(self, alpha):
 
@@ -252,30 +268,48 @@ class MonteCarloAnalysis(FlowValidator):
 
         return result
 
-    def break_random_links_until_any_pair_disconnected(self, verbose, importance=False, u=None):
+    def break_random_links_until_any_pair_disconnected_importance(self, u, verbose=False):
         self.links_broken = []
         self.alpha = []
         self.F_j = []
         self.F_bar_j = []
 
+        # Check to see current state of affairs before doing anything for this step
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-        self.initialize_per_link_traffic_paths(verbose=False)
-        self.classify_network_graph_links()
+        self.initialize_per_link_traffic_paths()
+        self.classify_network_graph_links(verbose)
+        self.F_j.append(len(self.links_causing_disconnect))
+        self.F_bar_j.append(len(self.links_not_causing_disconnect))
 
-        b = None
         j = 0
-        
+        b = None
+        if self.F_j[j] > 0:
+            b = j
+
+        self.alpha.append(self.get_alpha(u, b, j))
+
         while all_host_pair_connected:
 
+            # Increment step index
+            j += 1
+
+            # Get a value of alpha for this step
+            self.alpha.append(self.get_alpha(u, b, j))
+
+            # Do a skewed sample using alpha:
+            link = self.sample_link_skewed(self.alpha[j])
+
             if verbose:
-                print "links_not_causing_disconnect:"
-                for ld in self.links_not_causing_disconnect:
-                    print ld
+                print "Breaking the link:", link
 
-                print "links_causing_disconnect: "
-                for ld in self.links_causing_disconnect:
-                    print ld
+            # Break the link
+            self.links_broken.append((str(link[0]), str(link[1])))
+            self.port_graph.remove_node_graph_link(link[0], link[1])
 
+            # Check to see current state of affairs before doing anything for next step
+            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+            self.initialize_per_link_traffic_paths()
+            self.classify_network_graph_links(verbose)
             self.F_j.append(len(self.links_causing_disconnect))
             self.F_bar_j.append(len(self.links_not_causing_disconnect))
 
@@ -284,56 +318,48 @@ class MonteCarloAnalysis(FlowValidator):
                 if self.F_j[j] > 0:
                     b = j
 
-            if importance:
-
-                # Get a value for alpha
-                if b:
-                    alpha = self.get_alpha(u, b, j)
-                else:
-                    alpha = 0.0
-
-                self.alpha.append(alpha)
-
-                # Do a skewed sample when:
-                # 1. There are links that can cause disconnect, thus you would skew to sample from them
-                # 2. There are links that do not cause disconnect, otherwise skeweing is moot.
-
-                if self.F_j[j] > 0 and self.F_bar_j[j] > 0:
-                    link = self.sample_link_skewed(self.alpha[j])
-                else:
-                    link = self.sample_link_uniform()
-            else:
-                link = self.sample_link_uniform()
-
-            print "Breaking the link:", link
-
-            # Break the link
-            self.links_broken.append((str(link[0]), str(link[1])))
-            self.port_graph.remove_node_graph_link(link[0], link[1])
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-            self.initialize_per_link_traffic_paths()
-            self.classify_network_graph_links(verbose)
-
-            j += 1
-
-        # Restore the links for next run
-        for link in self.links_broken:
-            print "Restoring the link:", link
-            self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
-
-        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        self.initialize_per_link_traffic_paths()
-        self.classify_network_graph_links(verbose)
-
         if verbose:
             print "self.links_broken:", self.links_broken
 
-        if importance:
-            return self.get_importance_sampling_experiment_result(j - 1), self.links_broken
-        else:
-            return len(self.links_broken), self.links_broken
+        # Restore the links for next run
+        for link in self.links_broken:
+            if verbose:
+                print "Restoring the link:", link
+            self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
+
+        return self.get_importance_sampling_experiment_result(j - 1), self.links_broken
+
+    def break_random_links_until_any_pair_disconnected(self, verbose=False):
+
+        self.links_broken = []
+
+        # Check to see current state of affairs before doing anything for this step
+        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        while all_host_pair_connected:
+
+            sampled_link = self.sample_link_uniform()
+
+            if verbose:
+                print "Breaking the link:", sampled_link
+
+            # Break the link
+            self.links_broken.append(sampled_link)
+            self.port_graph.remove_node_graph_link(sampled_link.forward_link[0], sampled_link.forward_link[1])
+
+            # Check to see current state of affairs before doing anything for next step
+            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        #if verbose:
+        print "len(self.links_broken)", len(self.links_broken)
+
+        # Restore the links for next run
+        for link in self.links_broken:
+            if verbose:
+                print "Restoring the link:", link
+            self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+        return len(self.links_broken), self.links_broken
 
     def break_specified_links_in_order(self, links, verbose):
 

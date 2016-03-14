@@ -64,7 +64,6 @@ class FlowValidator(object):
         dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
         at = self.port_graph.get_admitted_traffic(src_host_obj.switch_ingress_port, dst_host_obj.switch_egress_port)
-
         all_paths = []
 
         if not at.is_empty():

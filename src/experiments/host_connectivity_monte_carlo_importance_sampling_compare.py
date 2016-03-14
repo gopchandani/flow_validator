@@ -53,7 +53,6 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
             print "Performing Run:", i + 1
 
             run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
-            print "broken_links:", run_broken_links
             run_links.append(run_broken_links)
             run_values.append(run_value)
 
@@ -72,10 +71,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
         for i in xrange(num_runs - num_unskewed_runs):
 
             print "Performing Run:", i + 1 + num_unskewed_runs
-
-            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected(verbose=False,
-                                                                                                   importance=True,
-                                                                                                   u=unskewed_run_mean * 1.5)
+            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(unskewed_run_mean, verbose=False)
             skewed_run_links.append(run_broken_links)
             skewed_run_values.append(run_value)
 
