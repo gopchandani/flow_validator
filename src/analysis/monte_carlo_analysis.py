@@ -69,11 +69,10 @@ class MonteCarloAnalysis(FlowValidator):
         self.links_causing_disconnect = []
         self.all_links = list(self.network_graph.get_switch_link_data())
 
-        # Go through every switch-switch link
-        for ld in self.network_graph.get_switch_link_data():
+        links_to_classify = list(set(self.all_links) - set(self.links_broken))
 
-            if ld.forward_link in self.links_broken or ld.reverse_link in self.links_broken:
-                continue
+        # Go through every switch-switch link
+        for ld in links_to_classify:
 
             ld.causes_disconnect = False
             if verbose:
@@ -316,15 +315,15 @@ class MonteCarloAnalysis(FlowValidator):
                 if self.F_j[j] > 0:
                     b = j
 
-        if verbose:
-            print "self.links_broken:", self.links_broken
+        print "self.links_broken:", self.links_broken
 
         # Restore the links for next run
         for link in self.links_broken:
-            if verbose:
-                print "Restoring the link:", link
+            print "Restoring the link:", link
 
-            self.port_graph.add_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1], updating=True)
+            self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+        self.classify_network_graph_links(verbose)
 
         return self.get_importance_sampling_experiment_result(j - 1), self.links_broken
 
