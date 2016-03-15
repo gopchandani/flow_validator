@@ -1,7 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
-
 sys.path.append("./")
 
 import matplotlib.pyplot as plt
@@ -19,10 +18,10 @@ class UniformImportanceSamplingCompare(Experiment):
                  load_config,
                  save_config,
                  controller,
-                 fanout,
-                 core,
-                 uniform_sampling_run_fractions,
-                 numbers_of_monte_carlo_runs):
+                 topo_descriptions,
+                 expected_values,
+                 num_seed_runs,
+                 error_bounds):
 
         super(UniformImportanceSamplingCompare, self).__init__("uniform_importance_sampling_compare",
                                                                num_iterations,
@@ -31,36 +30,21 @@ class UniformImportanceSamplingCompare(Experiment):
                                                                controller,
                                                                1)
 
-        self.uniform_sampling_run_fractions = uniform_sampling_run_fractions
+        self.topo_descriptions = topo_descriptions
+        self.expected_values = expected_values
+        self.num_seed_runs = num_seed_runs
+        self.error_bounds = error_bounds
 
-        self.fanout = fanout
-        self.core = core
-
-        self.numbers_of_monte_carlo_runs = numbers_of_monte_carlo_runs
-
-        self.uniform_data = {
+        self.data = {
             "execution_time": defaultdict(defaultdict),
-            "number_of_links_to_break_estimate": defaultdict(defaultdict),
-            "number_of_links_to_break_estimate_data": defaultdict(defaultdict),
+            "num_required_runs": defaultdict(defaultdict),
         }
-
-        self.skewed_data = {
-            "execution_time": defaultdict(defaultdict),
-            "number_of_links_to_break_estimate": defaultdict(defaultdict),
-            "number_of_links_to_break_estimate_data": defaultdict(defaultdict),
-        }
-
-        self.data = {}
-        self.data['uniform_data'] = self.uniform_data
-        self.data['skewed_data'] = self.skewed_data
 
     def perform_monte_carlo(self, num_runs):
         run_links = []
         run_values = []
 
         for i in xrange(num_runs):
-
-            #print "Performing Run:", i + 1
 
             run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
             run_links.append(run_broken_links)
@@ -69,25 +53,64 @@ class UniformImportanceSamplingCompare(Experiment):
         run_mean = np.mean(run_values)
         run_sem = ss.sem(run_values)
 
-        #return run_links, run_values, run_mean, run_sem
-
         return run_mean, run_sem
 
-    def perform_monte_carlo_importance_sampling(self, num_runs, num_uniform_runs):
+    def compute_num_required_runs(self, expected_value, error_bound, sampling, num_seed_runs=None):
+        run_links = []
+        run_values = []
 
-        uniform_run_mean, uniform_run_sem = self.perform_monte_carlo(num_uniform_runs)
+        required_lower_bound = expected_value - expected_value * error_bound
+        required_upper_bound = expected_value + expected_value * error_bound
+
+        num_required_runs = 0
+        reached_bound = False
+
+        seed_mean = None
+        seed_sem = None
+
+        if sampling == "importance":
+            seed_mean, seed_sem = self.perform_monte_carlo(num_seed_runs)
+
+        while not reached_bound:
+
+            run_value = None
+            run_broken_links = None
+
+            if sampling == "uniform":
+                run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
+            elif sampling == "importance":
+                run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_importance(seed_mean,
+                                                                                                              verbose=False)
+            run_links.append(run_broken_links)
+            run_values.append(run_value)
+
+            run_mean = np.mean(run_values)
+            run_sem = ss.sem(run_values)
+
+            run_lower_bound = run_mean - run_sem
+            run_upper_bound = run_mean + run_sem
+
+            overlap = max(0, min(required_upper_bound, run_upper_bound) - max(required_lower_bound, run_lower_bound))
+
+            if overlap > 0:
+                reached_bound = True
+            else:
+                num_required_runs += 1
+
+        return num_required_runs
+
+    def perform_monte_carlo_importance_sampling(self, num_seed_runs):
+
 
         skewed_run_links = []
         skewed_run_values = []
 
         print "uniform_run_mean:", uniform_run_mean
-        print "num_uniform_runs/num_runs:", num_uniform_runs, "/", num_runs
 
         for i in xrange(num_runs - num_uniform_runs):
 
             #print "Performing Run:", i + 1
 
-            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(uniform_run_mean, verbose=False)
             skewed_run_links.append(run_broken_links)
             skewed_run_values.append(run_value)
 
@@ -104,12 +127,11 @@ class UniformImportanceSamplingCompare(Experiment):
 
         print "Starting experiment..."
 
-        for uniform_sampling_run_fraction in self.uniform_sampling_run_fractions:
+        for i in range(len(self.topo_descriptions)):
 
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            topo_description = self.topo_descriptions[i]
 
-            ng = self.setup_network_graph(self.topo_description,
+            ng = self.setup_network_graph(topo_description,
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=60,
@@ -122,38 +144,36 @@ class UniformImportanceSamplingCompare(Experiment):
 
             print "Initialization done."
 
-            for total_runs in self.numbers_of_monte_carlo_runs:
-                print "total_runs:", total_runs
+            scenario_keys = (topo_description[0] + "_" + "uniform", topo_description[0] + "_" + "importance")
 
-                self.uniform_data["execution_time"][uniform_sampling_run_fraction][total_runs] = []
-                self.uniform_data["number_of_links_to_break_estimate"][uniform_sampling_run_fraction][total_runs] = []
-                self.uniform_data["number_of_links_to_break_estimate_data"][uniform_sampling_run_fraction][total_runs] = []
+            self.data[scenario_keys[0]][error_bound]["execution_time"] = []
+            self.data[scenario_keys[0]][error_bound]["num_required_runs"] = []
 
-                self.skewed_data["execution_time"][uniform_sampling_run_fraction][total_runs] = []
-                self.skewed_data["number_of_links_to_break_estimate"][uniform_sampling_run_fraction][total_runs] = []
-                self.skewed_data["number_of_links_to_break_estimate_data"][uniform_sampling_run_fraction][total_runs] = []
+            self.data[scenario_keys[1]][error_bound]["execution_time"] = []
+            self.data[scenario_keys[1]][error_bound]["num_required_runs"] = []
+
+            for error_bound in self.error_bounds:
 
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
+                    print "num_seed_runs:", self.num_seed_runs
 
                     with Timer(verbose=True) as t:
-                        est = self.perform_monte_carlo(total_runs)
+                        num_required_runs = self.compute_num_required_runs(self.expected_values[i],
+                                                                           error_bound,
+                                                                           "uniform")
 
-                    print "est:", est[0], est[1]
-
-                    self.uniform_data["execution_time"][uniform_sampling_run_fraction][total_runs].append(t.msecs)
-                    self.uniform_data["number_of_links_to_break_estimate"][uniform_sampling_run_fraction][total_runs].append(total_runs)
-                    self.uniform_data["number_of_links_to_break_estimate_data"][uniform_sampling_run_fraction][total_runs].append(est)
+                    self.data[scenario_keys[0]][error_bound]["execution_time"].append(t.msecs)
+                    self.data[scenario_keys[0]][error_bound]["num_required_runs"].append(num_required_runs)
 
                     with Timer(verbose=True) as t:
-                        est = self.perform_monte_carlo_importance_sampling(total_runs,
-                                                                           int(total_runs*uniform_sampling_run_fraction))
+                        num_required_runs = self.compute_num_required_runs(self.expected_values[i],
+                                                                           error_bound,
+                                                                           "importance",
+                                                                           self.num_seed_runs)
 
-                    print "est:", est[0], est[1]
-
-                    self.skewed_data["execution_time"][uniform_sampling_run_fraction][total_runs].append(t.msecs)
-                    self.skewed_data["number_of_links_to_break_estimate"][uniform_sampling_run_fraction][total_runs].append(total_runs)
-                    self.skewed_data["number_of_links_to_break_estimate_data"][uniform_sampling_run_fraction][total_runs].append(est)
+                    self.data[scenario_keys[1]][error_bound]["execution_time"].append(t.msecs)
+                    self.data[scenario_keys[1]][error_bound]["num_required_runs"].append(num_required_runs)
 
             self.mca.de_init_network_port_graph()
 
@@ -179,18 +199,22 @@ def main():
 
     fanout = 2
     core = 1
+    #topo_description = ("clostopo", None, 1, fanout, core)
 
-    numbers_of_monte_carlo_runs = [50]
-    uniform_sampling_run_fractions = [0.2, 0.4, 0.6, 0.8]
+    topo_descriptions = [("ring", 4, 1, None, None, 2.33)]
+    expected_values = [2.33]
+
+    num_seed_runs = 10
+    error_bounds = [0.25, 0.1, 0.05, 0.01, 0.05]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
                                            save_config,
                                            controller,
-                                           fanout,
-                                           core,
-                                           uniform_sampling_run_fractions,
-                                           numbers_of_monte_carlo_runs)
+                                           topo_descriptions,
+                                           expected_values,
+                                           num_seed_runs,
+                                           error_bounds)
 
     exp.trigger()
     exp.dump_data()

@@ -172,7 +172,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
         #                           y_scale='linear')
 
 def main():
-    num_iterations = 1
+    num_iterations = 5
     load_config = True
     save_config = False
     controller = "ryu"
@@ -181,7 +181,7 @@ def main():
     core = 1
 
     numbers_of_monte_carlo_runs = [50]
-    uniform_sampling_run_fractions = [0.2, 0.4, 0.6, 0.8]
+    uniform_sampling_run_fractions = [0.1]#2, 0.4, 0.6, 0.8]
 
     exp = HostConnectivityMonteCarloImportanceSamplingCompare(num_iterations,
                                                               load_config,
