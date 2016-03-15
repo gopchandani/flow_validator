@@ -71,7 +71,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
         for i in xrange(num_unskewed_runs):
 
             print "Performing Run:", i + 1 + num_unskewed_runs
-            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(unskewed_run_mean * 1.0, verbose=False)
+            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(4.5, verbose=False)
             skewed_run_links.append(run_broken_links)
             skewed_run_values.append(run_value)
 
@@ -114,10 +114,10 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
 
-                    with Timer(verbose=True) as t:
-                        est = self.perform_monte_carlo(total_runs)
-
-                    print "est:", est[2], est[3]
+                    # with Timer(verbose=True) as t:
+                    #     est = self.perform_monte_carlo(total_runs)
+                    #
+                    # print "est:", est[2], est[3]
 
                     # self.data["execution_time"][number_of_ports_to_synthesize][total_runs].append(t.msecs)
                     # self.data["number_of_links_to_break_estimate"][number_of_ports_to_synthesize][total_runs].append(est[1])

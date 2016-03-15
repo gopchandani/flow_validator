@@ -205,7 +205,7 @@ class MonteCarloAnalysis(FlowValidator):
             print  "j:", j, "b+1:", b+1
             print "beta:", beta
             if beta < 0 or beta >= 1.0:
-                raise Exception('Beta values out of range, u:' + str(u))
+                raise Exception("Beta values out of range, u: " + str(u) + " beta: " + str(beta))
             else:
                 alpha = beta
 
@@ -315,8 +315,6 @@ class MonteCarloAnalysis(FlowValidator):
             if b == None:
                 if self.F[j] > 0:
                     b = j
-
-        print "self.links_broken:", self.links_broken
 
         # Restore the links for next run
         for link in self.links_broken:
