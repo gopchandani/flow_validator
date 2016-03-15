@@ -63,7 +63,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
 
     def perform_monte_carlo_importance_sampling(self, num_unskewed_runs, num_runs):
 
-        #unskewed_run_links, unskewed_run_values, unskewed_run_mean, unskewed_run_sem = self.perform_monte_carlo(num_unskewed_runs)
+        unskewed_run_links, unskewed_run_values, unskewed_run_mean, unskewed_run_sem = self.perform_monte_carlo(num_unskewed_runs)
 
         skewed_run_links = []
         skewed_run_values = []
@@ -71,7 +71,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
         for i in xrange(num_runs):
 
             print "Performing Run:", i + 1
-            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(4.5, verbose=False)
+            run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(unskewed_run_mean, verbose=False)
             skewed_run_links.append(run_broken_links)
             skewed_run_values.append(run_value)
 
@@ -124,7 +124,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
                     # self.data["number_of_links_to_break_estimate_data"][number_of_ports_to_synthesize][total_runs].append(est)
 
                     with Timer(verbose=True) as t:
-                        est = self.perform_monte_carlo_importance_sampling(5, total_runs)
+                        est = self.perform_monte_carlo_importance_sampling(10, total_runs)
 
                     print "est:", est[2], est[3]
 
@@ -154,7 +154,7 @@ def main():
     core = 1
 
     total_number_of_ports_to_synthesize = 1
-    numbers_of_monte_carlo_runs = [10]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [50]#[10, 20, 30]
 
     exp = HostConnectivityMonteCarloImportanceSamplingCompare(num_iterations,
                                                               load_config,
