@@ -129,7 +129,8 @@ class MonteCarloAnalysis(FlowValidator):
                                                                      verbose)
                 if not all_paths:
                     all_host_pair_connected = False
-                    print "Disconnected Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+                    if verbose:
+                        print "Disconnected Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
 
         return all_host_pair_connected
 
@@ -184,7 +185,7 @@ class MonteCarloAnalysis(FlowValidator):
 
         return len(self.links_broken)
 
-    def get_alpha(self, u, b, j):
+    def get_alpha(self, u, b, j, verbose=False):
 
         #return 0.5
 
@@ -203,7 +204,8 @@ class MonteCarloAnalysis(FlowValidator):
 
                 beta = (j/u) * ((self.F[j-1]) / (self.N - j + 1)) * (p)
 
-            print "beta:", beta
+            if verbose:
+                print "beta:", beta
 
             # If beta is in the sensible range
             if beta > 0 or beta < 1.0:
@@ -221,7 +223,8 @@ class MonteCarloAnalysis(FlowValidator):
         else:
             alpha = 0.0
 
-        print "alpha:", alpha
+        if verbose:
+            print "alpha:", alpha
 
         return alpha
 
@@ -287,7 +290,7 @@ class MonteCarloAnalysis(FlowValidator):
         if self.F[j] > 0:
             b = j
 
-        self.alpha.append(self.get_alpha(u, b, j))
+        self.alpha.append(self.get_alpha(u, b, j, verbose))
 
         while all_host_pair_connected:
 
@@ -295,7 +298,7 @@ class MonteCarloAnalysis(FlowValidator):
             j += 1
 
             # Get a value of alpha for this step
-            self.alpha.append(self.get_alpha(u, b, j))
+            self.alpha.append(self.get_alpha(u, b, j, verbose))
 
             # Do a skewed sample using alpha:
             sampled_ld = self.sample_link_skewed(self.alpha[j])
@@ -321,7 +324,8 @@ class MonteCarloAnalysis(FlowValidator):
 
         # Restore the links for next run
         for link in self.links_broken:
-            print "Restoring the link:", link
+            if verbose:
+                print "Restoring the link:", link
 
             self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
