@@ -13,7 +13,7 @@ from timer import Timer
 from analysis.monte_carlo_analysis import MonteCarloAnalysis
 from experiment import Experiment
 
-class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
+class UniformImportanceSamplingCompare(Experiment):
     def __init__(self,
                  num_iterations,
                  load_config,
@@ -24,12 +24,12 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
                  uniform_sampling_run_fractions,
                  numbers_of_monte_carlo_runs):
 
-        super(HostConnectivityMonteCarloImportanceSamplingCompare, self).__init__("monte_carlo",
-                                                                                  num_iterations,
-                                                                                  load_config,
-                                                                                  save_config,
-                                                                                  controller,
-                                                                                  1)
+        super(UniformImportanceSamplingCompare, self).__init__("uniform_importance_sampling_compare",
+                                                               num_iterations,
+                                                               load_config,
+                                                               save_config,
+                                                               controller,
+                                                               1)
 
         self.uniform_sampling_run_fractions = uniform_sampling_run_fractions
 
@@ -183,14 +183,14 @@ def main():
     numbers_of_monte_carlo_runs = [50]
     uniform_sampling_run_fractions = [0.2, 0.4, 0.6, 0.8]
 
-    exp = HostConnectivityMonteCarloImportanceSamplingCompare(num_iterations,
-                                                              load_config,
-                                                              save_config,
-                                                              controller,
-                                                              fanout,
-                                                              core,
-                                                              uniform_sampling_run_fractions,
-                                                              numbers_of_monte_carlo_runs)
+    exp = UniformImportanceSamplingCompare(num_iterations,
+                                           load_config,
+                                           save_config,
+                                           controller,
+                                           fanout,
+                                           core,
+                                           uniform_sampling_run_fractions,
+                                           numbers_of_monte_carlo_runs)
 
     exp.trigger()
     exp.dump_data()
