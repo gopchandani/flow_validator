@@ -190,8 +190,9 @@ class MonteCarloAnalysis(FlowValidator):
 
         alpha = None
 
-        # If after previous link failure, both F and F_bar have some members...
-        if self.F[j-1] > 0 and self.F_bar[j-1] > 0:
+        if b != None:
+
+            beta = None
 
             if j == b + 1:
                 beta = ((b + 1)/(u)) * ((self.F[b])/(self.N - b))
@@ -202,21 +203,23 @@ class MonteCarloAnalysis(FlowValidator):
 
                 beta = (j/u) * ((self.F[j-1]) / (self.N - j + 1)) * (p)
 
-            print  "j:", j, "b+1:", b+1
             print "beta:", beta
-            if beta < 0 or beta >= 1.0:
-                raise Exception("Beta values out of range, u: " + str(u) + " beta: " + str(beta))
-            else:
-                alpha = beta
 
-        # If after previous failure, F has members, but F_bar has none, then sample only from F (i.e. alpha = 1.0)
-        elif self.F[j-1] > 0 and self.F_bar[j-1] == 0:
-            alpha = 1.0
-        # If after previous failure, F_bar has members, but F has none, then sample only from F_bar (i.e. alpha = 0.0)
-        elif self.F[j-1] == 0 and self.F_bar[j-1] > 0:
-            alpha = 0.0
+            # If beta is in the sensible range
+            if beta > 0 or beta < 1.0:
+                if self.F_bar[j - 1] > 0:
+                    alpha = beta
+                else:
+                    alpha = 1.0
+            elif beta >= 1.0:
+                if self.F_bar[j -1] > 0:
+                    alpha = self.F[j - 1] / (self.N - j + 1)
+                else:
+                    alpha = 1.0
+            else:
+                raise Exception("Weird beta, u: " + str(u) + " beta: " + str(beta))
         else:
-            raise ("No need to compute alpha for this case.")
+            alpha = 0.0
 
         print "alpha:", alpha
 
