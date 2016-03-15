@@ -50,13 +50,17 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
             "number_of_links_to_break_estimate_data": defaultdict(defaultdict),
         }
 
+        self.data = {}
+        self.data['uniform_data'] = self.uniform_data
+        self.data['skewed_data'] = self.skewed_data
+
     def perform_monte_carlo(self, num_runs):
         run_links = []
         run_values = []
 
         for i in xrange(num_runs):
 
-            print "Performing Run:", i + 1
+            #print "Performing Run:", i + 1
 
             run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
             run_links.append(run_broken_links)
@@ -76,13 +80,19 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
         skewed_run_links = []
         skewed_run_values = []
 
-        for i in xrange(num_runs):
+        print "uniform_run_mean:", uniform_run_mean
+        print "estimate_multiplier:", estimate_multiplier
+        print "u:", uniform_run_mean * estimate_multiplier
 
-            print "Performing Run:", i + 1
+        for i in xrange(num_runs - num_uniform_runs):
+
+            #print "Performing Run:", i + 1
 
             run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(uniform_run_mean * estimate_multiplier, verbose=False)
             skewed_run_links.append(run_broken_links)
             skewed_run_values.append(run_value)
+
+        print "skewed_run_values:", skewed_run_values
 
         run_mean = np.mean(skewed_run_values)
         run_sem = ss.sem(skewed_run_values)
@@ -97,8 +107,8 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
 
         for estimate_multiplier in self.estimate_multipliers:
 
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -137,7 +147,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
                     self.uniform_data["number_of_links_to_break_estimate_data"][estimate_multiplier][total_runs].append(est)
 
                     with Timer(verbose=True) as t:
-                        est = self.perform_monte_carlo_importance_sampling(10, total_runs, float(estimate_multiplier))
+                        est = self.perform_monte_carlo_importance_sampling(total_runs/2, total_runs, float(estimate_multiplier))
 
                     print "est:", est[0], est[1]
 
@@ -170,7 +180,7 @@ def main():
     fanout = 2
     core = 1
 
-    numbers_of_monte_carlo_runs = [20]#[10, 20, 30]
+    numbers_of_monte_carlo_runs = [20, 30, 40]#, 50, 60, 70, 80, 90, 100]
     estimate_multipliers = ["1.0"]#, "1.25", "1.5"]
 
     exp = HostConnectivityMonteCarloImportanceSamplingCompare(num_iterations,

@@ -269,13 +269,13 @@ class IntentSynthesis():
         # Add a MAC based forwarding rule for the destination host at the last hop
         self._compute_destination_host_mac_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
 
-        #  First find the shortest path between src and dst.
-        if self.network_graph.graph.has_edge('s1', 's2'):
-
-            if src_host.switch_id < dst_host.switch_id:
-                self.network_graph.graph['s1']['s2']['weight'] = 0.5
-            else:
-                self.network_graph.graph['s1']['s2']['weight'] = 1.5
+        # #  First find the shortest path between src and dst.
+        # if self.network_graph.graph.has_edge('s1', 's2'):
+        #
+        #     if src_host.switch_id < dst_host.switch_id:
+        #         self.network_graph.graph['s1']['s2']['weight'] = 0.5
+        #     else:
+        #         self.network_graph.graph['s1']['s2']['weight'] = 1.5
 
         p = nx.shortest_path(self.network_graph.graph,
                              source=src_host.switch_id,
