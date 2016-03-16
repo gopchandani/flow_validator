@@ -100,32 +100,9 @@ class UniformImportanceSamplingCompare(Experiment):
                     reached_bound = True
 
             num_required_runs += 1
+            print "Runs so far:", num_required_runs
 
         return num_required_runs
-
-    def perform_monte_carlo_importance_sampling(self, num_seed_runs):
-
-
-        skewed_run_links = []
-        skewed_run_values = []
-
-        print "uniform_run_mean:", uniform_run_mean
-
-        for i in xrange(num_runs - num_uniform_runs):
-
-            #print "Performing Run:", i + 1
-
-            skewed_run_links.append(run_broken_links)
-            skewed_run_values.append(run_value)
-
-        print "skewed_run_values:", skewed_run_values
-
-        run_mean = np.mean(skewed_run_values)
-        run_sem = ss.sem(skewed_run_values)
-
-        #return skewed_run_links, skewed_run_values, run_mean, run_sem
-
-        return run_mean, run_sem
 
     def trigger(self):
 
@@ -158,8 +135,8 @@ class UniformImportanceSamplingCompare(Experiment):
                 self.data[scenario_keys[1]][error_bound]["execution_time"] = []
                 self.data[scenario_keys[1]][error_bound]["num_required_runs"] = []
 
-                for i in xrange(self.num_iterations):
-                    print "iteration:", i + 1
+                for j in xrange(self.num_iterations):
+                    print "iteration:", j + 1
                     print "num_seed_runs:", self.num_seed_runs
 
                     with Timer(verbose=True) as t:
