@@ -173,7 +173,12 @@ class UniformImportanceSamplingCompare(Experiment):
         self.plot_line_error_bars("num_required_runs",
                                   "Required Percentage within N_f",
                                   "Average Number of Runs",
-                                  y_scale='linear', line_label="Topology/Sampling: ", xmax_factor=1.05, xmin_factor=0.95)
+                                  y_scale='linear', line_label="Topology/Sampling: ",
+                                  xmax_factor=1.05,
+                                  xmin_factor=0.95,
+                                  y_max_factor=1.05,
+                                  legend_loc='upper right',
+                                  xticks=[1, 5, 10])
 
 def main():
     num_iterations = 5
@@ -200,11 +205,11 @@ def main():
                                            num_seed_runs,
                                            error_bounds)
 
-    exp.trigger()
+    # exp.trigger()
+    #
+    # exp.dump_data()
 
-    exp.dump_data()
-
-    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160315_210257.json")
+    exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
 
     exp.plot_monte_carlo()
 

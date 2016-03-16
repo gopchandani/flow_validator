@@ -282,7 +282,9 @@ class Experiment(object):
 
         return data_min, data_max
 
-    def plot_line_error_bars(self, data_key, x_label, y_label, y_scale='log', line_label="Ports Synthesized: ", xmax_factor=1.05, xmin_factor=1.0):
+    def plot_line_error_bars(self, data_key, x_label, y_label, y_scale='log', line_label="Ports Synthesized: ",
+                             xmax_factor=1.05, xmin_factor=1.0, y_max_factor = 1.2, legend_loc='upper left',
+                             xticks=None):
 
         markers = ['o', 'v', '^', '*', 'd']
         marker_i = 0
@@ -334,25 +336,13 @@ class Experiment(object):
 
             marker_i += 1
 
-        low_xlim = x_min
-        high_xlim = x_max
-        #
-        # plt.xlim((low_xlim, high_xlim))
-        # plt.xticks(xrange(low_xlim, high_xlim), fontsize=16)
-        #
-        # low_ylim = (0.9 * y_min) / 1000
-        # high_ylim = (1.1 * y_max) / 1000
-        #
-        # plt.ylim((low_ylim, high_ylim))
-        # plt.yticks(xrange(int(high_ylim/10), int(high_ylim), int(high_ylim/10)), fontsize=16)
-
         low_xlim, high_xlim = plt.xlim()
         plt.xlim(xmax=(high_xlim) * xmax_factor)
         plt.xlim(xmin=(low_xlim) * xmin_factor)
 
         if y_scale == "linear":
             low_ylim, high_ylim = plt.ylim()
-            plt.ylim(ymax=(high_ylim) *1.2)
+            plt.ylim(ymax=(high_ylim) * y_max_factor)
 
         plt.yscale(y_scale)
         plt.xlabel(x_label, fontsize=18)
@@ -361,8 +351,9 @@ class Experiment(object):
         ax = plt.axes()
         xa = ax.get_xaxis()
         xa.set_major_locator(MaxNLocator(integer=True))
+        xa.set_ticks(xticks)
 
-        legend = plt.legend(loc='upper left', shadow=True, fontsize=12)
+        legend = plt.legend(loc=legend_loc, shadow=True, fontsize=12)
 
         plt.savefig("plots/" + self.experiment_tag + "_" + data_key + ".png")
         plt.show()
