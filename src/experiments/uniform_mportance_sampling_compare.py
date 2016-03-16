@@ -36,8 +36,8 @@ class UniformImportanceSamplingCompare(Experiment):
         self.error_bounds = error_bounds
 
         self.data = {
-            "ring_uniform": defaultdict(defaultdict),
-            "ring_importance": defaultdict(defaultdict),
+            "execution_time": defaultdict(defaultdict),
+            "num_required_runs": defaultdict(defaultdict),
         }
 
     def perform_monte_carlo(self, num_runs):
@@ -100,7 +100,10 @@ class UniformImportanceSamplingCompare(Experiment):
                     reached_bound = True
 
             num_required_runs += 1
-            print "Runs so far:", num_required_runs
+            print sampling, "runs so far:", num_required_runs
+
+        if sampling == "importance":
+            num_required_runs += num_seed_runs
 
         return num_required_runs
 
@@ -129,11 +132,11 @@ class UniformImportanceSamplingCompare(Experiment):
 
             for error_bound in self.error_bounds:
 
-                self.data[scenario_keys[0]][error_bound]["execution_time"] = []
-                self.data[scenario_keys[0]][error_bound]["num_required_runs"] = []
+                self.data["execution_time"][scenario_keys[0]][error_bound] = []
+                self.data["num_required_runs"][scenario_keys[0]][error_bound] = []
 
-                self.data[scenario_keys[1]][error_bound]["execution_time"] = []
-                self.data[scenario_keys[1]][error_bound]["num_required_runs"] = []
+                self.data["execution_time"][scenario_keys[1]][error_bound] = []
+                self.data["num_required_runs"][scenario_keys[1]][error_bound] = []
 
                 for j in xrange(self.num_iterations):
                     print "iteration:", j + 1
@@ -141,20 +144,20 @@ class UniformImportanceSamplingCompare(Experiment):
 
                     with Timer(verbose=True) as t:
                         num_required_runs = self.compute_num_required_runs(self.expected_values[i],
-                                                                           error_bound,
+                                                                           float(error_bound)/100,
                                                                            "uniform")
 
-                    self.data[scenario_keys[0]][error_bound]["execution_time"].append(t.msecs)
-                    self.data[scenario_keys[0]][error_bound]["num_required_runs"].append(num_required_runs)
+                    self.data["execution_time"][scenario_keys[0]][error_bound].append(t.msecs)
+                    self.data["num_required_runs"][scenario_keys[0]][error_bound].append(num_required_runs)
 
                     with Timer(verbose=True) as t:
                         num_required_runs = self.compute_num_required_runs(self.expected_values[i],
-                                                                           error_bound,
+                                                                           float(error_bound)/100,
                                                                            "importance",
                                                                            self.num_seed_runs)
 
-                    self.data[scenario_keys[1]][error_bound]["execution_time"].append(t.msecs)
-                    self.data[scenario_keys[1]][error_bound]["num_required_runs"].append(num_required_runs)
+                    self.data["execution_time"][scenario_keys[1]][error_bound].append(t.msecs)
+                    self.data["num_required_runs"][scenario_keys[1]][error_bound].append(num_required_runs)
 
             self.mca.de_init_network_port_graph()
 
@@ -166,14 +169,14 @@ class UniformImportanceSamplingCompare(Experiment):
         #                           "Execution Time (ms)",
         #                           y_scale='linear')
 
-        # fig = plt.figure(0)
-        # self.plot_line_error_bars("number_of_links_to_break_estimate",
-        #                           "Number of Monte Carlo Runs",
-        #                           "Estimated number of links to break",
-        #                           y_scale='linear')
+        fig = plt.figure(0)
+        self.plot_line_error_bars("num_required_runs",
+                                  "Required Percentage within N_f",
+                                  "Average Number of Runs",
+                                  y_scale='linear', line_label="Topology/Sampling: ", xmax_factor=1.05, xmin_factor=0.95)
 
 def main():
-    num_iterations = 1
+    num_iterations = 5
     load_config = True
     save_config = False
     controller = "ryu"
@@ -186,7 +189,7 @@ def main():
     expected_values = [2.33]
 
     num_seed_runs = 10
-    error_bounds = [0.1, 0.05, 0.01, 0.05]
+    error_bounds = ["1", "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
@@ -198,9 +201,12 @@ def main():
                                            error_bounds)
 
     exp.trigger()
+
     exp.dump_data()
 
-    #exp.plot_monte_carlo()
+    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160315_210257.json")
+
+    exp.plot_monte_carlo()
 
 if __name__ == "__main__":
     main()

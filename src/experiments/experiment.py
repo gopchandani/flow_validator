@@ -282,7 +282,7 @@ class Experiment(object):
 
         return data_min, data_max
 
-    def plot_line_error_bars(self, data_key, x_label, y_label, y_scale='log'):
+    def plot_line_error_bars(self, data_key, x_label, y_label, y_scale='log', line_label="Ports Synthesized: ", xmax_factor=1.05, xmin_factor=1.0):
 
         markers = ['o', 'v', '^', '*', 'd']
         marker_i = 0
@@ -330,7 +330,7 @@ class Experiment(object):
                 x_max = d_max
 
             l = plt.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=8.0,
-                             label="Ports Synthesized: " + str(number_of_ports_to_synthesize))
+                             label=line_label + str(number_of_ports_to_synthesize))
 
             marker_i += 1
 
@@ -347,7 +347,8 @@ class Experiment(object):
         # plt.yticks(xrange(int(high_ylim/10), int(high_ylim), int(high_ylim/10)), fontsize=16)
 
         low_xlim, high_xlim = plt.xlim()
-        plt.xlim(xmax=(high_xlim) *1.05)
+        plt.xlim(xmax=(high_xlim) * xmax_factor)
+        plt.xlim(xmin=(low_xlim) * xmin_factor)
 
         if y_scale == "linear":
             low_ylim, high_ylim = plt.ylim()
