@@ -36,8 +36,8 @@ class UniformImportanceSamplingCompare(Experiment):
         self.error_bounds = error_bounds
 
         self.data = {
-            "execution_time": defaultdict(defaultdict),
-            "num_required_runs": defaultdict(defaultdict),
+            "ring_uniform": defaultdict(defaultdict),
+            "ring_importance": defaultdict(defaultdict),
         }
 
     def perform_monte_carlo(self, num_runs):
@@ -84,18 +84,22 @@ class UniformImportanceSamplingCompare(Experiment):
             run_links.append(run_broken_links)
             run_values.append(run_value)
 
-            run_mean = np.mean(run_values)
-            run_sem = ss.sem(run_values)
+            # Do at least two runs...
+            if num_required_runs > 0:
 
-            run_lower_bound = run_mean - run_sem
-            run_upper_bound = run_mean + run_sem
+                run_mean = np.mean(run_values)
+                run_sem = ss.sem(run_values)
 
-            overlap = max(0, min(required_upper_bound, run_upper_bound) - max(required_lower_bound, run_lower_bound))
+                run_lower_bound = run_mean - run_sem
+                run_upper_bound = run_mean + run_sem
 
-            if overlap > 0:
-                reached_bound = True
-            else:
-                num_required_runs += 1
+                #overlap = max(0, min(required_upper_bound, run_upper_bound) - max(required_lower_bound, run_lower_bound))
+                #if overlap > 0:
+
+                if required_lower_bound <= run_lower_bound and run_upper_bound <= required_upper_bound:
+                    reached_bound = True
+
+            num_required_runs += 1
 
         return num_required_runs
 
@@ -146,13 +150,13 @@ class UniformImportanceSamplingCompare(Experiment):
 
             scenario_keys = (topo_description[0] + "_" + "uniform", topo_description[0] + "_" + "importance")
 
-            self.data[scenario_keys[0]][error_bound]["execution_time"] = []
-            self.data[scenario_keys[0]][error_bound]["num_required_runs"] = []
-
-            self.data[scenario_keys[1]][error_bound]["execution_time"] = []
-            self.data[scenario_keys[1]][error_bound]["num_required_runs"] = []
-
             for error_bound in self.error_bounds:
+
+                self.data[scenario_keys[0]][error_bound]["execution_time"] = []
+                self.data[scenario_keys[0]][error_bound]["num_required_runs"] = []
+
+                self.data[scenario_keys[1]][error_bound]["execution_time"] = []
+                self.data[scenario_keys[1]][error_bound]["num_required_runs"] = []
 
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
@@ -205,7 +209,7 @@ def main():
     expected_values = [2.33]
 
     num_seed_runs = 10
-    error_bounds = [0.25, 0.1, 0.05, 0.01, 0.05]
+    error_bounds = [0.1, 0.05, 0.01, 0.05]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
