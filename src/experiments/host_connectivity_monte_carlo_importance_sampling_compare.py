@@ -106,8 +106,8 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
 
         for uniform_sampling_run_fraction in self.uniform_sampling_run_fractions:
 
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -145,15 +145,15 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
                     self.uniform_data["number_of_links_to_break_estimate"][uniform_sampling_run_fraction][total_runs].append(total_runs)
                     self.uniform_data["number_of_links_to_break_estimate_data"][uniform_sampling_run_fraction][total_runs].append(est)
 
-                    with Timer(verbose=True) as t:
-                        est = self.perform_monte_carlo_importance_sampling(total_runs,
-                                                                           int(total_runs*uniform_sampling_run_fraction))
-
-                    print "est:", est[0], est[1]
-
-                    self.skewed_data["execution_time"][uniform_sampling_run_fraction][total_runs].append(t.msecs)
-                    self.skewed_data["number_of_links_to_break_estimate"][uniform_sampling_run_fraction][total_runs].append(total_runs)
-                    self.skewed_data["number_of_links_to_break_estimate_data"][uniform_sampling_run_fraction][total_runs].append(est)
+                    # with Timer(verbose=True) as t:
+                    #     est = self.perform_monte_carlo_importance_sampling(total_runs,
+                    #                                                        int(total_runs*uniform_sampling_run_fraction))
+                    #
+                    # print "est:", est[0], est[1]
+                    #
+                    # self.skewed_data["execution_time"][uniform_sampling_run_fraction][total_runs].append(t.msecs)
+                    # self.skewed_data["number_of_links_to_break_estimate"][uniform_sampling_run_fraction][total_runs].append(total_runs)
+                    # self.skewed_data["number_of_links_to_break_estimate_data"][uniform_sampling_run_fraction][total_runs].append(est)
 
             self.mca.de_init_network_port_graph()
 
@@ -172,7 +172,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
         #                           y_scale='linear')
 
 def main():
-    num_iterations = 5
+    num_iterations = 1
     load_config = True
     save_config = False
     controller = "ryu"
@@ -180,7 +180,7 @@ def main():
     fanout = 2
     core = 1
 
-    numbers_of_monte_carlo_runs = [50]
+    numbers_of_monte_carlo_runs = [1000]
     uniform_sampling_run_fractions = [0.1]#2, 0.4, 0.6, 0.8]
 
     exp = HostConnectivityMonteCarloImportanceSamplingCompare(num_iterations,

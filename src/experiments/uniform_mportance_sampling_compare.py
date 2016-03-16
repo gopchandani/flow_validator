@@ -126,6 +126,8 @@ class UniformImportanceSamplingCompare(Experiment):
             self.mca.add_hosts()
             self.mca.initialize_admitted_traffic()
 
+            e_nf = self.mca.compute_e_nf_exhaustive()
+
             print "Initialization done."
 
             scenario_keys = (topo_description[0] + "_" + "uniform", topo_description[0] + "_" + "importance")
@@ -190,7 +192,10 @@ def main():
     core = 1
     #topo_description = ("clostopo", None, 1, fanout, core)
 
-    topo_descriptions = [("ring", 4, 1, None, None, 2.33)]
+    #topo_descriptions = [("ring", 4, 1, None, None, 2.33)]
+
+    topo_descriptions = [("clostopo", None, 1, fanout, core)]
+
     expected_values = [2.33]
 
     num_seed_runs = 10
@@ -205,11 +210,11 @@ def main():
                                            num_seed_runs,
                                            error_bounds)
 
-    # exp.trigger()
-    #
-    # exp.dump_data()
+    exp.trigger()
 
-    exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
+    exp.dump_data()
+
+    #exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
 
     exp.plot_monte_carlo()
 

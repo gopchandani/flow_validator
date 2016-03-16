@@ -1,8 +1,12 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
-import random
 sys.path.append("./")
+
+import math
+import random
+
+from itertools import permutations
 
 from analysis.flow_validator import FlowValidator
 
@@ -334,6 +338,45 @@ class MonteCarloAnalysis(FlowValidator):
         result = self.get_importance_sampling_experiment_result(len(self.links_broken))
 
         return result, self.links_broken
+
+    def try_breaking_permutation(self, p):
+        self.links_broken = []
+
+        for ld in p:
+            self.links_broken.append(ld)
+            self.port_graph.remove_node_graph_link(ld.forward_link[0], ld.forward_link[1])
+            all_host_pair_connected = self.check_all_host_pair_connected(verbose=False)
+
+            if not all_host_pair_connected:
+                break
+
+        # Restore the links for next run
+        for link in self.links_broken:
+            self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+        return len(self.links_broken)
+
+    def compute_e_nf_exhaustive(self):
+        e_nf = 0.0
+
+        total_link_permutations = math.factorial(len(self.all_links))
+        each_permutation_proability = 1.0 / total_link_permutations
+
+        p_num = 0
+
+        for p in permutations(self.all_links):
+            p_num += 1
+
+            num_links_it_took = self.try_breaking_permutation(p)
+            print p_num, "/", total_link_permutations, num_links_it_took
+
+            e_nf += num_links_it_took
+
+        e_nf = e_nf * each_permutation_proability
+
+        print "e_nf:", e_nf
+
+        return e_nf
 
     def break_random_links_until_any_pair_disconnected(self, verbose=False):
 
