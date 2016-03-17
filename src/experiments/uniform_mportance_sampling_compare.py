@@ -93,8 +93,7 @@ class UniformImportanceSamplingCompare(Experiment):
                 run_lower_bound = run_mean - run_sem
                 run_upper_bound = run_mean + run_sem
 
-                #overlap = max(0, min(required_upper_bound, run_upper_bound) - max(required_lower_bound, run_lower_bound))
-                #if overlap > 0:
+                print "run_mean:", run_mean
 
                 if required_lower_bound <= run_lower_bound and run_upper_bound <= required_upper_bound:
                     reached_bound = True
@@ -125,8 +124,6 @@ class UniformImportanceSamplingCompare(Experiment):
             self.mca.init_network_port_graph()
             self.mca.add_hosts()
             self.mca.initialize_admitted_traffic()
-
-            e_nf = self.mca.compute_e_nf_exhaustive()
 
             print "Initialization done."
 
@@ -196,10 +193,11 @@ def main():
 
     topo_descriptions = [("clostopo", None, 1, fanout, core)]
 
-    expected_values = [2.33]
+    expected_values = [5.00]
 
-    num_seed_runs = 10
-    error_bounds = ["1", "5", "10"]
+    num_seed_runs = 1
+    #error_bounds = ["1", "5", "10"]
+    error_bounds = ["10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,

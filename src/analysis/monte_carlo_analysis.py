@@ -354,10 +354,31 @@ class MonteCarloAnalysis(FlowValidator):
         for link in self.links_broken:
             self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
-        return len(self.links_broken)
+        return self.links_broken
 
     def compute_e_nf_exhaustive(self):
+
+        # Checks for a prefix list, whether the given permutation matches any of them
+        def matching_prefix(p, prefixes):
+            matching_prefix = None
+
+            for prefix in prefixes:
+
+                this_prefix_matches = True
+                for i in range(len(prefix)):
+                    if prefix[i] != p[i]:
+                        this_prefix_matches = False
+                        break
+
+                if this_prefix_matches:
+                    matching_prefix = prefix
+                    break
+
+            return matching_prefix
+
         e_nf = 0.0
+
+        broken_prefixes = []
 
         total_link_permutations = math.factorial(len(self.all_links))
         each_permutation_proability = 1.0 / total_link_permutations
@@ -367,12 +388,24 @@ class MonteCarloAnalysis(FlowValidator):
         for p in permutations(self.all_links):
             p_num += 1
 
-            num_links_it_took = self.try_breaking_permutation(p)
-            print p_num, "/", total_link_permutations, num_links_it_took
+            if p_num % 10 == 0:
+                print p_num, "/", total_link_permutations
 
-            e_nf += num_links_it_took
 
-        e_nf = e_nf * each_permutation_proability
+            # If a prefix of this permutation has already been known to cause a failure, bolt
+            matching_previous_prefix = matching_prefix(p, broken_prefixes)
+            if matching_previous_prefix:
+                e_nf += len(matching_previous_prefix)
+                continue
+
+            links_broken = self.try_breaking_permutation(p)
+
+            e_nf += len(links_broken)
+
+            if len(links_broken) < len(self.all_links):
+                broken_prefixes.append(links_broken)
+
+        e_nf *= each_permutation_proability
 
         print "e_nf:", e_nf
 
