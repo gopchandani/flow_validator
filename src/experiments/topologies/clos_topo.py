@@ -51,11 +51,11 @@ class ClosTopo(Topo):
 
             edge_switch_name = self.edge_switches[edge_switch_num]
 
-            # if not (edge_switch_name == 's4' or edge_switch_name == 's7'):
-            #     continue
-
-            if not (edge_switch_name == 's7' or edge_switch_name == 's14'):
+            if not (edge_switch_name == 's4' or edge_switch_name == 's7'):
                 continue
+
+            # if not (edge_switch_name == 's7' or edge_switch_name == 's14'):
+            #     continue
 
             # add fanout number of hosts to each edge switch
             for y in xrange(self.num_hosts_per_switch):
