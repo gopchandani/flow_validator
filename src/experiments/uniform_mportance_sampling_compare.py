@@ -170,34 +170,33 @@ class UniformImportanceSamplingCompare(Experiment):
 
         fig = plt.figure(0)
         self.plot_line_error_bars("num_required_runs",
-                                  "Required Percentage within N_f",
+                                  "Relative Error",
                                   "Average Number of Runs",
-                                  y_scale='linear', line_label="Topology/Sampling: ",
+                                  y_scale='log',
+                                  line_label="",
+                                  line_label_suffixes = ["Ring with uniform sampling", "Ring with importance sampling"],
                                   xmax_factor=1.05,
-                                  xmin_factor=0.95,
+                                  xmin_factor=0.5,
                                   y_max_factor=1.05,
                                   legend_loc='upper right',
-                                  xticks=[1, 5, 10])
+                                  xticks=[1, 5, 10], xtick_labels=["0.01", "0.05", "0.1"])
 
 def main():
-    num_iterations = 5
+    num_iterations = 10
     load_config = True
     save_config = False
     controller = "ryu"
 
-    fanout = 2
-    core = 1
-    #topo_description = ("clostopo", None, 1, fanout, core)
+    topo_descriptions = [("ring", 4, 1, None, None)]
+    #topo_description = ("clostopo", None, 1, 2, 1)
+    #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
-    #topo_descriptions = [("ring", 4, 1, None, None, 2.33)]
+    expected_values = [2.33]
+#    expected_values = [5.00]
+#    expected_values = [19.50]
 
-    topo_descriptions = [("clostopo", None, 1, fanout, core)]
-
-    expected_values = [5.00]
-
-    num_seed_runs = 1
-    #error_bounds = ["1", "5", "10"]
-    error_bounds = ["10"]
+    num_seed_runs = 10
+    error_bounds = ["1", "5","10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
@@ -208,11 +207,10 @@ def main():
                                            num_seed_runs,
                                            error_bounds)
 
-    exp.trigger()
+    # exp.trigger()
+    # exp.dump_data()
 
-    exp.dump_data()
-
-    #exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
+    exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
 
     exp.plot_monte_carlo()
 

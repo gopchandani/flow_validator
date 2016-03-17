@@ -60,7 +60,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
 
         for i in xrange(num_runs):
 
-            #print "Performing Run:", i + 1
+            print "Performing Run:", i + 1
 
             run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
             run_links.append(run_broken_links)
@@ -85,7 +85,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
 
         for i in xrange(num_runs - num_uniform_runs):
 
-            #print "Performing Run:", i + 1
+            print "Performing Run:", i + 1
 
             run_value, run_broken_links =  self.mca.break_random_links_until_any_pair_disconnected_importance(uniform_run_mean, verbose=False)
             skewed_run_links.append(run_broken_links)
@@ -178,7 +178,7 @@ def main():
     controller = "ryu"
 
     fanout = 2
-    core = 1
+    core = 2
 
     numbers_of_monte_carlo_runs = [1000]
     uniform_sampling_run_fractions = [0.1]#2, 0.4, 0.6, 0.8]

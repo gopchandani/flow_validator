@@ -284,7 +284,7 @@ class Experiment(object):
 
     def plot_line_error_bars(self, data_key, x_label, y_label, y_scale='log', line_label="Ports Synthesized: ",
                              xmax_factor=1.05, xmin_factor=1.0, y_max_factor = 1.2, legend_loc='upper left',
-                             xticks=None):
+                             xticks=None, xtick_labels=None, line_label_suffixes=None):
 
         markers = ['o', 'v', '^', '*', 'd']
         marker_i = 0
@@ -331,8 +331,12 @@ class Experiment(object):
             else:
                 x_max = d_max
 
-            l = plt.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=8.0,
-                             label=line_label + str(number_of_ports_to_synthesize))
+            if line_label_suffixes:
+                l = plt.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=8.0,
+                                 label=line_label + line_label_suffixes[marker_i])
+            else:
+                l = plt.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=8.0,
+                                 label=line_label + str(number_of_ports_to_synthesize))
 
             marker_i += 1
 
@@ -351,7 +355,12 @@ class Experiment(object):
         ax = plt.axes()
         xa = ax.get_xaxis()
         xa.set_major_locator(MaxNLocator(integer=True))
-        xa.set_ticks(xticks)
+
+        if xticks:
+            ax.set_xticks(xticks)
+
+        if xtick_labels:
+            ax.set_xticklabels(xtick_labels)
 
         legend = plt.legend(loc=legend_loc, shadow=True, fontsize=12)
 

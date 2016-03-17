@@ -271,9 +271,6 @@ class MonteCarloAnalysis(FlowValidator):
 
         result = k * prod * second_factor
 
-        if result > 100:
-            pass
-
         return result
 
     def break_random_links_until_any_pair_disconnected_importance(self, u, verbose=False):
