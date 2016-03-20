@@ -125,6 +125,11 @@ class UniformImportanceSamplingCompare(Experiment):
             self.mca.add_hosts()
             self.mca.initialize_admitted_traffic()
 
+            #self.mca.test_classification_breaking_specified_link_sequence([('s1', 's2'), ('s2', 's4')])
+
+            self.mca.compute_e_nf_exhaustive()
+            return
+
             print "Initialization done."
 
             scenario_keys = (topo_description[0] + "_" + "uniform", topo_description[0] + "_" + "importance")
@@ -141,13 +146,13 @@ class UniformImportanceSamplingCompare(Experiment):
                     print "iteration:", j + 1
                     print "num_seed_runs:", self.num_seed_runs
 
-                    # with Timer(verbose=True) as t:
-                    #     num_required_runs = self.compute_num_required_runs(self.expected_values[i],
-                    #                                                        float(error_bound)/100,
-                    #                                                        "uniform")
-                    #
-                    # self.data["execution_time"][scenario_keys[0]][error_bound].append(t.msecs)
-                    # self.data["num_required_runs"][scenario_keys[0]][error_bound].append(num_required_runs)
+                    with Timer(verbose=True) as t:
+                        num_required_runs = self.compute_num_required_runs(self.expected_values[i],
+                                                                           float(error_bound)/100,
+                                                                           "uniform")
+
+                    self.data["execution_time"][scenario_keys[0]][error_bound].append(t.msecs)
+                    self.data["num_required_runs"][scenario_keys[0]][error_bound].append(num_required_runs)
 
                     with Timer(verbose=True) as t:
                         num_required_runs = self.compute_num_required_runs(self.expected_values[i],
@@ -196,7 +201,7 @@ def main():
 #    expected_values = [19.50]
 
     num_seed_runs = 10
-    error_bounds = ["10"] #["1", "5","10"]
+    error_bounds = ["5"] #["1", "5","10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
@@ -207,12 +212,13 @@ def main():
                                            num_seed_runs,
                                            error_bounds)
 
-    #exp.trigger()
-    #exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
-#    exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
+    #exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
+    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
 
-    exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
+    exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160319_075926.json")
 
     exp.plot_monte_carlo()
 

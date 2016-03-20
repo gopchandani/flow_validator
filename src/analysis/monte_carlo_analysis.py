@@ -191,9 +191,10 @@ class MonteCarloAnalysis(FlowValidator):
 
     def get_alpha(self, u, b, j, verbose=False):
 
-        #return 0.5
-
-        alpha = None
+        if self.F_bar[j -1] > 0:
+            return self.F[j - 1] / (self.N - j + 1)
+        else:
+            return 1.0
 
         if b != None:
 
@@ -291,7 +292,7 @@ class MonteCarloAnalysis(FlowValidator):
         if self.F[j] > 0:
             b = j
 
-        self.alpha.append(self.get_alpha(u, b, j, verbose))
+        self.alpha.append(self.get_alpha(u, b, j, True))
 
         while all_host_pair_connected:
 
@@ -299,7 +300,7 @@ class MonteCarloAnalysis(FlowValidator):
             j += 1
 
             # Get a value of alpha for this step
-            self.alpha.append(self.get_alpha(u, b, j, verbose))
+            self.alpha.append(self.get_alpha(u, b, j, True))
 
             # Do a skewed sample using alpha:
             sampled_ld = self.sample_link_skewed(self.alpha[j])
@@ -459,3 +460,17 @@ class MonteCarloAnalysis(FlowValidator):
             print "self.links_broken:", self.links_broken
 
         return self.links_broken
+
+    def test_classification_breaking_specified_link_sequence(self, link_sequence, verbose):
+
+        for link in link_sequence:
+
+            # Break the link
+            self.links_broken.append((str(link[0]), str(link[1])))
+            self.port_graph.remove_node_graph_link(link[0], link[1])
+            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        # Restore the links for next run
+        for link in self.links_broken:
+            self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
+            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
