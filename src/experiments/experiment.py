@@ -286,7 +286,7 @@ class Experiment(object):
                              xmax_factor=1.05, xmin_factor=1.0, y_max_factor = 1.2, legend_loc='upper left',
                              xticks=None, xtick_labels=None, line_label_suffixes=None):
 
-        markers = ['o', 'v', '^', '*', 'd']
+        markers = ['o', 'v', '^', '*', 'd', 'h', '+', '.']
         marker_i = 0
 
         x_min = None

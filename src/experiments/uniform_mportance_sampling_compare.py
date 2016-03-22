@@ -80,7 +80,7 @@ class UniformImportanceSamplingCompare(Experiment):
                 run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
             elif sampling == "importance":
                 run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_importance(seed_mean,
-                                                                                                              verbose=False)
+                                                                                                                 verbose=False)
             run_links.append(run_broken_links)
             run_values.append(run_value)
 
@@ -127,8 +127,8 @@ class UniformImportanceSamplingCompare(Experiment):
 
             #self.mca.test_classification_breaking_specified_link_sequence([('s1', 's2'), ('s2', 's4')])
             #
-            self.mca.compute_e_nf_exhaustive()
-            return
+            # self.mca.compute_e_nf_exhaustive()
+            # return
 
             # for p in self.mca.generate_link_permutation():
             #     print p
@@ -137,7 +137,11 @@ class UniformImportanceSamplingCompare(Experiment):
 
             print "Initialization done."
 
-            scenario_keys = (topo_description[0] + "_" + "uniform", topo_description[0] + "_" + "importance")
+            # scenario_keys = (topo_description[0] + "_" + str(topo_description[1]) + "_" + "uniform",
+            #                  topo_description[0] + "_" + str(topo_description[1]) + "_"+ "importance")
+
+            scenario_keys = (topo_description[0] + " with " + str(topo_description[1]) + " switches using uniform sampling",
+                             topo_description[0] + " with " + str(topo_description[1]) + " switches using importance sampling")
 
             for error_bound in self.error_bounds:
 
@@ -171,7 +175,6 @@ class UniformImportanceSamplingCompare(Experiment):
             self.mca.de_init_network_port_graph()
 
     def plot_monte_carlo(self):
-        pass
         # fig = plt.figure(0)
         # self.plot_line_error_bars("execution_time",
         #                           "Number of Monte Carlo Runs",
@@ -184,7 +187,7 @@ class UniformImportanceSamplingCompare(Experiment):
                                   "Average Number of Runs",
                                   y_scale='log',
                                   line_label="",
-                                  line_label_suffixes = ["Ring with uniform sampling", "Ring with importance sampling"],
+                                  line_label_suffixes=[],
                                   xmax_factor=1.05,
                                   xmin_factor=0.5,
                                   y_max_factor=1.05,
@@ -192,31 +195,36 @@ class UniformImportanceSamplingCompare(Experiment):
                                   xticks=[1, 5, 10], xtick_labels=["0.01", "0.05", "0.1"])
 
 def main():
-    num_iterations = 10
-    load_config = False
-    save_config = True
+    num_iterations = 3
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     #topo_descriptions = [("ring", 4, 1, None, None)]
     #topo_descriptions = [("ring", 6, 1, None, None)]
-    #topo_descriptions = [("ring", 7, 1, None, None)]
-
     #topo_descriptions = [("ring", 8, 1, None, None)]
-    topo_descriptions = [("ring", 10, 1, None, None)]
+    #topo_descriptions = [("ring", 10, 1, None, None)]
+
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
     #expected_values = [2.33]
     #expected_values = [2.5]
     #expected_values = [2.6]
+    #expected_values = [2.77142857143]
 
-    #expected_values = [2.6]
-    expected_values = [2.6]
     #expected_values = [5.00]
     #expected_values = [19.50]
 
+    topo_descriptions = [("ring", 4, 1, None, None),
+                         ("ring", 6, 1, None, None),
+                         ("ring", 8, 1, None, None),
+                         ("ring", 10, 1, None, None)]
+
+    expected_values = [2.33, 2.5, 2.6, 2.77142857143]
+
     num_seed_runs = 10
-    error_bounds = ["5"] #["1", "5","10"]
+    error_bounds = ["5", "10"] #["1", "5","10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
@@ -233,6 +241,10 @@ def main():
     #exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
     #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
     #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160319_075926.json")
+
+    #exp.load_data("data/uniform_importance_sampling_compare_2_iterations_20160321_204907.json")
+
+    #exp.load_data("data/uniform_importance_sampling_compare_3_iterations_20160322_051218.json")
 
     exp.plot_monte_carlo()
 
