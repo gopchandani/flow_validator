@@ -438,6 +438,40 @@ class MonteCarloAnalysis(FlowValidator):
 
         return len(self.links_broken), self.links_broken
 
+
+    def generate_link_permutation(self):
+
+        pool = tuple(self.all_links)
+        n = len(pool)
+
+        # Book-keeping arrays
+
+        # Indices of the original collection which are delivered as the output
+        indices = range(n)
+
+        # Number of cycles left at a given index
+        cycles = range(n, 0, -1)
+
+
+        print indices
+        # First permutation is same as the original collection
+        yield tuple(pool[i] for i in indices[:n])
+
+        while n:
+            for i in reversed(range(n)):
+                cycles[i] -= 1
+                if cycles[i] == 0:
+                    indices[i:] = indices[i+1:] + indices[i:i+1]
+                    cycles[i] = n - i
+                else:
+                    j = cycles[i]
+                    indices[i], indices[-j] = indices[-j], indices[i]
+                    print indices
+                    yield tuple(pool[i] for i in indices[:n])
+                    break
+            else:
+                return
+
     def break_specified_links_in_order(self, links, verbose):
 
         self.links_broken = []

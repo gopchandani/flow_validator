@@ -18,7 +18,9 @@ class RingTopo(Topo):
             curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow13")
             self.switch_names.append(curr_switch)
 
-            if curr_switch == 's2' or curr_switch == 's4':
+            if curr_switch == 's1' or curr_switch == 's5':
+                pass
+            else:
                 continue
 
             for j in xrange(self.num_hosts_per_switch):

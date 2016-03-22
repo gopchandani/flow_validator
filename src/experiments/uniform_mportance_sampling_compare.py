@@ -126,9 +126,14 @@ class UniformImportanceSamplingCompare(Experiment):
             self.mca.initialize_admitted_traffic()
 
             #self.mca.test_classification_breaking_specified_link_sequence([('s1', 's2'), ('s2', 's4')])
-
+            #
             self.mca.compute_e_nf_exhaustive()
             return
+
+            # for p in self.mca.generate_link_permutation():
+            #     print p
+
+            #return
 
             print "Initialization done."
 
@@ -188,17 +193,27 @@ class UniformImportanceSamplingCompare(Experiment):
 
 def main():
     num_iterations = 10
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     #topo_descriptions = [("ring", 4, 1, None, None)]
-    topo_descriptions = [("clostopo", None, 1, 2, 1)]
+    #topo_descriptions = [("ring", 6, 1, None, None)]
+    #topo_descriptions = [("ring", 7, 1, None, None)]
+
+    #topo_descriptions = [("ring", 8, 1, None, None)]
+    topo_descriptions = [("ring", 10, 1, None, None)]
+    #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
-#    expected_values = [2.33]
-    expected_values = [5.00]
-#    expected_values = [19.50]
+    #expected_values = [2.33]
+    #expected_values = [2.5]
+    #expected_values = [2.6]
+
+    #expected_values = [2.6]
+    expected_values = [2.6]
+    #expected_values = [5.00]
+    #expected_values = [19.50]
 
     num_seed_runs = 10
     error_bounds = ["5"] #["1", "5","10"]
@@ -212,13 +227,12 @@ def main():
                                            num_seed_runs,
                                            error_bounds)
 
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
     #exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
     #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
-
-    exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160319_075926.json")
+    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160319_075926.json")
 
     exp.plot_monte_carlo()
 
