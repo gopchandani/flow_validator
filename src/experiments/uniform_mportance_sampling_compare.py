@@ -192,17 +192,17 @@ class UniformImportanceSamplingCompare(Experiment):
                                   xmin_factor=0.5,
                                   y_max_factor=1.05,
                                   legend_loc='upper right',
-                                  xticks=[1, 5, 10], xtick_labels=["0.01", "0.05", "0.1"])
+                                  xticks=[2, 5, 10], xtick_labels=["0.02", "0.05", "0.1"])
 
 def main():
-    num_iterations = 3
+    num_iterations = 10
     load_config = True
     save_config = False
     controller = "ryu"
 
     #topo_descriptions = [("ring", 4, 1, None, None)]
     #topo_descriptions = [("ring", 6, 1, None, None)]
-    #topo_descriptions = [("ring", 8, 1, None, None)]
+    topo_descriptions = [("ring", 8, 1, None, None)]
     #topo_descriptions = [("ring", 10, 1, None, None)]
 
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
@@ -210,21 +210,21 @@ def main():
 
     #expected_values = [2.33]
     #expected_values = [2.5]
-    #expected_values = [2.6]
+    expected_values = [2.6]
     #expected_values = [2.77142857143]
 
     #expected_values = [5.00]
     #expected_values = [19.50]
 
-    topo_descriptions = [("ring", 4, 1, None, None),
-                         ("ring", 6, 1, None, None),
-                         ("ring", 8, 1, None, None),
-                         ("ring", 10, 1, None, None)]
-
-    expected_values = [2.33, 2.5, 2.6, 2.77142857143]
+    # topo_descriptions = [("ring", 4, 1, None, None),
+    #                      ("ring", 6, 1, None, None),
+    #                      ("ring", 8, 1, None, None),
+    #                      ("ring", 10, 1, None, None)]
+    #
+    # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     num_seed_runs = 10
-    error_bounds = ["5", "10"] #["1", "5","10"]
+    error_bounds = ["2", "5", "10"]#, "5","10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
@@ -245,6 +245,9 @@ def main():
     #exp.load_data("data/uniform_importance_sampling_compare_2_iterations_20160321_204907.json")
 
     #exp.load_data("data/uniform_importance_sampling_compare_3_iterations_20160322_051218.json")
+
+    #Candidate
+    #exp.load_data("data/uniform_importance_sampling_compare_3_iterations_20160323_073307.json")
 
     exp.plot_monte_carlo()
 
