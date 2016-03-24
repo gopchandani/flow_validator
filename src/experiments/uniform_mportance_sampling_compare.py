@@ -174,7 +174,17 @@ class UniformImportanceSamplingCompare(Experiment):
 
             self.mca.de_init_network_port_graph()
 
-    def plot_monte_carlo(self):
+    def plot_monte_carlo(self, translate=False):
+
+        if translate:
+
+            if "num_required_runs" in self.data.keys():
+                self.data["num_required_runs"]["Ring with uniform sampling"] = self.data["num_required_runs"]["ring_uniform"]
+                self.data["num_required_runs"]["Ring with importance sampling"] = self.data["num_required_runs"]["ring_importance"]
+
+                del self.data["num_required_runs"]["ring_uniform"]
+                del self.data["num_required_runs"]["ring_importance"]
+
         # fig = plt.figure(0)
         # self.plot_line_error_bars("execution_time",
         #                           "Number of Monte Carlo Runs",
@@ -192,7 +202,7 @@ class UniformImportanceSamplingCompare(Experiment):
                                   xmin_factor=0.5,
                                   y_max_factor=1.05,
                                   legend_loc='upper right',
-                                  xticks=[2, 5, 10], xtick_labels=["0.02", "0.05", "0.1"])
+                                  xticks=[1, 5, 10], xtick_labels=["0.01", "0.05", "0.1"])
 
 def main():
     num_iterations = 10
@@ -238,18 +248,14 @@ def main():
     exp.trigger()
     exp.dump_data()
 
-    #exp.load_data("data/uniform_importance_sampling_compare_5_iterations_20160315_215918.json")
-    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
-    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160319_075926.json")
 
-    #exp.load_data("data/uniform_importance_sampling_compare_2_iterations_20160321_204907.json")
-
-    #exp.load_data("data/uniform_importance_sampling_compare_3_iterations_20160322_051218.json")
+    # #Plot 4
+    # exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
 
     #Candidate
     #exp.load_data("data/uniform_importance_sampling_compare_3_iterations_20160323_073307.json")
 
-    exp.plot_monte_carlo()
+    exp.plot_monte_carlo(translate=True)
 
 if __name__ == "__main__":
     main()
