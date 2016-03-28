@@ -292,7 +292,7 @@ class MonteCarloAnalysis(FlowValidator):
         if self.F[j] > 0:
             b = j
 
-        self.alpha.append(self.get_alpha(u, b, j, True))
+        self.alpha.append(self.get_alpha(u, b, j, False))
 
         while all_host_pair_connected:
 
@@ -300,7 +300,7 @@ class MonteCarloAnalysis(FlowValidator):
             j += 1
 
             # Get a value of alpha for this step
-            self.alpha.append(self.get_alpha(u, b, j, True))
+            self.alpha.append(self.get_alpha(u, b, j, False))
 
             # Do a skewed sample using alpha:
             sampled_ld = self.sample_link_skewed(self.alpha[j])
