@@ -174,7 +174,7 @@ class UniformImportanceSamplingCompare(Experiment):
                                                                                       float(error_bound)/100,
                                                                                       "importance",
                                                                                       max(self.num_seed_runs,
-                                                                                          num_required_runs_uniform/10))
+                                                                                          self.num_seed_runs))
 
                     self.data["execution_time"][scenario_keys[1]][error_bound].append(t.msecs)
                     self.data["num_required_runs"][scenario_keys[1]][error_bound].append(num_required_runs_importance)
@@ -218,17 +218,17 @@ def main():
     controller = "ryu"
 
     #topo_descriptions = [("ring", 4, 1, None, None)]
-    #topo_descriptions = [("ring", 6, 1, None, None)]
+    topo_descriptions = [("ring", 6, 1, None, None)]
     #topo_descriptions = [("ring", 8, 1, None, None)]
-    topo_descriptions = [("ring", 10, 1, None, None)]
+    #topo_descriptions = [("ring", 10, 1, None, None)]
 
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
     #expected_values = [2.33]
-    #expected_values = [2.5]
+    expected_values = [2.5]
     #expected_values = [2.6]
-    expected_values = [2.77142857143]
+    #expected_values = [2.77142857143]
 
     #expected_values = [5.00] # 5.15238302266
     #expected_values = [19.50]
@@ -241,7 +241,7 @@ def main():
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     num_seed_runs = 100
-    error_bounds = ["1"]#["5", "10"]
+    error_bounds = ["1", "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
@@ -255,15 +255,11 @@ def main():
     exp.trigger()
     exp.dump_data()
 
-    # #Plot 4
-    # exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
+    # Plot 4
+    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
 
-    #Candidate
-    #exp.load_data("data/uniform_importance_sampling_compare_3_iterations_20160323_073307.json")
-
-    # #Candidate
-    # exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160326_141657.json")
-
+    # Plot 6
+    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160331_133752.json")
     exp.plot_monte_carlo()
 
 if __name__ == "__main__":
