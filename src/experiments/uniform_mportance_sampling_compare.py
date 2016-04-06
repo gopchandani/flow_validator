@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
+import json
 sys.path.append("./")
 
 import matplotlib.pyplot as plt
@@ -162,13 +163,13 @@ class UniformImportanceSamplingCompare(Experiment):
                     print "iteration:", j + 1
                     print "num_seed_runs:", self.num_seed_runs
 
-                    with Timer(verbose=True) as t:
-                        num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
-                                                                                   float(error_bound)/100,
-                                                                                   "uniform")
-
-                    self.data["execution_time"][scenario_keys[0]][error_bound].append(t.msecs)
-                    self.data["num_required_runs"][scenario_keys[0]][error_bound].append(num_required_runs_uniform)
+                    # with Timer(verbose=True) as t:
+                    #     num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
+                    #                                                                float(error_bound)/100,
+                    #                                                                "uniform")
+                    #
+                    # self.data["execution_time"][scenario_keys[0]][error_bound].append(t.msecs)
+                    # self.data["num_required_runs"][scenario_keys[0]][error_bound].append(num_required_runs_uniform)
 
                     with Timer(verbose=True) as t:
                         num_required_runs_importance = self.compute_num_required_runs(self.expected_values[i],
@@ -212,6 +213,22 @@ class UniformImportanceSamplingCompare(Experiment):
                                   legend_loc='upper right',
                                   xticks=[1, 5, 10], xtick_labels=["0.01", "0.05", "0.1"])
 
+    def merge_load_data(self, filename_list):
+
+        merged_data = {"execution_time": {}, "num_required_runs": {}}
+
+        for filename in filename_list:
+
+            print "Reading file:", filename
+
+            with open(filename, "r") as infile:
+                this_data = json.load(infile)
+
+            merged_data["execution_time"].update(this_data["execution_time"])
+            merged_data["num_required_runs"].update(this_data["num_required_runs"])
+
+        self.data = merged_data
+
 def main():
     num_iterations = 10
     load_config = True
@@ -241,7 +258,7 @@ def main():
     #
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
-    num_seed_runs = 500
+    num_seed_runs = 200
     error_bounds = ["1", "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
@@ -262,8 +279,13 @@ def main():
     # Plot 6
     #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160331_133752.json")
 
-    # Plot 7
-    exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160404_135504.json")
+    # Plot 8
+    #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160404_135504.json")
+
+    # Merge plot.
+    exp.merge_load_data(["data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json",
+                         "data/uniform_importance_sampling_compare_10_iterations_20160331_133752.json",
+                         "data/uniform_importance_sampling_compare_10_iterations_20160404_135504.json"])
 
     exp.plot_monte_carlo()
 
