@@ -72,6 +72,8 @@ class UniformImportanceSamplingCompare(Experiment):
         if sampling == "importance":
             seed_mean, seed_sem = self.perform_monte_carlo(num_seed_runs)
 
+        print "seed_mean:", seed_mean
+
         while not reached_bound:
 
             run_value = None
@@ -230,22 +232,22 @@ class UniformImportanceSamplingCompare(Experiment):
         self.data = merged_data
 
 def main():
-    num_iterations = 10
+    num_iterations = 1
     load_config = True
     save_config = False
     controller = "ryu"
 
     #topo_descriptions = [("ring", 4, 1, None, None)]
-    #topo_descriptions = [("ring", 6, 1, None, None)]
-    topo_descriptions = [("ring", 8, 1, None, None)]
+    topo_descriptions = [("ring", 6, 1, None, None)]
+    #topo_descriptions = [("ring", 8, 1, None, None)]
     #topo_descriptions = [("ring", 10, 1, None, None)]
 
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
     #expected_values = [2.33]
-    #expected_values = [2.5]
-    expected_values = [2.6]
+    expected_values = [2.5]
+    #expected_values = [2.6]
     #expected_values = [2.77142857143]
 
     #expected_values = [5.00] # 5.15238302266
@@ -258,8 +260,8 @@ def main():
     #
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
-    num_seed_runs = 200
-    error_bounds = ["1", "5", "10"]
+    num_seed_runs = 100
+    error_bounds = ["1"]#, "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
@@ -270,8 +272,8 @@ def main():
                                            num_seed_runs,
                                            error_bounds)
 
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
     # Plot 4
     #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
@@ -283,9 +285,9 @@ def main():
     #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160404_135504.json")
 
     # Merge plot.
-    exp.merge_load_data(["data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json",
-                         "data/uniform_importance_sampling_compare_10_iterations_20160331_133752.json",
-                         "data/uniform_importance_sampling_compare_10_iterations_20160404_135504.json"])
+    # exp.merge_load_data(["data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json",
+    #                      "data/uniform_importance_sampling_compare_10_iterations_20160331_133752.json",
+    #                      "data/uniform_importance_sampling_compare_10_iterations_20160404_135504.json"])
 
     exp.plot_monte_carlo()
 

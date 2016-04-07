@@ -189,6 +189,23 @@ class MonteCarloAnalysis(FlowValidator):
 
         return len(self.links_broken)
 
+    def get_beta(self, u, b, j, verbose=False):
+        beta = None
+
+        if j == b + 1:
+            beta = ((b + 1)/(u)) * ((self.F[b])/(self.N - b))
+        elif j > b + 1:
+            p = 1.0
+            for i in xrange(0, j-2 + 1):
+                p = p * ((self.F_bar[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
+
+            beta = (j/u) * ((self.F[j-1]) / (self.N - j + 1)) * (p)
+
+        if verbose:
+            print "beta:", beta
+
+        return beta
+
     def get_alpha(self, u, b, j, verbose=False):
 
         # if self.F_bar[j -1] > 0:
@@ -196,21 +213,8 @@ class MonteCarloAnalysis(FlowValidator):
         # else:
         #     return 1.0
 
-        if b != None:
-
-            beta = None
-
-            if j == b + 1:
-                beta = ((b + 1)/(u)) * ((self.F[b])/(self.N - b))
-            elif j > b + 1:
-                p = 1.0
-                for i in xrange(0, j-2 + 1):
-                    p = p * ((self.F_bar[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
-
-                beta = (j/u) * ((self.F[j-1]) / (self.N - j + 1)) * (p)
-
-            if verbose:
-                print "beta:", beta
+        if b is not None:
+            beta = self.get_beta(u, b, j, verbose)
 
             # If beta is in the sensible range
             if beta > 0 or beta < 1.0:
@@ -219,7 +223,7 @@ class MonteCarloAnalysis(FlowValidator):
                 else:
                     alpha = 1.0
             elif beta >= 1.0:
-                if self.F_bar[j -1] > 0:
+                if self.F_bar[j - 1] > 0:
                     alpha = self.F[j - 1] / (self.N - j + 1)
                 else:
                     alpha = 1.0
@@ -274,23 +278,35 @@ class MonteCarloAnalysis(FlowValidator):
 
         return result
 
-    def break_random_links_until_any_pair_disconnected_importance(self, u, verbose=False):
-        self.links_broken = []
-        self.alpha = []
-        self.F = []
-        self.F_bar = []
+    def update_link_state(self, verbose):
 
         # Check to see current state of affairs before doing anything for this step
-        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
         self.initialize_per_link_traffic_paths()
         self.classify_network_graph_links(verbose)
         self.F.append(len(self.links_causing_disconnect))
         self.F_bar.append(len(self.links_not_causing_disconnect))
 
+    def update_b(self, j, b):
+
+        # b is the smallest index j, for which self.F[j] > 0
+        if b == None:
+            if self.F[j] > 0:
+                b = j
+
+        return b
+
+    def break_random_links_until_any_pair_disconnected_importance(self, u, verbose=False):
+        self.links_broken = []
+        self.alpha = []
+        self.F = []
+        self.F_bar = []
         j = 0
         b = None
-        if self.F[j] > 0:
-            b = j
+
+        # Check to see current state of affairs before doing anything for this step
+        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+        self.update_link_state(verbose)
+        b = self.update_b(j, b)
 
         self.alpha.append(self.get_alpha(u, b, j, False))
 
@@ -314,15 +330,8 @@ class MonteCarloAnalysis(FlowValidator):
 
             # Check to see current state of affairs before doing anything for next step
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-            self.initialize_per_link_traffic_paths()
-            self.classify_network_graph_links(verbose)
-            self.F.append(len(self.links_causing_disconnect))
-            self.F_bar.append(len(self.links_not_causing_disconnect))
-
-            # b is the smallest index j, for which self.F[j] > 0
-            if b == None:
-                if self.F[j] > 0:
-                    b = j
+            self.update_link_state(verbose)
+            b = self.update_b(j, b)
 
         # Restore the links for next run
         for link in self.links_broken:
