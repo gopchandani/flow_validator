@@ -52,9 +52,15 @@ class UniformImportanceSamplingCompare(Experiment):
             run_values.append(run_value)
 
         run_mean = np.mean(run_values)
-        run_sem = ss.sem(run_values)
+        run_sd = np.std(run_values)
 
-        return run_mean, run_sem
+        return run_mean, run_sd
+
+    def check_bound_reached(self):
+        reached_bound = 0.0
+
+        return reached_bound
+
 
     def compute_num_required_runs(self, expected_value, error_bound, sampling, num_seed_runs=None):
         run_links = []
@@ -67,10 +73,10 @@ class UniformImportanceSamplingCompare(Experiment):
         reached_bound = False
 
         seed_mean = None
-        seed_sem = None
+        seed_sd = None
 
         if sampling == "importance":
-            seed_mean, seed_sem = self.perform_monte_carlo(num_seed_runs)
+            seed_mean, seed_sd = self.perform_monte_carlo(num_seed_runs)
 
         print "seed_mean:", seed_mean
 
@@ -89,13 +95,13 @@ class UniformImportanceSamplingCompare(Experiment):
 
             # Do at least two runs...
             # Do at least num_seed_runs for both uniform and importance case
-            if num_required_runs > 0 and num_required_runs % 100 == 0:
+            if num_required_runs > 0 and num_required_runs % 5 == 0:
 
                 run_mean = np.mean(run_values)
-                run_sem = ss.sem(run_values)
+                run_sd = np.std(run_values)
 
-                run_lower_bound = run_mean - run_sem
-                run_upper_bound = run_mean + run_sem
+                run_lower_bound = run_mean - run_sd
+                run_upper_bound = run_mean + run_sd
 
                 print sampling, "runs so far:", num_required_runs
 
@@ -232,18 +238,18 @@ def main():
     save_config = False
     controller = "ryu"
 
-    #topo_descriptions = [("ring", 4, 1, None, None)]
+    topo_descriptions = [("ring", 4, 1, None, None)]
     #topo_descriptions = [("ring", 6, 1, None, None)]
     #topo_descriptions = [("ring", 8, 1, None, None)]
-    topo_descriptions = [("ring", 10, 1, None, None)]
+    #topo_descriptions = [("ring", 10, 1, None, None)]
 
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
-    #expected_values = [2.33]
+    expected_values = [2.33]
     #expected_values = [2.5]
     #expected_values = [2.6]
-    expected_values = [2.77142857143]
+    #expected_values = [2.77142857143]
 
     #expected_values = [5.00] # 5.15238302266
     #expected_values = [19.50]
@@ -255,7 +261,7 @@ def main():
     #
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
-    num_seed_runs = 500
+    num_seed_runs = 5
     error_bounds = ["1"]#, "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
