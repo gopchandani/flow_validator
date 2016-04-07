@@ -233,17 +233,17 @@ def main():
     controller = "ryu"
 
     #topo_descriptions = [("ring", 4, 1, None, None)]
-    topo_descriptions = [("ring", 6, 1, None, None)]
+    #topo_descriptions = [("ring", 6, 1, None, None)]
     #topo_descriptions = [("ring", 8, 1, None, None)]
-    #topo_descriptions = [("ring", 10, 1, None, None)]
+    topo_descriptions = [("ring", 10, 1, None, None)]
 
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
     #expected_values = [2.33]
-    expected_values = [2.5]
+    #expected_values = [2.5]
     #expected_values = [2.6]
-    #expected_values = [2.77142857143]
+    expected_values = [2.77142857143]
 
     #expected_values = [5.00] # 5.15238302266
     #expected_values = [19.50]
@@ -255,7 +255,7 @@ def main():
     #
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
-    num_seed_runs = 100
+    num_seed_runs = 500
     error_bounds = ["1"]#, "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,

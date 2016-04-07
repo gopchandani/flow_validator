@@ -208,11 +208,6 @@ class MonteCarloAnalysis(FlowValidator):
 
     def get_alpha(self, u, b, j, verbose=False):
 
-        # if self.F_bar[j -1] > 0:
-        #     return self.F[j - 1] / (self.N - j + 1)
-        # else:
-        #     return 1.0
-
         if b is not None:
             beta = self.get_beta(u, b, j, verbose)
 
