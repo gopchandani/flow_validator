@@ -140,11 +140,6 @@ class UniformImportanceSamplingCompare(Experiment):
             # self.mca.compute_e_nf_exhaustive()
             # return
 
-            # for p in self.mca.generate_link_permutation():
-            #     print p
-
-            #return
-
             print "Initialization done."
 
             # scenario_keys = (topo_description[0] + "_" + str(topo_description[1]) + "_" + "uniform",
