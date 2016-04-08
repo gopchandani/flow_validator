@@ -95,30 +95,40 @@ class UniformImportanceSamplingCompare(Experiment):
 
             # Do at least two runs...
             # Do at least num_seed_runs for both uniform and importance case
-            if num_required_runs > 0 and num_required_runs % 5 == 0:
+            if num_required_runs > 0 and num_required_runs % 100 == 0:
 
                 run_mean = np.mean(run_values)
                 run_sd = np.std(run_values)
 
-                run_lower_bound = run_mean - run_sd
-                run_upper_bound = run_mean + run_sd
-
                 print sampling, "runs so far:", num_required_runs
 
                 print "run_mean:", run_mean
+                t99 = 2.56
 
-                print "required_lower_bound:", required_lower_bound
-                print "required_upper_bound:", required_upper_bound
-                print "run_lower_bound:", run_lower_bound
-                print "run_upper_bound:", run_upper_bound
+                plus_minus = t99 * run_sd / np.sqrt(num_required_runs - 1)
 
-                if required_lower_bound <= run_lower_bound and run_upper_bound <= required_upper_bound:
+                print "plus_minus:", plus_minus
+
+                interval_percentage = 100 * (2*plus_minus/run_mean)
+
+                print "interval_percentage:", interval_percentage
+
+                if interval_percentage <= 5:
                     reached_bound = True
 
             num_required_runs += 1
 
         if sampling == "importance":
             num_required_runs += num_seed_runs
+
+        run_lower_bound = run_mean - plus_minus
+        run_upper_bound = run_mean + plus_minus
+
+        if required_lower_bound <= run_lower_bound and run_upper_bound <= required_upper_bound:
+            print "Reached CI meets expected value bound"
+        else:
+            print "Reached CI does not meet expected value bound"
+
 
         return num_required_runs
 
@@ -166,13 +176,13 @@ class UniformImportanceSamplingCompare(Experiment):
                     print "iteration:", j + 1
                     print "num_seed_runs:", self.num_seed_runs
 
-                    # with Timer(verbose=True) as t:
-                    #     num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
-                    #                                                                float(error_bound)/100,
-                    #                                                                "uniform")
-                    #
-                    # self.data["execution_time"][scenario_keys[0]][error_bound].append(t.msecs)
-                    # self.data["num_required_runs"][scenario_keys[0]][error_bound].append(num_required_runs_uniform)
+                    with Timer(verbose=True) as t:
+                        num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
+                                                                                   float(error_bound)/100,
+                                                                                   "uniform")
+
+                    self.data["execution_time"][scenario_keys[0]][error_bound].append(t.msecs)
+                    self.data["num_required_runs"][scenario_keys[0]][error_bound].append(num_required_runs_uniform)
 
                     with Timer(verbose=True) as t:
                         num_required_runs_importance = self.compute_num_required_runs(self.expected_values[i],
@@ -233,23 +243,23 @@ class UniformImportanceSamplingCompare(Experiment):
         self.data = merged_data
 
 def main():
-    num_iterations = 1
+    num_iterations = 10
     load_config = True
     save_config = False
     controller = "ryu"
 
-    topo_descriptions = [("ring", 4, 1, None, None)]
+    #topo_descriptions = [("ring", 4, 1, None, None)]
     #topo_descriptions = [("ring", 6, 1, None, None)]
     #topo_descriptions = [("ring", 8, 1, None, None)]
-    #topo_descriptions = [("ring", 10, 1, None, None)]
+    topo_descriptions = [("ring", 10, 1, None, None)]
 
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
-    expected_values = [2.33]
+    #expected_values = [2.33]
     #expected_values = [2.5]
     #expected_values = [2.6]
-    #expected_values = [2.77142857143]
+    expected_values = [2.77142857143]
 
     #expected_values = [5.00] # 5.15238302266
     #expected_values = [19.50]
@@ -262,7 +272,7 @@ def main():
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     num_seed_runs = 5
-    error_bounds = ["1"]#, "5", "10"]
+    error_bounds = ["5"]#,"1", "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
