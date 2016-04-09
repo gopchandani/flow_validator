@@ -1,7 +1,8 @@
 ### How do I get set up? ###
 
 * If you don't have pip installed, then install the python package manager. (Ubuntu package: python-pip)
-* sudo pip install ryu
+* sudo apt-get install python-oslo.config
+* sudo pip install ryu==3.20
 * sudo pip install networkx
 * sudo pip install netaddr
 * sudo pip install intervaltree
