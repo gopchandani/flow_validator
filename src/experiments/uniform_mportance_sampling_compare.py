@@ -95,7 +95,7 @@ class UniformImportanceSamplingCompare(Experiment):
 
             # Do at least two runs...
             # Do at least num_seed_runs for both uniform and importance case
-            if num_required_runs > 0 and num_required_runs % 100 == 0:
+            if num_required_runs > 0 and num_required_runs % 200 == 0:
 
                 run_mean = np.mean(run_values)
                 run_sd = np.std(run_values)
