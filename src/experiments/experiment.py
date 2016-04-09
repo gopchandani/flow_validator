@@ -118,7 +118,7 @@ class Experiment(object):
 
     def compare_paths(self, src_host, dst_host, analyzed_path, synthesized_path, synthesized_path_vuln_rank, verbose):
 
-        analyzed_path_vuln_rank = analyzed_path.max_vuln_rank
+        analyzed_path_vuln_rank = analyzed_path.get_max_vuln_rank()
         path_matches = True
 
         if analyzed_path.get_len() == len(synthesized_path):

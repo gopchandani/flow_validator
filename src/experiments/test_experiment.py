@@ -38,13 +38,13 @@ class TestExperiment(Experiment):
             print "ports_to_synthesize:", ports_to_synthesize
 
             #self.topo_description = ("linear", 2, 1)
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
-                                          synthesis_setup_gap=60,
+                                          synthesis_setup_gap=10,
                                           synthesis_scheme="IntentSynthesis")
 
 
