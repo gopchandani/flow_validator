@@ -286,7 +286,7 @@ def main():
     exp.trigger()
     exp.dump_data()
 
-    # Plot 4
+    # #Plot 4
     #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
 
     # Plot 6

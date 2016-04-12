@@ -36,7 +36,8 @@ class MininetMan():
                  num_hosts_per_switch,
                  fanout=None,
                  core=None,
-                 per_switch_links=None):
+                 per_switch_links=None,
+                 dst_ports_to_synthesize=''):
 
         self.net = None
         self.synthesis_scheme = synthesis_scheme
@@ -77,16 +78,20 @@ class MininetMan():
             self.mininet_configuration_name = self.synthesis_scheme + "_" + \
                                               self.topo_name + "_" + \
                                               str(self.num_switches) + "_" + \
-                                              str(self.num_hosts_per_switch)
+                                              str(self.num_hosts_per_switch) + \
+                                              "_" + str(dst_ports_to_synthesize)
+
         elif self.fanout and self.core and self.num_hosts_per_switch:
             self.mininet_configuration_name = self.synthesis_scheme + "_" + \
                                               self.topo_name + "_" + \
                                               str(self.num_hosts_per_switch) + "_" + \
                                               str(self.fanout) + "_" + \
-                                              str(self.core)
+                                              str(self.core) + "_" \
+                                              + str(dst_ports_to_synthesize)
         else:
             self.mininet_configuration_name = self.synthesis_scheme + "_" + \
-                                              self.topo_name
+                                              self.topo_name + "_" \
+                                              + str(dst_ports_to_synthesize)
 
     def __del__(self):
         self.cleanup_mininet()

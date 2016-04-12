@@ -98,7 +98,7 @@ class InitialIncrementalTimes(Experiment):
                     print "iteration:", i + 1
 
                     ng = self.setup_network_graph(self.topo_description,
-                                                  mininet_setup_gap=1,
+                                                  mininet_setup_gap=5,
                                                   dst_ports_to_synthesize=ports_to_synthesize,
                                                   synthesis_setup_gap=len(ports_to_synthesize),
                                                   synthesis_scheme="IntentSynthesis")
@@ -145,15 +145,15 @@ class InitialIncrementalTimes(Experiment):
                                   y_scale='linear')
 
 def main():
-    num_iterations = 5
-    total_number_of_hosts = [4]
+    num_iterations = 1
+    total_number_of_hosts = [4, 6, 8, 10, 12]
     load_config = False
     save_config = True
     controller = "ryu"
 
     fanout = 2
     core = 1
-    total_number_of_ports_to_synthesize = 2
+    total_number_of_ports_to_synthesize = 3
 
     exp = InitialIncrementalTimes(num_iterations,
                                   total_number_of_hosts,

@@ -55,7 +55,8 @@ class Experiment(object):
         if not self.load_config and self.save_config:
             self.controller_port = self.cm.get_next()
 
-        self.mm = MininetMan(synthesis_scheme, self.controller_port, *topo_description)
+        self.mm = MininetMan(synthesis_scheme, self.controller_port, *topo_description,
+                             dst_ports_to_synthesize=dst_ports_to_synthesize)
 
         if not self.load_config and self.save_config:
             self.mm.start_mininet()
@@ -65,9 +66,9 @@ class Experiment(object):
 
         # Get a flow validator instance
         self.ng = NetworkGraph(mm=self.mm,
-                          controller=self.controller,
-                          load_config=self.load_config,
-                          save_config=self.save_config)
+                               controller=self.controller,
+                               load_config=self.load_config,
+                               save_config=self.save_config)
 
         if not self.load_config and self.save_config:
             if self.controller == "odl":
@@ -96,7 +97,7 @@ class Experiment(object):
 
 
 
-                self.mm.net.pingAll()
+                #self.mm.net.pingAll()
                 #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
 
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),
@@ -181,8 +182,8 @@ class Experiment(object):
                             synthesized_path = synthesized_primary_paths[src_host][dst_host]
                             synthesized_path_vuln_rank = 0
                 else:
-                     synthesized_path = synthesized_primary_paths[src_host][dst_host]
-                     synthesized_path_vuln_rank = 0
+                    synthesized_path = synthesized_primary_paths[src_host][dst_host]
+                    synthesized_path_vuln_rank = 0
 
                 # Need to find at least one matching path
                 for analyzed_path in analyzed_host_pairs_traffic_paths[src_host][dst_host]:
