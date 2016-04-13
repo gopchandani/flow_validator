@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as ss
 
-
 from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator

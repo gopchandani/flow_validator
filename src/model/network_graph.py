@@ -77,6 +77,20 @@ class NetworkGraph():
         #  Load up everything
         self.parse_network_graph()
 
+    # Gets a switch-only multi-di-graph for the present topology
+    def get_mdg(self):
+
+        mdg = nx.MultiDiGraph(self.graph)
+
+        for n in self.graph:
+            node_type = self.get_node_type(n)
+
+            # Remove all host nodes
+            if node_type == "host":
+                mdg.remove_node(n)
+
+        return mdg
+
     def get_odl_switches(self):
 
         odl_switches = {}

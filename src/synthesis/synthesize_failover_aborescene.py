@@ -3,15 +3,18 @@ __author__ = 'Rakesh Kumar'
 import networkx as nx
 
 from collections import defaultdict
+from copy import deepcopy
+
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
-from model.match import Match
 
 class SynthesizeFailoverAborescene():
 
     def __init__(self, network_graph):
 
         self.network_graph = network_graph
+        self.mdg = network_graph.get_mdg()
+
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
         self.apply_tag_intents_immediately = True
@@ -20,38 +23,21 @@ class SynthesizeFailoverAborescene():
         # per src switch, per dst switch, intents
         self.sw_intents = defaultdict(defaultdict)
 
-    def push_dst_sw_host_intent(self, sw, h_obj, flow_match):
+        # As a packet arrives, these are the tables it is evaluated against, in this order:
 
-        edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.switch_id, h_obj.node_id)
-        out_port = edge_ports_dict[h_obj.switch_id]
-        host_mac_intent = Intent("mac", flow_match, "all", out_port)
+        # If the packet belongs to a local host, just pop any tags and send it along.
+        self.local_mac_forwarding_rules = 0
 
-        self.synthesis_lib.push_destination_host_mac_intent_flow(sw,
-                                                                 host_mac_intent,
-                                                                 0,
-                                                                 12)
+        # If the packet belongs to some other switch, compute the vlan tag based on the destination switch
+        # and the tree that would be used and send it along to next table
+        self.remote_vlan_tag_push_rules = 1
 
+        # Use the vlan tag as a match and forward using appropriate tree
+        self.aborescene_forwarding_rules = 2
 
-    def compute_intents(self, dst_h_obj, flow_match):
+    def compute_intents(self, dst_sw, flow_match):
 
-        self.push_dst_sw_host_intent(dst_h_obj.switch_id, dst_h_obj, flow_match)
-
-        nmdg = nx.MultiDiGraph(self.network_graph.graph)
-
-        for n in self.network_graph.graph:
-            node_type = self.network_graph.get_node_type(n)
-            node_obj = self.network_graph.get_node_object(n)
-
-            # Remove all host nodes
-            if node_type == "host":
-                nmdg.remove_node(n)
-
-            # Set the weights of ingress edges to destination switch to less than 1
-            if node_type == "host" and dst_h_obj.node_id == node_obj.node_id:
-                for pred in nmdg.predecessors(node_obj.switch_id):
-                    nmdg[pred][node_obj.switch_id][0]['weight'] = 0.5
-
-        msa = nx.maximum_spanning_arborescence(nmdg)
+        msa = nx.maximum_spanning_arborescence(self.mdg)
 
         # Go through each node of the msa and check its successors
         for n in msa:
@@ -60,10 +46,10 @@ class SynthesizeFailoverAborescene():
                 link_port_dict = self.network_graph.get_link_ports_dict(n, pred)
                 out_port = link_port_dict[n]
 
-                self.sw_intents[n][dst_h_obj.switch_id] = Intent("primary",
-                                                                 flow_match,
-                                                                 "all",
-                                                                 out_port)
+                self.sw_intents[n][dst_sw.node_id] = Intent("primary",
+                                                            flow_match,
+                                                            "all",
+                                                            out_port)
 
     def push_intents(self):
 
@@ -83,24 +69,37 @@ class SynthesizeFailoverAborescene():
                         self.sw_intents[src_sw][dst_sw].flow_match,
                         self.sw_intents[src_sw][dst_sw].apply_immediately)
 
-    def synthesize_all_dsts(self):
+    def push_dst_sw_host_intent(self, switch_id, h_obj, flow_match):
 
-        print "Synthesizing backup paths between all possible host pairs..."
+        edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.switch_id, h_obj.node_id)
+        out_port = edge_ports_dict[h_obj.switch_id]
+        host_mac_intent = Intent("mac", flow_match, "all", out_port)
 
-        for dst in self.network_graph.host_ids:
+        self.synthesis_lib.push_destination_host_mac_intents(switch_id,
+                                                             [host_mac_intent],
+                                                             self.local_mac_forwarding_rules)
 
-            dst_h_obj = self.network_graph.get_node_object(dst)
+    def push_local_mac_forwarding_rules_rules(self, sw, flow_match):
+        for h_obj in sw.attached_hosts:
+            host_flow_match = deepcopy(flow_match)
+            mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
+            host_flow_match["ethernet_destination"] = int(mac_int)
 
-            print "-----------------------------------------------------------------------------------------------"
-            print 'Synthesizing paths to', dst
-            print "-----------------------------------------------------------------------------------------------"
+            self.push_dst_sw_host_intent(sw.node_id, h_obj, host_flow_match)
 
-            flow_match = Match(is_wildcard=True)
-            flow_match["ethernet_type"] = 0x0800
-            mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
-            flow_match["ethernet_destination"] = int(mac_int)
+    def synthesize_all_switches(self, flow_match):
 
-            self.compute_intents(dst_h_obj, flow_match)
-            print "-----------------------------------------------------------------------------------------------"
+        for sw in self.network_graph.get_switches():
+
+            # Push table switch rules
+            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.local_mac_forwarding_rules)
+            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.remote_vlan_tag_push_rules)
+            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.aborescene_forwarding_rules)
+
+            # Push all the rules that have to do with local mac forwarding per switch
+            self.push_local_mac_forwarding_rules_rules(sw, flow_match)
+
+            # # Consider each switch as a destination
+            # self.compute_intents(sw, flow_match)
 
         self.push_intents()

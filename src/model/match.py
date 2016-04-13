@@ -414,9 +414,13 @@ class Match(DictMixin):
 
         return match
 
-    def generate_ryu_match_json(self, match_json):
+    def generate_ryu_match_json(self, match_json, has_vlan_tag_check=False):
 
         for field_name in field_names:
+
+            if has_vlan_tag_check:
+                if field_name == "vlan_id":
+                    match_json[ryu_field_names_mapping_reverse[field_name]] = 0x1000
 
             if field_name in self and self[field_name] != sys.maxsize:
 
@@ -435,13 +439,13 @@ class Match(DictMixin):
 
         return match_json
 
-    def generate_match_json(self, controller, match_json):
+    def generate_match_json(self, controller, match_json, has_vlan_tag_check=False):
 
         if controller == "ryu":
-            return self.generate_ryu_match_json(match_json)
+            return self.generate_ryu_match_json(match_json, has_vlan_tag_check)
         elif controller == "odl":
-            return self.generate_odl_match_json(match_json)
+            return self.generate_odl_match_json(match_json, has_vlan_tag_check)
         elif controller == "sel":
-            return self.generate_sel_match_json(match_json)
+            return self.generate_sel_match_json(match_json, has_vlan_tag_check)
         else:
             raise NotImplementedError

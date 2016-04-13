@@ -303,8 +303,7 @@ class IntentSynthesisLDST():
                 dst_intents = intents[dst]
 
                 # Take care of mac intents for this destination
-                self.synthesis_lib.push_destination_host_mac_intents(sw, dst_intents,
-                                                                     self.get_intents(dst_intents, "mac"),
+                self.synthesis_lib.push_destination_host_mac_intents(sw, self.get_intents(dst_intents, "mac"),
                                                                      self.mac_forwarding_table_id)
 
                 # Take care of vlan tag push intents for this destination

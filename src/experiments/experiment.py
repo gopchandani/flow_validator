@@ -11,12 +11,15 @@ from matplotlib.ticker import MaxNLocator
 from pprint import pprint
 from controller_man import ControllerMan
 from mininet_man import MininetMan
+
 from model.network_graph import NetworkGraph
+from model.match import Match
 
 from synthesis.intent_synthesis import IntentSynthesis
 from synthesis.intent_synthesis_ldst import IntentSynthesisLDST
 from synthesis.intent_synthesis_load_balance import IntentSynthesisLB
 from synthesis.synthesize_simple_aborescene import SynthesizeSimpleAborescene
+from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
 
 class Experiment(object):
 
@@ -101,8 +104,12 @@ class Experiment(object):
                     self.synth.synthesize_all_dsts()
 
                 elif synthesis_scheme == "Synthesis_Failover_Aborescene":
-                    self.synth = SynthesizeSimpleAborescene(self.ng)
-                    self.synth.synthesize_all_dsts()
+                    self.synth = SynthesizeFailoverAborescene(self.ng)
+
+                    flow_match = Match(is_wildcard=True)
+                    flow_match["ethernet_type"] = 0x0800
+
+                    self.synth.synthesize_all_switches(flow_match)
 
                 self.mm.net.pingAll()
 

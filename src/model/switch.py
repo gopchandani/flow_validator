@@ -12,6 +12,7 @@ class Switch():
         self.g = nx.DiGraph()
         self.node_id = sw_id
         self.network_graph = network_graph
+        self.attached_hosts = []
         self.flow_tables = []
         self.group_table = None
         self.ports = None

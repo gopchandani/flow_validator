@@ -596,7 +596,8 @@ class SynthesisLib():
             output_action = [{'order': 1, "output-action": {"output-node-connector": mac_intent.out_port}}]
 
         elif self.network_graph.controller == "ryu":
-            flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"])
+            flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"],
+                                                                      has_vlan_tag_check=True)
             pop_vlan_action = {"type": "POP_VLAN"}
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
@@ -629,7 +630,7 @@ class SynthesisLib():
 
         return flow
 
-    def push_destination_host_mac_intents(self, sw, dst_intents, mac_intents, mac_forwarding_table_id, pop_vlan=True):
+    def push_destination_host_mac_intents(self, sw, mac_intents, mac_forwarding_table_id, pop_vlan=True):
 
         if mac_intents:
 

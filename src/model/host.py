@@ -12,6 +12,8 @@ class Host():
         self.switch_id = switch_id
         self.switch_obj = switch_obj
 
+        switch_obj.attached_hosts.append(self)
+
         self.switch_port_attached = switch_port_attached
         self.switch_port = switch_obj.ports[self.switch_port_attached]
 
