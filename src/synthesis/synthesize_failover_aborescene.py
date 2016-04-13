@@ -7,7 +7,7 @@ from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 from model.match import Match
 
-class SynthesizeSimpleAborescene():
+class SynthesizeFailoverAborescene():
 
     def __init__(self, network_graph):
 

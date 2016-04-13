@@ -32,8 +32,10 @@ class AborescenePlayground(Experiment):
             #self.topo_description = ("clostopo", None, 1, 3, 1)
 
             ng = self.setup_network_graph(self.topo_description,
-                                          synthesis_scheme="Synthesis_Simple_Aborescene",
+                                          #synthesis_scheme="Synthesis_Simple_Aborescene",
+                                          synthesis_scheme="Synthesis_Failover_Aborescene",
                                           synthesis_setup_gap=5)
+
 
         print "Done..."
 
