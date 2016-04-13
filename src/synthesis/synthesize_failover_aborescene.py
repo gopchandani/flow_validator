@@ -13,7 +13,6 @@ class SynthesizeFailoverAborescene():
     def __init__(self, network_graph):
 
         self.network_graph = network_graph
-        self.mdg = network_graph.get_mdg()
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
@@ -37,37 +36,55 @@ class SynthesizeFailoverAborescene():
 
     def compute_intents(self, dst_sw, flow_match):
 
+        self.mdg = self.network_graph.get_mdg()
+
+        # Set the weights of ingress edges to destination switch to less than 1
+        for pred in self.mdg.predecessors(dst_sw.node_id):
+            self.mdg[pred][dst_sw.node_id][0]['weight'] = 0.5
+
         msa = nx.maximum_spanning_arborescence(self.mdg)
 
         # Go through each node of the msa and check its successors
-        for n in msa:
-            for pred in msa.predecessors(n):
+        for src_n in msa:
+            src_sw = self.network_graph.get_node_object(src_n)
+            for pred in msa.predecessors(src_n):
+                link_port_dict = self.network_graph.get_link_ports_dict(src_n, pred)
+                out_port = link_port_dict[src_n]
+                self.sw_intents[src_sw][dst_sw] = Intent("primary", flow_match, "all", out_port)
 
-                link_port_dict = self.network_graph.get_link_ports_dict(n, pred)
-                out_port = link_port_dict[n]
-
-                self.sw_intents[n][dst_sw.node_id] = Intent("primary",
-                                                            flow_match,
-                                                            "all",
-                                                            out_port)
-
-    def push_intents(self):
+    def push_intents(self, flow_match):
 
         for src_sw in self.sw_intents:
 
             print "-- Pushing at Switch:", src_sw
 
             for dst_sw in self.sw_intents[src_sw]:
+                # Install the rules to put the vlan tags on for hosts that are at this destination switch
+                self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
 
-                group_id = self.synthesis_lib.push_select_all_group(src_sw, [self.sw_intents[src_sw][dst_sw]])
+                # Install the rules to do the send along the Aborescene
+                group_id = self.synthesis_lib.push_select_all_group(src_sw.node_id, [self.sw_intents[src_sw][dst_sw]])
 
                 flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        src_sw,
-                        0,
+                        src_sw.node_id,
+                        self.aborescene_forwarding_rules,
                         group_id,
                         1,
                         self.sw_intents[src_sw][dst_sw].flow_match,
                         self.sw_intents[src_sw][dst_sw].apply_immediately)
+
+    def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
+        for h_obj in dst_sw.attached_hosts:
+            host_flow_match = deepcopy(flow_match)
+            mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
+            host_flow_match["ethernet_destination"] = int(mac_int)
+
+            push_vlan_tag_intent = Intent("push_vlan", host_flow_match, "all", "all")
+            push_vlan_tag_intent.required_vlan_id = int(dst_sw.synthesis_tag)
+
+            self.synthesis_lib.push_vlan_push_intents(src_sw.node_id,
+                                                      [push_vlan_tag_intent],
+                                                      self.remote_vlan_tag_push_rules)
 
     def push_dst_sw_host_intent(self, switch_id, h_obj, flow_match):
 
@@ -99,7 +116,7 @@ class SynthesizeFailoverAborescene():
             # Push all the rules that have to do with local mac forwarding per switch
             self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
-            # # Consider each switch as a destination
-            # self.compute_intents(sw, flow_match)
+            # Consider each switch as a destination
+            self.compute_intents(sw, flow_match)
 
-        self.push_intents()
+        self.push_intents(flow_match)

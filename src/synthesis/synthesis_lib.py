@@ -645,7 +645,7 @@ class SynthesisLib():
 
             self.push_destination_host_mac_intent_flow(sw, mac_intents[0], mac_forwarding_table_id, 10)
 
-    def push_vlan_push_intents(self, sw, dst_intents, push_vlan_intents, vlan_tag_push_rules_table_id):
+    def push_vlan_push_intents(self, sw, push_vlan_intents, vlan_tag_push_rules_table_id):
 
         for push_vlan_intent in push_vlan_intents:
             flow = self.create_base_flow(sw, vlan_tag_push_rules_table_id, 1)
