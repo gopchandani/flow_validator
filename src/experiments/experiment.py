@@ -16,6 +16,7 @@ from model.network_graph import NetworkGraph
 from synthesis.intent_synthesis import IntentSynthesis
 from synthesis.intent_synthesis_ldst import IntentSynthesisLDST
 from synthesis.intent_synthesis_load_balance import IntentSynthesisLB
+from synthesis.synthesize_simple_aborescene import SynthesizeQoSAborescene
 
 class Experiment(object):
 
@@ -95,9 +96,12 @@ class Experiment(object):
                                                                                           same_output_queue=False)
                     #self.mm.qos_setup_two_flows_on_separate_queues_to_same_host(self.ng)
 
+                elif synthesis_scheme == "Synthesis_Simple_Aborescene":
+                    self.synth = SynthesizeQoSAborescene(self.ng)
+                    self.synth.synthesize_all_dsts(50)
 
+                self.mm.net.pingAll()
 
-                #self.mm.net.pingAll()
                 #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
 
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),
