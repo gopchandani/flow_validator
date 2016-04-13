@@ -5,7 +5,7 @@ sys.path.append("./")
 
 from experiment import Experiment
 
-class QosDemo(Experiment):
+class AborescenePlayground(Experiment):
 
     def __init__(self,
                  num_iterations,
@@ -14,12 +14,12 @@ class QosDemo(Experiment):
                  save_config,
                  controller):
 
-        super(QosDemo, self).__init__("number_of_hosts",
-                                            num_iterations,
-                                            load_config,
-                                            save_config,
-                                            controller,
-                                            len(total_number_of_hosts))
+        super(AborescenePlayground, self).__init__("number_of_hosts",
+                                                   num_iterations,
+                                                   load_config,
+                                                   save_config,
+                                                   controller,
+                                                   len(total_number_of_hosts))
 
         self.total_number_of_hosts = total_number_of_hosts
 
@@ -45,11 +45,11 @@ def main():
     save_config = True
     controller = "ryu"
 
-    exp = QosDemo(num_iterations,
-                        total_number_of_hosts,
-                        load_config,
-                        save_config,
-                        controller)
+    exp = AborescenePlayground(num_iterations,
+                               total_number_of_hosts,
+                               load_config,
+                               save_config,
+                               controller)
 
     exp.trigger()
 
