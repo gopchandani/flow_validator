@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 import networkx as nx
+import sys
 
 from collections import defaultdict
 from copy import deepcopy
@@ -56,7 +57,7 @@ class SynthesizeFailoverAborescene():
 
         for src_sw in self.sw_intents:
 
-            print "-- Pushing at Switch:", src_sw
+            print "-- Pushing at Switch:", src_sw.node_id
 
             for dst_sw in self.sw_intents[src_sw]:
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
@@ -65,12 +66,15 @@ class SynthesizeFailoverAborescene():
                 # Install the rules to do the send along the Aborescene
                 group_id = self.synthesis_lib.push_select_all_group(src_sw.node_id, [self.sw_intents[src_sw][dst_sw]])
 
+                flow_match = deepcopy(self.sw_intents[src_sw][dst_sw].flow_match)
+                flow_match["vlan_id"] = int(dst_sw.synthesis_tag)
+
                 flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         src_sw.node_id,
                         self.aborescene_forwarding_rules,
                         group_id,
                         1,
-                        self.sw_intents[src_sw][dst_sw].flow_match,
+                        flow_match,
                         self.sw_intents[src_sw][dst_sw].apply_immediately)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
@@ -78,6 +82,7 @@ class SynthesizeFailoverAborescene():
             host_flow_match = deepcopy(flow_match)
             mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
             host_flow_match["ethernet_destination"] = int(mac_int)
+            host_flow_match["vlan_id"] = sys.maxsize
 
             push_vlan_tag_intent = Intent("push_vlan", host_flow_match, "all", "all")
             push_vlan_tag_intent.required_vlan_id = int(dst_sw.synthesis_tag)
