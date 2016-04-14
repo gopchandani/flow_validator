@@ -286,7 +286,11 @@ class Match(DictMixin):
                         self[field_name] = match_json["zzzz"]
 
                 elif field_name == "vlan_id":
-                    self[field_name] = int(match_json[u"dl_vlan"])
+                    if match_json[u"dl_vlan"] == "0x1000/0x1000":
+                        #TODO: Deal with has_vlan_tag case
+                        raise KeyError
+                    else:
+                        self[field_name] = int(match_json[u"dl_vlan"])
 
             except KeyError:
                 self[field_name] = sys.maxsize
@@ -420,7 +424,7 @@ class Match(DictMixin):
 
             if has_vlan_tag_check:
                 if field_name == "vlan_id":
-                    match_json[ryu_field_names_mapping_reverse[field_name]] = 0x1000
+                    match_json[ryu_field_names_mapping_reverse[field_name]] = "0x1000/0x1000"
 
             if field_name in self and self[field_name] != sys.maxsize:
 
