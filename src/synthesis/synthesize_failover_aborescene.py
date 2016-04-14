@@ -35,13 +35,42 @@ class SynthesizeFailoverAborescene():
         # Use the vlan tag as a match and forward using appropriate tree
         self.aborescene_forwarding_rules = 2
 
+    def compute_k_edge_disjoint_aborescenes(self, k, dst_sw):
+
+        k_eda = []
+
+        self.mdg = self.network_graph.get_mdg()
+
+        # Set the weights of ingress edges to destination switch to less than 1
+        for pred in list(self.mdg.predecessors(dst_sw.node_id)):
+            self.mdg.remove_edge(pred, dst_sw.node_id)
+
+        for i in range(k):
+
+            # Compute and store one
+            msa = nx.maximum_spanning_arborescence(self.mdg)
+            k_eda.append(msa)
+
+            # If there are predecessors of dst_sw now, we could not find k msa, so break
+            if len(list(msa.predecessors(dst_sw.node_id))) > 0:
+                print "Could not find k msa."
+                break
+
+            # Remove its arcs from mdg
+            for arc in msa.edges():
+                print arc
+                self.mdg.remove_edge(arc[0], arc[1])
+
+        return k_eda
+
+
     def compute_intents(self, dst_sw, flow_match):
 
         self.mdg = self.network_graph.get_mdg()
 
         # Set the weights of ingress edges to destination switch to less than 1
-        for pred in self.mdg.predecessors(dst_sw.node_id):
-            self.mdg[pred][dst_sw.node_id][0]['weight'] = 0.5
+        for pred in list(self.mdg.predecessors(dst_sw.node_id)):
+            self.mdg.remove_edge(pred, dst_sw.node_id)
 
         msa = nx.maximum_spanning_arborescence(self.mdg)
 
@@ -118,10 +147,15 @@ class SynthesizeFailoverAborescene():
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.remote_vlan_tag_push_rules)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.aborescene_forwarding_rules)
 
-            # Push all the rules that have to do with local mac forwarding per switch
-            self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
-            # Consider each switch as a destination
-            self.compute_intents(sw, flow_match)
+            if sw.attached_hosts:
+
+                # Push all the rules that have to do with local mac forwarding per switch
+                self.push_local_mac_forwarding_rules_rules(sw, flow_match)
+
+                #k_eda = self.compute_k_edge_disjoint_aborescenes(2, sw)
+
+                # Consider each switch as a destination
+                self.compute_intents(sw, flow_match)
 
         self.push_intents(flow_match)
