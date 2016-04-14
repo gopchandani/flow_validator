@@ -48,7 +48,7 @@ class SynthesizeFailoverAborescene():
         for i in range(k):
 
             # Compute and store one
-            msa = nx.maximum_spanning_arborescence(self.mdg)
+            msa = nx.minimum_spanning_arborescence(self.mdg)
             k_eda.append(msa)
 
             # If there are predecessors of dst_sw now, we could not find k msa, so break
