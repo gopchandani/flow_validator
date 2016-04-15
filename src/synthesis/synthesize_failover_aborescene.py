@@ -35,6 +35,24 @@ class SynthesizeFailoverAborescene():
         # Use the vlan tag as a match and forward using appropriate tree
         self.aborescene_forwarding_rules = 2
 
+    def compute_shortest_path_tree(self, dst_sw):
+
+        spt = nx.DiGraph()
+
+        self.mdg = self.network_graph.get_mdg()
+
+        paths = nx.shortest_path(self.mdg, target=dst_sw.node_id)
+
+        for src in paths:
+
+            if src == dst_sw.node_id:
+                continue
+
+            for i in range(len(paths[src]) - 1):
+                spt.add_edge(paths[src][i], paths[src][i+1])
+
+        return spt
+
     def compute_k_edge_disjoint_aborescenes(self, k, dst_sw):
 
         k_eda = []
@@ -58,7 +76,6 @@ class SynthesizeFailoverAborescene():
 
             # Remove its arcs from mdg
             for arc in msa.edges():
-                print arc
                 self.mdg.remove_edge(arc[0], arc[1])
 
         return k_eda
@@ -153,7 +170,9 @@ class SynthesizeFailoverAborescene():
                 # Push all the rules that have to do with local mac forwarding per switch
                 self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
-                #k_eda = self.compute_k_edge_disjoint_aborescenes(2, sw)
+
+                spt = self.compute_shortest_path_tree(sw)
+                k_eda = self.compute_k_edge_disjoint_aborescenes(2, sw)
 
                 # Consider each switch as a destination
                 self.compute_intents(sw, flow_match)
