@@ -41,7 +41,7 @@ class SynthesizeFailoverAborescene():
 
         self.mdg = self.network_graph.get_mdg()
 
-        paths = nx.shortest_path(self.mdg, target=dst_sw.node_id)
+        paths = nx.shortest_path(self.mdg, source=dst_sw.node_id)
 
         for src in paths:
 
@@ -80,21 +80,12 @@ class SynthesizeFailoverAborescene():
 
         return k_eda
 
+    def compute_intents(self, dst_sw, flow_match, tree):
 
-    def compute_intents(self, dst_sw, flow_match):
-
-        self.mdg = self.network_graph.get_mdg()
-
-        # Set the weights of ingress edges to destination switch to less than 1
-        for pred in list(self.mdg.predecessors(dst_sw.node_id)):
-            self.mdg.remove_edge(pred, dst_sw.node_id)
-
-        msa = nx.maximum_spanning_arborescence(self.mdg)
-
-        # Go through each node of the msa and check its successors
-        for src_n in msa:
+        # Go through each node of the given tree and check its successors
+        for src_n in tree:
             src_sw = self.network_graph.get_node_object(src_n)
-            for pred in msa.predecessors(src_n):
+            for pred in tree.predecessors(src_n):
                 link_port_dict = self.network_graph.get_link_ports_dict(src_n, pred)
                 out_port = link_port_dict[src_n]
                 self.sw_intents[src_sw][dst_sw] = Intent("primary", flow_match, "all", out_port)
@@ -164,17 +155,15 @@ class SynthesizeFailoverAborescene():
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.remote_vlan_tag_push_rules)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.aborescene_forwarding_rules)
 
-
             if sw.attached_hosts:
 
                 # Push all the rules that have to do with local mac forwarding per switch
                 self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
-
                 spt = self.compute_shortest_path_tree(sw)
                 k_eda = self.compute_k_edge_disjoint_aborescenes(2, sw)
 
                 # Consider each switch as a destination
-                self.compute_intents(sw, flow_match)
+                self.compute_intents(sw, flow_match, spt)
 
         self.push_intents(flow_match)
