@@ -80,7 +80,7 @@ class SynthesizeFailoverAborescene():
 
         return k_eda
 
-    def compute_intents(self, dst_sw, flow_match, tree):
+    def compute_intents(self, dst_sw, flow_match, tree, tree_id):
 
         # Go through each node of the given tree and check its successors
         for src_n in tree:
@@ -146,7 +146,7 @@ class SynthesizeFailoverAborescene():
 
             self.push_dst_sw_host_intent(sw.node_id, h_obj, host_flow_match)
 
-    def synthesize_all_switches(self, flow_match):
+    def synthesize_all_switches(self, flow_match, k=1):
 
         for sw in self.network_graph.get_switches():
 
@@ -161,9 +161,9 @@ class SynthesizeFailoverAborescene():
                 self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
                 spt = self.compute_shortest_path_tree(sw)
-                k_eda = self.compute_k_edge_disjoint_aborescenes(2, sw)
+                k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
 
                 # Consider each switch as a destination
-                self.compute_intents(sw, flow_match, spt)
+                self.compute_intents(sw, flow_match, spt, k_eda[0])
 
         self.push_intents(flow_match)
