@@ -42,7 +42,6 @@ class Flow():
             self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
             self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
-
         self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
         self.complement_traffic = Traffic()
@@ -50,7 +49,6 @@ class Flow():
 
         self.traffic.add_traffic_elements([self.traffic_element])
         self.complement_traffic.add_traffic_elements(self.traffic_element.get_complement_traffic_elements())
-
 
     def get_port_graph_edges(self, port_graph_edges):
 
@@ -81,7 +79,6 @@ class Flow():
                 else:
                     print "At switch:", self.sw.node_id, ", couldn't find flow table goto:", self.instruction_set.goto_table
 
-
             for out_port, output_action in self.applied_port_graph_edges:
 
                 output_action.instruction_type = "applied"
@@ -108,7 +105,6 @@ class Flow():
                                                                                   None,
                                                                                   self.applied_modifications,
                                                                                   self.written_modifications))
-
         else:
             print "Assuming this means to drop."
 

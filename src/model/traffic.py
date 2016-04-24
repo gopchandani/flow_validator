@@ -69,8 +69,18 @@ class TrafficElement():
                 else:
                     self.traffic_fields[field_name].clear()
 
-            if isinstance(value, IPNetwork):
-                self.traffic_fields[field_name].add(Interval(value.first, value.last + 1))
+            # Deal with IP Network fields
+            if field_name == 'src_ip_addr' or field_name == 'dst_ip_addr':
+                if isinstance(value, IPNetwork):
+                    self.traffic_fields[field_name].add(Interval(value.first, value.last + 1))
+                else:
+                    raise Exception("Gotta be IPNetwork!")
+            elif field_name == 'vlan_id':
+                if value == 0x1000:
+                    # This is the case when the vlan tag only has to exist, and be any value in that range
+                    self.traffic_fields[field_name].add(Interval(value, value + 4096))
+                else:
+                    self.traffic_fields[field_name].add(Interval(value, value + 1))
             else:
                 self.traffic_fields[field_name].add(Interval(value, value + 1))
 

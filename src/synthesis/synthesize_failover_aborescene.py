@@ -153,7 +153,6 @@ class SynthesizeFailoverAborescene():
             # Push table switch rules
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.local_mac_forwarding_rules)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.remote_vlan_tag_push_rules)
-            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.aborescene_forwarding_rules)
 
             if sw.attached_hosts:
 

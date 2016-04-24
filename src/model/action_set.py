@@ -1,5 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
+import sys
+
 from match import OdlMatchJsonParser
 from match import ryu_field_names_mapping
 from collections import defaultdict
@@ -138,19 +140,18 @@ class Action():
             self.modified_field = ryu_field_names_mapping[field_mod[0:field_mod.find(":")]]
             self.field_modified_to = field_mod[field_mod.find(":") + 1:field_mod.find("}")]
 
-            if self.modified_field == "vlan_id":
-                self.field_modified_to = int(self.field_modified_to) - 0x1000
+            #TODO: Works fine for VLAN_ID mods, fields other than VLAN id may require special parsing here
+            self.field_modified_to = int(self.field_modified_to)
 
         if self.action_json.startswith("GROUP"):
             self.action_type = "group"
             self.group_id = int(self.action_json[self.action_json.find(":") + 1:])
 
-        # if "push-vlan-action" in self.action_json:
-        #     self.action_type = "push_vlan"
-        #     self.vlan_ethernet_type = self.action_json["push-vlan-action"]["ethernet-type"]
-        #
-        # if "pop-vlan-action" in self.action_json:
-        #     self.action_type = "pop_vlan"
+        if self.action_json.startswith("PUSH_VLAN"):
+            self.action_type = "push_vlan"
+
+        if self.action_json.startswith("POP_VLAN"):
+            self.action_type = "pop_vlan"
 
     def is_failover_action(self):
         return (self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF)
@@ -220,6 +221,14 @@ class ActionSet():
 
     def get_modified_fields_dict(self, flow_match_element):
         modified_fields_dict = {}
+
+        # # A vlan tag pushed means the value for the field becomes a wildcard (something needs to set it)
+        # if "push_vlan" in self.action_dict:
+        #     modified_fields_dict["vlan_id"] = (flow_match_element, sys.maxsize)
+        #
+        # # A vlan tag popped means, the field does not matter anymore
+        # if "pop_vlan" in self.action_dict:
+        #     modified_fields_dict["vlan_id"] = (flow_match_element, sys.maxsize)
 
         # Capture the value before (in principle and after) the modification in a tuple
         for set_action in self.action_dict["set_field"]:

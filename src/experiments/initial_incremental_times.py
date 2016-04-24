@@ -99,9 +99,9 @@ class InitialIncrementalTimes(Experiment):
 
                     ng = self.setup_network_graph(self.topo_description,
                                                   mininet_setup_gap=5,
-                                                  dst_ports_to_synthesize=ports_to_synthesize,
+                                                  #dst_ports_to_synthesize=ports_to_synthesize,
                                                   synthesis_setup_gap=len(ports_to_synthesize),
-                                                  synthesis_scheme="IntentSynthesis")
+                                                  synthesis_scheme="Synthesis_Failover_Aborescene")
 
 
                     self.fv = FlowValidator(ng)
@@ -123,6 +123,10 @@ class InitialIncrementalTimes(Experiment):
                     self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(restore)
                     self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(fail_restore)
 
+                    self.fv.validate_all_host_pair_reachability(verbose=False)
+
+                    self.fv.validate_all_host_pair_backup(self.fv.network_graph.host_ids,
+                                                          self.fv.network_graph.host_ids, verbose=False)
                     del self.fv
 
                     #fv.de_init_network_port_graph()
@@ -146,14 +150,14 @@ class InitialIncrementalTimes(Experiment):
 
 def main():
     num_iterations = 1
-    total_number_of_hosts = [4, 6, 8, 10, 12]
-    load_config = False
-    save_config = True
+    total_number_of_hosts = [4]#, 6, 8, 10, 12]
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     fanout = 2
     core = 1
-    total_number_of_ports_to_synthesize = 3
+    total_number_of_ports_to_synthesize = 1
 
     exp = InitialIncrementalTimes(num_iterations,
                                   total_number_of_hosts,
@@ -169,8 +173,7 @@ def main():
 
     #exp.load_data("data/initial_incremental_times_5_iterations_20151206_141249.json")
 
-    exp.plot_initial_incremental_times()
-
+    #exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()

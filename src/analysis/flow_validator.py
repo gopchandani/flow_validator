@@ -177,7 +177,6 @@ class FlowValidator(object):
                        edge_added_back_at.is_subset_traffic(edge_removed_at)):
                 print "Backup doesn't exist for:", src_h_id, "->", dst_h_id, "due to edge:", edge
 
-
     def validate_all_host_pair_backup(self, src_host_ids, dst_host_ids, verbose=True):
 
         for src_h_id in src_host_ids:
