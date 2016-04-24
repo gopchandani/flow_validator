@@ -135,6 +135,7 @@ class FlowValidator(object):
                                                                      specific_traffic,
                                                                      verbose)
                 if not all_paths:
+                    print "src_h_id:", src_h_id,  "-> dst_h_id:", dst_h_id, "disconnected."
                     all_pair_connected = False
 
         return all_pair_connected

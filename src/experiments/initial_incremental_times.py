@@ -125,8 +125,8 @@ class InitialIncrementalTimes(Experiment):
 
                     self.fv.validate_all_host_pair_reachability(verbose=False)
 
-                    self.fv.validate_all_host_pair_backup(self.fv.network_graph.host_ids,
-                                                          self.fv.network_graph.host_ids, verbose=False)
+                    # self.fv.validate_all_host_pair_backup(self.fv.network_graph.host_ids,
+                    #                                       self.fv.network_graph.host_ids, verbose=False)
                     del self.fv
 
                     #fv.de_init_network_port_graph()
@@ -151,8 +151,8 @@ class InitialIncrementalTimes(Experiment):
 def main():
     num_iterations = 1
     total_number_of_hosts = [4]#, 6, 8, 10, 12]
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     fanout = 2
