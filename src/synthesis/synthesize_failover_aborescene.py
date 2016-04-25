@@ -150,9 +150,6 @@ class SynthesizeFailoverAborescene():
 
         for sw in self.network_graph.get_switches():
 
-            if sw.node_id == 's3':
-                continue
-
             # Push table switch rules
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.local_mac_forwarding_rules)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.remote_vlan_tag_push_rules)

@@ -98,10 +98,10 @@ class InitialIncrementalTimes(Experiment):
                     print "iteration:", i + 1
 
                     ng = self.setup_network_graph(self.topo_description,
-                                                  mininet_setup_gap=5,
+                                                  mininet_setup_gap=15,
                                                   #dst_ports_to_synthesize=ports_to_synthesize,
-                                                  synthesis_setup_gap=len(ports_to_synthesize),
-                                                  synthesis_scheme="Synthesis_Failover_Aborescene")
+                                                  synthesis_setup_gap=15,#len(ports_to_synthesize),
+                                                  synthesis_scheme="IntentSynthesis")
 
 
                     self.fv = FlowValidator(ng)
@@ -116,7 +116,7 @@ class InitialIncrementalTimes(Experiment):
                         self.fv.initialize_admitted_traffic()
 
                     self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(t.msecs)
-
+                    #
                     fail, restore, fail_restore = self.perform_incremental_times()
 
                     self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(fail)
@@ -149,10 +149,10 @@ class InitialIncrementalTimes(Experiment):
                                   y_scale='linear')
 
 def main():
-    num_iterations = 1
-    total_number_of_hosts = [4]#, 6, 8, 10, 12]
-    load_config = False
-    save_config = True
+    num_iterations = 10
+    total_number_of_hosts = [12]#, 6, 8, 10, 12]
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     fanout = 2
