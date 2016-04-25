@@ -56,10 +56,13 @@ class TestExperiment(Experiment):
             print "Initialization done."
 
             analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_traffic_paths()
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
+
+            all_paths_match = self.compare_primary_paths_with_synthesis(self.fv, analyzed_host_pairs_path_info, verbose=False)
             print "Primary paths TestExperiment, all_paths_match:", all_paths_match
 
-            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv, verbose=False)
+            all_paths_match = self.compare_failover_paths_with_synthesis(self.fv,
+                                                                         links_to_try=self.fv.network_graph.graph.edges(),
+                                                                         verbose=False)
 
             print "Failover paths TestExperiment, all_paths_match:", all_paths_match
 
@@ -68,8 +71,8 @@ class TestExperiment(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     fanout = 2
