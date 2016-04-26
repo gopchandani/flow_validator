@@ -2,6 +2,8 @@ __author__ = 'Rakesh Kumar'
 
 import sys
 import random
+import itertools
+
 sys.path.append("./")
 
 from collections import defaultdict
@@ -186,7 +188,7 @@ class FlowValidator(object):
                 if src_h_id == dst_h_id:
                     continue
 
-                self.validate_host_pair_backup(src_h_id, dst_h_id)
+                self.validate_host_pair_backup(src_h_id, dst_h_id, verbose)
 
     def get_specific_traffic(self, src_h_id, dst_h_id):
 
@@ -201,3 +203,69 @@ class FlowValidator(object):
         specific_traffic.set_field("vlan_id", src_h_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
 
         return specific_traffic
+
+    def are_zones_connected(self, src_zone, dst_zone, traffic):
+
+        is_connected = True
+
+        for src_port in src_zone:
+            for dst_port in dst_zone:
+
+                if src_port == dst_port:
+                    continue
+
+                # Doing validation only between ports that have hosts attached with them
+                if not src_port.attached_host or not dst_port.attached_host:
+                    continue
+
+                ingress_node = self.port_graph.get_ingress_node(src_port.sw.node_id, src_port.port_number)
+                egress_node = self.port_graph.get_egress_node(dst_port.sw.node_id, dst_port.port_number)
+
+                # Setup the appropriate filter
+                traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+                traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+                traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
+                traffic.set_field("in_port", int(src_port.port_number))
+
+                at = self.port_graph.get_admitted_traffic(ingress_node, egress_node)
+
+                if not at.is_empty():
+                    if at.is_subset_traffic(traffic):
+                        is_connected = True
+                    else:
+                        print "src_port:", src_port, "dst_port:", dst_port, "at does not pass specific_traffic check."
+                        is_connected = False
+                else:
+                    print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
+                    is_connected = False
+
+                if not is_connected:
+                    break
+
+            if not is_connected:
+                break
+
+        return is_connected
+
+
+    def validate_zone_pair_connectivity(self, src_zone, dst_zone, traffic, k):
+
+        is_connected = False
+
+        if k == 0:
+            is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
+        else:
+            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                for link in links_to_fail:
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
+
+                for link in links_to_fail:
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+                if not is_connected:
+                    break
+
+        return is_connected

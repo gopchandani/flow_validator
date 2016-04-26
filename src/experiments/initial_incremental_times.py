@@ -85,8 +85,8 @@ class InitialIncrementalTimes(Experiment):
             for total_number_of_hosts in self.total_number_of_hosts:
                 print "total_number_of_hosts:", total_number_of_hosts
 
-                #self.topo_description = ("clostopo", None, total_number_of_hosts/4, self.fanout, self.core)
-                self.topo_description = ("ring", 4, total_number_of_hosts/4, None, None)
+                #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+                self.topo_description = ("ring", 4, 1, None, None)
 
                 self.data["construction_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
                 self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
@@ -150,13 +150,13 @@ class InitialIncrementalTimes(Experiment):
 
 def main():
     num_iterations = 10
-    total_number_of_hosts = [12]#, 6, 8, 10, 12]
-    load_config = True
-    save_config = False
+    total_number_of_hosts = [1]#, 6, 8, 10, 12]
+    load_config = False
+    save_config = True
     controller = "ryu"
 
-    fanout = 2
-    core = 1
+    fanout = 3
+    core = 3
     total_number_of_ports_to_synthesize = 1
 
     exp = InitialIncrementalTimes(num_iterations,

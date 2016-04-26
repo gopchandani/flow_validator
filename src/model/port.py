@@ -15,6 +15,7 @@ class Port():
         self.mac_address = None
         self.port_number = None
         self.state = None
+        self.attached_host = None
 
         if self.sw.network_graph.controller == "odl":
             self.parse_odl_port_json(port_json)

@@ -17,5 +17,7 @@ class Host():
         self.switch_port_attached = switch_port_attached
         self.switch_port = switch_obj.ports[self.switch_port_attached]
 
+        self.switch_port.attached_host = self
+
         self.switch_ingress_port = None
         self.switch_egress_port = None

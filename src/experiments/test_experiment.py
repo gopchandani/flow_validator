@@ -38,8 +38,8 @@ class TestExperiment(Experiment):
             print "ports_to_synthesize:", ports_to_synthesize
 
             #self.topo_description = ("linear", 2, 1)
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=1,
@@ -71,8 +71,8 @@ class TestExperiment(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     fanout = 2

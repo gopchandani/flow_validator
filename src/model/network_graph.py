@@ -562,7 +562,7 @@ class NetworkGraph():
         return link_data
 
     def get_switch_link_data(self):
-        for edge in self.graph.edges_iter():
+        for edge in self.graph.edges():
             link_data =  self.graph[edge[0]][edge[1]]['link_data']
             if link_data.link_type == "switch":
                 yield link_data
