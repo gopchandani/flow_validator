@@ -12,6 +12,7 @@ from analysis.flow_validator import FlowValidator
 from experiment import Experiment
 
 from model.traffic import Traffic
+from model.network_graph import NetworkGraphLinkData
 
 
 class PolicyValidationTimes(Experiment):
@@ -64,9 +65,19 @@ class PolicyValidationTimes(Experiment):
                 specific_traffic = Traffic(init_wildcard=True)
                 specific_traffic.set_field("ethernet_type", 0x0800)
 
+                # with Timer(verbose=True) as t:
+                #     connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 1)
+                #     print connected
+
+                # with Timer(verbose=True) as t:
+                #     within_limit = fv.validate_zone_pair_path_length(src_zone, dst_zone, specific_traffic, 6)
+                #     print within_limit
+
                 with Timer(verbose=True) as t:
-                    connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 1)
-                    
+                    el = [self.ng.get_link_data('s3', 's4')]
+                    is_exclusive = fv.validate_zone_pair_link_exclusivity(src_zone, dst_zone, specific_traffic, el)
+                    print is_exclusive
+
                 fv.de_init_network_port_graph()
 
     def plot_policy_validation_times(self):

@@ -60,6 +60,41 @@ class FlowValidator(object):
                                                      host_obj.switch_egress_port,
                                                      end_to_end_modified_edges)
 
+    def initialize_per_link_traffic_paths(self, verbose=False):
+
+        for ld in self.network_graph.get_switch_link_data():
+            ld.traffic_paths = []
+
+        for src_h_id in self.network_graph.host_ids:
+            for dst_h_id in self.network_graph.host_ids:
+
+                if src_h_id == dst_h_id:
+                    continue
+
+                src_host_obj = self.network_graph.get_node_object(src_h_id)
+                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
+
+                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
+
+                all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
+                                                      dst_host_obj.switch_egress_port,
+                                                      specific_traffic,
+                                                      [src_host_obj.switch_ingress_port],
+                                                      [],
+                                                      verbose)
+
+                for path in all_paths:
+                    if verbose:
+                        print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "path:", path
+
+                    path_links = path.get_path_links()
+                    for path_link in path_links:
+                        ld = self.network_graph.get_link_data(path_link[0], path_link[1])
+
+                        # Avoid adding the same path twice for cases when a link is repeated
+                        if path not in ld.traffic_paths:
+                            ld.traffic_paths.append(path)
+
     def validate_host_pair_reachability(self, src_h_id, dst_h_id, specific_traffic, verbose=True):
 
         src_host_obj = self.network_graph.get_node_object(src_h_id)
@@ -204,9 +239,7 @@ class FlowValidator(object):
 
         return specific_traffic
 
-    def are_zones_connected(self, src_zone, dst_zone, traffic):
-
-        is_connected = True
+    def port_pair_iter(self, src_zone, dst_zone):
 
         for src_port in src_zone:
             for dst_port in dst_zone:
@@ -218,35 +251,39 @@ class FlowValidator(object):
                 if not src_port.attached_host or not dst_port.attached_host:
                     continue
 
-                ingress_node = self.port_graph.get_ingress_node(src_port.sw.node_id, src_port.port_number)
-                egress_node = self.port_graph.get_egress_node(dst_port.sw.node_id, dst_port.port_number)
+                yield src_port, dst_port
 
-                # Setup the appropriate filter
-                traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-                traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-                traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
-                traffic.set_field("in_port", int(src_port.port_number))
+    def are_zones_connected(self, src_zone, dst_zone, traffic):
 
-                at = self.port_graph.get_admitted_traffic(ingress_node, egress_node)
+        is_connected = True
 
-                if not at.is_empty():
-                    if at.is_subset_traffic(traffic):
-                        is_connected = True
-                    else:
-                        print "src_port:", src_port, "dst_port:", dst_port, "at does not pass specific_traffic check."
-                        is_connected = False
+        for src_port, dst_port in self.port_pair_iter(src_zone, dst_zone):
+
+            ingress_node = self.port_graph.get_ingress_node(src_port.sw.node_id, src_port.port_number)
+            egress_node = self.port_graph.get_egress_node(dst_port.sw.node_id, dst_port.port_number)
+
+            # Setup the appropriate filter
+            traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+            traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+            traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
+            traffic.set_field("in_port", int(src_port.port_number))
+
+            at = self.port_graph.get_admitted_traffic(ingress_node, egress_node)
+
+            if not at.is_empty():
+                if at.is_subset_traffic(traffic):
+                    is_connected = True
                 else:
-                    print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
+                    print "src_port:", src_port, "dst_port:", dst_port, "at does not pass specific_traffic check."
                     is_connected = False
-
-                if not is_connected:
-                    break
+            else:
+                print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
+                is_connected = False
 
             if not is_connected:
                 break
 
         return is_connected
-
 
     def validate_zone_pair_connectivity(self, src_zone, dst_zone, traffic, k):
 
@@ -269,3 +306,63 @@ class FlowValidator(object):
                     break
 
         return is_connected
+
+    def validate_zone_pair_path_length(self, src_zone, dst_zone, traffic, l):
+
+        within_limit = True
+
+        for src_port, dst_port in self.port_pair_iter(src_zone, dst_zone):
+
+            ingress_node = self.port_graph.get_ingress_node(src_port.sw.node_id, src_port.port_number)
+            egress_node = self.port_graph.get_egress_node(dst_port.sw.node_id, dst_port.port_number)
+
+            # Setup the appropriate filter
+            traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+            traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+            traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
+            traffic.set_field("in_port", int(src_port.port_number))
+
+            traffic_paths = self.port_graph.get_paths(ingress_node,
+                                                      egress_node,
+                                                      traffic,
+                                                      [ingress_node],
+                                                      [], verbose=False)
+
+            for path in traffic_paths:
+                if len(path) > l:
+                    print "src_port:", src_port, "dst_port:", dst_port, "Path:", path
+                    within_limit = False
+                    break
+
+            if not within_limit:
+                break
+
+        return within_limit
+
+    def validate_zone_pair_link_exclusivity(self, src_zone, dst_zone, traffic, el):
+        is_exclusive = True
+
+        self.initialize_per_link_traffic_paths()
+
+        for src_port, dst_port in self.port_pair_iter(src_zone, dst_zone):
+
+            ingress_node = self.port_graph.get_ingress_node(src_port.sw.node_id, src_port.port_number)
+            egress_node = self.port_graph.get_egress_node(dst_port.sw.node_id, dst_port.port_number)
+
+            for l in el:
+
+                # Check to see if the paths belonging to this link are all for the source/destination pairs in all_paths
+                for path in l.traffic_paths:
+
+                    if not path.src_node == ingress_node or not path.dst_node == egress_node:
+                        print "l:", l, "src_port:", src_port, "dst_port:", dst_port, "Path:", path
+                        is_exclusive = False
+                        break
+
+                if not is_exclusive:
+                    break
+
+            if not is_exclusive:
+                break
+
+        return is_exclusive

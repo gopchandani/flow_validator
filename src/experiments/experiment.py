@@ -19,7 +19,6 @@ from model.traffic_path import TrafficPath
 from synthesis.intent_synthesis import IntentSynthesis
 from synthesis.intent_synthesis_ldst import IntentSynthesisLDST
 from synthesis.intent_synthesis_load_balance import IntentSynthesisLB
-from synthesis.synthesize_simple_aborescene import SynthesizeSimpleAborescene
 from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
 
 class Experiment(object):
@@ -100,10 +99,6 @@ class Experiment(object):
                                                                                           same_output_queue=False)
                     #self.mm.qos_setup_two_flows_on_separate_queues_to_same_host(self.ng)
 
-                elif synthesis_scheme == "Synthesis_Simple_Aborescene":
-                    self.synth = SynthesizeSimpleAborescene(self.ng)
-                    self.synth.synthesize_all_dsts()
-
                 elif synthesis_scheme == "Synthesis_Failover_Aborescene":
                     self.synth = SynthesizeFailoverAborescene(self.ng)
 
@@ -138,7 +133,7 @@ class Experiment(object):
 
         path_matches = True
 
-        if analyzed_path.get_len() == len(synthesized_path):
+        if len(analyzed_path) == len(synthesized_path):
             i = 0
             for path_node in analyzed_path:
                 if path_node.node_id != synthesized_path[i]:
