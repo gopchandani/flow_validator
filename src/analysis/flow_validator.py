@@ -307,7 +307,7 @@ class FlowValidator(object):
 
         return is_connected
 
-    def validate_zone_pair_path_length(self, src_zone, dst_zone, traffic, l):
+    def are_zone_paths_within_limit(self, src_zone, dst_zone, traffic, l):
 
         within_limit = True
 
@@ -339,7 +339,28 @@ class FlowValidator(object):
 
         return within_limit
 
-    def validate_zone_pair_link_exclusivity(self, src_zone, dst_zone, traffic, el):
+    def validate_zone_pair_path_length(self, src_zone, dst_zone, traffic, l, k):
+        within_limit = False
+
+        if k == 0:
+            within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
+        else:
+            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                for link in links_to_fail:
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
+
+                for link in links_to_fail:
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+                if not within_limit:
+                    break
+
+        return within_limit
+
+    def are_zone_pair_exlusive(self, src_zone, dst_zone, traffic, el):
         is_exclusive = True
 
         self.initialize_per_link_traffic_paths()
@@ -364,5 +385,26 @@ class FlowValidator(object):
 
             if not is_exclusive:
                 break
+
+        return is_exclusive
+
+    def validate_zone_pair_link_exclusivity(self, src_zone, dst_zone, traffic, el, k):
+        is_exclusive = False
+
+        if k == 0:
+            is_exclusive = self.are_zone_pair_exlusive(src_zone, dst_zone, traffic, el)
+        else:
+            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                for link in links_to_fail:
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                is_exclusive = self.are_zone_pair_exlusive(src_zone, dst_zone, traffic, el)
+
+                for link in links_to_fail:
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+                if not is_exclusive:
+                    break
 
         return is_exclusive
