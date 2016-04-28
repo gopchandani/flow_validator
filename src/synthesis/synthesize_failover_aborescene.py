@@ -105,16 +105,15 @@ class SynthesizeFailoverAborescene():
                 # Install the rules to do the send along the Aborescene
                 group_id = self.synthesis_lib.push_select_all_group(src_sw.node_id, [self.sw_intents[src_sw][dst_sw]])
 
+                # Push a group/vlan_id setting flow rule
                 flow_match = deepcopy(self.sw_intents[src_sw][dst_sw].flow_match)
-                flow_match["vlan_id"] = int(dst_sw.synthesis_tag) + self.max_k
-
-                flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        src_sw.node_id,
-                        self.aborescene_forwarding_rules,
-                        group_id,
-                        1,
-                        flow_match,
-                        self.sw_intents[src_sw][dst_sw].apply_immediately)
+                self.synthesis_lib.push_flow_with_group_and_set_vlan(src_sw.node_id,
+                                                                     flow_match,
+                                                                     self.aborescene_forwarding_rules,
+                                                                     int(dst_sw.synthesis_tag) + self.max_k,
+                                                                     group_id,
+                                                                     1,
+                                                                     True)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
         for h_obj in dst_sw.attached_hosts:
@@ -123,12 +122,10 @@ class SynthesizeFailoverAborescene():
             host_flow_match["ethernet_destination"] = int(mac_int)
             host_flow_match["vlan_id"] = sys.maxsize
 
-            push_vlan_tag_intent = Intent("push_vlan", host_flow_match, "all", "all")
-            push_vlan_tag_intent.required_vlan_id = int(dst_sw.synthesis_tag) + self.max_k
-
-            self.synthesis_lib.push_vlan_push_intents(src_sw.node_id,
-                                                      [push_vlan_tag_intent],
-                                                      self.remote_vlan_tag_push_rules)
+            self.synthesis_lib.push_flow_vlan_tag(src_sw.node_id,
+                                                  host_flow_match,
+                                                  self.remote_vlan_tag_push_rules,
+                                                  True)
 
     def push_dst_sw_host_intent(self, switch_id, h_obj, flow_match):
 
