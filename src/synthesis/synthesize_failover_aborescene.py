@@ -15,6 +15,8 @@ class SynthesizeFailoverAborescene():
 
         self.network_graph = network_graph
 
+        self.max_k = 5
+
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
         self.apply_tag_intents_immediately = True
@@ -104,7 +106,7 @@ class SynthesizeFailoverAborescene():
                 group_id = self.synthesis_lib.push_select_all_group(src_sw.node_id, [self.sw_intents[src_sw][dst_sw]])
 
                 flow_match = deepcopy(self.sw_intents[src_sw][dst_sw].flow_match)
-                flow_match["vlan_id"] = int(dst_sw.synthesis_tag)
+                flow_match["vlan_id"] = int(dst_sw.synthesis_tag) + self.max_k
 
                 flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         src_sw.node_id,
@@ -122,7 +124,7 @@ class SynthesizeFailoverAborescene():
             host_flow_match["vlan_id"] = sys.maxsize
 
             push_vlan_tag_intent = Intent("push_vlan", host_flow_match, "all", "all")
-            push_vlan_tag_intent.required_vlan_id = int(dst_sw.synthesis_tag)
+            push_vlan_tag_intent.required_vlan_id = int(dst_sw.synthesis_tag) + self.max_k
 
             self.synthesis_lib.push_vlan_push_intents(src_sw.node_id,
                                                       [push_vlan_tag_intent],
@@ -156,7 +158,7 @@ class SynthesizeFailoverAborescene():
 
             if sw.attached_hosts:
 
-                # Push all the rules that have to do with local mac forwarding per switch
+                # Push all the rules that have to do with local mac-based forwarding per switch
                 self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
                 spt = self.compute_shortest_path_tree(sw)
