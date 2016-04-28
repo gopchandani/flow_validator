@@ -160,7 +160,7 @@ class SynthesizeFailoverAborescene():
                 self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
                 spt = self.compute_shortest_path_tree(sw)
-                #k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
+                k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
 
                 # Consider each switch as a destination
                 self.compute_intents(sw, flow_match, spt, 0)#k_eda[0])
