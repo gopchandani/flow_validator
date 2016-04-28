@@ -15,7 +15,8 @@ class SynthesizeFailoverAborescene():
 
         self.network_graph = network_graph
 
-        self.max_k = 5
+        self.num_bits_for_k = 2
+        self.num_bits_for_switches = 10
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
@@ -92,7 +93,7 @@ class SynthesizeFailoverAborescene():
                 out_port = link_port_dict[src_n]
                 self.sw_intents[src_sw][dst_sw] = Intent("primary", flow_match, "all", out_port)
 
-    def push_intents(self, flow_match):
+    def push_intents(self, flow_match, k):
 
         for src_sw in self.sw_intents:
 
@@ -102,17 +103,23 @@ class SynthesizeFailoverAborescene():
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
 
-                # Install the rules to do the send along the Aborescene
-                # group_id = self.synthesis_lib.push_select_all_group(src_sw.node_id,
-                #                                                     [self.sw_intents[src_sw][dst_sw]])
+                # Install the rules to do the send along the appropriate aborscene
+
+                # Modified tag such that it comprises of the dst switch's tag in the 10 bits
+                # and the remaining 2 bits set to k
+                modified_tag = int(dst_sw.synthesis_tag) | (k << self.num_bits_for_switches)
 
                 group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
                                                                                     [self.sw_intents[src_sw][dst_sw]],
-                                                                                    int(dst_sw.synthesis_tag) + self.max_k)
+                                                                                    modified_tag)
 
                 # Push a group/vlan_id setting flow rule
+
                 flow_match = deepcopy(self.sw_intents[src_sw][dst_sw].flow_match)
-                flow_match["vlan_id"] = int(dst_sw.synthesis_tag) + self.max_k
+
+                # Matching on VLAN tag comprising of the dst switch's tag in the 10 bits
+                # and the remaining 2 bits set to zeros
+                flow_match["vlan_id"] = int(dst_sw.synthesis_tag)
 
                 flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                         src_sw.node_id,
@@ -122,14 +129,6 @@ class SynthesizeFailoverAborescene():
                         flow_match,
                         self.sw_intents[src_sw][dst_sw].apply_immediately)
 
-                # self.synthesis_lib.push_flow_with_group_and_set_vlan(src_sw.node_id,
-                #                                                      flow_match,
-                #                                                      self.aborescene_forwarding_rules,
-                #                                                      int(dst_sw.synthesis_tag) + self.max_k,
-                #                                                      group_id,
-                #                                                      1,
-                #                                                      True)
-
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
         for h_obj in dst_sw.attached_hosts:
             host_flow_match = deepcopy(flow_match)
@@ -138,7 +137,9 @@ class SynthesizeFailoverAborescene():
             host_flow_match["vlan_id"] = sys.maxsize
 
             push_vlan_tag_intent = Intent("push_vlan", host_flow_match, "all", "all")
-            push_vlan_tag_intent.required_vlan_id = int(dst_sw.synthesis_tag) + self.max_k
+
+            # VLAN tag constitutes of the dst switch's tag in the 10 bits and the remaining 2 bits set to zero
+            push_vlan_tag_intent.required_vlan_id = int(dst_sw.synthesis_tag)
 
             self.synthesis_lib.push_vlan_push_intents(src_sw.node_id,
                                                       [push_vlan_tag_intent],
@@ -182,4 +183,4 @@ class SynthesizeFailoverAborescene():
                 # Consider each switch as a destination
                 self.compute_intents(sw, flow_match, spt, 0)#k_eda[0])
 
-        self.push_intents(flow_match)
+        self.push_intents(flow_match, k)
