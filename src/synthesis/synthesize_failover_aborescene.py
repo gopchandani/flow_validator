@@ -103,19 +103,32 @@ class SynthesizeFailoverAborescene():
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
 
                 # Install the rules to do the send along the Aborescene
-                group_id = self.synthesis_lib.push_select_all_group(src_sw.node_id, [self.sw_intents[src_sw][dst_sw]])
+                # group_id = self.synthesis_lib.push_select_all_group(src_sw.node_id,
+                #                                                     [self.sw_intents[src_sw][dst_sw]])
+
+                group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
+                                                                                    [self.sw_intents[src_sw][dst_sw]],
+                                                                                    int(dst_sw.synthesis_tag) + self.max_k)
 
                 # Push a group/vlan_id setting flow rule
                 flow_match = deepcopy(self.sw_intents[src_sw][dst_sw].flow_match)
                 flow_match["vlan_id"] = int(dst_sw.synthesis_tag) + self.max_k
 
-                self.synthesis_lib.push_flow_with_group_and_set_vlan(src_sw.node_id,
-                                                                     flow_match,
-                                                                     self.aborescene_forwarding_rules,
-                                                                     int(dst_sw.synthesis_tag) + self.max_k,
-                                                                     group_id,
-                                                                     1,
-                                                                     True)
+                flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                        src_sw.node_id,
+                        self.aborescene_forwarding_rules,
+                        group_id,
+                        1,
+                        flow_match,
+                        self.sw_intents[src_sw][dst_sw].apply_immediately)
+
+                # self.synthesis_lib.push_flow_with_group_and_set_vlan(src_sw.node_id,
+                #                                                      flow_match,
+                #                                                      self.aborescene_forwarding_rules,
+                #                                                      int(dst_sw.synthesis_tag) + self.max_k,
+                #                                                      group_id,
+                #                                                      1,
+                #                                                      True)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
         for h_obj in dst_sw.attached_hosts:

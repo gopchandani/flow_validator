@@ -288,7 +288,7 @@ class SynthesisLib():
 
         elif self.network_graph.controller == "sel":
 
-            #TODO: Not Tested
+            raise NotImplemented
 
             match = flow_match.generate_match_json(self.network_graph.controller, flow.match)
             group_action = ConfigTree.GroupAction()
@@ -469,6 +469,54 @@ class SynthesisLib():
 
         return group_id
 
+    def push_select_all_group_set_vlan_action(self, sw, intent_list, set_vlan):
+
+        if not intent_list:
+            raise Exception("Need to have either one or two forwarding intents")
+
+        group = self.create_base_group(sw)
+        group_id = None
+
+        if self.network_graph.controller == "ryu":
+            group["type"] = "ALL"
+            group["buckets"] = []
+
+            for intent in intent_list:
+                this_bucket = {}
+
+                set_vlan_action = {"type": "SET_FIELD", "field": "vlan_vid", "value": set_vlan + 0x1000}
+                output_action = {"type": "OUTPUT", "port": intent.out_port}
+
+                action_list = [set_vlan_action, output_action]
+
+                this_bucket["actions"] = action_list
+                group["buckets"].append(this_bucket)
+
+            group_id = group["group_id"]
+
+        elif self.network_graph.controller == "sel":
+
+            raise NotImplemented
+
+            group.group_type = "All"
+            for intent in intent_list:
+                out_port, watch_port = self.get_out_and_watch_port(intent)
+                action = ConfigTree.OutputAction()
+                action.out_port = out_port
+                action.action_type =ConfigTree.OfpActionType.output()
+                action.max_length = 65535
+                bucket = ConfigTree.Bucket()
+                bucket.actions.append(action)
+                bucket.watch_port = 4294967295
+                bucket.watch_group = 4294967295
+                group.buckets.append(bucket)
+            group_id = group.group_id
+        else:
+            raise NotImplementedError
+        self.push_group(sw, group)
+
+        return group_id
+
     def push_destination_host_mac_intent_flow(self, sw, mac_intent, table_id, priority):
 
         mac_intent.flow_match["vlan_id"] = sys.maxsize
@@ -561,7 +609,8 @@ class SynthesisLib():
 
         elif self.network_graph.controller == "sel":
 
-            #TODO: Not tested
+            raise NotImplemented
+
 
             flow.match = flow_match.generate_match_json(self.network_graph.controller, flow.match)
 
