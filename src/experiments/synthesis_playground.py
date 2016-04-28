@@ -47,7 +47,6 @@ class AborescenePlayground(Experiment):
 
             specific_traffic = Traffic(init_wildcard=True)
             specific_traffic.set_field("ethernet_type", 0x0800)
-
             connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 0)
             print connected
 

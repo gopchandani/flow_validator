@@ -25,6 +25,8 @@ class SynthesizeFailoverAborescene():
 
         # per src switch, per dst switch, intents
         self.sw_intents = defaultdict(defaultdict)
+        
+        self.sw_intent_lists = defaultdict(defaultdict)
 
         # As a packet arrives, these are the tables it is evaluated against, in this order:
 
@@ -83,7 +85,7 @@ class SynthesizeFailoverAborescene():
 
         return k_eda
 
-    def compute_intents(self, dst_sw, flow_match, tree, tree_id):
+    def compute_sw_intents(self, dst_sw, flow_match, tree, tree_id):
 
         # Go through each node of the given tree and check its successors
         for src_n in tree:
@@ -93,13 +95,71 @@ class SynthesizeFailoverAborescene():
                 out_port = link_port_dict[src_n]
                 self.sw_intents[src_sw][dst_sw] = Intent("primary", flow_match, "all", out_port)
 
-    def push_intents(self, flow_match, k):
+    def compute_sw_intent_lists(self, dst_sw, flow_match, tree, tree_id):
+        for src_n in tree:
+            src_sw = self.network_graph.get_node_object(src_n)
+            for pred in tree.predecessors(src_n):
+                link_port_dict = self.network_graph.get_link_ports_dict(src_n, pred)
+                out_port = link_port_dict[src_n]
+
+                intent = Intent("primary", flow_match, "all", out_port)
+                intent.tree_id = tree_id
+
+                if src_sw in self.sw_intent_lists:
+                    if dst_sw in self.sw_intent_lists[src_sw]:
+                        self.sw_intent_lists[src_sw][dst_sw].append(intent)
+                    else:
+                        self.sw_intent_lists[src_sw][dst_sw] = [intent]
+                else:
+                    self.sw_intent_lists[src_sw][dst_sw] = [intent]
+
+    def push_sw_intents(self, flow_match, k):
 
         for src_sw in self.sw_intents:
 
             print "-- Pushing at Switch:", src_sw.node_id
 
             for dst_sw in self.sw_intents[src_sw]:
+                # Install the rules to put the vlan tags on for hosts that are at this destination switch
+                self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
+
+                # Install the rules to do the send along the appropriate aborscene
+
+                # Modified tag such that it comprises of the dst switch's tag in the 10 bits
+                # and the remaining 2 bits set to k
+                modified_tag = int(dst_sw.synthesis_tag) | (k << self.num_bits_for_switches)
+
+                group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
+                                                                                    [self.sw_intents[src_sw][dst_sw]],
+                                                                                    modified_tag)
+
+                # Push a group/vlan_id setting flow rule
+
+                flow_match = deepcopy(self.sw_intents[src_sw][dst_sw].flow_match)
+
+                # Matching on VLAN tag comprising of the dst switch's tag in the 10 bits
+                # and the remaining 2 bits set to zeros
+                flow_match["vlan_id"] = int(dst_sw.synthesis_tag)
+
+                flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                        src_sw.node_id,
+                        self.aborescene_forwarding_rules,
+                        group_id,
+                        1,
+                        flow_match,
+                        self.sw_intents[src_sw][dst_sw].apply_immediately)
+
+    def push_sw_intent_lists(self, flow_match, k):
+
+        for src_sw in self.sw_intents:
+
+            print "-- Pushing at Switch:", src_sw.node_id
+
+            for dst_sw in self.sw_intents[src_sw]:
+                
+                print self.sw_intent_lists[src_sw][dst_sw]
+                continue
+                
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
 
@@ -181,6 +241,8 @@ class SynthesizeFailoverAborescene():
                 k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
 
                 # Consider each switch as a destination
-                self.compute_intents(sw, flow_match, spt, 0)#k_eda[0])
+                self.compute_sw_intents(sw, flow_match, spt, 0)
 
-        self.push_intents(flow_match, k)
+
+
+        self.push_sw_intents(flow_match, k)
