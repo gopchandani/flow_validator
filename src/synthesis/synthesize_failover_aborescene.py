@@ -132,9 +132,7 @@ class SynthesizeFailoverAborescene():
                 group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
                                                                                     [self.sw_intents[src_sw][dst_sw]],
                                                                                     modified_tag)
-
                 # Push a group/vlan_id setting flow rule
-
                 flow_match = deepcopy(self.sw_intents[src_sw][dst_sw].flow_match)
 
                 # Matching on VLAN tag comprising of the dst switch's tag in the 10 bits
@@ -152,11 +150,8 @@ class SynthesizeFailoverAborescene():
     def push_sw_intent_lists(self, flow_match, k):
 
         for src_sw in self.sw_intents:
-
             print "-- Pushing at Switch:", src_sw.node_id
-
             for dst_sw in self.sw_intents[src_sw]:
-                
                 print self.sw_intent_lists[src_sw][dst_sw]
                 continue
                 
@@ -240,9 +235,13 @@ class SynthesizeFailoverAborescene():
                 spt = self.compute_shortest_path_tree(sw)
                 k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
 
+                k_eda = [spt, k_eda]
+
                 # Consider each switch as a destination
-                self.compute_sw_intents(sw, flow_match, spt, 0)
+                self.compute_sw_intents(sw, flow_match, k_eda[0], 1)
 
-
-
+                # for i in range(len(k)):
+                #     self.compute_sw_intent_lists(sw, flow_match, k_eda[i], i+1)
+                #
         self.push_sw_intents(flow_match, k)
+        #self.push_sw_intent_lists(flow_match, k)
