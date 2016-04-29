@@ -418,6 +418,65 @@ class SynthesisLib():
 
         return group_id
 
+    def push_fast_failover_group_set_vlan_action(self, sw, intent_list, set_vlan):
+
+        group = self.create_base_group(sw)
+        group_id = None
+
+        if self.network_graph.controller == "ryu":
+            group["type"] = "FF"
+            bucket_list = []
+            for intent in intent_list:
+                out_port, watch_port = self.get_out_and_watch_port(intent)
+                bucket = {}
+                bucket["actions"] = [{"type": "SET_FIELD", "field": "vlan_vid", "value": set_vlan + 0x1000},
+                                     {"type": "OUTPUT", "port": out_port}]
+
+                bucket["weight"] = 20
+                bucket["watch_port"] = watch_port
+                bucket_list.append(bucket)
+
+            group["buckets"] = bucket_list
+            group_id = group["group_id"]
+
+        elif self.network_graph.controller == "sel":
+
+            raise NotImplemented
+
+            group = self.create_base_group(sw)
+            group.group_type = "FastFailover"
+            out_port, watch_port = self.get_out_and_watch_port(primary_intent)
+
+            bucket_primary = ConfigTree.Bucket()
+            action = ConfigTree.OutputAction()
+            action.action_type = ConfigTree.OfpActionType.output()
+            action.out_port = out_port
+
+            bucket_primary.actions.append(action)
+            bucket_primary.watch_port = watch_port
+            bucket_primary.id = "0"
+            # No idea how to set the weight of this bucket.
+            group.buckets.append(bucket_primary)
+
+            out_port, watch_port = self.get_out_and_watch_port(failover_intent)
+            bucket_failover = ConfigTree.Bucket()
+            action = ConfigTree.OutputAction()
+            action.action_type = ConfigTree.OfpActionType.output()
+            action.out_port = out_port
+            bucket_failover.actions.append(action)
+            bucket_failover.watch_port = watch_port
+            bucket_failover.id = "1"
+
+            group.buckets.append(bucket_failover)
+            group_id = group.group_id
+
+        else:
+            raise NotImplementedError
+
+        self.push_group(sw, group)
+
+        return group_id
+
     def push_select_all_group(self, sw, intent_list):
 
         if not intent_list:

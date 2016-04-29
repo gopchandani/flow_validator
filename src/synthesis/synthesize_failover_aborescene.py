@@ -15,6 +15,9 @@ class SynthesizeFailoverAborescene():
 
         self.network_graph = network_graph
 
+        # VLAN tag constitutes 12 bits.
+        # We use 2 left most bits for representing the tree_id
+        # And the 10 right most bits for representing the destination switch's id
         self.num_bits_for_k = 2
         self.num_bits_for_switches = 10
 
@@ -25,7 +28,7 @@ class SynthesizeFailoverAborescene():
 
         # per src switch, per dst switch, intents
         self.sw_intents = defaultdict(defaultdict)
-        
+
         self.sw_intent_lists = defaultdict(defaultdict)
 
         # As a packet arrives, these are the tables it is evaluated against, in this order:
@@ -169,27 +172,21 @@ class SynthesizeFailoverAborescene():
         for src_sw in self.sw_intent_lists:
             print "-- Pushing at Switch:", src_sw.node_id
             for dst_sw in self.sw_intent_lists[src_sw]:
-                print self.sw_intent_lists[src_sw][dst_sw]
 
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
-
-                continue
-
-
-                # Install the rules to do the send along the appropriate aborscene
 
                 # Modified tag such that it comprises of the dst switch's tag in the 10 bits
                 # and the remaining 2 bits set to k
                 modified_tag = int(dst_sw.synthesis_tag) | (k << self.num_bits_for_switches)
 
-                group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
-                                                                                    [self.sw_intents[src_sw][dst_sw]],
-                                                                                    modified_tag)
+                group_id = self.synthesis_lib.push_fast_failover_group_set_vlan_action(src_sw.node_id,
+                                                                                       self.sw_intent_lists[src_sw][dst_sw],
+                                                                                       modified_tag)
 
                 # Push a group/vlan_id setting flow rule
 
-                flow_match = deepcopy(self.sw_intents[src_sw][dst_sw].flow_match)
+                flow_match = deepcopy(self.sw_intent_lists[src_sw][dst_sw][0].flow_match)
 
                 # Matching on VLAN tag comprising of the dst switch's tag in the 10 bits
                 # and the remaining 2 bits set to zeros
@@ -201,7 +198,7 @@ class SynthesizeFailoverAborescene():
                         group_id,
                         1,
                         flow_match,
-                        self.sw_intents[src_sw][dst_sw].apply_immediately)
+                        self.sw_intent_lists[src_sw][dst_sw][0].apply_immediately)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
         for h_obj in dst_sw.attached_hosts:
@@ -212,7 +209,6 @@ class SynthesizeFailoverAborescene():
 
             push_vlan_tag_intent = Intent("push_vlan", host_flow_match, "all", "all")
 
-            # VLAN tag constitutes of the dst switch's tag in the 10 bits and the remaining 2 bits set to zero
             push_vlan_tag_intent.required_vlan_id = int(dst_sw.synthesis_tag)
 
             self.synthesis_lib.push_vlan_push_intents(src_sw.node_id,
