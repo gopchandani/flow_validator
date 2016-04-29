@@ -176,20 +176,17 @@ class SynthesizeFailoverAborescene():
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
 
-                # Modified tag such that it comprises of the dst switch's tag in the 10 bits
-                # and the remaining 2 bits set to k
-                modified_tag = int(dst_sw.synthesis_tag) | (k << self.num_bits_for_switches)
 
+                # Push a failover group with each bucket containing a modify VLAN tag action,
+                # Each one of these buckets represent actions to be applied to send the packet in one tree
+
+                modified_tag = int(dst_sw.synthesis_tag) | (k << self.num_bits_for_switches)
                 group_id = self.synthesis_lib.push_fast_failover_group_set_vlan_action(src_sw.node_id,
                                                                                        self.sw_intent_lists[src_sw][dst_sw],
                                                                                        modified_tag)
 
                 # Push a group/vlan_id setting flow rule
-
                 flow_match = deepcopy(self.sw_intent_lists[src_sw][dst_sw][0].flow_match)
-
-                # Matching on VLAN tag comprising of the dst switch's tag in the 10 bits
-                # and the remaining 2 bits set to zeros
                 flow_match["vlan_id"] = int(dst_sw.synthesis_tag)
 
                 flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
