@@ -93,7 +93,9 @@ class SynthesizeFailoverAborescene():
             for pred in tree.predecessors(src_n):
                 link_port_dict = self.network_graph.get_link_ports_dict(src_n, pred)
                 out_port = link_port_dict[src_n]
-                self.sw_intents[src_sw][dst_sw] = Intent("primary", flow_match, "all", out_port)
+                intent = Intent("primary", flow_match, "all", out_port)
+                intent.tree_id = tree_id
+                self.sw_intents[src_sw][dst_sw] = intent
 
     def compute_sw_intent_lists(self, dst_sw, flow_match, tree, tree_id):
         for src_n in tree:
@@ -113,7 +115,7 @@ class SynthesizeFailoverAborescene():
                 else:
                     self.sw_intent_lists[src_sw][dst_sw] = [intent]
 
-    def push_sw_intents(self, flow_match, k):
+    def push_sw_intents(self, flow_match):
 
         for src_sw in self.sw_intents:
 
@@ -127,7 +129,7 @@ class SynthesizeFailoverAborescene():
 
                 # Modified tag such that it comprises of the dst switch's tag in the 10 bits
                 # and the remaining 2 bits set to k
-                modified_tag = int(dst_sw.synthesis_tag) | (k << self.num_bits_for_switches)
+                modified_tag = int(dst_sw.synthesis_tag) | (self.sw_intents[src_sw][dst_sw].tree_id << self.num_bits_for_switches)
 
                 group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
                                                                                     [self.sw_intents[src_sw][dst_sw]],
@@ -243,5 +245,5 @@ class SynthesizeFailoverAborescene():
                 # for i in range(len(k)):
                 #     self.compute_sw_intent_lists(sw, flow_match, k_eda[i], i+1)
                 #
-        self.push_sw_intents(flow_match, k)
+        self.push_sw_intents(flow_match)
         #self.push_sw_intent_lists(flow_match, k)
