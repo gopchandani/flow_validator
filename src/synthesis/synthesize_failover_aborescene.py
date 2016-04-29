@@ -44,9 +44,9 @@ class SynthesizeFailoverAborescene():
 
         spt = nx.DiGraph()
 
-        self.mdg = self.network_graph.get_mdg()
+        mdg = self.network_graph.get_mdg()
 
-        paths = nx.shortest_path(self.mdg, source=dst_sw.node_id)
+        paths = nx.shortest_path(mdg, source=dst_sw.node_id)
 
         for src in paths:
 
@@ -62,16 +62,31 @@ class SynthesizeFailoverAborescene():
 
         k_eda = []
 
-        self.mdg = self.network_graph.get_mdg()
+        mdg = self.network_graph.get_mdg()
 
-        # Set the weights of ingress edges to destination switch to less than 1
-        for pred in list(self.mdg.predecessors(dst_sw.node_id)):
-            self.mdg.remove_edge(pred, dst_sw.node_id)
+        dst_sw_preds = list(mdg.predecessors(dst_sw.node_id))
+        dst_sw_succs = list(mdg.successors(dst_sw.node_id))
+
+        # Remove the predecessor edges to dst_sw, to make it the "root"
+        for pred in dst_sw_preds:
+            mdg.remove_edge(pred, dst_sw.node_id)
+
+        # Initially, remove all successors edges of dst_sw as well
+        for succ in dst_sw_succs:
+            mdg.remove_edge(dst_sw.node_id, succ)
 
         for i in range(k):
 
+            # Assume there are always k edges as the successor of the dst_sw, kill all but one
+            for j in range(k):
+                if i == j:
+                    mdg.add_edge(dst_sw.node_id, dst_sw_succs[j])
+                else:
+                    if mdg.has_edge(dst_sw.node_id, dst_sw_succs[j]):
+                        mdg.remove_edge(dst_sw.node_id, dst_sw_succs[j])
+
             # Compute and store one
-            msa = nx.minimum_spanning_arborescence(self.mdg)
+            msa = nx.minimum_spanning_arborescence(mdg)
             k_eda.append(msa)
 
             # If there are predecessors of dst_sw now, we could not find k msa, so break
@@ -81,7 +96,7 @@ class SynthesizeFailoverAborescene():
 
             # Remove its arcs from mdg
             for arc in msa.edges():
-                self.mdg.remove_edge(arc[0], arc[1])
+                mdg.remove_edge(arc[0], arc[1])
 
         return k_eda
 
@@ -151,14 +166,16 @@ class SynthesizeFailoverAborescene():
 
     def push_sw_intent_lists(self, flow_match, k):
 
-        for src_sw in self.sw_intents:
+        for src_sw in self.sw_intent_lists:
             print "-- Pushing at Switch:", src_sw.node_id
-            for dst_sw in self.sw_intents[src_sw]:
+            for dst_sw in self.sw_intent_lists[src_sw]:
                 print self.sw_intent_lists[src_sw][dst_sw]
-                continue
-                
+
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
+
+                continue
+
 
                 # Install the rules to do the send along the appropriate aborscene
 
@@ -234,17 +251,9 @@ class SynthesizeFailoverAborescene():
                 # Push all the rules that have to do with local mac-based forwarding per switch
                 self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
-                spt = self.compute_shortest_path_tree(sw)
-                k_eda = self.compute_k_edge_disjoint_aborescenes(k-1, sw)
-
-                trees = [spt]
-                trees.extend(k_eda)
-
-                # Consider each switch as a destination
-                #self.compute_sw_intents(sw, flow_match, k_eda[0], 1)
+                k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
 
                 for i in range(k):
-                    self.compute_sw_intent_lists(sw, flow_match, trees[i], i+1)
+                    self.compute_sw_intent_lists(sw, flow_match, k_eda[i], i+1)
 
-        #self.push_sw_intents(flow_match)
         self.push_sw_intent_lists(flow_match, k)
