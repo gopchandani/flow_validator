@@ -221,7 +221,7 @@ class SynthesizeFailoverAborescene():
 
             self.push_dst_sw_host_intent(sw.node_id, h_obj, host_flow_match)
 
-    def synthesize_all_switches(self, flow_match, k=1):
+    def synthesize_all_switches(self, flow_match, k=2):
 
         for sw in self.network_graph.get_switches():
 
@@ -235,15 +235,16 @@ class SynthesizeFailoverAborescene():
                 self.push_local_mac_forwarding_rules_rules(sw, flow_match)
 
                 spt = self.compute_shortest_path_tree(sw)
-                k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
+                k_eda = self.compute_k_edge_disjoint_aborescenes(k-1, sw)
 
-                k_eda = [spt, k_eda]
+                trees = [spt]
+                trees.extend(k_eda)
 
                 # Consider each switch as a destination
-                self.compute_sw_intents(sw, flow_match, k_eda[0], 1)
+                #self.compute_sw_intents(sw, flow_match, k_eda[0], 1)
 
-                # for i in range(len(k)):
-                #     self.compute_sw_intent_lists(sw, flow_match, k_eda[i], i+1)
-                #
-        self.push_sw_intents(flow_match)
-        #self.push_sw_intent_lists(flow_match, k)
+                for i in range(k):
+                    self.compute_sw_intent_lists(sw, flow_match, trees[i], i+1)
+
+        #self.push_sw_intents(flow_match)
+        self.push_sw_intent_lists(flow_match, k)
