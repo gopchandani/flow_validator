@@ -42,6 +42,8 @@ class Flow():
             self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
             self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
+    def init_port_graph_state(self):
+
         self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
         self.complement_traffic = Traffic()
@@ -117,6 +119,18 @@ class FlowTable():
         self.table_id = table_id
         self.flows = []
 
+        for f in flow_list:
+            f = Flow(sw, f)
+            self.flows.append(f)
+
+        #  Sort the flows list by priority
+        self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
+
+    def init_port_graph_state(self):
+
+        for f in self.flows:
+            f.init_port_graph_state()
+
         self.port_graph_node = PortGraphNode(self.sw,
                                              self.sw.port_graph.get_table_node_id(self.sw.node_id, self.table_id),
                                              "table")
@@ -127,13 +141,6 @@ class FlowTable():
         # The key is the succ node, and the list contains edge contents
 
         self.current_port_graph_edges = None
-
-        for f in flow_list:
-            f = Flow(sw, f)
-            self.flows.append(f)
-
-        #  Sort the flows list by priority
-        self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
 
     def _get_port_graph_edges_dict(self):

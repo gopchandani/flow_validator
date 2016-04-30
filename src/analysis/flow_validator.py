@@ -13,9 +13,9 @@ from model.traffic import Traffic
 
 class FlowValidator(object):
 
-    def __init__(self, network_graph):
+    def __init__(self, network_graph, report_active_state=True):
         self.network_graph = network_graph
-        self.port_graph = NetworkPortGraph(network_graph)
+        self.port_graph = NetworkPortGraph(network_graph, report_active_state)
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
@@ -293,6 +293,9 @@ class FlowValidator(object):
             is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
         else:
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                if not("s3" in links_to_fail[0].link_ports_dict and "s4" in links_to_fail[0].link_ports_dict):
+                    continue
 
                 for link in links_to_fail:
                     self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])

@@ -26,6 +26,8 @@ class Port():
         elif self.sw.network_graph.controller == "sel":
             self.parse_sel_port_json(port_json)
 
+    def init_port_graph_state(self):
+
         # Need port_number parsed in before this is called
         self.switch_port_graph_ingress_node = PortGraphNode(self.sw,
                                                             self.sw.port_graph.get_ingress_node_id(self.sw.node_id,

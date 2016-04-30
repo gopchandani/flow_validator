@@ -1,14 +1,15 @@
 __author__ = 'Rakesh Kumar'
 
 from port_graph import PortGraph
+from switch_port_graph import SwitchPortGraph
 from port_graph_edge import PortGraphEdge, NetworkPortGraphEdgeData
 from traffic import Traffic
 
 class NetworkPortGraph(PortGraph):
 
-    def __init__(self, network_graph):
+    def __init__(self, network_graph, report_active_state):
 
-        super(NetworkPortGraph, self).__init__(network_graph)
+        super(NetworkPortGraph, self).__init__(network_graph, report_active_state)
 
     def get_edge_from_admitted_traffic(self, pred, succ, admitted_traffic, edge_sw=None):
 
@@ -74,6 +75,7 @@ class NetworkPortGraph(PortGraph):
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
 
+            sw.port_graph = SwitchPortGraph(sw.network_graph, sw, self.report_active_state)
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.compute_switch_admitted_traffic()
             # test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)

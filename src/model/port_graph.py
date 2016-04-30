@@ -9,7 +9,7 @@ from collections import defaultdict
 
 class PortGraph(object):
 
-    def __init__(self, network_graph):
+    def __init__(self, network_graph, report_active_state):
 
         self.network_graph = network_graph
         self.g = nx.DiGraph()
@@ -17,7 +17,7 @@ class PortGraph(object):
         # These are used to measure the points where changes are measured
         self.boundary_ingress_nodes = []
         self.boundary_egress_nodes = []
-
+        self.report_active_state = report_active_state
 
     def get_table_node_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
@@ -77,9 +77,24 @@ class PortGraph(object):
 
         dst_admitted_traffic = Traffic()
 
-        if dst in node.admitted_traffic:
-            for succ in node.admitted_traffic[dst]:
-                dst_admitted_traffic.union(node.admitted_traffic[dst][succ])
+        if self.report_active_state:
+
+            if dst in node.admitted_traffic:
+                for succ in node.admitted_traffic[dst]:
+
+                    tds = node.admitted_traffic[dst][succ]
+                    for te in tds.traffic_elements:
+
+                        if te.enabling_edge_data:
+                            if te.enabling_edge_data.get_active_rank() == 0:
+                                dst_admitted_traffic.traffic_elements.append(te)
+                        else:
+                            dst_admitted_traffic.traffic_elements.append(te)
+        else:
+
+            if dst in node.admitted_traffic:
+                for succ in node.admitted_traffic[dst]:
+                    dst_admitted_traffic.union(node.admitted_traffic[dst][succ])
 
         return dst_admitted_traffic
 

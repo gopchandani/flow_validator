@@ -42,15 +42,30 @@ class AborescenePlayground(Experiment):
             fv.add_hosts()
             fv.initialize_admitted_traffic()
 
-            src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-            dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+#            src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+#            dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+
+            # specific_traffic = Traffic(init_wildcard=True)
+            # specific_traffic.set_field("ethernet_type", 0x0800)
+            # connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 0)
+            # print connected
+            #
+            # connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 1)
+            # print connected
+
+            src_zone = [fv.network_graph.get_node_object("h11").switch_port]
+            dst_zone = [fv.network_graph.get_node_object("h21").switch_port]
 
             specific_traffic = Traffic(init_wildcard=True)
             specific_traffic.set_field("ethernet_type", 0x0800)
+
             connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 0)
             print connected
 
             connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 1)
+            print connected
+
+            connected = fv.validate_zone_pair_connectivity(dst_zone, src_zone, specific_traffic, 1)
             print connected
 
         print "Done..."

@@ -6,9 +6,9 @@ from port_graph import PortGraph
 
 class SwitchPortGraph(PortGraph):
 
-    def __init__(self, network_graph, sw):
+    def __init__(self, network_graph, sw, report_active_state):
 
-        super(SwitchPortGraph, self).__init__(network_graph)
+        super(SwitchPortGraph, self).__init__(network_graph, report_active_state)
 
         self.sw = sw
 
@@ -16,8 +16,13 @@ class SwitchPortGraph(PortGraph):
 
         print "Initializing Port Graph for switch:", self.sw.node_id
 
-        # Add a node per table in the port graph
+        # Initialize switch ports' port graph state
+        for port_num in self.sw.ports:
+            self.sw.ports[port_num].init_port_graph_state()
+
+        # Initialize port graph state per table and add its node to switch port graph
         for flow_table in self.sw.flow_tables:
+            flow_table.init_port_graph_state()
             self.add_node(flow_table.port_graph_node)
 
         # Add two nodes per physical port in port graph one for incoming and outgoing direction

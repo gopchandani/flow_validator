@@ -115,7 +115,7 @@ class Experiment(object):
                                                                             self.mm.net.get('h21'))],
                                                                            [('s3', 's4')])
 
-                #print "is_bi_connected:", is_bi_connected
+                print "is_bi_connected:", is_bi_connected
 
                 if synthesis_setup_gap:
                     time.sleep(synthesis_setup_gap)

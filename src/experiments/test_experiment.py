@@ -47,8 +47,7 @@ class TestExperiment(Experiment):
                                           synthesis_setup_gap=10,
                                           synthesis_scheme="IntentSynthesis")
 
-
-            self.fv = FlowValidator(ng)
+            self.fv = FlowValidator(ng, False)
             self.fv.init_network_port_graph()
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
@@ -61,7 +60,7 @@ class TestExperiment(Experiment):
             print "Primary paths TestExperiment, all_paths_match:", all_paths_match
 
             all_paths_match = self.compare_failover_paths_with_synthesis(self.fv,
-                                                                         links_to_try=self.fv.network_graph.graph.edges(),
+                                                                         self.fv.network_graph.graph.edges(),#links_to_try=[("s2", "s1")],
                                                                          verbose=False)
 
             print "Failover paths TestExperiment, all_paths_match:", all_paths_match
