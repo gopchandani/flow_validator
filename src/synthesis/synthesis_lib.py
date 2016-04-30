@@ -418,7 +418,7 @@ class SynthesisLib():
 
         return group_id
 
-    def push_fast_failover_group_set_vlan_action(self, sw, intent_list, set_vlan):
+    def push_fast_failover_group_set_vlan_action(self, sw, intent_list, set_vlan_tags):
 
         group = self.create_base_group(sw)
         group_id = None
@@ -426,10 +426,13 @@ class SynthesisLib():
         if self.network_graph.controller == "ryu":
             group["type"] = "FF"
             bucket_list = []
-            for intent in intent_list:
+            for i in range(len(intent_list)):
+
+                intent = intent_list[i]
+
                 out_port, watch_port = self.get_out_and_watch_port(intent)
                 bucket = {}
-                bucket["actions"] = [{"type": "SET_FIELD", "field": "vlan_vid", "value": set_vlan + 0x1000},
+                bucket["actions"] = [{"type": "SET_FIELD", "field": "vlan_vid", "value": set_vlan_tags[i] + 0x1000},
                                      {"type": "OUTPUT", "port": out_port}]
 
                 bucket["weight"] = 20

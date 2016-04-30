@@ -180,10 +180,13 @@ class SynthesizeFailoverAborescene():
                 # Push a failover group with each bucket containing a modify VLAN tag action,
                 # Each one of these buckets represent actions to be applied to send the packet in one tree
 
-                modified_tag = int(dst_sw.synthesis_tag) | (k << self.num_bits_for_switches)
+                modified_tags = []
+                for i in range(k):
+                    modified_tags.append(int(dst_sw.synthesis_tag) | (i + 1 << self.num_bits_for_switches))
+
                 group_id = self.synthesis_lib.push_fast_failover_group_set_vlan_action(src_sw.node_id,
                                                                                        self.sw_intent_lists[src_sw][dst_sw],
-                                                                                       modified_tag)
+                                                                                       modified_tags)
 
                 # Push a group/vlan_id setting flow rule
                 flow_match = deepcopy(self.sw_intent_lists[src_sw][dst_sw][0].flow_match)
