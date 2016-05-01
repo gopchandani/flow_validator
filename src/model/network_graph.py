@@ -567,6 +567,18 @@ class NetworkGraph():
             if link_data.link_type == "switch":
                 yield link_data
 
+    def get_adjacent_switch_link_data(self, switch_id):
+        for link_data in self.get_switch_link_data():
+            if switch_id in link_data.link_ports_dict:
+
+                adjacent_sw_id = None
+                if switch_id == link_data.forward_link[0]:
+                    adjacent_sw_id = link_data.forward_link[1]
+                else:
+                    adjacent_sw_id = link_data.forward_link[0]
+
+                yield adjacent_sw_id, link_data
+
     def get_node_object(self, node_id):
         node_obj = None
 
