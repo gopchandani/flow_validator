@@ -27,8 +27,12 @@ class NetworkPortGraph(PortGraph):
 
                 traffic_paths = None
                 if edge_sw:
+
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
+
+                    if len(traffic_paths) == 0:
+                        pass
 
                 edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, traffic_paths)
                 edge.add_edge_data(edge_data)
