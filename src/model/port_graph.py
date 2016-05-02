@@ -105,13 +105,10 @@ class PortGraph(object):
         for succ in possible_succs:
 
             # First check if the successor would carry this traffic at all
-            should, enabling_edge_data_list, traffic_at_succ = self.should_add_succ(pred,
-                                                                                    succ,
-                                                                                    dst,
-                                                                                    at)
+            should, enabling_edge_data_list = self.should_add_succ(pred, succ, dst, at)
+            traffic_at_succ = self.get_modified_traffic_at_succ(pred, succ, dst, at)
 
             # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
-
             if should:
                 vuln_rank_check = True
 
@@ -317,7 +314,6 @@ class PortGraph(object):
             at.set_field("in_port", int(this_node.parent_obj.port_number))
 
         should = False
-        traffic_at_succ = None
         enabling_edge_data_list = []
 
         at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
@@ -326,14 +322,8 @@ class PortGraph(object):
         if not at_dst_succ.is_empty():
 
             if at_dst_succ.is_subset_traffic(at):
-
                 should = True
                 enabling_edge_data_list = at.intersect(at_dst_succ).get_enabling_edge_data()
-
-                # modify at to adjust to the modifications in traffic along the succ
-                modified_at = at.intersect(at_dst_succ)
-                modified_at = modified_at.get_modified_traffic()
-                traffic_at_succ = modified_at
             else:
                 # Do not go further if the specified specific traffic is not handled by at_dst_succ
                 pass
@@ -341,7 +331,17 @@ class PortGraph(object):
             # Do not go further if there is no traffic admitted via this succ
             pass
 
-        return should, enabling_edge_data_list, traffic_at_succ
+        return should, enabling_edge_data_list
+
+    def get_modified_traffic_at_succ(self, this_node, succ, dst, at):
+
+        at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
+
+        # modify at to adjust to the modifications in traffic along the succ
+        traffic_at_succ = at.intersect(at_dst_succ)
+        traffic_at_succ = traffic_at_succ.get_modified_traffic()
+
+        return traffic_at_succ
 
     def get_paths(self, this_node, dst, at, path_prefix, path_edges, verbose):
 
@@ -356,10 +356,8 @@ class PortGraph(object):
             # If destination is one of the successors, stop
             if dst in remaining_succs:
 
-                should, enabling_edge_data_list, traffic_at_succ = self.should_add_succ(this_node,
-                                                                                        dst,
-                                                                                        dst,
-                                                                                        at)
+                should, enabling_edge_data_list = self.should_add_succ(this_node, dst, dst, at)
+
                 if should:
 
                     this_level_path_edges.append(((this_node, dst), enabling_edge_data_list, at))
@@ -373,10 +371,9 @@ class PortGraph(object):
             # Explore all the remaining successors
             for succ in remaining_succs:
 
-                should, enabling_edge_data_list, traffic_at_succ = self.should_add_succ(this_node,
-                                                                                        succ,
-                                                                                        dst,
-                                                                                        at)
+                should, enabling_edge_data_list = self.should_add_succ(this_node, succ, dst, at)
+                traffic_at_succ = self.get_modified_traffic_at_succ(this_node, succ, dst, at)
+
                 if should:
 
                     # Make sure no loops will be caused by going down this successor
