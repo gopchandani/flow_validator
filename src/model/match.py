@@ -16,7 +16,8 @@ field_names = ["in_port",
               "tcp_source_port",
               "udp_destination_port",
               "udp_source_port",
-              "vlan_id"]
+              "vlan_id",
+               "has_vlan_tag"]
 
 ryu_field_names_mapping = {"in_port": "in_port",
                            "eth_type": "ethernet_type",
@@ -288,12 +289,18 @@ class Match(DictMixin):
                 elif field_name == "vlan_id":
 
                     if match_json[u"dl_vlan"] == "0x1000/0x1000":
-                        self[field_name] = 0x1000
+                        self[field_name] = sys.maxsize
+                        self["has_vlan_tag"]= 1
                     else:
                         self[field_name] = 0x1000 + int(match_json[u"dl_vlan"])
+                        self["has_vlan_tag"]= 1
 
             except KeyError:
                 self[field_name] = sys.maxsize
+
+                if field_name == 'vlan_id':
+                    self["has_vlan_tag"]= 0
+
                 continue
 
     def generate_odl_match_json(self, match_json):

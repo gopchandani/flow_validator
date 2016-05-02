@@ -75,12 +75,6 @@ class TrafficElement():
                     self.traffic_fields[field_name].add(Interval(value.first, value.last + 1))
                 else:
                     raise Exception("Gotta be IPNetwork!")
-            elif field_name == 'vlan_id':
-                if value == 0x1000:
-                    # This is the case when the vlan tag only has to exist, and be any value in that range
-                    self.traffic_fields[field_name].add(Interval(value, value + 4096))
-                else:
-                    self.traffic_fields[field_name].add(Interval(value, value + 1))
             else:
                 self.traffic_fields[field_name].add(Interval(value, value + 1))
 
@@ -328,13 +322,14 @@ class Traffic():
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value, is_exception_value=is_exception_value)
 
-        elif key and value:
-            for te in self.traffic_elements:
-                te.set_traffic_field(key, value)
-
         elif key and is_wildcard:
             for te in self.traffic_elements:
                 te.set_traffic_field(key, set_wildcard=True)
+
+        else:
+            for te in self.traffic_elements:
+                te.set_traffic_field(key, value)
+
 
     # Checks if in_te is subset of self (any one of its te)
     def is_subset_te(self, in_te):
