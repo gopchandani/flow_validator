@@ -26,10 +26,10 @@ class PortGraphEdge():
 
 class NetworkPortGraphEdgeData():
 
-    def __init__(self, edge_filter_traffic, modifications, switch_port_graph_paths):
+    def __init__(self, edge_filter_traffic, applied_modifications, switch_port_graph_paths):
 
         self.edge_filter_traffic = edge_filter_traffic
-        self.modifications = modifications
+        self.applied_modifications = applied_modifications
         self.switch_port_graph_paths = switch_port_graph_paths
 
     def get_vuln_rank(self):

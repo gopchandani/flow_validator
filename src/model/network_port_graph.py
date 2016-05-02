@@ -179,12 +179,12 @@ class NetworkPortGraph(PortGraph):
                 traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
             # If there were modifications along the way...
-            if ed.modifications:
+            if ed.applied_modifications:
                 # If the edge ports belong to the same switch, keep the modifications, otherwise get rid of them.
                 if edge.port1.sw == edge.port2.sw:
-                    ttp = traffic_to_propagate.get_orig_traffic(ed.modifications, store_switch_modifications=True)
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=True)
                 else:
-                    ttp = traffic_to_propagate.get_orig_traffic(ed.modifications, store_switch_modifications=False)
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=False)
             else:
                 ttp = traffic_to_propagate
 

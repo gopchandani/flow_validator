@@ -204,15 +204,20 @@ class TrafficElement():
 
         for field_name in self.traffic_fields:
 
-            # TODO: If this fields needs to be modified, apply the modification
-            if field_name in self.switch_modifications:
+            #if field_name in self.switch_modifications:
 
-                field_val = int(self.switch_modifications[field_name][1])
-                value_tree = IntervalTree()
-                value_tree.add(Interval(field_val, field_val + 1))
+            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications != None:
+                if field_name in self.enabling_edge_data.applied_modifications:
 
-                modified_traffic_element.traffic_fields[field_name] = value_tree
+                    field_interval = self.enabling_edge_data.applied_modifications[field_name][1]
+                    value_tree = IntervalTree()
+                    value_tree.add(field_interval)
 
+                    modified_traffic_element.traffic_fields[field_name] = value_tree
+
+                else:
+                    # Otherwise, just keep the field same as it was
+                    modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
             else:
                 # Otherwise, just keep the field same as it was
                 modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
@@ -255,9 +260,9 @@ class TrafficElement():
                 # but it does not really apply because of what the traffic chunk has gone through subsequently
 
                 #TODO: Do this tree building thing more properly ground up from the parser
-                field_val = int(mf[field_name][1])
+                field_interval = mf[field_name][1]
                 value_tree = IntervalTree()
-                value_tree.add(Interval(field_val, field_val + 1))
+                value_tree.add(field_interval)
 
                 intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
 

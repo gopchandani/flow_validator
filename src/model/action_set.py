@@ -2,6 +2,8 @@ __author__ = 'Rakesh Kumar'
 
 import sys
 
+from intervaltree_modified import Interval
+
 from match import OdlMatchJsonParser
 from match import ryu_field_names_mapping
 from collections import defaultdict
@@ -222,17 +224,19 @@ class ActionSet():
     def get_modified_fields_dict(self, flow_match_element):
         modified_fields_dict = {}
 
-        # # A vlan tag pushed means the value for the field becomes a wildcard (something needs to set it)
-        # if "push_vlan" in self.action_dict:
-        #     modified_fields_dict["vlan_id"] = (flow_match_element, sys.maxsize)
-        #
-        # # A vlan tag popped means, the field does not matter anymore
-        # if "pop_vlan" in self.action_dict:
-        #     modified_fields_dict["vlan_id"] = (flow_match_element, sys.maxsize)
+        # A vlan tag pushed means the value for the field becomes a wildcard (something needs to set it)
+        if "push_vlan" in self.action_dict:
+            modified_fields_dict["vlan_id"] = (flow_match_element, Interval(0x1000, 0x1000 + 4096))
+
+        # A vlan tag popped means, the field does not matter anymore
+        if "pop_vlan" in self.action_dict:
+            modified_fields_dict["vlan_id"] = (flow_match_element, Interval(0, sys.maxsize))
 
         # Capture the value before (in principle and after) the modification in a tuple
         for set_action in self.action_dict["set_field"]:
-            modified_fields_dict[set_action.modified_field] = (flow_match_element, set_action.field_modified_to)
+            modified_fields_dict[set_action.modified_field] = (flow_match_element,
+                                                               Interval(set_action.field_modified_to,
+                                                                        set_action.field_modified_to + 1))
 
         return modified_fields_dict
 

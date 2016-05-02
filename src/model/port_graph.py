@@ -106,7 +106,7 @@ class PortGraph(object):
 
             # First check if the successor would carry this traffic at all
             should, enabling_edge_data_list = self.should_add_succ(pred, succ, dst, at)
-            traffic_at_succ = self.get_modified_traffic_at_succ(pred, succ, dst, at)
+            traffic_at_succ = self.get_modified_traffic_at_succ(pred, succ, dst, at, enabling_edge_data_list)
 
             # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
             if should:
@@ -182,6 +182,9 @@ class PortGraph(object):
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
+
+        if curr.node_id == 's1:table2' and dst.node_id == 's1:egress3':
+            pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
@@ -333,17 +336,22 @@ class PortGraph(object):
 
         return should, enabling_edge_data_list
 
-    def get_modified_traffic_at_succ(self, this_node, succ, dst, at):
+    def get_modified_traffic_at_succ(self, this_node, succ, dst, at, enabling_edge_data_list):
 
         at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
 
-        # modify at to adjust to the modifications in traffic along the succ
+        # Pick off successor admitted traffic that helps the traffic at pred (at) to exist.
         traffic_at_succ = at.intersect(at_dst_succ)
+
+        # modify at to adjust to the modifications in traffic along the succ
         traffic_at_succ = traffic_at_succ.get_modified_traffic()
 
         return traffic_at_succ
 
     def get_paths(self, this_node, dst, at, path_prefix, path_edges, verbose):
+
+        if this_node.node_id == 's1:ingress1' and dst.node_id == 's1:egress3':
+            pass
 
         this_level_paths = []
         this_level_prefix = path_prefix[:]
@@ -372,12 +380,13 @@ class PortGraph(object):
             for succ in remaining_succs:
 
                 should, enabling_edge_data_list = self.should_add_succ(this_node, succ, dst, at)
-                traffic_at_succ = self.get_modified_traffic_at_succ(this_node, succ, dst, at)
 
                 if should:
 
                     # Make sure no loops will be caused by going down this successor
                     if not self.path_has_loop(path_prefix, succ):
+
+                        traffic_at_succ = self.get_modified_traffic_at_succ(this_node, succ, dst, at, enabling_edge_data_list)
 
                         this_level_paths.extend(self.get_paths(succ,
                                                                dst,
