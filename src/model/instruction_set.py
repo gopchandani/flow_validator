@@ -1,5 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
+from copy import deepcopy
+
 from action_set import ActionSet
 from action_set import Action
 
@@ -142,8 +144,8 @@ class InstructionSet():
         else:
             raise NotImplementedError
 
-        self.applied_action_set = ActionSet(self.sw, self.flow)
-        self.written_action_set = ActionSet(self.sw, self.flow)
+        self.applied_action_set = ActionSet(self.sw)
+        self.written_action_set = ActionSet(self.sw)
 
     def parse_odl_instruction_set(self):
 
@@ -181,9 +183,6 @@ class InstructionSet():
             # TODO: Handle meter instruction
             # TODO: Write meta-data case
 
-        self.applied_modifications = self.applied_action_set.get_modified_fields_dict(self.flow.traffic_element)
-        self.written_modifications = self.written_action_set.get_modified_fields_dict(self.flow.traffic_element)
-
     def get_applied_port_graph_edges(self):
 
         applied_port_graph_edges = []
@@ -192,14 +191,21 @@ class InstructionSet():
 
         for out_port, output_action in output_actions:
 
+            applied_modifications = self.applied_action_set.get_modified_fields_dict(self.flow.traffic_element)
+            written_modifications = self.written_action_set.get_modified_fields_dict(self.flow.traffic_element)
+
+            if output_action.bucket != None:
+                bucket_modifications = output_action.bucket.action_set.get_modified_fields_dict(self.flow.traffic_element)
+                applied_modifications.update(bucket_modifications)
+
             output_action.instruction_type = "applied"
             egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
 
             applied_port_graph_edges.append((egress_node,
                                              (self.flow.applied_traffic,
                                               output_action,
-                                              self.applied_modifications,
-                                              self.written_modifications)))
+                                              applied_modifications,
+                                              written_modifications)))
 
         return applied_port_graph_edges
 
@@ -211,13 +217,20 @@ class InstructionSet():
 
         for out_port, output_action in output_actions:
 
+            applied_modifications = self.applied_action_set.get_modified_fields_dict(self.flow.traffic_element)
+            written_modifications = self.written_action_set.get_modified_fields_dict(self.flow.traffic_element)
+
+            if output_action.bucket != None:
+                bucket_modifications = output_action.bucket.action_set.get_modified_fields_dict(self.flow.traffic_element)
+                written_modifications.update(bucket_modifications)
+
             output_action.instruction_type = "written"
             egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
 
             written_port_graph_edges.append((egress_node,
                                              (self.flow.applied_traffic,
                                               output_action,
-                                              self.applied_modifications,
-                                              self.written_modifications)))
+                                              applied_modifications,
+                                              written_modifications)))
 
         return written_port_graph_edges

@@ -75,10 +75,13 @@ class Flow():
 
                     goto_table_port_graph_node = self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node
 
+                    applied_modifications = self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
+                    written_modifications = self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
+
                     port_graph_edges[goto_table_port_graph_node].append((self.applied_traffic,
                                                                          None,
-                                                                         self.instruction_set.applied_modifications,
-                                                                         self.instruction_set.written_modifications))
+                                                                         applied_modifications,
+                                                                         written_modifications))
                 else:
                     print "At switch:", self.sw.node_id, ", couldn't find flow table goto:", self.instruction_set.goto_table
         else:

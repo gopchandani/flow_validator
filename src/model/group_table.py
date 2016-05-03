@@ -1,8 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-from action_set import Action
-
-import pprint
+from action_set import Action, ActionSet
 
 class Bucket():
     def __init__(self, sw, bucket_json, group):
@@ -63,6 +61,9 @@ class Bucket():
 
         for action in self.action_list:
             action.bucket = self
+
+        self.action_set = ActionSet(self.sw)
+        self.action_set.add_all_actions(self.action_list)
 
     def is_live(self):
 

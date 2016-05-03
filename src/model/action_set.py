@@ -197,14 +197,13 @@ class ActionSet():
 
     '''
 
-    def __init__(self, sw, flow):
+    def __init__(self, sw):
 
         # network_graphling the ActionSet as a dictionary of lists, keyed by various actions.
         # These actions may be tucked away inside a group too and the type might be group
 
         self.action_dict = defaultdict(list)
         self.sw = sw
-        self.flow = flow
 
     def add_all_actions(self, action_list):
 
