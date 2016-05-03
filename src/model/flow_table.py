@@ -63,12 +63,10 @@ class Flow():
             # Prepare the raw material for edges
             self.instruction_set.populate_action_sets_for_port_graph_edges()
 
-            self.applied_port_graph_edges = self.instruction_set.get_applied_port_graph_edges()
-            for egress_node, edge_tuple in self.applied_port_graph_edges:
+            for egress_node, edge_tuple in self.instruction_set.get_applied_port_graph_edges():
                 port_graph_edges[egress_node].append(edge_tuple)
 
-            self.written_port_graph_edges = self.instruction_set.get_applied_port_graph_edges()
-            for egress_node, edge_tuple in self.written_port_graph_edges:
+            for egress_node, edge_tuple in self.instruction_set.get_applied_port_graph_edges():
                 port_graph_edges[egress_node].append(edge_tuple)
 
             if self.instruction_set.goto_table:
