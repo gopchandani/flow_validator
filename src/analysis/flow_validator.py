@@ -1,7 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
 import sys
-import random
 import itertools
 
 sys.path.append("./")
@@ -236,6 +235,7 @@ class FlowValidator(object):
         specific_traffic.set_field("ethernet_destination", int(dst_h_obj.mac_addr.replace(":", ""), 16))
         specific_traffic.set_field("in_port", int(src_h_obj.switch_port_attached))
         specific_traffic.set_field("vlan_id", src_h_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
+        specific_traffic.set_field("has_vlan_tag", 0)
 
         return specific_traffic
 

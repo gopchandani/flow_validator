@@ -32,6 +32,7 @@ class AborescenePlayground(Experiment):
 
             self.topo_description = ("ring", 4, 1, None, None)
             #self.topo_description = ("clostopo", None, 1, 2, 1)
+            #self.topo_description = ("linear", 2, 1)
 
             ng = self.setup_network_graph(self.topo_description,
                                           synthesis_scheme="Synthesis_Failover_Aborescene",
@@ -52,6 +53,7 @@ class AborescenePlayground(Experiment):
             #
             # connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 1)
             # print connected
+
 
             src_zone = [fv.network_graph.get_node_object("h11").switch_port]
             dst_zone = [fv.network_graph.get_node_object("h21").switch_port]

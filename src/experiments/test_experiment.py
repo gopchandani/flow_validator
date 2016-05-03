@@ -70,8 +70,8 @@ class TestExperiment(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     fanout = 2

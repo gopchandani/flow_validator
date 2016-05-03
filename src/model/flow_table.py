@@ -172,7 +172,6 @@ class FlowTable():
 
         self.current_port_graph_edges = self._get_port_graph_edges_dict()
 
-
     def update_port_graph_edges(self):
 
         modified_keys = []

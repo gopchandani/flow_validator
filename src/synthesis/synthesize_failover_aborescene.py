@@ -157,30 +157,30 @@ class SynthesizeFailoverAborescene():
                         flow_match,
                         sw_intent_list[0].apply_immediately)
 
-
-
-                # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
-                modified_tag = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
-
-                sw_intent_list = [self.sw_intent_lists[src_sw][dst_sw][1]]
-
-                # Push a failover group with each bucket containing a modify VLAN tag action,
-                # Each one of these buckets represent actions to be applied to send the packet in one tree
-                group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
-                                                                                       sw_intent_list,
-                                                                                       modified_tag)
-
-                # Push a group/vlan_id setting flow rule
-                flow_match = deepcopy(sw_intent_list[0].flow_match)
-                flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
-
-                flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        src_sw.node_id,
-                        self.aborescene_forwarding_rules,
-                        group_id,
-                        1,
-                        flow_match,
-                        sw_intent_list[0].apply_immediately)
+                #
+                #
+                # # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
+                # modified_tag = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
+                #
+                # sw_intent_list = [self.sw_intent_lists[src_sw][dst_sw][1]]
+                #
+                # # Push a failover group with each bucket containing a modify VLAN tag action,
+                # # Each one of these buckets represent actions to be applied to send the packet in one tree
+                # group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
+                #                                                                        sw_intent_list,
+                #                                                                        modified_tag)
+                #
+                # # Push a group/vlan_id setting flow rule
+                # flow_match = deepcopy(sw_intent_list[0].flow_match)
+                # flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
+                #
+                # flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                #         src_sw.node_id,
+                #         self.aborescene_forwarding_rules,
+                #         group_id,
+                #         1,
+                #         flow_match,
+                #         sw_intent_list[0].apply_immediately)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
         for h_obj in dst_sw.attached_hosts:

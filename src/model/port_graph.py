@@ -183,8 +183,9 @@ class PortGraph(object):
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
-        # if curr.node_id == 's1:table2' and dst.node_id == 's1:egress3':
-        #     pass
+        #if curr.node_id == 's4:table2' and dst.node_id == 's4:egress1':
+        if dst.node_id == 's4:egress1':
+            pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
@@ -350,8 +351,8 @@ class PortGraph(object):
 
     def get_paths(self, this_node, dst, at, path_prefix, path_edges, verbose):
 
-        # if this_node.node_id == 's1:ingress1' and dst.node_id == 's1:egress3':
-        #     pass
+        if this_node.node_id == 's4:ingress2' and dst.node_id == 's2:egress1':
+            pass
 
         this_level_paths = []
         this_level_prefix = path_prefix[:]
