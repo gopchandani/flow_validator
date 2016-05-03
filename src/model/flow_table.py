@@ -55,8 +55,8 @@ class Flow():
 
     def get_port_graph_edges(self, port_graph_edges):
 
-        if self.flow_table.port_graph_node.node_id == 's1:table3':
-            pass
+        # if self.flow_table.port_graph_node.node_id == 's1:table3':
+        #     pass
 
         if self.instruction_set:
 

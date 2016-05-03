@@ -351,8 +351,8 @@ class PortGraph(object):
 
     def get_paths(self, this_node, dst, at, path_prefix, path_edges, verbose):
 
-        if this_node.node_id == 's4:ingress2' and dst.node_id == 's2:egress1':
-            pass
+        # if this_node.node_id == 's4:ingress2' and dst.node_id == 's2:egress1':
+        #     pass
 
         this_level_paths = []
         this_level_prefix = path_prefix[:]
