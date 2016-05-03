@@ -206,14 +206,14 @@ class ActionSet():
         self.sw = sw
         self.flow = flow
 
-    def add_all_actions(self, action_list, intersection):
+    def add_all_actions(self, action_list):
 
         for action in action_list:
 
             if action.action_type == "group":
                 if action.group_id in self.sw.group_table.groups:
                     group_all_action_list =  self.sw.group_table.groups[action.group_id].get_action_list()
-                    self.add_all_actions(group_all_action_list, intersection)
+                    self.add_all_actions(group_all_action_list)
                 else:
                     raise Exception("Odd that a group_id is not provided in a group action")
             else:

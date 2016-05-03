@@ -170,10 +170,10 @@ class InstructionSet():
         for instruction in self.instruction_list:
             if instruction.instruction_type == "apply-actions":
                 self.applied_action_set.remove_all_actions()
-                self.applied_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
+                self.applied_action_set.add_all_actions(instruction.actions_list)
             elif instruction.instruction_type == "write-actions":
                 self.written_action_set.remove_all_actions()
-                self.written_action_set.add_all_actions(instruction.actions_list, self.flow.traffic_element)
+                self.written_action_set.add_all_actions(instruction.actions_list)
             elif instruction.instruction_type == "go-to-table":
                 self.goto_table = instruction.go_to_table
 
