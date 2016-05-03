@@ -142,8 +142,8 @@ class InstructionSet():
         else:
             raise NotImplementedError
 
-        self.applied_action_set = ActionSet(self.sw)
-        self.written_action_set = ActionSet(self.sw)
+        self.applied_action_set = ActionSet(self.sw, self.flow)
+        self.written_action_set = ActionSet(self.sw, self.flow)
 
     def parse_odl_instruction_set(self):
 
@@ -180,3 +180,44 @@ class InstructionSet():
             # TODO: Handle clear-actions case
             # TODO: Handle meter instruction
             # TODO: Write meta-data case
+
+        self.applied_modifications = self.applied_action_set.get_modified_fields_dict(self.flow.traffic_element)
+        self.written_modifications = self.written_action_set.get_modified_fields_dict(self.flow.traffic_element)
+
+    def get_applied_port_graph_edges(self):
+
+        applied_port_graph_edges = []
+
+        output_actions = self.applied_action_set.get_action_set_output_action_edges()
+
+        for out_port, output_action in output_actions:
+
+            output_action.instruction_type = "applied"
+            egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
+
+            applied_port_graph_edges.append((egress_node,
+                                             (self.flow.applied_traffic,
+                                              output_action,
+                                              self.applied_modifications,
+                                              self.written_modifications)))
+
+        return applied_port_graph_edges
+
+    def get_written_port_graph_edges(self):
+
+        written_port_graph_edges = []
+
+        output_actions = self.written_action_set.get_action_set_output_action_edges()
+
+        for out_port, output_action in output_actions:
+
+            output_action.instruction_type = "written"
+            egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
+
+            written_port_graph_edges.append((egress_node,
+                                             (self.flow.applied_traffic,
+                                              output_action,
+                                              self.applied_modifications,
+                                              self.written_modifications)))
+
+        return written_port_graph_edges

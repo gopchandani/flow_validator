@@ -197,13 +197,14 @@ class ActionSet():
 
     '''
 
-    def __init__(self, sw):
+    def __init__(self, sw, flow):
 
         # network_graphling the ActionSet as a dictionary of lists, keyed by various actions.
         # These actions may be tucked away inside a group too and the type might be group
 
         self.action_dict = defaultdict(list)
         self.sw = sw
+        self.flow = flow
 
     def add_all_actions(self, action_list, intersection):
 
@@ -240,7 +241,7 @@ class ActionSet():
 
         return modified_fields_dict
 
-    def get_action_set_port_graph_edges(self):
+    def get_action_set_output_action_edges(self):
 
         port_graph_edges = []
 
