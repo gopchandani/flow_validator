@@ -130,7 +130,7 @@ class SynthesizeFailoverAborescene():
 
         sw_intent_list = deepcopy(self.sw_intent_lists[src_sw][dst_sw])
 
-        # Push a failover group with each bucket containing a modify VLAN tag action,
+        # Push a fail-over group with each bucket containing a modify VLAN tag action,
         # Each one of these buckets represent actions to be applied to send the packet in one tree
         group_id = self.synthesis_lib.push_fast_failover_group_set_vlan_action(src_sw.node_id,
                                                                                sw_intent_list,
@@ -147,6 +147,37 @@ class SynthesizeFailoverAborescene():
                 1,
                 flow_match,
                 sw_intent_list[0].apply_immediately)
+
+
+        # Need to install some more rules to handle the IN_PORT as out_port case.
+        for adjacent_sw_id, link_data in self.network_graph.get_adjacent_switch_link_data(src_sw.node_id):
+
+            sw_intent_list = deepcopy(self.sw_intent_lists[src_sw][dst_sw])
+
+            # If the intent is such that it is sending the packet back out to the adjacent switch...
+            if sw_intent_list[1].out_port == link_data.link_ports_dict[src_sw.node_id]:
+
+                # Push a fail-over group with each bucket containing a modify VLAN tag action,
+                # Each one of these buckets represent actions to be applied to send the packet in one tree
+
+                sw_intent_list[1].in_port = link_data.link_ports_dict[src_sw.node_id]
+                group_id = self.synthesis_lib.push_fast_failover_group_set_vlan_action(src_sw.node_id,
+                                                                                       sw_intent_list,
+                                                                                       modified_tags)
+
+                # Push a group/vlan_id setting flow rule
+                flow_match = deepcopy(sw_intent_list[0].flow_match)
+                flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (1 << self.num_bits_for_switches)
+                flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
+
+                flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                        src_sw.node_id,
+                        self.aborescene_forwarding_rules,
+                        group_id,
+                        2,
+                        flow_match,
+                        sw_intent_list[0].apply_immediately)
+
 
     def install_all_group_vlan_tag_flow(self, src_sw, dst_sw, k):
 
