@@ -185,6 +185,9 @@ class PortGraph(object):
 
         #if curr.node_id == 's4:table1' and dst.node_id == 's4:table3':
         #if dst.node_id == 's4:egress1':
+        # if curr.node_id =='s1:table3' and dst.node_id == 's1:egress3':
+        #     pass
+        #
         # if curr.node_id =='s1:table3' and dst.node_id == 's1:egress2':
         #     pass
 

@@ -224,6 +224,24 @@ class TrafficElement():
 
         return modified_traffic_element
 
+    def use_original_value(self, field_name, mf):
+
+        # Check to see if the value on this traffic is same as what it was modified to be for this modification
+        # If it is, then use the 'original' value of the match that caused the modification. This is stored in mf
+        # If it is not, then the assumption here would be that even though the modification is there on this chunk
+        # but it does not really apply because of what the traffic chunk has gone through subsequently
+
+        field_interval = mf[field_name][1]
+        value_tree = IntervalTree()
+        value_tree.add(field_interval)
+
+        intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
+
+        if intersection:
+            return True
+        else:
+            return False
+
     def get_orig_traffic_element(self, applied_modifications=None, store_switch_modifications=True):
 
         if applied_modifications:
@@ -248,22 +266,35 @@ class TrafficElement():
 
             if field_name in mf:
 
-                # Check to see if the value on this traffic is same as what it was modified to be for this modification
-                # If it is, then use the 'original' value of the match that caused the modification. This is stored in mf
-                # If it is not, then the assumption here would be that even though the modification is there on this chunk
-                # but it does not really apply because of what the traffic chunk has gone through subsequently
+                # Checking if the rule has both push_vlan and set_vlan modifications for the header,
+                # if so, then don't apply the push_vlan modification, the other one would take care of it, see below:
+                if field_name == "has_vlan_tag" and "vlan_id" in mf:
+                    continue
 
-                #TODO: Do this tree building thing more properly ground up from the parser
-                field_interval = mf[field_name][1]
-                value_tree = IntervalTree()
-                value_tree.add(field_interval)
+                use_original = self.use_original_value(field_name, mf)
 
-                intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
-
-                if intersection:
+                if use_original:
                     orig_traffic_element.traffic_fields[field_name] = mf[field_name][0].traffic_fields[field_name]
+
+                    # If ever reversing effects of push_vlan and using original value, Check to see what becomes of the
+                    # modification of has_vlan_tag, if there were any...
+                    if field_name == "vlan_id" and "has_vlan_tag" in mf:
+
+                        use_original = self.use_original_value("has_vlan_tag", mf)
+
+                        if use_original:
+                            orig_traffic_element.traffic_fields["has_vlan_tag"] = mf["has_vlan_tag"][0].traffic_fields["has_vlan_tag"]
+                        else:
+                            orig_traffic_element.traffic_fields["has_vlan_tag"] = self.traffic_fields["has_vlan_tag"]
+
                 else:
                     orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+
+                    # If ever reversing effects of push_vlan and not matching on it, whhile there is a modification
+                    # on the has_vlan_tag as well..., nullify this te somehow. One way is to set has_vlan_tag to empty
+                    if field_name == "vlan_id" and "has_vlan_tag" in mf:
+                        empty_field = IntervalTree()
+                        orig_traffic_element.traffic_fields["has_vlan_tag"] = empty_field
 
             else:
                 # Otherwise, just keep the field same as it was
