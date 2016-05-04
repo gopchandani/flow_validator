@@ -230,13 +230,13 @@ class MininetMan():
 
             for (src_host, dst_host) in experiment_host_pairs_to_check:
 
-                # is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
-                #
-                # if not is_pingable_before_failure:
-                #     print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
-                #     is_bi_connected = False
-                #     break
-                #
+                is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
+
+                if not is_pingable_before_failure:
+                    print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
+                    is_bi_connected = False
+                    break
+
 
                 self.net.configLinkStatus(edge[0], edge[1], 'down')
                 self.wait_until_link_status(edge[0], edge[1], 'down')
