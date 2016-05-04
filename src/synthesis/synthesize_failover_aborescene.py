@@ -130,8 +130,6 @@ class SynthesizeFailoverAborescene():
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
 
-
-
                 # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
                 modified_tags = []
                 for i in range(k):
@@ -157,30 +155,29 @@ class SynthesizeFailoverAborescene():
                         flow_match,
                         sw_intent_list[0].apply_immediately)
 
-                #
-                #
-                # # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
-                # modified_tag = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
-                #
-                # sw_intent_list = [self.sw_intent_lists[src_sw][dst_sw][1]]
-                #
-                # # Push a failover group with each bucket containing a modify VLAN tag action,
-                # # Each one of these buckets represent actions to be applied to send the packet in one tree
-                # group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
-                #                                                                        sw_intent_list,
-                #                                                                        modified_tag)
-                #
-                # # Push a group/vlan_id setting flow rule
-                # flow_match = deepcopy(sw_intent_list[0].flow_match)
-                # flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
-                #
-                # flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                #         src_sw.node_id,
-                #         self.aborescene_forwarding_rules,
-                #         group_id,
-                #         1,
-                #         flow_match,
-                #         sw_intent_list[0].apply_immediately)
+
+                # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
+                modified_tag = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
+
+                sw_intent_list = [self.sw_intent_lists[src_sw][dst_sw][1]]
+
+                # Push a failover group with each bucket containing a modify VLAN tag action,
+                # Each one of these buckets represent actions to be applied to send the packet in one tree
+                group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
+                                                                                       sw_intent_list,
+                                                                                       modified_tag)
+
+                # Push a group/vlan_id setting flow rule
+                flow_match = deepcopy(sw_intent_list[0].flow_match)
+                flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
+
+                flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                        src_sw.node_id,
+                        self.aborescene_forwarding_rules,
+                        group_id,
+                        1,
+                        flow_match,
+                        sw_intent_list[0].apply_immediately)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
         for h_obj in dst_sw.attached_hosts:
@@ -198,7 +195,6 @@ class SynthesizeFailoverAborescene():
                                                       [push_vlan_tag_intent],
                                                       self.tree_vlan_tag_push_rules)
 
-
     def push_local_mac_forwarding_rules_rules(self, sw, flow_match):
 
         for h_obj in sw.attached_hosts:
@@ -209,7 +205,6 @@ class SynthesizeFailoverAborescene():
             edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.switch_id, h_obj.node_id)
             out_port = edge_ports_dict[h_obj.switch_id]
             host_mac_intent = Intent("mac", host_flow_match, "all", out_port)
-
 
             self.synthesis_lib.push_destination_host_mac_intents(sw.node_id,
                                                                  [host_mac_intent],
@@ -233,11 +228,11 @@ class SynthesizeFailoverAborescene():
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.other_switch_vlan_tagged_packet_rules)
             self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.tree_vlan_tag_push_rules)
 
+            self.push_other_switch_vlan_tagged_packet_rules(sw, flow_match)
+
             if sw.attached_hosts:
 
                 self.push_local_mac_forwarding_rules_rules(sw, flow_match)
-
-                self.push_other_switch_vlan_tagged_packet_rules(sw, flow_match)
 
                 k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
 
