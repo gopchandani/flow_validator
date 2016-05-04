@@ -27,7 +27,6 @@ class Instruction():
         else:
             raise NotImplementedError
 
-
     def parse_odl_instruction(self):
 
         if "write-actions" in self.instruction_json:
@@ -129,7 +128,6 @@ class InstructionSet():
         self.flow = flow
         self.network_graph = self.sw.network_graph
         self.instruction_list = []
-
         self.goto_table = None
 
         if self.sw.network_graph.controller == "odl":
@@ -159,13 +157,11 @@ class InstructionSet():
             instruction = Instruction(self.sw, (instruction_name, self.instructions_json[instruction_name]))
             self.instruction_list.append(instruction)
 
-
     def parse_sel_instruction_set(self):
 
         for instruction in self.instructions_json:
             instruction = Instruction(self.sw, instruction)
             self.instruction_list.append(instruction)
-
 
     def populate_action_sets_for_port_graph_edges(self):
 
@@ -190,6 +186,11 @@ class InstructionSet():
         output_actions = self.applied_action_set.get_action_set_output_action_edges()
 
         for out_port, output_action in output_actions:
+
+            # Avoid adding edges for actions when only reporting active state
+            if self.sw.port_graph.report_active_state:
+                if output_action.get_active_rank() != 0:
+                    continue
 
             applied_modifications = self.applied_action_set.get_modified_fields_dict(self.flow.traffic_element)
             written_modifications = self.written_action_set.get_modified_fields_dict(self.flow.traffic_element)
@@ -216,6 +217,10 @@ class InstructionSet():
         output_actions = self.written_action_set.get_action_set_output_action_edges()
 
         for out_port, output_action in output_actions:
+
+            if self.sw.port_graph.report_active_state:
+                if output_action.get.get_active_rank() != 0:
+                    continue
 
             applied_modifications = self.applied_action_set.get_modified_fields_dict(self.flow.traffic_element)
             written_modifications = self.written_action_set.get_modified_fields_dict(self.flow.traffic_element)

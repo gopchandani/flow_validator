@@ -174,6 +174,7 @@ class FlowTable():
         # 3. The edges that existed previously and now do as well
         # TODO: but the contents of traffic filters/modifications
         modified_values = [k for k in self.intersect if len(new_port_graph_edges[k]) != len(self.current_port_graph_edges[k])]
+
         modified_keys.extend(modified_values)
 
         # Set the flow table's port graph edges to now modified ones

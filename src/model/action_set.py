@@ -224,19 +224,21 @@ class ActionSet():
     def get_modified_fields_dict(self, flow_match_element):
         modified_fields_dict = {}
 
-        # A vlan tag pushed means the value for the field becomes a wildcard (something needs to set it)
-        if "push_vlan" in self.action_dict:
-            modified_fields_dict["has_vlan_tag"] = (flow_match_element, Interval(1, 2))
-
-        # A vlan tag popped means, the field does not matter anymore
-        if "pop_vlan" in self.action_dict:
-            modified_fields_dict["has_vlan_tag"] = (flow_match_element, Interval(0, 1))
-
         # Capture the value before (in principle and after) the modification in a tuple
         for set_action in self.action_dict["set_field"]:
             modified_fields_dict[set_action.modified_field] = (flow_match_element,
                                                                Interval(set_action.field_modified_to,
                                                                         set_action.field_modified_to + 1))
+
+
+        if "vlan_id" not in modified_fields_dict:
+
+            if "push_vlan" in self.action_dict:
+                modified_fields_dict["has_vlan_tag"] = (flow_match_element, Interval(1, 2))
+
+            # A vlan tag popped means, the field does not matter anymore
+            if "pop_vlan" in self.action_dict:
+                modified_fields_dict["has_vlan_tag"] = (flow_match_element, Interval(0, 1))
 
         return modified_fields_dict
 

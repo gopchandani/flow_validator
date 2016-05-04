@@ -79,8 +79,8 @@ def main():
 
     num_iterations = 1#10
     total_number_of_hosts = [4]
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = AborescenePlayground(num_iterations,
