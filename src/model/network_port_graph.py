@@ -27,9 +27,9 @@ class NetworkPortGraph(PortGraph):
 
                 traffic_paths = None
                 if edge_sw:
-
-                    if pred.node_id == 's1:ingress1' and succ.node_id == 's1:egress2':
-                        pass
+                    #
+                    # if pred.node_id == 's1:ingress1' and succ.node_id == 's1:egress2':
+                    #     pass
 
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)

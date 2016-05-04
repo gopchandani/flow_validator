@@ -9,7 +9,6 @@ class Switch():
 
     def __init__(self, sw_id, network_graph):
 
-        self.g = nx.DiGraph()
         self.node_id = sw_id
         self.network_graph = network_graph
         self.attached_hosts = []

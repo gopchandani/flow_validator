@@ -185,8 +185,8 @@ class PortGraph(object):
 
         #if curr.node_id == 's4:table1' and dst.node_id == 's4:table3':
         #if dst.node_id == 's4:egress1':
-        if curr.node_id =='s1:table3' and dst.node_id == 's1:egress2':
-            pass
+        # if curr.node_id =='s1:table3' and dst.node_id == 's1:egress2':
+        #     pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
