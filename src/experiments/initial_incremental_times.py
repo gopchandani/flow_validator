@@ -85,8 +85,8 @@ class InitialIncrementalTimes(Experiment):
             for total_number_of_hosts in self.total_number_of_hosts:
                 print "total_number_of_hosts:", total_number_of_hosts
 
-                #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
-                self.topo_description = ("ring", 4, 1, None, None)
+                self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+                #self.topo_description = ("ring", 4, 1, None, None)
 
                 self.data["construction_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
                 self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
@@ -101,8 +101,7 @@ class InitialIncrementalTimes(Experiment):
                                                   mininet_setup_gap=15,
                                                   #dst_ports_to_synthesize=ports_to_synthesize,
                                                   synthesis_setup_gap=15,#len(ports_to_synthesize),
-                                                  synthesis_scheme="IntentSynthesis")
-
+                                                  synthesis_scheme="Synthesis_Failover_Aborescene")
 
                     self.fv = FlowValidator(ng)
                     with Timer(verbose=True) as t:
@@ -123,13 +122,6 @@ class InitialIncrementalTimes(Experiment):
                     self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(restore)
                     self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(fail_restore)
 
-                    self.fv.validate_all_host_pair_reachability(verbose=False)
-
-                    # self.fv.validate_all_host_pair_backup(self.fv.network_graph.host_ids,
-                    #                                       self.fv.network_graph.host_ids, verbose=False)
-                    del self.fv
-
-                    #fv.de_init_network_port_graph()
 
     def plot_initial_incremental_times(self):
         fig = plt.figure(0)
@@ -156,7 +148,7 @@ def main():
     controller = "ryu"
 
     fanout = 3
-    core = 3
+    core = 2
     total_number_of_ports_to_synthesize = 1
 
     exp = InitialIncrementalTimes(num_iterations,
