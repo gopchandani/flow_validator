@@ -174,9 +174,6 @@ class SwitchPortGraph(PortGraph):
         ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
         egress_node = self.get_egress_node(self.sw.node_id, port_num)
 
-        if event_type == "port_up":
-            pass
-
         for pred in self.predecessors_iter(egress_node):
 
             edge = self.get_edge(pred, egress_node)

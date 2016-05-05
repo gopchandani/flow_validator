@@ -52,11 +52,6 @@ class PortGraph(object):
             yield self.get_node(succ_id)
 
     def add_edge(self, pred, succ, edge_data):
-
-        if pred.node_id == 's4:table3' and (succ.node_id == 's4:egress1' or succ.node_id == 's4:egress2'):
-            for ed in edge_data.edge_data_list:
-                print succ.node_id, ed.get_active_rank()
-
         self.g.add_edge(pred.node_id, succ.node_id, e=edge_data)
 
     def remove_edge(self, pred, succ):
@@ -175,13 +170,7 @@ class PortGraph(object):
 
         #if curr.node_id == 's4:table1' and dst.node_id == 's4:table3':
         # if curr.node_id =='s1:table3' and dst.node_id == 's1:egress3':
-        #     pass
-        #
-        # if curr.node_id =='s1:table3' and dst.node_id == 's1:egress2':
-        #     pass
-
-        if dst.node_id == 's4:egress1':
-            pass
+        #pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
@@ -236,9 +225,6 @@ class PortGraph(object):
 
             # For each destination that may have been affected at the pred port
             for dst in admitted_traffic_changes[pred]:
-
-                if dst.node_id == "s4:egress2":
-                    pass
 
                 prev_pred_traffic = self.get_admitted_traffic(pred, dst)
                 now_pred_traffic = Traffic()
