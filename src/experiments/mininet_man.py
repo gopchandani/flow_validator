@@ -173,6 +173,15 @@ class MininetMan():
             else:
                 return True
 
+    def are_all_hosts_pingable(self):
+        ping_loss_rate = self.net.pingAll('1')
+
+        # If some packets get through, then declare pingable
+        if ping_loss_rate < 100.0:
+            return True
+        else:
+            return False
+
     def get_intf_status(self, ifname):
 
         # set some symbolic constants
@@ -251,6 +260,41 @@ class MininetMan():
                     is_bi_connected = False
                     print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
                     break
+
+        return is_bi_connected
+
+    def is_bi_connected_manual_ping_test_all_hosts(self,  edges_to_try=None):
+
+        is_bi_connected= True
+
+        if not edges_to_try:
+            edges_to_try = self.topo.g.edges()
+
+        for edge in edges_to_try:
+
+            # Only try and break switch-switch edges
+            if edge[0].startswith("h") or edge[1].startswith("h"):
+                continue
+
+            is_pingable_before_failure = self.are_all_hosts_pingable()
+
+            if not is_pingable_before_failure:
+                is_bi_connected = False
+                break
+
+            self.net.configLinkStatus(edge[0], edge[1], 'down')
+            self.wait_until_link_status(edge[0], edge[1], 'down')
+            time.sleep(5)
+            is_pingable_after_failure = self.are_all_hosts_pingable()
+            self.net.configLinkStatus(edge[0], edge[1], 'up')
+            self.wait_until_link_status(edge[0], edge[1], 'up')
+
+            time.sleep(5)
+            is_pingable_after_restoration = self.are_all_hosts_pingable()
+
+            if not is_pingable_after_failure == True:
+                is_bi_connected = False
+                break
 
         return is_bi_connected
 

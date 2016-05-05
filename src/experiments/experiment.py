@@ -103,12 +103,11 @@ class Experiment(object):
 
                     flow_match = Match(is_wildcard=True)
                     flow_match["ethernet_type"] = 0x0800
-
                     self.synth.synthesize_all_switches(flow_match)
 
-                #
-                # self.mm.net.pingAll()
-                #
+                #self.mm.net.pingAll()
+                is_bi_connected = self.mm.is_bi_connected_manual_ping_test_all_hosts()
+
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
 
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
@@ -117,10 +116,10 @@ class Experiment(object):
                 # # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
                 # #                                                             self.mm.net.get('h21'))],
                 # #                                                            [('s3', 's4')])
-                # print "is_bi_connected:", is_bi_connected
-                #
-                # if synthesis_setup_gap:
-                #     time.sleep(synthesis_setup_gap)
+                print "is_bi_connected:", is_bi_connected
+
+                if synthesis_setup_gap:
+                    time.sleep(synthesis_setup_gap)
 
         # Refresh the network_graph
         self.ng.parse_switches()
