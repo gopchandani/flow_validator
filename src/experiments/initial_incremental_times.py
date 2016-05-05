@@ -1,23 +1,20 @@
-__author__ = 'Rakesh Kumar'
-
-import sys
-
-sys.path.append("./")
-
 import matplotlib.pyplot as plt
 import numpy as np
-
+import sys
 
 from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
+from network_configuration import NetworkConfiguration
 
+__author__ = 'Rakesh Kumar'
+sys.path.append("./")
 
 class InitialIncrementalTimes(Experiment):
     def __init__(self,
                  num_iterations,
-                 topo_descriptions,
+                 network_configurations,
                  load_config,
                  save_config,
                  controller,
@@ -30,7 +27,7 @@ class InitialIncrementalTimes(Experiment):
                                                       controller,
                                                       1)
 
-        self.topo_descriptions = topo_descriptions
+        self.network_configurations = network_configurations
         self.total_number_of_ports_to_synthesize = total_number_of_ports_to_synthesize
 
         self.data = {
@@ -77,16 +74,16 @@ class InitialIncrementalTimes(Experiment):
             ports_to_synthesize = xrange(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            for topo_description in self.topo_descriptions:
-                print "topo_description:", topo_description
+            for network_configuration in self.network_configurations:
+                print "network_configuration:", network_configuration
 
-                self.data["construction_time"][number_of_ports_to_synthesize][str(topo_description)] = []
-                self.data["propagation_time"][number_of_ports_to_synthesize][str(topo_description)] = []
-                self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][str(topo_description)] = []
-                self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][str(topo_description)] = []
-                self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][str(topo_description)] = []
+                self.data["construction_time"][number_of_ports_to_synthesize][str(network_configuration)] = []
+                self.data["propagation_time"][number_of_ports_to_synthesize][str(network_configuration)] = []
+                self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][str(network_configuration)] = []
+                self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][str(network_configuration)] = []
+                self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][str(network_configuration)] = []
 
-                ng = self.setup_network_graph(topo_description,
+                ng = self.setup_network_graph(network_configuration,
                                               mininet_setup_gap=15,
                                               #dst_ports_to_synthesize=ports_to_synthesize,
                                               synthesis_setup_gap=15,#len(ports_to_synthesize),
@@ -99,20 +96,20 @@ class InitialIncrementalTimes(Experiment):
                     with Timer(verbose=True) as t:
                         self.fv.init_network_port_graph()
 
-                    self.data["construction_time"][number_of_ports_to_synthesize][str(topo_description)].append(t.msecs)
+                    self.data["construction_time"][number_of_ports_to_synthesize][str(network_configuration)].append(t.msecs)
 
                     self.fv.add_hosts()
 
                     with Timer(verbose=True) as t:
                         self.fv.initialize_admitted_traffic()
 
-                    self.data["propagation_time"][number_of_ports_to_synthesize][str(topo_description)].append(t.msecs)
+                    self.data["propagation_time"][number_of_ports_to_synthesize][str(network_configuration)].append(t.msecs)
                     #
                     fail, restore, fail_restore = self.perform_incremental_times()
 
-                    self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][str(topo_description)].append(fail)
-                    self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][str(topo_description)].append(restore)
-                    self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][str(topo_description)].append(fail_restore)
+                    self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][str(network_configuration)].append(fail)
+                    self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][str(network_configuration)].append(restore)
+                    self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][str(network_configuration)].append(fail_restore)
 
     def plot_initial_incremental_times(self):
         fig = plt.figure(0)
@@ -130,10 +127,11 @@ class InitialIncrementalTimes(Experiment):
                                   "Total number of hosts",
                                   "Average Incremental Computation Time (ms)",
                                   y_scale='linear')
-
 def main():
+
     num_iterations = 2
-    topo_descriptions = [("ring", 4, 1, None, None), ("clostopo", None, 1, 2, 1)]
+
+    network_configurations = [("ring", 4, 1, None, None)]#, ("clostopo", None, 1, 2, 1)]
 
     load_config = False
     save_config = True
@@ -142,7 +140,7 @@ def main():
     total_number_of_ports_to_synthesize = 1
 
     exp = InitialIncrementalTimes(num_iterations,
-                                  topo_descriptions,
+                                  network_configurations,
                                   load_config,
                                   save_config,
                                   controller,
