@@ -35,6 +35,7 @@ class AborescenePlayground(Experiment):
             #self.topo_description = ("linear", 2, 1)
 
             ng = self.setup_network_graph(self.topo_description,
+                                          mininet_setup_gap=1,
                                           synthesis_scheme="Synthesis_Failover_Aborescene",
                                           synthesis_setup_gap=5)
 

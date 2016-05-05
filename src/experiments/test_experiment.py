@@ -42,7 +42,7 @@ class TestExperiment(Experiment):
             #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
-                                          mininet_setup_gap=1,
+                                          mininet_setup_gap=5,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=10,
                                           synthesis_scheme="IntentSynthesis")
