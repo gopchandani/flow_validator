@@ -277,7 +277,6 @@ class FlowValidator(object):
                                                   [ingress_node],
                                                   [],
                                                   True)
-
             if not at.is_empty():
                 if at.is_subset_traffic(traffic):
                     is_connected = True

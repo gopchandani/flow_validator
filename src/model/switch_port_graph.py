@@ -114,6 +114,7 @@ class SwitchPortGraph(PortGraph):
                 self.remove_edge(pred, succ)
 
             edge = self.get_edges_from_flow_table_edges(flow_table, succ)
+
             self.add_edge(flow_table.port_graph_node, succ, edge)
 
     def compute_switch_admitted_traffic(self):
@@ -172,6 +173,9 @@ class SwitchPortGraph(PortGraph):
 
         ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
         egress_node = self.get_egress_node(self.sw.node_id, port_num)
+
+        if event_type == "port_up":
+            pass
 
         for pred in self.predecessors_iter(egress_node):
 

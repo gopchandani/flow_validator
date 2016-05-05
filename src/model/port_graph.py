@@ -52,6 +52,11 @@ class PortGraph(object):
             yield self.get_node(succ_id)
 
     def add_edge(self, pred, succ, edge_data):
+
+        if pred.node_id == 's4:table3' and (succ.node_id == 's4:egress1' or succ.node_id == 's4:egress2'):
+            for ed in edge_data.edge_data_list:
+                print succ.node_id, ed.get_active_rank()
+
         self.g.add_edge(pred.node_id, succ.node_id, e=edge_data)
 
     def remove_edge(self, pred, succ):
@@ -77,24 +82,9 @@ class PortGraph(object):
 
         dst_admitted_traffic = Traffic()
 
-        if self.report_active_state:
-
-            if dst in node.admitted_traffic:
-                for succ in node.admitted_traffic[dst]:
-
-                    tds = node.admitted_traffic[dst][succ]
-                    for te in tds.traffic_elements:
-
-                        if te.enabling_edge_data:
-                            if te.enabling_edge_data.get_active_rank() == 0:
-                                dst_admitted_traffic.traffic_elements.append(te)
-                        else:
-                            dst_admitted_traffic.traffic_elements.append(te)
-        else:
-
-            if dst in node.admitted_traffic:
-                for succ in node.admitted_traffic[dst]:
-                    dst_admitted_traffic.union(node.admitted_traffic[dst][succ])
+        if dst in node.admitted_traffic:
+            for succ in node.admitted_traffic[dst]:
+                dst_admitted_traffic.union(node.admitted_traffic[dst][succ])
 
         return dst_admitted_traffic
 
@@ -184,12 +174,14 @@ class PortGraph(object):
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
         #if curr.node_id == 's4:table1' and dst.node_id == 's4:table3':
-        #if dst.node_id == 's4:egress1':
         # if curr.node_id =='s1:table3' and dst.node_id == 's1:egress3':
         #     pass
         #
         # if curr.node_id =='s1:table3' and dst.node_id == 's1:egress2':
         #     pass
+
+        if dst.node_id == 's4:egress1':
+            pass
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
@@ -245,6 +237,9 @@ class PortGraph(object):
             # For each destination that may have been affected at the pred port
             for dst in admitted_traffic_changes[pred]:
 
+                if dst.node_id == "s4:egress2":
+                    pass
+
                 prev_pred_traffic = self.get_admitted_traffic(pred, dst)
                 now_pred_traffic = Traffic()
 
@@ -273,7 +268,7 @@ class PortGraph(object):
                                                       succ,
                                                       dst, end_to_end_modified_edges)
                 else:
-                    # Update admitted traffic at ingress port to reflect any and all changes
+                    # Update admitted traffic at successor node to reflect any and all changes
                     for succ in pred_succ_traffic_now:
                         pred_traffic = pred_succ_traffic_now[succ]
                         self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
