@@ -277,8 +277,7 @@ class FlowValidator(object):
                                                   [ingress_node],
                                                   [],
                                                   True)
-
-            print all_paths[0]
+            #print all_paths[0]
 
             if not at.is_empty():
                 if at.is_subset_traffic(traffic):

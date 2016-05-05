@@ -107,17 +107,18 @@ class Experiment(object):
 
                     self.synth.synthesize_all_switches(flow_match)
 
-                #self.mm.net.pingAll()
+                self.mm.net.pingAll()
 
-                #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
+                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
 
-                is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
-                                                                            self.mm.net.get('h21'))])
+                #
+                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
+                #                                                             self.mm.net.get('h21'))])
 
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
                 #                                                             self.mm.net.get('h21'))],
                 #                                                            [('s3', 's4')])
-                print "is_bi_connected:", is_bi_connected
+                # print "is_bi_connected:", is_bi_connected
 
                 if synthesis_setup_gap:
                     time.sleep(synthesis_setup_gap)
