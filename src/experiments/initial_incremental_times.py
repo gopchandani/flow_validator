@@ -17,12 +17,10 @@ from experiment import Experiment
 class InitialIncrementalTimes(Experiment):
     def __init__(self,
                  num_iterations,
-                 total_number_of_hosts,
+                 topo_descriptions,
                  load_config,
                  save_config,
                  controller,
-                 fanout,
-                 core,
                  total_number_of_ports_to_synthesize):
 
         super(InitialIncrementalTimes, self).__init__("initial_incremental_times",
@@ -32,11 +30,8 @@ class InitialIncrementalTimes(Experiment):
                                                       controller,
                                                       1)
 
-        self.total_number_of_hosts = total_number_of_hosts
+        self.topo_descriptions = topo_descriptions
         self.total_number_of_ports_to_synthesize = total_number_of_ports_to_synthesize
-
-        self.fanout = fanout
-        self.core = core
 
         self.data = {
             "construction_time": defaultdict(defaultdict),
@@ -82,46 +77,41 @@ class InitialIncrementalTimes(Experiment):
             ports_to_synthesize = xrange(5000, 5000 + number_of_ports_to_synthesize)
             print "ports_to_synthesize:", ports_to_synthesize
 
-            for total_number_of_hosts in self.total_number_of_hosts:
-                print "total_number_of_hosts:", total_number_of_hosts
+            for topo_description in self.topo_descriptions:
+                print "topo_description:", topo_description
 
-                self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
-                #self.topo_description = ("ring", 4, 1, None, None)
+                self.data["construction_time"][number_of_ports_to_synthesize][topo_description] = []
+                self.data["propagation_time"][number_of_ports_to_synthesize][topo_description] = []
+                self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][topo_description] = []
+                self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][topo_description] = []
+                self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][topo_description] = []
 
-                self.data["construction_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
-                self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
-                self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
-                self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
-                self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
+                ng = self.setup_network_graph(topo_description,
+                                              mininet_setup_gap=15,
+                                              #dst_ports_to_synthesize=ports_to_synthesize,
+                                              synthesis_setup_gap=15,#len(ports_to_synthesize),
+                                              synthesis_scheme="Synthesis_Failover_Aborescene")
 
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
-
-                    ng = self.setup_network_graph(self.topo_description,
-                                                  mininet_setup_gap=15,
-                                                  #dst_ports_to_synthesize=ports_to_synthesize,
-                                                  synthesis_setup_gap=15,#len(ports_to_synthesize),
-                                                  synthesis_scheme="Synthesis_Failover_Aborescene")
 
                     self.fv = FlowValidator(ng)
                     with Timer(verbose=True) as t:
                         self.fv.init_network_port_graph()
 
-                    self.data["construction_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(t.msecs)
+                    self.data["construction_time"][number_of_ports_to_synthesize][topo_description].append(t.msecs)
 
                     self.fv.add_hosts()
 
                     with Timer(verbose=True) as t:
                         self.fv.initialize_admitted_traffic()
 
-                    self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(t.msecs)
-                    #
+                    self.data["propagation_time"][number_of_ports_to_synthesize][topo_description].append(t.msecs)
                     fail, restore, fail_restore = self.perform_incremental_times()
 
-                    self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(fail)
-                    self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(restore)
-                    self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(fail_restore)
-
+                    self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][topo_description].append(fail)
+                    self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][topo_description].append(restore)
+                    self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][topo_description].append(fail_restore)
 
     def plot_initial_incremental_times(self):
         fig = plt.figure(0)
@@ -141,29 +131,26 @@ class InitialIncrementalTimes(Experiment):
                                   y_scale='linear')
 
 def main():
-    num_iterations = 10
-    total_number_of_hosts = [1]#, 6, 8, 10, 12]
+    num_iterations = 2
+    topo_descriptions = [("ring", 4, 1, None, None), ("clostopo", None, 1, 2, 1)]
+
     load_config = False
     save_config = True
     controller = "ryu"
 
-    fanout = 3
-    core = 2
     total_number_of_ports_to_synthesize = 1
 
     exp = InitialIncrementalTimes(num_iterations,
-                                  total_number_of_hosts,
+                                  topo_descriptions,
                                   load_config,
                                   save_config,
                                   controller,
-                                  fanout,
-                                  core,
                                   total_number_of_ports_to_synthesize)
 
     exp.trigger()
     exp.dump_data()
 
-    #exp.load_data("data/initial_incremental_times_5_iterations_20151206_141249.json")
+    #exp.load_data("data/.json")
 
     #exp.plot_initial_incremental_times()
 
