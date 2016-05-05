@@ -6,7 +6,6 @@ import itertools
 sys.path.append("./")
 
 from collections import defaultdict
-
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
 

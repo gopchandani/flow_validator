@@ -1,6 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-
 import json
 import time
 import numpy as np
