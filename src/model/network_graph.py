@@ -40,6 +40,7 @@ class NetworkGraph():
     def __init__(self, mm, controller, load_config=False, save_config=False):
 
         self.mm = mm
+        self.total_flow_rules = 0
 
         self.OFPP_CONTROLLER = 0xfffffffd
         self.OFPP_ALL = 0xfffffffc
@@ -535,7 +536,9 @@ class NetworkGraph():
             self.parse_ryu_switches(ryu_switches)
 
     def parse_network_graph(self):
-        
+
+        self.total_flow_rules = 0
+
         self.parse_switches()
 
         mininet_host_nodes = self.get_mininet_host_nodes()

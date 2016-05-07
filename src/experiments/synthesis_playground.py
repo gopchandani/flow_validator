@@ -24,6 +24,7 @@ class AborescenePlayground(Experiment):
                                                    len(num_hosts_per_switch))
 
         self.num_hosts_per_switch = num_hosts_per_switch
+        self.num_iterations = num_iterations
 
     def trigger(self):
 
@@ -37,9 +38,9 @@ class AborescenePlayground(Experiment):
             #self.topo_description = ("linear", 2, 1)
 
             ng = self.setup_network_graph(self.topo_description,
-                                          mininet_setup_gap=10,
+                                          mininet_setup_gap=20,
                                           synthesis_scheme="Synthesis_Failover_Aborescene",
-                                          synthesis_setup_gap=10)
+                                          synthesis_setup_gap=20)
 
             fv = FlowValidator(ng)
             fv.init_network_port_graph()
@@ -73,8 +74,8 @@ def main():
 
     num_iterations = 1#10
     num_hosts_per_switch = [1]#, 2, 3, 4]
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = AborescenePlayground(num_iterations,

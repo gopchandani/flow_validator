@@ -302,12 +302,32 @@ class FlowValidator(object):
         else:
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
 
-                # if not("s2" in links_to_fail[0].link_ports_dict and "s3" in links_to_fail[0].link_ports_dict):
+                # if not("s2" in links_to_fail[0].link_ports_dict and "s1" in links_to_fail[0].link_ports_dict):
                 #     continue
 
                 for link in links_to_fail:
                     print "Failing:", link
                     self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                # if "s2" in links_to_fail[0].link_ports_dict and "s3" in links_to_fail[0].link_ports_dict:
+                #     src_node = self.port_graph.get_ingress_node('s2', 1)
+                #     dst_node = self.port_graph.get_egress_node('s4', 1)
+                #     te = self.port_graph.get_admitted_traffic(src_node, dst_node)
+                #     print te
+                #
+                #
+                #     src_node = self.port_graph.get_ingress_node('s1', 2)
+                #     dst_node = self.port_graph.get_egress_node('s4', 1)
+                #     te = self.port_graph.get_admitted_traffic(src_node, dst_node)
+                #     print te
+                #
+                #
+                #
+                #     src_node = self.port_graph.get_ingress_node('s4', 2)
+                #     dst_node = self.port_graph.get_egress_node('s4', 1)
+                #     te = self.port_graph.get_admitted_traffic(src_node, dst_node)
+                #     print te
+
 
                 is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
 

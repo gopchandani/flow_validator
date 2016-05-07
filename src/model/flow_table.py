@@ -19,6 +19,8 @@ class Flow():
         self.flow_table = flow_table
         self.flow_json = flow_json
         self.network_graph = sw.network_graph
+        self.network_graph.total_flow_rules += 1
+
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None

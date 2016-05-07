@@ -126,6 +126,8 @@ class Experiment(object):
         # Refresh the network_graph
         self.ng.parse_switches()
 
+        print "total_flow_rules:", self.ng.total_flow_rules
+
         # import sys
         # sys.exit()
 
