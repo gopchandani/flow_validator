@@ -278,6 +278,15 @@ class FlowValidator(object):
                                                   True)
             #print all_paths[0]
 
+            print "----------------"
+            print all_paths[0]
+            print "------------------------------"
+            for te in at.traffic_elements:
+                print te
+                print te.switch_modifications
+                print te.enabling_edge_data.edge_filter_traffic
+                print te.enabling_edge_data.applied_modifications
+
             if not at.is_empty():
                 if at.is_subset_traffic(traffic):
                     is_connected = True
@@ -302,32 +311,28 @@ class FlowValidator(object):
         else:
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
 
-                # if not("s2" in links_to_fail[0].link_ports_dict and "s1" in links_to_fail[0].link_ports_dict):
-                #     continue
+                if not("s2" in links_to_fail[0].link_ports_dict and "s1" in links_to_fail[0].link_ports_dict):
+                    continue
 
                 for link in links_to_fail:
                     print "Failing:", link
                     self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
 
-                # if "s2" in links_to_fail[0].link_ports_dict and "s3" in links_to_fail[0].link_ports_dict:
-                #     src_node = self.port_graph.get_ingress_node('s2', 1)
-                #     dst_node = self.port_graph.get_egress_node('s4', 1)
-                #     te = self.port_graph.get_admitted_traffic(src_node, dst_node)
-                #     print te
-                #
-                #
-                #     src_node = self.port_graph.get_ingress_node('s1', 2)
-                #     dst_node = self.port_graph.get_egress_node('s4', 1)
-                #     te = self.port_graph.get_admitted_traffic(src_node, dst_node)
-                #     print te
-                #
-                #
-                #
-                #     src_node = self.port_graph.get_ingress_node('s4', 2)
-                #     dst_node = self.port_graph.get_egress_node('s4', 1)
-                #     te = self.port_graph.get_admitted_traffic(src_node, dst_node)
-                #     print te
+                pred = self.port_graph.get_ingress_node("s2", 1)
+                succ = self.port_graph.get_egress_node("s2", 3)
+                e = self.port_graph.get_edge(pred, succ)
+                for ed in e.edge_data_list:
+                    print ed.edge_filter_traffic
+                    print ed.applied_modifications
 
+                node = self.port_graph.get_egress_node("s2", 3)
+                dst = self.port_graph.get_egress_node("s1", 1)
+                at = self.port_graph.get_admitted_traffic(node, dst)
+                print at
+
+                for te in at.traffic_elements:
+                    print te
+                    print te.switch_modifications
 
                 is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
 
