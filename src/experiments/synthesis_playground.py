@@ -50,8 +50,8 @@ class AborescenePlayground(Experiment):
             # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
             # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
             # #
-            src_zone = [fv.network_graph.get_node_object("h21").switch_port]
-            dst_zone = [fv.network_graph.get_node_object("h11").switch_port]
+            src_zone = [fv.network_graph.get_node_object("h11").switch_port]
+            dst_zone = [fv.network_graph.get_node_object("h31").switch_port]
 
             specific_traffic = Traffic(init_wildcard=True)
             specific_traffic.set_field("ethernet_type", 0x0800)

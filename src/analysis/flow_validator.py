@@ -318,22 +318,6 @@ class FlowValidator(object):
                     print "Failing:", link
                     self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
 
-                pred = self.port_graph.get_ingress_node("s2", 1)
-                succ = self.port_graph.get_egress_node("s2", 3)
-                e = self.port_graph.get_edge(pred, succ)
-                for ed in e.edge_data_list:
-                    print ed.edge_filter_traffic
-                    print ed.applied_modifications
-
-                node = self.port_graph.get_egress_node("s2", 3)
-                dst = self.port_graph.get_egress_node("s1", 1)
-                at = self.port_graph.get_admitted_traffic(node, dst)
-                print at
-
-                for te in at.traffic_elements:
-                    print te
-                    print te.switch_modifications
-
                 is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
 
                 for link in links_to_fail:
