@@ -180,7 +180,7 @@ class PortGraph(object):
 
                 edge = self.get_edge(pred, curr)
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-                
+
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_admitted_traffic.is_empty():
                     self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)

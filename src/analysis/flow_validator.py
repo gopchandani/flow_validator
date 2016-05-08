@@ -276,20 +276,11 @@ class FlowValidator(object):
                                                   [ingress_node],
                                                   [],
                                                   True)
-            #print all_paths[0]
-
-            print "----------------"
-            print all_paths[0]
-            print "------------------------------"
-            for te in at.traffic_elements:
-                print te
-                print te.switch_modifications
-                print te.enabling_edge_data.edge_filter_traffic
-                print te.enabling_edge_data.applied_modifications
 
             if not at.is_empty():
                 if at.is_subset_traffic(traffic):
                     is_connected = True
+                    print all_paths[0]
                 else:
                     print "src_port:", src_port, "dst_port:", dst_port, "at does not pass specific_traffic check."
                     is_connected = False

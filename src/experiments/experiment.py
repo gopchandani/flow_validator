@@ -107,17 +107,16 @@ class Experiment(object):
 
                 #self.mm.net.pingAll()
 
-                is_bi_connected = self.mm.is_bi_connected_manual_ping_test_all_hosts()
+                #is_bi_connected = self.mm.is_bi_connected_manual_ping_test_all_hosts()
 
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
-
+                #
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
-                #                                                             self.mm.net.get('h21'))])
-                #
-                #
-                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h22'),
-                #                                                             self.mm.net.get('h41'))],
-                #                                                            [('s2', 's3')])
+                #                                                             self.mm.net.get('h31'))])
+
+                is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
+                                                                            self.mm.net.get('h31'))],
+                                                                           [('s1', 's2')])
                 print "is_bi_connected:", is_bi_connected
 
                 if synthesis_setup_gap:

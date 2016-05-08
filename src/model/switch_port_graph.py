@@ -154,7 +154,6 @@ class SwitchPortGraph(PortGraph):
                 ttp = traffic_to_propagate.get_orig_traffic()
             else:
                 # At all the non-ingress edges accumulate written modifications
-                # But these are useless if the instruction_type is applied.
                 if ed.written_modifications:
                     for te in ttp.traffic_elements:
                         te.written_modifications.update(ed.written_modifications)
