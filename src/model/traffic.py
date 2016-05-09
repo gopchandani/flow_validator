@@ -88,7 +88,6 @@ class TrafficElement():
             self.traffic_fields[field_name].add(Interval(0, sys.maxsize))
             self.traffic_fields[field_name].chop(value, value + 1)
 
-
     def get_field_intersection(self, field1, field2):
 
         # If either one of fields is a wildcard, other is the answer
@@ -224,7 +223,7 @@ class TrafficElement():
 
         return modified_traffic_element
 
-    def use_original_value(self, field_name, mf):
+    def field_remains_unmodified(self, orig_traffic_element, field_name, mf):
 
         # Check to see if the value on this traffic is same as what it was modified to be for this modification
         # If it is, then use the 'original' value of the match that caused the modification.
@@ -238,9 +237,11 @@ class TrafficElement():
         intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
 
         if intersection:
-            return True
+            orig_traffic_element.traffic_fields[field_name] = mf[field_name][0].traffic_fields[field_name]
         else:
-            return False
+            orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+
+        return intersection
 
     def get_orig_traffic_element(self, applied_modifications=None, store_switch_modifications=True):
 
@@ -252,6 +253,9 @@ class TrafficElement():
                 return self
 
             mf = self.written_modifications
+
+        mf_used = {}
+        mf_used.update(mf)
 
         orig_traffic_element = TrafficElement()
 
@@ -271,31 +275,40 @@ class TrafficElement():
                 if field_name == "has_vlan_tag" and "vlan_id" in mf:
                     continue
 
-                use_original = self.use_original_value(field_name, mf)
-
-                if use_original:
-                    orig_traffic_element.traffic_fields[field_name] = mf[field_name][0].traffic_fields[field_name]
-
-                    # If ever reversing effects of push_vlan and using original value, Check to see what becomes of the
-                    # modification of has_vlan_tag, if there were any...
-                    if field_name == "vlan_id" and "has_vlan_tag" in mf:
-
-                        use_original = self.use_original_value("has_vlan_tag", mf)
-
-                        if use_original:
+                elif field_name == "vlan_id" and "has_vlan_tag" in mf:
+                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                    
+                    if unmodified:
+                        unmodified = self.field_remains_unmodified(orig_traffic_element, "has_vlan_tag", mf)
+                        if unmodified:
                             orig_traffic_element.traffic_fields["has_vlan_tag"] = mf["has_vlan_tag"][0].traffic_fields["has_vlan_tag"]
                         else:
                             orig_traffic_element.traffic_fields["has_vlan_tag"] = self.traffic_fields["has_vlan_tag"]
-
-                else:
-                    orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
-
-                    # If ever reversing effects of push_vlan and not matching on it, while there is a modification
-                    # on the has_vlan_tag as well..., nullify this te somehow. One way is to set has_vlan_tag to empty
-                    if field_name == "vlan_id" and "has_vlan_tag" in mf:
+    
+                    else:
+                        # If ever reversing effects of push_vlan and not matching on it, while there is a modification
+                        # on the has_vlan_tag as well then nullify this te. One way is to set has_vlan_tag to empty
                         empty_field = IntervalTree()
                         orig_traffic_element.traffic_fields["has_vlan_tag"] = empty_field
 
+                elif field_name == "vlan_id" and "has_vlan_tag" not in mf:
+
+                    # Reverse the effects of a vlan_id modification on traffic only when a vlan tag is present
+                    vlan_tag_present = False
+
+                    if not self.is_traffic_field_wildcard(self.traffic_fields["has_vlan_tag"]):
+                        if Interval(1, 2) in self.traffic_fields["has_vlan_tag"]:
+                            vlan_tag_present = True
+
+                    if vlan_tag_present:
+                        unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                    else:
+                        orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+                        del mf_used[field_name]
+
+                # All the other fields...
+                else:
+                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
             else:
                 # Otherwise, just keep the field same as it was
                 orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
@@ -310,9 +323,9 @@ class TrafficElement():
         # matching rule
 
         if store_switch_modifications:
-            for modified_field in mf:
+            for modified_field in mf_used:
                 if modified_field not in orig_traffic_element.switch_modifications:
-                    orig_traffic_element.switch_modifications[modified_field] = mf[modified_field]
+                    orig_traffic_element.switch_modifications[modified_field] = mf_used[modified_field]
                 else:
                     # Check if the previous modification requires setting of the match to this modification
                     # If so, then use the match from this modification
@@ -382,7 +395,6 @@ class Traffic():
         else:
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value)
-
 
     # Checks if in_te is subset of self (any one of its te)
     def is_subset_te(self, in_te):

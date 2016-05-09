@@ -168,9 +168,6 @@ class PortGraph(object):
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
-        if curr.node_id == 's1:egress3' and dst.node_id == 's3:egress1':
-            pass
-
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
 
@@ -194,6 +191,10 @@ class PortGraph(object):
                 end_to_end_modified_edges.append((curr.node_id, dst.node_id))
 
             for pred in self.predecessors_iter(curr):
+
+                if curr and succ and dst:
+                    if pred.node_id == 's3:ingress3' and curr.node_id == 's3:egress2' and succ.node_id == 's2:ingress3' and dst.node_id == 's1:egress1':
+                        pass
 
                 edge = self.get_edge(pred, curr)
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
@@ -286,11 +287,13 @@ class PortGraph(object):
     def path_has_loop(self, path, succ):
 
         # Check for loops, if a node repeats more than twice, it is a loop
-        indices = [i for i,x in enumerate(path) if x == succ]
+        indices = [i for i, x in enumerate(path) if x == succ]
 
         has_loop = len(indices) > 2
 
         if has_loop:
+            for n in path:
+                print n
             print "Found a loop in the path:", path
 
         return has_loop
