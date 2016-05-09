@@ -168,6 +168,9 @@ class PortGraph(object):
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
+        if curr.node_id == 's1:egress3' and dst.node_id == 's3:egress1':
+            pass
+
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
 

@@ -306,8 +306,30 @@ class TrafficElement():
         orig_traffic_element.instruction_type = self.instruction_type
         orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
+        # If storing modifications, store the first one applied in the switch, with the match from the last
+        # matching rule
+
         if store_switch_modifications:
-            orig_traffic_element.switch_modifications.update(mf)
+            for modified_field in mf:
+                if modified_field not in orig_traffic_element.switch_modifications:
+                    orig_traffic_element.switch_modifications[modified_field] = mf[modified_field]
+                else:
+                    # Check if the previous modification requires setting of the match to this modification
+                    # If so, then use the match from this modification
+                    this_modification_match = mf[modified_field][0]
+                    this_modification_value_tree = mf[modified_field][1]
+
+                    prev_modification_match = orig_traffic_element.switch_modifications[modified_field][0]
+                    prev_modification_value_tree = orig_traffic_element.switch_modifications[modified_field][1]
+
+                    prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
+
+                    intersection = self.get_field_intersection(this_modification_value_tree,
+                                                               prev_match_field_value_tree)
+
+                    if intersection:
+                        orig_traffic_element.switch_modifications[modified_field] = (this_modification_match,
+                                                                                     prev_modification_value_tree)
 
         return orig_traffic_element
 
