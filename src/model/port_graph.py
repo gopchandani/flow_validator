@@ -372,9 +372,6 @@ class PortGraph(object):
                     # Make sure no loops will be caused by going down this successor
                     if not self.path_has_loop(path_prefix, succ):
 
-                        if this_node.node_id == 's2:ingress3' and succ.node_id == 's2:egress3':
-                            pass
-
                         traffic_at_succ = self.get_modified_traffic_at_succ(this_node, succ, dst, at, enabling_edge_data_list)
 
                         this_level_paths.extend(self.get_paths(succ,
