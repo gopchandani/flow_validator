@@ -192,10 +192,6 @@ class PortGraph(object):
 
             for pred in self.predecessors_iter(curr):
 
-                if curr and succ and dst:
-                    if pred.node_id == 's3:ingress3' and curr.node_id == 's3:egress2' and succ.node_id == 's2:ingress3' and dst.node_id == 's1:egress1':
-                        pass
-
                 edge = self.get_edge(pred, curr)
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
                 self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
@@ -375,6 +371,9 @@ class PortGraph(object):
 
                     # Make sure no loops will be caused by going down this successor
                     if not self.path_has_loop(path_prefix, succ):
+
+                        if this_node.node_id == 's2:ingress3' and succ.node_id == 's2:egress3':
+                            pass
 
                         traffic_at_succ = self.get_modified_traffic_at_succ(this_node, succ, dst, at, enabling_edge_data_list)
 

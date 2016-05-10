@@ -183,7 +183,11 @@ class NetworkPortGraph(PortGraph):
 
             # If there were modifications along the way...
             if ed.applied_modifications:
-                ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=False)
+
+                if edge.pred.sw == edge.succ.sw:
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=True)
+                else:
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=False)
             else:
                 ttp = traffic_to_propagate
 

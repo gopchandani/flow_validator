@@ -277,11 +277,6 @@ class FlowValidator(object):
                                                   [],
                                                   True)
 
-            node = self.port_graph.get_ingress_node("s3", 3)
-            dst = self.port_graph.get_egress_node("s1", 1)
-            at_debug = self.port_graph.get_admitted_traffic(node, dst)
-            print at_debug
-
             if not at.is_empty():
                 if at.is_subset_traffic(traffic):
                     is_connected = True

@@ -1,12 +1,13 @@
-__author__ = 'Rakesh Kumar'
-
 import sys
 
 from netaddr import IPNetwork
 from match import field_names
 from intervaltree_modified import IntervalTree, Interval
 
-class TrafficElement():
+__author__ = 'Rakesh Kumar'
+
+
+class TrafficElement:
 
     def __init__(self, init_match=None, init_field_wildcard=False):
 
@@ -296,8 +297,11 @@ class TrafficElement():
                     # Reverse the effects of a vlan_id modification on traffic only when a vlan tag is present
                     vlan_tag_present = False
 
-                    if not self.is_traffic_field_wildcard(self.traffic_fields["has_vlan_tag"]):
-                        if Interval(1, 2) in self.traffic_fields["has_vlan_tag"]:
+                    # We check this by using a weird check here.
+                    if self.is_traffic_field_wildcard(self.traffic_fields["has_vlan_tag"]):
+                       vlan_tag_present = True
+                    else:
+                        if not Interval(0, 1) in self.traffic_fields["has_vlan_tag"]:
                             vlan_tag_present = True
 
                     if vlan_tag_present:
@@ -347,7 +351,7 @@ class TrafficElement():
         return orig_traffic_element
 
 
-class Traffic():
+class Traffic:
 
     def __init__(self, init_wildcard=False):
 
