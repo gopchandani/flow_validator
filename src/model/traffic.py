@@ -348,6 +348,9 @@ class TrafficElement:
                         orig_traffic_element.switch_modifications[modified_field] = (this_modification_match,
                                                                                      prev_modification_value_tree)
 
+        else:
+            orig_traffic_element.switch_modifications.clear()
+
         return orig_traffic_element
 
 
@@ -399,6 +402,10 @@ class Traffic:
         else:
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value)
+
+    def clear_switch_modifications(self):
+        for te in self.traffic_elements:
+            te.switch_modifications.clear()
 
     # Checks if in_te is subset of self (any one of its te)
     def is_subset_te(self, in_te):

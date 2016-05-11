@@ -215,7 +215,8 @@ class PortGraph(object):
                 if dst not in admitted_traffic_changes[pred]:
                     admitted_traffic_changes[pred][dst] = [succ]
                 else:
-                    admitted_traffic_changes[pred][dst].append(succ)
+                    if succ not in admitted_traffic_changes[pred][dst]:
+                        admitted_traffic_changes[pred][dst].append(succ)
 
         # Do this for each pred port that has changed
         for pred in admitted_traffic_changes:
@@ -233,6 +234,9 @@ class PortGraph(object):
                     edge = self.get_edge(pred, succ)
                     succ_traffic = self.get_admitted_traffic(succ, dst)
 
+                    if pred.node_id == 's2:ingress3' and succ.node_id == 's2:egress3' and dst.node_id == 's1:egress1':
+                        pass
+
                     pred_traffic = self.compute_edge_admitted_traffic(succ_traffic, edge)
 
                     pred_succ_traffic_now[succ] = pred_traffic
@@ -241,13 +245,6 @@ class PortGraph(object):
 
                 more_now = prev_pred_traffic.difference(now_pred_traffic)
                 less_now = now_pred_traffic.difference(prev_pred_traffic)
-
-                if pred.node_id == 's2:ingress3' and dst.node_id == 's1:egress1':
-
-                    print len(prev_pred_traffic.traffic_elements)
-                    print len(now_pred_traffic.traffic_elements)
-                    print len(more_now.traffic_elements)
-                    print len(less_now.traffic_elements)
 
                 # Decide if to propagate it, if more_now or less_now is not empty...
                 if not more_now.is_empty() or not less_now.is_empty():

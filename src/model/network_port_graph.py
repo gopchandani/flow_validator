@@ -180,6 +180,7 @@ class NetworkPortGraph(PortGraph):
             # At succ edges, set the in_port of the admitted match for destination to wildcard
             if edge.edge_type == "outside":
                 traffic_to_propagate.set_field("in_port", is_wildcard=True)
+                traffic_to_propagate.clear_switch_modifications()
 
             # If there were modifications along the way...
             if ed.applied_modifications:
