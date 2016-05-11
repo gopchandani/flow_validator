@@ -8,7 +8,7 @@ from traffic import Traffic, TrafficElement
 from instruction_set import InstructionSet
 
 
-class Flow():
+class Flow:
 
     def __hash__(self):
         return hash(str(self.sw.node_id) + str(self.table_id) + str(id(self)))
@@ -56,9 +56,6 @@ class Flow():
         self.complement_traffic.add_traffic_elements(self.traffic_element.get_complement_traffic_elements())
 
     def get_port_graph_edges(self, port_graph_edges):
-
-        # if self.flow_table.port_graph_node.node_id == 's1:table3':
-        #     pass
 
         if self.instruction_set:
 
