@@ -230,12 +230,12 @@ class PortGraph(object):
                     edge = self.get_edge(pred, succ)
                     succ_traffic = self.get_admitted_traffic(succ, dst)
 
-                    pred_traffic = self.compute_edge_admitted_traffic(succ_traffic, edge)
-
                     # Update admitted traffic at successor node to reflect changes
-                    self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
+                    pred_traffic_via_succ = self.compute_edge_admitted_traffic(succ_traffic, edge)
+                    self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic_via_succ)
 
-                    now_pred_traffic.union(pred_traffic)
+                    # Accumulate total traffic admitted at this pred
+                    now_pred_traffic.union(pred_traffic_via_succ)
 
                 # Propagate the net unioned traffic to all of predecessors of the predecessor itself.
                 for pred_pred in self.predecessors_iter(pred):
