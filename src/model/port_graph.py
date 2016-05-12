@@ -251,50 +251,37 @@ class PortGraph(object):
 
                     pred_traffic = self.compute_edge_admitted_traffic(succ_traffic, edge)
 
-                    pred_succ_traffic_now[succ] = pred_traffic
+                    # Update admitted traffic at successor node to reflect changes
+                    # self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
 
+                    pred_succ_traffic_now[succ] = pred_traffic
                     now_pred_traffic.union(pred_traffic)
 
-                more_now = prev_pred_traffic.difference(now_pred_traffic)
-                less_now = now_pred_traffic.difference(prev_pred_traffic)
+                debug_mode = True
 
-                # Decide if to propagate it, if more_now or less_now is not empty...
-                if not more_now.is_empty() or not less_now.is_empty():
+                if debug_mode and pred.node_id == 's4:ingress3' and dst.node_id == 's2:egress1':
 
-                    if pred.node_id == 's4:ingress3' and dst.node_id == 's2:egress1':
+                        succ = self.get_egress_node("s4", 3)
 
-                            succ = self.get_egress_node("s4", 2)
+                        self.compute_admitted_traffic(pred,
+                                                      pred_succ_traffic_now[succ],
+                                                      succ,
+                                                      dst, end_to_end_modified_edges)
 
-                            self.compute_admitted_traffic(pred,
-                                                          pred_succ_traffic_now[succ],
-                                                          succ,
-                                                          dst, end_to_end_modified_edges)
+                        succ = self.get_egress_node("s4", 2)
 
-                            succ = self.get_egress_node("s4", 3)
-
-                            self.compute_admitted_traffic(pred,
-                                                          pred_succ_traffic_now[succ],
-                                                          succ,
-                                                          dst, end_to_end_modified_edges)
-                    else:
-
-                        # Decide if to propagate it, if more_now or less_now is not empty...
-                        if not more_now.is_empty() or not less_now.is_empty():
-
-                            for succ in pred_succ_traffic_now:
-
-                                if pred.node_id == 's4:ingress3' and dst.node_id == 's2:egress1':
-                                    print succ.node_id
-
-                                self.compute_admitted_traffic(pred,
-                                                              pred_succ_traffic_now[succ],
-                                                              succ,
-                                                              dst, end_to_end_modified_edges)
+                        self.compute_admitted_traffic(pred,
+                                                      pred_succ_traffic_now[succ],
+                                                      succ,
+                                                      dst, end_to_end_modified_edges)
                 else:
-                    # Update admitted traffic at successor node to reflect any and all changes
-                    for succ in pred_succ_traffic_now:
-                        pred_traffic = pred_succ_traffic_now[succ]
-                        self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
+
+                        for succ in pred_succ_traffic_now:
+
+                            self.compute_admitted_traffic(pred,
+                                                          pred_succ_traffic_now[succ],
+                                                          succ,
+                                                          dst, end_to_end_modified_edges)
 
     def get_graph_ats(self):
         graph_ats = defaultdict(defaultdict)
