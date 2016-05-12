@@ -168,10 +168,6 @@ class PortGraph(object):
 
     def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
-        if curr and succ and dst:
-            if curr.node_id == 's1:egress3' and succ.node_id == 's4:ingress3' and dst.node_id == 's2:egress1':
-                pass
-
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
 
@@ -181,10 +177,6 @@ class PortGraph(object):
                 end_to_end_modified_edges.append((curr.node_id, dst.node_id))
 
             for pred in self.predecessors_iter(curr):
-
-                if pred and curr and succ and dst:
-                    if pred.node_id == 's1:ingress1' and curr.node_id == 's1:egress3' and succ.node_id == 's4:ingress3' and dst.node_id == 's2:egress1':
-                        pass
 
                 edge = self.get_edge(pred, curr)
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
@@ -199,10 +191,6 @@ class PortGraph(object):
                 end_to_end_modified_edges.append((curr.node_id, dst.node_id))
 
             for pred in self.predecessors_iter(curr):
-
-                if pred and curr and succ and dst:
-                    if pred.node_id == 's1:ingress1' and curr.node_id == 's1:egress3' and succ.node_id == 's4:ingress3' and dst.node_id == 's2:egress1':
-                        pass
 
                 edge = self.get_edge(pred, curr)
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
@@ -236,52 +224,29 @@ class PortGraph(object):
             # For each destination that may have been affected at the pred port
             for dst in admitted_traffic_changes[pred]:
 
-                prev_pred_traffic = self.get_admitted_traffic(pred, dst)
                 now_pred_traffic = Traffic()
-
-                pred_succ_traffic_now = {}
-
                 for succ in admitted_traffic_changes[pred][dst]:
 
                     edge = self.get_edge(pred, succ)
                     succ_traffic = self.get_admitted_traffic(succ, dst)
 
-                    if pred.node_id == 's4:ingress3' and dst.node_id == 's2:egress1':
-                        pass
-
                     pred_traffic = self.compute_edge_admitted_traffic(succ_traffic, edge)
 
                     # Update admitted traffic at successor node to reflect changes
-                    # self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
+                    self.set_admitted_traffic_via_succ(pred, dst, succ, pred_traffic)
 
-                    pred_succ_traffic_now[succ] = pred_traffic
                     now_pred_traffic.union(pred_traffic)
 
-                debug_mode = True
+                # Propagate the net unioned traffic to all of predecessors of the predecessor itself.
+                for pred_pred in self.predecessors_iter(pred):
 
-                if debug_mode and pred.node_id == 's4:ingress3' and dst.node_id == 's2:egress1':
+                    edge = self.get_edge(pred_pred, pred)
+                    pred_pred_traffic = self.compute_edge_admitted_traffic(now_pred_traffic, edge)
 
-                        succ = self.get_egress_node("s4", 3)
-
-                        self.compute_admitted_traffic(pred,
-                                                      pred_succ_traffic_now[succ],
-                                                      succ,
-                                                      dst, end_to_end_modified_edges)
-
-                        succ = self.get_egress_node("s4", 2)
-
-                        self.compute_admitted_traffic(pred,
-                                                      pred_succ_traffic_now[succ],
-                                                      succ,
-                                                      dst, end_to_end_modified_edges)
-                else:
-
-                        for succ in pred_succ_traffic_now:
-
-                            self.compute_admitted_traffic(pred,
-                                                          pred_succ_traffic_now[succ],
-                                                          succ,
-                                                          dst, end_to_end_modified_edges)
+                    self.compute_admitted_traffic(pred_pred,
+                                                  pred_pred_traffic,
+                                                  pred,
+                                                  dst, end_to_end_modified_edges)
 
     def get_graph_ats(self):
         graph_ats = defaultdict(defaultdict)

@@ -27,14 +27,15 @@ class NetworkPortGraph(PortGraph):
 
                 traffic_paths = None
                 if edge_sw:
-                    #
-                    # if pred.node_id == 's4:ingress1' and succ.node_id == 's4:egress2':
-                    #     pass
+
+                    if pred.node_id == 's4:ingress3' and succ.node_id == 's4:egress1':
+                        pass
 
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
 
                     if len(traffic_paths) == 0:
+                        traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
                         raise Exception("Found traffic but no paths to back it up.")
 
                 edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, traffic_paths)

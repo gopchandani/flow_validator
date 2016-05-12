@@ -277,6 +277,13 @@ class FlowValidator(object):
                                                   [],
                                                   True)
 
+            if not all_paths:
+                all_paths = self.port_graph.get_paths(ingress_node,
+                                                      egress_node,
+                                                      traffic,
+                                                      [ingress_node],
+                                                      [],
+                                                      True)
             if not at.is_empty():
                 if at.is_subset_traffic(traffic):
                     is_connected = True
@@ -303,9 +310,9 @@ class FlowValidator(object):
             is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
         else:
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
-
-                if not ("s4" in links_to_fail[0].link_ports_dict and "s3" in links_to_fail[0].link_ports_dict):
-                    continue
+                #
+                # if not ("s4" in links_to_fail[0].link_ports_dict and "s3" in links_to_fail[0].link_ports_dict):
+                #     continue
 
                 for link in links_to_fail:
                     print "Failing:", link
