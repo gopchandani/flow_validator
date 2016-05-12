@@ -304,7 +304,7 @@ class FlowValidator(object):
         else:
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
 
-                if not("s2" in links_to_fail[0].link_ports_dict and "s1" in links_to_fail[0].link_ports_dict):
+                if not ("s4" in links_to_fail[0].link_ports_dict and "s3" in links_to_fail[0].link_ports_dict):
                     continue
 
                 for link in links_to_fail:
