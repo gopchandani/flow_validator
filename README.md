@@ -1,9 +1,9 @@
 ### How do I get set up? ###
 
+* You would need a custom RYU version to run this as of now. It is fork on RYU 3.20
 * Ensure that OVS version is 2.3.0
 * If you don't have pip installed, then install the python package manager. (Ubuntu package: python-pip)
 * sudo apt-get install python-oslo.config
-* sudo pip install ryu==3.20
 * sudo pip install networkx
 * sudo pip install netaddr
 * sudo pip install intervaltree
