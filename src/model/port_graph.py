@@ -208,9 +208,6 @@ class PortGraph(object):
             succ = self.get_node(modified_edge[1])
 
             # TODO Limit the destinations by using markets in modified_flow_table_edges
-            # Go to the succ and snap up all destinations, without regard to
-            # whether the admitted traffic actually could have gotten affected by modified_edge.
-
             for dst in self.get_admitted_traffic_dsts(succ):
                 if dst not in admitted_traffic_changes[pred]:
                     admitted_traffic_changes[pred][dst] = [succ]

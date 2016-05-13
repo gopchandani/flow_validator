@@ -115,11 +115,11 @@ class InitialIncrementalTimes(Experiment):
                                   y_scale='linear')
 def main():
 
-    num_iterations = 2
+    num_iterations = 1
 
 #    network_configurations = [("ring", 4, 1, None, None)]#, ("clostopo", None, 1, 2, 1)]
-#    network_configurations = [("clostopo", None, 1, 3, 2)]
-    network_configurations = [("ring", 4, 1, None, None)]
+    network_configurations = [("clostopo", None, 5, 2, 1)]
+    #network_configurations = [("ring", 4, 5, None, None)]
 
     load_config = False
     save_config = True
