@@ -38,8 +38,8 @@ class TestExperiment(Experiment):
             print "ports_to_synthesize:", ports_to_synthesize
 
             #self.topo_description = ("linear", 2, 1)
-            self.topo_description = ("ring", 4, 1, None, None)
-            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            #self.topo_description = ("ring", 4, 1, None, None)
+            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=5,
@@ -56,12 +56,14 @@ class TestExperiment(Experiment):
 
             analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_traffic_paths()
 
-            all_paths_match = self.compare_primary_paths_with_synthesis(self.fv, analyzed_host_pairs_path_info, verbose=False)
+            all_paths_match = self.compare_primary_paths_with_synthesis(self.fv, analyzed_host_pairs_path_info,
+                                                                        verbose=False)
+
             print "Primary paths TestExperiment, all_paths_match:", all_paths_match
 
             all_paths_match = self.compare_failover_paths_with_synthesis(self.fv,
-                                                                         #self.fv.network_graph.graph.edges(),
-                                                                         links_to_try=[("s3", "s2")],
+                                                                         self.fv.network_graph.graph.edges(),
+                                                                         #links_to_try=[("s3", "s2")],
                                                                          verbose=False)
 
             print "Failover paths TestExperiment, all_paths_match:", all_paths_match

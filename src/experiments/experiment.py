@@ -109,7 +109,6 @@ class Experiment(object):
 
                 is_bi_connected = self.mm.is_bi_connected_manual_ping_test_all_hosts()
 
-                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
                 #
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
                 #                                                             self.mm.net.get('h31'))])

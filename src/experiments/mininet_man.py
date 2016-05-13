@@ -221,7 +221,7 @@ class MininetMan():
 
         return num_seconds
 
-    def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check=None, edges_to_try=None):
+    def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check, edges_to_try=None):
 
         is_bi_connected= True
 
@@ -234,17 +234,14 @@ class MininetMan():
             if edge[0].startswith("h") or edge[1].startswith("h"):
                 continue
 
-            if not experiment_host_pairs_to_check:
-                experiment_host_pairs_to_check = list(self._get_experiment_host_pair())
-
             for (src_host, dst_host) in experiment_host_pairs_to_check:
 
-                #is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
+                is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
 
-                # if not is_pingable_before_failure:
-                #     print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
-                #     is_bi_connected = False
-                #     break
+                if not is_pingable_before_failure:
+                    print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
+                    is_bi_connected = False
+                    break
 
                 self.net.configLinkStatus(edge[0], edge[1], 'down')
                 self.wait_until_link_status(edge[0], edge[1], 'down')
@@ -254,12 +251,12 @@ class MininetMan():
                 self.wait_until_link_status(edge[0], edge[1], 'up')
 
                 time.sleep(5)
-                # is_pingable_after_restoration = self.is_host_pair_pingable(src_host, dst_host)
-                #
-                # if not is_pingable_after_failure == True:
-                #     is_bi_connected = False
-                #     print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
-                #     break
+                is_pingable_after_restoration = self.is_host_pair_pingable(src_host, dst_host)
+
+                if not is_pingable_after_failure == True:
+                    is_bi_connected = False
+                    print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
+                    break
 
         return is_bi_connected
 
