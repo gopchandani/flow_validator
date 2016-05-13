@@ -1,5 +1,6 @@
 ### How do I get set up? ###
 
+* Ensure that OVS version is 2.3.0
 * If you don't have pip installed, then install the python package manager. (Ubuntu package: python-pip)
 * sudo apt-get install python-oslo.config
 * sudo pip install ryu==3.20
