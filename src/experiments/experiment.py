@@ -126,9 +126,6 @@ class Experiment(object):
 
         print "total_flow_rules:", self.ng.total_flow_rules
 
-        # import sys
-        # sys.exit()
-
         return self.ng
 
     #TODO: Eliminate the need to have this function

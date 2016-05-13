@@ -287,7 +287,7 @@ class FlowValidator(object):
             if not at.is_empty():
                 if at.is_subset_traffic(traffic):
                     is_connected = True
-                    print all_paths[0]
+                    #print all_paths[0]
                 else:
                     print at
                     print "src_port:", src_port, "dst_port:", dst_port, "at does not pass specific_traffic check."

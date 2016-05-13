@@ -59,14 +59,8 @@ class AborescenePlayground(Experiment):
             connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 0)
             print connected
 
-            # connected = fv.validate_zone_pair_connectivity(dst_zone, src_zone, specific_traffic, 0)
-            # print connected
-
             connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 1)
             print connected
-
-            # connected = fv.validate_zone_pair_connectivity(dst_zone, src_zone, specific_traffic, 1)
-            # print connected
 
         print "Done..."
 
@@ -74,8 +68,8 @@ def main():
 
     num_iterations = 1#10
     num_hosts_per_switch = [2]#, 2, 3, 4]
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = AborescenePlayground(num_iterations,

@@ -526,7 +526,9 @@ class NetworkGraph():
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
     def parse_switches(self):
-        
+
+        self.total_flow_rules = 0
+
         if self.controller == "odl":
             odl_switches = self.get_odl_switches()
             self.parse_odl_switches(odl_switches)
@@ -536,8 +538,6 @@ class NetworkGraph():
             self.parse_ryu_switches(ryu_switches)
 
     def parse_network_graph(self):
-
-        self.total_flow_rules = 0
 
         self.parse_switches()
 

@@ -87,7 +87,7 @@ class Flow:
             print "Assuming this means to drop."
 
 
-class FlowTable():
+class FlowTable:
     def __init__(self, sw, table_id, flow_list):
 
         self.sw = sw
