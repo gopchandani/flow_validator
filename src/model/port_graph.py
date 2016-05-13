@@ -224,9 +224,6 @@ class PortGraph(object):
             # For each destination that may have been affected at the pred port
             for dst in admitted_traffic_changes[pred]:
 
-                if pred.node_id == 's2:ingress2' and dst.node_id == 's2:egress1':
-                    pass
-
                 now_pred_traffic = Traffic()
 
                 # Check the fate of traffic from changed successors in this loop
@@ -245,7 +242,11 @@ class PortGraph(object):
                 # Collect traffic from any succs that was not changed
                 for succ in self.get_admitted_traffic_succs(pred, dst):
                     if succ not in admitted_traffic_changes[pred][dst]:
-                        now_pred_traffic = self.get_admitted_traffic_via_succ(pred, dst, succ)
+                        now_pred_traffic.union(self.get_admitted_traffic_via_succ(pred, dst, succ))
+
+                if pred.node_id == 's3:ingress3' and dst.node_id == 's2:egress1':
+                    print "now_pred_traffic"
+                    print now_pred_traffic
 
                 # Propagate the net unioned traffic to all of predecessors of the predecessor itself.
                 for pred_pred in self.predecessors_iter(pred):
