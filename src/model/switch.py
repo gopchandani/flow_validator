@@ -9,9 +9,9 @@ class Switch():
 
     def __init__(self, sw_id, network_graph):
 
-        self.g = nx.DiGraph()
         self.node_id = sw_id
         self.network_graph = network_graph
+        self.attached_hosts = []
         self.flow_tables = []
         self.group_table = None
         self.ports = None
@@ -25,4 +25,4 @@ class Switch():
             self.synthesis_tag = self.node_id
 
         # Analysis stuff
-        self.port_graph = SwitchPortGraph(network_graph, self)
+        self.port_graph = None

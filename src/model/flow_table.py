@@ -8,16 +8,19 @@ from traffic import Traffic, TrafficElement
 from instruction_set import InstructionSet
 
 
-class Flow():
+class Flow:
 
     def __hash__(self):
         return hash(str(self.sw.node_id) + str(self.table_id) + str(id(self)))
 
-    def __init__(self, sw, flow_json):
+    def __init__(self, sw, flow_table, flow_json):
 
         self.sw = sw
+        self.flow_table = flow_table
         self.flow_json = flow_json
         self.network_graph = sw.network_graph
+        self.network_graph.total_flow_rules += 1
+
         self.written_actions = []
         self.applied_actions = []
         self.go_to_table = None
@@ -42,6 +45,7 @@ class Flow():
             self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
             self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
+    def init_port_graph_state(self):
 
         self.traffic_element = TrafficElement(init_match=self.match)
         self.traffic = Traffic()
@@ -51,75 +55,57 @@ class Flow():
         self.traffic.add_traffic_elements([self.traffic_element])
         self.complement_traffic.add_traffic_elements(self.traffic_element.get_complement_traffic_elements())
 
-
     def get_port_graph_edges(self, port_graph_edges):
 
         if self.instruction_set:
 
             # Prepare the raw material for edges
-
             self.instruction_set.populate_action_sets_for_port_graph_edges()
 
-            self.applied_modifications = \
-                self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
+            for egress_node, edge_tuple in self.instruction_set.get_applied_port_graph_edges():
+                port_graph_edges[egress_node].append(edge_tuple)
 
-            self.written_modifications = \
-                self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
-
-            self.applied_port_graph_edges = self.instruction_set.applied_action_set.get_action_set_port_graph_edges()
-
-            self.written_port_graph_edges = self.instruction_set.written_action_set.get_action_set_port_graph_edges()
-
-            self.goto_table_port_graph_edge = None
+            for egress_node, edge_tuple in self.instruction_set.get_applied_port_graph_edges():
+                port_graph_edges[egress_node].append(edge_tuple)
 
             if self.instruction_set.goto_table:
 
                 if self.instruction_set.goto_table < len(self.sw.flow_tables):
 
-                    self.goto_table_port_graph_edge = (self.sw.flow_tables[self.table_id].port_graph_node,
-                                                       self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node)
+                    goto_table_port_graph_node = self.sw.flow_tables[self.instruction_set.goto_table].port_graph_node
+
+                    applied_modifications = self.instruction_set.applied_action_set.get_modified_fields_dict(self.traffic_element)
+                    written_modifications = self.instruction_set.written_action_set.get_modified_fields_dict(self.traffic_element)
+
+                    port_graph_edges[goto_table_port_graph_node].append((self.applied_traffic,
+                                                                         None,
+                                                                         applied_modifications,
+                                                                         written_modifications))
                 else:
                     print "At switch:", self.sw.node_id, ", couldn't find flow table goto:", self.instruction_set.goto_table
-
-
-            for out_port, output_action in self.applied_port_graph_edges:
-
-                output_action.instruction_type = "applied"
-                egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
-
-                port_graph_edges[egress_node].append((self.applied_traffic,
-                                                           output_action,
-                                                           self.applied_modifications,
-                                                           self.written_modifications))
-
-            for out_port, output_action in self.written_port_graph_edges:
-
-                output_action.instruction_type = "written"
-                egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
-
-                port_graph_edges[egress_node].append((self.applied_traffic,
-                                                           output_action,
-                                                           self.applied_modifications,
-                                                           self.written_modifications))
-
-            if self.goto_table_port_graph_edge:
-
-                port_graph_edges[self.goto_table_port_graph_edge[1]].append((self.applied_traffic,
-                                                                                  None,
-                                                                                  self.applied_modifications,
-                                                                                  self.written_modifications))
-
         else:
             print "Assuming this means to drop."
 
 
-class FlowTable():
+class FlowTable:
     def __init__(self, sw, table_id, flow_list):
 
         self.sw = sw
         self.network_graph = sw.network_graph
         self.table_id = table_id
         self.flows = []
+
+        for f in flow_list:
+            f = Flow(sw, self, f)
+            self.flows.append(f)
+
+        #  Sort the flows list by priority
+        self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
+
+    def init_port_graph_state(self):
+
+        for f in self.flows:
+            f.init_port_graph_state()
 
         self.port_graph_node = PortGraphNode(self.sw,
                                              self.sw.port_graph.get_table_node_id(self.sw.node_id, self.table_id),
@@ -131,13 +117,6 @@ class FlowTable():
         # The key is the succ node, and the list contains edge contents
 
         self.current_port_graph_edges = None
-
-        for f in flow_list:
-            f = Flow(sw, f)
-            self.flows.append(f)
-
-        #  Sort the flows list by priority
-        self.flows = sorted(self.flows, key=lambda flow: flow.priority, reverse=True)
 
 
     def _get_port_graph_edges_dict(self):
@@ -169,7 +148,6 @@ class FlowTable():
 
         self.current_port_graph_edges = self._get_port_graph_edges_dict()
 
-
     def update_port_graph_edges(self):
 
         modified_keys = []
@@ -195,6 +173,7 @@ class FlowTable():
         # 3. The edges that existed previously and now do as well
         # TODO: but the contents of traffic filters/modifications
         modified_values = [k for k in self.intersect if len(new_port_graph_edges[k]) != len(self.current_port_graph_edges[k])]
+
         modified_keys.extend(modified_values)
 
         # Set the flow table's port graph edges to now modified ones

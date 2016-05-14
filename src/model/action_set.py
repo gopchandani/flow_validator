@@ -1,5 +1,9 @@
 __author__ = 'Rakesh Kumar'
 
+import sys
+
+from intervaltree_modified import Interval
+
 from match import OdlMatchJsonParser
 from match import ryu_field_names_mapping
 from collections import defaultdict
@@ -138,19 +142,18 @@ class Action():
             self.modified_field = ryu_field_names_mapping[field_mod[0:field_mod.find(":")]]
             self.field_modified_to = field_mod[field_mod.find(":") + 1:field_mod.find("}")]
 
-            if self.modified_field == "vlan_id":
-                self.field_modified_to = int(self.field_modified_to) - 0x1000
+            #TODO: Works fine for VLAN_ID mods, fields other than VLAN id may require special parsing here
+            self.field_modified_to = int(self.field_modified_to)
 
         if self.action_json.startswith("GROUP"):
             self.action_type = "group"
             self.group_id = int(self.action_json[self.action_json.find(":") + 1:])
 
-        # if "push-vlan-action" in self.action_json:
-        #     self.action_type = "push_vlan"
-        #     self.vlan_ethernet_type = self.action_json["push-vlan-action"]["ethernet-type"]
-        #
-        # if "pop-vlan-action" in self.action_json:
-        #     self.action_type = "pop_vlan"
+        if self.action_json.startswith("PUSH_VLAN"):
+            self.action_type = "push_vlan"
+
+        if self.action_json.startswith("POP_VLAN"):
+            self.action_type = "pop_vlan"
 
     def is_failover_action(self):
         return (self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF)
@@ -202,14 +205,14 @@ class ActionSet():
         self.action_dict = defaultdict(list)
         self.sw = sw
 
-    def add_all_actions(self, action_list, intersection):
+    def add_all_actions(self, action_list):
 
         for action in action_list:
 
             if action.action_type == "group":
                 if action.group_id in self.sw.group_table.groups:
                     group_all_action_list =  self.sw.group_table.groups[action.group_id].get_action_list()
-                    self.add_all_actions(group_all_action_list, intersection)
+                    self.add_all_actions(group_all_action_list)
                 else:
                     raise Exception("Odd that a group_id is not provided in a group action")
             else:
@@ -223,11 +226,24 @@ class ActionSet():
 
         # Capture the value before (in principle and after) the modification in a tuple
         for set_action in self.action_dict["set_field"]:
-            modified_fields_dict[set_action.modified_field] = (flow_match_element, set_action.field_modified_to)
+
+            #TODO: Do this tree building thing more properly ground up from the parser
+            modified_fields_dict[set_action.modified_field] = (flow_match_element,
+                                                               Interval(set_action.field_modified_to,
+                                                                        set_action.field_modified_to + 1))
+
+        if "push_vlan" in self.action_dict:
+            modified_fields_dict["has_vlan_tag"] = (flow_match_element, Interval(1, 2))
+
+        # A vlan tag popped means, the field does not matter anymore
+        if "pop_vlan" in self.action_dict:
+            modified_fields_dict["has_vlan_tag"] = (flow_match_element, Interval(0, 1))
+
+        #if "vlan_id" not in modified_fields_dict:
 
         return modified_fields_dict
 
-    def get_action_set_port_graph_edges(self):
+    def get_action_set_output_action_edges(self):
 
         port_graph_edges = []
 

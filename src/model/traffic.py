@@ -1,12 +1,13 @@
-__author__ = 'Rakesh Kumar'
-
 import sys
 
 from netaddr import IPNetwork
 from match import field_names
 from intervaltree_modified import IntervalTree, Interval
 
-class TrafficElement():
+__author__ = 'Rakesh Kumar'
+
+
+class TrafficElement:
 
     def __init__(self, init_match=None, init_field_wildcard=False):
 
@@ -69,8 +70,12 @@ class TrafficElement():
                 else:
                     self.traffic_fields[field_name].clear()
 
-            if isinstance(value, IPNetwork):
-                self.traffic_fields[field_name].add(Interval(value.first, value.last + 1))
+            # Deal with IP Network fields
+            if field_name == 'src_ip_addr' or field_name == 'dst_ip_addr':
+                if isinstance(value, IPNetwork):
+                    self.traffic_fields[field_name].add(Interval(value.first, value.last + 1))
+                else:
+                    raise Exception("Gotta be IPNetwork!")
             else:
                 self.traffic_fields[field_name].add(Interval(value, value + 1))
 
@@ -83,7 +88,6 @@ class TrafficElement():
 
             self.traffic_fields[field_name].add(Interval(0, sys.maxsize))
             self.traffic_fields[field_name].chop(value, value + 1)
-
 
     def get_field_intersection(self, field1, field2):
 
@@ -194,15 +198,20 @@ class TrafficElement():
 
         for field_name in self.traffic_fields:
 
-            # TODO: If this fields needs to be modified, apply the modification
-            if field_name in self.switch_modifications:
+            #if field_name in self.switch_modifications:
 
-                field_val = int(self.switch_modifications[field_name][1])
-                value_tree = IntervalTree()
-                value_tree.add(Interval(field_val, field_val + 1))
+            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications != None:
+                if field_name in self.enabling_edge_data.applied_modifications:
 
-                modified_traffic_element.traffic_fields[field_name] = value_tree
+                    field_interval = self.enabling_edge_data.applied_modifications[field_name][1]
+                    value_tree = IntervalTree()
+                    value_tree.add(field_interval)
 
+                    modified_traffic_element.traffic_fields[field_name] = value_tree
+
+                else:
+                    # Otherwise, just keep the field same as it was
+                    modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
             else:
                 # Otherwise, just keep the field same as it was
                 modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
@@ -215,6 +224,26 @@ class TrafficElement():
 
         return modified_traffic_element
 
+    def field_remains_unmodified(self, orig_traffic_element, field_name, mf):
+
+        # Check to see if the value on this traffic is same as what it was modified to be for this modification
+        # If it is, then use the 'original' value of the match that caused the modification.
+        # If it is not, then the assumption here would be that even though the modification is there on this chunk
+        # but it does not really apply because of what the traffic chunk has gone through subsequently
+
+        field_interval = mf[field_name][1]
+        value_tree = IntervalTree()
+        value_tree.add(field_interval)
+
+        intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
+
+        if intersection:
+            orig_traffic_element.traffic_fields[field_name] = mf[field_name][0].traffic_fields[field_name]
+        else:
+            orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+
+        return intersection
+
     def get_orig_traffic_element(self, applied_modifications=None, store_switch_modifications=True):
 
         if applied_modifications:
@@ -225,6 +254,9 @@ class TrafficElement():
                 return self
 
             mf = self.written_modifications
+
+        mf_used = {}
+        mf_used.update(mf)
 
         orig_traffic_element = TrafficElement()
 
@@ -239,23 +271,48 @@ class TrafficElement():
 
             if field_name in mf:
 
-                # Check to see if the value on this traffic is same as what it was modified to be for this modification
-                # If it is, then use the 'original' value of the match that caused the modification. This is stored in mf
-                # If it is not, then the assumption here would be that even though the modification is there on this chunk
-                # but it does not really apply because of what the traffic chunk has gone through subsequently
+                # Checking if the rule has both push_vlan and set_vlan modifications for the header,
+                # if so, then don't apply the push_vlan modification, the other one would take care of it, see below:
+                if field_name == "has_vlan_tag" and "vlan_id" in mf:
+                    continue
 
-                #TODO: Do this tree building thing more properly ground up from the parser
-                field_val = int(mf[field_name][1])
-                value_tree = IntervalTree()
-                value_tree.add(Interval(field_val, field_val + 1))
+                elif field_name == "vlan_id" and "has_vlan_tag" in mf:
+                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                    
+                    if unmodified:
+                        unmodified = self.field_remains_unmodified(orig_traffic_element, "has_vlan_tag", mf)
+                        if unmodified:
+                            orig_traffic_element.traffic_fields["has_vlan_tag"] = mf["has_vlan_tag"][0].traffic_fields["has_vlan_tag"]
+                        else:
+                            orig_traffic_element.traffic_fields["has_vlan_tag"] = self.traffic_fields["has_vlan_tag"]
+    
+                    else:
+                        # If ever reversing effects of push_vlan and not matching on it, while there is a modification
+                        # on the has_vlan_tag as well then nullify this te. One way is to set has_vlan_tag to empty
+                        empty_field = IntervalTree()
+                        orig_traffic_element.traffic_fields["has_vlan_tag"] = empty_field
 
-                intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
+                elif field_name == "vlan_id" and "has_vlan_tag" not in mf:
 
-                if intersection:
-                    orig_traffic_element.traffic_fields[field_name] = mf[field_name][0].traffic_fields[field_name]
+                    # Reverse the effects of a vlan_id modification on traffic only when a vlan tag is present
+                    vlan_tag_present = False
+
+                    # We check this by using a weird check here.
+                    if self.is_traffic_field_wildcard(self.traffic_fields["has_vlan_tag"]):
+                       vlan_tag_present = True
+                    else:
+                        if not Interval(0, 1) in self.traffic_fields["has_vlan_tag"]:
+                            vlan_tag_present = True
+
+                    if vlan_tag_present:
+                        unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                    else:
+                        orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+                        del mf_used[field_name]
+
+                # All the other fields...
                 else:
-                    orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
-
+                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
             else:
                 # Otherwise, just keep the field same as it was
                 orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
@@ -266,13 +323,38 @@ class TrafficElement():
         orig_traffic_element.instruction_type = self.instruction_type
         orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
+        # If storing modifications, store the first one applied in the switch, with the match from the last
+        # matching rule
+
         if store_switch_modifications:
-            orig_traffic_element.switch_modifications.update(mf)
+            for modified_field in mf_used:
+                if modified_field not in orig_traffic_element.switch_modifications:
+                    orig_traffic_element.switch_modifications[modified_field] = mf_used[modified_field]
+                else:
+                    # Check if the previous modification requires setting of the match to this modification
+                    # If so, then use the match from this modification
+                    this_modification_match = mf[modified_field][0]
+                    this_modification_value_tree = mf[modified_field][1]
+
+                    prev_modification_match = orig_traffic_element.switch_modifications[modified_field][0]
+                    prev_modification_value_tree = orig_traffic_element.switch_modifications[modified_field][1]
+
+                    prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
+
+                    intersection = self.get_field_intersection(this_modification_value_tree,
+                                                               prev_match_field_value_tree)
+
+                    if intersection:
+                        orig_traffic_element.switch_modifications[modified_field] = (this_modification_match,
+                                                                                     prev_modification_value_tree)
+
+        else:
+            orig_traffic_element.switch_modifications.clear()
 
         return orig_traffic_element
 
 
-class Traffic():
+class Traffic:
 
     def __init__(self, init_wildcard=False):
 
@@ -313,13 +395,17 @@ class Traffic():
             for te in self.traffic_elements:
                 te.set_traffic_field(key, value, is_exception_value=is_exception_value)
 
-        elif key and value:
-            for te in self.traffic_elements:
-                te.set_traffic_field(key, value)
-
         elif key and is_wildcard:
             for te in self.traffic_elements:
                 te.set_traffic_field(key, set_wildcard=True)
+
+        else:
+            for te in self.traffic_elements:
+                te.set_traffic_field(key, value)
+
+    def clear_switch_modifications(self):
+        for te in self.traffic_elements:
+            te.switch_modifications.clear()
 
     # Checks if in_te is subset of self (any one of its te)
     def is_subset_te(self, in_te):

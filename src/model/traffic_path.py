@@ -74,7 +74,7 @@ class TrafficPath(object):
         for node in self.path_nodes:
             yield node
 
-    def get_len(self):
+    def __len__(self):
         return len(self.path_nodes)
 
     # Returns if the given link fails, the path would have an alternative way to get around

@@ -36,7 +36,8 @@ class MininetMan():
                  num_hosts_per_switch,
                  fanout=None,
                  core=None,
-                 per_switch_links=None):
+                 per_switch_links=None,
+                 dst_ports_to_synthesize=''):
 
         self.net = None
         self.synthesis_scheme = synthesis_scheme
@@ -77,16 +78,20 @@ class MininetMan():
             self.mininet_configuration_name = self.synthesis_scheme + "_" + \
                                               self.topo_name + "_" + \
                                               str(self.num_switches) + "_" + \
-                                              str(self.num_hosts_per_switch)
+                                              str(self.num_hosts_per_switch) + \
+                                              "_" + str(dst_ports_to_synthesize)
+
         elif self.fanout and self.core and self.num_hosts_per_switch:
             self.mininet_configuration_name = self.synthesis_scheme + "_" + \
                                               self.topo_name + "_" + \
                                               str(self.num_hosts_per_switch) + "_" + \
                                               str(self.fanout) + "_" + \
-                                              str(self.core)
+                                              str(self.core) + "_" \
+                                              + str(dst_ports_to_synthesize)
         else:
             self.mininet_configuration_name = self.synthesis_scheme + "_" + \
-                                              self.topo_name
+                                              self.topo_name + "_" \
+                                              + str(dst_ports_to_synthesize)
 
     def __del__(self):
         self.cleanup_mininet()
@@ -168,6 +173,15 @@ class MininetMan():
             else:
                 return True
 
+    def are_all_hosts_pingable(self):
+        ping_loss_rate = self.net.pingAll('1')
+
+        # If some packets get through, then declare pingable
+        if ping_loss_rate < 100.0:
+            return True
+        else:
+            return False
+
     def get_intf_status(self, ifname):
 
         # set some symbolic constants
@@ -207,21 +221,9 @@ class MininetMan():
 
         return num_seconds
 
-    def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check=None, edges_to_try=None):
+    def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check, edges_to_try=None):
 
         is_bi_connected= True
-
-        # if not experiment_host_pairs_to_check:
-        #     experiment_host_pairs_to_check = list(self._get_experiment_host_pair())
-        #
-        # for (src_host, dst_host) in experiment_host_pairs_to_check:
-        #
-        #     is_pingable_before_failure = self.is_host_pair_pingable(src_host, dst_host)
-        #
-        #     if not is_pingable_before_failure:
-        #         print "src_host:", src_host, "dst_host:", dst_host, "are not connected."
-        #         is_bi_connected = False
-        #         break
 
         if not edges_to_try:
             edges_to_try = self.topo.g.edges()
@@ -231,9 +233,6 @@ class MininetMan():
             # Only try and break switch-switch edges
             if edge[0].startswith("h") or edge[1].startswith("h"):
                 continue
-
-            if not experiment_host_pairs_to_check:
-                experiment_host_pairs_to_check = list(self._get_experiment_host_pair())
 
             for (src_host, dst_host) in experiment_host_pairs_to_check:
 
@@ -245,18 +244,54 @@ class MininetMan():
                     break
 
                 self.net.configLinkStatus(edge[0], edge[1], 'down')
-                #self.wait_until_link_status(edge[0], edge[1], 'down')
-                time.sleep(30)
+                self.wait_until_link_status(edge[0], edge[1], 'down')
+                time.sleep(5)
                 is_pingable_after_failure = self.is_host_pair_pingable(src_host, dst_host)
                 self.net.configLinkStatus(edge[0], edge[1], 'up')
-                #self.wait_until_link_status(edge[0], edge[1], 'up')
-                time.sleep(30)
+                self.wait_until_link_status(edge[0], edge[1], 'up')
+
+                time.sleep(5)
                 is_pingable_after_restoration = self.is_host_pair_pingable(src_host, dst_host)
 
                 if not is_pingable_after_failure == True:
                     is_bi_connected = False
                     print "Got a problem with edge:", edge, " for src_host:", src_host, "dst_host:", dst_host
                     break
+
+        return is_bi_connected
+
+    def is_bi_connected_manual_ping_test_all_hosts(self,  edges_to_try=None):
+
+        is_bi_connected= True
+
+        if not edges_to_try:
+            edges_to_try = self.topo.g.edges()
+
+        for edge in edges_to_try:
+
+            # Only try and break switch-switch edges
+            if edge[0].startswith("h") or edge[1].startswith("h"):
+                continue
+
+            is_pingable_before_failure = self.are_all_hosts_pingable()
+
+            if not is_pingable_before_failure:
+                is_bi_connected = False
+                break
+
+            self.net.configLinkStatus(edge[0], edge[1], 'down')
+            self.wait_until_link_status(edge[0], edge[1], 'down')
+            time.sleep(5)
+            is_pingable_after_failure = self.are_all_hosts_pingable()
+            self.net.configLinkStatus(edge[0], edge[1], 'up')
+            self.wait_until_link_status(edge[0], edge[1], 'up')
+
+            time.sleep(5)
+            is_pingable_after_restoration = self.are_all_hosts_pingable()
+
+            if not is_pingable_after_failure == True:
+                is_bi_connected = False
+                break
 
         return is_bi_connected
 

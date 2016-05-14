@@ -40,6 +40,7 @@ class NetworkGraph():
     def __init__(self, mm, controller, load_config=False, save_config=False):
 
         self.mm = mm
+        self.total_flow_rules = 0
 
         self.OFPP_CONTROLLER = 0xfffffffd
         self.OFPP_ALL = 0xfffffffc
@@ -76,6 +77,20 @@ class NetworkGraph():
 
         #  Load up everything
         self.parse_network_graph()
+
+    # Gets a switch-only multi-di-graph for the present topology
+    def get_mdg(self):
+
+        mdg = nx.MultiDiGraph(self.graph)
+
+        for n in self.graph:
+            node_type = self.get_node_type(n)
+
+            # Remove all host nodes
+            if node_type == "host":
+                mdg.remove_node(n)
+
+        return mdg
 
     def get_odl_switches(self):
 
@@ -511,7 +526,9 @@ class NetworkGraph():
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
     def parse_switches(self):
-        
+
+        self.total_flow_rules = 0
+
         if self.controller == "odl":
             odl_switches = self.get_odl_switches()
             self.parse_odl_switches(odl_switches)
@@ -521,7 +538,7 @@ class NetworkGraph():
             self.parse_ryu_switches(ryu_switches)
 
     def parse_network_graph(self):
-        
+
         self.parse_switches()
 
         mininet_host_nodes = self.get_mininet_host_nodes()
@@ -548,10 +565,22 @@ class NetworkGraph():
         return link_data
 
     def get_switch_link_data(self):
-        for edge in self.graph.edges_iter():
+        for edge in self.graph.edges():
             link_data =  self.graph[edge[0]][edge[1]]['link_data']
             if link_data.link_type == "switch":
                 yield link_data
+
+    def get_adjacent_switch_link_data(self, switch_id):
+        for link_data in self.get_switch_link_data():
+            if switch_id in link_data.link_ports_dict:
+
+                adjacent_sw_id = None
+                if switch_id == link_data.forward_link[0]:
+                    adjacent_sw_id = link_data.forward_link[1]
+                else:
+                    adjacent_sw_id = link_data.forward_link[0]
+
+                yield adjacent_sw_id, link_data
 
     def get_node_object(self, node_id):
         node_obj = None

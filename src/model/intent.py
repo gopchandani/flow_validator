@@ -12,6 +12,7 @@ class Intent():
         self.min_rate = min_rate
         self.max_rate = max_rate
 
+        self.tree_id = None
         self.required_vlan_id = None
         self.hash_value = hash(str(self.in_port) + str(self.out_port) + str(self.flow_match))
 

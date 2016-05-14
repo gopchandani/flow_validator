@@ -1,14 +1,15 @@
 __author__ = 'Rakesh Kumar'
 
 from port_graph import PortGraph
+from switch_port_graph import SwitchPortGraph
 from port_graph_edge import PortGraphEdge, NetworkPortGraphEdgeData
 from traffic import Traffic
 
 class NetworkPortGraph(PortGraph):
 
-    def __init__(self, network_graph):
+    def __init__(self, network_graph, report_active_state):
 
-        super(NetworkPortGraph, self).__init__(network_graph)
+        super(NetworkPortGraph, self).__init__(network_graph, report_active_state)
 
     def get_edge_from_admitted_traffic(self, pred, succ, admitted_traffic, edge_sw=None):
 
@@ -26,8 +27,16 @@ class NetworkPortGraph(PortGraph):
 
                 traffic_paths = None
                 if edge_sw:
+
+                    if pred.node_id == 's4:ingress3' and succ.node_id == 's4:egress1':
+                        pass
+
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
+
+                    if len(traffic_paths) == 0:
+                        traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
+                        raise Exception("Found traffic but no paths to back it up.")
 
                 edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, traffic_paths)
                 edge.add_edge_data(edge_data)
@@ -74,6 +83,7 @@ class NetworkPortGraph(PortGraph):
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
 
+            sw.port_graph = SwitchPortGraph(sw.network_graph, sw, self.report_active_state)
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.compute_switch_admitted_traffic()
             # test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
@@ -171,14 +181,15 @@ class NetworkPortGraph(PortGraph):
             # At succ edges, set the in_port of the admitted match for destination to wildcard
             if edge.edge_type == "outside":
                 traffic_to_propagate.set_field("in_port", is_wildcard=True)
+                traffic_to_propagate.clear_switch_modifications()
 
             # If there were modifications along the way...
-            if ed.modifications:
-                # If the edge ports belong to the same switch, keep the modifications, otherwise get rid of them.
-                if edge.port1.sw == edge.port2.sw:
-                    ttp = traffic_to_propagate.get_orig_traffic(ed.modifications, store_switch_modifications=True)
+            if ed.applied_modifications:
+
+                if edge.pred.sw == edge.succ.sw:
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=True)
                 else:
-                    ttp = traffic_to_propagate.get_orig_traffic(ed.modifications, store_switch_modifications=False)
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=False)
             else:
                 ttp = traffic_to_propagate
 

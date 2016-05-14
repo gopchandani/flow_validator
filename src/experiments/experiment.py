@@ -1,6 +1,5 @@
 __author__ = 'Rakesh Kumar'
 
-
 import json
 import time
 import numpy as np
@@ -11,11 +10,15 @@ from matplotlib.ticker import MaxNLocator
 from pprint import pprint
 from controller_man import ControllerMan
 from mininet_man import MininetMan
+
 from model.network_graph import NetworkGraph
+from model.match import Match
+from model.traffic_path import TrafficPath
 
 from synthesis.intent_synthesis import IntentSynthesis
 from synthesis.intent_synthesis_ldst import IntentSynthesisLDST
 from synthesis.intent_synthesis_load_balance import IntentSynthesisLB
+from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
 
 class Experiment(object):
 
@@ -55,7 +58,8 @@ class Experiment(object):
         if not self.load_config and self.save_config:
             self.controller_port = self.cm.get_next()
 
-        self.mm = MininetMan(synthesis_scheme, self.controller_port, *topo_description)
+        self.mm = MininetMan(synthesis_scheme, self.controller_port, *topo_description,
+                             dst_ports_to_synthesize=dst_ports_to_synthesize)
 
         if not self.load_config and self.save_config:
             self.mm.start_mininet()
@@ -65,9 +69,9 @@ class Experiment(object):
 
         # Get a flow validator instance
         self.ng = NetworkGraph(mm=self.mm,
-                          controller=self.controller,
-                          load_config=self.load_config,
-                          save_config=self.save_config)
+                               controller=self.controller,
+                               load_config=self.load_config,
+                               save_config=self.save_config)
 
         if not self.load_config and self.save_config:
             if self.controller == "odl":
@@ -94,16 +98,25 @@ class Experiment(object):
                                                                                           same_output_queue=False)
                     #self.mm.qos_setup_two_flows_on_separate_queues_to_same_host(self.ng)
 
+                elif synthesis_scheme == "Synthesis_Failover_Aborescene":
+                    self.synth = SynthesizeFailoverAborescene(self.ng)
 
+                    flow_match = Match(is_wildcard=True)
+                    flow_match["ethernet_type"] = 0x0800
+                    self.synth.synthesize_all_switches(flow_match)
 
-                self.mm.net.pingAll()
-                #is_bi_connected = self.mm.is_bi_connected_manual_ping_test()
+                # self.mm.net.pingAll()
+
+                is_bi_connected = self.mm.is_bi_connected_manual_ping_test_all_hosts()
+
+                #
+                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
+                #                                                             self.mm.net.get('h31'))])
 
                 # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),
-                #                                                             self.mm.net.get('h21'))],
-                #                                                            [('s3', 's2')])
-
-                #print "is_bi_connected:", is_bi_connected
+                #                                                             self.mm.net.get('h41'))],
+                #                                                            [('s1', 's2')])
+                print "is_bi_connected:", is_bi_connected
 
                 if synthesis_setup_gap:
                     time.sleep(synthesis_setup_gap)
@@ -111,17 +124,16 @@ class Experiment(object):
         # Refresh the network_graph
         self.ng.parse_switches()
 
-        # import sys
-        # sys.exit()
+        print "total_flow_rules:", self.ng.total_flow_rules
 
         return self.ng
 
-    def compare_paths(self, src_host, dst_host, analyzed_path, synthesized_path, synthesized_path_vuln_rank, verbose):
+    #TODO: Eliminate the need to have this function
+    def compare_synthesis_paths(self, analyzed_path, synthesized_path, verbose):
 
-        analyzed_path_vuln_rank = analyzed_path.get_max_vuln_rank()
         path_matches = True
 
-        if analyzed_path.get_len() == len(synthesized_path):
+        if len(analyzed_path) == len(synthesized_path):
             i = 0
             for path_node in analyzed_path:
                 if path_node.node_id != synthesized_path[i]:
@@ -131,101 +143,101 @@ class Experiment(object):
         else:
             path_matches = False
 
-        if path_matches:
-
-            if analyzed_path_vuln_rank != synthesized_path_vuln_rank:
-                path_matches = False
-
-                print "Path vulnerability ranks do not match. src_host:", src_host, "dst_host:", dst_host, \
-                    "analyzed_path_vuln_rank:", analyzed_path_vuln_rank, \
-                    "synthesized_path_vuln_rank:", synthesized_path_vuln_rank
-
         return path_matches
 
-    def compare_host_pair_paths_with_synthesis(self, analyzed_host_pairs_traffic_paths, failed_edge=None, verbose=False):
+    def search_matching_analyzed_path(self, analyzed_host_pairs_paths, src_host, dst_host, synthesized_path, verbose):
 
-        all_paths_match = True
+        found_matching_path = False
+
+        # Need to find at least one matching analyzed path
+        for analyzed_path in analyzed_host_pairs_paths[src_host][dst_host]:
+            found_matching_path = self.compare_synthesis_paths(analyzed_path, synthesized_path, verbose)
+
+            if found_matching_path:
+                break
+
+        return found_matching_path
+
+    def compare_primary_paths_with_synthesis(self, fv, analyzed_host_pairs_traffic_paths, verbose=False):
 
         synthesized_primary_paths = None
 
         if not self.load_config and self.save_config:
             synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
-            synthesized_failover_paths = self.synthesis.synthesis_lib.synthesized_failover_paths
         else:
             with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
 
-            with open(self.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
-                synthesized_failover_paths = json.loads(in_file.read())
+        all_paths_match = True
 
         for src_host in analyzed_host_pairs_traffic_paths:
             for dst_host in analyzed_host_pairs_traffic_paths[src_host]:
 
-                synthesized_path = None
-                synthesized_path_vuln_rank = None
-
-                # If an edge has not been failed, then refer to synthesized paths.
-                # If an edge has been failed, first check both permutation of edge switches, if neither is found,
-                # then refer to primary path by assuming that the given edge did not participate in the failover of
-                # the given host pair.
-
-                if failed_edge:
-                    try:
-                        synthesized_path = synthesized_failover_paths[src_host][dst_host][failed_edge[0]][failed_edge[1]]
-                        synthesized_path_vuln_rank = 1
-                    except:
-                        try:
-                            synthesized_path = synthesized_failover_paths[src_host][dst_host][failed_edge[1]][failed_edge[0]]
-                            synthesized_path_vuln_rank = 1
-                        except:
-                            synthesized_path = synthesized_primary_paths[src_host][dst_host]
-                            synthesized_path_vuln_rank = 0
-                else:
-                     synthesized_path = synthesized_primary_paths[src_host][dst_host]
-                     synthesized_path_vuln_rank = 0
-
-                # Need to find at least one matching path
-                for analyzed_path in analyzed_host_pairs_traffic_paths[src_host][dst_host]:
-                    path_matches = self.compare_paths(src_host, dst_host, analyzed_path, synthesized_path, synthesized_path_vuln_rank, verbose)
-
-                    if path_matches:
-                        break
-
+                synthesized_path = synthesized_primary_paths[src_host][dst_host]
+                path_matches = self.search_matching_analyzed_path(analyzed_host_pairs_traffic_paths,
+                                                                  src_host, dst_host,
+                                                                  synthesized_path, verbose)
                 if not path_matches:
                     print "No analyzed path matched for:", synthesized_path
                     all_paths_match = False
 
         return all_paths_match
 
-    def compare_failover_host_pair_paths_with_synthesis(self, fv, edges_to_try=None, verbose=False):
+    def compare_failover_paths_with_synthesis(self, fv, links_to_try, verbose=False):
 
-        all_paths_match = False
+        synthesized_primary_paths = None
+        synthesized_failover_paths = None
+        
+        if not self.load_config and self.save_config:
+            synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
+            synthesized_failover_paths = self.synthesis.synthesis_lib.synthesized_failover_paths
+        else:
+            with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
+                synthesized_primary_paths = json.loads(in_file.read())
+            
+            with open(self.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
+                synthesized_failover_paths = json.loads(in_file.read())
 
-        if not edges_to_try:
-            edges_to_try = fv.network_graph.graph.edges()
+        for link in links_to_try:
 
-        for edge in edges_to_try:
-
-            # Ignore host edges
-            if edge[0].startswith("h") or edge[1].startswith("h"):
+            # Ignore host links
+            if link[0].startswith("h") or link[1].startswith("h"):
                 continue
 
-            print "Breaking edge:", edge
+            print "Breaking link:", link
+            fv.port_graph.remove_node_graph_link(link[0], link[1])
+            
+            all_paths_match = True
 
-            fv.port_graph.remove_node_graph_link(edge[0], edge[1])
+            analyzed_host_pairs_paths = fv.get_all_host_pairs_traffic_paths()
 
-            analyzed_host_pairs_path_info = fv.get_all_host_pairs_traffic_paths()
+            for src_host in analyzed_host_pairs_paths:
+                for dst_host in analyzed_host_pairs_paths[src_host]:
+                    
+                    # If an link has been failed, first check both permutation of link switches, if neither is found,
+                    # then refer to primary path by assuming that the given link did not participate in the failover of
+                    # the given host pair.
+                    try:
+                        synthesized_path = synthesized_failover_paths[src_host][dst_host][link[0]][link[1]]
+                    except:
+                        try:
+                            synthesized_path = synthesized_failover_paths[src_host][dst_host][link[1]][link[0]]
+                        except:
+                            synthesized_path = synthesized_primary_paths[src_host][dst_host]                        
 
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info,
-                                                                          verbose=verbose,
-                                                                          failed_edge=edge)
+                    path_matches = self.search_matching_analyzed_path(analyzed_host_pairs_paths,
+                                                                      src_host, dst_host,
+                                                                      synthesized_path, verbose)
+                    if not path_matches:
+                        print "No analyzed path matched for:", synthesized_path, "with failed link:", link
+                        all_paths_match = False
+                        break
+
+            print "Restoring link:", link
+            fv.port_graph.add_node_graph_link(link[0], link[1], updating=True)
 
             if not all_paths_match:
                 break
-
-            print "Restoring edge:", edge
-
-            fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
 
         return all_paths_match
 

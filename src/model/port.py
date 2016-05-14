@@ -15,6 +15,7 @@ class Port():
         self.mac_address = None
         self.port_number = None
         self.state = None
+        self.attached_host = None
 
         if self.sw.network_graph.controller == "odl":
             self.parse_odl_port_json(port_json)
@@ -24,6 +25,8 @@ class Port():
 
         elif self.sw.network_graph.controller == "sel":
             self.parse_sel_port_json(port_json)
+
+    def init_port_graph_state(self):
 
         # Need port_number parsed in before this is called
         self.switch_port_graph_ingress_node = PortGraphNode(self.sw,

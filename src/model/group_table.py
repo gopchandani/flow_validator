@@ -1,8 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-from action_set import Action
-
-import pprint
+from action_set import Action, ActionSet
 
 class Bucket():
     def __init__(self, sw, bucket_json, group):
@@ -63,6 +61,9 @@ class Bucket():
 
         for action in self.action_list:
             action.bucket = self
+
+        self.action_set = ActionSet(self.sw)
+        self.action_set.add_all_actions(self.action_list)
 
     def is_live(self):
 
@@ -202,20 +203,6 @@ class Group():
         # If it is a fast-failover group, collect the bucket which is active
         elif self.group_type == self.sw.network_graph.GROUP_FF:
 
-            # # at any point in time, only those actions are active that belong to the first live bucket
-            # i = 0
-            # while i < len(self.bucket_list):
-            #     this_bucket = self.bucket_list[i]
-            #     if this_bucket.is_live():
-            #         for action in this_bucket.action_list:
-            #             action.vuln_rank = i
-            #         action_list.extend(this_bucket.action_list)
-            #         break
-            #
-            #     i += 1
-            #
-
-
             # Add all actions, set the vuln ranks
             i = 0
             while i < len(self.bucket_list):
@@ -227,7 +214,6 @@ class Group():
                 action_list.extend(this_bucket.action_list)
 
                 i += 1
-
 
         return action_list
 

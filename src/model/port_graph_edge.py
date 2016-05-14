@@ -2,20 +2,20 @@ __author__ = 'Rakesh Kumar'
 
 class PortGraphEdge():
 
-    def __init__(self, port1, port2):
+    def __init__(self, pred, succ):
 
-        self.port1 = port1
-        self.port2 = port2
+        self.pred = pred
+        self.succ = succ
 
         self.edge_type = None
 
-        if (port1.node_type == "table") and (port2.node_type == "egress"):
+        if (pred.node_type == "table") and (succ.node_type == "egress"):
             self.edge_type = "egress"
-        elif (port1.node_type == "ingress") and (port2.node_type == "table"):
+        elif (pred.node_type == "ingress") and (succ.node_type == "table"):
             self.edge_type = "ingress"
-        elif (port1.node_type == "egress") and (port2.node_type == "ingress"):
+        elif (pred.node_type == "egress") and (succ.node_type == "ingress"):
             self.edge_type = "outside"
-        elif (port1.node_type == "ingress") and (port2.node_type == "egress"):
+        elif (pred.node_type == "ingress") and (succ.node_type == "egress"):
             self.edge_type = "inside"
 
         self.edge_data_list = []
@@ -26,10 +26,10 @@ class PortGraphEdge():
 
 class NetworkPortGraphEdgeData():
 
-    def __init__(self, edge_filter_traffic, modifications, switch_port_graph_paths):
+    def __init__(self, edge_filter_traffic, applied_modifications, switch_port_graph_paths):
 
         self.edge_filter_traffic = edge_filter_traffic
-        self.modifications = modifications
+        self.applied_modifications = applied_modifications
         self.switch_port_graph_paths = switch_port_graph_paths
 
     def get_vuln_rank(self):

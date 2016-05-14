@@ -6,9 +6,9 @@ from port_graph import PortGraph
 
 class SwitchPortGraph(PortGraph):
 
-    def __init__(self, network_graph, sw):
+    def __init__(self, network_graph, sw, report_active_state):
 
-        super(SwitchPortGraph, self).__init__(network_graph)
+        super(SwitchPortGraph, self).__init__(network_graph, report_active_state)
 
         self.sw = sw
 
@@ -16,8 +16,13 @@ class SwitchPortGraph(PortGraph):
 
         print "Initializing Port Graph for switch:", self.sw.node_id
 
-        # Add a node per table in the port graph
+        # Initialize switch ports' port graph state
+        for port_num in self.sw.ports:
+            self.sw.ports[port_num].init_port_graph_state()
+
+        # Initialize port graph state per table and add its node to switch port graph
         for flow_table in self.sw.flow_tables:
+            flow_table.init_port_graph_state()
             self.add_node(flow_table.port_graph_node)
 
         # Add two nodes per physical port in port graph one for incoming and outgoing direction
@@ -109,6 +114,7 @@ class SwitchPortGraph(PortGraph):
                 self.remove_edge(pred, succ)
 
             edge = self.get_edges_from_flow_table_edges(flow_table, succ)
+
             self.add_edge(flow_table.port_graph_node, succ, edge)
 
     def compute_switch_admitted_traffic(self):
@@ -148,7 +154,6 @@ class SwitchPortGraph(PortGraph):
                 ttp = traffic_to_propagate.get_orig_traffic()
             else:
                 # At all the non-ingress edges accumulate written modifications
-                # But these are useless if the instruction_type is applied.
                 if ed.written_modifications:
                     for te in ttp.traffic_elements:
                         te.written_modifications.update(ed.written_modifications)
@@ -168,6 +173,10 @@ class SwitchPortGraph(PortGraph):
         ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
         egress_node = self.get_egress_node(self.sw.node_id, port_num)
 
+        # This will keep track of all the edges due to flow tables that were modified due to port event
+        # This assumes that ports are always successors on these edges.
+        all_modified_flow_table_edges = []
+
         for pred in self.predecessors_iter(egress_node):
 
             edge = self.get_edge(pred, egress_node)
@@ -180,6 +189,8 @@ class SwitchPortGraph(PortGraph):
 
             self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
 
+            all_modified_flow_table_edges.extend(modified_flow_table_edges)
+
         if event_type == "port_down":
 
             edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
@@ -189,6 +200,11 @@ class SwitchPortGraph(PortGraph):
             modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
             self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
 
+            # Add minimal changed edges by doing a cross product from this node's ingress to
+            # all egress nodes
+            for e in all_modified_flow_table_edges:
+                end_to_end_modified_edges.append((ingress_node.node_id, e[1]))
+
         elif event_type == "port_up":
 
             edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
@@ -197,6 +213,11 @@ class SwitchPortGraph(PortGraph):
 
             modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
             self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
+
+            # Add minimal changed edges by doing a cross product from this node's ingress to
+            # all egress nodes
+            for e in all_modified_flow_table_edges:
+                end_to_end_modified_edges.append((ingress_node.node_id, e[1]))
 
         return end_to_end_modified_edges
 

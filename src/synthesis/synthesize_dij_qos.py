@@ -183,13 +183,11 @@ class SynthesizeQoS():
                 dst_intents = intents[dst]
 
                 # Take care of mac intents for this destination
-                self.synthesis_lib.push_destination_host_mac_intents(sw, dst_intents,
-                                                                     self.get_intents(dst_intents, "mac"),
+                self.synthesis_lib.push_destination_host_mac_intents(sw, self.get_intents(dst_intents, "mac"),
                                                                      self.mac_forwarding_table_id)
 
                 # Take care of vlan tag push intents for this destination
-                self.synthesis_lib.push_vlan_push_intents(sw, dst_intents,
-                                                          self.get_intents(dst_intents, "push_vlan"),
+                self.synthesis_lib.push_vlan_push_intents(sw, self.get_intents(dst_intents, "push_vlan"),
                                                           self.vlan_tag_push_rules_table_id)
 
                 primary_intents = self.get_intents(dst_intents, "primary")

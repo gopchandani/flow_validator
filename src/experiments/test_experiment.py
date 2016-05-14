@@ -42,13 +42,12 @@ class TestExperiment(Experiment):
             self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
-                                          mininet_setup_gap=1,
+                                          mininet_setup_gap=5,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=10,
                                           synthesis_scheme="IntentSynthesis")
 
-
-            self.fv = FlowValidator(ng)
+            self.fv = FlowValidator(ng, True)
             self.fv.init_network_port_graph()
             self.fv.add_hosts()
             self.fv.initialize_admitted_traffic()
@@ -56,20 +55,25 @@ class TestExperiment(Experiment):
             print "Initialization done."
 
             analyzed_host_pairs_path_info = self.fv.get_all_host_pairs_traffic_paths()
-            all_paths_match = self.compare_host_pair_paths_with_synthesis(analyzed_host_pairs_path_info, verbose=False)
+
+            all_paths_match = self.compare_primary_paths_with_synthesis(self.fv, analyzed_host_pairs_path_info,
+                                                                        verbose=False)
+
             print "Primary paths TestExperiment, all_paths_match:", all_paths_match
 
-            all_paths_match = self.compare_failover_host_pair_paths_with_synthesis(self.fv, verbose=False)
+            all_paths_match = self.compare_failover_paths_with_synthesis(self.fv,
+                                                                         self.fv.network_graph.graph.edges(),
+                                                                         #links_to_try=[("s3", "s2")],
+                                                                         verbose=False)
 
             print "Failover paths TestExperiment, all_paths_match:", all_paths_match
-
 
             self.fv.de_init_network_port_graph()
 
 def main():
     num_iterations = 1#20
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     fanout = 2

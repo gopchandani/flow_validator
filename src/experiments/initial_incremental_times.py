@@ -1,29 +1,22 @@
-__author__ = 'Rakesh Kumar'
-
-import sys
-
-sys.path.append("./")
-
 import matplotlib.pyplot as plt
 import numpy as np
-
+import sys
 
 from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
 
+__author__ = 'Rakesh Kumar'
+sys.path.append("./")
 
 class InitialIncrementalTimes(Experiment):
     def __init__(self,
                  num_iterations,
-                 total_number_of_hosts,
+                 network_configurations,
                  load_config,
                  save_config,
-                 controller,
-                 fanout,
-                 core,
-                 total_number_of_ports_to_synthesize):
+                 controller):
 
         super(InitialIncrementalTimes, self).__init__("initial_incremental_times",
                                                       num_iterations,
@@ -32,18 +25,14 @@ class InitialIncrementalTimes(Experiment):
                                                       controller,
                                                       1)
 
-        self.total_number_of_hosts = total_number_of_hosts
-        self.total_number_of_ports_to_synthesize = total_number_of_ports_to_synthesize
-
-        self.fanout = fanout
-        self.core = core
+        self.network_configurations = network_configurations
 
         self.data = {
-            "construction_time": defaultdict(defaultdict),
-            "propagation_time": defaultdict(defaultdict),
-            "incremental_avg_edge_failure_time": defaultdict(defaultdict),
-            "incremental_avg_edge_restoration_time": defaultdict(defaultdict),
-            "incremental_avg_edge_failure_restoration_time": defaultdict(defaultdict),
+            "construction_time": defaultdict(list),
+            "propagation_time": defaultdict(list),
+            "incremental_avg_edge_failure_time": defaultdict(list),
+            "incremental_avg_edge_restoration_time": defaultdict(list),
+            "incremental_avg_edge_failure_restoration_time": defaultdict(list),
         }
 
     def perform_incremental_times(self):
@@ -78,54 +67,35 @@ class InitialIncrementalTimes(Experiment):
 
         print "Starting experiment..."
 
-        for number_of_ports_to_synthesize in xrange(1, self.total_number_of_ports_to_synthesize + 1):
-            ports_to_synthesize = xrange(5000, 5000 + number_of_ports_to_synthesize)
-            print "ports_to_synthesize:", ports_to_synthesize
+        for network_configuration in self.network_configurations:
+            print "network_configuration:", network_configuration
 
-            for total_number_of_hosts in self.total_number_of_hosts:
-                print "total_number_of_hosts:", total_number_of_hosts
+            ng = self.setup_network_graph(network_configuration,
+                                          mininet_setup_gap=15,
+                                          synthesis_setup_gap=15,
+                                          synthesis_scheme="Synthesis_Failover_Aborescene")
 
-                #self.topo_description = ("clostopo", None, total_number_of_hosts/4, self.fanout, self.core)
-                self.topo_description = ("ring", 4, total_number_of_hosts/4, None, None)
+            for i in xrange(self.num_iterations):
+                print "iteration:", i + 1
 
-                self.data["construction_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
-                self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
-                self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
-                self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
-                self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts] = []
+                self.fv = FlowValidator(ng)
+                with Timer(verbose=True) as t:
+                    self.fv.init_network_port_graph()
 
-                for i in xrange(self.num_iterations):
-                    print "iteration:", i + 1
+                self.data["construction_time"][str(network_configuration)].append(t.msecs)
 
-                    ng = self.setup_network_graph(self.topo_description,
-                                                  mininet_setup_gap=1,
-                                                  dst_ports_to_synthesize=ports_to_synthesize,
-                                                  synthesis_setup_gap=len(ports_to_synthesize),
-                                                  synthesis_scheme="IntentSynthesis")
+                self.fv.add_hosts()
 
+                with Timer(verbose=True) as t:
+                    self.fv.initialize_admitted_traffic()
 
-                    self.fv = FlowValidator(ng)
-                    with Timer(verbose=True) as t:
-                        self.fv.init_network_port_graph()
+                self.data["propagation_time"][str(network_configuration)].append(t.msecs)
+                #
+                fail, restore, fail_restore = self.perform_incremental_times()
 
-                    self.data["construction_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(t.msecs)
-
-                    self.fv.add_hosts()
-
-                    with Timer(verbose=True) as t:
-                        self.fv.initialize_admitted_traffic()
-
-                    self.data["propagation_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(t.msecs)
-
-                    fail, restore, fail_restore = self.perform_incremental_times()
-
-                    self.data["incremental_avg_edge_failure_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(fail)
-                    self.data["incremental_avg_edge_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(restore)
-                    self.data["incremental_avg_edge_failure_restoration_time"][number_of_ports_to_synthesize][total_number_of_hosts].append(fail_restore)
-
-                    del self.fv
-
-                    #fv.de_init_network_port_graph()
+                self.data["incremental_avg_edge_failure_time"][str(network_configuration)].append(fail)
+                self.data["incremental_avg_edge_restoration_time"][str(network_configuration)].append(restore)
+                self.data["incremental_avg_edge_failure_restoration_time"][str(network_configuration)].append(fail_restore)
 
     def plot_initial_incremental_times(self):
         fig = plt.figure(0)
@@ -143,34 +113,30 @@ class InitialIncrementalTimes(Experiment):
                                   "Total number of hosts",
                                   "Average Incremental Computation Time (ms)",
                                   y_scale='linear')
-
 def main():
-    num_iterations = 5
-    total_number_of_hosts = [4]
+
+    num_iterations = 1
+
+#    network_configurations = [("ring", 4, 1, None, None)]#, ("clostopo", None, 1, 2, 1)]
+    network_configurations = [("clostopo", None, 5, 2, 1)]
+    #network_configurations = [("ring", 4, 5, None, None)]
+
     load_config = False
     save_config = True
     controller = "ryu"
 
-    fanout = 2
-    core = 1
-    total_number_of_ports_to_synthesize = 2
-
     exp = InitialIncrementalTimes(num_iterations,
-                                  total_number_of_hosts,
+                                  network_configurations,
                                   load_config,
                                   save_config,
-                                  controller,
-                                  fanout,
-                                  core,
-                                  total_number_of_ports_to_synthesize)
+                                  controller)
 
     exp.trigger()
     exp.dump_data()
 
-    #exp.load_data("data/initial_incremental_times_5_iterations_20151206_141249.json")
+    #exp.load_data("data/.json")
 
-    exp.plot_initial_incremental_times()
-
+    #exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()

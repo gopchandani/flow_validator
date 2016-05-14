@@ -146,7 +146,7 @@ class UniformImportanceSamplingCompare(Experiment):
                                           synthesis_setup_gap=60,
                                           synthesis_scheme="IntentSynthesis")
 
-            self.mca = MonteCarloAnalysis(ng)
+            self.mca = MonteCarloAnalysis(ng, False)
             self.mca.init_network_port_graph()
             self.mca.add_hosts()
             self.mca.initialize_admitted_traffic()
@@ -286,7 +286,7 @@ def main():
     exp.trigger()
     exp.dump_data()
 
-    # Plot 4
+    # #Plot 4
     #exp.load_data("data/uniform_importance_sampling_compare_10_iterations_20160316_202014.json")
 
     # Plot 6

@@ -18,7 +18,7 @@ class RingTopo(Topo):
             curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow13")
             self.switch_names.append(curr_switch)
 
-            # if curr_switch == 's1' or curr_switch == 's5':
+            # if curr_switch == 's3' or curr_switch == 's4':
             #     pass
             # else:
             #     continue
