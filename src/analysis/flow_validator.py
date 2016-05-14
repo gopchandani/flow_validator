@@ -1,13 +1,15 @@
-__author__ = 'Rakesh Kumar'
-
 import sys
 import itertools
 
+from collections import defaultdict
+
 sys.path.append("./")
 
-from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
+
+__author__ = 'Rakesh Kumar'
+
 
 class FlowValidator(object):
 
@@ -52,11 +54,11 @@ class FlowValidator(object):
 
             end_to_end_modified_edges = []
 
-            self.port_graph.compute_admitted_traffic(host_obj.switch_egress_port,
-                                                     dst_traffic_at_succ,
-                                                     None,
-                                                     host_obj.switch_egress_port,
-                                                     end_to_end_modified_edges)
+            self.port_graph.propagate_admitted_traffic(host_obj.switch_egress_port,
+                                                       dst_traffic_at_succ,
+                                                       None,
+                                                       host_obj.switch_egress_port,
+                                                       end_to_end_modified_edges)
 
     def initialize_per_link_traffic_paths(self, verbose=False):
 

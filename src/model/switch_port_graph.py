@@ -128,7 +128,7 @@ class SwitchPortGraph(PortGraph):
 
             dst_traffic_at_succ = Traffic(init_wildcard=True)
             end_to_end_modified_edges = []
-            self.compute_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, end_to_end_modified_edges)
+            self.propagate_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, end_to_end_modified_edges)
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 

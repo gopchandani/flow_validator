@@ -166,7 +166,7 @@ class PortGraph(object):
 
         return additional_traffic, reduced_traffic, traffic_to_propagate
 
-    def compute_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
+    def propagate_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
@@ -183,7 +183,7 @@ class PortGraph(object):
 
                 # Base case: No traffic left to propagate to predecessors
                 if not pred_admitted_traffic.is_empty():
-                    self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
+                    self.propagate_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
 
         if not reduced_traffic.is_empty():
 
@@ -194,7 +194,7 @@ class PortGraph(object):
 
                 edge = self.get_edge(pred, curr)
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-                self.compute_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
+                self.propagate_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
 
     def update_admitted_traffic(self, modified_edges, end_to_end_modified_edges):
 
@@ -207,7 +207,7 @@ class PortGraph(object):
             pred = self.get_node(modified_edge[0])
             succ = self.get_node(modified_edge[1])
 
-            # TODO Limit the destinations by using markets in modified_flow_table_edges
+            # TODO Limit the destinations by using markers in modified_flow_table_edges
             for dst in self.get_admitted_traffic_dsts(succ):
                 if dst not in admitted_traffic_changes[pred]:
                     admitted_traffic_changes[pred][dst] = [succ]
@@ -247,10 +247,10 @@ class PortGraph(object):
                     edge = self.get_edge(pred_pred, pred)
                     pred_pred_traffic = self.compute_edge_admitted_traffic(now_pred_traffic, edge)
 
-                    self.compute_admitted_traffic(pred_pred,
-                                                  pred_pred_traffic,
-                                                  pred,
-                                                  dst, end_to_end_modified_edges)
+                    self.propagate_admitted_traffic(pred_pred,
+                                                    pred_pred_traffic,
+                                                    pred,
+                                                    dst, end_to_end_modified_edges)
 
     def get_graph_ats(self):
         graph_ats = defaultdict(defaultdict)
