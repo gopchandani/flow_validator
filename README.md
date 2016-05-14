@@ -5,6 +5,7 @@
 * Ensure that OVS version is 2.3.0
 * If you don't have pip installed, then install the python package manager. (Ubuntu package: python-pip)
 * sudo apt-get install python-oslo.config
+* sudo pip install sortedcontainers
 * sudo pip install networkx
 * sudo pip install netaddr
 * sudo pip install httplib2
