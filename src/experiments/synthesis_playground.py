@@ -1,11 +1,12 @@
-__author__ = 'Rakesh Kumar'
-
 import sys
-sys.path.append("./")
 
 from experiment import Experiment
 from model.traffic import Traffic
 from analysis.flow_validator import FlowValidator
+
+__author__ = 'Rakesh Kumar'
+
+sys.path.append("./")
 
 class AborescenePlayground(Experiment):
 
@@ -34,7 +35,7 @@ class AborescenePlayground(Experiment):
             print "num_hosts_per_switch:", num_hosts_per_switch
 
             #self.topo_description = ("ring", 4, num_hosts_per_switch, None, None)
-            self.topo_description = ("clostopo", None, 1, 2, num_hosts_per_switch)
+            self.topo_description = ("clostopo", None, 1, 2, 2)
             #self.topo_description = ("linear", 2, 1)
 
             ng = self.setup_network_graph(self.topo_description,
@@ -67,7 +68,7 @@ class AborescenePlayground(Experiment):
 def main():
 
     num_iterations = 1#10
-    num_hosts_per_switch = [5]#, 2, 3, 4]
+    num_hosts_per_switch = [1]#, 2, 3, 4]
     load_config = False
     save_config = True
     controller = "ryu"

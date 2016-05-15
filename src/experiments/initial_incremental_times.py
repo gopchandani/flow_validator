@@ -8,6 +8,7 @@ from analysis.flow_validator import FlowValidator
 from experiment import Experiment
 
 __author__ = 'Rakesh Kumar'
+
 sys.path.append("./")
 
 class InitialIncrementalTimes(Experiment):
@@ -28,17 +29,12 @@ class InitialIncrementalTimes(Experiment):
         self.network_configurations = network_configurations
 
         self.data = {
-            "construction_time": defaultdict(list),
-            "propagation_time": defaultdict(list),
-            "incremental_avg_edge_failure_time": defaultdict(list),
-            "incremental_avg_edge_restoration_time": defaultdict(list),
-            "incremental_avg_edge_failure_restoration_time": defaultdict(list),
+            "initial_time": defaultdict(list),
+            "incremental_time": defaultdict(list),
         }
 
     def perform_incremental_times(self):
-        fail_values = []
-        restore_values = []
-        fail_restore_values = []
+        incremental_times = []
 
         # Iterate over each edge
         for edge in self.fv.network_graph.graph.edges():
@@ -47,21 +43,19 @@ class InitialIncrementalTimes(Experiment):
             if edge[0].startswith("h") or edge[1].startswith("h"):
                 continue
 
+            print "Failing:", edge
+
             with Timer(verbose=True) as t:
                 self.fv.port_graph.remove_node_graph_link(edge[0], edge[1])
+            incremental_times.append(t.msecs)
 
-            fail_time = t.msecs
-            fail_values.append(fail_time)
+            print "Restoring:", edge
 
             with Timer(verbose=True) as t:
                 self.fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
+            incremental_times.append(t.msecs)
 
-            restore_time = t.msecs
-            restore_values.append(restore_time)
-
-            fail_restore_values.append(fail_time + restore_time)
-
-        return np.mean(fail_values), np.mean(restore_values), np.mean(fail_restore_values)
+        return np.mean(incremental_times)
 
     def trigger(self):
 
@@ -81,35 +75,24 @@ class InitialIncrementalTimes(Experiment):
                 self.fv = FlowValidator(ng)
                 with Timer(verbose=True) as t:
                     self.fv.init_network_port_graph()
-
-                self.data["construction_time"][str(network_configuration)].append(t.msecs)
-
-                self.fv.add_hosts()
-
-                with Timer(verbose=True) as t:
+                    self.fv.add_hosts()
                     self.fv.initialize_admitted_traffic()
 
-                self.data["propagation_time"][str(network_configuration)].append(t.msecs)
-                #
-                fail, restore, fail_restore = self.perform_incremental_times()
+                self.data["initial_time"][str(network_configuration)].append(t.msecs)
 
-                self.data["incremental_avg_edge_failure_time"][str(network_configuration)].append(fail)
-                self.data["incremental_avg_edge_restoration_time"][str(network_configuration)].append(restore)
-                self.data["incremental_avg_edge_failure_restoration_time"][str(network_configuration)].append(fail_restore)
+                incremental_time = self.perform_incremental_times()
+
+                self.data["incremental_time"][str(network_configuration)].append(incremental_time)
+
 
     def plot_initial_incremental_times(self):
         fig = plt.figure(0)
-        self.plot_line_error_bars("construction_time",
+        self.plot_line_error_bars("initial_time",
                                   "Total number of hosts",
-                                  "Average Construction Time (ms)")
-
-        fig = plt.figure(1)
-        self.plot_line_error_bars("propagation_time",
-                                  "Total number of hosts",
-                                  "Average Propagation Time (ms)")
+                                  "Average Initial Computation Time (ms)")
 
         fig = plt.figure(2)
-        self.plot_line_error_bars("incremental_avg_edge_failure_restoration_time",
+        self.plot_line_error_bars("incremental_time",
                                   "Total number of hosts",
                                   "Average Incremental Computation Time (ms)",
                                   y_scale='linear')
@@ -118,8 +101,8 @@ def main():
     num_iterations = 1
 
 #    network_configurations = [("ring", 4, 1, None, None)]#, ("clostopo", None, 1, 2, 1)]
-#    network_configurations = [("clostopo", None, 5, 2, 1)]
-    network_configurations = [("ring", 4, 1, None, None)]
+    network_configurations = [("clostopo", None, 1, 2, 2)]
+    #network_configurations = [("ring", 4, 1, None, None)]
 
     load_config = True
     save_config = False

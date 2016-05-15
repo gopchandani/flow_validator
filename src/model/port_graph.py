@@ -208,6 +208,8 @@ class PortGraph(object):
             succ = self.get_node(modified_edge[1])
 
             # TODO Limit the destinations by using markers in modified_flow_table_edges
+            # Right now, just take all the destinations at succ and marking them as having been modified...
+
             for dst in self.get_admitted_traffic_dsts(succ):
                 if dst not in admitted_traffic_changes[pred]:
                     admitted_traffic_changes[pred][dst] = [succ]
