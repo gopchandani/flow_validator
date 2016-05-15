@@ -101,11 +101,11 @@ def main():
     num_iterations = 1
 
 #    network_configurations = [("ring", 4, 1, None, None)]#, ("clostopo", None, 1, 2, 1)]
-    network_configurations = [("clostopo", None, 1, 2, 2)]
-    #network_configurations = [("ring", 4, 1, None, None)]
+#    network_configurations = [("clostopo", None, 1, 2, 1)]
+    network_configurations = [("ring", 20, 1, None, None)]
 
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
