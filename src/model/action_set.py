@@ -127,32 +127,32 @@ class Action():
             else:
                 raise NotImplementedError
 
-
-
     def parse_ryu_action_json(self):
 
-        if self.action_json.startswith("OUTPUT"):
+        if self.action_json["type"] == "OUTPUT":
             self.action_type = "output"
-            output_port = self.action_json.split(":")[1]
-            self.out_port = int(output_port)
+            self.out_port = self.action_json["port"]
 
-        if self.action_json.startswith("SET_FIELD"):
+        if self.action_json["type"] == "SET_FIELD":
             self.action_type = "set_field"
-            field_mod = self.action_json[self.action_json.find("{") + 1:]
-            self.modified_field = ryu_field_names_mapping[field_mod[0:field_mod.find(":")]]
-            self.field_modified_to = field_mod[field_mod.find(":") + 1:field_mod.find("}")]
 
-            #TODO: Works fine for VLAN_ID mods, fields other than VLAN id may require special parsing here
-            self.field_modified_to = int(self.field_modified_to)
+            self.modified_field = ryu_field_names_mapping[self.action_json["field"]]
 
-        if self.action_json.startswith("GROUP"):
+            #TODO: Works fine for VLAN_ID mods, other fields may require special parsing here
+            if self.action_json["field"] == "vlan_vid":
+                self.field_modified_to = self.action_json["value"]
+                self.field_modified_to = int(self.field_modified_to)
+            else:
+                raise NotImplemented
+
+        if self.action_json["type"] == "GROUP":
             self.action_type = "group"
-            self.group_id = int(self.action_json[self.action_json.find(":") + 1:])
+            self.group_id = self.action_json["group_id"]
 
-        if self.action_json.startswith("PUSH_VLAN"):
+        if self.action_json["type"] == "PUSH_VLAN":
             self.action_type = "push_vlan"
 
-        if self.action_json.startswith("POP_VLAN"):
+        if self.action_json["type"] == "POP_VLAN":
             self.action_type = "pop_vlan"
 
     def is_failover_action(self):

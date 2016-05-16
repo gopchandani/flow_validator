@@ -45,7 +45,7 @@ class TestExperiment(Experiment):
                                           mininet_setup_gap=5,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=10,
-                                          synthesis_scheme="Synthesis_Failover_Aborescene")
+                                          synthesis_scheme="IntentSynthesis")
 
             self.fv = FlowValidator(ng, True)
             self.fv.init_network_port_graph()
