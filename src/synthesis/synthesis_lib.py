@@ -438,8 +438,8 @@ class SynthesisLib():
                 bucket["actions"] = [{"type": "SET_FIELD", "field": "vlan_vid", "value": set_vlan_tags[i] + 0x1000},
                                      {"type": "OUTPUT", "port": out_port}]
 
-                bucket["weight"] = 20
                 bucket["watch_port"] = watch_port
+                bucket["watch_group"] = 4294967295
                 bucket_list.append(bucket)
 
             group["buckets"] = bucket_list
