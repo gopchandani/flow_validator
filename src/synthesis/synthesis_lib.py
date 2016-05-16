@@ -170,7 +170,7 @@ class SynthesisLib():
             flow["priority"] = priority + 10
             flow["flags"] = 1
             flow["match"] = {}
-            flow["actions"] = []
+            flow["instructions"] = []
 
 
         elif self.network_graph.controller == "sel":
@@ -217,12 +217,15 @@ class SynthesisLib():
 
         if self.network_graph.controller == "ryu":
 
-            flow["actions"] = action_list
+            # for action in action_list:
+            #     action["max_len"] = 65535
 
             if apply_immediately:
-                pass
+                flow["instructions"] = [{"type": "APPLY_ACTIONS",
+                                         "actions": action_list}]
             else:
-                pass
+                flow["instructions"] = [{"type": "WRITE_ACTIONS",
+                                         "actions": action_list}]
 
         elif self.network_graph.controller == "sel":
             instruction = ConfigTree.WriteActions()
@@ -260,7 +263,7 @@ class SynthesisLib():
         #  Assert that packet be sent to table with this table_id + 1
 
         if self.network_graph.controller == "ryu":
-            flow["actions"] = [{"type": "GOTO_TABLE",  "table_id": str(table_id + 1)}]
+            flow["instructions"] = [{"type": "GOTO_TABLE",  "table_id": str(table_id + 1)}]
 
         elif self.network_graph.controller == "sel":
             go_to_table_instruction = ConfigTree.GoToTable()
@@ -648,9 +651,7 @@ class SynthesisLib():
                                                            flow["match"],
                                                            has_vlan_tag_check=True)
 
-            action_list = [{"type": "GOTO_TABLE",  "table_id": str(dst_table)}]
-
-            self.populate_flow_action_instruction(flow, action_list, True)
+            flow["instructions"] = [{"type": "GOTO_TABLE",  "table_id": str(dst_table)}]
 
         elif self.network_graph.controller == "sel":
             raise NotImplemented

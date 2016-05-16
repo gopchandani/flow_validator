@@ -38,14 +38,14 @@ class TestExperiment(Experiment):
             print "ports_to_synthesize:", ports_to_synthesize
 
             #self.topo_description = ("linear", 2, 1)
-            #self.topo_description = ("ring", 4, 1, None, None)
-            self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
+            self.topo_description = ("ring", 4, 1, None, None)
+            #self.topo_description = ("clostopo", None, 1, self.fanout, self.core)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=5,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=10,
-                                          synthesis_scheme="IntentSynthesis")
+                                          synthesis_scheme="Synthesis_Failover_Aborescene")
 
             self.fv = FlowValidator(ng, True)
             self.fv.init_network_port_graph()
@@ -72,8 +72,8 @@ class TestExperiment(Experiment):
 
 def main():
     num_iterations = 1#20
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     fanout = 2

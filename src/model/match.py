@@ -43,7 +43,7 @@ ryu_field_names_mapping_reverse = {"in_port": "in_port",
                                    "tcp_source_port": "tcp_src",
                                    "udp_destination_port": "udp_dst",
                                    "udp_source_port": "udp_src",
-                                   "vlan_id": "dl_vlan"}
+                                   "vlan_id": "vlan_vid"}
 
 
 class OdlMatchJsonParser():

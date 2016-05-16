@@ -427,6 +427,9 @@ class NetworkGraph():
                 if port["port_no"] == 4294967294:
                     continue
 
+                if port["port_no"] == "LOCAL":
+                    continue
+
                 switch_ports[int(port["port_no"])] = Port(sw, port_json=port)
 
             sw.ports = switch_ports
