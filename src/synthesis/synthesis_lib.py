@@ -806,11 +806,10 @@ class SynthesisLib():
             flow = self.create_base_flow(sw, loop_preventing_drop_table, 100)
             action_list = []
 
-            #Compile match with in_port and destination mac address
+            # Compile match with in_port and destination mac address
             if self.network_graph.controller == "ryu":
                 flow["match"]["in_port"] = h_obj.switch_port_attached
                 flow["match"]["eth_dst"] = h_obj.mac_addr
-
 
             elif self.network_graph.controller == "sel":
                 flow.match.in_port = str(h_obj.switch_port_attached)
@@ -842,7 +841,7 @@ class SynthesisLib():
             #Compile match with in_port and destination mac address
             if self.network_graph.controller == "ryu":
                 flow["match"]["in_port"] = h_obj.switch_port_attached
-                flow["match"]["dl_vlan"] = self.network_graph.graph.node[sw]["sw"].synthesis_tag
+                flow["match"]["vlan_vid"] = self.network_graph.graph.node[sw]["sw"].synthesis_tag
 
             elif self.network_graph.controller == "sel":
                 raise NotImplementedError
