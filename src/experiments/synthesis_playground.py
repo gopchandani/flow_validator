@@ -35,7 +35,7 @@ class AborescenePlayground(Experiment):
             print "num_hosts_per_switch:", num_hosts_per_switch
 
             #self.topo_description = ("ring", 4, num_hosts_per_switch, None, None)
-            self.topo_description = ("clostopo", None, 1, 2, 1)
+            self.topo_description = ("clostopo", None, 1, 3, 2)
             #self.topo_description = ("linear", 2, 1)
 
             ng = self.setup_network_graph(self.topo_description,

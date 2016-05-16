@@ -55,6 +55,8 @@ class InitialIncrementalTimes(Experiment):
                 self.fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
             incremental_times.append(t.msecs)
 
+            break
+
         return np.mean(incremental_times)
 
     def trigger(self):
@@ -101,8 +103,8 @@ def main():
     num_iterations = 1
 
 #    network_configurations = [("ring", 4, 1, None, None)]#, ("clostopo", None, 1, 2, 1)]
-#    network_configurations = [("clostopo", None, 1, 2, 1)]
-    network_configurations = [("ring", 20, 1, None, None)]
+    network_configurations = [("clostopo", None, 1, 3, 2)]
+#    network_configurations = [("ring", 20, 1, None, None)]
 
     load_config = False
     save_config = True
