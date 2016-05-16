@@ -668,15 +668,15 @@ class SynthesisLib():
             # Compile match
             flow["match"] = flow_match.generate_match_json(self.network_graph.controller, flow["match"])
 
-            action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
-                           {"type": "GOTO_TABLE",  "table_id": str(vlan_tag_push_rules_table_id + 1)}]
+            action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100}]
 
             self.populate_flow_action_instruction(flow, action_list, apply_immediately)
+
+            flow["instructions"].append({"type": "GOTO_TABLE", "table_id": str(vlan_tag_push_rules_table_id + 1)})
 
         elif self.network_graph.controller == "sel":
 
             raise NotImplemented
-
 
             flow.match = flow_match.generate_match_json(self.network_graph.controller, flow.match)
 
@@ -713,10 +713,11 @@ class SynthesisLib():
                                                                                 flow["match"])
 
                 action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
-                               {"type": "SET_FIELD", "field": "vlan_vid", "value": push_vlan_intent.required_vlan_id + 0x1000},
-                               {"type": "GOTO_TABLE",  "table_id": str(vlan_tag_push_rules_table_id + 1)}]
+                               {"type": "SET_FIELD", "field": "vlan_vid", "value": push_vlan_intent.required_vlan_id + 0x1000}]
 
                 self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
+
+                flow["instructions"].append({"type": "GOTO_TABLE", "table_id": str(vlan_tag_push_rules_table_id + 1)})
 
             elif self.network_graph.controller == "sel":
                 flow.match = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
