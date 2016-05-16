@@ -6,6 +6,7 @@ from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
+from network_configuration import NetworkConfiguration
 
 __author__ = 'Rakesh Kumar'
 
@@ -14,6 +15,7 @@ sys.path.append("./")
 class InitialIncrementalTimes(Experiment):
     def __init__(self,
                  num_iterations,
+                 num_hosts_per_switch_list,
                  network_configurations,
                  load_config,
                  save_config,
@@ -26,18 +28,19 @@ class InitialIncrementalTimes(Experiment):
                                                       controller,
                                                       1)
 
+        self.num_hosts_per_switch_list = num_hosts_per_switch_list
         self.network_configurations = network_configurations
 
         self.data = {
-            "initial_time": defaultdict(list),
-            "incremental_time": defaultdict(list),
+            "initial_time": defaultdict(defaultdict),
+            "incremental_time": defaultdict(defaultdict),
         }
 
-    def perform_incremental_times(self):
+    def perform_incremental_times(self, fv):
         incremental_times = []
 
         # Iterate over each edge
-        for edge in self.fv.network_graph.graph.edges():
+        for edge in fv.network_graph.graph.edges():
 
             # Ignore host edges
             if edge[0].startswith("h") or edge[1].startswith("h"):
@@ -46,13 +49,13 @@ class InitialIncrementalTimes(Experiment):
             print "Failing:", edge
 
             with Timer(verbose=True) as t:
-                self.fv.port_graph.remove_node_graph_link(edge[0], edge[1])
+                fv.port_graph.remove_node_graph_link(edge[0], edge[1])
             incremental_times.append(t.msecs)
 
             print "Restoring:", edge
 
             with Timer(verbose=True) as t:
-                self.fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
+                fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
             incremental_times.append(t.msecs)
 
         return np.mean(incremental_times)
@@ -64,26 +67,40 @@ class InitialIncrementalTimes(Experiment):
         for network_configuration in self.network_configurations:
             print "network_configuration:", network_configuration
 
-            ng = self.setup_network_graph(network_configuration,
-                                          mininet_setup_gap=15,
-                                          synthesis_setup_gap=15,
-                                          synthesis_scheme="Synthesis_Failover_Aborescene")
+            for num_hosts_per_switch in self.num_hosts_per_switch_list:
 
-            for i in xrange(self.num_iterations):
-                print "iteration:", i + 1
+                print "num_hosts_per_switch:", num_hosts_per_switch
 
-                self.fv = FlowValidator(ng)
-                with Timer(verbose=True) as t:
-                    self.fv.init_network_port_graph()
-                    self.fv.add_hosts()
-                    self.fv.initialize_admitted_traffic()
+                network_configuration.num_hosts_per_switch = num_hosts_per_switch
 
-                self.data["initial_time"][str(network_configuration)].append(t.msecs)
+                topo_description = (network_configuration.topo_name,
+                                    network_configuration.num_switches,
+                                    num_hosts_per_switch,
+                                    network_configuration.fanout,
+                                    network_configuration.core)
 
-                incremental_time = self.perform_incremental_times()
+                ng = self.setup_network_graph(topo_description,
+                                              mininet_setup_gap=15,
+                                              synthesis_setup_gap=15,
+                                              synthesis_scheme="Synthesis_Failover_Aborescene")
 
-                self.data["incremental_time"][str(network_configuration)].append(incremental_time)
+                self.data["initial_time"][num_hosts_per_switch][str(network_configuration)] = []
+                self.data["incremental_time"][num_hosts_per_switch][str(network_configuration)] = []
 
+                for i in xrange(self.num_iterations):
+                    print "iteration:", i + 1
+
+                    fv = FlowValidator(ng)
+                    with Timer(verbose=True) as t:
+                        fv.init_network_port_graph()
+                        fv.add_hosts()
+                        fv.initialize_admitted_traffic()
+
+                    self.data["initial_time"][num_hosts_per_switch][str(network_configuration)].append(t.msecs)
+
+                    incremental_time = self.perform_incremental_times(fv)
+
+                    self.data["incremental_time"][num_hosts_per_switch][str(network_configuration)].append(incremental_time)
 
     def plot_initial_incremental_times(self):
         fig = plt.figure(0)
@@ -99,16 +116,21 @@ class InitialIncrementalTimes(Experiment):
 def main():
 
     num_iterations = 1
+    num_hosts_per_switch_list = [1]#, 2, 3, 4]
 
-#    network_configurations = [("ring", 4, 1, None, None)]#, ("clostopo", None, 1, 2, 1)]
-#    network_configurations = [("clostopo", None, 1, 2, 1)]
-    network_configurations = [("ring", 20, 1, None, None)]
+    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
+    #                           NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
-    load_config = False
-    save_config = True
+    # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
+
+    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
+                                  num_hosts_per_switch_list,
                                   network_configurations,
                                   load_config,
                                   save_config,
@@ -118,7 +140,6 @@ def main():
     exp.dump_data()
 
     #exp.load_data("data/.json")
-
     #exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":

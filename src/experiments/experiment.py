@@ -13,7 +13,6 @@ from mininet_man import MininetMan
 
 from model.network_graph import NetworkGraph
 from model.match import Match
-from model.traffic_path import TrafficPath
 
 from synthesis.intent_synthesis import IntentSynthesis
 from synthesis.intent_synthesis_ldst import IntentSynthesisLDST

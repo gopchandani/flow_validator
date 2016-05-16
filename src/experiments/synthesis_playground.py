@@ -8,7 +8,7 @@ __author__ = 'Rakesh Kumar'
 
 sys.path.append("./")
 
-class AborescenePlayground(Experiment):
+class SynthesisPlayground(Experiment):
 
     def __init__(self,
                  num_iterations,
@@ -17,7 +17,7 @@ class AborescenePlayground(Experiment):
                  save_config,
                  controller):
 
-        super(AborescenePlayground, self).__init__("number_of_hosts",
+        super(SynthesisPlayground, self).__init__("number_of_hosts",
                                                    num_iterations,
                                                    load_config,
                                                    save_config,
@@ -73,7 +73,7 @@ def main():
     save_config = True
     controller = "ryu"
 
-    exp = AborescenePlayground(num_iterations,
+    exp = SynthesisPlayground(num_iterations,
                                num_hosts_per_switch,
                                load_config,
                                save_config,
