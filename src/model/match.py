@@ -22,9 +22,9 @@ field_names = ["in_port",
 ryu_field_names_mapping = {"in_port": "in_port",
                            "eth_type": "ethernet_type",
                            "eth_src": "ethernet_source",
-                           "eth_dst":"ethernet_destination",
+                           "eth_dst": "ethernet_destination",
                            "nw_src": "src_ip_addr",
-                           "nw_dst":"dst_ip_addr",
+                           "nw_dst": "dst_ip_addr",
                            "ip_proto": "ip_protocol",
                            "tcp_dst": "tcp_destination_port",
                            "tcp_src": "tcp_source_port",
@@ -240,7 +240,7 @@ class Match(DictMixin):
                         self[field_name] = int(parsed_in_port)
 
                 elif field_name == "ethernet_type":
-                    self[field_name] = int(match_json["dl_type"])
+                    self[field_name] = int(match_json["eth_type"])
 
                 elif field_name == "ethernet_source":
                     mac_int = int(match_json[u"eth_src"].replace(":", ""), 16)
