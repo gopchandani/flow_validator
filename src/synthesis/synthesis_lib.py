@@ -217,15 +217,16 @@ class SynthesisLib():
 
         if self.network_graph.controller == "ryu":
 
-            # for action in action_list:
-            #     action["max_len"] = 65535
-
-            if apply_immediately:
-                flow["instructions"] = [{"type": "APPLY_ACTIONS",
-                                         "actions": action_list}]
+            if not action_list:
+                flow["instructions"] = []
             else:
-                flow["instructions"] = [{"type": "WRITE_ACTIONS",
-                                         "actions": action_list}]
+
+                if apply_immediately:
+                    flow["instructions"] = [{"type": "APPLY_ACTIONS",
+                                             "actions": action_list}]
+                else:
+                    flow["instructions"] = [{"type": "WRITE_ACTIONS",
+                                             "actions": action_list}]
 
         elif self.network_graph.controller == "sel":
             instruction = ConfigTree.WriteActions()
@@ -808,11 +809,9 @@ class SynthesisLib():
 
             #Compile match with in_port and destination mac address
             if self.network_graph.controller == "ryu":
-                flow["match"]["in_port"] = str(h_obj.switch_port_attached)
+                flow["match"]["in_port"] = h_obj.switch_port_attached
                 flow["match"]["eth_dst"] = h_obj.mac_addr
 
-                # Empty list for drop action
-                action_list = []
 
             elif self.network_graph.controller == "sel":
                 flow.match.in_port = str(h_obj.switch_port_attached)
