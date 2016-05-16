@@ -243,11 +243,11 @@ class Match(DictMixin):
                     self[field_name] = int(match_json["dl_type"])
 
                 elif field_name == "ethernet_source":
-                    mac_int = int(match_json[u"dl_src"].replace(":", ""), 16)
+                    mac_int = int(match_json[u"eth_src"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 elif field_name == "ethernet_destination":
-                    mac_int = int(match_json[u"dl_dst"].replace(":", ""), 16)
+                    mac_int = int(match_json[u"eth_dst"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 #TODO: Add graceful handling of IP addresses
@@ -293,7 +293,7 @@ class Match(DictMixin):
                         self["has_vlan_tag"] = 1
                     else:
                         self[field_name] = 0x1000 + int(match_json[u"vlan_vid"])
-                        self["has_vlan_tag"]= 1
+                        self["has_vlan_tag"] = 1
 
             except KeyError:
                 self[field_name] = sys.maxsize
