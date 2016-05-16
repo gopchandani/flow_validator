@@ -373,14 +373,13 @@ class SynthesisLib():
 
             out_port, watch_port = self.get_out_and_watch_port(primary_intent)
             bucket_primary["actions"] = [{"type": "OUTPUT", "port": out_port}]
-            bucket_primary["weight"] = 20
             bucket_primary["watch_port"] = watch_port
+            bucket_primary["watch_group"] = 4294967295
 
             out_port, watch_port = self.get_out_and_watch_port(failover_intent)
             bucket_failover["actions"] = [{"type": "OUTPUT", "port": out_port}]
-            bucket_failover["weight"] = 20
-            bucket_failover["weight"] = 20
             bucket_failover["watch_port"] = watch_port
+            bucket_primary["watch_group"] = 4294967295
 
             group["buckets"] = [bucket_primary, bucket_failover]
             group_id = group["group_id"]
@@ -842,11 +841,9 @@ class SynthesisLib():
 
             #Compile match with in_port and destination mac address
             if self.network_graph.controller == "ryu":
-                flow["match"]["in_port"] = str(h_obj.switch_port_attached)
+                flow["match"]["in_port"] = h_obj.switch_port_attached
                 flow["match"]["dl_vlan"] = self.network_graph.graph.node[sw]["sw"].synthesis_tag
 
-                # Empty list for drop action
-                action_list = []
             elif self.network_graph.controller == "sel":
                 raise NotImplementedError
 
