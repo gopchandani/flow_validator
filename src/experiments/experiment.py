@@ -377,3 +377,56 @@ class Experiment(object):
 
         plt.savefig("plots/" + self.experiment_tag + "_" + data_key + ".png")
         plt.show()
+
+    def plot_lines_with_error_bars(self,
+                                   data_key,
+                                   x_label,
+                                   y_label,
+                                   y_scale='log',
+                                   xmin_factor=1.0,
+                                   xmax_factor=1.05,
+                                   y_max_factor=1.2,
+                                   legend_loc='upper left',
+                                   xticks=None,
+                                   xtick_labels=None):
+
+        markers = ['o', 'v', '^', '*', 'd', 'h', '+', '.']
+        marker_i = 0
+
+        for line_data_key in self.data[data_key]:
+
+            data_vals = self.data[data_key][line_data_key]
+
+            x, mean, sem = self.prepare_matplotlib_data(data_vals)
+
+            l = plt.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=8.0, label=line_data_key)
+
+            marker_i += 1
+
+        low_xlim, high_xlim = plt.xlim()
+        plt.xlim(xmax=(high_xlim) * xmax_factor)
+        plt.xlim(xmin=(low_xlim) * xmin_factor)
+
+        if y_scale == "linear":
+            low_ylim, high_ylim = plt.ylim()
+            plt.ylim(ymax=(high_ylim) * y_max_factor)
+
+        plt.yscale(y_scale)
+
+        plt.xlabel(x_label, fontsize=18)
+        plt.ylabel(y_label, fontsize=18)
+
+        ax = plt.axes()
+        xa = ax.get_xaxis()
+        xa.set_major_locator(MaxNLocator(integer=True))
+
+        if xticks:
+            ax.set_xticks(xticks)
+
+        if xtick_labels:
+            ax.set_xticklabels(xtick_labels)
+
+        legend = plt.legend(loc=legend_loc, shadow=True, fontsize=12)
+
+        plt.savefig("plots/" + self.experiment_tag + "_" + data_key + ".png")
+        plt.show()

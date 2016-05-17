@@ -85,8 +85,8 @@ class InitialIncrementalTimes(Experiment):
                                               synthesis_setup_gap=15,
                                               synthesis_scheme="Synthesis_Failover_Aborescene")
 
-                self.data["initial_time"][num_hosts_per_switch][str(network_configuration)] = []
-                self.data["incremental_time"][num_hosts_per_switch][str(network_configuration)] = []
+                self.data["initial_time"][str(network_configuration)][num_hosts_per_switch] = []
+                self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch]= []
 
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
@@ -97,44 +97,41 @@ class InitialIncrementalTimes(Experiment):
                         fv.add_hosts()
                         fv.initialize_admitted_traffic()
 
-                    self.data["initial_time"][num_hosts_per_switch][str(network_configuration)].append(t.msecs)
+                    self.data["initial_time"][str(network_configuration)][num_hosts_per_switch].append(t.msecs)
 
                     incremental_time = self.perform_incremental_times(fv)
 
-                    self.data["incremental_time"][num_hosts_per_switch][str(network_configuration)].append(incremental_time)
+                    self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch].append(incremental_time)
 
     def plot_initial_incremental_times(self):
-        fig = plt.figure(0)
-        # self.plot_line_error_bars("initial_time",
-        #                           "Total number of hosts",
-        #                           "Average Initial Computation Time (ms)")
-        #
-        # fig = plt.figure(1)
-        # self.plot_line_error_bars("incremental_time",
-        #                           "Total number of hosts",
-        #                           "Average Incremental Computation Time (ms)")
-        #
-
 
         fig = plt.figure(0)
-        self.plot_line_error_bars("initial_time",
+        self.plot_lines_with_error_bars("initial_time",
                                   "Total number of hosts",
                                   "Average Initial Computation Time (ms)",
                                   y_scale='linear',
-                                  line_label="",
-                                  line_label_suffixes=[],
-                                  xmax_factor=8,
                                   xmin_factor=0,
+                                  xmax_factor=1.05,
                                   y_max_factor=1.05,
                                   legend_loc='upper right',
-                                  xticks=self.num_hosts_per_switch_list)#,
-                                  #xtick_labels=["0.01", "0.05", "0.1"])
+                                  xticks=self.num_hosts_per_switch_list)
+
+        fig = plt.figure(1)
+        self.plot_lines_with_error_bars("incremental_time",
+                                  "Total number of hosts",
+                                  "Average Incremental Computation Time (ms)",
+                                  y_scale='linear',
+                                  xmin_factor=0,
+                                  xmax_factor=1.05,
+                                  y_max_factor=1.05,
+                                  legend_loc='upper right',
+                                  xticks=self.num_hosts_per_switch_list)
 
 
 def main():
 
     num_iterations = 2
-    num_hosts_per_switch_list = [1, 2]#, 3, 4]
+    num_hosts_per_switch_list = [1, 2, 3, 4, 5, 6]
 
     network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
                               NetworkConfiguration("clostopo", 7, 1, 2, 1)]
@@ -157,7 +154,7 @@ def main():
     # exp.trigger()
     # exp.dump_data()
 
-    exp.load_data("data/initial_incremental_times_2_iterations_20160516_144446.json")
+    exp.load_data("data/initial_incremental_times_2_iterations_20160516_172555.json")
     exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
