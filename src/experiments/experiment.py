@@ -379,14 +379,16 @@ class Experiment(object):
         plt.show()
 
     def plot_lines_with_error_bars(self,
+                                   ax,
                                    data_key,
                                    x_label,
                                    y_label,
-                                   y_scale='log',
+                                   subplot_title,
+                                   y_scale,
+                                   legend_loc,
                                    xmin_factor=1.0,
                                    xmax_factor=1.05,
-                                   y_max_factor=1.2,
-                                   legend_loc='upper left',
+                                   y_max_factor=1.5,
                                    xticks=None,
                                    xtick_labels=None):
 
@@ -399,24 +401,25 @@ class Experiment(object):
 
             x, mean, sem = self.prepare_matplotlib_data(data_vals)
 
-            l = plt.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=8.0, label=line_data_key)
+            l = ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=8.0, label=line_data_key)
 
             marker_i += 1
+        #
+        # low_xlim, high_xlim = plt.xlim()
+        # plt.xlim(xmax=(high_xlim) * xmax_factor)
+        # plt.xlim(xmin=(low_xlim) * xmin_factor)
 
-        low_xlim, high_xlim = plt.xlim()
-        plt.xlim(xmax=(high_xlim) * xmax_factor)
-        plt.xlim(xmin=(low_xlim) * xmin_factor)
+        ax.set_xlabel(x_label, fontsize=12)
+        ax.set_ylabel(y_label, fontsize=12)
+
+        ax.set_title(subplot_title, fontsize=12)
 
         if y_scale == "linear":
             low_ylim, high_ylim = plt.ylim()
-            plt.ylim(ymax=(high_ylim) * y_max_factor)
+            plt.ylim(ymax=high_ylim*y_max_factor)
 
         plt.yscale(y_scale)
 
-        plt.xlabel(x_label, fontsize=18)
-        plt.ylabel(y_label, fontsize=18)
-
-        ax = plt.axes()
         xa = ax.get_xaxis()
         xa.set_major_locator(MaxNLocator(integer=True))
 
@@ -425,8 +428,3 @@ class Experiment(object):
 
         if xtick_labels:
             ax.set_xticklabels(xtick_labels)
-
-        legend = plt.legend(loc=legend_loc, shadow=True, fontsize=12)
-
-        plt.savefig("plots/" + self.experiment_tag + "_" + data_key + ".png")
-        plt.show()

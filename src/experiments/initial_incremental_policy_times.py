@@ -26,7 +26,7 @@ class InitialIncrementalTimes(Experiment):
                  save_config,
                  controller):
 
-        super(InitialIncrementalTimes, self).__init__("initial_incremental_times",
+        super(InitialIncrementalTimes, self).__init__("initial_incremental_policy_times",
                                                       num_iterations,
                                                       load_config,
                                                       save_config,
@@ -131,39 +131,72 @@ class InitialIncrementalTimes(Experiment):
 
     def plot_initial_incremental_times(self):
 
-        fig = plt.figure(0)
-        self.plot_lines_with_error_bars("initial_time",
+        # Two subplots, unpack the axes array immediately
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(8.5, 2))
+
+        self.plot_lines_with_error_bars(ax1,
+                                        "initial_time",
                                         "Total number of hosts",
-                                        "Average Initial Computation Time (sec)",
+                                        "Time (seconds)",
+                                        "(a)",
                                         y_scale='linear',
                                         xmin_factor=0,
                                         xmax_factor=1.05,
                                         y_max_factor=1.05,
-                                        legend_loc='upper right',
+                                        legend_loc='upper left',
                                         xticks=self.num_hosts_per_switch_list)
 
-        fig = plt.figure(1)
-        self.plot_lines_with_error_bars("incremental_time",
+        self.plot_lines_with_error_bars(ax2,
+                                        "incremental_time",
                                         "Total number of hosts",
-                                        "Average Incremental Computation Time (sec)",
+                                        "",
+                                        "(b)",
                                         y_scale='linear',
                                         xmin_factor=0,
                                         xmax_factor=1.05,
                                         y_max_factor=1.05,
-                                        legend_loc='upper right',
+                                        legend_loc='upper left',
                                         xticks=self.num_hosts_per_switch_list)
 
-
-        fig = plt.figure(2)
-        self.plot_lines_with_error_bars("validation_time",
+        self.plot_lines_with_error_bars(ax3,
+                                        "initial_time",
                                         "Total number of hosts",
-                                        "Average Validation Time (sec)",
+                                        "",
+                                        "(c)",
                                         y_scale='linear',
                                         xmin_factor=0,
                                         xmax_factor=1.05,
                                         y_max_factor=1.05,
-                                        legend_loc='upper right',
+                                        legend_loc='upper left',
                                         xticks=self.num_hosts_per_switch_list)
+
+        plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
+
+        plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
+        plt.show()
+
+        # fig = plt.figure(1)
+        # self.plot_lines_with_error_bars("incremental_time",
+        #                                 "Total number of hosts",
+        #                                 "Average Incremental Computation Time (sec)",
+        #                                 y_scale='linear',
+        #                                 xmin_factor=0,
+        #                                 xmax_factor=1.05,
+        #                                 y_max_factor=1.05,
+        #                                 legend_loc='upper left',
+        #                                 xticks=self.num_hosts_per_switch_list)
+        #
+        #
+        # fig = plt.figure(2)
+        # self.plot_lines_with_error_bars("validation_time",
+        #                                 "Total number of hosts",
+        #                                 "Average Validation Time (sec)",
+        #                                 y_scale='linear',
+        #                                 xmin_factor=0,
+        #                                 xmax_factor=1.05,
+        #                                 y_max_factor=1.05,
+        #                                 legend_loc='upper left',
+        #                                 xticks=self.num_hosts_per_switch_list)
 
 def main():
 
@@ -189,12 +222,12 @@ def main():
                                   save_config,
                                   controller)
 
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
-    # # exp.load_data("data/initial_incremental_times_2_iterations_20160516_213610.json")
-    # exp.load_data("data/initial_incremental_times_1_iterations_20160517_092037.json")
-    # exp.plot_initial_incremental_times()
+    exp.load_data("data/initial_incremental_times_2_iterations_20160516_213610.json")
+    #exp.load_data("data/initial_incremental_times_1_iterations_20160517_092037.json")
+    exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()
