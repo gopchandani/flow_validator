@@ -385,7 +385,6 @@ class Experiment(object):
                                    y_label,
                                    subplot_title,
                                    y_scale,
-                                   legend_loc,
                                    xmin_factor=1.0,
                                    xmax_factor=1.05,
                                    y_max_factor=1.5,
@@ -401,7 +400,12 @@ class Experiment(object):
 
             x, mean, sem = self.prepare_matplotlib_data(data_vals)
 
-            l = ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=8.0, label=line_data_key)
+            try:
+                legend_label = line_data_key[:line_data_key.index("Fanout") - 1]
+            except ValueError:
+                legend_label = line_data_key
+
+            l = ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=legend_label)
 
             marker_i += 1
         #
@@ -412,7 +416,7 @@ class Experiment(object):
         ax.set_xlabel(x_label, fontsize=12)
         ax.set_ylabel(y_label, fontsize=12)
 
-        ax.set_title(subplot_title, fontsize=12)
+        ax.set_title(subplot_title, fontsize=10)
 
         if y_scale == "linear":
             low_ylim, high_ylim = plt.ylim()

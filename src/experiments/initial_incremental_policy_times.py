@@ -132,7 +132,7 @@ class InitialIncrementalTimes(Experiment):
     def plot_initial_incremental_times(self):
 
         # Two subplots, unpack the axes array immediately
-        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=True, figsize=(8.5, 2))
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=True, figsize=(8.5, 2.5))
 
         self.plot_lines_with_error_bars(ax1,
                                         "initial_time",
@@ -143,7 +143,6 @@ class InitialIncrementalTimes(Experiment):
                                         xmin_factor=0,
                                         xmax_factor=1.05,
                                         y_max_factor=1.05,
-                                        legend_loc='upper left',
                                         xticks=self.num_hosts_per_switch_list)
 
         self.plot_lines_with_error_bars(ax2,
@@ -155,7 +154,6 @@ class InitialIncrementalTimes(Experiment):
                                         xmin_factor=0,
                                         xmax_factor=1.05,
                                         y_max_factor=1.05,
-                                        legend_loc='upper left',
                                         xticks=self.num_hosts_per_switch_list)
 
         self.plot_lines_with_error_bars(ax3,
@@ -167,11 +165,13 @@ class InitialIncrementalTimes(Experiment):
                                         xmin_factor=0,
                                         xmax_factor=1.05,
                                         y_max_factor=1.05,
-                                        legend_loc='upper left',
                                         xticks=self.num_hosts_per_switch_list)
 
         plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
 
+        handles, labels = ax3.get_legend_handles_labels()
+
+        f.legend(handles, labels, shadow=False, fontsize=10, loc=8, ncol=3, markerscale=0.75, frameon=False, columnspacing=0.5)
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
