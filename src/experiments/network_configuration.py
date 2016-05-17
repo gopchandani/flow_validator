@@ -13,7 +13,7 @@ class NetworkConfiguration(object):
 
     def __str__(self):
         if self.topo_name == "ring":
-            return "Ring topology with: " + str(self.num_switches) + " switches"
+            return "Ring topology with " + str(self.num_switches) + " switches"
 
         elif self.topo_name == "clostopo":
-            return "Clos topology with: " + str(self.num_switches) + " switches Fanout/Core: " + str(self.fanout) + "/" + str(self.core)
+            return "Clos topology with " + str(self.num_switches) + " switches Fanout/Core: " + str(self.fanout) + "/" + str(self.core)
