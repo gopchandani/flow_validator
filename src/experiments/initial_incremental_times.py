@@ -51,13 +51,13 @@ class InitialIncrementalTimes(Experiment):
 
             with Timer(verbose=True) as t:
                 fv.port_graph.remove_node_graph_link(edge[0], edge[1])
-            incremental_times.append(t.msecs)
+            incremental_times.append(t.secs)
 
             print "Restoring:", edge
 
             with Timer(verbose=True) as t:
                 fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
-            incremental_times.append(t.msecs)
+            incremental_times.append(t.secs)
 
         return np.mean(incremental_times)
 
@@ -97,7 +97,7 @@ class InitialIncrementalTimes(Experiment):
                         fv.add_hosts()
                         fv.initialize_admitted_traffic()
 
-                    self.data["initial_time"][str(network_configuration)][num_hosts_per_switch].append(t.msecs)
+                    self.data["initial_time"][str(network_configuration)][num_hosts_per_switch].append(t.secs)
 
                     incremental_time = self.perform_incremental_times(fv)
 
@@ -108,7 +108,7 @@ class InitialIncrementalTimes(Experiment):
         fig = plt.figure(0)
         self.plot_lines_with_error_bars("initial_time",
                                   "Total number of hosts",
-                                  "Average Initial Computation Time (ms)",
+                                  "Average Initial Computation Time (sec)",
                                   y_scale='linear',
                                   xmin_factor=0,
                                   xmax_factor=1.05,
@@ -119,7 +119,7 @@ class InitialIncrementalTimes(Experiment):
         fig = plt.figure(1)
         self.plot_lines_with_error_bars("incremental_time",
                                   "Total number of hosts",
-                                  "Average Incremental Computation Time (ms)",
+                                  "Average Incremental Computation Time (sec)",
                                   y_scale='linear',
                                   xmin_factor=0,
                                   xmax_factor=1.05,
@@ -131,7 +131,7 @@ class InitialIncrementalTimes(Experiment):
 def main():
 
     num_iterations = 2
-    num_hosts_per_switch_list = [1, 2, 3, 4, 5, 6]
+    num_hosts_per_switch_list = [1, 2]#, 3, 4, 5, 6]
 
     network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
                               NetworkConfiguration("clostopo", 7, 1, 2, 1)]
@@ -151,10 +151,10 @@ def main():
                                   save_config,
                                   controller)
 
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    exp.load_data("data/initial_incremental_times_2_iterations_20160516_172555.json")
+    #exp.load_data("data/initial_incremental_times_2_iterations_20160516_172555.json")
     exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
