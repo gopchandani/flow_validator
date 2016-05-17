@@ -105,17 +105,17 @@ class InitialIncrementalTimes(Experiment):
 
                     self.data["initial_time"][str(network_configuration)][num_hosts_per_switch].append(t.secs)
 
-                    src_zone = [fv.network_graph.get_node_object(h_id).switch_port
+                    src_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
                                 for h_id in fv.network_graph.host_ids]
 
-                    dst_zone = [fv.network_graph.get_node_object(h_id).switch_port
+                    dst_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
                                 for h_id in fv.network_graph.host_ids]
 
                     traffic = Traffic(init_wildcard=True)
                     traffic.set_field("ethernet_type", 0x0800)
                     k = 1
-                    l = 6
-                    el = [self.ng.get_link_data('s3', 's4')]
+                    l = 12
+                    el = [self.ng.get_link_data('s1', 's2')]
 
                     with Timer(verbose=True) as t:
                         validation_result = fv.validate_zone_pair_connectivity_path_length_link_exclusivity(src_zone,
@@ -171,14 +171,14 @@ def main():
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [1]#, 2, 3, 4, 5]
 
-    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
-                              NetworkConfiguration("clostopo", 7, 1, 2, 1)]
+    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
+    #                           NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
     # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
-    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -189,12 +189,12 @@ def main():
                                   save_config,
                                   controller)
 
-    #exp.trigger()
-    #exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    # exp.load_data("data/initial_incremental_times_2_iterations_20160516_213610.json")
-    exp.load_data("data/initial_incremental_times_1_iterations_20160517_092037.json")
-    exp.plot_initial_incremental_times()
+    # # exp.load_data("data/initial_incremental_times_2_iterations_20160516_213610.json")
+    # exp.load_data("data/initial_incremental_times_1_iterations_20160517_092037.json")
+    # exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()

@@ -257,6 +257,27 @@ class FlowValidator(object):
 
                 yield src_port, dst_port
 
+    def is_node_in_zone(self, node, zone, as_ingress_egress):
+
+        result = False
+
+        for port in zone:
+
+            if as_ingress_egress == "ingress":
+                if port.network_port_graph_ingress_node == node:
+                    result = True
+                    break
+
+            elif as_ingress_egress == "egress":
+
+                if port.network_port_graph_egress_node == node:
+                    result = True
+                    break
+            else:
+                raise Exception("Unknown as_ingress_egress")
+
+        return result
+
     def are_zones_connected(self, src_zone, dst_zone, traffic):
 
         is_connected = True
@@ -330,7 +351,7 @@ class FlowValidator(object):
 
             for path in traffic_paths:
                 if len(path) > l:
-                    print "src_port:", src_port, "dst_port:", dst_port, "Path:", path
+                    print "src_port:", src_port, "dst_port:", dst_port, "Path does not fit in specified limit:", path
                     within_limit = False
                     break
 
@@ -344,22 +365,17 @@ class FlowValidator(object):
 
         self.initialize_per_link_traffic_paths()
 
-        for src_port, dst_port in self.port_pair_iter(src_zone, dst_zone):
+        for l in el:
 
-            ingress_node = self.port_graph.get_ingress_node(src_port.sw.node_id, src_port.port_number)
-            egress_node = self.port_graph.get_egress_node(dst_port.sw.node_id, dst_port.port_number)
+            # Check to see if the paths belonging to this link are all from src_zone to dst_zone
+            for path in l.traffic_paths:
 
-            for l in el:
+                if not self.is_node_in_zone(path.src_node, src_zone, "ingress") or \
+                        not self.is_node_in_zone(path.dst_node, dst_zone, "egress"):
 
-                # Check to see if the paths belonging to this link are all for the source/destination pairs in all_paths
-                for path in l.traffic_paths:
-
-                    if not path.src_node == ingress_node or not path.dst_node == egress_node:
-                        print "l:", l, "src_port:", src_port, "dst_port:", dst_port, "Path:", path
-                        is_exclusive = False
-                        break
-
-                if not is_exclusive:
+                    print "el:", el
+                    print "Found path:", path
+                    is_exclusive = False
                     break
 
             if not is_exclusive:
@@ -449,6 +465,9 @@ class FlowValidator(object):
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
 
                 for link in links_to_fail:
+
+                    print "Failing:", link
+
                     with Timer(verbose=True) as t:
                         self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
                     incremental_times.append(t.secs)
@@ -463,6 +482,9 @@ class FlowValidator(object):
                     is_exclusive = self.are_zone_pair_exlusive(src_zone, dst_zone, traffic, el)
 
                 for link in links_to_fail:
+
+                    print "Restoring:", link
+
                     with Timer(verbose=True) as t:
                         self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
                     incremental_times.append(t.secs)

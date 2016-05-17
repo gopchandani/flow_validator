@@ -48,8 +48,8 @@ class SynthesisPlayground(Experiment):
             fv.add_hosts()
             fv.initialize_admitted_traffic()
 
-            src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-            dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+            src_zone = [fv.network_graph.get_node_object(h_id).get_switch_port() for h_id in fv.network_graph.host_ids]
+            dst_zone = [fv.network_graph.get_node_object(h_id).get_switch_port() for h_id in fv.network_graph.host_ids]
 
             # src_zone = [fv.network_graph.get_node_object("h11").switch_port]
             # dst_zone = [fv.network_graph.get_node_object("h21").switch_port]
