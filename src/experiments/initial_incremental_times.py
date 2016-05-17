@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
+import random
+import math
 
 from collections import defaultdict
 from timer import Timer
@@ -16,6 +18,7 @@ sys.path.append("./")
 class InitialIncrementalTimes(Experiment):
     def __init__(self,
                  num_iterations,
+                 link_fraction_to_sample,
                  num_hosts_per_switch_list,
                  network_configurations,
                  load_config,
@@ -31,32 +34,32 @@ class InitialIncrementalTimes(Experiment):
 
         self.num_hosts_per_switch_list = num_hosts_per_switch_list
         self.network_configurations = network_configurations
+        self.link_fraction_to_sample = link_fraction_to_sample
 
         self.data = {
             "initial_time": defaultdict(defaultdict),
             "incremental_time": defaultdict(defaultdict),
         }
 
-    def perform_incremental_times(self, fv):
+    def perform_incremental_times(self, fv, link_fraction_to_sample):
+
+        all_links = list(fv.network_graph.get_switch_link_data())
+        num_links_to_sample = int(math.ceil(len(all_links) * link_fraction_to_sample))
+
         incremental_times = []
 
-        # Iterate over each edge
-        for edge in fv.network_graph.graph.edges():
+        for i in range(num_links_to_sample):
 
-            # Ignore host edges
-            if edge[0].startswith("h") or edge[1].startswith("h"):
-                continue
+            sampled_ld = random.choice(all_links)
 
-            print "Failing:", edge
-
+            print "Failing:", sampled_ld
             with Timer(verbose=True) as t:
-                fv.port_graph.remove_node_graph_link(edge[0], edge[1])
+                fv.port_graph.remove_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1])
             incremental_times.append(t.secs)
 
-            print "Restoring:", edge
-
+            print "Restoring:", sampled_ld
             with Timer(verbose=True) as t:
-                fv.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
+                fv.port_graph.add_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1], updating=True)
             incremental_times.append(t.secs)
 
         return np.mean(incremental_times)
@@ -99,7 +102,7 @@ class InitialIncrementalTimes(Experiment):
 
                     self.data["initial_time"][str(network_configuration)][num_hosts_per_switch].append(t.secs)
 
-                    incremental_time = self.perform_incremental_times(fv)
+                    incremental_time = self.perform_incremental_times(fv, self.link_fraction_to_sample)
 
                     self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch].append(incremental_time)
 
@@ -131,6 +134,7 @@ class InitialIncrementalTimes(Experiment):
 def main():
 
     num_iterations = 2
+    link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [1, 2]#, 3, 4, 5, 6]
 
     network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
@@ -140,11 +144,12 @@ def main():
 
     # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
+                                  link_fraction_to_sample,
                                   num_hosts_per_switch_list,
                                   network_configurations,
                                   load_config,
