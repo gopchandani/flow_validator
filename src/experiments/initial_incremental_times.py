@@ -135,17 +135,17 @@ def main():
 
     num_iterations = 2
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [1, 2]#, 3, 4, 5, 6]
+    num_hosts_per_switch_list = [1, 2, 3, 4, 5]
 
-    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
-                              NetworkConfiguration("clostopo", 7, 1, 2, 1)]
+    network_configurations = [NetworkConfiguration("ring", 10, 1, None, None),
+                              NetworkConfiguration("clostopo", 7, 1, 2, 2)]
 
     # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
     # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
