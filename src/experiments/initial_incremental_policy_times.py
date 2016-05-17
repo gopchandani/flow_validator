@@ -132,11 +132,11 @@ class InitialIncrementalTimes(Experiment):
     def plot_initial_incremental_times(self):
 
         # Two subplots, unpack the axes array immediately
-        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(8.5, 2))
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=True, figsize=(8.5, 2))
 
         self.plot_lines_with_error_bars(ax1,
                                         "initial_time",
-                                        "Total number of hosts",
+                                        "",
                                         "Time (seconds)",
                                         "(a)",
                                         y_scale='linear',
@@ -160,7 +160,7 @@ class InitialIncrementalTimes(Experiment):
 
         self.plot_lines_with_error_bars(ax3,
                                         "initial_time",
-                                        "Total number of hosts",
+                                        "",
                                         "",
                                         "(c)",
                                         y_scale='linear',
@@ -171,6 +171,7 @@ class InitialIncrementalTimes(Experiment):
                                         xticks=self.num_hosts_per_switch_list)
 
         plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
+
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
