@@ -377,18 +377,3 @@ class Experiment(object):
 
         plt.savefig("plots/" + self.experiment_tag + "_" + data_key + ".png")
         plt.show()
-
-    def plot_bar_error_bars(self, data_key, x_label, y_label):
-
-        x, edges_broken_mean, edges_broken_sem = self.prepare_matplotlib_data(self.data[data_key])
-        ind = np.arange(len(x))
-        width = 0.3
-
-        plt.bar(ind + width, edges_broken_mean, yerr=edges_broken_sem, color="0.90", align='center',
-                error_kw=dict(ecolor='gray', lw=2, capsize=5, capthick=2))
-
-        plt.xticks(ind + width, tuple(x))
-        plt.xlabel(x_label, fontsize=18)
-        plt.ylabel(y_label, fontsize=18)
-        plt.savefig("plots/" + self.experiment_tag + "_" + data_key + ".png")
-        plt.show()

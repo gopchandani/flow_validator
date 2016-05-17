@@ -12,6 +12,7 @@ __author__ = 'Rakesh Kumar'
 
 sys.path.append("./")
 
+
 class InitialIncrementalTimes(Experiment):
     def __init__(self,
                  num_iterations,
@@ -104,29 +105,46 @@ class InitialIncrementalTimes(Experiment):
 
     def plot_initial_incremental_times(self):
         fig = plt.figure(0)
+        # self.plot_line_error_bars("initial_time",
+        #                           "Total number of hosts",
+        #                           "Average Initial Computation Time (ms)")
+        #
+        # fig = plt.figure(1)
+        # self.plot_line_error_bars("incremental_time",
+        #                           "Total number of hosts",
+        #                           "Average Incremental Computation Time (ms)")
+        #
+
+
+        fig = plt.figure(0)
         self.plot_line_error_bars("initial_time",
                                   "Total number of hosts",
-                                  "Average Initial Computation Time (ms)")
+                                  "Average Initial Computation Time (ms)",
+                                  y_scale='linear',
+                                  line_label="",
+                                  line_label_suffixes=[],
+                                  xmax_factor=8,
+                                  xmin_factor=0,
+                                  y_max_factor=1.05,
+                                  legend_loc='upper right',
+                                  xticks=self.num_hosts_per_switch_list)#,
+                                  #xtick_labels=["0.01", "0.05", "0.1"])
 
-        fig = plt.figure(2)
-        self.plot_line_error_bars("incremental_time",
-                                  "Total number of hosts",
-                                  "Average Incremental Computation Time (ms)",
-                                  y_scale='linear')
+
 def main():
 
-    num_iterations = 1
-    num_hosts_per_switch_list = [1]#, 2, 3, 4]
+    num_iterations = 2
+    num_hosts_per_switch_list = [1, 2]#, 3, 4]
 
-    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
-    #                           NetworkConfiguration("clostopo", 7, 1, 2, 1)]
+    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
+                              NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
     # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
-    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -136,11 +154,11 @@ def main():
                                   save_config,
                                   controller)
 
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
-    #exp.load_data("data/.json")
-    #exp.plot_initial_incremental_times()
+    exp.load_data("data/initial_incremental_times_2_iterations_20160516_144446.json")
+    exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()
