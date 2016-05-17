@@ -387,9 +387,11 @@ class Experiment(object):
                                    y_scale,
                                    xmin_factor=1.0,
                                    xmax_factor=1.05,
-                                   y_max_factor=1.5,
-                                   xticks=None,
-                                   xtick_labels=None):
+                                   y_max_factor=1.5):
+
+        ax.set_xlabel(x_label, fontsize=12)
+        ax.set_ylabel(y_label, fontsize=12)
+        ax.set_title(subplot_title, fontsize=10)
 
         markers = ['o', 'v', '^', '*', 'd', 'h', '+', '.']
         marker_i = 0
@@ -405,30 +407,22 @@ class Experiment(object):
             except ValueError:
                 legend_label = line_data_key
 
-            l = ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=legend_label)
+            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=legend_label)
 
             marker_i += 1
-        #
-        # low_xlim, high_xlim = plt.xlim()
-        # plt.xlim(xmax=(high_xlim) * xmax_factor)
-        # plt.xlim(xmin=(low_xlim) * xmin_factor)
 
-        ax.set_xlabel(x_label, fontsize=12)
-        ax.set_ylabel(y_label, fontsize=12)
+        ax.tick_params(axis='x', labelsize=10)
+        ax.tick_params(axis='y', labelsize=10)
 
-        ax.set_title(subplot_title, fontsize=10)
+        low_xlim, high_xlim = ax.get_xlim()
+        ax.set_xlim(xmax=(high_xlim) * xmax_factor)
+        ax.set_xlim(xmin=(low_xlim) * xmin_factor)
 
         if y_scale == "linear":
-            low_ylim, high_ylim = plt.ylim()
-            plt.ylim(ymax=high_ylim*y_max_factor)
+            low_ylim, high_ylim = ax.get_ylim()
+            ax.set_ylim(ymax=high_ylim*y_max_factor)
 
-        plt.yscale(y_scale)
+        ax.set_yscale(y_scale)
 
         xa = ax.get_xaxis()
         xa.set_major_locator(MaxNLocator(integer=True))
-
-        if xticks:
-            ax.set_xticks(xticks)
-
-        if xtick_labels:
-            ax.set_xticklabels(xtick_labels)

@@ -16,4 +16,4 @@ class NetworkConfiguration(object):
             return "Ring topology with " + str(self.num_switches) + " switches"
 
         elif self.topo_name == "clostopo":
-            return "Clos topology with " + str(self.num_switches) + " switches Fanout/Core: " + str(self.fanout) + "/" + str(self.core)
+            return "Clos topology with " + str(self.num_switches) + " switches"

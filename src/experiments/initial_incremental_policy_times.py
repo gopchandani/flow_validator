@@ -139,33 +139,30 @@ class InitialIncrementalTimes(Experiment):
                                         "",
                                         "Time (seconds)",
                                         "(a)",
-                                        y_scale='linear',
-                                        xmin_factor=0,
-                                        xmax_factor=1.05,
-                                        y_max_factor=1.05,
-                                        xticks=self.num_hosts_per_switch_list)
+                                        y_scale='log',
+                                        xmin_factor=0.8,
+                                        xmax_factor=1.2,
+                                        y_max_factor=1.0)
 
         self.plot_lines_with_error_bars(ax2,
                                         "incremental_time",
                                         "Total number of hosts",
                                         "",
                                         "(b)",
-                                        y_scale='linear',
-                                        xmin_factor=0,
+                                        y_scale='log',
+                                        xmin_factor=0.8,
                                         xmax_factor=1.05,
-                                        y_max_factor=1.05,
-                                        xticks=self.num_hosts_per_switch_list)
+                                        y_max_factor=1.1)
 
         self.plot_lines_with_error_bars(ax3,
                                         "initial_time",
                                         "",
                                         "",
                                         "(c)",
-                                        y_scale='linear',
-                                        xmin_factor=0,
+                                        y_scale='log',
+                                        xmin_factor=0.8,
                                         xmax_factor=1.05,
-                                        y_max_factor=1.05,
-                                        xticks=self.num_hosts_per_switch_list)
+                                        y_max_factor=1.1)
 
         plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
 
