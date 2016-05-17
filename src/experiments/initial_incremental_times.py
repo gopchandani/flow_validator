@@ -9,6 +9,7 @@ from timer import Timer
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
 from network_configuration import NetworkConfiguration
+from model.traffic import Traffic
 
 __author__ = 'Rakesh Kumar'
 
@@ -39,6 +40,7 @@ class InitialIncrementalTimes(Experiment):
         self.data = {
             "initial_time": defaultdict(defaultdict),
             "incremental_time": defaultdict(defaultdict),
+            "validation_time": defaultdict(defaultdict)
         }
 
     def perform_incremental_times(self, fv, link_fraction_to_sample):
@@ -90,6 +92,7 @@ class InitialIncrementalTimes(Experiment):
 
                 self.data["initial_time"][str(network_configuration)][num_hosts_per_switch] = []
                 self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch]= []
+                self.data["validation_time"][str(network_configuration)][num_hosts_per_switch]= []
 
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
@@ -102,50 +105,80 @@ class InitialIncrementalTimes(Experiment):
 
                     self.data["initial_time"][str(network_configuration)][num_hosts_per_switch].append(t.secs)
 
-                    incremental_time = self.perform_incremental_times(fv, self.link_fraction_to_sample)
+                    src_zone = [fv.network_graph.get_node_object(h_id).switch_port
+                                for h_id in fv.network_graph.host_ids]
 
-                    self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch].append(incremental_time)
+                    dst_zone = [fv.network_graph.get_node_object(h_id).switch_port
+                                for h_id in fv.network_graph.host_ids]
+
+                    traffic = Traffic(init_wildcard=True)
+                    traffic.set_field("ethernet_type", 0x0800)
+                    k = 1
+                    l = 6
+                    el = [self.ng.get_link_data('s3', 's4')]
+
+                    with Timer(verbose=True) as t:
+                        validation_result = fv.validate_zone_pair_connectivity_path_length_link_exclusivity(src_zone,
+                                                                                                            dst_zone,
+                                                                                                            traffic,
+                                                                                                            l, el, k)
+
+                    self.data["validation_time"][str(network_configuration)][num_hosts_per_switch].append(t.secs)
+
+                    print validation_result
+
+                    self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch].append(validation_result[3])
 
     def plot_initial_incremental_times(self):
 
         fig = plt.figure(0)
         self.plot_lines_with_error_bars("initial_time",
-                                  "Total number of hosts",
-                                  "Average Initial Computation Time (sec)",
-                                  y_scale='linear',
-                                  xmin_factor=0,
-                                  xmax_factor=1.05,
-                                  y_max_factor=1.05,
-                                  legend_loc='upper right',
-                                  xticks=self.num_hosts_per_switch_list)
+                                        "Total number of hosts",
+                                        "Average Initial Computation Time (sec)",
+                                        y_scale='linear',
+                                        xmin_factor=0,
+                                        xmax_factor=1.05,
+                                        y_max_factor=1.05,
+                                        legend_loc='upper right',
+                                        xticks=self.num_hosts_per_switch_list)
 
         fig = plt.figure(1)
         self.plot_lines_with_error_bars("incremental_time",
-                                  "Total number of hosts",
-                                  "Average Incremental Computation Time (sec)",
-                                  y_scale='linear',
-                                  xmin_factor=0,
-                                  xmax_factor=1.05,
-                                  y_max_factor=1.05,
-                                  legend_loc='upper right',
-                                  xticks=self.num_hosts_per_switch_list)
+                                        "Total number of hosts",
+                                        "Average Incremental Computation Time (sec)",
+                                        y_scale='linear',
+                                        xmin_factor=0,
+                                        xmax_factor=1.05,
+                                        y_max_factor=1.05,
+                                        legend_loc='upper right',
+                                        xticks=self.num_hosts_per_switch_list)
 
+
+        fig = plt.figure(2)
+        self.plot_lines_with_error_bars("validation_time",
+                                        "Total number of hosts",
+                                        "Average Validation Time (sec)",
+                                        y_scale='linear',
+                                        xmin_factor=0,
+                                        xmax_factor=1.05,
+                                        y_max_factor=1.05,
+                                        legend_loc='upper right',
+                                        xticks=self.num_hosts_per_switch_list)
 
 def main():
 
-    num_iterations = 2
+    num_iterations = 1
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [1, 2]#, 3, 4, 5, 6]
+    num_hosts_per_switch_list = [1]#, 2, 3, 4, 5]
 
     network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
                               NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
     # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
-
     # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -156,10 +189,11 @@ def main():
                                   save_config,
                                   controller)
 
-    exp.trigger()
-    exp.dump_data()
+    #exp.trigger()
+    #exp.dump_data()
 
-    #exp.load_data("data/initial_incremental_times_2_iterations_20160516_172555.json")
+    # exp.load_data("data/initial_incremental_times_2_iterations_20160516_213610.json")
+    exp.load_data("data/initial_incremental_times_1_iterations_20160517_092037.json")
     exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":

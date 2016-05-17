@@ -1,5 +1,7 @@
 import sys
 import itertools
+import numpy as np
+
 
 from collections import defaultdict
 
@@ -7,6 +9,7 @@ sys.path.append("./")
 
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
+from experiments.timer import Timer
 
 __author__ = 'Rakesh Kumar'
 
@@ -304,33 +307,6 @@ class FlowValidator(object):
 
         return is_connected
 
-    def validate_zone_pair_connectivity(self, src_zone, dst_zone, traffic, k):
-
-        is_connected = False
-
-        if k == 0:
-            is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
-        else:
-            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
-                #
-                # if not ("s4" in links_to_fail[0].link_ports_dict and "s3" in links_to_fail[0].link_ports_dict):
-                #     continue
-
-                for link in links_to_fail:
-                    print "Failing:", link
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
-
-                for link in links_to_fail:
-                    print "Restoring:", link
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
-                if not is_connected:
-                    break
-
-        return is_connected
-
     def are_zone_paths_within_limit(self, src_zone, dst_zone, traffic, l):
 
         within_limit = True
@@ -363,27 +339,6 @@ class FlowValidator(object):
 
         return within_limit
 
-    def validate_zone_pair_path_length(self, src_zone, dst_zone, traffic, l, k):
-        within_limit = False
-
-        if k == 0:
-            within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
-        else:
-            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
-
-                for link in links_to_fail:
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
-
-                for link in links_to_fail:
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
-                if not within_limit:
-                    break
-
-        return within_limit
-
     def are_zone_pair_exlusive(self, src_zone, dst_zone, traffic, el):
         is_exclusive = True
 
@@ -412,6 +367,51 @@ class FlowValidator(object):
 
         return is_exclusive
 
+    def validate_zone_pair_connectivity(self, src_zone, dst_zone, traffic, k):
+
+        is_connected = False
+
+        if k == 0:
+            is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
+        else:
+            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                for link in links_to_fail:
+                    print "Failing:", link
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
+
+                for link in links_to_fail:
+                    print "Restoring:", link
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+                if not is_connected:
+                    break
+
+        return is_connected
+
+    def validate_zone_pair_path_length(self, src_zone, dst_zone, traffic, l, k):
+        within_limit = False
+
+        if k == 0:
+            within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
+        else:
+            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                for link in links_to_fail:
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
+
+                for link in links_to_fail:
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+                if not within_limit:
+                    break
+
+        return within_limit
+
     def validate_zone_pair_link_exclusivity(self, src_zone, dst_zone, traffic, el, k):
         is_exclusive = False
 
@@ -432,3 +432,45 @@ class FlowValidator(object):
                     break
 
         return is_exclusive
+
+    def validate_zone_pair_connectivity_path_length_link_exclusivity(self, src_zone, dst_zone, traffic, l, el, k):
+
+        is_connected = True
+        within_limit = True
+        is_exclusive = True
+
+        incremental_times = []
+
+        if k == 0:
+            is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
+            within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
+            is_exclusive = self.are_zone_pair_exlusive(src_zone, dst_zone, traffic, el)
+        else:
+            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                for link in links_to_fail:
+                    with Timer(verbose=True) as t:
+                        self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+                    incremental_times.append(t.secs)
+
+                if is_connected:
+                    is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
+
+                if within_limit:
+                    within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
+
+                if is_exclusive:
+                    is_exclusive = self.are_zone_pair_exlusive(src_zone, dst_zone, traffic, el)
+
+                for link in links_to_fail:
+                    with Timer(verbose=True) as t:
+                        self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+                    incremental_times.append(t.secs)
+
+                # Break out of here if all three properties have been proven to be false
+                if not is_connected and not within_limit and not is_exclusive:
+                    break
+
+        avg_incremental_time = np.mean(incremental_times)
+
+        return is_connected, within_limit, is_exclusive, avg_incremental_time
