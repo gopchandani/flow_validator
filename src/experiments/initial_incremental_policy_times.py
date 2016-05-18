@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import sys
 import random
+import json
 
 from collections import defaultdict
 from timer import Timer
@@ -159,12 +160,37 @@ class InitialIncrementalTimes(Experiment):
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
 
+    def load_data_merge_iterations(self, filename_list):
+
+        '''
+        :param filename_list: List of files with exact same experiment scenarios in them
+        :return: merged dataset
+        '''
+
+        merged_data = None
+
+        for filename in filename_list:
+
+            print "Reading file:", filename
+
+            with open(filename, "r") as infile:
+                this_data = json.load(infile)
+
+            if merged_data:
+                for ds in merged_data:
+                    for nc in merged_data[ds]:
+                        for nh in merged_data[ds][nc]:
+                            merged_data[ds][nc][nh].extend(this_data[ds][nc][nh])
+            else:
+                merged_data = this_data
+
+        return merged_data
 
 def main():
 
     num_iterations = 1
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [2, 10]#[2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [2, 4, 6, 8, 10]
 
     # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
     #                           NetworkConfiguration("clostopo", 7, 1, 2, 1)]
@@ -187,8 +213,11 @@ def main():
     # exp.trigger()
     # exp.dump_data()
 
-    exp.load_data("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
-    exp.plot_initial_incremental_times()
+    exp.data = exp.load_data_merge_iterations(["data/initial_incremental_policy_times_1_iterations_20160517_174831.json",
+                                               "data/initial_incremental_policy_times_1_iterations_20160517_174831.json"])
+
+    # exp.load_data("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
+    # exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()
