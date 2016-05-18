@@ -385,8 +385,9 @@ class Experiment(object):
                                    y_label,
                                    subplot_title,
                                    y_scale,
-                                   xmin_factor=1.0,
-                                   xmax_factor=1.05,
+                                   x_min_factor=1.0,
+                                   x_max_factor=1.05,
+                                   y_min_factor=0.1,
                                    y_max_factor=1.5):
 
         ax.set_xlabel(x_label, fontsize=12, labelpad=-0)
@@ -415,11 +416,12 @@ class Experiment(object):
         ax.tick_params(axis='y', labelsize=10)
 
         low_xlim, high_xlim = ax.get_xlim()
-        ax.set_xlim(xmax=(high_xlim) * xmax_factor)
-        ax.set_xlim(xmin=(low_xlim) * xmin_factor)
+        ax.set_xlim(xmax=(high_xlim) * x_max_factor)
+        ax.set_xlim(xmin=(low_xlim) * x_min_factor)
 
         if y_scale == "linear":
             low_ylim, high_ylim = ax.get_ylim()
+            ax.set_ylim(ymin=low_ylim*y_min_factor)
             ax.set_ylim(ymax=high_ylim*y_max_factor)
 
         ax.set_yscale(y_scale)

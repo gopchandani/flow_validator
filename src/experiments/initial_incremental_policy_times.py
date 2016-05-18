@@ -115,7 +115,7 @@ class InitialIncrementalTimes(Experiment):
                     traffic.set_field("ethernet_type", 0x0800)
                     k = 1
                     l = 12
-                    el = [self.ng.get_link_data('s1', 's2')]
+                    el = [random.choice(list(fv.network_graph.get_switch_link_data()))]
 
                     with Timer(verbose=True) as t:
                         validation_result = fv.validate_zone_pair_connectivity_path_length_link_exclusivity(src_zone,
@@ -140,8 +140,9 @@ class InitialIncrementalTimes(Experiment):
                                         "Time (seconds)",
                                         "(a)",
                                         y_scale='log',
-                                        xmin_factor=0.8,
-                                        xmax_factor=1.2,
+                                        x_min_factor=0.8,
+                                        x_max_factor=1.2,
+                                        y_min_factor=0.1,
                                         y_max_factor=10)
 
         self.plot_lines_with_error_bars(ax2,
@@ -150,18 +151,20 @@ class InitialIncrementalTimes(Experiment):
                                         "",
                                         "(b)",
                                         y_scale='log',
-                                        xmin_factor=0.8,
-                                        xmax_factor=1.05,
+                                        x_min_factor=0.8,
+                                        x_max_factor=1.05,
+                                        y_min_factor=0.1,
                                         y_max_factor=10)
 
         self.plot_lines_with_error_bars(ax3,
-                                        "initial_time",
+                                        "validation_time",
                                         "",
                                         "",
                                         "(c)",
                                         y_scale='log',
-                                        xmin_factor=0.8,
-                                        xmax_factor=1.05,
+                                        x_min_factor=0.8,
+                                        x_max_factor=1.05,
+                                        y_min_factor=0.1,
                                         y_max_factor=10)
 
         plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
@@ -208,16 +211,16 @@ def main():
 
     num_iterations = 1
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [1]#, 2, 3, 4, 5]
+    num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
 
     # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
     #                           NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
-    # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
-    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+    network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 2)]
+    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -231,8 +234,7 @@ def main():
     # exp.trigger()
     # exp.dump_data()
 
-    exp.load_data("data/initial_incremental_times_2_iterations_20160516_213610.json")
-    #exp.load_data("data/initial_incremental_times_1_iterations_20160517_092037.json")
+    exp.load_data("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
     exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
