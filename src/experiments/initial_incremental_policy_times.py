@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import sys
 import random
-import math
 
 from collections import defaultdict
 from timer import Timer
@@ -43,29 +41,6 @@ class InitialIncrementalTimes(Experiment):
             "validation_time": defaultdict(defaultdict)
         }
 
-    def perform_incremental_times(self, fv, link_fraction_to_sample):
-
-        all_links = list(fv.network_graph.get_switch_link_data())
-        num_links_to_sample = int(math.ceil(len(all_links) * link_fraction_to_sample))
-
-        incremental_times = []
-
-        for i in range(num_links_to_sample):
-
-            sampled_ld = random.choice(all_links)
-
-            print "Failing:", sampled_ld
-            with Timer(verbose=True) as t:
-                fv.port_graph.remove_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1])
-            incremental_times.append(t.secs)
-
-            print "Restoring:", sampled_ld
-            with Timer(verbose=True) as t:
-                fv.port_graph.add_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1], updating=True)
-            incremental_times.append(t.secs)
-
-        return np.mean(incremental_times)
-
     def trigger(self):
 
         print "Starting experiment..."
@@ -91,8 +66,8 @@ class InitialIncrementalTimes(Experiment):
                                               synthesis_scheme="Synthesis_Failover_Aborescene")
 
                 self.data["initial_time"][str(network_configuration)][num_hosts_per_switch] = []
-                self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch]= []
-                self.data["validation_time"][str(network_configuration)][num_hosts_per_switch]= []
+                self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch] = []
+                self.data["validation_time"][str(network_configuration)][num_hosts_per_switch] = []
 
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
@@ -184,43 +159,21 @@ class InitialIncrementalTimes(Experiment):
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
 
-        # fig = plt.figure(1)
-        # self.plot_lines_with_error_bars("incremental_time",
-        #                                 "Total number of hosts",
-        #                                 "Average Incremental Computation Time (sec)",
-        #                                 y_scale='linear',
-        #                                 xmin_factor=0,
-        #                                 xmax_factor=1.05,
-        #                                 y_max_factor=1.05,
-        #                                 legend_loc='upper left',
-        #                                 xticks=self.num_hosts_per_switch_list)
-        #
-        #
-        # fig = plt.figure(2)
-        # self.plot_lines_with_error_bars("validation_time",
-        #                                 "Total number of hosts",
-        #                                 "Average Validation Time (sec)",
-        #                                 y_scale='linear',
-        #                                 xmin_factor=0,
-        #                                 xmax_factor=1.05,
-        #                                 y_max_factor=1.05,
-        #                                 legend_loc='upper left',
-        #                                 xticks=self.num_hosts_per_switch_list)
 
 def main():
 
     num_iterations = 1
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [2, 10]#[2, 4, 6, 8, 10]
 
     # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
     #                           NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
-    network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 2)]
-    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+    # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 2)]
+    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,

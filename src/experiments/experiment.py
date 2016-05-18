@@ -1,5 +1,3 @@
-__author__ = 'Rakesh Kumar'
-
 import json
 import time
 import numpy as np
@@ -13,11 +11,15 @@ from mininet_man import MininetMan
 
 from model.network_graph import NetworkGraph
 from model.match import Match
+from timer import Timer
 
 from synthesis.intent_synthesis import IntentSynthesis
 from synthesis.intent_synthesis_ldst import IntentSynthesisLDST
 from synthesis.intent_synthesis_load_balance import IntentSynthesisLB
 from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
+
+__author__ = 'Rakesh Kumar'
+
 
 class Experiment(object):
 
@@ -240,6 +242,29 @@ class Experiment(object):
 
         return all_paths_match
 
+    def perform_incremental_times_experiment(self, fv, link_fraction_to_sample):
+
+        all_links = list(fv.network_graph.get_switch_link_data())
+        num_links_to_sample = int(math.ceil(len(all_links) * link_fraction_to_sample))
+
+        incremental_times = []
+
+        for i in range(num_links_to_sample):
+
+            sampled_ld = random.choice(all_links)
+
+            print "Failing:", sampled_ld
+            with Timer(verbose=True) as t:
+                fv.port_graph.remove_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1])
+            incremental_times.append(t.secs)
+
+            print "Restoring:", sampled_ld
+            with Timer(verbose=True) as t:
+                fv.port_graph.add_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1], updating=True)
+            incremental_times.append(t.secs)
+
+        return np.mean(incremental_times)
+
     def dump_data(self):
         pprint(self.data)
         filename = "data/" + self.experiment_tag + ".json"
@@ -255,9 +280,11 @@ class Experiment(object):
         with open(filename, "r") as infile:
             self.data = json.load(infile)
 
+        pprint(self.data)
+
     def prepare_matplotlib_data(self, data_dict):
 
-        x = sorted(data_dict.keys())
+        x = sorted(data_dict.keys(), key=int)
 
         data_means = []
         data_sems = []
@@ -403,12 +430,7 @@ class Experiment(object):
 
             x, mean, sem = self.prepare_matplotlib_data(data_vals)
 
-            try:
-                legend_label = line_data_key[:line_data_key.index("Fanout") - 1]
-            except ValueError:
-                legend_label = line_data_key
-
-            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=legend_label)
+            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=line_data_key)
 
             marker_i += 1
 
@@ -428,3 +450,4 @@ class Experiment(object):
 
         xa = ax.get_xaxis()
         xa.set_major_locator(MaxNLocator(integer=True))
+
