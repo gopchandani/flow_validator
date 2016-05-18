@@ -186,6 +186,32 @@ class InitialIncrementalTimes(Experiment):
 
         return merged_data
 
+    def load_data_merge_network_config(self, filename_list):
+
+        '''
+        :param filename_list: List of files with exact same experiment scenarios in them
+        :return: merged dataset
+        '''
+
+        merged_data = None
+
+        for filename in filename_list:
+
+            print "Reading file:", filename
+
+            with open(filename, "r") as infile:
+                this_data = json.load(infile)
+
+            if merged_data:
+                for ds in merged_data:
+                    merged_data[ds].update(this_data[ds])
+
+            else:
+                merged_data = this_data
+
+        return merged_data
+
+
 def main():
 
     num_iterations = 1
