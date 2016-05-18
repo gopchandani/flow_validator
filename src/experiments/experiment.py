@@ -389,9 +389,9 @@ class Experiment(object):
                                    xmax_factor=1.05,
                                    y_max_factor=1.5):
 
-        ax.set_xlabel(x_label, fontsize=12)
-        ax.set_ylabel(y_label, fontsize=12)
-        ax.set_title(subplot_title, fontsize=10)
+        ax.set_xlabel(x_label, fontsize=12, labelpad=-0)
+        ax.set_ylabel(y_label, fontsize=12, labelpad=0)
+        ax.set_title(subplot_title, fontsize=12)
 
         markers = ['o', 'v', '^', '*', 'd', 'h', '+', '.']
         marker_i = 0

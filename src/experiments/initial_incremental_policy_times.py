@@ -142,7 +142,7 @@ class InitialIncrementalTimes(Experiment):
                                         y_scale='log',
                                         xmin_factor=0.8,
                                         xmax_factor=1.2,
-                                        y_max_factor=1.0)
+                                        y_max_factor=10)
 
         self.plot_lines_with_error_bars(ax2,
                                         "incremental_time",
@@ -152,7 +152,7 @@ class InitialIncrementalTimes(Experiment):
                                         y_scale='log',
                                         xmin_factor=0.8,
                                         xmax_factor=1.05,
-                                        y_max_factor=1.1)
+                                        y_max_factor=10)
 
         self.plot_lines_with_error_bars(ax3,
                                         "initial_time",
@@ -162,13 +162,21 @@ class InitialIncrementalTimes(Experiment):
                                         y_scale='log',
                                         xmin_factor=0.8,
                                         xmax_factor=1.05,
-                                        y_max_factor=1.1)
+                                        y_max_factor=10)
 
         plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
 
         handles, labels = ax3.get_legend_handles_labels()
 
-        f.legend(handles, labels, shadow=False, fontsize=10, loc=8, ncol=3, markerscale=0.75, frameon=False, columnspacing=0.5)
+        f.legend(handles,
+                 labels,
+                 shadow=False,
+                 fontsize=10,
+                 loc=8,
+                 ncol=3,
+                 markerscale=0.75,
+                 frameon=True,
+                 columnspacing=0.5, bbox_to_anchor=[0.5, 0.79])
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
