@@ -163,7 +163,7 @@ class InitialIncrementalTimes(Experiment):
     def load_data_merge_iterations(self, filename_list):
 
         '''
-        :param filename_list: List of files with exact same experiment scenarios in them
+        :param filename_list: List of files with exact same network configurations in them
         :return: merged dataset
         '''
 
@@ -189,7 +189,7 @@ class InitialIncrementalTimes(Experiment):
     def load_data_merge_network_config(self, filename_list):
 
         '''
-        :param filename_list: List of files with exact same experiment scenarios in them
+        :param filename_list: List of files with different network configurations in them
         :return: merged dataset
         '''
 
