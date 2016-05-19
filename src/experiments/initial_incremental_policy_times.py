@@ -213,6 +213,21 @@ class InitialIncrementalTimes(Experiment):
 
         return merged_data
 
+    def data_merge(self):
+
+        path_prefix = "data_merge/initial_incremental_policy_times/"
+
+        # 4-switch ring merges
+        four_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "4_switch_ring/iter1.json",
+                                                                  path_prefix + "4_switch_ring/iter2.json"])
+
+        # 7-switch clos merges
+        seven_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "7_switch_clos/iter1.json"])
+
+        merged_data = self.load_data_merge_network_config([four_switch_ring_merge, seven_switch_clos_merge])
+
+        return merged_data
+
 
 def main():
 
@@ -220,11 +235,11 @@ def main():
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [2, 4, 6, 8, 10]
 
-    # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
-    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+    network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
+    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -236,24 +251,12 @@ def main():
                                   controller)
 
     # Trigger the experiment
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
-    # Do merges here
-
-    # # 4-switch ring merges
-    # four_switch_ring_merge = exp.load_data_merge_iterations(["data/initial_incremental_policy_times_1_iterations_20160517_174831.json",
-    #                                            "data/initial_incremental_policy_times_1_iterations_20160518_102540.json"])
-    #
-    # # 7-switch clos merges
-    # # 7_switch_clos_merge = exp.load_data_merge_iterations(["data/initial_incremental_policy_times_1_iterations_20160517_174831.json",
-    #
-    # merged_data = exp.load_data_merge_network_config([four_switch_ring_merge])
-    #
-    #
     # # Load up data and plot
     # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
-    # exp.data = merged_data
+    exp.data = exp.data_merge()
     # exp.plot_initial_incremental_times()
 
 
