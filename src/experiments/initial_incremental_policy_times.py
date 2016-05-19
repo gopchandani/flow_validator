@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import sys
 import random
 import json
+import numpy as np
 
 from collections import defaultdict
 from timer import Timer
@@ -166,6 +167,14 @@ class InitialIncrementalTimes(Experiment):
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
 
+    def generate_improvement_ratio_data(self, data):
+
+        data["improvement_ratio"] = defaultdict(defaultdict)
+        for nc in data["initial_time"]:
+            for nh in data["initial_time"][nc]:
+                data["improvement_ratio"][nc][nh] = np.mean(data["initial_time"][nc][nh]) / np.mean(data["incremental_time"][nc][nh])
+        return data
+
     def load_data_merge_iterations(self, filename_list):
 
         '''
@@ -259,7 +268,6 @@ class InitialIncrementalTimes(Experiment):
 
         return merged_data
 
-
 def main():
 
     num_iterations = 1
@@ -288,6 +296,7 @@ def main():
     # # Load up data and plot
     # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
     exp.data = exp.data_merge()
+    exp.data = exp.generate_improvement_ratio_data(exp.data)
     exp.plot_initial_incremental_times()
 
 
