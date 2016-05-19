@@ -188,9 +188,6 @@ class InitialIncrementalTimes(Experiment):
             else:
                 merged_data = this_data
 
-        import pprint
-        pprint.pprint(merged_data)
-
         return merged_data
 
     def load_data_merge_network_config(self, data_dict_list):
@@ -213,6 +210,29 @@ class InitialIncrementalTimes(Experiment):
 
         return merged_data
 
+    def load_data_merge_nh(self, filename_list, merged_out_file):
+        
+        merged_data = None
+
+        for filename in filename_list:
+
+            print "Reading file:", filename
+
+            with open(filename, "r") as infile:
+                this_data = json.load(infile)
+
+            if merged_data:
+                for ds in merged_data:
+                    for nc in merged_data[ds]:
+                        merged_data[ds][nc].update(this_data[ds][nc])
+            else:
+                merged_data = this_data
+            
+        with open(merged_out_file, "w") as outfile:
+            json.dump(merged_data, outfile)
+            
+        return merged_data
+        
     def data_merge(self):
 
         path_prefix = "data_merge/initial_incremental_policy_times/"
@@ -224,7 +244,17 @@ class InitialIncrementalTimes(Experiment):
         # 7-switch clos merges
         seven_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "7_switch_clos/iter1.json"])
 
-        merged_data = self.load_data_merge_network_config([four_switch_ring_merge, seven_switch_clos_merge])
+
+        # 8-switch ring merges
+        
+        self.load_data_merge_nh([path_prefix + "8_switch_ring/iter1/2_4_hps.json"],
+                                path_prefix + "8_switch_ring/iter1.json")
+        
+        eight_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "8_switch_ring/iter1.json"])
+
+        merged_data = self.load_data_merge_network_config([four_switch_ring_merge, 
+                                                           seven_switch_clos_merge,
+                                                           eight_switch_ring_merge])
 
         return merged_data
 
