@@ -446,6 +446,9 @@ class Experiment(object):
             low_ylim, high_ylim = ax.get_ylim()
             ax.set_ylim(ymin=low_ylim*y_min_factor)
             ax.set_ylim(ymax=high_ylim*y_max_factor)
+        elif y_scale == "log":
+            ax.set_ylim(ymin=10)
+            ax.set_ylim(ymax=1000000)
 
         ax.set_yscale(y_scale)
 

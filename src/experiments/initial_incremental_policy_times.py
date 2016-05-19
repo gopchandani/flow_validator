@@ -110,6 +110,8 @@ class InitialIncrementalTimes(Experiment):
                     self.dump_data()
 
     def plot_initial_incremental_times(self):
+        import pprint
+        pprint.pprint(self.data)
 
         # Two subplots, unpack the axes array immediately
         f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=True, figsize=(8.5, 2.5))
@@ -121,13 +123,13 @@ class InitialIncrementalTimes(Experiment):
                                         "(a)",
                                         y_scale='log',
                                         x_min_factor=0.8,
-                                        x_max_factor=1.2,
+                                        x_max_factor=1.05,
                                         y_min_factor=0.1,
                                         y_max_factor=10)
 
         self.plot_lines_with_error_bars(ax2,
                                         "incremental_time",
-                                        "Total number of hosts",
+                                        "Number of hosts per switch",
                                         "",
                                         "(b)",
                                         y_scale='log',
@@ -247,14 +249,13 @@ class InitialIncrementalTimes(Experiment):
 
         # 8-switch ring merges
         
-        self.load_data_merge_nh([path_prefix + "8_switch_ring/iter1/2_4_hps.json"],
-                                path_prefix + "8_switch_ring/iter1.json")
-        
-        eight_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "8_switch_ring/iter1.json"])
+        # self.load_data_merge_nh([path_prefix + "8_switch_ring/iter1/2_4_hps.json"],
+        #                         path_prefix + "8_switch_ring/iter1.json")
+        #
+        # eight_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "8_switch_ring/iter1.json"])
 
         merged_data = self.load_data_merge_network_config([four_switch_ring_merge, 
-                                                           seven_switch_clos_merge,
-                                                           eight_switch_ring_merge])
+                                                           seven_switch_clos_merge])
 
         return merged_data
 
@@ -287,7 +288,7 @@ def main():
     # # Load up data and plot
     # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
     exp.data = exp.data_merge()
-    # exp.plot_initial_incremental_times()
+    exp.plot_initial_incremental_times()
 
 
 if __name__ == "__main__":
