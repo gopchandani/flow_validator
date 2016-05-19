@@ -266,6 +266,7 @@ class Experiment(object):
         return np.mean(incremental_times)
 
     def dump_data(self):
+        print "Dumping data:"
         pprint(self.data)
         filename = "data/" + self.experiment_tag + ".json"
         print "Writing to file:", filename

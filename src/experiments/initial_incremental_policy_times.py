@@ -80,6 +80,8 @@ class InitialIncrementalTimes(Experiment):
                         fv.initialize_admitted_traffic()
 
                     self.data["initial_time"][str(network_configuration)][num_hosts_per_switch].append(t.secs)
+                    self.dump_data()
+
 
                     src_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
                                 for h_id in fv.network_graph.host_ids]
@@ -104,6 +106,8 @@ class InitialIncrementalTimes(Experiment):
                     print validation_result
 
                     self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch].append(validation_result[3])
+
+                    self.dump_data()
 
     def plot_initial_incremental_times(self):
 
@@ -164,7 +168,7 @@ class InitialIncrementalTimes(Experiment):
 
         '''
         :param filename_list: List of files with exact same network configurations in them
-        :return: merged dataset
+        :return: merged data
         '''
 
         merged_data = None
@@ -184,23 +188,21 @@ class InitialIncrementalTimes(Experiment):
             else:
                 merged_data = this_data
 
+        import pprint
+        pprint.pprint(merged_data)
+
         return merged_data
 
-    def load_data_merge_network_config(self, filename_list):
+    def load_data_merge_network_config(self, data_dict_list):
 
         '''
-        :param filename_list: List of files with different network configurations in them
-        :return: merged dataset
+        :param data_dict_list: List of dictionaries containing data from different network configurations
+        :return: merged data
         '''
 
         merged_data = None
 
-        for filename in filename_list:
-
-            print "Reading file:", filename
-
-            with open(filename, "r") as infile:
-                this_data = json.load(infile)
+        for this_data in data_dict_list:
 
             if merged_data:
                 for ds in merged_data:
@@ -218,14 +220,11 @@ def main():
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [2, 4, 6, 8, 10]
 
-    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None),
-    #                           NetworkConfiguration("clostopo", 7, 1, 2, 1)]
-
-    # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 2)]
+    # network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
     network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -236,14 +235,27 @@ def main():
                                   save_config,
                                   controller)
 
-    # exp.trigger()
-    # exp.dump_data()
+    # Trigger the experiment
+    exp.trigger()
+    exp.dump_data()
 
-    exp.data = exp.load_data_merge_iterations(["data/initial_incremental_policy_times_1_iterations_20160517_174831.json",
-                                               "data/initial_incremental_policy_times_1_iterations_20160517_174831.json"])
+    # Do merges here
 
-    # exp.load_data("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
+    # # 4-switch ring merges
+    # four_switch_ring_merge = exp.load_data_merge_iterations(["data/initial_incremental_policy_times_1_iterations_20160517_174831.json",
+    #                                            "data/initial_incremental_policy_times_1_iterations_20160518_102540.json"])
+    #
+    # # 7-switch clos merges
+    # # 7_switch_clos_merge = exp.load_data_merge_iterations(["data/initial_incremental_policy_times_1_iterations_20160517_174831.json",
+    #
+    # merged_data = exp.load_data_merge_network_config([four_switch_ring_merge])
+    #
+    #
+    # # Load up data and plot
+    # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
+    # exp.data = merged_data
     # exp.plot_initial_incremental_times()
+
 
 if __name__ == "__main__":
     main()
