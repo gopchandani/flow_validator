@@ -6,6 +6,7 @@ import numpy as np
 
 from collections import defaultdict
 from timer import Timer
+import analysis
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
 from network_configuration import NetworkConfiguration
@@ -114,7 +115,6 @@ class InitialIncrementalTimes(Experiment):
         import pprint
         pprint.pprint(self.data)
 
-        # Two subplots, unpack the axes array immediately
         f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=True, figsize=(8.5, 2.5))
 
         self.plot_lines_with_error_bars(ax1,
@@ -167,12 +167,31 @@ class InitialIncrementalTimes(Experiment):
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
 
+        f, ax1 = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(4.0, 4.0))
+
+        self.plot_lines_with_error_bars(ax1,
+                                        "improvement_ratio",
+                                        "Number of hosts per switch",
+                                        "Improvement Ratio",
+                                        "",
+                                        y_scale='linear',
+                                        x_min_factor=0.8,
+                                        x_max_factor=1.05,
+                                        y_min_factor=0.1,
+                                        y_max_factor=1.05)
+
+        plt.savefig("plots/" + self.experiment_tag + "_" + "improvement_ratio" + ".png", dpi=100)
+        plt.show()
+
+
     def generate_improvement_ratio_data(self, data):
 
         data["improvement_ratio"] = defaultdict(defaultdict)
         for nc in data["initial_time"]:
             for nh in data["initial_time"][nc]:
-                data["improvement_ratio"][nc][nh] = np.mean(data["initial_time"][nc][nh]) / np.mean(data["incremental_time"][nc][nh])
+                avg_initial_time = np.mean(data["initial_time"][nc][nh])
+                avg_incremental_time = np.mean(data["incremental_time"][nc][nh])
+                data["improvement_ratio"][nc][nh] = [avg_initial_time / avg_incremental_time]
         return data
 
     def load_data_merge_iterations(self, filename_list):
