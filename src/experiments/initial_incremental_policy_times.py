@@ -178,7 +178,21 @@ class InitialIncrementalTimes(Experiment):
                                         x_min_factor=0.8,
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
-                                        y_max_factor=1.05)
+                                        y_max_factor=5)
+
+        plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
+
+        handles, labels = ax3.get_legend_handles_labels()
+
+        f.legend(handles,
+                 labels,
+                 shadow=False,
+                 fontsize=10,
+                 loc=8,
+                 ncol=1,
+                 markerscale=0.75,
+                 frameon=True,
+                 columnspacing=0.5, bbox_to_anchor=[0.43, 0.85])
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "improvement_ratio" + ".png", dpi=100)
         plt.show()
