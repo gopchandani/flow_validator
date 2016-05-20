@@ -286,7 +286,8 @@ class InitialIncrementalTimes(Experiment):
                                                                   path_prefix + "4_switch_ring/iter2.json"])
 
         # 7-switch clos merges
-        seven_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "7_switch_clos/iter1.json"])
+        seven_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "7_switch_clos/iter1.json",
+                                                                   path_prefix + "7_switch_clos/iter2.json"])
 
 
         # 8-switch ring merges
