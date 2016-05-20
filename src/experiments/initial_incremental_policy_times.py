@@ -150,24 +150,36 @@ class InitialIncrementalTimes(Experiment):
                                         y_min_factor=0.1,
                                         y_max_factor=10)
 
-        plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
+        # Shrink current axis's height by 25% on the bottom
+        box = ax1.get_position()
+        ax1.set_position([box.x0, box.y0 + box.height * 0.3,
+                          box.width, box.height * 0.7])
+
+        box = ax2.get_position()
+        ax2.set_position([box.x0, box.y0 + box.height * 0.3,
+                          box.width, box.height * 0.7])
+
+        box = ax3.get_position()
+        ax3.set_position([box.x0, box.y0 + box.height * 0.3,
+                          box.width, box.height * 0.7])
 
         handles, labels = ax3.get_legend_handles_labels()
 
-        f.legend(handles,
-                 labels,
-                 shadow=False,
-                 fontsize=10,
-                 loc=8,
-                 ncol=3,
-                 markerscale=0.75,
-                 frameon=True,
-                 columnspacing=0.5, bbox_to_anchor=[0.5, 0.70])
+        ax1.legend(handles,
+                   labels,
+                   shadow=True,
+                   fontsize=8,
+                   loc='upper center',
+                   ncol=3,
+                   markerscale=1.0,
+                   frameon=True,
+                   fancybox=True,
+                   columnspacing=0.5, bbox_to_anchor=[1.6, -0.25])
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
 
-        f, ax1 = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(4.0, 4.0))
+        f, ax1 = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(4.5, 3.0))
 
         self.plot_lines_with_error_bars(ax1,
                                         "relative_cost_ratio",
@@ -178,21 +190,27 @@ class InitialIncrementalTimes(Experiment):
                                         x_min_factor=0.8,
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
-                                        y_max_factor=5)
-
-        plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
+                                        y_max_factor=1.2,
+                                        xticks=[2, 4, 6, 8, 10],
+                                        xtick_labels=["2", "4", "6", "8", "10"],
+                                        yticks=[1, 2, 3, 4, 5])
 
         handles, labels = ax3.get_legend_handles_labels()
 
-        f.legend(handles,
-                 labels,
-                 shadow=False,
-                 fontsize=10,
-                 loc=8,
-                 ncol=1,
-                 markerscale=0.75,
-                 frameon=True,
-                 columnspacing=0.5, bbox_to_anchor=[0.45, 0.75])
+        box = ax1.get_position()
+        ax1.set_position([box.x0, box.y0 + box.height * 0.3,
+                          box.width, box.height * 0.7])
+
+        ax1.legend(handles,
+                   labels,
+                   shadow=True,
+                   fontsize=8,
+                   loc='upper center',
+                   ncol=2,
+                   markerscale=1.0,
+                   frameon=True,
+                   fancybox=True,
+                   columnspacing=0.5, bbox_to_anchor=[0.5, -0.2])
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "relative_cost_ratio" + ".png", dpi=100)
         plt.show()
@@ -254,7 +272,7 @@ class InitialIncrementalTimes(Experiment):
         return merged_data
 
     def load_data_merge_nh(self, filename_list, merged_out_file):
-        
+
         merged_data = None
 
         for filename in filename_list:
@@ -270,12 +288,12 @@ class InitialIncrementalTimes(Experiment):
                         merged_data[ds][nc].update(this_data[ds][nc])
             else:
                 merged_data = this_data
-            
+
         with open(merged_out_file, "w") as outfile:
             json.dump(merged_data, outfile)
-            
+
         return merged_data
-        
+
     def data_merge(self):
 
         path_prefix = "data_merge/initial_incremental_policy_times/"
@@ -300,7 +318,7 @@ class InitialIncrementalTimes(Experiment):
 
         fourteen_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "14_switch_clos/iter1.json"])
 
-        merged_data = self.load_data_merge_network_config([four_switch_ring_merge, 
+        merged_data = self.load_data_merge_network_config([four_switch_ring_merge,
                                                            seven_switch_clos_merge,
                                                            eight_switch_ring_merge,
                                                            fourteen_switch_clos_merge])

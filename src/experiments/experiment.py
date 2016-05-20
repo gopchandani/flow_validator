@@ -416,7 +416,11 @@ class Experiment(object):
                                    x_min_factor=1.0,
                                    x_max_factor=1.05,
                                    y_min_factor=0.1,
-                                   y_max_factor=1.5):
+                                   y_max_factor=1.5,
+                                   xticks=None,
+                                   xtick_labels=None,
+                                   yticks=None,
+                                   ytick_labels=None):
 
         ax.set_xlabel(x_label, fontsize=12, labelpad=-0)
         ax.set_ylabel(y_label, fontsize=12, labelpad=0)
@@ -455,3 +459,14 @@ class Experiment(object):
         xa = ax.get_xaxis()
         xa.set_major_locator(MaxNLocator(integer=True))
 
+        if xticks:
+            ax.set_xticks(xticks)
+
+        if xtick_labels:
+            ax.set_xticklabels(xtick_labels)
+
+        if yticks:
+            ax.set_yticks(yticks)
+
+        if ytick_labels:
+            ax.set_yticklabels(ytick_labels)
