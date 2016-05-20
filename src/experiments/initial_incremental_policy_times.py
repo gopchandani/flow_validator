@@ -1,16 +1,13 @@
 import matplotlib.pyplot as plt
 import sys
-import random
 import json
 import numpy as np
 
 from collections import defaultdict
 from timer import Timer
-import analysis
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
 from network_configuration import NetworkConfiguration
-from model.traffic import Traffic
 
 __author__ = 'Rakesh Kumar'
 
@@ -84,30 +81,8 @@ class InitialIncrementalTimes(Experiment):
                     self.data["initial_time"][str(network_configuration)][num_hosts_per_switch].append(t.secs)
                     self.dump_data()
 
-
-                    src_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
-                                for h_id in fv.network_graph.host_ids]
-
-                    dst_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
-                                for h_id in fv.network_graph.host_ids]
-
-                    traffic = Traffic(init_wildcard=True)
-                    traffic.set_field("ethernet_type", 0x0800)
-                    k = 1
-                    l = 12
-                    el = [random.choice(list(fv.network_graph.get_switch_link_data()))]
-
-                    with Timer(verbose=True) as t:
-                        validation_result = fv.validate_zone_pair_connectivity_path_length_link_exclusivity(src_zone,
-                                                                                                            dst_zone,
-                                                                                                            traffic,
-                                                                                                            l, el, k)
-
-                    self.data["validation_time"][str(network_configuration)][num_hosts_per_switch].append(t.secs)
-
-                    print validation_result
-
-                    self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch].append(validation_result[3])
+                    incr_time = self.perform_incremental_times_experiment(fv, self.link_fraction_to_sample)
+                    self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch].append(incr_time)
 
                     self.dump_data()
 
@@ -115,7 +90,7 @@ class InitialIncrementalTimes(Experiment):
         import pprint
         pprint.pprint(self.data)
 
-        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=True, figsize=(8.5, 2.5))
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=False, figsize=(8.5, 2.5))
 
         self.plot_lines_with_error_bars(ax1,
                                         "initial_time",
@@ -140,15 +115,16 @@ class InitialIncrementalTimes(Experiment):
                                         y_max_factor=10)
 
         self.plot_lines_with_error_bars(ax3,
-                                        "validation_time",
+                                        "relative_cost_ratio",
                                         "",
-                                        "",
+                                        "Relative Cost Ratio",
                                         "(c)",
-                                        y_scale='log',
+                                        y_scale='linear',
                                         x_min_factor=0.8,
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
-                                        y_max_factor=10)
+                                        y_max_factor=1.2,
+                                        yticks=[1, 2, 3, 4, 5])
 
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
@@ -177,42 +153,6 @@ class InitialIncrementalTimes(Experiment):
                    columnspacing=0.5, bbox_to_anchor=[1.6, -0.25])
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
-        plt.show()
-
-        f, ax1 = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(4.5, 3.0))
-
-        self.plot_lines_with_error_bars(ax1,
-                                        "relative_cost_ratio",
-                                        "Number of hosts per switch",
-                                        "Relative Cost Ratio",
-                                        "",
-                                        y_scale='linear',
-                                        x_min_factor=0.8,
-                                        x_max_factor=1.05,
-                                        y_min_factor=0.1,
-                                        y_max_factor=1.2,
-                                        xticks=[2, 4, 6, 8, 10],
-                                        xtick_labels=["2", "4", "6", "8", "10"],
-                                        yticks=[1, 2, 3, 4, 5])
-
-        handles, labels = ax3.get_legend_handles_labels()
-
-        box = ax1.get_position()
-        ax1.set_position([box.x0, box.y0 + box.height * 0.3,
-                          box.width, box.height * 0.7])
-
-        ax1.legend(handles,
-                   labels,
-                   shadow=True,
-                   fontsize=8,
-                   loc='upper center',
-                   ncol=2,
-                   markerscale=1.0,
-                   frameon=True,
-                   fancybox=True,
-                   columnspacing=0.5, bbox_to_anchor=[0.5, -0.2])
-
-        plt.savefig("plots/" + self.experiment_tag + "_" + "relative_cost_ratio" + ".png", dpi=100)
         plt.show()
 
     def generate_relative_cost_ratio_data(self, data):
@@ -330,13 +270,13 @@ def main():
 
     num_iterations = 1
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [8, 10]# [2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [2]#[2, 4, 6, 8, 10]
 
-    #network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
-    network_configurations = [NetworkConfiguration("ring", 8, 1, None, None)]
+    #network_configurations = [NetworkConfiguration("clostopo", 21, 1, 3, 3)]
+    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -348,15 +288,14 @@ def main():
                                   controller)
 
     # # Trigger the experiment
-    # exp.trigger()
-    # exp.dump_data()
-    # #
-    # # # Load up data and plot
-    # # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
-    exp.data = exp.data_merge()
-    exp.data = exp.generate_relative_cost_ratio_data(exp.data)
-    exp.plot_initial_incremental_times()
+    exp.trigger()
+    exp.dump_data()
+    #
 
+    # # # # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
+    # exp.data = exp.data_merge()
+    # exp.data = exp.generate_relative_cost_ratio_data(exp.data)
+    # exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()
