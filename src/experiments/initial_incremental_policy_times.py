@@ -162,7 +162,7 @@ class InitialIncrementalTimes(Experiment):
                  ncol=3,
                  markerscale=0.75,
                  frameon=True,
-                 columnspacing=0.5, bbox_to_anchor=[0.5, 0.79])
+                 columnspacing=0.5, bbox_to_anchor=[0.5, 0.70])
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
@@ -170,9 +170,9 @@ class InitialIncrementalTimes(Experiment):
         f, ax1 = plt.subplots(1, 1, sharex=True, sharey=True, figsize=(4.0, 4.0))
 
         self.plot_lines_with_error_bars(ax1,
-                                        "improvement_ratio",
+                                        "relative_cost_ratio",
                                         "Number of hosts per switch",
-                                        "Improvement Ratio",
+                                        "Relative Cost Ratio",
                                         "",
                                         y_scale='linear',
                                         x_min_factor=0.8,
@@ -192,20 +192,19 @@ class InitialIncrementalTimes(Experiment):
                  ncol=1,
                  markerscale=0.75,
                  frameon=True,
-                 columnspacing=0.5, bbox_to_anchor=[0.43, 0.85])
+                 columnspacing=0.5, bbox_to_anchor=[0.45, 0.75])
 
-        plt.savefig("plots/" + self.experiment_tag + "_" + "improvement_ratio" + ".png", dpi=100)
+        plt.savefig("plots/" + self.experiment_tag + "_" + "relative_cost_ratio" + ".png", dpi=100)
         plt.show()
 
+    def generate_relative_cost_ratio_data(self, data):
 
-    def generate_improvement_ratio_data(self, data):
-
-        data["improvement_ratio"] = defaultdict(defaultdict)
+        data["relative_cost_ratio"] = defaultdict(defaultdict)
         for nc in data["initial_time"]:
             for nh in data["initial_time"][nc]:
                 avg_initial_time = np.mean(data["initial_time"][nc][nh])
                 avg_incremental_time = np.mean(data["incremental_time"][nc][nh])
-                data["improvement_ratio"][nc][nh] = [avg_initial_time / avg_incremental_time]
+                data["relative_cost_ratio"][nc][nh] = [avg_initial_time / avg_incremental_time]
         return data
 
     def load_data_merge_iterations(self, filename_list):
@@ -289,30 +288,37 @@ class InitialIncrementalTimes(Experiment):
         seven_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "7_switch_clos/iter1.json",
                                                                    path_prefix + "7_switch_clos/iter2.json"])
 
-
         # 8-switch ring merges
-        
-        # self.load_data_merge_nh([path_prefix + "8_switch_ring/iter1/2_4_hps.json"],
-        #                         path_prefix + "8_switch_ring/iter1.json")
-        #
-        # eight_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "8_switch_ring/iter1.json"])
+        self.load_data_merge_nh([path_prefix + "8_switch_ring/iter1_hps/2_4_hps.json"],
+                                path_prefix + "8_switch_ring/iter1.json")
+
+        eight_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "8_switch_ring/iter1.json"])
+
+        # 14-switch clos merges
+        self.load_data_merge_nh([path_prefix + "14_switch_clos/iter1_hps/2_hps.json"],
+                                path_prefix + "14_switch_clos/iter1.json")
+
+        fourteen_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "14_switch_clos/iter1.json"])
 
         merged_data = self.load_data_merge_network_config([four_switch_ring_merge, 
-                                                           seven_switch_clos_merge])
+                                                           seven_switch_clos_merge,
+                                                           eight_switch_ring_merge,
+                                                           fourteen_switch_clos_merge])
 
         return merged_data
+
 
 def main():
 
     num_iterations = 1
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [8, 10]# [2, 4, 6, 8, 10]
 
-    network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
-    # network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+    #network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
+    network_configurations = [NetworkConfiguration("ring", 8, 1, None, None)]
 
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -323,14 +329,14 @@ def main():
                                   save_config,
                                   controller)
 
-    # Trigger the experiment
+    # # Trigger the experiment
     # exp.trigger()
     # exp.dump_data()
-
-    # # Load up data and plot
-    # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
+    # #
+    # # # Load up data and plot
+    # # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
     exp.data = exp.data_merge()
-    exp.data = exp.generate_improvement_ratio_data(exp.data)
+    exp.data = exp.generate_relative_cost_ratio_data(exp.data)
     exp.plot_initial_incremental_times()
 
 
