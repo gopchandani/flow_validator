@@ -222,7 +222,10 @@ class InitialIncrementalTimes(Experiment):
                 for ds in merged_data:
                     for nc in merged_data[ds]:
                         for nh in merged_data[ds][nc]:
-                            merged_data[ds][nc][nh].extend(this_data[ds][nc][nh])
+                            try:
+                                merged_data[ds][nc][nh].extend(this_data[ds][nc][nh])
+                            except KeyError:
+                                print nh, "not found."
             else:
                 merged_data = this_data
 
@@ -277,7 +280,8 @@ class InitialIncrementalTimes(Experiment):
 
         # 4-switch ring merges
         four_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "4_switch_ring/iter1.json",
-                                                                  path_prefix + "4_switch_ring/iter2.json"])
+                                                                  path_prefix + "4_switch_ring/iter2.json",
+                                                                  path_prefix + "4_switch_ring/iter3.json"])
 
         # 7-switch clos merges
         seven_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "7_switch_clos/iter1.json",
@@ -294,7 +298,8 @@ class InitialIncrementalTimes(Experiment):
                                  #path_prefix + "14_switch_clos/iter1_hps/4_hps.json"],
                                 path_prefix + "14_switch_clos/iter1.json")
 
-        fourteen_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "14_switch_clos/iter1.json"])
+        fourteen_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "14_switch_clos/iter1.json",
+                                                                      path_prefix + "14_switch_clos/iter2.json"])
 
         merged_data = self.load_data_merge_network_config([four_switch_ring_merge,
                                                            seven_switch_clos_merge,
@@ -310,8 +315,8 @@ def main():
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [2]#[2, 4, 6, 8, 10]
 
-    network_configurations = [NetworkConfiguration("clostopo", 14, 1, 2, 2)]
-    #network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+    #network_configurations = [NetworkConfiguration("clostopo", 14, 1, 2, 2)]
+    network_configurations = [NetworkConfiguration("ring", 12, 1, None, None)]
 
     load_config = False
     save_config = True
@@ -325,12 +330,10 @@ def main():
                                   save_config,
                                   controller)
 
-    # # Trigger the experiment
+    # Trigger the experiment
     # exp.trigger()
     # exp.dump_data()
-    #
 
-    # # # # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
     exp.data = exp.data_merge()
     exp.data = exp.generate_relative_cost_ratio_data(exp.data)
     exp.data = exp.generate_num_flow_path_keys(exp.data)

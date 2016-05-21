@@ -260,13 +260,13 @@ class Experiment(object):
             with Timer(verbose=True) as t:
                 fv.port_graph.remove_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1])
             incremental_times.append(t.secs)
-            self.dump_data()
+            print incremental_times
 
             print "Restoring:", sampled_ld
             with Timer(verbose=True) as t:
                 fv.port_graph.add_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1], updating=True)
             incremental_times.append(t.secs)
-            self.dump_data()
+            print incremental_times
 
         return np.mean(incremental_times)
 
