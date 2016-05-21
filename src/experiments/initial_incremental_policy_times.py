@@ -101,18 +101,22 @@ class InitialIncrementalTimes(Experiment):
                                         x_min_factor=0.8,
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
-                                        y_max_factor=10)
+                                        y_max_factor=10,
+                                        xticks=[0, 500, 1000, 1500],
+                                        xtick_labels=["0", "500", "1000", "1500"])
 
         self.plot_lines_with_error_bars(ax2,
                                         "incremental_time",
-                                        "Number of hosts per switch",
+                                        "Number of host pairs",
                                         "",
                                         "(b)",
                                         y_scale='log',
                                         x_min_factor=0.8,
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
-                                        y_max_factor=10)
+                                        y_max_factor=10,
+                                        xticks=[0, 500, 1000, 1500],
+                                        xtick_labels=["0", "500", "1000", "1500"])
 
         self.plot_lines_with_error_bars(ax3,
                                         "relative_cost_ratio",
@@ -124,6 +128,8 @@ class InitialIncrementalTimes(Experiment):
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
                                         y_max_factor=1.2,
+                                        xticks=[0, 500, 1000, 1500],
+                                        xtick_labels=["0", "500", "1000", "1500"],
                                         yticks=[1, 2, 3, 4, 5])
 
         # Shrink current axis's height by 25% on the bottom
@@ -164,6 +170,37 @@ class InitialIncrementalTimes(Experiment):
                 avg_incremental_time = np.mean(data["incremental_time"][nc][nh])
                 data["relative_cost_ratio"][nc][nh] = [avg_initial_time / avg_incremental_time]
         return data
+
+    def generate_num_flow_path_keys(self, data):
+
+        flow_path_keys_data = {
+            "initial_time": defaultdict(defaultdict),
+            "incremental_time": defaultdict(defaultdict),
+            "validation_time": defaultdict(defaultdict),
+            "relative_cost_ratio": defaultdict(defaultdict)}
+
+        for ds in data:
+            for nc in data[ds]:
+                for nh in data[ds][nc]:
+
+                    num_host_carrying_switches = 0
+
+                    if nc == "Ring topology with 4 switches":
+                        num_host_carrying_switches = 4
+                    elif nc == "Ring topology with 8 switches":
+                        num_host_carrying_switches = 8
+                    elif nc == "Clos topology with 7 switches":
+                        num_host_carrying_switches = 4
+                    elif nc == "Clos topology with 14 switches":
+                        num_host_carrying_switches = 8
+                    else:
+                        raise Exception("Unknown topology, write the translation rule")
+
+                    # Total flows = total hosts squared.
+                    new_key = str(int(nh) * num_host_carrying_switches * int(nh) * num_host_carrying_switches)
+                    flow_path_keys_data[ds][nc][new_key] = data[ds][nc][nh]
+
+        return flow_path_keys_data
 
     def load_data_merge_iterations(self, filename_list):
 
@@ -254,6 +291,7 @@ class InitialIncrementalTimes(Experiment):
 
         # 14-switch clos merges
         self.load_data_merge_nh([path_prefix + "14_switch_clos/iter1_hps/2_hps.json"],
+                                 #path_prefix + "14_switch_clos/iter1_hps/4_hps.json"],
                                 path_prefix + "14_switch_clos/iter1.json")
 
         fourteen_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "14_switch_clos/iter1.json"])
@@ -272,11 +310,11 @@ def main():
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [2]#[2, 4, 6, 8, 10]
 
-    #network_configurations = [NetworkConfiguration("clostopo", 21, 1, 3, 3)]
-    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
+    network_configurations = [NetworkConfiguration("clostopo", 14, 1, 2, 2)]
+    #network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = True
-    save_config = False
+    load_config = False
+    save_config = True
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
@@ -288,14 +326,15 @@ def main():
                                   controller)
 
     # # Trigger the experiment
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
     #
 
     # # # # #exp.data = exp.load_dat("data/initial_incremental_policy_times_1_iterations_20160517_174831.json")
-    # exp.data = exp.data_merge()
-    # exp.data = exp.generate_relative_cost_ratio_data(exp.data)
-    # exp.plot_initial_incremental_times()
+    exp.data = exp.data_merge()
+    exp.data = exp.generate_relative_cost_ratio_data(exp.data)
+    exp.data = exp.generate_num_flow_path_keys(exp.data)
+    exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()

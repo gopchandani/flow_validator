@@ -181,7 +181,7 @@ class Experiment(object):
                 path_matches = self.search_matching_analyzed_path(analyzed_host_pairs_traffic_paths,
                                                                   src_host, dst_host,
                                                                   synthesized_path, verbose)
-                if not path_matches:
+                if not path_smatches:
                     print "No analyzed path matched for:", synthesized_path
                     all_paths_match = False
 
@@ -260,11 +260,13 @@ class Experiment(object):
             with Timer(verbose=True) as t:
                 fv.port_graph.remove_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1])
             incremental_times.append(t.secs)
+            self.dump_data()
 
             print "Restoring:", sampled_ld
             with Timer(verbose=True) as t:
                 fv.port_graph.add_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1], updating=True)
             incremental_times.append(t.secs)
+            self.dump_data()
 
         return np.mean(incremental_times)
 
