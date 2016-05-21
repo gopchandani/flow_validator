@@ -92,6 +92,9 @@ class InitialIncrementalTimes(Experiment):
 
         f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=False, figsize=(8.5, 2.5))
 
+        data_xtick_labels = list(self.data["all_keys"])
+        data_xticks = [int(x) for x in data_xtick_labels]
+
         self.plot_lines_with_error_bars(ax1,
                                         "initial_time",
                                         "",
@@ -101,9 +104,9 @@ class InitialIncrementalTimes(Experiment):
                                         x_min_factor=0.8,
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
-                                        y_max_factor=10,
-                                        xticks=[0, 500, 1000, 1500],
-                                        xtick_labels=["0", "500", "1000", "1500"])
+                                        y_max_factor=1,
+                                        xticks=data_xticks,
+                                        xtick_labels=data_xtick_labels)
 
         self.plot_lines_with_error_bars(ax2,
                                         "incremental_time",
@@ -114,9 +117,9 @@ class InitialIncrementalTimes(Experiment):
                                         x_min_factor=0.8,
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
-                                        y_max_factor=10,
-                                        xticks=[0, 500, 1000, 1500],
-                                        xtick_labels=["0", "500", "1000", "1500"])
+                                        y_max_factor=1,
+                                        xticks=data_xticks,
+                                        xtick_labels=data_xtick_labels)
 
         self.plot_lines_with_error_bars(ax3,
                                         "relative_cost_ratio",
@@ -128,9 +131,9 @@ class InitialIncrementalTimes(Experiment):
                                         x_max_factor=1.05,
                                         y_min_factor=0.1,
                                         y_max_factor=1.2,
-                                        xticks=[0, 500, 1000, 1500],
-                                        xtick_labels=["0", "500", "1000", "1500"],
-                                        yticks=[1, 2, 3, 4, 5])
+                                        xticks=data_xticks,
+                                        xtick_labels=data_xtick_labels,
+                                        yticks=[1, 2, 3, 4, 5, 6, 7, 8])
 
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
@@ -173,6 +176,8 @@ class InitialIncrementalTimes(Experiment):
 
     def generate_num_flow_path_keys(self, data):
 
+        all_keys = set()
+
         flow_path_keys_data = {
             "initial_time": defaultdict(defaultdict),
             "incremental_time": defaultdict(defaultdict),
@@ -193,6 +198,8 @@ class InitialIncrementalTimes(Experiment):
                         num_host_carrying_switches = 4
                     elif nc == "Clos topology with 14 switches":
                         num_host_carrying_switches = 8
+                    elif nc == "Clos topology with 21 switches":
+                        num_host_carrying_switches = 12
                     else:
                         raise Exception("Unknown topology, write the translation rule")
 
@@ -200,6 +207,9 @@ class InitialIncrementalTimes(Experiment):
                     new_key = str(int(nh) * num_host_carrying_switches * int(nh) * num_host_carrying_switches)
                     flow_path_keys_data[ds][nc][new_key] = data[ds][nc][nh]
 
+                    all_keys.add(new_key)
+
+        flow_path_keys_data["all_keys"] = all_keys
         return flow_path_keys_data
 
     def load_data_merge_iterations(self, filename_list):
@@ -295,16 +305,22 @@ class InitialIncrementalTimes(Experiment):
 
         # 14-switch clos merges
         self.load_data_merge_nh([path_prefix + "14_switch_clos/iter1_hps/2_hps.json"],
-                                 #path_prefix + "14_switch_clos/iter1_hps/4_hps.json"],
                                 path_prefix + "14_switch_clos/iter1.json")
 
         fourteen_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "14_switch_clos/iter1.json",
                                                                       path_prefix + "14_switch_clos/iter2.json"])
 
+        # 21-switch clos merges
+        self.load_data_merge_nh([path_prefix + "21_switch_clos/iter1_hps/2_hps.json"],
+                                path_prefix + "21_switch_clos/iter1.json")
+
+        twenty_one_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "21_switch_clos/iter1.json"])
+
         merged_data = self.load_data_merge_network_config([four_switch_ring_merge,
                                                            seven_switch_clos_merge,
                                                            eight_switch_ring_merge,
-                                                           fourteen_switch_clos_merge])
+                                                           fourteen_switch_clos_merge,
+                                                           twenty_one_switch_clos_merge])
 
         return merged_data
 

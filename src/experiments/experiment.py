@@ -448,11 +448,11 @@ class Experiment(object):
                                    yticks=None,
                                    ytick_labels=None):
 
-        ax.set_xlabel(x_label, fontsize=12, labelpad=-0)
-        ax.set_ylabel(y_label, fontsize=12, labelpad=0)
-        ax.set_title(subplot_title, fontsize=12)
+        ax.set_xlabel(x_label, fontsize=10, labelpad=-0)
+        ax.set_ylabel(y_label, fontsize=10, labelpad=0)
+        ax.set_title(subplot_title, fontsize=10)
 
-        markers = ['o', 'v', '^', '*', 'd', 'h', '+', '.']
+        markers = ['o', 's', '*', 'H', '+', '.', '^', 'h', 'd', 'v']
         marker_i = 0
 
         for line_data_key in self.data[data_key]:
@@ -461,12 +461,12 @@ class Experiment(object):
 
             x, mean, sem = self.prepare_matplotlib_data(data_vals)
 
-            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=line_data_key)
+            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=line_data_key, ls='none')
 
             marker_i += 1
 
-        ax.tick_params(axis='x', labelsize=10)
-        ax.tick_params(axis='y', labelsize=10)
+        ax.tick_params(axis='x', labelsize=8)
+        ax.tick_params(axis='y', labelsize=8)
 
         low_xlim, high_xlim = ax.get_xlim()
         ax.set_xlim(xmax=(high_xlim) * x_max_factor)
@@ -478,7 +478,7 @@ class Experiment(object):
             ax.set_ylim(ymax=high_ylim*y_max_factor)
         elif y_scale == "log":
             ax.set_ylim(ymin=10)
-            ax.set_ylim(ymax=1000000)
+            ax.set_ylim(ymax=100000)
 
         ax.set_yscale(y_scale)
 
