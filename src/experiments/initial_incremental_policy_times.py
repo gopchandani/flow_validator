@@ -194,6 +194,8 @@ class InitialIncrementalTimes(Experiment):
                         num_host_carrying_switches = 4
                     elif nc == "Ring topology with 8 switches":
                         num_host_carrying_switches = 8
+                    elif nc == "Ring topology with 12 switches":
+                        num_host_carrying_switches = 12
                     elif nc == "Clos topology with 7 switches":
                         num_host_carrying_switches = 4
                     elif nc == "Clos topology with 14 switches":
@@ -293,15 +295,22 @@ class InitialIncrementalTimes(Experiment):
                                                                   path_prefix + "4_switch_ring/iter2.json",
                                                                   path_prefix + "4_switch_ring/iter3.json"])
 
-        # 7-switch clos merges
-        seven_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "7_switch_clos/iter1.json",
-                                                                   path_prefix + "7_switch_clos/iter2.json"])
-
         # 8-switch ring merges
         self.load_data_merge_nh([path_prefix + "8_switch_ring/iter1_hps/2_4_hps.json"],
                                 path_prefix + "8_switch_ring/iter1.json")
 
         eight_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "8_switch_ring/iter1.json"])
+
+        # 12-switch ring merges
+        self.load_data_merge_nh([path_prefix + "12_switch_ring/iter1_hps/2_hps.json"],
+                                path_prefix + "12_switch_ring/iter1.json")
+
+        twelve_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "12_switch_ring/iter1.json"])
+
+
+        # 7-switch clos merges
+        seven_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "7_switch_clos/iter1.json",
+                                                                   path_prefix + "7_switch_clos/iter2.json"])
 
         # 14-switch clos merges
         self.load_data_merge_nh([path_prefix + "14_switch_clos/iter1_hps/2_hps.json"],
@@ -317,8 +326,9 @@ class InitialIncrementalTimes(Experiment):
         twenty_one_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "21_switch_clos/iter1.json"])
 
         merged_data = self.load_data_merge_network_config([four_switch_ring_merge,
-                                                           seven_switch_clos_merge,
                                                            eight_switch_ring_merge,
+                                                           twelve_switch_ring_merge,
+                                                           seven_switch_clos_merge,
                                                            fourteen_switch_clos_merge,
                                                            twenty_one_switch_clos_merge])
 
