@@ -452,7 +452,7 @@ class Experiment(object):
         ax.set_ylabel(y_label, fontsize=10, labelpad=0)
         ax.set_title(subplot_title, fontsize=10)
 
-        markers = ['o', 's', '*', 'H', '+', '.', '^', 'h', 'd', 'v']
+        markers = ['.', 's', 'v', 'd', '+', '^', 'H', ',', 'o', 'o', 'h', '*']
         marker_i = 0
 
         for line_data_key in self.data[data_key]:
