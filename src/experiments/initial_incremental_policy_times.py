@@ -375,15 +375,15 @@ def main():
                                   load_config,
                                   save_config,
                                   controller)
+    
+    # # Trigger the experiment
+    # exp.trigger()
+    # exp.dump_data()
 
-    # Trigger the experiment
-    exp.trigger()
-    exp.dump_data()
-
-    #exp.data = exp.data_merge()
-    #exp.data = exp.generate_relative_cost_ratio_data(exp.data)
-    #exp.data = exp.generate_num_flow_path_keys(exp.data)
-    #exp.plot_initial_incremental_times()
+    exp.data = exp.data_merge()
+    exp.data = exp.generate_relative_cost_ratio_data(exp.data)
+    exp.data = exp.generate_num_flow_path_keys(exp.data)
+    exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()
