@@ -28,7 +28,7 @@ class AmerenTopo(Topo):
 
         # Add switches
         for i in xrange(self.num_switches):
-            curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow13")
+            curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow14")
             self.switch_names.append(curr_switch)
 
         # Add Links

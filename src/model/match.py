@@ -22,9 +22,9 @@ field_names = ["in_port",
 ryu_field_names_mapping = {"in_port": "in_port",
                            "eth_type": "ethernet_type",
                            "eth_src": "ethernet_source",
-                           "eth_dst":"ethernet_destination",
+                           "eth_dst": "ethernet_destination",
                            "nw_src": "src_ip_addr",
-                           "nw_dst":"dst_ip_addr",
+                           "nw_dst": "dst_ip_addr",
                            "ip_proto": "ip_protocol",
                            "tcp_dst": "tcp_destination_port",
                            "tcp_src": "tcp_source_port",
@@ -43,7 +43,7 @@ ryu_field_names_mapping_reverse = {"in_port": "in_port",
                                    "tcp_source_port": "tcp_src",
                                    "udp_destination_port": "udp_dst",
                                    "udp_source_port": "udp_src",
-                                   "vlan_id": "dl_vlan"}
+                                   "vlan_id": "vlan_vid"}
 
 
 class OdlMatchJsonParser():
@@ -240,14 +240,14 @@ class Match(DictMixin):
                         self[field_name] = int(parsed_in_port)
 
                 elif field_name == "ethernet_type":
-                    self[field_name] = int(match_json["dl_type"])
+                    self[field_name] = int(match_json["eth_type"])
 
                 elif field_name == "ethernet_source":
-                    mac_int = int(match_json[u"dl_src"].replace(":", ""), 16)
+                    mac_int = int(match_json[u"eth_src"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 elif field_name == "ethernet_destination":
-                    mac_int = int(match_json[u"dl_dst"].replace(":", ""), 16)
+                    mac_int = int(match_json[u"eth_dst"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 #TODO: Add graceful handling of IP addresses
@@ -288,12 +288,12 @@ class Match(DictMixin):
 
                 elif field_name == "vlan_id":
 
-                    if match_json[u"dl_vlan"] == "0x1000/0x1000":
+                    if match_json[u"vlan_vid"] == "0x1000/0x1000":
                         self[field_name] = sys.maxsize
-                        self["has_vlan_tag"]= 1
+                        self["has_vlan_tag"] = 1
                     else:
-                        self[field_name] = 0x1000 + int(match_json[u"dl_vlan"])
-                        self["has_vlan_tag"]= 1
+                        self[field_name] = 0x1000 + int(match_json[u"vlan_vid"])
+                        self["has_vlan_tag"] = 1
 
             except KeyError:
                 self[field_name] = sys.maxsize

@@ -72,7 +72,7 @@ class MininetMan():
         else:
             raise Exception("Invalid, unknown topology type: " % topo_name)
 
-        self.switch = partial(OVSSwitch, protocols='OpenFlow13')
+        self.switch = partial(OVSSwitch, protocols='OpenFlow14')
 
         if self.num_switches and self.num_hosts_per_switch:
             self.mininet_configuration_name = self.synthesis_scheme + "_" + \

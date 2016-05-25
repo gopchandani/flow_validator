@@ -357,12 +357,12 @@ class InitialIncrementalTimes(Experiment):
 
 def main():
 
-    num_iterations = 1
+    num_iterations = 2
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [2]#[2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
 
     #network_configurations = [NetworkConfiguration("clostopo", 14, 1, 2, 2)]
-    network_configurations = [NetworkConfiguration("ring", 12, 1, None, None)]
+    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
     load_config = False
     save_config = True
@@ -377,13 +377,13 @@ def main():
                                   controller)
 
     # Trigger the experiment
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    exp.data = exp.data_merge()
-    exp.data = exp.generate_relative_cost_ratio_data(exp.data)
-    exp.data = exp.generate_num_flow_path_keys(exp.data)
-    exp.plot_initial_incremental_times()
+    #exp.data = exp.data_merge()
+    #exp.data = exp.generate_relative_cost_ratio_data(exp.data)
+    #exp.data = exp.generate_num_flow_path_keys(exp.data)
+    #exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()

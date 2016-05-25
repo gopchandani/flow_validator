@@ -217,7 +217,6 @@ class SynthesizeFailoverAborescene():
 
                 self.install_all_group_vlan_tag_flow(src_sw, dst_sw, k)
 
-
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
         for h_obj in dst_sw.attached_hosts:
             host_flow_match = deepcopy(flow_match)

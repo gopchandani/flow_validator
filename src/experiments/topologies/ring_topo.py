@@ -15,7 +15,7 @@ class RingTopo(Topo):
 
         #  Add switches and hosts under them
         for i in xrange(self.num_switches):
-            curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow13")
+            curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow14")
             self.switch_names.append(curr_switch)
 
             # if curr_switch == 's3' or curr_switch == 's4':

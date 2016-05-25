@@ -26,7 +26,7 @@ class IntentSynthesis():
         self.primary_path_edges = []
 
         self.apply_tag_intents_immediately = True
-        self.apply_other_intents_immediately = False
+        self.apply_other_intents_immediately = True
 
         # Table contains the rules that drop packets destined to the same MAC address as host of origin
         self.local_host_rule_table = 0
@@ -211,7 +211,7 @@ class IntentSynthesis():
         host_mac_match["ethernet_destination"] = int(mac_int)
         host_mac_match["vlan_id"] = int(matching_tag)
 
-        host_mac_intent = Intent("mac", host_mac_match, "all", out_port, apply_immediately=False)
+        host_mac_intent = Intent("mac", host_mac_match, "all", out_port, apply_immediately=True)
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
         # by using its mac address as the key
@@ -238,7 +238,7 @@ class IntentSynthesis():
         push_vlan_match["ethernet_destination"] = int(mac_int)
         push_vlan_match["in_port"] = int(src_h_obj.switch_port_attached)
         push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port_attached, "all",
-                                      apply_immediately=False)
+                                      apply_immediately=True)
 
         push_vlan_tag_intent.required_vlan_id = required_tag
 
