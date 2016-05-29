@@ -90,7 +90,7 @@ class InitialIncrementalTimes(Experiment):
         import pprint
         pprint.pprint(self.data)
 
-        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=False, figsize=(8.5, 3.0))
+        f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=False, figsize=(9.5, 3.0))
 
         data_xtick_labels = list(self.data["all_keys"])
         data_xticks = [int(x) for x in data_xtick_labels]
@@ -101,8 +101,8 @@ class InitialIncrementalTimes(Experiment):
                                         "Time (seconds)",
                                         "(a)",
                                         y_scale='log',
-                                        x_min_factor=0.8,
-                                        x_max_factor=1.05,
+                                        x_min_factor=1.0,
+                                        x_max_factor=1.0,
                                         y_min_factor=0.1,
                                         y_max_factor=1,
                                         xticks=data_xticks,
@@ -114,8 +114,8 @@ class InitialIncrementalTimes(Experiment):
                                         "",
                                         "(b)",
                                         y_scale='log',
-                                        x_min_factor=0.8,
-                                        x_max_factor=1.05,
+                                        x_min_factor=1.0,
+                                        x_max_factor=1.0,
                                         y_min_factor=0.1,
                                         y_max_factor=1,
                                         xticks=data_xticks,
@@ -127,13 +127,13 @@ class InitialIncrementalTimes(Experiment):
                                         "Relative Cost Ratio",
                                         "(c)",
                                         y_scale='linear',
-                                        x_min_factor=0.8,
-                                        x_max_factor=1.05,
+                                        x_min_factor=1.0,
+                                        x_max_factor=1.0,
                                         y_min_factor=0.1,
                                         y_max_factor=1.2,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels,
-                                        yticks=[1, 2, 3, 4, 5, 6, 7, 8])
+                                        yticks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
@@ -296,10 +296,16 @@ class InitialIncrementalTimes(Experiment):
         #                                                           path_prefix + "4_switch_ring/iter3.json"])
 
         # 8-switch ring merges
-        self.load_data_merge_nh([path_prefix + "8_switch_ring/iter1_hps/2_4_hps.json"],
+        self.load_data_merge_nh([path_prefix + "8_switch_ring/iter1_hps/2_4_hps.json",
+                                 path_prefix + "8_switch_ring/iter1_hps/6_hps.json"],
                                 path_prefix + "8_switch_ring/iter1.json")
 
-        eight_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "8_switch_ring/iter1.json"])
+        self.load_data_merge_nh([path_prefix + "8_switch_ring/iter2_hps/2_4_hps.json",
+                                 path_prefix + "8_switch_ring/iter2_hps/6_hps.json"],
+                                path_prefix + "8_switch_ring/iter2.json")
+
+        eight_switch_ring_merge = self.load_data_merge_iterations([path_prefix + "8_switch_ring/iter1.json",
+                                                                   path_prefix + "8_switch_ring/iter2.json"])
 
         # 12-switch ring merges
         self.load_data_merge_nh([path_prefix + "12_switch_ring/iter1_hps/2_hps.json"],
@@ -375,15 +381,15 @@ def main():
                                   load_config,
                                   save_config,
                                   controller)
-    
-    # # Trigger the experiment
-    # exp.trigger()
-    # exp.dump_data()
 
-    exp.data = exp.data_merge()
-    exp.data = exp.generate_relative_cost_ratio_data(exp.data)
-    exp.data = exp.generate_num_flow_path_keys(exp.data)
-    exp.plot_initial_incremental_times()
+    # # Trigger the experiment
+    exp.trigger()
+    exp.dump_data()
+
+    # exp.data = exp.data_merge()
+    # exp.data = exp.generate_relative_cost_ratio_data(exp.data)
+    # exp.data = exp.generate_num_flow_path_keys(exp.data)
+    # exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()

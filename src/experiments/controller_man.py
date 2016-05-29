@@ -93,7 +93,7 @@ class ControllerMan():
             self.ryu_proc.kill()
 
         #topo_apps = "ryu.app.rest_topology ryu.app.ws_topology"
-        ryu_cmd = ["ryu-manager", "--observe-links", "ryu.app.ofctl_rest"]
+        ryu_cmd = ["ryu-manager", "--observe-links", "ryu.app.ofctl_rest", "ryu.app.rest_topology"]
 
         self.ryu_proc = subprocess.Popen(ryu_cmd, stdout=subprocess.PIPE)
         return 6633
