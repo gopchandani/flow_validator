@@ -48,6 +48,7 @@ class Experiment(object):
         self.cm = None
         self.mm = None
         self.ng = None
+        self.synthesis = None
 
         if not self.load_config and self.save_config:
             self.cm = ControllerMan(self.num_controller_instances, controller=controller)
@@ -103,11 +104,11 @@ class Experiment(object):
                     #self.mm.qos_setup_two_flows_on_separate_queues_to_same_host(self.ng)
 
                 elif synthesis_scheme == "Synthesis_Failover_Aborescene":
-                    self.synth = SynthesizeFailoverAborescene(self.ng)
+                    self.synthesis = SynthesizeFailoverAborescene(self.ng)
 
                     flow_match = Match(is_wildcard=True)
                     flow_match["ethernet_type"] = 0x0800
-                    self.synth.synthesize_all_switches(flow_match)
+                    self.synthesis.synthesize_all_switches(flow_match)
 
                 # self.mm.net.pingAll()
 

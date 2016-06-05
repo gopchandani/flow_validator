@@ -34,14 +34,12 @@ class SynthesisPlayground(Experiment):
 
             print "num_hosts_per_switch:", num_hosts_per_switch
 
-            #self.topo_description = ("ring", 4, num_hosts_per_switch, None, None)
-            self.topo_description = ("clostopo", None, 1, 3, 2)
-            #self.topo_description = ("linear", 2, 1)
+            self.topo_description = ("ring", 4, num_hosts_per_switch, None, None)
 
             ng = self.setup_network_graph(self.topo_description,
-                                          mininet_setup_gap=20,
+                                          mininet_setup_gap=5,
                                           synthesis_scheme="Synthesis_Failover_Aborescene",
-                                          synthesis_setup_gap=20)
+                                          synthesis_setup_gap=5)
 
             fv = FlowValidator(ng)
             fv.init_network_port_graph()
