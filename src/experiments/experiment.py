@@ -181,7 +181,7 @@ class Experiment(object):
                 path_matches = self.search_matching_analyzed_path(analyzed_host_pairs_traffic_paths,
                                                                   src_host, dst_host,
                                                                   synthesized_path, verbose)
-                if not path_smatches:
+                if not path_matches:
                     print "No analyzed path matched for:", synthesized_path
                     all_paths_match = False
 
