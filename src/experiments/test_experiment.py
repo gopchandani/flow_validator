@@ -42,7 +42,7 @@ class TestExperiment(Experiment):
                                           mininet_setup_gap=5,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=10,
-                                          synthesis_scheme="IntentSynthesis")
+                                          synthesis_scheme="Synthesis_Failover_Aborescene")
 
             self.fv = FlowValidator(ng, True)
             self.fv.init_network_port_graph()
@@ -77,8 +77,7 @@ def main():
 
     #network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1)]
 
-    network_configurations = [NetworkConfiguration("clostopo", 7, 1, 2, 1),
-                              NetworkConfiguration("ring", 4, 1, None, None)]
+    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
     exp = TestExperiment(num_iterations,
                          load_config,

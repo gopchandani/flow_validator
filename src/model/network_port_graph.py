@@ -5,6 +5,7 @@ from switch_port_graph import SwitchPortGraph
 from port_graph_edge import PortGraphEdge, NetworkPortGraphEdgeData
 from traffic import Traffic
 
+
 class NetworkPortGraph(PortGraph):
 
     def __init__(self, network_graph, report_active_state):
@@ -187,9 +188,11 @@ class NetworkPortGraph(PortGraph):
             if ed.applied_modifications:
 
                 if edge.pred.sw == edge.succ.sw:
-                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=True)
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications,
+                                                                store_switch_modifications=True)
                 else:
-                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=False)
+                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications,
+                                                                store_switch_modifications=False)
             else:
                 ttp = traffic_to_propagate
 

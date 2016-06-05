@@ -150,6 +150,7 @@ class SwitchPortGraph(PortGraph):
             else:
                 ttp = traffic_to_propagate
 
+            # This chunk handles all the written modifications stuff.
             if edge.edge_type == "ingress":
                 ttp = traffic_to_propagate.get_orig_traffic()
             else:
