@@ -39,7 +39,6 @@ class TrafficElement:
                 te_str += field_names[i] + ":" + str(self.traffic_fields[field_names[i]]) + "\r\n"
             else:
                 pass
-                #te_str += field_names[i] + ":" + "*" + "\r\n"
 
         te_str += field_names[len(field_names) - 1] + ":" + str(self.traffic_fields[field_names[len(field_names) - 1]])
         te_str += "\r\n"
@@ -198,9 +197,7 @@ class TrafficElement:
 
         for field_name in self.traffic_fields:
 
-            #if field_name in self.switch_modifications:
-
-            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications != None:
+            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
                 if field_name in self.enabling_edge_data.applied_modifications:
 
                     field_interval = self.enabling_edge_data.applied_modifications[field_name][1]
@@ -263,7 +260,7 @@ class TrafficElement:
             if field_name in modifications:
 
                 # Checking if the rule has both push_vlan and set_vlan modifications for the header,
-                # if so, then don't apply the push_vlan modification, the other one would take care of it, see below:
+                # if so, then don't sweat the push_vlan modification, the other one would take care of it, see below:
                 if field_name == "has_vlan_tag" and "vlan_id" in modifications:
                     continue
 
@@ -458,8 +455,6 @@ class Traffic:
             diff_traffic.traffic_elements.extend(in_traffic.traffic_elements)
             return diff_traffic
 
-        #print "in_traffic.traffic_elements:", len(in_traffic.traffic_elements), "self.traffic_elements:", len(self.traffic_elements)
-
         for in_te in in_traffic.traffic_elements:
 
             remaining = [in_te]
@@ -549,6 +544,7 @@ class Traffic:
             enabling_edge_data_list.append(te.enabling_edge_data)
 
         return enabling_edge_data_list
+
 
 def main():
     m1 = Traffic()

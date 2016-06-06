@@ -4,6 +4,7 @@ from traffic import Traffic
 from port_graph_edge import PortGraphEdge, SwitchPortGraphEdgeData
 from port_graph import PortGraph
 
+
 class SwitchPortGraph(PortGraph):
 
     def __init__(self, network_graph, sw, report_active_state):
@@ -137,9 +138,6 @@ class SwitchPortGraph(PortGraph):
         for ed in edge.edge_data_list:
 
             if edge.edge_type == "egress":
-
-                # Case when traffic changes switch boundary
-                traffic_to_propagate.set_field("in_port", is_wildcard=True)
 
                 for te in traffic_to_propagate.traffic_elements:
                     if ed.edge_action:
