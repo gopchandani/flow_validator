@@ -244,7 +244,7 @@ class TrafficElement:
 
         return intersection
 
-    def get_orig_traffic_element(self, applied_modifications=None, store_switch_modifications=True):
+    def get_orig_traffic_element(self, applied_modifications=None):
 
         if applied_modifications:
             mf = applied_modifications
@@ -326,30 +326,26 @@ class TrafficElement:
         # If storing modifications, store the first one applied in the switch, with the match from the last
         # matching rule
 
-        if store_switch_modifications:
-            for modified_field in mf_used:
-                if modified_field not in orig_traffic_element.switch_modifications:
-                    orig_traffic_element.switch_modifications[modified_field] = mf_used[modified_field]
-                else:
-                    # Check if the previous modification requires setting of the match to this modification
-                    # If so, then use the match from this modification
-                    this_modification_match = mf[modified_field][0]
-                    this_modification_value_tree = mf[modified_field][1]
+        for modified_field in mf_used:
+            if modified_field not in orig_traffic_element.switch_modifications:
+                orig_traffic_element.switch_modifications[modified_field] = mf_used[modified_field]
+            else:
+                # Check if the previous modification requires setting of the match to this modification
+                # If so, then use the match from this modification
+                this_modification_match = mf[modified_field][0]
+                this_modification_value_tree = mf[modified_field][1]
 
-                    prev_modification_match = orig_traffic_element.switch_modifications[modified_field][0]
-                    prev_modification_value_tree = orig_traffic_element.switch_modifications[modified_field][1]
+                prev_modification_match = orig_traffic_element.switch_modifications[modified_field][0]
+                prev_modification_value_tree = orig_traffic_element.switch_modifications[modified_field][1]
 
-                    prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
+                prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
 
-                    intersection = self.get_field_intersection(this_modification_value_tree,
-                                                               prev_match_field_value_tree)
+                intersection = self.get_field_intersection(this_modification_value_tree,
+                                                           prev_match_field_value_tree)
 
-                    if intersection:
-                        orig_traffic_element.switch_modifications[modified_field] = (this_modification_match,
-                                                                                     prev_modification_value_tree)
-
-        else:
-            orig_traffic_element.switch_modifications.clear()
+                if intersection:
+                    orig_traffic_element.switch_modifications[modified_field] = (this_modification_match,
+                                                                                 prev_modification_value_tree)
 
         return orig_traffic_element
 
@@ -520,7 +516,7 @@ class Traffic:
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
-            orig_te = te.get_orig_traffic_element(modifications, store_switch_modifications)
+            orig_te = te.get_orig_traffic_element(modifications)
             orig_traffic.traffic_elements.append(orig_te)
         return orig_traffic
 

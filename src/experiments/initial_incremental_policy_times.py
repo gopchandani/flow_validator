@@ -363,7 +363,7 @@ class InitialIncrementalTimes(Experiment):
 
 def main():
 
-    num_iterations = 2
+    num_iterations = 1
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
 

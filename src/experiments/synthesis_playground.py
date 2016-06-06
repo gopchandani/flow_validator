@@ -34,7 +34,8 @@ class SynthesisPlayground(Experiment):
 
             print "num_hosts_per_switch:", num_hosts_per_switch
 
-            self.topo_description = ("ring", 4, num_hosts_per_switch, None, None)
+            #self.topo_description = ("ring", 4, num_hosts_per_switch, None, None)
+            self.topo_description = ("clostopo", 7, num_hosts_per_switch, 2, 1)
 
             ng = self.setup_network_graph(self.topo_description,
                                           mininet_setup_gap=5,
