@@ -244,19 +244,10 @@ class TrafficElement:
 
         return intersection
 
-    def get_orig_traffic_element(self, applied_modifications=None):
-
-        if applied_modifications:
-            mf = applied_modifications
-        else:
-            # if the output_action type is applied, no written modifications take effect.
-            if self.instruction_type == "applied":
-                return self
-
-            mf = self.written_modifications
+    def get_orig_traffic_element(self, modifications):
 
         mf_used = {}
-        mf_used.update(mf)
+        mf_used.update(modifications)
 
         orig_traffic_element = TrafficElement()
 
@@ -269,20 +260,20 @@ class TrafficElement:
             # If the field is modified however, it is left as-is too, unless it is modified to the exact value
             # as it is contained in the traffic
 
-            if field_name in mf:
+            if field_name in modifications:
 
                 # Checking if the rule has both push_vlan and set_vlan modifications for the header,
                 # if so, then don't apply the push_vlan modification, the other one would take care of it, see below:
-                if field_name == "has_vlan_tag" and "vlan_id" in mf:
+                if field_name == "has_vlan_tag" and "vlan_id" in modifications:
                     continue
 
-                elif field_name == "vlan_id" and "has_vlan_tag" in mf:
-                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                elif field_name == "vlan_id" and "has_vlan_tag" in modifications:
+                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, modifications)
                     
                     if unmodified:
-                        unmodified = self.field_remains_unmodified(orig_traffic_element, "has_vlan_tag", mf)
+                        unmodified = self.field_remains_unmodified(orig_traffic_element, "has_vlan_tag", modifications)
                         if unmodified:
-                            orig_traffic_element.traffic_fields["has_vlan_tag"] = mf["has_vlan_tag"][0].traffic_fields["has_vlan_tag"]
+                            orig_traffic_element.traffic_fields["has_vlan_tag"] = modifications["has_vlan_tag"][0].traffic_fields["has_vlan_tag"]
                         else:
                             orig_traffic_element.traffic_fields["has_vlan_tag"] = self.traffic_fields["has_vlan_tag"]
     
@@ -292,7 +283,7 @@ class TrafficElement:
                         empty_field = IntervalTree()
                         orig_traffic_element.traffic_fields["has_vlan_tag"] = empty_field
 
-                elif field_name == "vlan_id" and "has_vlan_tag" not in mf:
+                elif field_name == "vlan_id" and "has_vlan_tag" not in modifications:
 
                     # Reverse the effects of a vlan_id modification on traffic only when a vlan tag is present
                     vlan_tag_present = False
@@ -305,14 +296,14 @@ class TrafficElement:
                             vlan_tag_present = True
 
                     if vlan_tag_present:
-                        unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                        unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, modifications)
                     else:
                         orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
                         del mf_used[field_name]
 
                 # All the other fields...
                 else:
-                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, modifications)
             else:
                 # Otherwise, just keep the field same as it was
                 orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
@@ -323,7 +314,7 @@ class TrafficElement:
         orig_traffic_element.instruction_type = self.instruction_type
         orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
-        # If storing modifications, store the first one applied in the switch, with the match from the last
+        # When storing modifications, store the first one applied in the switch, with the match from the last
         # matching rule
 
         for modified_field in mf_used:
@@ -332,8 +323,8 @@ class TrafficElement:
             else:
                 # Check if the previous modification requires setting of the match to this modification
                 # If so, then use the match from this modification
-                this_modification_match = mf[modified_field][0]
-                this_modification_value_tree = mf[modified_field][1]
+                this_modification_match = modifications[modified_field][0]
+                this_modification_value_tree = modifications[modified_field][1]
 
                 prev_modification_match = orig_traffic_element.switch_modifications[modified_field][0]
                 prev_modification_value_tree = orig_traffic_element.switch_modifications[modified_field][1]
@@ -512,12 +503,27 @@ class Traffic:
     def union(self, in_traffic):
         self.traffic_elements.extend(in_traffic.traffic_elements)
 
-    def get_orig_traffic(self, modifications=None, store_switch_modifications=True):
+    def get_orig_traffic(self, modifications=None):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
-            orig_te = te.get_orig_traffic_element(modifications)
+
+            if modifications:
+                mf = modifications
+            else:
+                # if the output_action type is applied, no written modifications take effect.
+                if te.instruction_type == "applied":
+                    return self
+
+                mf = te.written_modifications
+
+            if mf:
+                orig_te = te.get_orig_traffic_element(mf)
+            else:
+                orig_te = te
+
             orig_traffic.traffic_elements.append(orig_te)
+
         return orig_traffic
 
     def get_intersecting_modifications(self):
