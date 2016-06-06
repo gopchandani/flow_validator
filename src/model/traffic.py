@@ -508,7 +508,8 @@ class Traffic:
             else:
                 # if the output_action type is applied, no written modifications take effect.
                 if te.instruction_type == "applied":
-                    return self
+                    orig_traffic.traffic_elements.append(te)
+                    continue
 
                 mf = te.written_modifications
 
