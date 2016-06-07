@@ -68,8 +68,8 @@ def main():
 
     num_iterations = 1#10
     num_hosts_per_switch = [1]#, 2, 3, 4]
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
 
 
     controller = "ryu"
