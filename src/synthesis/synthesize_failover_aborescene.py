@@ -146,7 +146,7 @@ class SynthesizeFailoverAborescene():
                 group_id,
                 1,
                 flow_match,
-                False)
+                True)
 
 
         # Need to install some more rules to handle the IN_PORT as out_port case.
@@ -176,7 +176,7 @@ class SynthesizeFailoverAborescene():
                         group_id,
                         2,
                         flow_match,
-                        False)
+                        True)
 
 
     def install_all_group_vlan_tag_flow(self, src_sw, dst_sw, k):
@@ -202,7 +202,7 @@ class SynthesizeFailoverAborescene():
                 group_id,
                 1,
                 flow_match,
-                False)
+                True)
 
     def push_sw_intent_lists(self, flow_match, k):
 
