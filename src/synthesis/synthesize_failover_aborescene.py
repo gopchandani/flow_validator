@@ -9,6 +9,7 @@ from copy import deepcopy
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 
+
 class SynthesizeFailoverAborescene():
 
     def __init__(self, network_graph):
@@ -146,8 +147,7 @@ class SynthesizeFailoverAborescene():
                 group_id,
                 1,
                 flow_match,
-                True)
-
+                False)
 
         # Need to install some more rules to handle the IN_PORT as out_port case.
         for adjacent_sw_id, link_data in self.network_graph.get_adjacent_switch_link_data(src_sw.node_id):
@@ -176,8 +176,7 @@ class SynthesizeFailoverAborescene():
                         group_id,
                         2,
                         flow_match,
-                        True)
-
+                        False)
 
     def install_all_group_vlan_tag_flow(self, src_sw, dst_sw, k):
 
@@ -189,8 +188,8 @@ class SynthesizeFailoverAborescene():
         # Push a failover group with each bucket containing a modify VLAN tag action,
         # Each one of these buckets represent actions to be applied to send the packet in one tree
         group_id = self.synthesis_lib.push_select_all_group_set_vlan_action(src_sw.node_id,
-                                                                               sw_intent_list,
-                                                                               modified_tag)
+                                                                            sw_intent_list,
+                                                                            modified_tag)
 
         # Push a group/vlan_id setting flow rule
         flow_match = deepcopy(sw_intent_list[0].flow_match)
@@ -202,7 +201,7 @@ class SynthesizeFailoverAborescene():
                 group_id,
                 1,
                 flow_match,
-                True)
+                False)
 
     def push_sw_intent_lists(self, flow_match, k):
 

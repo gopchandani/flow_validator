@@ -138,9 +138,11 @@ class SwitchPortGraph(PortGraph):
 
             if edge.edge_type == "egress":
 
-                for te in traffic_to_propagate.traffic_elements:
-                    if ed.edge_action:
-                        te.instruction_type = ed.edge_action.instruction_type
+                # if the output_action type is applied, no written modifications take effect.
+                if ed.edge_action.instruction_type == "applied":
+                    traffic_to_propagate.set_written_modifications_apply(False)
+                else:
+                    traffic_to_propagate.set_written_modifications_apply(True)
 
             if ed.applied_modifications:
                 ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications)

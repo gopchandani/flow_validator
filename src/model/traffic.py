@@ -13,10 +13,10 @@ class TrafficElement:
 
         self.switch_modifications = {}
         self.written_modifications = {}
-        self.instruction_type = None
+        self.written_modifications_apply = None
         self.traffic_fields = {}
         self.enabling_edge_data = None
-
+        
         # If a match has been provided to initialize with
         if init_match:
             for field_name in field_names:
@@ -216,7 +216,7 @@ class TrafficElement:
         # Accumulate field modifications
         modified_traffic_element.written_modifications = self.written_modifications
         modified_traffic_element.switch_modifications = self.switch_modifications
-        modified_traffic_element.instruction_type = self.instruction_type
+        modified_traffic_element.written_modifications_apply = self.written_modifications_apply
         modified_traffic_element.enabling_edge_data = self.enabling_edge_data
 
         return modified_traffic_element
@@ -308,7 +308,7 @@ class TrafficElement:
         # Accumulate field modifications
         orig_traffic_element.written_modifications.update(self.written_modifications)
         orig_traffic_element.switch_modifications.update(self.switch_modifications)
-        orig_traffic_element.instruction_type = self.instruction_type
+        orig_traffic_element.written_modifications_apply = self.written_modifications_apply
         orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
         # When storing modifications, store the first one applied in the switch, with the match from the last
@@ -438,7 +438,7 @@ class Traffic:
                     traffic_intersection.traffic_elements.append(ei)
 
                     ei.written_modifications.update(e_in.written_modifications)
-                    ei.instruction_type = e_in.instruction_type
+                    ei.written_modifications_apply = e_in.written_modifications_apply
                     ei.switch_modifications = e_in.switch_modifications
                     ei.enabling_edge_data = e_in.enabling_edge_data
 
@@ -487,7 +487,7 @@ class Traffic:
                 for remaining_te in remaining:
                     remaining_te.written_modifications = in_te.written_modifications
                     remaining_te.switch_modifications = in_te.switch_modifications
-                    remaining_te.instruction_type = in_te.instruction_type
+                    remaining_te.written_modifications_apply = in_te.written_modifications_apply
                     remaining_te.enabling_edge_data = in_te.enabling_edge_data
 
                 diff_traffic.traffic_elements.extend(remaining)
@@ -506,11 +506,9 @@ class Traffic:
             if modifications:
                 mf = modifications
             else:
-                # if the output_action type is applied, no written modifications take effect.
-                if te.instruction_type == "applied":
+                if not te.written_modifications_apply:
                     orig_traffic.traffic_elements.append(te)
                     continue
-
                 mf = te.written_modifications
 
             if mf:
@@ -537,6 +535,10 @@ class Traffic:
     def set_enabling_edge_data(self, enabling_edge_data):
         for te in self.traffic_elements:
             te.enabling_edge_data = enabling_edge_data
+            
+    def set_written_modifications_apply(self, written_modifications_apply):
+        for te in self.traffic_elements:
+            te.written_modifications_apply = written_modifications_apply
 
     def get_enabling_edge_data(self):
         enabling_edge_data_list = []
