@@ -102,7 +102,6 @@ class SwitchPortGraph(PortGraph):
             edge = self.get_edges_from_flow_table_edges(flow_table, succ)
             self.add_edge(flow_table.port_graph_node, succ, edge)
 
-
     def modify_flow_table_edges(self, flow_table, modified_flow_table_edges):
 
         for modified_edge in modified_flow_table_edges:

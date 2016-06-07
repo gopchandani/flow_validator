@@ -216,8 +216,9 @@ class InstructionSet():
 
         for out_port, output_action in output_actions:
 
+            # Avoid adding edges for actions when only reporting active state
             if self.sw.port_graph.report_active_state:
-                if output_action.get.get_active_rank() != 0:
+                if output_action.get_active_rank() != 0:
                     continue
 
             applied_modifications = self.applied_action_set.get_modified_fields_dict(self.flow.traffic_element)

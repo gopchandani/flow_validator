@@ -71,7 +71,7 @@ class IntentSynthesis():
             if in_port == out_port:
                 pass
 
-            intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
+            intent = Intent(intent_type, fwd_flow_match, in_port, out_port, apply_immediately=False)
             intent.src_host = src_host
             intent.dst_host = dst_host
 
