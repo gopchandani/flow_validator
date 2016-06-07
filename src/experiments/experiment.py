@@ -17,8 +17,6 @@ from model.traffic import Traffic
 from timer import Timer
 
 from synthesis.intent_synthesis import IntentSynthesis
-from synthesis.intent_synthesis_ldst import IntentSynthesisLDST
-from synthesis.intent_synthesis_load_balance import IntentSynthesisLB
 from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
 
 __author__ = 'Rakesh Kumar'
@@ -87,21 +85,6 @@ class Experiment(object):
                                                      synthesized_paths_save_directory=self.ng.config_path_prefix)
 
                     self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-
-                elif synthesis_scheme == "IntentSynthesisLDST":
-                    self.synthesis = IntentSynthesisLDST(self.ng, master_switch=topo_description[0] == "linear")
-                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-
-                elif synthesis_scheme == "IntentSynthesisLB":
-                    self.synthesis = IntentSynthesisLB(self.ng, master_switch=topo_description[0] == "linear")
-                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-
-                elif synthesis_scheme == "QoS_Synthesis":
-                    #self.mm.qos_setup_single_flow_test(ng)
-
-                    self.mm.qos_setup_two_flows_on_separate_queues_to_two_different_hosts(self.ng,
-                                                                                          same_output_queue=False)
-                    #self.mm.qos_setup_two_flows_on_separate_queues_to_same_host(self.ng)
 
                 elif synthesis_scheme == "Synthesis_Failover_Aborescene":
                     self.synthesis = SynthesizeFailoverAborescene(self.ng)
