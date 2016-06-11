@@ -42,7 +42,7 @@ class UniformImportanceSamplingCompare(Experiment):
             "num_required_runs": defaultdict(defaultdict),
         }
 
-    def perform_monte_carlo(self, num_runs):
+    def perform_seed_runs(self, num_runs):
         run_links = []
         run_values = []
 
@@ -71,7 +71,7 @@ class UniformImportanceSamplingCompare(Experiment):
         seed_sd = None
 
         if sampling == "importance":
-            seed_mean, seed_sd = self.perform_monte_carlo(num_seed_runs)
+            seed_mean, seed_sd = self.perform_seed_runs(num_seed_runs)
 
         print "seed_mean:", seed_mean
 
@@ -266,7 +266,7 @@ def main():
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     num_seed_runs = 5
-    error_bounds = ["5"]#,"1", "5", "10"]
+    error_bounds = ["10"]#,"1", "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
