@@ -13,6 +13,7 @@ from timer import Timer
 from analysis.monte_carlo_analysis import MonteCarloAnalysis
 from experiment import Experiment
 
+
 class UniformImportanceSamplingCompare(Experiment):
     def __init__(self,
                  num_iterations,
@@ -55,12 +56,6 @@ class UniformImportanceSamplingCompare(Experiment):
         run_sd = np.std(run_values)
 
         return run_mean, run_sd
-
-    def check_bound_reached(self):
-        reached_bound = 0.0
-
-        return reached_bound
-
 
     def compute_num_required_runs(self, expected_value, error_bound, sampling, num_seed_runs=None):
         run_links = []
@@ -129,7 +124,6 @@ class UniformImportanceSamplingCompare(Experiment):
         else:
             print "Reached CI does not meet expected value bound"
 
-
         return num_required_runs
 
     def trigger(self):
@@ -144,7 +138,7 @@ class UniformImportanceSamplingCompare(Experiment):
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=60,
-                                          synthesis_scheme="IntentSynthesis")
+                                          synthesis_scheme="Synthesis_Failover_Aborescene")
 
             self.mca = MonteCarloAnalysis(ng, False)
             self.mca.init_network_port_graph()
@@ -243,23 +237,23 @@ class UniformImportanceSamplingCompare(Experiment):
         self.data = merged_data
 
 def main():
-    num_iterations = 10
-    load_config = True
-    save_config = False
+    num_iterations = 1
+    load_config = False
+    save_config = True
     controller = "ryu"
 
-    #topo_descriptions = [("ring", 4, 1, None, None)]
+    topo_descriptions = [("ring", 4, 1, None, None)]
     #topo_descriptions = [("ring", 6, 1, None, None)]
     #topo_descriptions = [("ring", 8, 1, None, None)]
-    topo_descriptions = [("ring", 10, 1, None, None)]
+    #topo_descriptions = [("ring", 10, 1, None, None)]
 
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
-    #expected_values = [2.33]
+    expected_values = [2.33]
     #expected_values = [2.5]
     #expected_values = [2.6]
-    expected_values = [2.77142857143]
+    #expected_values = [2.77142857143]
 
     #expected_values = [5.00] # 5.15238302266
     #expected_values = [19.50]
