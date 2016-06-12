@@ -24,4 +24,5 @@ class Host:
 
     def get_switch_port(self):
         self.switch_port = self.switch_obj.ports[self.switch_port_attached]
+        self.switch_port.attached_host = self
         return self.switch_port
