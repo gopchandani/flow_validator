@@ -23,7 +23,7 @@ class UniformImportanceSamplingCompare(Experiment):
                  topo_descriptions,
                  expected_values,
                  num_seed_runs,
-                 error_bounds):
+                 relative_errors):
 
         super(UniformImportanceSamplingCompare, self).__init__("uniform_importance_sampling_compare",
                                                                num_iterations,
@@ -35,7 +35,7 @@ class UniformImportanceSamplingCompare(Experiment):
         self.topo_descriptions = topo_descriptions
         self.expected_values = expected_values
         self.num_seed_runs = num_seed_runs
-        self.error_bounds = error_bounds
+        self.relative_errors = relative_errors
 
         self.data = {
             "execution_time": defaultdict(defaultdict),
@@ -57,12 +57,12 @@ class UniformImportanceSamplingCompare(Experiment):
 
         return run_mean, run_sd
 
-    def compute_num_required_runs(self, expected_value, error_bound, sampling, num_seed_runs=None):
+    def compute_num_required_runs(self, expected_value, relative_error, sampling_type, num_min_runs, num_seed_runs=None):
         run_links = []
         run_values = []
 
-        required_lower_bound = expected_value - expected_value * error_bound
-        required_upper_bound = expected_value + expected_value * error_bound
+        required_lower_bound = expected_value - expected_value * relative_error
+        required_upper_bound = expected_value + expected_value * relative_error
 
         num_required_runs = 0
         reached_bound = False
@@ -70,7 +70,7 @@ class UniformImportanceSamplingCompare(Experiment):
         seed_mean = None
         seed_sd = None
 
-        if sampling == "importance":
+        if sampling_type == "importance":
             seed_mean, seed_sd = self.perform_seed_runs(num_seed_runs)
 
         print "seed_mean:", seed_mean
@@ -80,25 +80,21 @@ class UniformImportanceSamplingCompare(Experiment):
             run_value = None
             run_broken_links = None
 
-            if sampling == "uniform":
+            if sampling_type == "uniform":
                 run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_uniform(verbose=False)
-                print run_value, run_broken_links
-            elif sampling == "importance":
+            elif sampling_type == "importance":
                 run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_importance(seed_mean,
                                                                                                                  verbose=False)
-                print run_value, run_broken_links
-
             run_links.append(run_broken_links)
             run_values.append(run_value)
 
-            # Do at least two runs...
-            # Do at least num_seed_runs for both uniform and importance case
-            if num_required_runs > 0 and num_required_runs % 10 == 0:
+            # Do at least num_min_runs
+            if num_required_runs > 0 and num_required_runs % num_min_runs == 0:
 
                 run_mean = np.mean(run_values)
                 run_sd = np.std(run_values)
 
-                print sampling, "runs so far:", num_required_runs
+                print sampling_type, "runs so far:", num_required_runs
 
                 print "run_mean:", run_mean
                 t99 = 2.56
@@ -111,12 +107,12 @@ class UniformImportanceSamplingCompare(Experiment):
 
                 print "interval_percentage:", interval_percentage
 
-                if interval_percentage <= 5:
+                if interval_percentage <= relative_error:
                     reached_bound = True
 
             num_required_runs += 1
 
-        if sampling == "importance":
+        if sampling_type == "importance":
             num_required_runs += num_seed_runs
 
         run_lower_bound = run_mean - plus_minus
@@ -161,13 +157,13 @@ class UniformImportanceSamplingCompare(Experiment):
             scenario_keys = (topo_description[0] + " with " + str(topo_description[1]) + " switches using uniform sampling",
                              topo_description[0] + " with " + str(topo_description[1]) + " switches using importance sampling")
 
-            for error_bound in self.error_bounds:
+            for relative_error in self.relative_errors:
 
-                self.data["execution_time"][scenario_keys[0]][error_bound] = []
-                self.data["num_required_runs"][scenario_keys[0]][error_bound] = []
+                self.data["execution_time"][scenario_keys[0]][relative_error] = []
+                self.data["num_required_runs"][scenario_keys[0]][relative_error] = []
 
-                self.data["execution_time"][scenario_keys[1]][error_bound] = []
-                self.data["num_required_runs"][scenario_keys[1]][error_bound] = []
+                self.data["execution_time"][scenario_keys[1]][relative_error] = []
+                self.data["num_required_runs"][scenario_keys[1]][relative_error] = []
 
                 for j in xrange(self.num_iterations):
                     print "iteration:", j + 1
@@ -178,21 +174,23 @@ class UniformImportanceSamplingCompare(Experiment):
 
                     with Timer(verbose=True) as t:
                         num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
-                                                                                   float(error_bound)/100,
-                                                                                   "uniform")
+                                                                                   float(relative_error),
+                                                                                   "uniform",
+                                                                                   1)
 
-                    self.data["execution_time"][scenario_keys[0]][error_bound].append(t.msecs)
-                    self.data["num_required_runs"][scenario_keys[0]][error_bound].append(num_required_runs_uniform)
+                    self.data["execution_time"][scenario_keys[0]][relative_error].append(t.msecs)
+                    self.data["num_required_runs"][scenario_keys[0]][relative_error].append(num_required_runs_uniform)
 
                     with Timer(verbose=True) as t:
                         num_required_runs_importance = self.compute_num_required_runs(self.expected_values[i],
-                                                                                      float(error_bound)/100,
+                                                                                      float(relative_error),
                                                                                       "importance",
+                                                                                      1,
                                                                                       max(self.num_seed_runs,
                                                                                           self.num_seed_runs))
 
-                    self.data["execution_time"][scenario_keys[1]][error_bound].append(t.msecs)
-                    self.data["num_required_runs"][scenario_keys[1]][error_bound].append(num_required_runs_importance)
+                    self.data["execution_time"][scenario_keys[1]][relative_error].append(t.msecs)
+                    self.data["num_required_runs"][scenario_keys[1]][relative_error].append(num_required_runs_importance)
 
             self.mca.de_init_network_port_graph()
 
@@ -272,7 +270,7 @@ def main():
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     num_seed_runs = 5
-    error_bounds = ["10"]#,"1", "5", "10"]
+    relative_errors = ["10"]#,"1", "5", "10"]
 
     exp = UniformImportanceSamplingCompare(num_iterations,
                                            load_config,
@@ -281,7 +279,7 @@ def main():
                                            topo_descriptions,
                                            expected_values,
                                            num_seed_runs,
-                                           error_bounds)
+                                           relative_errors)
 
     exp.trigger()
     exp.dump_data()
