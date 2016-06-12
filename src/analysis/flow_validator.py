@@ -98,40 +98,6 @@ class FlowValidator(object):
                         if path not in ld.traffic_paths:
                             ld.traffic_paths.append(path)
 
-    def validate_host_pair_reachability(self, src_h_id, dst_h_id, specific_traffic, verbose=True):
-
-        src_host_obj = self.network_graph.get_node_object(src_h_id)
-        dst_host_obj = self.network_graph.get_node_object(dst_h_id)
-
-        at = self.port_graph.get_admitted_traffic(src_host_obj.switch_ingress_port, dst_host_obj.switch_egress_port)
-        all_paths = []
-
-        if not at.is_empty():
-
-            if verbose:
-                print "-------------------"
-                print src_h_id, "->", dst_h_id
-                print "Number of traffic elements in admitted traffic:", len(at.traffic_elements)
-                print at
-
-            if at.is_subset_traffic(specific_traffic):
-
-                all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
-                                                      dst_host_obj.switch_egress_port,
-                                                      specific_traffic,
-                                                      [src_host_obj.switch_ingress_port],
-                                                      [],
-                                                      verbose)
-
-            else:
-                if verbose:
-                    print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at does not pass specific_traffic check."
-        else:
-            if verbose:
-                print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "at is empty."
-
-        return at, all_paths
-
     def get_all_host_pairs_traffic_paths(self, verbose=False):
 
         host_pair_paths = defaultdict(defaultdict)
@@ -144,10 +110,16 @@ class FlowValidator(object):
 
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-                at, all_paths = self.validate_host_pair_reachability(src_h_id,
-                                                                     dst_h_id,
-                                                                     specific_traffic,
-                                                                     verbose)
+                src_host_obj = self.network_graph.get_node_object(src_h_id)
+                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
+
+                all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
+                                                      dst_host_obj.switch_egress_port,
+                                                      specific_traffic,
+                                                      [src_host_obj.switch_ingress_port],
+                                                      [],
+                                                      verbose)
+
                 if not all_paths:
                     host_pair_paths[src_h_id][dst_h_id] = []
                 else:
