@@ -62,7 +62,7 @@ class HostConnectivityMonteCarloImportanceSamplingCompare(Experiment):
 
             print "Performing Run:", i + 1
 
-            run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
+            run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_uniform(verbose=False)
             run_links.append(run_broken_links)
             run_values.append(run_value)
 

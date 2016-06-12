@@ -48,7 +48,7 @@ class UniformImportanceSamplingCompare(Experiment):
 
         for i in xrange(num_runs):
 
-            run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
+            run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_uniform(verbose=False)
             run_links.append(run_broken_links)
             run_values.append(run_value)
 
@@ -81,10 +81,13 @@ class UniformImportanceSamplingCompare(Experiment):
             run_broken_links = None
 
             if sampling == "uniform":
-                run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
+                run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_uniform(verbose=False)
+                print run_value, run_broken_links
             elif sampling == "importance":
                 run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_importance(seed_mean,
                                                                                                                  verbose=False)
+                print run_value, run_broken_links
+
             run_links.append(run_broken_links)
             run_values.append(run_value)
 
@@ -170,6 +173,9 @@ class UniformImportanceSamplingCompare(Experiment):
                     print "iteration:", j + 1
                     print "num_seed_runs:", self.num_seed_runs
 
+                    # self.mca.break_specified_links_in_order([('s4', 's1'), ('s1', 's2')], True)
+                    # self.mca.break_specified_links_in_order([('s3', 's2')], True)
+
                     with Timer(verbose=True) as t:
                         num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
                                                                                    float(error_bound)/100,
@@ -238,8 +244,8 @@ class UniformImportanceSamplingCompare(Experiment):
 
 def main():
     num_iterations = 1
-    load_config = False
-    save_config = True
+    load_config = True
+    save_config = False
     controller = "ryu"
 
     topo_descriptions = [("ring", 4, 1, None, None)]

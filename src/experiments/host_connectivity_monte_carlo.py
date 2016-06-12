@@ -52,7 +52,7 @@ class HostConnectivityMonteCarlo(Experiment):
 
             print "Performing Run:", i + 1
 
-            broken_edges = self.mca.break_random_links_until_any_pair_disconnected(verbose=False)
+            broken_edges = self.mca.break_random_links_until_any_pair_disconnected_uniform(verbose=False)
 
             #broken_edges = self.mca.break_specified_links_in_order([('s3', 's4')], verbose=True)
 
