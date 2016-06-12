@@ -363,7 +363,8 @@ class MonteCarloAnalysis(FlowValidator):
 
             sampled_link = self.sample_link_uniform()
 
-            print "Breaking the link:", sampled_link
+            if verbose:
+                print "Breaking the link:", sampled_link
 
             # Break the link
             self.links_broken.append(sampled_link)
@@ -374,7 +375,8 @@ class MonteCarloAnalysis(FlowValidator):
 
         # Restore the links for next run
         for link in self.links_broken:
-            print "Restoring the link:", link
+            if verbose:
+                print "Restoring the link:", link
             self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
         return len(self.links_broken), self.links_broken
