@@ -14,7 +14,7 @@ from analysis.monte_carlo_analysis import MonteCarloAnalysis
 from experiment import Experiment
 
 
-class UniformImportanceSamplingCompare(Experiment):
+class MonteCarloSamplingCompare(Experiment):
     def __init__(self,
                  num_iterations,
                  load_config,
@@ -25,12 +25,12 @@ class UniformImportanceSamplingCompare(Experiment):
                  num_seed_runs,
                  relative_errors):
 
-        super(UniformImportanceSamplingCompare, self).__init__("uniform_importance_sampling_compare",
-                                                               num_iterations,
-                                                               load_config,
-                                                               save_config,
-                                                               controller,
-                                                               1)
+        super(MonteCarloSamplingCompare, self).__init__("monte_carlo_sampling_compare",
+                                                        num_iterations,
+                                                        load_config,
+                                                        save_config,
+                                                        controller,
+                                                        1)
 
         self.topo_descriptions = topo_descriptions
         self.expected_values = expected_values
@@ -240,6 +240,7 @@ class UniformImportanceSamplingCompare(Experiment):
 
         self.data = merged_data
 
+
 def main():
     num_iterations = 1
     load_config = True
@@ -272,14 +273,14 @@ def main():
     num_seed_runs = 5
     relative_errors = ["10"]#,"1", "5", "10"]
 
-    exp = UniformImportanceSamplingCompare(num_iterations,
-                                           load_config,
-                                           save_config,
-                                           controller,
-                                           topo_descriptions,
-                                           expected_values,
-                                           num_seed_runs,
-                                           relative_errors)
+    exp = MonteCarloSamplingCompare(num_iterations,
+                                    load_config,
+                                    save_config,
+                                    controller,
+                                    topo_descriptions,
+                                    expected_values,
+                                    num_seed_runs,
+                                    relative_errors)
 
     exp.trigger()
     exp.dump_data()
