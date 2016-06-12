@@ -125,8 +125,6 @@ class MonteCarloAnalysis(FlowValidator):
 
         all_host_pair_connected = self.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 0)
 
-        print "all_host_pair_connected:", all_host_pair_connected
-
         return all_host_pair_connected
 
     def get_beta(self, u, b, j, verbose=False):
