@@ -383,6 +383,10 @@ class MonteCarloAnalysis(FlowValidator):
 
     def test_classification_breaking_specified_link_sequence(self, link_sequence, verbose=False):
 
+        ingress_node_of_interest = self.port_graph.get_ingress_node("s2", 3)
+        dst_node_of_interest = self.port_graph.get_egress_node("s4", 1)
+        prior_at = self.port_graph.get_admitted_traffic(ingress_node_of_interest, dst_node_of_interest)
+
         for link in link_sequence:
 
             # Break the link
@@ -398,6 +402,8 @@ class MonteCarloAnalysis(FlowValidator):
 
             self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        after_at = self.port_graph.get_admitted_traffic(ingress_node_of_interest, dst_node_of_interest)
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
         self.update_link_state(verbose)

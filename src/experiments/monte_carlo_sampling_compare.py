@@ -171,7 +171,7 @@ class MonteCarloSamplingCompare(Experiment):
                     print "iteration:", j + 1
                     print "num_seed_runs:", self.num_seed_runs
 
-                    self.mca.test_classification_breaking_specified_link_sequence([('s4', 's1'), ('s2', 's1')], True)
+                    self.mca.test_classification_breaking_specified_link_sequence([('s4', 's1'), ('s2', 's1')], False)
 
                     # with Timer(verbose=True) as t:
                     #     num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
