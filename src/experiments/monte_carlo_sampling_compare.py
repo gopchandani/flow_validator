@@ -189,7 +189,7 @@ class MonteCarloSamplingCompare(Experiment):
                     #                                                                   2,
                     #                                                                   max(self.num_seed_runs,
                     #                                                                       self.num_seed_runs))
-                    # 
+                    #
                     # self.data["execution_time"][scenario_keys[1]][relative_error].append(t.msecs)
                     # self.data["num_required_runs"][scenario_keys[1]][relative_error].append(num_required_runs_importance)
 
