@@ -232,6 +232,7 @@ class MonteCarloAnalysis(FlowValidator):
         return b
 
     def break_random_links_until_any_pair_disconnected_importance(self, u, verbose=False):
+        print "--"
         self.links_broken = []
         self.alpha = []
         self.F = []
@@ -273,8 +274,6 @@ class MonteCarloAnalysis(FlowValidator):
             print "Restoring the link:", link
 
             self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
-        self.classify_network_graph_links(verbose)
 
         result = self.get_importance_sampling_experiment_result(len(self.links_broken))
 
@@ -381,29 +380,6 @@ class MonteCarloAnalysis(FlowValidator):
             self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
         return len(self.links_broken), self.links_broken
-
-    def break_specified_links_in_order(self, links, verbose):
-
-        self.links_broken = []
-
-        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        for link in links:
-
-            # Break the link
-            self.links_broken.append((str(link[0]), str(link[1])))
-            self.port_graph.remove_node_graph_link(link[0], link[1])
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        # Restore the links for next run
-        for link in self.links_broken:
-            self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        if verbose:
-            print "self.links_broken:", self.links_broken
-
-        return self.links_broken
 
     def test_classification_breaking_specified_link_sequence(self, link_sequence, verbose=False):
 

@@ -132,6 +132,7 @@ class TrafficPath(object):
                     break
 
         if causes_disconnect:
+            print backup_ingress_nodes_and_traffic
             print "Failure of link:", ld, "causes disconnect in path:", self
 
         return causes_disconnect
