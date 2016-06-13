@@ -176,7 +176,7 @@ class MonteCarloSamplingCompare(Experiment):
                         num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
                                                                                    float(relative_error),
                                                                                    "uniform",
-                                                                                   1)
+                                                                                   2)
 
                     self.data["execution_time"][scenario_keys[0]][relative_error].append(t.msecs)
                     self.data["num_required_runs"][scenario_keys[0]][relative_error].append(num_required_runs_uniform)
@@ -185,7 +185,7 @@ class MonteCarloSamplingCompare(Experiment):
                         num_required_runs_importance = self.compute_num_required_runs(self.expected_values[i],
                                                                                       float(relative_error),
                                                                                       "importance",
-                                                                                      1,
+                                                                                      2,
                                                                                       max(self.num_seed_runs,
                                                                                           self.num_seed_runs))
 
@@ -271,7 +271,7 @@ def main():
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     num_seed_runs = 5
-    relative_errors = ["10"]#,"1", "5", "10"]
+    relative_errors = ["50"]#,"1", "5", "10"]
 
     exp = MonteCarloSamplingCompare(num_iterations,
                                     load_config,
