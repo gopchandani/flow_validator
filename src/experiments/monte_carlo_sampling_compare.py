@@ -67,11 +67,11 @@ class MonteCarloSamplingCompare(Experiment):
         num_required_runs = 0
         reached_bound = False
 
-        seed_mean = None
+        seed_mean = 2.4
         seed_sd = None
 
-        if sampling_type == "importance":
-            seed_mean, seed_sd = self.perform_seed_runs(num_seed_runs)
+        # if sampling_type == "importance":
+        #     seed_mean, seed_sd = self.perform_seed_runs(num_seed_runs)
 
         print "seed_mean:", seed_mean
 
@@ -137,7 +137,8 @@ class MonteCarloSamplingCompare(Experiment):
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=60,
-                                          synthesis_scheme="Synthesis_Failover_Aborescene")
+                                          synthesis_scheme="IntentSynthesis")
+                                          #synthesis_scheme="Synthesis_Failover_Aborescene")
 
             self.mca = MonteCarloAnalysis(ng, False)
             self.mca.init_network_port_graph()
@@ -172,14 +173,14 @@ class MonteCarloSamplingCompare(Experiment):
                     # self.mca.break_specified_links_in_order([('s4', 's1'), ('s1', 's2')], True)
                     # self.mca.break_specified_links_in_order([('s3', 's2')], True)
 
-                    with Timer(verbose=True) as t:
-                        num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
-                                                                                   float(relative_error),
-                                                                                   "uniform",
-                                                                                   2)
-
-                    self.data["execution_time"][scenario_keys[0]][relative_error].append(t.msecs)
-                    self.data["num_required_runs"][scenario_keys[0]][relative_error].append(num_required_runs_uniform)
+                    # with Timer(verbose=True) as t:
+                    #     num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
+                    #                                                                float(relative_error),
+                    #                                                                "uniform",
+                    #                                                                2)
+                    #
+                    # self.data["execution_time"][scenario_keys[0]][relative_error].append(t.msecs)
+                    # self.data["num_required_runs"][scenario_keys[0]][relative_error].append(num_required_runs_uniform)
 
                     with Timer(verbose=True) as t:
                         num_required_runs_importance = self.compute_num_required_runs(self.expected_values[i],

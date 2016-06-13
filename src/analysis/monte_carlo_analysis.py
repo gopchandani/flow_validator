@@ -136,6 +136,8 @@ class MonteCarloAnalysis(FlowValidator):
             p = 1.0
             for i in xrange(0, j-2 + 1):
 
+                print "self.alpha:", self.alpha
+                print "i:", i
                 print "self.alpha[i+1]:", self.alpha[i+1]
                 print "(1 - self.alpha[i+1]):", (1 - self.alpha[i+1])
                 print "(self.N - i):", (self.N - i)
@@ -246,6 +248,9 @@ class MonteCarloAnalysis(FlowValidator):
         self.update_link_state(verbose)
         b = self.update_b(j, b)
 
+        if self.links_causing_disconnect:
+            pass
+
         self.alpha.append(self.get_alpha(u, b, j, False))
 
         while all_host_pair_connected:
@@ -259,8 +264,7 @@ class MonteCarloAnalysis(FlowValidator):
             # Do a skewed sample using alpha:
             sampled_ld = self.sample_link_skewed(self.alpha[j])
 
-            if verbose:
-                print "Breaking the link:", sampled_ld
+            print "Breaking the link:", sampled_ld
 
             # Break the link
             self.links_broken.append(sampled_ld)
@@ -273,8 +277,7 @@ class MonteCarloAnalysis(FlowValidator):
 
         # Restore the links for next run
         for link in self.links_broken:
-            if verbose:
-                print "Restoring the link:", link
+            print "Restoring the link:", link
 
             self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
