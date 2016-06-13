@@ -131,4 +131,7 @@ class TrafficPath(object):
                     causes_disconnect = True
                     break
 
+        if causes_disconnect:
+            print "Failure of link:", ld, "causes disconnect in path:", self
+
         return causes_disconnect
