@@ -135,13 +135,7 @@ class MonteCarloAnalysis(FlowValidator):
         elif j > b + 1:
             p = 1.0
             for i in xrange(0, j-2 + 1):
-
-                print "self.alpha:", self.alpha
-                print "i:", i
-                print "self.alpha[i+1]:", self.alpha[i+1]
-                print "(1 - self.alpha[i+1]):", (1 - self.alpha[i+1])
-                print "(self.N - i):", (self.N - i)
-
+                print "i:", i, "self.alpha[i+1]:", self.alpha[i+1]
                 p = p * ((self.F_bar[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
 
             beta = (j/u) * ((self.F[j-1]) / (self.N - j + 1)) * (p)
@@ -152,6 +146,8 @@ class MonteCarloAnalysis(FlowValidator):
         return beta
 
     def get_alpha(self, u, b, j, verbose=False):
+
+        print "self.F:", self.F, "self.F_bar:", self.F_bar, "self.alpha:", self.alpha
 
         if b is not None:
             beta = self.get_beta(u, b, j, verbose)
@@ -248,9 +244,6 @@ class MonteCarloAnalysis(FlowValidator):
         self.update_link_state(verbose)
         b = self.update_b(j, b)
 
-        if self.links_causing_disconnect:
-            pass
-
         self.alpha.append(self.get_alpha(u, b, j, False))
 
         while all_host_pair_connected:
@@ -263,8 +256,6 @@ class MonteCarloAnalysis(FlowValidator):
 
             # Do a skewed sample using alpha:
             sampled_ld = self.sample_link_skewed(self.alpha[j])
-
-            print "Breaking the link:", sampled_ld
 
             # Break the link
             self.links_broken.append(sampled_ld)
@@ -410,16 +401,27 @@ class MonteCarloAnalysis(FlowValidator):
 
         return self.links_broken
 
-    def test_classification_breaking_specified_link_sequence(self, link_sequence, verbose):
+    def test_classification_breaking_specified_link_sequence(self, link_sequence, verbose=False):
 
         for link in link_sequence:
 
             # Break the link
+            print "Breaking the link:", link
+
             self.links_broken.append((str(link[0]), str(link[1])))
             self.port_graph.remove_node_graph_link(link[0], link[1])
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
         # Restore the links for next run
         for link in self.links_broken:
+            print "Restoring the link:", link
+
             self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
             all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+        self.update_link_state(verbose)
+
+        print all_host_pair_connected
+        print "links_causing_disconnect:", self.links_causing_disconnect
+        print "links_not_causing_disconnect:", self.links_not_causing_disconnect

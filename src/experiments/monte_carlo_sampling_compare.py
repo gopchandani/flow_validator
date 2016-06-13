@@ -137,16 +137,17 @@ class MonteCarloSamplingCompare(Experiment):
                                           mininet_setup_gap=1,
                                           dst_ports_to_synthesize=None,
                                           synthesis_setup_gap=60,
-                                          synthesis_scheme="IntentSynthesis")
-                                          #synthesis_scheme="Synthesis_Failover_Aborescene")
+                                          #synthesis_scheme="IntentSynthesis")
+                                          synthesis_scheme="Synthesis_Failover_Aborescene")
 
             self.mca = MonteCarloAnalysis(ng, False)
             self.mca.init_network_port_graph()
             self.mca.add_hosts()
             self.mca.initialize_admitted_traffic()
 
-            #self.mca.test_classification_breaking_specified_link_sequence([('s1', 's2'), ('s2', 's4')])
-            #
+            # self.mca.test_classification_breaking_specified_link_sequence([('s2', 's3'), ('s4', 's3')])
+            # self.mca.test_classification_breaking_specified_link_sequence([('s2', 's3'), ('s4', 's1')])
+
             # self.mca.compute_e_nf_exhaustive()
             # return
 
@@ -170,8 +171,7 @@ class MonteCarloSamplingCompare(Experiment):
                     print "iteration:", j + 1
                     print "num_seed_runs:", self.num_seed_runs
 
-                    # self.mca.break_specified_links_in_order([('s4', 's1'), ('s1', 's2')], True)
-                    # self.mca.break_specified_links_in_order([('s3', 's2')], True)
+                    # self.mca.break_specified_links_in_order([('s2', 's3'), ('s4', 's1')], True)
 
                     # with Timer(verbose=True) as t:
                     #     num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],
@@ -272,7 +272,7 @@ def main():
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     num_seed_runs = 5
-    relative_errors = ["50"]#,"1", "5", "10"]
+    relative_errors = ["10"]#,"1", "5", "10"]
 
     exp = MonteCarloSamplingCompare(num_iterations,
                                     load_config,
