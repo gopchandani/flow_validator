@@ -147,7 +147,7 @@ class MonteCarloAnalysis(FlowValidator):
 
     def get_alpha(self, u, b, j, verbose=False):
 
-        print "self.F:", self.F, "self.F_bar:", self.F_bar, "self.alpha:", self.alpha
+        print "j:", j, "self.F:", self.F, "self.F_bar:", self.F_bar, "self.alpha:", self.alpha
 
         if b is not None:
             beta = self.get_beta(u, b, j, verbose)
@@ -257,6 +257,8 @@ class MonteCarloAnalysis(FlowValidator):
             # Do a skewed sample using alpha:
             sampled_ld = self.sample_link_skewed(self.alpha[j])
 
+            print "Breaking the link:", sampled_ld
+
             # Break the link
             self.links_broken.append(sampled_ld)
             self.port_graph.remove_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1])
@@ -275,6 +277,8 @@ class MonteCarloAnalysis(FlowValidator):
         self.classify_network_graph_links(verbose)
 
         result = self.get_importance_sampling_experiment_result(len(self.links_broken))
+
+        print "result:", result
 
         return result, self.links_broken
 
