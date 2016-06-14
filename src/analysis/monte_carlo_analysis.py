@@ -249,6 +249,8 @@ class MonteCarloAnalysis(FlowValidator):
 
         while all_host_pair_connected:
 
+            print "all_host_pair_connected:", all_host_pair_connected
+
             # Increment step index
             j += 1
 

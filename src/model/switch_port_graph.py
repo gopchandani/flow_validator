@@ -191,34 +191,6 @@ class SwitchPortGraph(PortGraph):
 
             all_modified_flow_table_edges.extend(modified_flow_table_edges)
 
-        if event_type == "port_down":
-
-            edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
-            for ed in edge.edge_data_list:
-                del ed.edge_filter_traffic.traffic_elements[:]
-
-            modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
-            self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
-
-            # Add minimal changed edges by doing a cross product from this node's ingress to
-            # all egress nodes
-            for e in all_modified_flow_table_edges:
-                end_to_end_modified_edges.append((ingress_node.node_id, e[1]))
-
-        elif event_type == "port_up":
-
-            edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
-            for ed in edge.edge_data_list:
-                ed.edge_filter_traffic.union(ingress_node.parent_obj.ingress_node_traffic)
-
-            modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
-            self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
-
-            # Add minimal changed edges by doing a cross product from this node's ingress to
-            # all egress nodes
-            for e in all_modified_flow_table_edges:
-                end_to_end_modified_edges.append((ingress_node.node_id, e[1]))
-
         return end_to_end_modified_edges
 
     def test_one_port_failure_at_a_time(self, verbose=False):
