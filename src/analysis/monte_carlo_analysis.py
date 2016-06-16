@@ -117,8 +117,11 @@ class MonteCarloAnalysis(FlowValidator):
 
         all_host_pair_connected = True
 
-        src_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
-        dst_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
+        # src_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
+        # dst_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
+
+        src_zone = [self.network_graph.get_node_object("h21").switch_port]
+        dst_zone = [self.network_graph.get_node_object("h31").switch_port]
 
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
@@ -393,23 +396,21 @@ class MonteCarloAnalysis(FlowValidator):
 
             # Break the link
             print "Breaking the link:", link
-
-            self.links_broken.append((str(link[0]), str(link[1])))
             self.port_graph.remove_node_graph_link(link[0], link[1])
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        print all_host_pair_connected
 
         # Restore the links for next run
         for link in self.links_broken:
             print "Restoring the link:", link
-
             self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
         after_at = self.port_graph.get_admitted_traffic(ingress_node_of_interest, dst_node_of_interest)
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
         self.update_link_state(verbose)
 
-        print all_host_pair_connected
         print "links_causing_disconnect:", self.links_causing_disconnect
         print "links_not_causing_disconnect:", self.links_not_causing_disconnect
