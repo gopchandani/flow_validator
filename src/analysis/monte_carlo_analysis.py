@@ -117,11 +117,11 @@ class MonteCarloAnalysis(FlowValidator):
 
         all_host_pair_connected = True
 
-        # src_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
-        # dst_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
+        src_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
+        dst_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
 
-        src_zone = [self.network_graph.get_node_object("h21").switch_port]
-        dst_zone = [self.network_graph.get_node_object("h31").switch_port]
+        # src_zone = [self.network_graph.get_node_object("h21").switch_port]
+        # dst_zone = [self.network_graph.get_node_object("h31").switch_port]
 
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
@@ -150,7 +150,7 @@ class MonteCarloAnalysis(FlowValidator):
 
     def get_alpha(self, u, b, j, verbose=False):
 
-        print "j:", j, "self.F:", self.F, "self.F_bar:", self.F_bar, "self.alpha:", self.alpha
+        # print "j:", j, "self.F:", self.F, "self.F_bar:", self.F_bar, "self.alpha:", self.alpha
 
         if b is not None:
             beta = self.get_beta(u, b, j, verbose)
@@ -251,8 +251,6 @@ class MonteCarloAnalysis(FlowValidator):
         self.alpha.append(self.get_alpha(u, b, j, False))
 
         while all_host_pair_connected:
-
-            print "all_host_pair_connected:", all_host_pair_connected
 
             # Increment step index
             j += 1
@@ -399,8 +397,6 @@ class MonteCarloAnalysis(FlowValidator):
             self.port_graph.remove_node_graph_link(link[0], link[1])
 
         all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        print all_host_pair_connected
 
         # Restore the links for next run
         for link in self.links_broken:

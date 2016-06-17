@@ -208,11 +208,11 @@ class FlowValidator(object):
                     #print all_paths[0]
                 else:
                     print at
-                    print "src_port:", src_port, "dst_port:", dst_port, "at does not pass specific_traffic check."
+                    # print "src_port:", src_port, "dst_port:", dst_port, "at does not pass specific_traffic check."
 
                     is_connected = False
             else:
-                print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
+                # print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
                 is_connected = False
 
             if not is_connected:
