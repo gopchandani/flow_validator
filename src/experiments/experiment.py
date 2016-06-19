@@ -91,7 +91,7 @@ class Experiment(object):
 
                     flow_match = Match(is_wildcard=True)
                     flow_match["ethernet_type"] = 0x0800
-                    self.synthesis.synthesize_all_switches(flow_match)
+                    self.synthesis.synthesize_all_switches(flow_match, 2)
 
                 # self.mm.net.pingAll()
 

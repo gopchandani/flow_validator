@@ -256,7 +256,7 @@ class SynthesizeFailoverAborescene():
                                                             self.other_switch_vlan_tagged_packet_rules,
                                                             self.aborescene_forwarding_rules)
 
-    def synthesize_all_switches(self, flow_match, k=2):
+    def synthesize_all_switches(self, flow_match, k):
 
         for sw in self.network_graph.get_switches():
 
