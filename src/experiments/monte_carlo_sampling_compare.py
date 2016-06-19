@@ -12,30 +12,24 @@ from collections import defaultdict
 from timer import Timer
 from analysis.monte_carlo_analysis import MonteCarloAnalysis
 from experiment import Experiment
+from network_configuration import NetworkConfiguration
 
 
 class MonteCarloSamplingCompare(Experiment):
     def __init__(self,
+                 network_configurations,
                  num_iterations,
-                 load_config,
-                 save_config,
-                 controller,
-                 topo_descriptions,
-                 expected_values,
                  num_seed_runs,
-                 relative_errors):
+                 relative_errors,
+                 expected_values):
 
         super(MonteCarloSamplingCompare, self).__init__("monte_carlo_sampling_compare",
-                                                        num_iterations,
-                                                        load_config,
-                                                        save_config,
-                                                        controller,
-                                                        1)
+                                                        num_iterations)
 
-        self.topo_descriptions = topo_descriptions
-        self.expected_values = expected_values
+        self.network_configurations = network_configurations
         self.num_seed_runs = num_seed_runs
         self.relative_errors = relative_errors
+        self.expected_values = expected_values
 
         self.data = {
             "execution_time": defaultdict(defaultdict),
@@ -125,16 +119,13 @@ class MonteCarloSamplingCompare(Experiment):
 
         print "Starting experiment..."
 
-        for i in range(len(self.topo_descriptions)):
+        for i in range(len(self.network_configurations)):
 
-            topo_description = self.topo_descriptions[i]
+            nc = self.network_configurations[i]
 
-            ng = self.setup_network_graph(topo_description,
+            ng = self.setup_network_graph(nc,
                                           mininet_setup_gap=1,
-                                          dst_ports_to_synthesize=None,
-                                          synthesis_setup_gap=60,
-                                          #synthesis_scheme="IntentSynthesis")
-                                          synthesis_scheme="Synthesis_Failover_Aborescene")
+                                          synthesis_setup_gap=60)
 
             self.mca = MonteCarloAnalysis(ng, False)
             self.mca.init_network_port_graph()
@@ -152,8 +143,8 @@ class MonteCarloSamplingCompare(Experiment):
             # scenario_keys = (topo_description[0] + "_" + str(topo_description[1]) + "_" + "uniform",
             #                  topo_description[0] + "_" + str(topo_description[1]) + "_"+ "importance")
 
-            scenario_keys = (topo_description[0] + " with " + str(topo_description[1]) + " switches using uniform sampling",
-                             topo_description[0] + " with " + str(topo_description[1]) + " switches using importance sampling")
+            scenario_keys = (nc.topo_name + " with " + str(nc.topo_params["num_switches"]) + " switches using uniform sampling",
+                             nc.topo_name + " with " + str(nc.topo_params["num_switches"]) + " switches using importance sampling")
 
             for relative_error in self.relative_errors:
 
@@ -239,12 +230,8 @@ class MonteCarloSamplingCompare(Experiment):
 
 
 def main():
-    num_iterations = 1
-    load_config = True
-    save_config = False
-    controller = "ryu"
 
-    topo_descriptions = [("ring", 4, 1, None, None)]
+    #topo_descriptions = [("ring", 4, 1, None, None)]
     #topo_descriptions = [("ring", 6, 1, None, None)]
     #topo_descriptions = [("ring", 8, 1, None, None)]
     #topo_descriptions = [("ring", 10, 1, None, None)]
@@ -252,7 +239,7 @@ def main():
     #topo_descriptions = [("clostopo", None, 1, 2, 1)]
     #topo_descriptions = [("clostopo", None, 1, 2, 2)]
 
-    expected_values = [2.33]
+    #expected_values = [2.33]
     #expected_values = [2.5]
     #expected_values = [2.6]
     #expected_values = [2.77142857143]
@@ -267,17 +254,24 @@ def main():
     #
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
+    network_configurations = [NetworkConfiguration("ryu",
+                                                   "ring",
+                                                   {"num_switches": 4,
+                                                    "num_hosts_per_switch": 1},
+                                                   load_config=False,
+                                                   save_config=True,
+                                                   synthesis_scheme="Synthesis_Failover_Aborescene")]
+
+    num_iterations = 1
     num_seed_runs = 5
     relative_errors = ["10"]#,"1", "5", "10"]
+    expected_values = [2.0]
 
-    exp = MonteCarloSamplingCompare(num_iterations,
-                                    load_config,
-                                    save_config,
-                                    controller,
-                                    topo_descriptions,
-                                    expected_values,
+    exp = MonteCarloSamplingCompare(network_configurations,
+                                    num_iterations,
                                     num_seed_runs,
-                                    relative_errors)
+                                    relative_errors,
+                                    expected_values)
 
     exp.trigger()
     exp.dump_data()
