@@ -9,7 +9,6 @@ from matplotlib.ticker import MaxNLocator
 
 from pprint import pprint
 from controller_man import ControllerMan
-from mininet_man import MininetMan
 
 from model.network_graph import NetworkGraph
 from model.match import Match
@@ -26,67 +25,48 @@ class Experiment(object):
 
     def __init__(self,
                  experiment_name,
-                 num_iterations,
-                 load_config,
-                 save_config,
-                 controller,
-                 num_controller_instances):
+                 num_iterations):
 
-        self.experiment_tag = experiment_name + "_" + str(num_iterations) + "_iterations_" +time.strftime("%Y%m%d_%H%M%S")
-
+        self.experiment_tag = experiment_name + "_" + str(num_iterations) + "_iterations_" + time.strftime("%Y%m%d_%H%M%S")
         self.num_iterations = num_iterations
-        self.load_config = load_config
-        self.save_config = save_config
-        self.controller = controller
-        self.num_controller_instances = num_controller_instances
 
         self.data = {}
-
-        self.controller_port = 6633
         self.cm = None
-        self.mm = None
         self.ng = None
         self.synthesis = None
 
-        if not self.load_config and self.save_config:
-            self.cm = ControllerMan(self.num_controller_instances, controller=controller)
-
     def setup_network_graph(self,
-                            topo_description,
+                            nc,
                             mininet_setup_gap=None,
-                            dst_ports_to_synthesize=None,
-                            synthesis_setup_gap=None,
-                            synthesis_scheme=None):
+                            synthesis_setup_gap=None):
 
-        if not self.load_config and self.save_config:
-            self.controller_port = self.cm.get_next()
+        if not nc.load_config and nc.save_config:
+            self.cm = ControllerMan(controller=nc.controller)
 
-        self.mm = MininetMan(synthesis_scheme, self.controller_port, *topo_description,
-                             dst_ports_to_synthesize=dst_ports_to_synthesize)
+        if not nc.load_config and nc.save_config:
+            controller_port = self.cm.get_next()
 
-        if not self.load_config and self.save_config:
-            self.mm.start_mininet()
+        if not nc.load_config and nc.save_config:
+            nc.start_mininet()
 
             if mininet_setup_gap:
                 time.sleep(mininet_setup_gap)
 
         # Get a flow validator instance
-        self.ng = NetworkGraph(mm=self.mm,
-                               controller=self.controller,
-                               load_config=self.load_config,
-                               save_config=self.save_config)
+        self.ng = NetworkGraph(network_configuration=nc)
 
-        if not self.load_config and self.save_config:
-            if self.controller == "odl":
-                self.mm.setup_mininet_with_odl(self.ng)
-            elif self.controller == "ryu":
-                if synthesis_scheme == "IntentSynthesis":
-                    self.synthesis = IntentSynthesis(self.ng, master_switch=topo_description[0] == "linear",
+        if not nc.load_config and nc.save_config:
+            if nc.controller == "odl":
+                raise Exception("Don't know how to use odl controller...")
+            elif nc.controller == "ryu":
+                if nc.synthesis_scheme == "IntentSynthesis":
+                    self.synthesis = IntentSynthesis(self.ng,
+                                                     master_switch=topo_description[0] == "linear",
                                                      synthesized_paths_save_directory=self.ng.config_path_prefix)
 
                     self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
 
-                elif synthesis_scheme == "Synthesis_Failover_Aborescene":
+                elif nc.synthesis_scheme == "Synthesis_Failover_Aborescene":
                     self.synthesis = SynthesizeFailoverAborescene(self.ng)
 
                     flow_match = Match(is_wildcard=True)

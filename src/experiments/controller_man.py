@@ -18,7 +18,7 @@ __author__ = 'Shane Rogers'
 
 
 class ControllerMan():
-    def __init__(self, num_cons, verbose=False, controller="odl"):
+    def __init__(self, num_cons=1, verbose=False, controller="ryu"):
         self.num_cons = num_cons
         self.data = []
         self.ports = []

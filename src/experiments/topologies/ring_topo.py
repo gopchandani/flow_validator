@@ -2,6 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 from mininet.topo import Topo
 
+
 class RingTopo(Topo):
     
     def __init__(self, num_switches=4, num_hosts_per_switch=1):
@@ -18,11 +19,6 @@ class RingTopo(Topo):
             curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow14")
             self.switch_names.append(curr_switch)
 
-            # if curr_switch == 's3' or curr_switch == 's4':
-            #     pass
-            # else:
-            #     continue
-
             for j in xrange(self.num_hosts_per_switch):
                 curr_switch_host = self.addHost("h" + str(i+1) + str(j+1))
                 self.addLink(curr_switch, curr_switch_host)
@@ -35,5 +31,12 @@ class RingTopo(Topo):
             #  Form a ring only when there are more than two switches
             if self.num_switches > 2:
                 self.addLink(self.switch_names[0], self.switch_names[-1])
+
+    def get_switches_with_hosts(self):
+        return self.switch_names
+
+    def __str__(self):
+        return "ring" + "_" + str(self.num_switches) + "_" + str(self.num_hosts_per_switch)
+
 
 topos = {"ringtopo": (lambda: RingTopo())}

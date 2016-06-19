@@ -15,6 +15,7 @@ from group_table import GroupTable
 from port import Port
 from sel_controller import Session, OperationalTree, ConfigTree
 
+
 class NetworkGraphLinkData():
 
     def __init__(self, node1_id, node1_port, node2_id, node2_port, link_type):
@@ -35,11 +36,12 @@ class NetworkGraphLinkData():
     def __str__(self):
         return str(self.forward_link)
 
+
 class NetworkGraph():
 
-    def __init__(self, mm, controller, load_config=False, save_config=False):
+    def __init__(self, network_configuration):
 
-        self.mm = mm
+        self.network_configuration = network_configuration
         self.total_flow_rules = 0
 
         self.OFPP_CONTROLLER = 0xfffffffd
@@ -64,18 +66,15 @@ class NetworkGraph():
         self.host_ids = []
         self.switch_ids = []
 
-        self.controller = controller
+        self.controller = self.network_configuration.controller
 
-        self.config_path_prefix = "../experiments/configurations/" + self.controller + "_" + \
-                                  self.mm.mininet_configuration_name + "/"
+        self.config_path_prefix = "../experiments/configurations/" + self.network_configuration.controller + "_" + \
+                                  self.network_configuration.mininet_configuration_name + "/"
 
         if not os.path.exists(self.config_path_prefix):
             os.makedirs(self.config_path_prefix)
 
-        self.load_config = load_config
-        self.save_config = save_config
-
-        #  Load up everything
+        # Load up everything
         self.parse_network_graph()
 
     # Gets a switch-only multi-di-graph for the present topology
@@ -96,7 +95,7 @@ class NetworkGraph():
 
         odl_switches = {}
 
-        if self.load_config:
+        if self.network_configuration.load_config:
 
             with open(self.config_path_prefix + "odl_switches.json", "r") as in_file:
                 odl_switches = json.loads(in_file.read())
@@ -120,7 +119,7 @@ class NetworkGraph():
                     if "flow-node-inventory:group" in switch_node['node'][0]:
                         node["flow-node-inventory:group"] = switch_node['node'][0]["flow-node-inventory:group"]
 
-        if self.save_config:
+        if self.network_configuration.save_config:
             with open(self.config_path_prefix + "odl_switches.json", "w") as outfile:
                 json.dump(odl_switches, outfile)
 
@@ -130,7 +129,7 @@ class NetworkGraph():
 
         topology = {}
 
-        if self.load_config:
+        if self.network_configuration.load_config:
             with open(self.config_path_prefix + "topology.json", "r") as in_file:
                 topology = json.loads(in_file.read())
         else:
@@ -139,7 +138,7 @@ class NetworkGraph():
             resp, content = self.h.request(self.baseUrlOdl + remaining_url, "GET")
             topology = json.loads(content)
 
-        if self.save_config:
+        if self.network_configuration.save_config:
             with open(self.config_path_prefix + "topology.json", "w") as outfile:
                 json.dump(topology, outfile)
 
@@ -149,13 +148,13 @@ class NetworkGraph():
 
         mininet_host_nodes = {}
 
-        if self.load_config:
+        if self.network_configuration.load_config:
             with open(self.config_path_prefix + "mininet_host_nodes.json", "r") as in_file:
                 mininet_host_nodes = json.loads(in_file.read())
         else:
-            for sw in self.mm.topo.switches():
+            for sw in self.network_configuration.topo.switches():
                 mininet_host_nodes[sw] = []
-                for h in self.mm.get_all_switch_hosts(sw):
+                for h in self.network_configuration.get_all_switch_hosts(sw):
                     mininet_host_dict = {"host_switch_id": "s" + sw[1:],
                                          "host_name": h.name,
                                          "host_IP": h.IP(),
@@ -163,7 +162,7 @@ class NetworkGraph():
 
                     mininet_host_nodes[sw].append(mininet_host_dict)
 
-        if self.save_config:
+        if self.network_configuration.save_config:
             with open(self.config_path_prefix + "mininet_host_nodes.json", "w") as outfile:
                 json.dump(mininet_host_nodes, outfile)
 
@@ -173,13 +172,13 @@ class NetworkGraph():
 
         mininet_port_links = {}
 
-        if self.load_config:
+        if self.network_configuration.load_config:
             with open(self.config_path_prefix + "mininet_port_links.json", "r") as in_file:
                 mininet_port_links = json.loads(in_file.read())
         else:
-            mininet_port_links = self.mm.topo.ports
+            mininet_port_links = self.network_configuration.topo.ports
 
-        if self.save_config:
+        if self.network_configuration.save_config:
             with open(self.config_path_prefix + "mininet_port_links.json", "w") as outfile:
                 json.dump(mininet_port_links, outfile)
 
@@ -232,7 +231,7 @@ class NetworkGraph():
                 self.host_ids.append(mininet_host_dict["host_name"])
                 sw_obj = self.get_node_object(sw)
 
-                if self.load_config:
+                if self.network_configuration.load_config:
                     h_obj = Host(mininet_host_dict["host_name"],
                                  self,
                                  mininet_host_dict["host_IP"],
@@ -344,8 +343,7 @@ class NetworkGraph():
         ryu_switches = {}
         request_gap = 0
 
-        if self.load_config:
-
+        if self.network_configuration.load_config:
             with open(self.config_path_prefix + "ryu_switches.json", "r") as in_file:
                 ryu_switches = json.loads(in_file.read())
 
@@ -399,7 +397,7 @@ class NetworkGraph():
 
                 ryu_switches[dpid] = this_ryu_switch
 
-        if self.save_config:
+        if self.network_configuration.save_config:
             with open(self.config_path_prefix + "ryu_switches.json", "w") as outfile:
                 json.dump(ryu_switches, outfile)
 
@@ -491,7 +489,7 @@ class NetworkGraph():
 
                 sel_switches[switch_id] = this_switch
 
-        if self.save_config:
+        if self.network_configuration.save_config:
             with open(self.config_path_prefix + "sel_switches.json", "w") as outfile:
                 json.dump(sel_switches, outfile)
 
@@ -532,11 +530,11 @@ class NetworkGraph():
 
         self.total_flow_rules = 0
 
-        if self.controller == "odl":
+        if self.network_configuration.controller == "odl":
             odl_switches = self.get_odl_switches()
             self.parse_odl_switches(odl_switches)
             
-        elif self.controller == "ryu":
+        elif self.network_configuration.controller == "ryu":
             ryu_switches = self.get_ryu_switches()
             self.parse_ryu_switches(ryu_switches)
 

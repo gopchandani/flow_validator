@@ -19,17 +19,10 @@ class InitialIncrementalTimes(Experiment):
                  num_iterations,
                  link_fraction_to_sample,
                  num_hosts_per_switch_list,
-                 network_configurations,
-                 load_config,
-                 save_config,
-                 controller):
+                 network_configurations):
 
         super(InitialIncrementalTimes, self).__init__("initial_incremental_policy_times",
-                                                      num_iterations,
-                                                      load_config,
-                                                      save_config,
-                                                      controller,
-                                                      1)
+                                                      num_iterations)
 
         self.num_hosts_per_switch_list = num_hosts_per_switch_list
         self.network_configurations = network_configurations
@@ -54,16 +47,9 @@ class InitialIncrementalTimes(Experiment):
 
                 network_configuration.num_hosts_per_switch = num_hosts_per_switch
 
-                topo_description = (network_configuration.topo_name,
-                                    network_configuration.num_switches,
-                                    num_hosts_per_switch,
-                                    network_configuration.fanout,
-                                    network_configuration.core)
-
-                ng = self.setup_network_graph(topo_description,
-                                              mininet_setup_gap=15,
-                                              synthesis_setup_gap=15,
-                                              synthesis_scheme="Synthesis_Failover_Aborescene")
+                ng = self.setup_network_graph(network_configuration,
+                                              mininet_setup_gap=1,
+                                              synthesis_setup_gap=1)
 
                 self.data["initial_time"][str(network_configuration)][num_hosts_per_switch] = []
                 self.data["incremental_time"][str(network_configuration)][num_hosts_per_switch] = []
@@ -368,19 +354,21 @@ def main():
     num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
 
     #network_configurations = [NetworkConfiguration("clostopo", 14, 1, 2, 2)]
-    network_configurations = [NetworkConfiguration("ring", 4, 1, None, None)]
 
-    load_config = False
-    save_config = True
+    network_configurations = [NetworkConfiguration("ryu",
+                                                   "ring",
+                                                   {"num_switches": 4,
+                                                    "num_hosts_per_switch": 1},
+                                                   load_config=False,
+                                                   save_config=True,
+                                                   synthesis_scheme="Synthesis_Failover_Aborescene")]
+
     controller = "ryu"
 
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
                                   num_hosts_per_switch_list,
-                                  network_configurations,
-                                  load_config,
-                                  save_config,
-                                  controller)
+                                  network_configurations)
 
     # # Trigger the experiment
     exp.trigger()

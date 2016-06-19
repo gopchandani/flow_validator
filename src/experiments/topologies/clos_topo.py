@@ -4,12 +4,15 @@ from mininet.topo import Topo
 
 class ClosTopo(Topo):
 
-    def __init__(self, fanout, cores, num_hosts_per_switch, **opts):
+    def __init__(self, fanout, core, num_hosts_per_switch, **opts):
         
         # Initialize topology and default options
         Topo.__init__(self, **opts)
 
-        self.total_core_switches = cores
+        self.fanout = fanout
+        self.core = core
+
+        self.total_core_switches = core
         self.total_agg_switches = self.total_core_switches * fanout
         self.total_edge_switches = self.total_agg_switches * fanout
 
@@ -51,15 +54,15 @@ class ClosTopo(Topo):
 
             edge_switch_name = self.edge_switches[edge_switch_num]
 
-            # if not (edge_switch_name == 's4' or edge_switch_name == 's7'):
-            #     continue
-
-            # if not (edge_switch_name == 's7' or edge_switch_name == 's14'):
-            #     continue
-
             # add fanout number of hosts to each edge switch
             for y in xrange(self.num_hosts_per_switch):
                 host_name = self.addHost("h" + edge_switch_name[1:] + str(y+1))
                 self.addLink(host_name, self.edge_switches[edge_switch_num])
+
+    def get_switches_with_hosts(self):
+        return self.edge_switches.keys()
+
+    def __str__(self):
+        return "ring" + "_" + str(self.num_hosts_per_switch) + "_" + str(self.fanout) + "_" + str(self.core)
 
 topos = {"clostopo": (lambda: ClosTopo())}
