@@ -353,15 +353,22 @@ def main():
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
 
-    #network_configurations = [NetworkConfiguration("clostopo", 14, 1, 2, 2)]
-
     network_configurations = [NetworkConfiguration("ryu",
-                                                   "ring",
-                                                   {"num_switches": 4,
+                                                   "clostopo",
+                                                   {"fanout": 2,
+                                                    "core": 1,
                                                     "num_hosts_per_switch": 1},
                                                    load_config=False,
                                                    save_config=True,
                                                    synthesis_scheme="Synthesis_Failover_Aborescene")]
+    #
+    # network_configurations = [NetworkConfiguration("ryu",
+    #                                                "ring",
+    #                                                {"num_switches": 4,
+    #                                                 "num_hosts_per_switch": 1},
+    #                                                load_config=False,
+    #                                                save_config=True,
+    #                                                synthesis_scheme="Synthesis_Failover_Aborescene")]
 
     controller = "ryu"
 

@@ -61,10 +61,10 @@ class NetworkConfiguration(object):
 
     def __str__(self):
         if self.topo_name == "ring":
-            return "Ring topology with " + str(self.topo_params["num_switches"]) + " switches"
+            return "Ring topology with " + str(self.topo.total_switches) + " switches"
 
         elif self.topo_name == "clostopo":
-            return "Clos topology with " + str(self.topo_params["num_switches"]) + " switches"
+            return "Clos topology with " + str(self.topo.total_switches) + " switches"
 
     def __del__(self):
         self.cleanup_mininet()
