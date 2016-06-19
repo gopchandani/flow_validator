@@ -1,11 +1,13 @@
 ### How do I get set up? ###
 
+* Get RYU version 4.0 from their repo at: http://osrg.github.io/ryu/
+* Need to install the SEL Python packages.
+* Ensure that OVS version is 2.3.0
 * If you don't have pip installed, then install the python package manager. (Ubuntu package: python-pip)
 * sudo apt-get install python-oslo.config
-* sudo pip install ryu==3.20
+* sudo pip install sortedcontainers
 * sudo pip install networkx
 * sudo pip install netaddr
-* sudo pip install intervaltree
 * sudo pip install httplib2
 * Install mininet version 2.2 by following instructions here: http://mininet.org/download/
 * sudo apt-get install python-scipy
