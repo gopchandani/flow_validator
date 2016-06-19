@@ -61,10 +61,10 @@ class Experiment(object):
             elif nc.controller == "ryu":
                 if nc.synthesis_scheme == "IntentSynthesis":
                     self.synthesis = IntentSynthesis(self.ng,
-                                                     master_switch=topo_description[0] == "linear",
+                                                     master_switch=nc.topo_name == "linear",
                                                      synthesized_paths_save_directory=self.ng.config_path_prefix)
 
-                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+                    self.synthesis.synthesize_all_node_pairs()
 
                 elif nc.synthesis_scheme == "Synthesis_Failover_Aborescene":
                     self.synthesis = SynthesizeFailoverAborescene(self.ng)
@@ -126,11 +126,11 @@ class Experiment(object):
 
         return found_matching_path
 
-    def compare_primary_paths_with_synthesis(self, fv, analyzed_host_pairs_traffic_paths, verbose=False):
+    def compare_primary_paths_with_synthesis(self, fv, nc, analyzed_host_pairs_traffic_paths, verbose=False):
 
         synthesized_primary_paths = None
 
-        if not self.load_config and self.save_config:
+        if not nc.load_config and nc.save_config:
             synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
         else:
             with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
@@ -151,12 +151,12 @@ class Experiment(object):
 
         return all_paths_match
 
-    def compare_failover_paths_with_synthesis(self, fv, links_to_try, verbose=False):
+    def compare_failover_paths_with_synthesis(self, fv, nc, links_to_try, verbose=False):
 
         synthesized_primary_paths = None
         synthesized_failover_paths = None
         
-        if not self.load_config and self.save_config:
+        if not nc.load_config and nc.save_config:
             synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
             synthesized_failover_paths = self.synthesis.synthesis_lib.synthesized_failover_paths
         else:

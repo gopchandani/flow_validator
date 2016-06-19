@@ -370,8 +370,6 @@ def main():
     #                                                save_config=True,
     #                                                synthesis_scheme="Synthesis_Failover_Aborescene")]
 
-    controller = "ryu"
-
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
                                   num_hosts_per_switch_list,
