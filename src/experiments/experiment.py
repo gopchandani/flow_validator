@@ -73,16 +73,16 @@ class Experiment(object):
                     flow_match["ethernet_type"] = 0x0800
                     self.synthesis.synthesize_all_switches(flow_match, 2)
 
-                # self.mm.net.pingAll()
+                # nc.net.pingAll()
 
-                is_bi_connected = self.mm.is_bi_connected_manual_ping_test_all_hosts()
+                is_bi_connected = nc.is_bi_connected_manual_ping_test_all_hosts()
 
                 #
-                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
-                #                                                             self.mm.net.get('h31'))])
+                # is_bi_connected = nc.is_bi_connected_manual_ping_test([(nc.net.get('h11'),
+                #                                                             nc.net.get('h31'))])
 
-                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),
-                #                                                             self.mm.net.get('h41'))],
+                # is_bi_connected = nc.is_bi_connected_manual_ping_test([(nc.net.get('h31'),
+                #                                                             nc.net.get('h41'))],
                 #                                                            [('s1', 's2')])
                 # print "is_bi_connected:", is_bi_connected
 
