@@ -389,7 +389,8 @@ class PortGraph(object):
         for src in self.boundary_ingress_nodes:
             for dst in self.boundary_egress_nodes:
 
-                graph_paths[src][dst] = self.get_paths(src, dst, None, [src], [], verbose)
+                at = self.get_admitted_traffic(src, dst)
+                graph_paths[src][dst] = self.get_paths(src, dst, at, [src], [], verbose)
 
         return graph_paths
 
