@@ -73,14 +73,15 @@ class TestNetworkPortGraph(unittest.TestCase):
         self.ring_npg.remove_node_graph_link("s1", "s4")
         before_at = self.ring_npg.get_admitted_traffic_via_succ(src_node, dst_node, egress_node_3)
         before_at_int = specific_traffic.intersect(before_at)
+        before_vlan_tag_modification = before_at_int.traffic_elements[0].switch_modifications["vlan_id"][1]
 
         # Delete the second link
         self.ring_npg.remove_node_graph_link("s2", "s3")
         after_at = self.ring_npg.get_admitted_traffic_via_succ(src_node, dst_node, egress_node_2)
         after_at_int = specific_traffic.intersect(after_at)
+        after_vlan_tag_modification = after_at_int.traffic_elements[0].switch_modifications["vlan_id"][1]
 
-        is_traffic_equal = before_at_int.is_equal_traffic(after_at_int)
-        self.assertEqual(is_traffic_equal, False)
+        self.assertNotEqual(before_vlan_tag_modification, after_vlan_tag_modification)
 
 
 if __name__ == '__main__':
