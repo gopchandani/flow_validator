@@ -1,12 +1,10 @@
 import unittest
-from collections import defaultdict
 
 from switch_port_graph import SwitchPortGraph
 from network_graph import NetworkGraph
 from traffic import Traffic
 
 from experiments.network_configuration import NetworkConfiguration
-from analysis.flow_validator import FlowValidator
 
 
 class TestSwitchPortGraph(unittest.TestCase):
