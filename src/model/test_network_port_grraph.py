@@ -80,7 +80,7 @@ class TestNetworkPortGraph(unittest.TestCase):
         after_at_int = specific_traffic.intersect(after_at)
 
         is_traffic_equal = before_at_int.is_equal_traffic(after_at_int)
-        self.assertEqual(is_traffic_equal, True)
+        self.assertEqual(is_traffic_equal, False)
 
 
 if __name__ == '__main__':
