@@ -254,7 +254,7 @@ class PortGraph(object):
                                                     pred,
                                                     dst, end_to_end_modified_edges)
 
-    def get_graph_ats(self):
+    def get_graph_at(self):
         graph_ats = defaultdict(defaultdict)
 
         for src in self.boundary_ingress_nodes:
