@@ -24,8 +24,7 @@ class SynthesizeFailoverAborescene():
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
-        self.apply_tag_intents_immediately = True
-        self.apply_other_intents_immediately = True
+        self.apply_group_intents_immediately = False
 
         self.sw_intent_lists = defaultdict(defaultdict)
 
@@ -147,7 +146,7 @@ class SynthesizeFailoverAborescene():
                 group_id,
                 1,
                 flow_match,
-                False)
+                self.apply_group_intents_immediately)
 
         # Need to install some more rules to handle the IN_PORT as out_port case.
         for adjacent_sw_id, link_data in self.network_graph.get_adjacent_switch_link_data(src_sw.node_id):
@@ -176,7 +175,7 @@ class SynthesizeFailoverAborescene():
                         group_id,
                         2,
                         flow_match,
-                        False)
+                        self.apply_group_intents_immediately)
 
     def install_all_group_vlan_tag_flow(self, src_sw, dst_sw, k):
 
@@ -201,7 +200,7 @@ class SynthesizeFailoverAborescene():
                 group_id,
                 1,
                 flow_match,
-                False)
+                self.apply_group_intents_immediately)
 
     def push_sw_intent_lists(self, flow_match, k):
 
@@ -211,9 +210,7 @@ class SynthesizeFailoverAborescene():
 
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
-
                 self.install_failover_group_vlan_tag_flow(src_sw, dst_sw, k)
-
                 self.install_all_group_vlan_tag_flow(src_sw, dst_sw, k)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
