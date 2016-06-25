@@ -37,8 +37,10 @@ class NetworkConfiguration(object):
 
         if self.topo_name == "ring":
             self.topo = RingTopo(**topo_params)
+            self.network_configuration_name = "Ring topology with " + str(self.topo.total_switches) + " switches"
         elif self.topo_name == "clostopo":
             self.topo = ClosTopo(**topo_params)
+            self.network_configuration_name = "Ring topology with " + str(self.topo.total_switches) + " switches"
         elif self.topo_name == "linear":
             self.topo = LinearTopo(**topo_params)
         elif self.topo_name == "two_ring":
@@ -57,14 +59,8 @@ class NetworkConfiguration(object):
         self.switch = partial(OVSSwitch, protocols='OpenFlow14')
         self.net = None
 
-        self.mininet_configuration_name = self.synthesis_scheme + "_" + str(self.topo)
-
     def __str__(self):
-        if self.topo_name == "ring":
-            return "Ring topology with " + str(self.topo.total_switches) + " switches"
-
-        elif self.topo_name == "clostopo":
-            return "Clos topology with " + str(self.topo.total_switches) + " switches"
+        return self.synthesis_scheme + "_" + str(self.topo)
 
     def __del__(self):
         self.cleanup_mininet()

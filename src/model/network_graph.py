@@ -69,7 +69,7 @@ class NetworkGraph():
         self.controller = self.network_configuration.controller
 
         self.config_path_prefix = "../experiments/configurations/" + self.network_configuration.controller + "_" + \
-                                  self.network_configuration.mininet_configuration_name + "/"
+                                  str(self.network_configuration) + "/"
 
         if not os.path.exists(self.config_path_prefix):
             os.makedirs(self.config_path_prefix)
