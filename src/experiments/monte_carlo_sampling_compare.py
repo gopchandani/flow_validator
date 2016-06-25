@@ -6,7 +6,6 @@ sys.path.append("./")
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.stats as ss
 
 from collections import defaultdict
 from timer import Timer
@@ -123,9 +122,7 @@ class MonteCarloSamplingCompare(Experiment):
 
             nc = self.network_configurations[i]
 
-            ng = self.setup_network_graph(nc,
-                                          mininet_setup_gap=1,
-                                          synthesis_setup_gap=60)
+            ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
             self.mca = MonteCarloAnalysis(ng, False)
             self.mca.init_network_port_graph()
@@ -260,7 +257,7 @@ def main():
                                                     "num_hosts_per_switch": 1},
                                                    load_config=False,
                                                    save_config=True,
-                                                   synthesis_scheme="Synthesis_Failover_Aborescene")]
+                                                   synthesis_name="Synthesis_Failover_Aborescene")]
 
     num_iterations = 1
     num_seed_runs = 5

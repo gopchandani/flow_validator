@@ -6,17 +6,9 @@ import numpy as np
 import scipy.stats as ss
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-
 from pprint import pprint
-from controller_man import ControllerMan
-
-from model.network_graph import NetworkGraph
-from model.match import Match
 from model.traffic import Traffic
 from timer import Timer
-
-from synthesis.intent_synthesis import IntentSynthesis
-from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
 
 __author__ = 'Rakesh Kumar'
 
@@ -31,70 +23,6 @@ class Experiment(object):
         self.num_iterations = num_iterations
 
         self.data = {}
-        self.cm = None
-        self.ng = None
-        self.synthesis = None
-
-    def setup_network_graph(self,
-                            nc,
-                            mininet_setup_gap=None,
-                            synthesis_setup_gap=None):
-
-        if not nc.load_config and nc.save_config:
-            self.cm = ControllerMan(controller=nc.controller)
-
-        if not nc.load_config and nc.save_config:
-            controller_port = self.cm.get_next()
-
-        if not nc.load_config and nc.save_config:
-            nc.start_mininet()
-
-            if mininet_setup_gap:
-                time.sleep(mininet_setup_gap)
-
-        # Get a flow validator instance
-        self.ng = NetworkGraph(network_configuration=nc)
-
-        if not nc.load_config and nc.save_config:
-            if nc.controller == "odl":
-                raise Exception("Don't know how to use odl controller...")
-            elif nc.controller == "ryu":
-                if nc.synthesis_scheme == "IntentSynthesis":
-                    self.synthesis = IntentSynthesis(self.ng,
-                                                     master_switch=nc.topo_name == "linear",
-                                                     synthesized_paths_save_directory=self.ng.config_path_prefix)
-
-                    self.synthesis.synthesize_all_node_pairs()
-
-                elif nc.synthesis_scheme == "Synthesis_Failover_Aborescene":
-                    self.synthesis = SynthesizeFailoverAborescene(self.ng)
-
-                    flow_match = Match(is_wildcard=True)
-                    flow_match["ethernet_type"] = 0x0800
-                    self.synthesis.synthesize_all_switches(flow_match, 2)
-
-                # nc.net.pingAll()
-
-                is_bi_connected = nc.is_bi_connected_manual_ping_test_all_hosts()
-
-                #
-                # is_bi_connected = nc.is_bi_connected_manual_ping_test([(nc.net.get('h11'),
-                #                                                             nc.net.get('h31'))])
-
-                # is_bi_connected = nc.is_bi_connected_manual_ping_test([(nc.net.get('h31'),
-                #                                                             nc.net.get('h41'))],
-                #                                                            [('s1', 's2')])
-                # print "is_bi_connected:", is_bi_connected
-
-                if synthesis_setup_gap:
-                    time.sleep(synthesis_setup_gap)
-
-        # Refresh the network_graph
-        self.ng.parse_switches()
-
-        print "total_flow_rules:", self.ng.total_flow_rules
-
-        return self.ng
 
     #TODO: Eliminate the need to have this function
     def compare_synthesis_paths(self, analyzed_path, synthesized_path, verbose):
@@ -131,9 +59,9 @@ class Experiment(object):
         synthesized_primary_paths = None
 
         if not nc.load_config and nc.save_config:
-            synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
+            synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
         else:
-            with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
+            with open(nc.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
 
         all_paths_match = True
@@ -157,13 +85,13 @@ class Experiment(object):
         synthesized_failover_paths = None
         
         if not nc.load_config and nc.save_config:
-            synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
-            synthesized_failover_paths = self.synthesis.synthesis_lib.synthesized_failover_paths
+            synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
+            synthesized_failover_paths = nc.synthesis.synthesis_lib.synthesized_failover_paths
         else:
-            with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
+            with open(nc.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
             
-            with open(self.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
+            with open(nc.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
                 synthesized_failover_paths = json.loads(in_file.read())
 
         for link in links_to_try:

@@ -25,9 +25,7 @@ class TestExperiment(Experiment):
 
         for network_configuration in self.network_configurations:
 
-            ng = self.setup_network_graph(network_configuration,
-                                          mininet_setup_gap=1,
-                                          synthesis_setup_gap=1)
+            ng = network_configuration.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
             fv = FlowValidator(ng, True)
             fv.init_network_port_graph()
@@ -66,7 +64,7 @@ def main():
     #                                                 "num_hosts_per_switch": 1},
     #                                                load_config=False,
     #                                                save_config=True,
-    #                                                synthesis_scheme="IntentSynthesis")]
+    #                                                synthesis_name="IntentSynthesis")]
     # #
     network_configurations = [NetworkConfiguration("ryu",
                                                    "ring",
@@ -74,7 +72,7 @@ def main():
                                                     "num_hosts_per_switch": 1},
                                                    load_config=False,
                                                    save_config=True,
-                                                   synthesis_scheme="IntentSynthesis")]
+                                                   synthesis_name="IntentSynthesis")]
 
 
     exp = TestExperiment(num_iterations,

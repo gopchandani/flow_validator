@@ -7,11 +7,13 @@ import struct
 from socket import *
 
 from functools import partial
-
 from mininet.topo import LinearTopo
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
+from controller_man import ControllerMan
+from model.network_graph import NetworkGraph
+from model.match import Match
 
 from experiments.topologies.fat_tree import FatTree
 from experiments.topologies.two_ring_topo import TwoRingTopo
@@ -21,10 +23,13 @@ from experiments.topologies.clos_topo import ClosTopo
 from experiments.topologies.clique_topo import CliqueTopo
 from experiments.topologies.ameren_topo import AmerenTopo
 
+from synthesis.intent_synthesis import IntentSynthesis
+from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
+
 
 class NetworkConfiguration(object):
 
-    def __init__(self, controller, topo_name, topo_params, load_config, save_config, synthesis_scheme):
+    def __init__(self, controller, topo_name, topo_params, load_config, save_config, synthesis_name):
 
         self.controller = controller
         self.controller_port = 6633
@@ -33,7 +38,7 @@ class NetworkConfiguration(object):
         self.topo_name = topo_name
         self.load_config = load_config
         self.save_config = save_config
-        self.synthesis_scheme = synthesis_scheme
+        self.synthesis_name = synthesis_name
 
         if self.topo_name == "ring":
             self.topo = RingTopo(**topo_params)
@@ -58,12 +63,68 @@ class NetworkConfiguration(object):
 
         self.switch = partial(OVSSwitch, protocols='OpenFlow14')
         self.net = None
+        self.cm = None
+        self.ng = None
+
+        self.synthesis = None
 
     def __str__(self):
-        return self.synthesis_scheme + "_" + str(self.topo)
+        return self.synthesis_name + "_" + str(self.topo)
 
     def __del__(self):
         self.cleanup_mininet()
+
+    def setup_network_graph(self,
+                            mininet_setup_gap=None,
+                            synthesis_setup_gap=None):
+
+        if not self.load_config and self.save_config:
+            self.cm = ControllerMan(controller=self.controller)
+            self.controller_port = self.cm.get_next()
+            self.start_mininet()
+            if mininet_setup_gap:
+                time.sleep(mininet_setup_gap)
+
+        # Get a flow validator instance
+        self.ng = NetworkGraph(network_configuration=self)
+
+        if not self.load_config and self.save_config:
+            if self.controller == "odl":
+                raise Exception("Don't know how to use odl controller...")
+            elif self.controller == "ryu":
+                if self.synthesis_name == "IntentSynthesis":
+                    self.synthesis = IntentSynthesis(self.ng,
+                                                     master_switch=self.topo_name == "linear",
+                                                     synthesized_paths_save_directory=self.ng.config_path_prefix)
+
+                    self.synthesis.synthesize_all_node_pairs()
+
+                elif self.synthesis_name == "Synthesis_Failover_Aborescene":
+                    self.synthesis = SynthesizeFailoverAborescene(self.ng)
+
+                    flow_match = Match(is_wildcard=True)
+                    flow_match["ethernet_type"] = 0x0800
+                    self.synthesis.synthesize_all_switches(flow_match, 2)
+
+                # self.net.pingAll()
+
+                is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
+
+                # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.net.get('h11'), self.net.get('h31'))])
+
+                # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.net.get('h31'), self.net.get('h41'))],
+                #                                                            [('s1', 's2')])
+                # print "is_bi_connected:", is_bi_connected
+
+                if synthesis_setup_gap:
+                    time.sleep(synthesis_setup_gap)
+
+        # Refresh the network_graph
+        self.ng.parse_switches()
+
+        print "total_flow_rules:", self.ng.total_flow_rules
+
+        return self.ng
 
     def start_mininet(self):
 

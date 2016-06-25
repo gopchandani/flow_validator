@@ -21,9 +21,7 @@ class SynthesisPlayground(Experiment):
 
     def trigger(self):
 
-        ng = self.setup_network_graph(self.network_configuration,
-                                      mininet_setup_gap=1,
-                                      synthesis_setup_gap=1)
+        ng = self.network_configuration.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
         fv = FlowValidator(ng)
         fv.init_network_port_graph()
@@ -56,7 +54,7 @@ def main():
     #                                               "num_hosts_per_switch": 1},
     #                                              load_config=True,
     #                                              save_config=False,
-    #                                              synthesis_scheme="Synthesis_Failover_Aborescene")
+    #                                              synthesis_name="Synthesis_Failover_Aborescene")
 
     network_configuration = NetworkConfiguration("ryu",
                                                    "ring",
@@ -64,7 +62,7 @@ def main():
                                                     "num_hosts_per_switch": 1},
                                                    load_config=False,
                                                    save_config=True,
-                                                   synthesis_scheme="Synthesis_Failover_Aborescene")
+                                                   synthesis_name="Synthesis_Failover_Aborescene")
 
     exp = SynthesisPlayground(network_configuration)
     exp.trigger()
