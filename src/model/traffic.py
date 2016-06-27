@@ -245,10 +245,37 @@ class TrafficElement:
 
         return intersection
 
+    def cascade_modifications(self, orig_traffic_element, modifications, modifications_used):
+
+        # When storing modifications, store the first one applied in the switch, with the match from the last
+        # matching rule
+        for modified_field in modifications_used:
+            if modified_field not in orig_traffic_element.switch_modifications:
+                orig_traffic_element.switch_modifications[modified_field] = modifications_used[modified_field]
+            else:
+                # Check if the previous modification requires setting of the match to this modification
+                # If so, then use the match from this modification
+                this_modification_match = modifications[modified_field][0]
+                this_modification_value_tree = modifications[modified_field][1]
+
+                prev_modification_match = orig_traffic_element.switch_modifications[modified_field][0]
+                prev_modification_value_tree = orig_traffic_element.switch_modifications[modified_field][1]
+
+                prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
+
+                intersection = self.get_field_intersection(this_modification_value_tree,
+                                                           prev_match_field_value_tree)
+
+                if intersection:
+                    orig_traffic_element.switch_modifications[modified_field] = (this_modification_match,
+                                                                                 prev_modification_value_tree)
+
+        return orig_traffic_element
+
     def get_orig_traffic_element(self, modifications):
 
-        mf_used = {}
-        mf_used.update(modifications)
+        modifications_used = {}
+        modifications_used.update(modifications)
 
         orig_traffic_element = TrafficElement()
 
@@ -295,7 +322,7 @@ class TrafficElement:
                         is_modified = self.get_orig_field(orig_traffic_element, field_name, modifications)
                     else:
                         orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
-                        del mf_used[field_name]
+                        del modifications_used[field_name]
 
                 # All the other fields...
                 else:
@@ -310,31 +337,8 @@ class TrafficElement:
         orig_traffic_element.written_modifications_apply = self.written_modifications_apply
         orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
-        # When storing modifications, store the first one applied in the switch, with the match from the last
-        # matching rule
+        return self.cascade_modifications(orig_traffic_element, modifications, modifications_used)
 
-        for modified_field in mf_used:
-            if modified_field not in orig_traffic_element.switch_modifications:
-                orig_traffic_element.switch_modifications[modified_field] = mf_used[modified_field]
-            else:
-                # Check if the previous modification requires setting of the match to this modification
-                # If so, then use the match from this modification
-                this_modification_match = modifications[modified_field][0]
-                this_modification_value_tree = modifications[modified_field][1]
-
-                prev_modification_match = orig_traffic_element.switch_modifications[modified_field][0]
-                prev_modification_value_tree = orig_traffic_element.switch_modifications[modified_field][1]
-
-                prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
-
-                intersection = self.get_field_intersection(this_modification_value_tree,
-                                                           prev_match_field_value_tree)
-
-                if intersection:
-                    orig_traffic_element.switch_modifications[modified_field] = (this_modification_match,
-                                                                                 prev_modification_value_tree)
-
-        return orig_traffic_element
 
 
 class Traffic:
