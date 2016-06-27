@@ -155,8 +155,7 @@ class SwitchPortGraph(PortGraph):
             else:
                 # At all the non-ingress edges accumulate written modifications
                 if ed.written_modifications:
-                    for te in ttp.traffic_elements:
-                        te.written_modifications.update(ed.written_modifications)
+                    ttp.set_written_modifications(ed.written_modifications)
 
             i = ed.edge_filter_traffic.intersect(ttp)
             i.set_enabling_edge_data(ed)

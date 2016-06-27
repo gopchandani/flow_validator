@@ -501,21 +501,21 @@ class Traffic:
     def union(self, in_traffic):
         self.traffic_elements.extend(in_traffic.traffic_elements)
 
-    def get_orig_traffic(self, modifications=None):
+    def get_orig_traffic(self, applied_modifications=None):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
 
-            if modifications:
-                mf = modifications
+            if applied_modifications:
+                modifications = applied_modifications
             else:
                 if not te.written_modifications_apply:
                     orig_traffic.traffic_elements.append(te)
                     continue
-                mf = te.written_modifications
+                modifications = te.written_modifications
 
-            if mf:
-                orig_te = te.get_orig_traffic_element(mf)
+            if modifications:
+                orig_te = te.get_orig_traffic_element(modifications)
             else:
                 orig_te = te
 
@@ -538,7 +538,11 @@ class Traffic:
     def set_enabling_edge_data(self, enabling_edge_data):
         for te in self.traffic_elements:
             te.enabling_edge_data = enabling_edge_data
-            
+
+    def set_written_modifications(self, written_modifications):
+        for te in self.traffic_elements:
+            te.written_modifications.update(written_modifications)
+
     def set_written_modifications_apply(self, written_modifications_apply):
         for te in self.traffic_elements:
             te.written_modifications_apply = written_modifications_apply
