@@ -2,7 +2,8 @@ import sys
 
 from netaddr import IPNetwork
 from match import field_names
-from intervaltree_modified import IntervalTree, Interval
+from model import intervaltree_modified
+from model.intervaltree_modified import IntervalTree, Interval
 
 __author__ = 'Rakesh Kumar'
 
@@ -47,7 +48,7 @@ class TrafficElement:
 
     def is_traffic_field_wildcard(self, field_val):
 
-        if isinstance(field_val, Interval):
+        if isinstance(field_val, intervaltree_modified.Interval):
             return True
         else:
             return False
@@ -100,6 +101,9 @@ class TrafficElement:
             field_intersection_intervals = []
 
             for iv in field1:
+                if type(iv) == int:
+                    self.is_traffic_field_wildcard(field1)
+
                 for matched_iv in field2.search(iv.begin, iv.end):
 
                     # Take the smaller interval of the two and put it in the field_intersection

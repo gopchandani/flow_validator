@@ -24,7 +24,7 @@ class SynthesizeFailoverAborescene():
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
-        self.apply_group_intents_immediately = False
+        self.apply_group_intents_immediately = True
 
         self.sw_intent_lists = defaultdict(defaultdict)
 

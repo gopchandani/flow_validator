@@ -1,7 +1,6 @@
 import unittest
 
 from traffic import Traffic
-from network_graph import NetworkGraph
 from network_port_graph import NetworkPortGraph
 
 from experiments.network_configuration import NetworkConfiguration
@@ -16,9 +15,10 @@ class TestNetworkPortGraph(unittest.TestCase):
                                    "num_hosts_per_switch": 1},
                                   load_config=True,
                                   save_config=False,
-                                  synthesis_scheme="Synthesis_Failover_Aborescene")
+                                  synthesis_name="Synthesis_Failover_Aborescene")
 
-        self.ng = NetworkGraph(nc)
+        self.ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+
         sw = self.ng.get_node_object("s1")
         self.ring_npg = NetworkPortGraph(self.ng, True)
         self.ring_npg.init_network_port_graph()
