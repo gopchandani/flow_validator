@@ -1,4 +1,5 @@
 import unittest
+import os
 
 from model.traffic import Traffic
 from model.network_port_graph import NetworkPortGraph
@@ -9,13 +10,16 @@ from experiments.network_configuration import NetworkConfiguration
 class TestNetworkPortGraph(unittest.TestCase):
 
     def setUp(self):
+
         nc = NetworkConfiguration("ryu",
                                   "ring",
                                   {"num_switches": 4,
                                    "num_hosts_per_switch": 1},
-                                  load_config=True,
-                                  save_config=False,
-                                  synthesis_name="Synthesis_Failover_Aborescene")
+                                  load_config=False,
+                                  save_config=True,
+                                  conf_root=os.path.dirname(__file__) + "/",
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
 
         self.ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
