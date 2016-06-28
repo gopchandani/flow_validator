@@ -1,7 +1,6 @@
 import unittest
-
+import os
 from model.switch_port_graph import SwitchPortGraph
-from model.network_graph import NetworkGraph
 from model.traffic import Traffic
 
 from experiments.network_configuration import NetworkConfiguration
@@ -15,11 +14,13 @@ class TestSwitchPortGraph(unittest.TestCase):
                                   "ring",
                                   {"num_switches": 4,
                                    "num_hosts_per_switch": 1},
-                                  load_config=True,
-                                  save_config=False,
-                                  synthesis_scheme="Synthesis_Failover_Aborescene")
+                                  load_config=False,
+                                  save_config=True,
+                                  conf_root=os.path.dirname(__file__) + "/",
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
 
-        self.ng = NetworkGraph(nc)
+        self.ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         sw = self.ng.get_node_object("s1")
         self.ring_swpg = SwitchPortGraph(self.ng, sw, True)
         sw.port_graph = self.ring_swpg

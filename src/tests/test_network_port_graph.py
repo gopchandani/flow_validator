@@ -11,7 +11,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
     def setUp(self):
 
-        nc = NetworkConfiguration("ryu",
+        self.nc = NetworkConfiguration("ryu",
                                   "ring",
                                   {"num_switches": 4,
                                    "num_hosts_per_switch": 1},
@@ -21,7 +21,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                   synthesis_name="AboresceneSynthesis",
                                   synthesis_params={"apply_group_intents_immediately": True})
 
-        self.ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        self.ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
         sw = self.ng.get_node_object("s1")
         self.ring_npg = NetworkPortGraph(self.ng, True)
@@ -87,6 +87,8 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         self.assertNotEqual(before_vlan_tag_modification, after_vlan_tag_modification)
 
+    def tearDown(self):
+        self.nc.cm.stop_controller()
 
 if __name__ == '__main__':
     unittest.main()

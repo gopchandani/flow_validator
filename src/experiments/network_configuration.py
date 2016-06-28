@@ -63,7 +63,7 @@ class NetworkConfiguration(object):
         return self.controller + "_" + str(self.synthesis) + "_" + str(self.topo)
 
     def __del__(self):
-        del self.cm
+        self.cm.stop_controller()
         self.cleanup_mininet()
 
     def init_topo(self):
@@ -113,7 +113,7 @@ class NetworkConfiguration(object):
 
         if not self.load_config and self.save_config:
             self.cm = ControllerMan(controller=self.controller)
-            self.controller_port = self.cm.get_next()
+            self.controller_port = self.cm.start_controller()
             self.start_mininet()
             if mininet_setup_gap:
                 time.sleep(mininet_setup_gap)
