@@ -64,7 +64,7 @@ def main():
     #                                                 "num_hosts_per_switch": 1},
     #                                                load_config=False,
     #                                                save_config=True,
-    #                                                synthesis_name="IntentSynthesis")]
+    #                                                synthesis_name="DijkstraSynthesis")]
     # #
     network_configurations = [NetworkConfiguration("ryu",
                                                    "ring",
@@ -72,7 +72,7 @@ def main():
                                                     "num_hosts_per_switch": 1},
                                                    load_config=False,
                                                    save_config=True,
-                                                   synthesis_name="IntentSynthesis")]
+                                                   synthesis_name="DijkstraSynthesis")]
 
 
     exp = TestExperiment(num_iterations,

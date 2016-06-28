@@ -10,11 +10,12 @@ from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 
 
-class SynthesizeFailoverAborescene():
+class AboresceneSynthesis(object):
 
-    def __init__(self, network_graph):
+    def __init__(self, network_graph, params):
 
         self.network_graph = network_graph
+        self.params = params
 
         # VLAN tag constitutes 12 bits.
         # We use 2 left most bits for representing the tree_id
@@ -24,7 +25,7 @@ class SynthesizeFailoverAborescene():
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
-        self.apply_group_intents_immediately = True
+        self.apply_group_intents_immediately = params["apply_group_intents_immediately"]
 
         self.sw_intent_lists = defaultdict(defaultdict)
 
@@ -42,6 +43,12 @@ class SynthesizeFailoverAborescene():
 
         # Use the vlan tag as a match and forward using appropriate tree
         self.aborescene_forwarding_rules = 3
+
+    def __str__(self):
+        params_str = ''
+        for k, v in self.params:
+            params_str += "_" + k + "_" + v
+        return self.__class__.__name__ + params_str
 
     def compute_shortest_path_tree(self, dst_sw):
 

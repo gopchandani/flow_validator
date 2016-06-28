@@ -2,22 +2,21 @@ __author__ = 'Rakehs Kumar'
 
 from mininet.topo import Topo
 
+
 class ClosTopo(Topo):
 
-    def __init__(self, fanout, core, num_hosts_per_switch, **opts):
+    def __init__(self, params):
         
         # Initialize topology and default options
-        Topo.__init__(self, **opts)
+        Topo.__init__(self)
 
-        self.fanout = fanout
-        self.core = core
+        self.params = params
 
-        self.total_core_switches = core
-        self.total_agg_switches = self.total_core_switches * fanout
-        self.total_edge_switches = self.total_agg_switches * fanout
+        self.total_core_switches = self.params["core"]
+        self.total_agg_switches = self.total_core_switches * self.params["fanout"]
+        self.total_edge_switches = self.total_agg_switches * self.params["fanout"]
 
         self.total_switches = 0
-        self.num_hosts_per_switch = num_hosts_per_switch
 
         self.core_switches = {}
         self.agg_switches = {}
@@ -51,11 +50,8 @@ class ClosTopo(Topo):
                 self.addLink(self.agg_switches[x], self.edge_switches[y])
 
         for edge_switch_num in self.edge_switches:
-
             edge_switch_name = self.edge_switches[edge_switch_num]
-
-            # add fanout number of hosts to each edge switch
-            for y in xrange(self.num_hosts_per_switch):
+            for y in xrange(self.params["num_hosts_per_switch"]):
                 host_name = self.addHost("h" + edge_switch_name[1:] + str(y+1))
                 self.addLink(host_name, self.edge_switches[edge_switch_num])
 
@@ -63,6 +59,7 @@ class ClosTopo(Topo):
         return self.edge_switches.keys()
 
     def __str__(self):
-        return "ring" + "_" + str(self.num_hosts_per_switch) + "_" + str(self.fanout) + "_" + str(self.core)
-
-topos = {"clostopo": (lambda: ClosTopo())}
+        params_str = ''
+        for k, v in self.params:
+            params_str += "_" + k + "_" + v
+        return self.__class__.__name__ + params_str

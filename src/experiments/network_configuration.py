@@ -7,7 +7,6 @@ import struct
 from socket import *
 
 from functools import partial
-from mininet.topo import LinearTopo
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
@@ -15,21 +14,22 @@ from controller_man import ControllerMan
 from model.network_graph import NetworkGraph
 from model.match import Match
 
+from experiments.topologies.ring_topo import RingTopo
+from experiments.topologies.clos_topo import ClosTopo
+from mininet.topo import LinearTopo
 from experiments.topologies.fat_tree import FatTree
 from experiments.topologies.two_ring_topo import TwoRingTopo
-from experiments.topologies.ring_topo import RingTopo
 from experiments.topologies.ring_line_topo import RingLineTopo
-from experiments.topologies.clos_topo import ClosTopo
 from experiments.topologies.clique_topo import CliqueTopo
 from experiments.topologies.ameren_topo import AmerenTopo
 
-from synthesis.intent_synthesis import IntentSynthesis
-from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
+from synthesis.dijkstra_synthesis import DijkstraSynthesis
+from synthesis.aborescene_synthesis import AboresceneSynthesis
 
 
 class NetworkConfiguration(object):
 
-    def __init__(self, controller, topo_name, topo_params, load_config, save_config, synthesis_name):
+    def __init__(self, controller, topo_name, topo_params, load_config, save_config, synthesis_name, synthesis_params):
 
         self.controller = controller
         self.controller_port = 6633
@@ -39,27 +39,16 @@ class NetworkConfiguration(object):
         self.load_config = load_config
         self.save_config = save_config
         self.synthesis_name = synthesis_name
+        self.synthesis_params = synthesis_params
 
         if self.topo_name == "ring":
-            self.topo = RingTopo(**topo_params)
+            self.topo = RingTopo(topo_params)
             self.network_configuration_name = "Ring topology with " + str(self.topo.total_switches) + " switches"
         elif self.topo_name == "clostopo":
-            self.topo = ClosTopo(**topo_params)
+            self.topo = ClosTopo(topo_params)
             self.network_configuration_name = "Ring topology with " + str(self.topo.total_switches) + " switches"
-        elif self.topo_name == "linear":
-            self.topo = LinearTopo(**topo_params)
-        elif self.topo_name == "two_ring":
-            self.topo = TwoRingTopo(**topo_params)
-        elif self.topo_name == "fat_tree":
-            self.topo = FatTree(**topo_params)
-        elif self.topo_name == "ringline":
-            self.topo = RingLineTopo(**topo_params)
-        elif self.topo_name == "cliquetopo":
-            self.topo = CliqueTopo(**topo_params)
-        elif self.topo_name == "amerentopo":
-            self.topo = AmerenTopo()
         else:
-            raise Exception("Invalid, unknown topology type: " % topo_name)
+            raise NotImplemented("Unknown topology type: " % topo_name)
 
         self.switch = partial(OVSSwitch, protocols='OpenFlow14')
         self.net = None
@@ -92,15 +81,13 @@ class NetworkConfiguration(object):
             if self.controller == "odl":
                 raise Exception("Don't know how to use odl controller...")
             elif self.controller == "ryu":
-                if self.synthesis_name == "IntentSynthesis":
-                    self.synthesis = IntentSynthesis(self.ng,
-                                                     master_switch=self.topo_name == "linear",
-                                                     synthesized_paths_save_directory=self.ng.config_path_prefix)
-
+                if self.synthesis_name == "DijkstraSynthesis":
+                    self.synthesis_params["master_switch"] = self.topo_name == "linear"
+                    self.synthesis = DijkstraSynthesis(self.ng, self.ng.config_path_prefix, self.synthesis_params)
                     self.synthesis.synthesize_all_node_pairs()
 
-                elif self.synthesis_name == "Synthesis_Failover_Aborescene":
-                    self.synthesis = SynthesizeFailoverAborescene(self.ng)
+                elif self.synthesis_name == "AboresceneSynthesis":
+                    self.synthesis = AboresceneSynthesis(self.ng, self.synthesis_params)
 
                     flow_match = Match(is_wildcard=True)
                     flow_match["ethernet_type"] = 0x0800

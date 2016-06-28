@@ -47,22 +47,22 @@ class SynthesisPlayground(Experiment):
 
 
 def main():
-    # network_configuration = NetworkConfiguration("ryu",
-    #                                              "clostopo",
-    #                                              {"fanout": 2,
-    #                                               "core": 1,
-    #                                               "num_hosts_per_switch": 1},
-    #                                              load_config=True,
-    #                                              save_config=False,
-    #                                              synthesis_name="Synthesis_Failover_Aborescene")
-
     network_configuration = NetworkConfiguration("ryu",
-                                                   "ring",
-                                                   {"num_switches": 4,
-                                                    "num_hosts_per_switch": 1},
-                                                   load_config=False,
-                                                   save_config=True,
-                                                   synthesis_name="Synthesis_Failover_Aborescene")
+                                                 "clostopo",
+                                                 {"fanout": 2,
+                                                  "core": 1,
+                                                  "num_hosts_per_switch": 1},
+                                                 load_config=False,
+                                                 save_config=True,
+                                                 synthesis_name="AboresceneSynthesis")
+
+    # network_configuration = NetworkConfiguration("ryu",
+    #                                                "ring",
+    #                                                {"num_switches": 4,
+    #                                                 "num_hosts_per_switch": 1},
+    #                                                load_config=False,
+    #                                                save_config=True,
+    #                                                synthesis_name="AboresceneSynthesis")
 
     exp = SynthesisPlayground(network_configuration)
     exp.trigger()

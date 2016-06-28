@@ -8,14 +8,16 @@ from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 from model.match import Match
 
-class IntentSynthesis():
 
-    def __init__(self, network_graph, master_switch=False, synthesized_paths_save_directory=None):
+class DijkstraSynthesis(object):
 
-        self.synthesized_paths_save_directory = synthesized_paths_save_directory
+    def __init__(self, network_graph, synthesized_paths_save_directory, params):
 
         self.network_graph = network_graph
-        self.master_switch = master_switch
+        self.synthesized_paths_save_directory = synthesized_paths_save_directory
+        self.params = params
+
+        self.master_switch = params["master_switch"]
 
         self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
@@ -45,6 +47,12 @@ class IntentSynthesis():
 
         # Table contains the primary and failover forwarding rules
         self.primary_failover_forwarding_table_id = 5
+
+    def __str__(self):
+        params_str = ''
+        for k, v in self.params:
+            params_str += "_" + k + "_" + v
+        return self.__class__.__name__ + params_str
 
     def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type, flow_match, first_in_port, dst_switch_tag,
                                  edge_broken=None, switch_port_tuple_prefix_list=None):

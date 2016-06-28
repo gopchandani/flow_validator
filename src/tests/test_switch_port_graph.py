@@ -1,8 +1,8 @@
 import unittest
 
-from switch_port_graph import SwitchPortGraph
-from network_graph import NetworkGraph
-from traffic import Traffic
+from model.switch_port_graph import SwitchPortGraph
+from model.network_graph import NetworkGraph
+from model.traffic import Traffic
 
 from experiments.network_configuration import NetworkConfiguration
 

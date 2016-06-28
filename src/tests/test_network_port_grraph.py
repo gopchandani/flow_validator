@@ -1,7 +1,7 @@
 import unittest
 
-from traffic import Traffic
-from network_port_graph import NetworkPortGraph
+from model.traffic import Traffic
+from model.network_port_graph import NetworkPortGraph
 
 from experiments.network_configuration import NetworkConfiguration
 
