@@ -36,6 +36,6 @@ class RingTopo(Topo):
 
     def __str__(self):
         params_str = ''
-        for k, v in self.params:
-            params_str += "_" + k + "_" + v
+        for k, v in self.params.items():
+            params_str += "_" + str(k) + "_" + str(v)
         return self.__class__.__name__ + params_str

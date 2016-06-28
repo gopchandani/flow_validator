@@ -25,11 +25,15 @@ from experiments.topologies.ameren_topo import AmerenTopo
 
 from synthesis.dijkstra_synthesis import DijkstraSynthesis
 from synthesis.aborescene_synthesis import AboresceneSynthesis
+from synthesis.synthesis_lib import SynthesisLib
 
 
 class NetworkConfiguration(object):
 
-    def __init__(self, controller, topo_name, topo_params, load_config, save_config, synthesis_name, synthesis_params):
+    def __init__(self, controller, 
+                 topo_name, topo_params, 
+                 load_config, save_config, conf_root, 
+                 synthesis_name, synthesis_params):
 
         self.controller = controller
         self.controller_port = 6633
@@ -38,30 +42,70 @@ class NetworkConfiguration(object):
         self.topo_name = topo_name
         self.load_config = load_config
         self.save_config = save_config
+        self.conf_root = conf_root
         self.synthesis_name = synthesis_name
         self.synthesis_params = synthesis_params
+    
+        self.topo = None
+        self.nc_topo_str = None
+        self.init_topo()
+        self.init_synthesis()
 
-        if self.topo_name == "ring":
-            self.topo = RingTopo(topo_params)
-            self.network_configuration_name = "Ring topology with " + str(self.topo.total_switches) + " switches"
-        elif self.topo_name == "clostopo":
-            self.topo = ClosTopo(topo_params)
-            self.network_configuration_name = "Ring topology with " + str(self.topo.total_switches) + " switches"
-        else:
-            raise NotImplemented("Unknown topology type: " % topo_name)
-
-        self.switch = partial(OVSSwitch, protocols='OpenFlow14')
-        self.net = None
+        self.mininet_obj = None
         self.cm = None
         self.ng = None
 
-        self.synthesis = None
+        self.conf_path = self.conf_root + str(self) + "/"
+        if not os.path.exists(self.conf_path):
+            os.makedirs(self.conf_path)    
 
     def __str__(self):
-        return self.synthesis_name + "_" + str(self.topo)
+        return self.controller + "_" + str(self.synthesis) + "_" + str(self.topo)
 
     def __del__(self):
+        del self.cm
         self.cleanup_mininet()
+
+    def init_topo(self):
+        if self.topo_name == "ring":
+            self.topo = RingTopo(self.topo_params)
+            self.nc_topo_str = "Ring topology with " + str(self.topo.total_switches) + " switches"
+        elif self.topo_name == "clostopo":
+            self.topo = ClosTopo(self.topo_params)
+            self.nc_topo_str = "Ring topology with " + str(self.topo.total_switches) + " switches"
+        else:
+            raise NotImplemented("Unknown topology type: " % self.topo_name)
+            
+    def init_synthesis(self):
+        if self.synthesis_name == "DijkstraSynthesis":
+            self.synthesis_params["master_switch"] = self.topo_name == "linear"
+            self.synthesis = DijkstraSynthesis(self.ng.config_path_prefix, self.synthesis_params)
+
+        elif self.synthesis_name == "AboresceneSynthesis":
+            self.synthesis = AboresceneSynthesis(self.synthesis_params)
+
+    def trigger_synthesis(self):
+        if self.synthesis_name == "DijkstraSynthesis":
+            self.synthesis.network_graph = self.ng
+            self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng)
+            self.synthesis.synthesize_all_node_pairs()
+
+        elif self.synthesis_name == "AboresceneSynthesis":
+            self.synthesis.network_graph = self.ng
+            self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng)
+            flow_match = Match(is_wildcard=True)
+            flow_match["ethernet_type"] = 0x0800
+            self.synthesis.synthesize_all_switches(flow_match, 2)
+
+        # self.mininet_obj.pingAll()
+
+        is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
+
+        # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
+
+        # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h31'), self.mininet_obj.get('h41'))],
+        #                                                            [('s1', 's2')])
+        # print "is_bi_connected:", is_bi_connected
 
     def setup_network_graph(self,
                             mininet_setup_gap=None,
@@ -78,34 +122,10 @@ class NetworkConfiguration(object):
         self.ng = NetworkGraph(network_configuration=self)
 
         if not self.load_config and self.save_config:
-            if self.controller == "odl":
-                raise Exception("Don't know how to use odl controller...")
-            elif self.controller == "ryu":
-                if self.synthesis_name == "DijkstraSynthesis":
-                    self.synthesis_params["master_switch"] = self.topo_name == "linear"
-                    self.synthesis = DijkstraSynthesis(self.ng, self.ng.config_path_prefix, self.synthesis_params)
-                    self.synthesis.synthesize_all_node_pairs()
-
-                elif self.synthesis_name == "AboresceneSynthesis":
-                    self.synthesis = AboresceneSynthesis(self.ng, self.synthesis_params)
-
-                    flow_match = Match(is_wildcard=True)
-                    flow_match["ethernet_type"] = 0x0800
-                    self.synthesis.synthesize_all_switches(flow_match, 2)
-
-                # self.net.pingAll()
-
-                is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
-
-                # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.net.get('h11'), self.net.get('h31'))])
-
-                # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.net.get('h31'), self.net.get('h41'))],
-                #                                                            [('s1', 's2')])
-                # print "is_bi_connected:", is_bi_connected
-
-                if synthesis_setup_gap:
-                    time.sleep(synthesis_setup_gap)
-
+            self.trigger_synthesis()
+            if synthesis_setup_gap:
+                time.sleep(synthesis_setup_gap)
+        
         # Refresh the network_graph
         self.ng.parse_switches()
 
@@ -117,19 +137,19 @@ class NetworkConfiguration(object):
 
         self.cleanup_mininet()
 
-        self.net = Mininet(topo=self.topo,
+        self.mininet_obj = Mininet(topo=self.topo,
                            cleanup=True,
                            autoStaticArp=True,
                            controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
-                           switch=self.switch)
+                           switch=partial(OVSSwitch, protocols='OpenFlow14'))
 
-        self.net.start()
+        self.mininet_obj.start()
 
     def cleanup_mininet(self):
 
-        if self.net:
+        if self.mininet_obj:
             print "Mininet cleanup..."
-            self.net.stop()
+            self.mininet_obj.stop()
 
         os.system("sudo mn -c")
 
@@ -147,7 +167,7 @@ class NetworkConfiguration(object):
                 dst_list = p[node][switch_port]
                 dst_node = dst_list[0]
                 if dst_node.startswith("h"):
-                    yield self.net.get(dst_node)
+                    yield self.mininet_obj.get(dst_node)
 
     def _get_experiment_host_pair(self):
 
@@ -160,14 +180,14 @@ class NetworkConfiguration(object):
                 src_host = "h" + src_switch[1:] + "1"
                 dst_host = "h" + dst_switch[1:] + "1"
 
-                src_host_node = self.net.get(src_host)
-                dst_host_node = self.net.get(dst_host)
+                src_host_node = self.mininet_obj.get(src_host)
+                dst_host_node = self.mininet_obj.get(dst_host)
 
                 yield (src_host_node, dst_host_node)
 
     def is_host_pair_pingable(self, src_host, dst_host):
         hosts = [src_host, dst_host]
-        ping_loss_rate = self.net.ping(hosts, '1')
+        ping_loss_rate = self.mininet_obj.ping(hosts, '1')
 
         # If some packets get through, then declare pingable
         if ping_loss_rate < 100.0:
@@ -182,7 +202,7 @@ class NetworkConfiguration(object):
                 return True
 
     def are_all_hosts_pingable(self):
-        ping_loss_rate = self.net.pingAll('1')
+        ping_loss_rate = self.mininet_obj.pingAll('1')
 
         # If some packets get through, then declare pingable
         if ping_loss_rate < 100.0:
@@ -214,7 +234,7 @@ class NetworkConfiguration(object):
 
         num_seconds = 0
 
-        for link in self.net.links:
+        for link in self.mininet_obj.links:
             if (sw_i in link.intf1.name and sw_j in link.intf2.name) or (sw_i in link.intf2.name and sw_j in link.intf1.name):
 
                 while True:
@@ -251,11 +271,11 @@ class NetworkConfiguration(object):
                     is_bi_connected = False
                     break
 
-                self.net.configLinkStatus(edge[0], edge[1], 'down')
+                self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
                 self.wait_until_link_status(edge[0], edge[1], 'down')
                 time.sleep(5)
                 is_pingable_after_failure = self.is_host_pair_pingable(src_host, dst_host)
-                self.net.configLinkStatus(edge[0], edge[1], 'up')
+                self.mininet_obj.configLinkStatus(edge[0], edge[1], 'up')
                 self.wait_until_link_status(edge[0], edge[1], 'up')
 
                 time.sleep(5)
@@ -287,11 +307,11 @@ class NetworkConfiguration(object):
                 is_bi_connected = False
                 break
 
-            self.net.configLinkStatus(edge[0], edge[1], 'down')
+            self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
             self.wait_until_link_status(edge[0], edge[1], 'down')
             time.sleep(5)
             is_pingable_after_failure = self.are_all_hosts_pingable()
-            self.net.configLinkStatus(edge[0], edge[1], 'up')
+            self.mininet_obj.configLinkStatus(edge[0], edge[1], 'up')
             self.wait_until_link_status(edge[0], edge[1], 'up')
 
             time.sleep(5)

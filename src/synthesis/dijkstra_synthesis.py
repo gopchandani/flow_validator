@@ -50,9 +50,10 @@ class DijkstraSynthesis(object):
 
     def __str__(self):
         params_str = ''
-        for k, v in self.params:
-            params_str += "_" + k + "_" + v
+        for k, v in self.params.items():
+            params_str += "_" + str(k) + "_" + str(v)
         return self.__class__.__name__ + params_str
+
 
     def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type, flow_match, first_in_port, dst_switch_tag,
                                  edge_broken=None, switch_port_tuple_prefix_list=None):

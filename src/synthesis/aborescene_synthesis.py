@@ -5,16 +5,17 @@ import sys
 
 from collections import defaultdict
 from copy import deepcopy
-
 from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 
 
 class AboresceneSynthesis(object):
 
-    def __init__(self, network_graph, params):
+    def __init__(self, params):
 
-        self.network_graph = network_graph
+        self.network_graph = None
+        self.synthesis_lib = None
+
         self.params = params
 
         # VLAN tag constitutes 12 bits.
@@ -22,8 +23,6 @@ class AboresceneSynthesis(object):
         # And the 10 right most bits for representing the destination switch's id
         self.num_bits_for_k = 2
         self.num_bits_for_switches = 10
-
-        self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
         self.apply_group_intents_immediately = params["apply_group_intents_immediately"]
 
@@ -46,8 +45,8 @@ class AboresceneSynthesis(object):
 
     def __str__(self):
         params_str = ''
-        for k, v in self.params:
-            params_str += "_" + k + "_" + v
+        for k, v in self.params.items():
+            params_str += "_" + str(k) + "_" + str(v)
         return self.__class__.__name__ + params_str
 
     def compute_shortest_path_tree(self, dst_sw):
