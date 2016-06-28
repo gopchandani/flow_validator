@@ -11,15 +11,13 @@ from model.match import Match
 
 class DijkstraSynthesis(object):
 
-    def __init__(self, network_graph, synthesized_paths_save_directory, params):
+    def __init__(self, params):
 
-        self.network_graph = network_graph
-        self.synthesized_paths_save_directory = synthesized_paths_save_directory
+        self.network_graph = None
         self.params = params
+        self.synthesis_lib = None
 
         self.master_switch = params["master_switch"]
-
-        self.synthesis_lib = SynthesisLib("localhost", "8181", self.network_graph)
 
         # s represents the set of all switches that are
         # affected as a result of flow synthesis
@@ -609,5 +607,4 @@ class DijkstraSynthesis(object):
             for dst_port in dst_ports_to_synthesize:
                 self._synthesize_all_node_pairs(dst_port)
 
-        if self.synthesized_paths_save_directory:
-            self.synthesis_lib.save_synthesized_paths(self.synthesized_paths_save_directory)
+        self.synthesis_lib.save_synthesized_paths(self.network_graph.network_configuration.conf_path)

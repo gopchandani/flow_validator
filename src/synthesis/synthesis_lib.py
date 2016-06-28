@@ -9,9 +9,10 @@ import sys
 
 from collections import  defaultdict
 
-class SynthesisLib():
 
-    def __init__(self, controller_host, controller_port, network_graph, synthesized_paths_save_directory=None):
+class SynthesisLib(object):
+
+    def __init__(self, controller_host, controller_port, network_graph):
 
         self.network_graph = network_graph
 
@@ -59,11 +60,11 @@ class SynthesisLib():
 
         self.synthesized_failover_paths[src_host.node_id][dst_host.node_id][e[0]][e[1]] = port_path
 
-    def save_synthesized_paths(self, synthesized_paths_save_directory):
-        with open(synthesized_paths_save_directory + "synthesized_primary_paths.json", "w") as outfile:
+    def save_synthesized_paths(self, conf_path):
+        with open(conf_path + "synthesized_primary_paths.json", "w") as outfile:
             json.dump(self.synthesized_primary_paths, outfile)
 
-        with open(synthesized_paths_save_directory + "synthesized_failover_paths.json", "w") as outfile:
+        with open(conf_path + "synthesized_failover_paths.json", "w") as outfile:
             json.dump(self.synthesized_failover_paths, outfile)
 
     def push_queue(self, sw, port, min_rate, max_rate):

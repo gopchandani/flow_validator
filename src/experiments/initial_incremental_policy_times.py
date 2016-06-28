@@ -49,9 +49,9 @@ class InitialIncrementalTimes(Experiment):
 
                 ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
-                self.data["initial_time"][nc.network_configuration_name][num_hosts_per_switch] = []
-                self.data["incremental_time"][nc.network_configuration_name][num_hosts_per_switch] = []
-                self.data["validation_time"][nc.network_configuration_name][num_hosts_per_switch] = []
+                self.data["initial_time"][nc.nc_topo_str][num_hosts_per_switch] = []
+                self.data["incremental_time"][nc.nc_topo_str][num_hosts_per_switch] = []
+                self.data["validation_time"][nc.nc_topo_str][num_hosts_per_switch] = []
 
                 for i in xrange(self.num_iterations):
                     print "iteration:", i + 1
@@ -62,11 +62,11 @@ class InitialIncrementalTimes(Experiment):
                         fv.add_hosts()
                         fv.initialize_admitted_traffic()
 
-                    self.data["initial_time"][nc.network_configuration_name][num_hosts_per_switch].append(t.secs)
+                    self.data["initial_time"][nc.nc_topo_str][num_hosts_per_switch].append(t.secs)
                     self.dump_data()
 
                     incr_time = self.perform_incremental_times_experiment(fv, self.link_fraction_to_sample)
-                    self.data["incremental_time"][nc.network_configuration_name][num_hosts_per_switch].append(incr_time)
+                    self.data["incremental_time"][nc.nc_topo_str][num_hosts_per_switch].append(incr_time)
 
                     self.dump_data()
 
@@ -169,29 +169,29 @@ class InitialIncrementalTimes(Experiment):
             "relative_cost_ratio": defaultdict(defaultdict)}
 
         for ds in data:
-            for network_configuration_name in data[ds]:
-                for nh in data[ds][network_configuration_name]:
+            for nc_topo_str in data[ds]:
+                for nh in data[ds][nc_topo_str]:
 
                     num_host_carrying_switches = 0
 
-                    if network_configuration_name == "Ring topology with 4 switches":
+                    if nc_topo_str == "Ring topology with 4 switches":
                         num_host_carrying_switches = 4
-                    elif network_configuration_name == "Ring topology with 8 switches":
+                    elif nc_topo_str == "Ring topology with 8 switches":
                         num_host_carrying_switches = 8
-                    elif network_configuration_name == "Ring topology with 12 switches":
+                    elif nc_topo_str == "Ring topology with 12 switches":
                         num_host_carrying_switches = 12
-                    elif network_configuration_name == "Clos topology with 7 switches":
+                    elif nc_topo_str == "Clos topology with 7 switches":
                         num_host_carrying_switches = 4
-                    elif network_configuration_name == "Clos topology with 14 switches":
+                    elif nc_topo_str == "Clos topology with 14 switches":
                         num_host_carrying_switches = 8
-                    elif network_configuration_name == "Clos topology with 21 switches":
+                    elif nc_topo_str == "Clos topology with 21 switches":
                         num_host_carrying_switches = 12
                     else:
                         raise Exception("Unknown topology, write the translation rule")
 
                     # Total flows = total hosts squared.
                     new_key = str(int(nh) * num_host_carrying_switches * int(nh) * num_host_carrying_switches)
-                    flow_path_keys_data[ds][network_configuration_name][new_key] = data[ds][network_configuration_name][nh]
+                    flow_path_keys_data[ds][nc_topo_str][new_key] = data[ds][nc_topo_str][nh]
 
                     all_keys.add(new_key)
 
@@ -351,36 +351,39 @@ def main():
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
 
-    network_configurations = [NetworkConfiguration("ryu",
-                                                   "clostopo",
-                                                   {"fanout": 2,
-                                                    "core": 1,
-                                                    "num_hosts_per_switch": 1},
-                                                   load_config=True,
-                                                   save_config=False,
-                                                   synthesis_name="Synthesis_Failover_Aborescene")]
-    #
     # network_configurations = [NetworkConfiguration("ryu",
-    #                                                "ring",
-    #                                                {"num_switches": 4,
+    #                                                "clostopo",
+    #                                                {"fanout": 2,
+    #                                                 "core": 1,
     #                                                 "num_hosts_per_switch": 1},
     #                                                load_config=False,
     #                                                save_config=True,
-    #                                                synthesis_name="Synthesis_Failover_Aborescene")]
+    #                                                conf_root="configurations/",
+    #                                                synthesis_name="AboresceneSynthesis",
+    #                                                synthesis_params={"apply_group_intents_immediately": True})]
+
+    network_configurations = [NetworkConfiguration("ryu",
+                                                 "ring",
+                                                 {"num_switches": 4,
+                                                  "num_hosts_per_switch": 1},
+                                                 load_config=False,
+                                                 save_config=True,
+                                                 conf_root="configurations/",
+                                                 synthesis_name="AboresceneSynthesis",
+                                                 synthesis_params={"apply_group_intents_immediately": True})]
 
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
                                   num_hosts_per_switch_list,
                                   network_configurations)
 
-    # # Trigger the experiment
+    # Trigger the experiment
     # exp.trigger()
     # exp.dump_data()
 
     exp.data = exp.data_merge()
     exp.data = exp.generate_relative_cost_ratio_data(exp.data)
     exp.data = exp.generate_num_flow_path_keys(exp.data)
-
     exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":

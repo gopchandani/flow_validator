@@ -14,8 +14,7 @@ class TestExperiment(Experiment):
                  num_iterations,
                  network_configurations):
 
-        super(TestExperiment, self).__init__("test_experiment",
-                                             num_iterations)
+        super(TestExperiment, self).__init__("test_experiment", num_iterations)
 
         self.network_configurations = network_configurations
 
@@ -58,25 +57,27 @@ def main():
     num_iterations = 1#20
 
     # network_configurations = [NetworkConfiguration("ryu",
-    #                                                "clostopo",
-    #                                                {"fanout": 2,
-    #                                                 "core": 1,
-    #                                                 "num_hosts_per_switch": 1},
-    #                                                load_config=False,
-    #                                                save_config=True,
-    #                                                synthesis_name="DijkstraSynthesis")]
-    # #
+    #                                              "clostopo",
+    #                                              {"fanout": 2,
+    #                                               "core": 1,
+    #                                               "num_hosts_per_switch": 1},
+    #                                              load_config=False,
+    #                                              save_config=True,
+    #                                              conf_root="configurations/",
+    #                                              synthesis_name="DijkstraSynthesis",
+    #                                              synthesis_params={})]
+
     network_configurations = [NetworkConfiguration("ryu",
                                                    "ring",
                                                    {"num_switches": 4,
                                                     "num_hosts_per_switch": 1},
                                                    load_config=False,
                                                    save_config=True,
-                                                   synthesis_name="DijkstraSynthesis")]
+                                                   conf_root="configurations/",
+                                                   synthesis_name="DijkstraSynthesis",
+                                                   synthesis_params={})]
 
-
-    exp = TestExperiment(num_iterations,
-                         network_configurations)
+    exp = TestExperiment(num_iterations, network_configurations)
 
     exp.trigger()
 

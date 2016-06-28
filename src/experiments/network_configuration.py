@@ -79,7 +79,7 @@ class NetworkConfiguration(object):
     def init_synthesis(self):
         if self.synthesis_name == "DijkstraSynthesis":
             self.synthesis_params["master_switch"] = self.topo_name == "linear"
-            self.synthesis = DijkstraSynthesis(self.ng.config_path_prefix, self.synthesis_params)
+            self.synthesis = DijkstraSynthesis(self.synthesis_params)
 
         elif self.synthesis_name == "AboresceneSynthesis":
             self.synthesis = AboresceneSynthesis(self.synthesis_params)
