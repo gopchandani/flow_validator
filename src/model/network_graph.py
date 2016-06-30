@@ -85,59 +85,6 @@ class NetworkGraph(object):
 
         return mdg
 
-    def get_odl_switches(self):
-
-        odl_switches = {}
-
-        if self.network_configuration.load_config:
-
-            with open(self.network_configuration.conf_path + "odl_switches.json", "r") as in_file:
-                odl_switches = json.loads(in_file.read())
-
-        else:
-            # Get all the odl_switches from the inventory API
-            remaining_url = 'operational/opendaylight-inventory:nodes'
-            resp, content = self.h.request(self.baseUrlOdl + remaining_url, "GET")
-            odl_switches = json.loads(content)
-
-            # Grab each switch's group table with a separate GET request
-            for node in odl_switches["nodes"]["node"]:
-
-                #  Add an instance for Switch in the graph
-                remaining_url = "config/opendaylight-inventory:nodes/node/" + str(node["id"])
-                resp, content = self.h.request(self.baseUrlOdl + remaining_url, "GET")
-
-                if resp["status"] == "200":
-                    switch_node = json.loads(content)
-
-                    if "flow-node-inventory:group" in switch_node['node'][0]:
-                        node["flow-node-inventory:group"] = switch_node['node'][0]["flow-node-inventory:group"]
-
-        if self.network_configuration.save_config:
-            with open(self.network_configuration.conf_path + "odl_switches.json", "w") as outfile:
-                json.dump(odl_switches, outfile)
-
-        return odl_switches
-
-    def get_odl_topology(self):
-
-        topology = {}
-
-        if self.network_configuration.load_config:
-            with open(self.network_configuration.conf_path + "topology.json", "r") as in_file:
-                topology = json.loads(in_file.read())
-        else:
-            # Get all the hosts and links from the topology API
-            remaining_url = 'operational/network-topology:network-topology'
-            resp, content = self.h.request(self.baseUrlOdl + remaining_url, "GET")
-            topology = json.loads(content)
-
-        if self.network_configuration.save_config:
-            with open(self.network_configuration.conf_path + "topology.json", "w") as outfile:
-                json.dump(topology, outfile)
-
-        return topology
-
     def get_mininet_host_nodes(self):
 
         mininet_host_nodes = {}
@@ -177,41 +124,6 @@ class NetworkGraph(object):
                 json.dump(mininet_port_links, outfile)
 
         return mininet_port_links
-
-    def parse_odl_switches(self, odl_switches):
-
-        #  Go through each node and grab the odl_switches and the corresponding hosts associated with the switch
-        for node in odl_switches["nodes"]["node"]:
-
-            #  prepare a switch id
-            switch_id = "s" + node["id"].split(":")[1]
-
-            # Check to see if a switch with this id already exists in the graph,
-            # if so grab it, otherwise create it
-
-            sw = self.get_node_object(switch_id)
-            if not sw:
-                sw = Switch(switch_id, self)
-                self.graph.add_node(switch_id, node_type="switch", sw=sw)
-                self.switch_ids.append(switch_id)
-
-            # Parse out the information about all the ports in the switch
-            switch_ports = {}
-            for nc in node["node-connector"]:
-                if nc["flow-node-inventory:port-number"] != "LOCAL":
-                    switch_ports[int(nc["flow-node-inventory:port-number"])] = Port(sw, port_json=nc)
-            sw.ports = switch_ports
-
-            # Parse group table if one is available
-            if "flow-node-inventory:group" in node:
-                sw.group_table = GroupTable(sw, node["flow-node-inventory:group"])
-
-            # Parse all the flow tables and sort them by table_id in the list
-            switch_flow_tables = []
-            for flow_table in node["flow-node-inventory:table"]:
-                if "flow" in flow_table:
-                    switch_flow_tables.append(FlowTable(sw, flow_table["id"], flow_table["flow"]))
-            sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
     def parse_mininet_host_nodes(self, mininet_host_nodes, mininet_port_links):
 
@@ -262,29 +174,6 @@ class NetworkGraph(object):
                               dst_node,
                               int(dst_node_port))
 
-    def parse_odl_node_links(self, topology):
-
-        topology_links = dict()
-        if "link" in topology["network-topology"]["topology"][0]:
-            topology_links = topology["network-topology"]["topology"][0]["link"]
-
-        for link in topology_links:
-
-            # only add links for those nodes that are in the graph
-            if link["source"]["source-node"] in self.graph.node and link["destination"]["dest-node"] in self.graph.node:
-
-                if self.graph.node[link["source"]["source-node"]]["node_type"] == "switch":
-                    node1_port = link["source"]["source-tp"].split(":")[2]
-                else:
-                    node1_port = "0"
-
-                if self.graph.node[link["destination"]["dest-node"]]["node_type"] == "switch":
-                    node2_port = link["destination"]["dest-tp"].split(":")[2]
-                else:
-                    node2_port = "0"
-
-                self.add_link(link["source"]["source-node"], node1_port, link["destination"]["dest-node"], node2_port)
-
     def add_link(self, node1_id, node1_port, node2_id, node2_port):
 
         link_type = None
@@ -320,18 +209,6 @@ class NetworkGraph(object):
 
         if self.graph.node[node2_id]["node_type"] == "switch":
             self.graph.node[node2_id]["sw"].ports[node2_port].state = "down"
-
-    def dump_model(self):
-
-        print "Hosts in the graph:", self.host_ids
-        print "Switches in the graph:", self.switch_ids
-        print "Number of nodes in the graph:", self.graph.number_of_nodes()
-        print "Number of links in the graph:", self.graph.number_of_edges()
-
-        for sw in self.switch_ids:
-            print "---", sw, "---"
-            for port in self.graph.node[sw]["sw"].ports:
-                print self.graph.node[sw]["sw"].ports[port]
 
     def get_ryu_switches(self):
         ryu_switches = {}
@@ -399,7 +276,7 @@ class NetworkGraph(object):
 
     def parse_ryu_switches(self, ryu_switches):
 
-        #  Go through each node and grab the odl_switches and the corresponding hosts associated with the switch
+        #  Go through each node and grab the ryu_switches and the corresponding hosts associated with the switch
         for dpid in ryu_switches:
 
             #  prepare a switch id
@@ -520,29 +397,22 @@ class NetworkGraph(object):
 
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
-    def parse_switches(self):
+    def parse_network_graph(self):
 
         self.total_flow_rules = 0
 
         if self.network_configuration.controller == "odl":
-            odl_switches = self.get_odl_switches()
-            self.parse_odl_switches(odl_switches)
-            
+            raise NotImplemented
+
         elif self.network_configuration.controller == "ryu":
             ryu_switches = self.get_ryu_switches()
             self.parse_ryu_switches(ryu_switches)
-
-    def parse_network_graph(self):
-
-        self.parse_switches()
 
         mininet_host_nodes = self.get_mininet_host_nodes()
         mininet_port_links = self.get_mininet_port_links()
 
         self.parse_mininet_host_nodes(mininet_host_nodes, mininet_port_links)
         self.parse_mininet_port_links(mininet_port_links)
-
-        #self.dump_model()
 
     def get_node_graph(self):
         return self.graph
