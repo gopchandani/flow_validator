@@ -127,7 +127,7 @@ class NetworkConfiguration(object):
                 time.sleep(synthesis_setup_gap)
         
         # Refresh the network_graph
-        self.ng.parse_switches()
+        self.ng.parse_network_graph()
 
         print "total_flow_rules:", self.ng.total_flow_rules
 
