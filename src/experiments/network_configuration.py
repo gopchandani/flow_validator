@@ -228,8 +228,8 @@ class NetworkConfiguration(object):
             else:
                 raise NotImplemented
 
-        # Refresh the network_graph
-        self.ng.parse_network_graph()
+        # Refresh just the switches in the network graph, post synthesis
+        self.ng.parse_switches()
 
         print "total_flow_rules:", self.ng.total_flow_rules
 

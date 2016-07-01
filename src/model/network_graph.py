@@ -78,7 +78,7 @@ class NetworkGraph(object):
 
         return mdg
 
-    def parse_mininet_host_nodes(self):
+    def parse_host_nodes(self):
 
         mininet_host_nodes = None
         mininet_port_links = None
@@ -111,7 +111,7 @@ class NetworkGraph(object):
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
-    def parse_mininet_port_links(self):
+    def parse_links(self):
 
         mininet_port_links = None
 
@@ -293,8 +293,7 @@ class NetworkGraph(object):
 
             sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
-    def parse_network_graph(self):
-
+    def parse_switches(self):
         self.total_flow_rules = 0
 
         if self.network_configuration.controller == "ryu":
@@ -302,8 +301,11 @@ class NetworkGraph(object):
         else:
             raise NotImplemented
 
-        self.parse_mininet_host_nodes()
-        self.parse_mininet_port_links()
+    def parse_network_graph(self):
+
+        self.parse_switches()
+        self.parse_host_nodes()
+        self.parse_links()
 
     def get_node_graph(self):
         return self.graph
