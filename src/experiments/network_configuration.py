@@ -34,21 +34,21 @@ from synthesis.synthesis_lib import SynthesisLib
 class NetworkConfiguration(object):
 
     def __init__(self, controller, 
-                 topo_name, topo_params, 
-                 load_config, save_config, conf_root, 
-                 synthesis_name, synthesis_params):
+                 topo_name,
+                 topo_params,
+                 conf_root,
+                 synthesis_name,
+                 synthesis_params):
 
         self.controller = controller
-        self.controller_port = 6633
         self.topo_name = topo_name
         self.topo_params = topo_params
         self.topo_name = topo_name
-        self.load_config = load_config
-        self.save_config = save_config
         self.conf_root = conf_root
         self.synthesis_name = synthesis_name
         self.synthesis_params = synthesis_params
-    
+
+        self.controller_port = None
         self.topo = None
         self.nc_topo_str = None
         self.init_topo()
@@ -58,9 +58,16 @@ class NetworkConfiguration(object):
         self.cm = None
         self.ng = None
 
+        # Setup the directory for saving configs, check if one does not exist,
+        # if not, assume that the controller, mininet and rule synthesis needs to be triggered.
         self.conf_path = self.conf_root + str(self) + "/"
         if not os.path.exists(self.conf_path):
-            os.makedirs(self.conf_path)    
+            os.makedirs(self.conf_path)
+            self.load_config = False
+            self.save_config = True
+        else:
+            self.load_config = True
+            self.save_config = False
 
         # Initialize things to talk to controller
         self.baseUrlRyu = "http://localhost:8080/"
@@ -172,7 +179,7 @@ class NetworkConfiguration(object):
         with open(self.conf_path + "ryu_switches.json", "w") as outfile:
             json.dump(ryu_switches, outfile)
 
-    def get_mininet_host_nodes(self):
+    def get_host_nodes(self):
 
         mininet_host_nodes = {}
 
@@ -191,7 +198,7 @@ class NetworkConfiguration(object):
 
         return mininet_host_nodes
 
-    def get_mininet_port_links(self):
+    def get_links(self):
 
         mininet_port_links = {}
 
@@ -200,36 +207,43 @@ class NetworkConfiguration(object):
 
         return mininet_port_links
 
+    def get_switches(self):
+        # Now the output of synthesis is carted away
+        if self.controller == "ryu":
+            self.get_ryu_switches()
+        else:
+            raise NotImplemented
+
     def setup_network_graph(self, mininet_setup_gap=None, synthesis_setup_gap=None):
 
         if not self.load_config and self.save_config:
             self.cm = ControllerMan(controller=self.controller)
             self.controller_port = self.cm.start_controller()
+
             self.start_mininet()
             if mininet_setup_gap:
                 time.sleep(mininet_setup_gap)
 
             # These things are needed by network graph...
-            self.get_mininet_host_nodes()
-            self.get_mininet_port_links()
+            self.get_host_nodes()
+            self.get_links()
+            self.get_switches()
 
-        self.ng = NetworkGraph(network_configuration=self)
-
-        if not self.load_config and self.save_config:
+            self.ng = NetworkGraph(network_configuration=self)
+            self.ng.parse_network_graph()
 
             # Now the synthesis...
             self.trigger_synthesis()
             if synthesis_setup_gap:
                 time.sleep(synthesis_setup_gap)
 
-            # Now the output of synthesis is carted away
-            if self.controller == "ryu":
-                self.get_ryu_switches()
-            else:
-                raise NotImplemented
+            # Refresh just the switches in the network graph, post synthesis
+            self.get_switches()
+            self.ng.parse_switches()
 
-        # Refresh just the switches in the network graph, post synthesis
-        self.ng.parse_switches()
+        else:
+            self.ng = NetworkGraph(network_configuration=self)
+            self.ng.parse_network_graph()
 
         print "total_flow_rules:", self.ng.total_flow_rules
 

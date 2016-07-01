@@ -61,9 +61,6 @@ class NetworkGraph(object):
 
         self.controller = self.network_configuration.controller
 
-        # Load up everything
-        self.parse_network_graph()
-
     # Gets a switch-only multi-di-graph for the present topology
     def get_mdg(self):
 

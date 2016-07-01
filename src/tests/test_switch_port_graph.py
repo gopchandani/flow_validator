@@ -14,8 +14,6 @@ class TestSwitchPortGraph(unittest.TestCase):
                                   "ring",
                                   {"num_switches": 4,
                                    "num_hosts_per_switch": 1},
-                                  load_config=False,
-                                  save_config=True,
                                   conf_root=os.path.dirname(__file__) + "/",
                                   synthesis_name="AboresceneSynthesis",
                                   synthesis_params={"apply_group_intents_immediately": True})

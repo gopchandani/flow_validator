@@ -56,26 +56,22 @@ class TestExperiment(Experiment):
 def main():
     num_iterations = 1#20
 
-    # network_configurations = [NetworkConfiguration("ryu",
-    #                                              "clostopo",
-    #                                              {"fanout": 2,
-    #                                               "core": 1,
-    #                                               "num_hosts_per_switch": 1},
-    #                                              load_config=False,
-    #                                              save_config=True,
-    #                                              conf_root="configurations/",
-    #                                              synthesis_name="DijkstraSynthesis",
-    #                                              synthesis_params={})]
-
     network_configurations = [NetworkConfiguration("ryu",
-                                                   "ring",
-                                                   {"num_switches": 4,
-                                                    "num_hosts_per_switch": 1},
-                                                   load_config=False,
-                                                   save_config=True,
-                                                   conf_root="configurations/",
-                                                   synthesis_name="DijkstraSynthesis",
-                                                   synthesis_params={})]
+                                                 "clostopo",
+                                                 {"fanout": 2,
+                                                  "core": 1,
+                                                  "num_hosts_per_switch": 1},
+                                                 conf_root="configurations/",
+                                                 synthesis_name="DijkstraSynthesis",
+                                                 synthesis_params={})]
+
+    # network_configurations = [NetworkConfiguration("ryu",
+    #                                                "ring",
+    #                                                {"num_switches": 4,
+    #                                                 "num_hosts_per_switch": 1},
+    #                                                conf_root="configurations/",
+    #                                                synthesis_name="DijkstraSynthesis",
+    #                                                synthesis_params={})]
 
     exp = TestExperiment(num_iterations, network_configurations)
 

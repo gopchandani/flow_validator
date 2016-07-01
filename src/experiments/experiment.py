@@ -61,7 +61,7 @@ class Experiment(object):
         if not nc.load_config and nc.save_config:
             synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
         else:
-            with open(nc.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
+            with open(nc.conf_path + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
 
         all_paths_match = True
@@ -88,10 +88,10 @@ class Experiment(object):
             synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
             synthesized_failover_paths = nc.synthesis.synthesis_lib.synthesized_failover_paths
         else:
-            with open(nc.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
+            with open(nc.conf_path + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
             
-            with open(nc.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
+            with open(nc.conf_path + "synthesized_failover_paths.json", "r") as in_file:
                 synthesized_failover_paths = json.loads(in_file.read())
 
         for link in links_to_try:

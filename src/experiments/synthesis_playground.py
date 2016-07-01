@@ -52,8 +52,6 @@ def main():
     #                                              {"fanout": 2,
     #                                               "core": 1,
     #                                               "num_hosts_per_switch": 1},
-    #                                              load_config=False,
-    #                                              save_config=True,
     #                                              conf_root="configurations/",
     #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
@@ -62,8 +60,6 @@ def main():
                                                  "ring",
                                                  {"num_switches": 4,
                                                   "num_hosts_per_switch": 1},
-                                                 load_config=True,
-                                                 save_config=False,
                                                  conf_root="configurations/",
                                                  synthesis_name="AboresceneSynthesis",
                                                  synthesis_params={"apply_group_intents_immediately": True})
