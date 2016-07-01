@@ -26,24 +26,24 @@ class TestSwitchPortGraph(unittest.TestCase):
         self.ring_swpg.init_switch_port_graph()
         self.ring_swpg.compute_switch_admitted_traffic()
 
+    def check_admitted_traffic(self, swpg, src_host_obj, dst_host_obj, ingress_port_num, egress_port_num):
+        ingress_node = swpg.get_ingress_node(swpg.sw.node_id, ingress_port_num)
+        egress_node = swpg.get_egress_node(swpg.sw.node_id, egress_port_num)
+
+        specific_traffic = Traffic(init_wildcard=True)
+        specific_traffic.set_field("ethernet_type", 0x0800)
+        specific_traffic.set_field("ethernet_source", int(src_host_obj.mac_addr.replace(":", ""), 16))
+        specific_traffic.set_field("ethernet_destination", int(dst_host_obj.mac_addr.replace(":", ""), 16))
+        specific_traffic.set_field("in_port", int(src_host_obj.switch_port_attached))
+        specific_traffic.set_field("vlan_id", src_host_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
+        specific_traffic.set_field("has_vlan_tag", 0)
+
+        at_int = self.ring_swpg.get_admitted_traffic(ingress_node, egress_node).intersect(specific_traffic)
+        self.assertNotEqual(at_int.is_empty(), True)
+
+        return at_int
+
     def test_ring_aborescene_synthesis_admitted_traffic(self):
-
-        def test_admitted_traffic(swpg, src_host_obj, dst_host_obj, ingress_port_num, egress_port_num):
-            ingress_node = swpg.get_ingress_node(swpg.sw.node_id, ingress_port_num)
-            egress_node = swpg.get_egress_node(swpg.sw.node_id, egress_port_num)
-
-            specific_traffic = Traffic(init_wildcard=True)
-            specific_traffic.set_field("ethernet_type", 0x0800)
-            specific_traffic.set_field("ethernet_source", int(src_host_obj.mac_addr.replace(":", ""), 16))
-            specific_traffic.set_field("ethernet_destination", int(dst_host_obj.mac_addr.replace(":", ""), 16))
-            specific_traffic.set_field("in_port", int(src_host_obj.switch_port_attached))
-            specific_traffic.set_field("vlan_id", src_host_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
-            specific_traffic.set_field("has_vlan_tag", 0)
-
-            at_int = self.ring_swpg.get_admitted_traffic(ingress_node, egress_node).intersect(specific_traffic)
-            self.assertNotEqual(at_int.is_empty(), True)
-
-            return at_int
 
         # This test asserts that in switch s1, for host h11, with no failures:
         # Traffic for host h21 flows out of port 3
@@ -55,9 +55,9 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        at_int = test_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
-        at_int = test_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
-        at_int = test_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
+        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
+        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
+        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
     #
     # def test_ring_aborescene_synthesis_modifications(self):
     #
