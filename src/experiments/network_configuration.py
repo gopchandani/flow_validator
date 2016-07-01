@@ -2,10 +2,13 @@ __author__ = 'Rakesh Kumar'
 
 import time
 import os
+import json
+import httplib2
 import fcntl
 import struct
 from socket import *
 
+from collections import defaultdict
 from functools import partial
 from mininet.net import Mininet
 from mininet.node import RemoteController
@@ -59,6 +62,12 @@ class NetworkConfiguration(object):
         if not os.path.exists(self.conf_path):
             os.makedirs(self.conf_path)    
 
+        # Initialize things to talk to controller
+        self.baseUrlRyu = "http://localhost:8080/"
+
+        self.h = httplib2.Http(".cache")
+        self.h.add_credentials('admin', 'admin')
+
     def __str__(self):
         return self.controller + "_" + str(self.synthesis) + "_" + str(self.topo)
 
@@ -107,9 +116,91 @@ class NetworkConfiguration(object):
         #                                                            [('s1', 's2')])
         # print "is_bi_connected:", is_bi_connected
 
-    def setup_network_graph(self,
-                            mininet_setup_gap=None,
-                            synthesis_setup_gap=None):
+    def get_ryu_switches(self):
+        ryu_switches = {}
+        request_gap = 0
+
+        # Get all the ryu_switches from the inventory API
+        remaining_url = 'stats/switches'
+        time.sleep(request_gap)
+        resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+
+        ryu_switch_numbers = json.loads(content)
+
+        for dpid in ryu_switch_numbers:
+
+            this_ryu_switch = {}
+
+            # Get the flows
+            remaining_url = 'stats/flow' + "/" + str(dpid)
+            resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+            time.sleep(request_gap)
+
+            if resp["status"] == "200":
+                switch_flows = json.loads(content)
+                switch_flow_tables = defaultdict(list)
+                for flow_rule in switch_flows[str(dpid)]:
+                    switch_flow_tables[flow_rule["table_id"]].append(flow_rule)
+                this_ryu_switch["flow_tables"] = switch_flow_tables
+            else:
+                print "Error pulling switch flows from RYU."
+
+            # Get the ports
+            remaining_url = 'stats/portdesc' + "/" + str(dpid)
+            resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+            time.sleep(request_gap)
+
+            if resp["status"] == "200":
+                switch_ports = json.loads(content)
+                this_ryu_switch["ports"] = switch_ports[str(dpid)]
+            else:
+                print "Error pulling switch ports from RYU."
+
+            # Get the groups
+            remaining_url = 'stats/groupdesc' + "/" + str(dpid)
+            resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+            time.sleep(request_gap)
+
+            if resp["status"] == "200":
+                switch_groups = json.loads(content)
+                this_ryu_switch["groups"] = switch_groups[str(dpid)]
+            else:
+                print "Error pulling switch ports from RYU."
+
+            ryu_switches[dpid] = this_ryu_switch
+
+        with open(self.conf_path + "ryu_switches.json", "w") as outfile:
+            json.dump(ryu_switches, outfile)
+
+    def get_mininet_host_nodes(self):
+
+        mininet_host_nodes = {}
+
+        for sw in self.topo.switches():
+            mininet_host_nodes[sw] = []
+            for h in self.get_all_switch_hosts(sw):
+                mininet_host_dict = {"host_switch_id": "s" + sw[1:],
+                                     "host_name": h.name,
+                                     "host_IP": h.IP(),
+                                     "host_MAC": h.MAC()}
+
+                mininet_host_nodes[sw].append(mininet_host_dict)
+
+        with open(self.conf_path + "mininet_host_nodes.json", "w") as outfile:
+            json.dump(mininet_host_nodes, outfile)
+
+        return mininet_host_nodes
+
+    def get_mininet_port_links(self):
+
+        mininet_port_links = {}
+
+        with open(self.conf_path + "mininet_port_links.json", "w") as outfile:
+            json.dump(self.topo.ports, outfile)
+
+        return mininet_port_links
+
+    def setup_network_graph(self, mininet_setup_gap=None, synthesis_setup_gap=None):
 
         if not self.load_config and self.save_config:
             self.cm = ControllerMan(controller=self.controller)
@@ -118,14 +209,25 @@ class NetworkConfiguration(object):
             if mininet_setup_gap:
                 time.sleep(mininet_setup_gap)
 
-        # Get a flow validator instance
+            # These things are needed by network graph...
+            self.get_mininet_host_nodes()
+            self.get_mininet_port_links()
+
         self.ng = NetworkGraph(network_configuration=self)
 
         if not self.load_config and self.save_config:
+
+            # Now the synthesis...
             self.trigger_synthesis()
             if synthesis_setup_gap:
                 time.sleep(synthesis_setup_gap)
-        
+
+            # Now the output of synthesis is carted away
+            if self.controller == "ryu":
+                self.get_ryu_switches()
+            else:
+                raise NotImplemented
+
         # Refresh the network_graph
         self.ng.parse_network_graph()
 
