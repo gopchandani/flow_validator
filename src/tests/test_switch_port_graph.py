@@ -38,10 +38,14 @@ class TestSwitchPortGraph(unittest.TestCase):
         specific_traffic.set_field("vlan_id", src_host_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
         specific_traffic.set_field("has_vlan_tag", 0)
 
-        at_int = self.ring_swpg.get_admitted_traffic(ingress_node, egress_node).intersect(specific_traffic)
+        at_int = specific_traffic.intersect(swpg.get_admitted_traffic(ingress_node, egress_node))
         self.assertNotEqual(at_int.is_empty(), True)
 
         return at_int
+
+    def check_vlan_tag_push_and_modification(self, at, modified_interval):
+        vlan_tag_modification = at.traffic_elements[0].switch_modifications["vlan_id"][1]
+        self.assertEqual(modified_interval, vlan_tag_modification)
 
     def test_ring_aborescene_synthesis_admitted_traffic(self):
 
@@ -58,45 +62,28 @@ class TestSwitchPortGraph(unittest.TestCase):
         at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
         at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
         at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
-    #
-    # def test_ring_aborescene_synthesis_modifications(self):
-    #
-    #     # This test asserts that in switch s1, for host h11, with no failures:
-    #     # Traffic for host h21 flows out of port 3 with modifications 5122
-    #     # Traffic for host h31 flows out of port 2 with modifications 5123
-    #     # Traffic for host h41 flows out of port 2 with modifications 5124
-    #
-    #     h11_obj = self.ng.get_node_object("h11")
-    #     h21_obj = self.ng.get_node_object("h21")
-    #     h31_obj = self.ng.get_node_object("h31")
-    #     h41_obj = self.ng.get_node_object("h41")
-    #
-    #     specific_traffic = Traffic(init_wildcard=True)
-    #     specific_traffic.set_field("ethernet_type", 0x0800)
-    #     specific_traffic.set_field("ethernet_source", int(h11_obj.mac_addr.replace(":", ""), 16))
-    #     specific_traffic.set_field("in_port", int(h11_obj.switch_port_attached))
-    #     specific_traffic.set_field("vlan_id", h11_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
-    #     specific_traffic.set_field("has_vlan_tag", 0)
-    #
-    #     ingress_node_1 = self.ring_swpg.get_ingress_node("s1", 1)
-    #     egress_node_2 = self.ring_swpg.get_egress_node("s1", 2)
-    #     egress_node_3 = self.ring_swpg.get_egress_node("s1", 3)
-    #
-    #     specific_traffic.set_field("ethernet_destination", int(h21_obj.mac_addr.replace(":", ""), 16))
-    #     at_int = specific_traffic.intersect(self.ring_swpg.get_admitted_traffic(ingress_node_1, egress_node_3))
-    #     vlan_tag_modification = at_int.traffic_elements[0].switch_modifications["vlan_id"][1]
-    #     self.assertEqual(Interval(5122, 5123), vlan_tag_modification)
-    #
-    #     specific_traffic.set_field("ethernet_destination", int(h31_obj.mac_addr.replace(":", ""), 16))
-    #     at_int = specific_traffic.intersect(self.ring_swpg.get_admitted_traffic(ingress_node_1, egress_node_2))
-    #     vlan_tag_modification = at_int.traffic_elements[0].switch_modifications["vlan_id"][1]
-    #     self.assertEqual(Interval(5123, 5124), vlan_tag_modification)
-    #
-    #     specific_traffic.set_field("ethernet_destination", int(h41_obj.mac_addr.replace(":", ""), 16))
-    #     at_int = specific_traffic.intersect(self.ring_swpg.get_admitted_traffic(ingress_node_1, egress_node_2))
-    #     vlan_tag_modification = at_int.traffic_elements[0].switch_modifications["vlan_id"][1]
-    #     self.assertEqual(Interval(5124, 5125), vlan_tag_modification)
-    #
+
+    def test_ring_aborescene_synthesis_modifications(self):
+
+        # This test asserts that in switch s1, for host h11, with no failures:
+        # Traffic for host h21 flows out of port 3 with modifications 5122
+        # Traffic for host h31 flows out of port 2 with modifications 5123
+        # Traffic for host h41 flows out of port 2 with modifications 5124
+
+        h11_obj = self.ng.get_node_object("h11")
+        h21_obj = self.ng.get_node_object("h21")
+        h31_obj = self.ng.get_node_object("h31")
+        h41_obj = self.ng.get_node_object("h41")
+
+        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
+        self.check_vlan_tag_push_and_modification(at_int, Interval(5122, 5123))
+
+        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
+        self.check_vlan_tag_push_and_modification(at_int, Interval(5123, 5124))
+
+        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
+        self.check_vlan_tag_push_and_modification(at_int, Interval(5124, 5125))
+
     # def test_single_port_failure(self, verbose=False):
     #
     #     # This test asserts that in switch s1, for host h11, with a single failures:
