@@ -276,7 +276,6 @@ class TestSwitchPortGraph(unittest.TestCase):
         self.check_failover_path(self.ring_swpg, h11_obj, h41_obj, 1, 2, 3,
                                  expected_path_via_egress2, expected_path_via_egress3)
 
-
     def test_all_ports_failure_restore(self, verbose=False):
 
         test_passed = True
