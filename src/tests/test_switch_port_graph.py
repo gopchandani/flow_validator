@@ -2,6 +2,7 @@ import unittest
 import os
 from model.switch_port_graph import SwitchPortGraph
 from model.traffic import Traffic
+from model.traffic_path import TrafficPath
 from model.intervaltree_modified import Interval
 
 from experiments.network_configuration import NetworkConfiguration
@@ -41,28 +42,32 @@ class TestSwitchPortGraph(unittest.TestCase):
         at_int = specific_traffic.intersect(swpg.get_admitted_traffic(ingress_node, egress_node))
         self.assertNotEqual(at_int.is_empty(), True)
 
-        return at_int
+        return at_int, ingress_node, egress_node
 
-    def check_failover_admitted_traffic(self, swpg, src_host_obj, dst_host_obj, 
-                                        ingress_port_num, 
-                                        primary_egress_port_num, 
+    def check_failover_admitted_traffic(self, swpg, src_host_obj, dst_host_obj,
+                                        ingress_port_num,
+                                        primary_egress_port_num,
                                         failover_egress_port_num):
-    
-        primary_at_int = self.check_admitted_traffic(self.ring_swpg, src_host_obj, dst_host_obj, 
-                                                     ingress_port_num, primary_egress_port_num)
+
+        primary_at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, src_host_obj,
+                                                                                dst_host_obj,
+                                                     ingress_port_num,
+                                                                                primary_egress_port_num)
 
         testing_port = self.ring_swpg.sw.ports[primary_egress_port_num]
         testing_port.state = "down"
-        self.ring_swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_down")        
-        
-        failover_at_int = self.check_admitted_traffic(self.ring_swpg, src_host_obj, dst_host_obj, 
-                                                      ingress_port_num, failover_egress_port_num)
-        
+        self.ring_swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_down")
+
+        failover_at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, src_host_obj,
+                                                                                 dst_host_obj,
+                                                      ingress_port_num,
+                                                                                 failover_egress_port_num)
+
         testing_port.state = "up"
         self.ring_swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_up")
-        
+
         return primary_at_int, failover_at_int
-        
+
     def check_modifications(self, at, expected_modified_fields):
 
         for mf in expected_modified_fields:
@@ -74,6 +79,18 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         self.check_modifications(primary_at, primary_expected_modified_fields)
         self.check_modifications(failover_at, failover_expected_modified_fields)
+
+    def check_path(self, swpg, ingress_node, egress_node, at, expected_path):
+
+        all_paths = swpg.get_paths(ingress_node,
+                                   egress_node,
+                                   at,
+                                   [ingress_node],
+                                   [],
+                                   False)
+
+        self.assertEqual(len(all_paths), 1)
+        self.assertEqual(all_paths[0], expected_path)
 
     def test_ring_aborescene_synthesis_admitted_traffic(self):
 
@@ -87,9 +104,9 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
-        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
-        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
 
     def test_ring_aborescene_synthesis_modifications(self):
 
@@ -103,33 +120,72 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
         self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5122, 5123)})
 
-        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
         self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5123, 5124)})
 
-        at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
         self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)})
 
-    def test_ring_aborescene_synthesis_admitted_traffic_failover(self):
-    
-        # This test asserts that in switch s1, for host h11, with a single failures:
-        # Traffic for host h21 flows out of port 3 before failure and out of port 2 after failure
-        # Traffic for host h31 flows out of port 2 before failure and out of port 3 after failure
-        # Traffic for host h41 flows out of port 2 before failure and out of port 3 after failure
-    
+    def test_ring_aborescene_synthesis_paths(self):
+
+        # This test asserts that in switch s1, for host h11, with no failures:
+        # Traffic for host h21 flows out of port 3 with modifications 5122
+        # Traffic for host h31 flows out of port 2 with modifications 5123
+        # Traffic for host h41 flows out of port 2 with modifications 5124
+
         h11_obj = self.ng.get_node_object("h11")
         h21_obj = self.ng.get_node_object("h21")
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
-    
+
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
+        expected_path = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
+                                                     self.ring_swpg.get_node("s1:table0"),
+                                                     self.ring_swpg.get_node("s1:table1"),
+                                                     self.ring_swpg.get_node("s1:table2"),
+                                                     self.ring_swpg.get_node("s1:table3"),
+                                                     self.ring_swpg.get_node("s1:egress3")])
+        self.check_path(self.ring_swpg, ingress_node, egress_node, at_int, expected_path)
+
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
+        expected_path = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
+                                                     self.ring_swpg.get_node("s1:table0"),
+                                                     self.ring_swpg.get_node("s1:table1"),
+                                                     self.ring_swpg.get_node("s1:table2"),
+                                                     self.ring_swpg.get_node("s1:table3"),
+                                                     self.ring_swpg.get_node("s1:egress2")])
+        self.check_path(self.ring_swpg, ingress_node, egress_node, at_int, expected_path)
+
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
+        expected_path = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
+                                                     self.ring_swpg.get_node("s1:table0"),
+                                                     self.ring_swpg.get_node("s1:table1"),
+                                                     self.ring_swpg.get_node("s1:table2"),
+                                                     self.ring_swpg.get_node("s1:table3"),
+                                                     self.ring_swpg.get_node("s1:egress2")])
+        self.check_path(self.ring_swpg, ingress_node, egress_node, at_int, expected_path)
+
+    def test_ring_aborescene_synthesis_admitted_traffic_failover(self):
+
+        # This test asserts that in switch s1, for host h11, with a single failures:
+        # Traffic for host h21 flows out of port 3 before failure and out of port 2 after failure
+        # Traffic for host h31 flows out of port 2 before failure and out of port 3 after failure
+        # Traffic for host h41 flows out of port 2 before failure and out of port 3 after failure
+
+        h11_obj = self.ng.get_node_object("h11")
+        h21_obj = self.ng.get_node_object("h21")
+        h31_obj = self.ng.get_node_object("h31")
+        h41_obj = self.ng.get_node_object("h41")
+
         self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3, 2)
         self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2, 3)
         self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2, 3)
-    
+
     def test_ring_aborescene_synthesis_modifications_failover(self):
-    
+
         # This test asserts that in switch s1, for host h11, with a single failures:
         # Traffic for host h21 flows out of port 3 with modifications 5122 before failure and
         # out of port 2 with modifications 6146 after failure
@@ -137,7 +193,7 @@ class TestSwitchPortGraph(unittest.TestCase):
         # out of port 3 with modifications 6147 after failure
         # Traffic for host h41 flows out of port 2 with modifications 5124 before failure and
         # out of port 3 with modifications 6148 after failure
-        
+
         h11_obj = self.ng.get_node_object("h11")
         h21_obj = self.ng.get_node_object("h21")
         h31_obj = self.ng.get_node_object("h31")

@@ -7,7 +7,16 @@ from traffic_path import TrafficPath
 
 from collections import defaultdict
 
+
 class PortGraph(object):
+
+    @staticmethod
+    def get_ingress_node_id(node_id, port_number):
+        return node_id + ":ingress" + str(port_number)
+
+    @staticmethod
+    def get_egress_node_id(node_id, port_number):
+        return node_id + ":egress" + str(port_number)
 
     def __init__(self, network_graph, report_active_state):
 
@@ -21,12 +30,6 @@ class PortGraph(object):
 
     def get_table_node_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
-
-    def get_ingress_node_id(self, node_id, port_number):
-        return node_id + ":ingress" + str(port_number)
-
-    def get_egress_node_id(self, node_id, port_number):
-        return node_id + ":egress" + str(port_number)
 
     def get_ingress_node(self, node_id, port_number):
         return self.get_node(self.get_ingress_node_id(node_id, port_number))

@@ -28,7 +28,6 @@ class FlowValidator(object):
 
     def add_hosts(self):
 
-        # Attach a destination port for each host.
         for host_id in self.network_graph.host_ids:
 
             host_obj = self.network_graph.get_node_object(host_id)

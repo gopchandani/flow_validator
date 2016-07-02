@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+
 class TrafficPath(object):
 
     def __init__(self, port_graph, nodes=[], path_edges=[]):
