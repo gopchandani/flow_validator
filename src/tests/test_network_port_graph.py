@@ -68,7 +68,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                     {"fanout": 2,
                                                      "core": 1,
                                                      "num_hosts_per_switch": 1},
-                                                    conf_root="configurations/",
+                                                    conf_root=os.path.dirname(__file__) + "/",
                                                     synthesis_name="DijkstraSynthesis",
                                                     synthesis_params={})
 
