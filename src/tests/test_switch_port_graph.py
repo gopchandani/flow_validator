@@ -49,22 +49,22 @@ class TestSwitchPortGraph(unittest.TestCase):
                                         primary_egress_port_num,
                                         failover_egress_port_num):
 
-        primary_at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, src_host_obj,
+        primary_at_int, ingress_node, egress_node = self.check_admitted_traffic(swpg, src_host_obj,
                                                                                 dst_host_obj,
-                                                     ingress_port_num,
+                                                                                ingress_port_num,
                                                                                 primary_egress_port_num)
 
-        testing_port = self.ring_swpg.sw.ports[primary_egress_port_num]
+        testing_port = swpg.sw.ports[primary_egress_port_num]
         testing_port.state = "down"
-        self.ring_swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_down")
+        swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_down")
 
-        failover_at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, src_host_obj,
+        failover_at_int, ingress_node, egress_node = self.check_admitted_traffic(swpg, src_host_obj,
                                                                                  dst_host_obj,
-                                                      ingress_port_num,
+                                                                                 ingress_port_num,
                                                                                  failover_egress_port_num)
 
         testing_port.state = "up"
-        self.ring_swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_up")
+        swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_up")
 
         return primary_at_int, failover_at_int
 
@@ -92,11 +92,32 @@ class TestSwitchPortGraph(unittest.TestCase):
         self.assertEqual(len(all_paths), 1)
         self.assertEqual(all_paths[0], expected_path)
 
-    def check_failover_paths(self, swpg, at,
-                             ingress_node,
-                             egress_node_primary, egress_node_failover,
-                             expected_path_primry, expected_path_failover):
-        pass
+    def check_failover_path(self, swpg, src_host_obj, dst_host_obj,
+                            ingress_port_num, primary_egress_port_num, failover_egress_port_num,
+                            primary_expected_path, failover_expected_path):
+
+        primary_at_int, ingress_node, egress_node = self.check_admitted_traffic(swpg, src_host_obj,
+                                                                                dst_host_obj,
+                                                                                ingress_port_num,
+                                                                                primary_egress_port_num)
+
+        self.check_path(swpg, primary_at_int, ingress_node, egress_node, primary_expected_path)
+
+        testing_port = swpg.sw.ports[primary_egress_port_num]
+        testing_port.state = "down"
+        swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_down")
+
+        failover_at_int, ingress_node, egress_node = self.check_admitted_traffic(swpg, src_host_obj,
+                                                                                 dst_host_obj,
+                                                                                 ingress_port_num,
+                                                                                 failover_egress_port_num)
+
+        self.check_path(swpg, primary_at_int, ingress_node, egress_node, failover_expected_path)
+
+        testing_port.state = "up"
+        swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_up")
+
+        return primary_at_int, failover_at_int
 
     def test_ring_aborescene_synthesis_admitted_traffic(self):
 
@@ -266,29 +287,29 @@ class TestSwitchPortGraph(unittest.TestCase):
 
             testing_port.state = "down"
             end_to_end_modified_edges = self.ring_swpg.update_admitted_traffic_due_to_port_state_change(testing_port_number,
-                                                                                                   "port_down")
+                                                                                                        "port_down")
 
             graph_paths_intermediate = self.ring_swpg.get_graph_paths(verbose)
             graph_ats_intermediate = self.ring_swpg.get_graph_at()
 
             testing_port.state = "up"
             end_to_end_modified_edges = self.ring_swpg.update_admitted_traffic_due_to_port_state_change(testing_port_number,
-                                                                                                   "port_up")
+                                                                                                        "port_up")
 
             graph_paths_after = self.ring_swpg.get_graph_paths(verbose)
             graph_ats_after = self.ring_swpg.get_graph_at()
 
             all_graph_paths_equal = self.ring_swpg.compare_graph_paths(graph_paths_before,
-                                                                  graph_paths_after,
-                                                                  verbose)
+                                                                       graph_paths_after,
+                                                                       verbose)
 
             if not all_graph_paths_equal:
                 test_passed = all_graph_paths_equal
                 print "Test Failed."
 
             all_graph_ats_equal = self.ring_swpg.compare_graph_ats(graph_ats_before,
-                                                              graph_ats_after,
-                                                              verbose)
+                                                                   graph_ats_after,
+                                                                   verbose)
             if not all_graph_ats_equal:
                 test_passed = all_graph_ats_equal
                 print "Test Failed."
