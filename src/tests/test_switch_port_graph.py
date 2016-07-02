@@ -13,20 +13,20 @@ class TestSwitchPortGraph(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        nc = NetworkConfiguration("ryu",
-                                  "ring",
-                                  {"num_switches": 4,
-                                   "num_hosts_per_switch": 1},
-                                  conf_root=os.path.dirname(__file__) + "/",
-                                  synthesis_name="AboresceneSynthesis",
-                                  synthesis_params={"apply_group_intents_immediately": True})
+        nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
+                                                             "ring",
+                                                             {"num_switches": 4,
+                                                              "num_hosts_per_switch": 1},
+                                                             conf_root=os.path.dirname(__file__) + "/",
+                                                             synthesis_name="AboresceneSynthesis",
+                                                             synthesis_params={"apply_group_intents_immediately": True})
 
-        cls.ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        cls.ng = nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         sw = cls.ng.get_node_object("s1")
-        cls.ring_swpg = SwitchPortGraph(cls.ng, sw, True)
-        sw.port_graph = cls.ring_swpg
-        cls.ring_swpg.init_switch_port_graph()
-        cls.ring_swpg.compute_switch_admitted_traffic()
+        cls.swpg_ring_aborescene_apply_true = SwitchPortGraph(cls.ng, sw, True)
+        sw.port_graph = cls.swpg_ring_aborescene_apply_true
+        cls.swpg_ring_aborescene_apply_true.init_switch_port_graph()
+        cls.swpg_ring_aborescene_apply_true.compute_switch_admitted_traffic()
 
     def check_admitted_traffic(self, swpg, src_host_obj, dst_host_obj, ingress_port_num, egress_port_num):
         ingress_node = swpg.get_ingress_node(swpg.sw.node_id, ingress_port_num)
@@ -55,8 +55,8 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                                                 ingress_port_num,
                                                                                 primary_egress_port_num)
 
-        testing_port = swpg.sw.ports[primary_egress_port_num]
-        testing_port.state = "down"
+        test_port = swpg.sw.ports[primary_egress_port_num]
+        test_port.state = "down"
         swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_down")
 
         failover_at_int, ingress_node, egress_node = self.check_admitted_traffic(swpg, src_host_obj,
@@ -64,7 +64,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                                                  ingress_port_num,
                                                                                  failover_egress_port_num)
 
-        testing_port.state = "up"
+        test_port.state = "up"
         swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_up")
 
         return primary_at_int, failover_at_int
@@ -104,8 +104,8 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         self.check_path(swpg, primary_at_int, ingress_node, egress_node, primary_expected_path)
 
-        testing_port = swpg.sw.ports[primary_egress_port_num]
-        testing_port.state = "down"
+        test_port = swpg.sw.ports[primary_egress_port_num]
+        test_port.state = "down"
         swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_down")
 
         failover_at_int, ingress_node, egress_node = self.check_admitted_traffic(swpg, src_host_obj,
@@ -115,7 +115,7 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         self.check_path(swpg, primary_at_int, ingress_node, egress_node, failover_expected_path)
 
-        testing_port.state = "up"
+        test_port.state = "up"
         swpg.update_admitted_traffic_due_to_port_state_change(primary_egress_port_num, "port_up")
 
         return primary_at_int, failover_at_int
@@ -132,9 +132,12 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                        h11_obj, h21_obj, 1, 3)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                        h11_obj, h31_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                        h11_obj, h41_obj, 1, 2)
 
     def test_ring_aborescene_synthesis_modifications(self):
 
@@ -148,13 +151,22 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                        h11_obj, h21_obj, 1, 3)
         self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5122, 5123)})
 
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                        h11_obj, h31_obj, 1, 2)
         self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5123, 5124)})
 
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+
+
+
+
+
+
+                                                                        h11_obj, h41_obj, 1, 2)
         self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)})
 
     def test_ring_aborescene_synthesis_paths(self):
@@ -169,32 +181,38 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
-        expected_path = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
-                                                     self.ring_swpg.get_node("s1:table0"),
-                                                     self.ring_swpg.get_node("s1:table1"),
-                                                     self.ring_swpg.get_node("s1:table2"),
-                                                     self.ring_swpg.get_node("s1:table3"),
-                                                     self.ring_swpg.get_node("s1:egress3")])
-        self.check_path(self.ring_swpg, at_int, ingress_node, egress_node, expected_path)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                        h11_obj, h21_obj, 1, 3)
+        expected_path = TrafficPath(self.swpg_ring_aborescene_apply_true,
+                                    [self.swpg_ring_aborescene_apply_true.get_node("s1:ingress1"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table0"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table1"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table2"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table3"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:egress3")])
+        self.check_path(self.swpg_ring_aborescene_apply_true, at_int, ingress_node, egress_node, expected_path)
 
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
-        expected_path = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
-                                                     self.ring_swpg.get_node("s1:table0"),
-                                                     self.ring_swpg.get_node("s1:table1"),
-                                                     self.ring_swpg.get_node("s1:table2"),
-                                                     self.ring_swpg.get_node("s1:table3"),
-                                                     self.ring_swpg.get_node("s1:egress2")])
-        self.check_path(self.ring_swpg, at_int, ingress_node, egress_node, expected_path)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                        h11_obj, h31_obj, 1, 2)
+        expected_path = TrafficPath(self.swpg_ring_aborescene_apply_true,
+                                    [self.swpg_ring_aborescene_apply_true.get_node("s1:ingress1"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table0"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table1"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table2"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table3"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:egress2")])
+        self.check_path(self.swpg_ring_aborescene_apply_true, at_int, ingress_node, egress_node, expected_path)
 
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
-        expected_path = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
-                                                     self.ring_swpg.get_node("s1:table0"),
-                                                     self.ring_swpg.get_node("s1:table1"),
-                                                     self.ring_swpg.get_node("s1:table2"),
-                                                     self.ring_swpg.get_node("s1:table3"),
-                                                     self.ring_swpg.get_node("s1:egress2")])
-        self.check_path(self.ring_swpg, at_int, ingress_node, egress_node, expected_path)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                        h11_obj, h41_obj, 1, 2)
+        expected_path = TrafficPath(self.swpg_ring_aborescene_apply_true,
+                                    [self.swpg_ring_aborescene_apply_true.get_node("s1:ingress1"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table0"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table1"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table2"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:table3"),
+                                     self.swpg_ring_aborescene_apply_true.get_node("s1:egress2")])
+        self.check_path(self.swpg_ring_aborescene_apply_true, at_int, ingress_node, egress_node, expected_path)
 
     def test_ring_aborescene_synthesis_admitted_traffic_failover(self):
 
@@ -208,9 +226,9 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3, 2)
-        self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2, 3)
-        self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2, 3)
+        self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true, h11_obj, h21_obj, 1, 3, 2)
+        self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true, h11_obj, h31_obj, 1, 2, 3)
+        self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true, h11_obj, h41_obj, 1, 2, 3)
 
     def test_ring_aborescene_synthesis_modifications_failover(self):
 
@@ -227,17 +245,20 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        primary_at, failover_at = self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3, 2)
+        primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                       h11_obj, h21_obj, 1, 3, 2)
         self.check_failover_modifications(primary_at, failover_at,
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5122, 5123)},
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6146, 6147)})
 
-        primary_at, failover_at = self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2, 3)
+        primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                       h11_obj, h31_obj, 1, 2, 3)
         self.check_failover_modifications(primary_at, failover_at,
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5123, 5124)},
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6147, 6148)})
 
-        primary_at, failover_at = self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2, 3)
+        primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true,
+                                                                       h11_obj, h41_obj, 1, 2, 3)
         self.check_failover_modifications(primary_at, failover_at,
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)},
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6148, 6149)})
@@ -254,27 +275,29 @@ class TestSwitchPortGraph(unittest.TestCase):
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        expected_path_via_egress2 = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
-                                                     self.ring_swpg.get_node("s1:table0"),
-                                                     self.ring_swpg.get_node("s1:table1"),
-                                                     self.ring_swpg.get_node("s1:table2"),
-                                                     self.ring_swpg.get_node("s1:table3"),
-                                                     self.ring_swpg.get_node("s1:egress2")])
+        expected_path_via_egress2 = TrafficPath(self.swpg_ring_aborescene_apply_true,
+                                                [self.swpg_ring_aborescene_apply_true.get_node("s1:ingress1"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:table0"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:table1"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:table2"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:table3"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:egress2")])
 
-        expected_path_via_egress3 = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
-                                                     self.ring_swpg.get_node("s1:table0"),
-                                                     self.ring_swpg.get_node("s1:table1"),
-                                                     self.ring_swpg.get_node("s1:table2"),
-                                                     self.ring_swpg.get_node("s1:table3"),
-                                                     self.ring_swpg.get_node("s1:egress3")])
+        expected_path_via_egress3 = TrafficPath(self.swpg_ring_aborescene_apply_true,
+                                                [self.swpg_ring_aborescene_apply_true.get_node("s1:ingress1"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:table0"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:table1"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:table2"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:table3"),
+                                                 self.swpg_ring_aborescene_apply_true.get_node("s1:egress3")])
 
-        self.check_failover_path(self.ring_swpg, h11_obj, h21_obj, 1, 3, 2,
+        self.check_failover_path(self.swpg_ring_aborescene_apply_true, h11_obj, h21_obj, 1, 3, 2,
                                  expected_path_via_egress3, expected_path_via_egress2)
 
-        self.check_failover_path(self.ring_swpg, h11_obj, h31_obj, 1, 2, 3,
+        self.check_failover_path(self.swpg_ring_aborescene_apply_true, h11_obj, h31_obj, 1, 2, 3,
                                  expected_path_via_egress2, expected_path_via_egress3)
 
-        self.check_failover_path(self.ring_swpg, h11_obj, h41_obj, 1, 2, 3,
+        self.check_failover_path(self.swpg_ring_aborescene_apply_true, h11_obj, h41_obj, 1, 2, 3,
                                  expected_path_via_egress2, expected_path_via_egress3)
 
     def test_all_ports_failure_restore(self, verbose=False):
@@ -282,37 +305,39 @@ class TestSwitchPortGraph(unittest.TestCase):
         test_passed = True
 
         # Loop over ports of the switch and fail and restore them one by one
-        for testing_port_number in self.ring_swpg.sw.ports:
+        for test_port_num in self.swpg_ring_aborescene_apply_true.sw.ports:
 
-            testing_port = self.ring_swpg.sw.ports[testing_port_number]
+            test_port = self.swpg_ring_aborescene_apply_true.sw.ports[test_port_num]
 
-            graph_paths_before = self.ring_swpg.get_graph_paths(verbose)
-            graph_ats_before = self.ring_swpg.get_graph_at()
+            graph_paths_before = self.swpg_ring_aborescene_apply_true.get_graph_paths(verbose)
+            graph_ats_before = self.swpg_ring_aborescene_apply_true.get_graph_at()
 
-            testing_port.state = "down"
-            end_to_end_modified_edges = self.ring_swpg.update_admitted_traffic_due_to_port_state_change(testing_port_number,
-                                                                                                        "port_down")
+            test_port.state = "down"
+            end_to_end_modified_edges = \
+                self.swpg_ring_aborescene_apply_true.update_admitted_traffic_due_to_port_state_change(test_port_num,
+                                                                                                      "port_down")
 
-            graph_paths_intermediate = self.ring_swpg.get_graph_paths(verbose)
-            graph_ats_intermediate = self.ring_swpg.get_graph_at()
+            graph_paths_intermediate = self.swpg_ring_aborescene_apply_true.get_graph_paths(verbose)
+            graph_ats_intermediate = self.swpg_ring_aborescene_apply_true.get_graph_at()
 
-            testing_port.state = "up"
-            end_to_end_modified_edges = self.ring_swpg.update_admitted_traffic_due_to_port_state_change(testing_port_number,
-                                                                                                        "port_up")
+            test_port.state = "up"
+            end_to_end_modified_edges = \
+                self.swpg_ring_aborescene_apply_true.update_admitted_traffic_due_to_port_state_change(test_port_num,
+                                                                                                      "port_up")
 
-            graph_paths_after = self.ring_swpg.get_graph_paths(verbose)
-            graph_ats_after = self.ring_swpg.get_graph_at()
+            graph_paths_after = self.swpg_ring_aborescene_apply_true.get_graph_paths(verbose)
+            graph_ats_after = self.swpg_ring_aborescene_apply_true.get_graph_at()
 
-            all_graph_paths_equal = self.ring_swpg.compare_graph_paths(graph_paths_before,
-                                                                       graph_paths_after,
-                                                                       verbose)
+            all_graph_paths_equal = self.swpg_ring_aborescene_apply_true.compare_graph_paths(graph_paths_before,
+                                                                                             graph_paths_after,
+                                                                                             verbose)
 
             if not all_graph_paths_equal:
                 test_passed = all_graph_paths_equal
 
-            all_graph_ats_equal = self.ring_swpg.compare_graph_ats(graph_ats_before,
-                                                                   graph_ats_after,
-                                                                   verbose)
+            all_graph_ats_equal = self.swpg_ring_aborescene_apply_true.compare_graph_ats(graph_ats_before,
+                                                                                         graph_ats_after,
+                                                                                         verbose)
             if not all_graph_ats_equal:
                 test_passed = all_graph_ats_equal
 
