@@ -43,9 +43,11 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         return at_int
 
-    def check_vlan_tag_push_and_modification(self, at, modified_interval):
-        vlan_tag_modification = at.traffic_elements[0].switch_modifications["vlan_id"][1]
-        self.assertEqual(modified_interval, vlan_tag_modification)
+    def check_vlan_tag_push_and_modification(self, at, expected_modified_fields):
+
+        for mf in expected_modified_fields:
+            vlan_tag_modification = at.traffic_elements[0].switch_modifications[mf][1]
+            self.assertEqual(expected_modified_fields[mf], vlan_tag_modification)
 
     def test_ring_aborescene_synthesis_admitted_traffic(self):
 
@@ -76,13 +78,16 @@ class TestSwitchPortGraph(unittest.TestCase):
         h41_obj = self.ng.get_node_object("h41")
 
         at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3)
-        self.check_vlan_tag_push_and_modification(at_int, Interval(5122, 5123))
+        self.check_vlan_tag_push_and_modification(at_int, {"has_vlan_tag": Interval(1, 2),
+                                                           "vlan_id": Interval(5122, 5123)})
 
         at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2)
-        self.check_vlan_tag_push_and_modification(at_int, Interval(5123, 5124))
+        self.check_vlan_tag_push_and_modification(at_int, {"has_vlan_tag": Interval(1, 2),
+                                                           "vlan_id": Interval(5123, 5124)})
 
         at_int = self.check_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2)
-        self.check_vlan_tag_push_and_modification(at_int, Interval(5124, 5125))
+        self.check_vlan_tag_push_and_modification(at_int, {"has_vlan_tag": Interval(1, 2),
+                                                           "vlan_id": Interval(5124, 5125)})
 
     # def test_single_port_failure(self, verbose=False):
     #
