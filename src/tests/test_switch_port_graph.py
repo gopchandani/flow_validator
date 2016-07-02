@@ -22,9 +22,9 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                              synthesis_params={"apply_group_intents_immediately": True})
 
         cls.ng = nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        sw = cls.ng.get_node_object("s1")
-        cls.swpg_ring_aborescene_apply_true = SwitchPortGraph(cls.ng, sw, True)
-        sw.port_graph = cls.swpg_ring_aborescene_apply_true
+        sw_ring_aborescene_apply_true = cls.ng.get_node_object("s1")
+        cls.swpg_ring_aborescene_apply_true = SwitchPortGraph(cls.ng, sw_ring_aborescene_apply_true, True)
+        sw_ring_aborescene_apply_true.port_graph = cls.swpg_ring_aborescene_apply_true
         cls.swpg_ring_aborescene_apply_true.init_switch_port_graph()
         cls.swpg_ring_aborescene_apply_true.compute_switch_admitted_traffic()
 
