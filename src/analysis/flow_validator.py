@@ -97,35 +97,6 @@ class FlowValidator(object):
                         if path not in ld.traffic_paths:
                             ld.traffic_paths.append(path)
 
-    def get_all_host_pairs_traffic_paths(self, verbose=False):
-
-        host_pair_paths = defaultdict(defaultdict)
-
-        for src_h_id in self.network_graph.host_ids:
-            for dst_h_id in self.network_graph.host_ids:
-
-                if src_h_id == dst_h_id:
-                    continue
-
-                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
-
-                src_host_obj = self.network_graph.get_node_object(src_h_id)
-                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
-
-                all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
-                                                      dst_host_obj.switch_egress_port,
-                                                      specific_traffic,
-                                                      [src_host_obj.switch_ingress_port],
-                                                      [],
-                                                      verbose)
-
-                if not all_paths:
-                    host_pair_paths[src_h_id][dst_h_id] = []
-                else:
-                    host_pair_paths[src_h_id][dst_h_id] = all_paths
-
-        return host_pair_paths
-
     def get_specific_traffic(self, src_h_id, dst_h_id):
 
         src_h_obj = self.network_graph.get_node_object(src_h_id)
