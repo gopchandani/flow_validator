@@ -244,32 +244,38 @@ class TestSwitchPortGraph(unittest.TestCase):
     def test_ring_aborescene_synthesis_paths_failover(self):
 
         # This test asserts that in switch s1, for host h11, with a single failures:
-        # Traffic for host h21 flows out of port 3 with modifications 5122 before failure and
-        # out of port 2 with modifications 6146 after failure
-        # Traffic for host h31 flows out of port 2 with modifications 5123 before failure and
-        # out of port 3 with modifications 6147 after failure
-        # Traffic for host h41 flows out of port 2 with modifications 5124 before failure and
-        # out of port 3 with modifications 6148 after failure
+        # Traffic for host h21 flows out of port 3 before failure and out of port 2 after failure
+        # Traffic for host h31 flows out of port 2 before failure and out of port 3 after failure
+        # Traffic for host h41 flows out of port 2 before failure and out of port 3 after failure
 
         h11_obj = self.ng.get_node_object("h11")
         h21_obj = self.ng.get_node_object("h21")
         h31_obj = self.ng.get_node_object("h31")
         h41_obj = self.ng.get_node_object("h41")
 
-        primary_at, failover_at = self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h21_obj, 1, 3, 2)
-        self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5122, 5123)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6146, 6147)})
+        expected_path_via_egress2 = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
+                                                     self.ring_swpg.get_node("s1:table0"),
+                                                     self.ring_swpg.get_node("s1:table1"),
+                                                     self.ring_swpg.get_node("s1:table2"),
+                                                     self.ring_swpg.get_node("s1:table3"),
+                                                     self.ring_swpg.get_node("s1:egress2")])
 
-        primary_at, failover_at = self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h31_obj, 1, 2, 3)
-        self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5123, 5124)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6147, 6148)})
+        expected_path_via_egress3 = TrafficPath(self.ring_swpg, [self.ring_swpg.get_node("s1:ingress1"),
+                                                     self.ring_swpg.get_node("s1:table0"),
+                                                     self.ring_swpg.get_node("s1:table1"),
+                                                     self.ring_swpg.get_node("s1:table2"),
+                                                     self.ring_swpg.get_node("s1:table3"),
+                                                     self.ring_swpg.get_node("s1:egress3")])
 
-        primary_at, failover_at = self.check_failover_admitted_traffic(self.ring_swpg, h11_obj, h41_obj, 1, 2, 3)
-        self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6148, 6149)})
+        self.check_failover_path(self.ring_swpg, h11_obj, h21_obj, 1, 3, 2,
+                                 expected_path_via_egress3, expected_path_via_egress2)
+
+        self.check_failover_path(self.ring_swpg, h11_obj, h31_obj, 1, 2, 3,
+                                 expected_path_via_egress2, expected_path_via_egress3)
+
+        self.check_failover_path(self.ring_swpg, h11_obj, h41_obj, 1, 2, 3,
+                                 expected_path_via_egress2, expected_path_via_egress3)
+
 
     def test_all_ports_failure_restore(self, verbose=False):
 
