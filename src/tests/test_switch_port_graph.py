@@ -10,7 +10,8 @@ from experiments.network_configuration import NetworkConfiguration
 
 class TestSwitchPortGraph(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
 
         nc = NetworkConfiguration("ryu",
                                   "ring",
@@ -20,12 +21,12 @@ class TestSwitchPortGraph(unittest.TestCase):
                                   synthesis_name="AboresceneSynthesis",
                                   synthesis_params={"apply_group_intents_immediately": True})
 
-        self.ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        sw = self.ng.get_node_object("s1")
-        self.ring_swpg = SwitchPortGraph(self.ng, sw, True)
-        sw.port_graph = self.ring_swpg
-        self.ring_swpg.init_switch_port_graph()
-        self.ring_swpg.compute_switch_admitted_traffic()
+        cls.ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        sw = cls.ng.get_node_object("s1")
+        cls.ring_swpg = SwitchPortGraph(cls.ng, sw, True)
+        sw.port_graph = cls.ring_swpg
+        cls.ring_swpg.init_switch_port_graph()
+        cls.ring_swpg.compute_switch_admitted_traffic()
 
     def check_admitted_traffic(self, swpg, src_host_obj, dst_host_obj, ingress_port_num, egress_port_num):
         ingress_node = swpg.get_ingress_node(swpg.sw.node_id, ingress_port_num)
@@ -283,8 +284,6 @@ class TestSwitchPortGraph(unittest.TestCase):
         # Loop over ports of the switch and fail and restore them one by one
         for testing_port_number in self.ring_swpg.sw.ports:
 
-            print "testing_port_number:", testing_port_number
-
             testing_port = self.ring_swpg.sw.ports[testing_port_number]
 
             graph_paths_before = self.ring_swpg.get_graph_paths(verbose)
@@ -310,14 +309,12 @@ class TestSwitchPortGraph(unittest.TestCase):
 
             if not all_graph_paths_equal:
                 test_passed = all_graph_paths_equal
-                print "Test Failed."
 
             all_graph_ats_equal = self.ring_swpg.compare_graph_ats(graph_ats_before,
                                                                    graph_ats_after,
                                                                    verbose)
             if not all_graph_ats_equal:
                 test_passed = all_graph_ats_equal
-                print "Test Failed."
 
         self.assertEqual(test_passed, True)
 
