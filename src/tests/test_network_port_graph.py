@@ -98,15 +98,8 @@ class TestNetworkPortGraph(unittest.TestCase):
         after_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
         self.assertEqual(after_at.is_empty(), True)
 
-    def test_two_link_failure_admitted_traffic_absence(self):
-
-        # Initialize some data structures
-        src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
-        dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
-        links_to_fail = [("s1", "s4"), ("s2", "s3")]
-
-        self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
-                                                             src_h_obj, dst_h_obj, links_to_fail)
+        for link_to_fail in links_to_fail:
+            npg.add_node_graph_link(*link_to_fail, updating=True)
 
     def get_specific_traffic(self, ng, src_h_id, dst_h_id):
 
@@ -206,13 +199,6 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         return all_paths_match
 
-    def test_clos_primary_paths_match_synthesized(self):
-        analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
-                                                                                  self.npg_clos_dijkstra)
-        paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
-                                                                analyzed_host_pairs_traffic_paths)
-        self.assertEqual(paths_match, True)
-
     def compare_failover_paths_with_synthesis(self, nc, ng, npg, links_to_try, verbose=False):
 
         synthesized_primary_paths = None
@@ -271,12 +257,29 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         return all_paths_match
 
-    def test_clos_failover_paths_match_synthesized(self):
-        paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
-                                                                 self.ng_clos_dijkstra,
-                                                                 self.npg_clos_dijkstra,
-                                                                 self.ng_clos_dijkstra.graph.edges())
-        self.assertEqual(paths_match, True)
+    # def test_clos_primary_paths_match_synthesized(self):
+    #     analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
+    #                                                                               self.npg_clos_dijkstra)
+    #     paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
+    #                                                             analyzed_host_pairs_traffic_paths)
+    #     self.assertEqual(paths_match, True)
+    #
+    # def test_clos_failover_paths_match_synthesized(self):
+    #     paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
+    #                                                              self.ng_clos_dijkstra,
+    #                                                              self.npg_clos_dijkstra,
+    #                                                              self.ng_clos_dijkstra.graph.edges())
+    #     self.assertEqual(paths_match, True)
+
+    def test_two_link_failure_admitted_traffic_absence(self):
+
+        # Initialize some data structures
+        src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
+        dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
+        links_to_fail = [("s1", "s4"), ("s2", "s3")]
+
+        self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
+                                                             src_h_obj, dst_h_obj, links_to_fail)
 
 if __name__ == '__main__':
     unittest.main()
