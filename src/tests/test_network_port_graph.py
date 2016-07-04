@@ -63,22 +63,22 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.attach_hosts_port_nodes_with_npg(cls.ng_ring_aborescene_apply_true, cls.npg_ring_aborescene_apply_true)
         cls.init_hosts_traffic_propagation(cls.ng_ring_aborescene_apply_true, cls.npg_ring_aborescene_apply_true)
 
-        cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
-                                                    "clostopo",
-                                                    {"fanout": 2,
-                                                     "core": 1,
-                                                     "num_hosts_per_switch": 1},
-                                                    conf_root=os.path.dirname(__file__) + "/",
-                                                    synthesis_name="DijkstraSynthesis",
-                                                    synthesis_params={})
-
-        cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
-                                                                        synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
-        cls.npg_clos_dijkstra.init_network_port_graph()
-
-        cls.attach_hosts_port_nodes_with_npg(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
-        cls.init_hosts_traffic_propagation(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
+        # cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
+        #                                             "clostopo",
+        #                                             {"fanout": 2,
+        #                                              "core": 1,
+        #                                              "num_hosts_per_switch": 1},
+        #                                             conf_root=os.path.dirname(__file__) + "/",
+        #                                             synthesis_name="DijkstraSynthesis",
+        #                                             synthesis_params={})
+        #
+        # cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
+        #                                                                 synthesis_setup_gap=1)
+        # cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
+        # cls.npg_clos_dijkstra.init_network_port_graph()
+        #
+        # cls.attach_hosts_port_nodes_with_npg(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
+        # cls.init_hosts_traffic_propagation(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
 
     def check_two_link_failure_admitted_traffic_absence(self, npg, src_h_obj, dst_h_obj, links_to_fail):
 
@@ -92,10 +92,36 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         before_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
 
+        all_paths = npg.get_paths(src_h_obj.switch_ingress_port,
+                                  dst_h_obj.switch_egress_port,
+                                  before_at,
+                                  [src_h_obj.switch_ingress_port],
+                                  [],
+                                  True)
+
+        print all_paths[0]
+
+
         for link_to_fail in links_to_fail:
             npg.remove_node_graph_link(*link_to_fail)
 
         after_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
+
+        all_paths = npg.get_paths(src_h_obj.switch_ingress_port,
+                                  dst_h_obj.switch_egress_port,
+                                  after_at,
+                                  [src_h_obj.switch_ingress_port],
+                                  [],
+                                  True)
+
+        print all_paths[0]
+
+        # mn_src_host = self.nc_ring_aborescene_apply_true.mininet_obj.get('h21')
+        # mn_dst_host = self.nc_ring_aborescene_apply_true.mininet_obj.get('h31')
+        # for link_to_fail in links_to_fail:
+        #     self.nc_ring_aborescene_apply_true.mininet_obj.configLinkStatus(link_to_fail[0], link_to_fail[1], 'down')
+        # self.nc_ring_aborescene_apply_true.is_host_pair_pingable(mn_src_host, mn_dst_host)
+
         self.assertEqual(after_at.is_empty(), True)
 
         for link_to_fail in links_to_fail:

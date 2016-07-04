@@ -115,7 +115,7 @@ class NetworkConfiguration(object):
 
         # self.mininet_obj.pingAll()
 
-        is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
+        # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
 
         # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 

@@ -308,15 +308,11 @@ class PortGraph(object):
 
         at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
 
-        # Check to see if what is admitted via this succ is  not empty
-        if not at_dst_succ.is_empty():
-
-            if at_dst_succ.is_subset_traffic(at):
-                should = True
-                enabling_edge_data_list = at.intersect(at_dst_succ).get_enabling_edge_data()
-            else:
-                # Do not go further if the specified specific traffic is not handled by at_dst_succ
-                pass
+        # Check to see if the successor would carry some of the traffic from here
+        succ_int = at.intersect(at_dst_succ)
+        if not succ_int.is_empty():
+            should = True
+            enabling_edge_data_list = succ_int.get_enabling_edge_data()
         else:
             # Do not go further if there is no traffic admitted via this succ
             pass
