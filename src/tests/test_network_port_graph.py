@@ -80,41 +80,58 @@ class TestNetworkPortGraph(unittest.TestCase):
         # cls.attach_hosts_port_nodes_with_npg(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
         # cls.init_hosts_traffic_propagation(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
 
+    def check_single_link_failure_admitted_traffic_subset(self, npg, node, dst, traffic_to_check, link_to_fail):
+
+        npg.remove_node_graph_link(*link_to_fail)
+        after_at = npg.get_admitted_traffic(node, dst)
+
+        is_subset = after_at.is_subset_traffic(traffic_to_check)
+
+        self.assertEqual(is_subset, True)
+        npg.add_node_graph_link(*link_to_fail, updating=True)
+
+    def check_single_link_failure_admitted_traffic_match(self, npg, node, dst, traffic_to_match, link_to_fail):
+
+        npg.remove_node_graph_link(*link_to_fail)
+        after_at = npg.get_admitted_traffic(node, dst)
+        self.assertEqual(after_at, traffic_to_match)
+        npg.add_node_graph_link(*link_to_fail, updating=True)
+
     def check_two_link_failure_admitted_traffic_absence(self, npg, src_h_obj, dst_h_obj, links_to_fail):
 
-        specific_traffic = Traffic(init_wildcard=True)
-        specific_traffic.set_field("ethernet_type", 0x0800)
-        specific_traffic.set_field("ethernet_source", int(src_h_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("ethernet_destination", int(dst_h_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("in_port", int(src_h_obj.switch_port_attached))
-        specific_traffic.set_field("vlan_id", src_h_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
-        specific_traffic.set_field("has_vlan_tag", 0)
+        # specific_traffic = Traffic(init_wildcard=True)
+        # specific_traffic.set_field("ethernet_type", 0x0800)
+        # specific_traffic.set_field("ethernet_source", int(src_h_obj.mac_addr.replace(":", ""), 16))
+        # specific_traffic.set_field("ethernet_destination", int(dst_h_obj.mac_addr.replace(":", ""), 16))
+        # specific_traffic.set_field("in_port", int(src_h_obj.switch_port_attached))
+        # specific_traffic.set_field("vlan_id", src_h_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
+        # specific_traffic.set_field("has_vlan_tag", 0)
 
-        before_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
-
-        all_paths = npg.get_paths(src_h_obj.switch_ingress_port,
-                                  dst_h_obj.switch_egress_port,
-                                  before_at,
-                                  [src_h_obj.switch_ingress_port],
-                                  [],
-                                  True)
-
-        print all_paths[0]
-
+        specific_traffic = self.get_specific_traffic(npg.network_graph, src_h_obj.node_id, dst_h_obj.node_id)
 
         for link_to_fail in links_to_fail:
+
+            before_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
+            all_paths = npg.get_paths(src_h_obj.switch_ingress_port,
+                                      dst_h_obj.switch_egress_port,
+                                      before_at,
+                                      [src_h_obj.switch_ingress_port],
+                                      [],
+                                      True)
+            for p in all_paths:
+                print p
+
             npg.remove_node_graph_link(*link_to_fail)
 
         after_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
-
         all_paths = npg.get_paths(src_h_obj.switch_ingress_port,
                                   dst_h_obj.switch_egress_port,
                                   after_at,
                                   [src_h_obj.switch_ingress_port],
                                   [],
                                   True)
-
-        print all_paths[0]
+        for p in all_paths:
+            print p
 
         # mn_src_host = self.nc_ring_aborescene_apply_true.mininet_obj.get('h21')
         # mn_dst_host = self.nc_ring_aborescene_apply_true.mininet_obj.get('h31')
@@ -283,29 +300,58 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         return all_paths_match
 
-    # def test_clos_primary_paths_match_synthesized(self):
-    #     analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
-    #                                                                               self.npg_clos_dijkstra)
-    #     paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
-    #                                                             analyzed_host_pairs_traffic_paths)
-    #     self.assertEqual(paths_match, True)
-    #
-    # def test_clos_failover_paths_match_synthesized(self):
-    #     paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
-    #                                                              self.ng_clos_dijkstra,
-    #                                                              self.npg_clos_dijkstra,
-    #                                                              self.ng_clos_dijkstra.graph.edges())
-    #     self.assertEqual(paths_match, True)
-
-    def test_two_link_failure_admitted_traffic_absence(self):
+    def test_single_link_failure_admitted_traffic_presence(self):
 
         # Initialize some data structures
-        src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
-        dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
-        links_to_fail = [("s1", "s4"), ("s2", "s3")]
+        node_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h21").switch_ingress_port
+        dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
+        traffic_to_check = self.get_specific_traffic(self.ng_ring_aborescene_apply_true, "h21", "h31")
+        link_to_fail = ("s1", "s4")
 
-        self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
-                                                             src_h_obj, dst_h_obj, links_to_fail)
+        self.check_single_link_failure_admitted_traffic_subset(self.npg_ring_aborescene_apply_true,
+                                                               node_to_check,
+                                                               dst_to_check,
+                                                               traffic_to_check,
+                                                               link_to_fail)
+
+    def test_single_link_failure_admitted_traffic_absence(self):
+
+        # Initialize some data structures
+        node_to_check = self.npg_ring_aborescene_apply_true.get_egress_node("s1", 3)
+        dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
+        traffic_to_match = Traffic()
+        link_to_fail = ("s1", "s4")
+
+        self.check_single_link_failure_admitted_traffic_match(self.npg_ring_aborescene_apply_true,
+                                                              node_to_check,
+                                                              dst_to_check,
+                                                              traffic_to_match,
+                                                              link_to_fail)
+
+        # def test_two_link_failure_admitted_traffic_absence(self):
+        #
+        #     # Initialize some data structures
+        #     src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
+        #     dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
+        #     links_to_fail = [("s1", "s4"), ("s2", "s3")]
+        #
+        #     self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
+        #                                                          src_h_obj, dst_h_obj, links_to_fail)
+
+        # def test_clos_primary_paths_match_synthesized(self):
+        #     analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
+        #                                                                               self.npg_clos_dijkstra)
+        #     paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
+        #                                                             analyzed_host_pairs_traffic_paths)
+        #     self.assertEqual(paths_match, True)
+        #
+        # def test_clos_failover_paths_match_synthesized(self):
+        #     paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
+        #                                                              self.ng_clos_dijkstra,
+        #                                                              self.npg_clos_dijkstra,
+        #                                                              self.ng_clos_dijkstra.graph.edges())
+        #     self.assertEqual(paths_match, True)
+
 
 if __name__ == '__main__':
     unittest.main()

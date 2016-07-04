@@ -422,6 +422,9 @@ class Traffic:
         else:
             return False
 
+    def __eq__(self, other):
+        return self.is_equal_traffic(other)
+
     def intersect(self, in_traffic):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:
