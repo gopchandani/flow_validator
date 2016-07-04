@@ -232,6 +232,7 @@ class PortGraph(object):
                 for succ in admitted_traffic_changes[pred][dst]:
 
                     edge = self.get_edge(pred, succ)
+
                     succ_traffic = self.get_admitted_traffic(succ, dst)
 
                     # Update admitted traffic at successor node to reflect changes
