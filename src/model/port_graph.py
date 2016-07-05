@@ -114,7 +114,12 @@ class PortGraph(object):
         return succs_traffic
 
     def get_admitted_traffic_via_succ(self, node, dst, succ):
-        return node.admitted_traffic[dst][succ]
+        try:
+            admitted_traffic_via_succ = node.admitted_traffic[dst][succ]
+        except KeyError:
+            admitted_traffic_via_succ = Traffic(init_wildcard=False)
+
+        return admitted_traffic_via_succ
 
     def set_admitted_traffic_via_succ(self, node, dst, succ, admitted_traffic):
         node.admitted_traffic[dst][succ] = admitted_traffic
@@ -129,52 +134,13 @@ class PortGraph(object):
 
         return succ_list
 
-    def account_node_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst):
-
-        # Keep track of what traffic looks like before any changes occur
-        traffic_before_changes = self.get_admitted_traffic(curr, dst)
-
-        # Compute what additional traffic is being admitted overall
-        additional_traffic = traffic_before_changes.difference(dst_traffic_at_succ)
-
-        # Do the changes...
-        try:
-            # First accumulate any more traffic that has arrived from this sucessor
-            prev_dst_traffic_at_succ = self.get_admitted_traffic_via_succ(curr, dst, succ)
-            more_from_succ = prev_dst_traffic_at_succ.difference(dst_traffic_at_succ)
-            if not more_from_succ.is_empty():
-                prev_dst_traffic_at_succ.union(more_from_succ)
-
-            # Then get rid of traffic that this particular successor does not admit anymore
-            less_from_succ = dst_traffic_at_succ.difference(self.get_admitted_traffic_via_succ(curr, dst, succ))
-            if not less_from_succ.is_empty():
-                remaining = less_from_succ.difference(self.get_admitted_traffic_via_succ(curr, dst, succ))
-                self.set_admitted_traffic_via_succ(curr, dst, succ, remaining)
-
-        # If there is no traffic for this dst-succ combination prior to this propagation,
-        # setup a traffic object for successor
-        except KeyError:
-            if not dst_traffic_at_succ.is_empty():
-                new_traffic = Traffic()
-                new_traffic.union(dst_traffic_at_succ)
-                self.set_admitted_traffic_via_succ(curr, dst, succ, new_traffic)
-
-        # Then see what the overall traffic looks like after additional/reduced traffic for specific successor
-        traffic_after_changes = self.get_admitted_traffic(curr, dst)
-
-        # Compute what reductions (if any) in traffic has occured due to all the changes
-        reduced_traffic = traffic_after_changes.difference(traffic_before_changes)
-
-        traffic_to_propagate = traffic_after_changes
-
-        return additional_traffic, reduced_traffic, traffic_to_propagate
-
     def propagate_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
-        additional_traffic, reduced_traffic, traffic_to_propagate = \
-            self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
+        prev_dst_traffic_at_succ = self.get_admitted_traffic_via_succ(curr, dst, succ)
+        self.set_admitted_traffic_via_succ(curr, dst, succ, dst_traffic_at_succ)
+        traffic_after_changes = self.get_admitted_traffic(curr, dst)
 
-        if not additional_traffic.is_empty() or not reduced_traffic.is_empty():
+        if not (prev_dst_traffic_at_succ == dst_traffic_at_succ):
 
             if curr in self.boundary_ingress_nodes:
                 end_to_end_modified_edges.append((curr.node_id, dst.node_id))
@@ -182,7 +148,7 @@ class PortGraph(object):
             for pred in self.predecessors_iter(curr):
 
                 edge = self.get_edge(pred, curr)
-                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
+                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_after_changes, edge)
                 self.propagate_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
 
     def update_admitted_traffic(self, modified_edges, end_to_end_modified_edges):
