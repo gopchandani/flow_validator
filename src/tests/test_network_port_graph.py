@@ -108,8 +108,6 @@ class TestNetworkPortGraph(unittest.TestCase):
                                       [src_h_obj.switch_ingress_port],
                                       [],
                                       True)
-            for p in all_paths:
-                print p
 
             npg.remove_node_graph_link(*link_to_fail)
 
@@ -120,8 +118,6 @@ class TestNetworkPortGraph(unittest.TestCase):
                                   [src_h_obj.switch_ingress_port],
                                   [],
                                   True)
-        for p in all_paths:
-            print p
 
         for link_to_fail in links_to_fail:
             npg.add_node_graph_link(*link_to_fail, updating=True)
@@ -228,8 +224,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
     def compare_failover_paths_with_synthesis(self, nc, ng, npg, links_to_try, verbose=False):
 
-        synthesized_primary_paths = None
-        synthesized_failover_paths = None
+        all_paths_match = True
 
         if not nc.load_config and nc.save_config:
             synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
@@ -248,9 +243,8 @@ class TestNetworkPortGraph(unittest.TestCase):
                 continue
 
             print "Breaking link:", link
-            npg.remove_node_graph_link(link[0], link[1])
 
-            all_paths_match = True
+            npg.remove_node_graph_link(link[0], link[1])
 
             analyzed_host_pairs_paths = self.get_all_host_pairs_traffic_paths(ng, npg)
 
@@ -272,6 +266,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                       src_host, dst_host,
                                                                       synthesized_path, verbose)
                     if not path_matches:
+
                         print "No analyzed path matched for:", synthesized_path, "with failed link:", link
                         all_paths_match = False
                         break
@@ -284,7 +279,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         return all_paths_match
 
-    def test_single_link_failure_admitted_traffic_presence(self):
+    def test_single_link_failure_admitted_traffic_presence_ring_aborescene_apply_true(self):
 
         node_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h21").switch_ingress_port
         dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
@@ -308,7 +303,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                traffic_to_check,
                                                                link_to_fail)
 
-    def test_single_link_failure_admitted_traffic_absence(self):
+    def test_single_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
 
         node_to_check = self.npg_ring_aborescene_apply_true.get_egress_node("s1", 3)
         dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
@@ -321,7 +316,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                               traffic_to_match,
                                                               link_to_fail)
 
-    def test_two_link_failure_admitted_traffic_absence(self):
+    def test_two_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
 
         src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
         dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
@@ -337,14 +332,14 @@ class TestNetworkPortGraph(unittest.TestCase):
         self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
                                                              src_h_obj, dst_h_obj, links_to_fail)
 
-    def test_clos_primary_paths_match_synthesized(self):
+    def test_primary_paths_match_synthesized_clos_dijkstra(self):
         analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
                                                                                   self.npg_clos_dijkstra)
         paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
                                                                 analyzed_host_pairs_traffic_paths)
         self.assertEqual(paths_match, True)
 
-    def test_clos_failover_paths_match_synthesized(self):
+    def test_failover_paths_match_synthesized_clos_dijkstra(self):
         paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
                                                                  self.ng_clos_dijkstra,
                                                                  self.npg_clos_dijkstra,

@@ -132,6 +132,16 @@ class NetworkPortGraph(PortGraph):
 
             end_to_end_modified_edges = []
 
+            # Update admitted traffic due to link failure
+            edge1 = (sw1.ports[edge_port_dict[node1_id]].network_port_graph_egress_node.node_id,
+                     sw2.ports[edge_port_dict[node2_id]].network_port_graph_ingress_node.node_id)
+
+            edge2 = (sw2.ports[edge_port_dict[node2_id]].network_port_graph_egress_node.node_id,
+                     sw1.ports[edge_port_dict[node1_id]].network_port_graph_ingress_node.node_id)
+
+            self.update_admitted_traffic([edge1, edge2], end_to_end_modified_edges)
+
+            # Update admitted traffic due to switch transfer function changes
             modified_switch_edges = sw1.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node1_id],
                                                                                                     "port_up")
             self.modify_switch_transfer_edges(sw1, modified_switch_edges)
