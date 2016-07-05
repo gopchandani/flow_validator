@@ -337,20 +337,19 @@ class TestNetworkPortGraph(unittest.TestCase):
         self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
                                                              src_h_obj, dst_h_obj, links_to_fail)
 
+    def test_clos_primary_paths_match_synthesized(self):
+        analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
+                                                                                  self.npg_clos_dijkstra)
+        paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
+                                                                analyzed_host_pairs_traffic_paths)
+        self.assertEqual(paths_match, True)
 
-    # def test_clos_primary_paths_match_synthesized(self):
-    #     analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
-    #                                                                               self.npg_clos_dijkstra)
-    #     paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
-    #                                                             analyzed_host_pairs_traffic_paths)
-    #     self.assertEqual(paths_match, True)
-
-    # def test_clos_failover_paths_match_synthesized(self):
-    #     paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
-    #                                                              self.ng_clos_dijkstra,
-    #                                                              self.npg_clos_dijkstra,
-    #                                                              self.ng_clos_dijkstra.graph.edges())
-    #     self.assertEqual(paths_match, True)
+    def test_clos_failover_paths_match_synthesized(self):
+        paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
+                                                                 self.ng_clos_dijkstra,
+                                                                 self.npg_clos_dijkstra,
+                                                                 self.ng_clos_dijkstra.graph.edges())
+        self.assertEqual(paths_match, True)
 
 
 if __name__ == '__main__':
