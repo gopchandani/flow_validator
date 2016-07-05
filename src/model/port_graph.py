@@ -174,18 +174,7 @@ class PortGraph(object):
         additional_traffic, reduced_traffic, traffic_to_propagate = \
             self.account_node_admitted_traffic(curr, dst_traffic_at_succ, succ, dst)
 
-        if not additional_traffic.is_empty():
-
-            if curr in self.boundary_ingress_nodes:
-                end_to_end_modified_edges.append((curr.node_id, dst.node_id))
-
-            for pred in self.predecessors_iter(curr):
-
-                edge = self.get_edge(pred, curr)
-                pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_to_propagate, edge)
-                self.propagate_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
-
-        if not reduced_traffic.is_empty():
+        if not additional_traffic.is_empty() or not reduced_traffic.is_empty():
 
             if curr in self.boundary_ingress_nodes:
                 end_to_end_modified_edges.append((curr.node_id, dst.node_id))
