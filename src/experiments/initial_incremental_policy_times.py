@@ -87,7 +87,7 @@ class InitialIncrementalTimes(Experiment):
                                         y_scale='log',
                                         x_min_factor=1.0,
                                         x_max_factor=1.0,
-                                        y_min_factor=0.1,
+                                        y_min_factor=0.01,
                                         y_max_factor=1,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
@@ -100,7 +100,7 @@ class InitialIncrementalTimes(Experiment):
                                         y_scale='log',
                                         x_min_factor=1.0,
                                         x_max_factor=1.0,
-                                        y_min_factor=0.1,
+                                        y_min_factor=0.01,
                                         y_max_factor=1,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
@@ -347,26 +347,26 @@ class InitialIncrementalTimes(Experiment):
 
 def main():
 
-    num_iterations = 10
-    link_fraction_to_sample = 1.0
-    num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
-
-    network_configurations = [NetworkConfiguration("ryu",
-                                                   "clostopo",
-                                                   {"fanout": 2,
-                                                    "core": 1,
-                                                    "num_hosts_per_switch": 1},
-                                                   conf_root="configurations/",
-                                                   synthesis_name="AboresceneSynthesis",
-                                                   synthesis_params={"apply_group_intents_immediately": True})]
+    num_iterations = 2
+    link_fraction_to_sample = 0.25
+    num_hosts_per_switch_list = [2, 4, 6]#[2, 4, 6, 8, 10]
 
     # network_configurations = [NetworkConfiguration("ryu",
-    #                                                "ring",
-    #                                                {"num_switches": 4,
+    #                                                "clostopo",
+    #                                                {"fanout": 2,
+    #                                                 "core": 1,
     #                                                 "num_hosts_per_switch": 1},
     #                                                conf_root="configurations/",
     #                                                synthesis_name="AboresceneSynthesis",
     #                                                synthesis_params={"apply_group_intents_immediately": True})]
+
+    network_configurations = [NetworkConfiguration("ryu",
+                                                   "ring",
+                                                   {"num_switches": 4,
+                                                    "num_hosts_per_switch": 1},
+                                                   conf_root="configurations/",
+                                                   synthesis_name="AboresceneSynthesis",
+                                                   synthesis_params={"apply_group_intents_immediately": True})]
 
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
@@ -379,9 +379,10 @@ def main():
 
 
     # exp.data = exp.data_merge()
-    # exp.data = exp.generate_relative_cost_ratio_data(exp.data)
-    # exp.data = exp.generate_num_flow_path_keys(exp.data)
-    # exp.plot_initial_incremental_times()
+
+    exp.data = exp.generate_relative_cost_ratio_data(exp.data)
+    exp.data = exp.generate_num_flow_path_keys(exp.data)
+    exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()
