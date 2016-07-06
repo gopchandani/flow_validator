@@ -245,7 +245,7 @@ class TrafficElement:
 
         return intersection
 
-    def cascade_modifications(self, orig_traffic_element, modifications_used):
+    def store_switch_modifications(self, orig_traffic_element, modifications_used):
 
         # When storing modifications, store the first one applied in the switch, with the match from the last
         # matching rule
@@ -337,8 +337,7 @@ class TrafficElement:
         orig_traffic_element.written_modifications_apply = self.written_modifications_apply
         orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
-        return self.cascade_modifications(orig_traffic_element, modifications_used)
-
+        return self.store_switch_modifications(orig_traffic_element, modifications_used)
 
 
 class Traffic:
