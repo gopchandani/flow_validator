@@ -245,30 +245,27 @@ class TrafficElement:
 
         return intersection
 
-    def store_switch_modifications(self, modifications_used):
+    def store_switch_modifications(self, modifications):
 
         # When storing modifications, store the first one applied in the switch, with the match from the last
         # matching rule
-        for modified_field in modifications_used:
+        for modified_field in modifications:
             if modified_field not in self.switch_modifications:
-                self.switch_modifications[modified_field] = modifications_used[modified_field]
+                self.switch_modifications[modified_field] = modifications[modified_field]
             else:
                 # Check if the previous modification requires setting of the match to this modification
                 # If so, then use the match from this modification
-                this_modification_match = modifications_used[modified_field][0]
-                this_modification_value_tree = modifications_used[modified_field][1]
+                this_modification_match = modifications[modified_field][0]
+                this_modification_value_tree = modifications[modified_field][1]
 
                 prev_modification_match = self.switch_modifications[modified_field][0]
                 prev_modification_value_tree = self.switch_modifications[modified_field][1]
-
                 prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
 
-                intersection = self.get_field_intersection(this_modification_value_tree,
-                                                           prev_match_field_value_tree)
+                intersection = self.get_field_intersection(this_modification_value_tree, prev_match_field_value_tree)
 
                 if intersection:
-                    self.switch_modifications[modified_field] = (this_modification_match,
-                                                                                 prev_modification_value_tree)
+                    self.switch_modifications[modified_field] = (this_modification_match, prev_modification_value_tree)
 
     def get_orig_traffic_element(self, modifications):
 
