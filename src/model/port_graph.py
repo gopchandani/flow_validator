@@ -136,6 +136,9 @@ class PortGraph(object):
 
     def propagate_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
+        if succ and succ.node_id == 's1:egress2' and dst.node_id == 's1:egress2':
+            pass
+
         prev_dst_traffic_at_succ = self.get_admitted_traffic_via_succ(curr, dst, succ)
         self.set_admitted_traffic_via_succ(curr, dst, succ, dst_traffic_at_succ)
         traffic_after_changes = self.get_admitted_traffic(curr, dst)

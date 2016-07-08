@@ -250,8 +250,12 @@ class TrafficElement:
         # When storing modifications, store the first one applied in the switch, with the match from the last
         # matching rule
         for modified_field in modifications:
+
+            # If the modification on this field has not been seen before, simply store it.
             if modified_field not in self.switch_modifications:
                 self.switch_modifications[modified_field] = modifications[modified_field]
+
+            # Otherwise if you have seen this field being modified previously...
             else:
                 # Check if the previous modification requires setting of the match to this modification
                 # If so, then use the match from this modification
@@ -541,6 +545,7 @@ class Traffic:
     def set_written_modifications(self, written_modifications):
         for te in self.traffic_elements:
             te.written_modifications.update(written_modifications)
+            # te.store_switch_modifications(written_modifications)
 
     def set_written_modifications_apply(self, written_modifications_apply):
         for te in self.traffic_elements:

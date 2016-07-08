@@ -144,23 +144,24 @@ class SwitchPortGraph(PortGraph):
                 else:
                     traffic_to_propagate.set_written_modifications_apply(True)
 
+            # Always roll-back applied modifications if th edge has any...
             if ed.applied_modifications:
                 ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications)
             else:
                 ttp = traffic_to_propagate
 
-            # This chunk handles all the written modifications stuff.
+            # At ingress edges, first roll-back any accumulated written modifications
             if edge.edge_type == "ingress":
-                ttp = traffic_to_propagate.get_orig_traffic()
-            else:
-                # At all the non-ingress edges accumulate written modifications
-                if ed.written_modifications:
-                    ttp.set_written_modifications(ed.written_modifications)
+                ttp = ttp.get_orig_traffic()
 
             i = ed.edge_filter_traffic.intersect(ttp)
             i.set_enabling_edge_data(ed)
 
             if not i.is_empty():
+                # At all the non-ingress edges accumulate written modifications
+                if edge.edge_type != "ingress" and ed.written_modifications:
+                    i.set_written_modifications(ed.written_modifications)
+
                 pred_admitted_traffic.union(i)
 
         return pred_admitted_traffic
