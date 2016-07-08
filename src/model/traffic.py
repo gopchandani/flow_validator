@@ -218,8 +218,8 @@ class TrafficElement:
                 modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
         # Accumulate field modifications
-        modified_traffic_element.written_modifications = self.written_modifications
-        modified_traffic_element.switch_modifications = self.switch_modifications
+        modified_traffic_element.switch_modifications.update(self.switch_modifications)
+        modified_traffic_element.written_modifications.update(self.written_modifications)
         modified_traffic_element.written_modifications_apply = self.written_modifications_apply
         modified_traffic_element.enabling_edge_data = self.enabling_edge_data
 
@@ -331,8 +331,8 @@ class TrafficElement:
                 orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
         # Accumulate field modifications
-        orig_traffic_element.written_modifications.update(self.written_modifications)
         orig_traffic_element.switch_modifications.update(self.switch_modifications)
+        orig_traffic_element.written_modifications.update(self.written_modifications)
         orig_traffic_element.written_modifications_apply = self.written_modifications_apply
         orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
@@ -443,9 +443,9 @@ class Traffic:
                     # Add this and do the necessary book-keeping...
                     traffic_intersection.traffic_elements.append(ei)
 
+                    ei.switch_modifications.update(e_in.switch_modifications)
                     ei.written_modifications.update(e_in.written_modifications)
                     ei.written_modifications_apply = e_in.written_modifications_apply
-                    ei.switch_modifications = e_in.switch_modifications
                     ei.enabling_edge_data = e_in.enabling_edge_data
 
         return traffic_intersection
@@ -491,8 +491,8 @@ class Traffic:
             if remaining:
 
                 for remaining_te in remaining:
-                    remaining_te.written_modifications = in_te.written_modifications
-                    remaining_te.switch_modifications = in_te.switch_modifications
+                    remaining_te.switch_modifications.update(in_te.switch_modifications)
+                    remaining_te.written_modifications.update(in_te.written_modifications)
                     remaining_te.written_modifications_apply = in_te.written_modifications_apply
                     remaining_te.enabling_edge_data = in_te.enabling_edge_data
 
@@ -545,7 +545,7 @@ class Traffic:
     def set_written_modifications(self, written_modifications):
         for te in self.traffic_elements:
             te.written_modifications.update(written_modifications)
-            # te.store_switch_modifications(written_modifications)
+            te.store_switch_modifications(written_modifications)
 
     def set_written_modifications_apply(self, written_modifications_apply):
         for te in self.traffic_elements:

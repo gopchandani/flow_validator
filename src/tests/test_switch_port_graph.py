@@ -451,7 +451,7 @@ class TestSwitchPortGraph(unittest.TestCase):
         self.check_failover_modifications(primary_at, failover_at,
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)},
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6148, 6149)})
-    #
+    # 
     # def test_ring_aborescene_synthesis_paths_failover_apply_false(self):
     #
     #     # This test asserts that in switch s1, for host h11, with a single failures:
