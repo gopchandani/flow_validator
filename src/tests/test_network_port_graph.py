@@ -376,19 +376,29 @@ class TestNetworkPortGraph(unittest.TestCase):
         return npg.link_failure_causes_path_disconnect(active_path, ld)
 
     def test_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
-        h11_obj = self.ng_ring_aborescene_apply_true.get_node_object("h11")
-        h21_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
-        h31_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
-        h41_obj = self.ng_ring_aborescene_apply_true.get_node_object("h41")
 
-        s1_s2_ld = self.ng_ring_aborescene_apply_true.get_link_data("s1", "s2")
+        # Test for every host pair
+        for src_h_obj, dst_h_obj in self.ng_ring_aborescene_apply_true.host_obj_pair_iter():
 
-        fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
-                                                               self.npg_ring_aborescene_apply_true_report_active_false,
-                                                               h11_obj,
-                                                               h31_obj,
-                                                               s1_s2_ld)
-        self.assertEqual(fails, False)
+            # Try failing each link
+            for ld in self.ng_ring_aborescene_apply_true.get_switch_link_data():
+                fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
+                                                                       self.npg_ring_aborescene_apply_true_report_active_false,
+                                                                       src_h_obj,
+                                                                       dst_h_obj,
+                                                                       ld)
+                if fails:
+                    print src_h_obj, dst_h_obj
+
+                self.assertEqual(fails, False)
+
+
+    # def test_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
+    #     h11_obj = self.ng_ring_aborescene_apply_true.get_node_object("h11")
+    #     h21_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
+    #     h31_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
+    #     h41_obj = self.ng_ring_aborescene_apply_true.get_node_object("h41")
+
 
 if __name__ == '__main__':
     unittest.main()

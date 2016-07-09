@@ -7,6 +7,7 @@ import httplib2
 import networkx as nx
 
 from collections import defaultdict
+from itertools import permutations
 
 from switch import Switch
 from host import Host
@@ -369,8 +370,7 @@ class NetworkGraph(object):
 
         return num_rules
 
-def main():
-    m = NetworkGraph()
-
-if __name__ == "__main__":
-    main()
+    def host_obj_pair_iter(self):
+        for host_id_pair in permutations(self.host_ids, 2):
+            host_obj_pair = (self.get_node_object(host_id_pair[0]), self.get_node_object(host_id_pair[1]))
+            yield host_obj_pair
