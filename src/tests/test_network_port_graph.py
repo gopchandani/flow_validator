@@ -382,14 +382,12 @@ class TestNetworkPortGraph(unittest.TestCase):
 
             # Try failing each link
             for ld in self.ng_ring_aborescene_apply_true.get_switch_link_data():
+
                 fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
                                                                        self.npg_ring_aborescene_apply_true_report_active_false,
                                                                        src_h_obj,
                                                                        dst_h_obj,
                                                                        ld)
-                if fails:
-                    print src_h_obj, dst_h_obj
-
                 self.assertEqual(fails, False)
 
 
