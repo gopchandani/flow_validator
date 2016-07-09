@@ -31,18 +31,6 @@ class TestSwitchPortGraph(unittest.TestCase):
         cls.swpg_ring_aborescene_apply_true.init_switch_port_graph()
         cls.swpg_ring_aborescene_apply_true.compute_switch_admitted_traffic()
 
-
-        sw_ring_aborescene_apply_true_report_active_false = cls.ng_ring_aborescene_apply_true.get_node_object("s1")
-
-        cls.swpg_ring_aborescene_apply_true_report_active_false = SwitchPortGraph(cls.ng_ring_aborescene_apply_true,
-                                                               sw_ring_aborescene_apply_true_report_active_false, False)
-
-        sw_ring_aborescene_apply_true_report_active_false.port_graph = cls.swpg_ring_aborescene_apply_true_report_active_false
-        cls.swpg_ring_aborescene_apply_true_report_active_false.init_switch_port_graph()
-        cls.swpg_ring_aborescene_apply_true_report_active_false.compute_switch_admitted_traffic()
-
-
-
         nc_ring_aborescene_apply_false = NetworkConfiguration("ryu",
                                                               "ring",
                                                               {"num_switches": 4,
@@ -172,14 +160,6 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                                         h11_obj, h31_obj, 1, 2)
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
                                                                         h11_obj, h41_obj, 1, 2)
-
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true_report_active_false,
-                                                                        h11_obj, h21_obj, 1, 3)
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true_report_active_false,
-                                                                        h11_obj, h31_obj, 1, 2)
-        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true_report_active_false,
-                                                                        h11_obj, h41_obj, 1, 2)
-
 
         # This test asserts that in switch s1, for host h11, with no failures:
         # Traffic for host h21 flows out of port 3

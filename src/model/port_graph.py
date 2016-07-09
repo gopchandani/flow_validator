@@ -86,33 +86,6 @@ class PortGraph(object):
 
         return dst_admitted_traffic
 
-    def get_succs_with_admitted_traffic_and_vuln_rank(self, pred, at, vuln_rank, dst):
-
-        succs_traffic = []
-        possible_succs = self.get_admitted_traffic_succs(pred, dst)
-        for succ in possible_succs:
-
-            # First check if the successor would carry this traffic at all
-            should, enabling_edge_data_list = self.should_add_succ(pred, succ, dst, at)
-            traffic_at_succ = self.get_modified_traffic_at_succ(pred, succ, dst, at, enabling_edge_data_list)
-
-            # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
-            if should:
-                vuln_rank_check = True
-
-                # TODO: This may cause problem with duplicates (i.e. two edge data with exact same
-                # traffic carried but with different vuln_ranks)
-
-                for ed in enabling_edge_data_list:
-                    if ed.get_vuln_rank() != vuln_rank:
-                        vuln_rank_check = False
-                        break
-
-                if vuln_rank_check:
-                    succs_traffic.append((succ, traffic_at_succ))
-
-        return succs_traffic
-
     def get_admitted_traffic_via_succ(self, node, dst, succ):
         try:
             admitted_traffic_via_succ = node.admitted_traffic[dst][succ]
