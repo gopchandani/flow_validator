@@ -86,7 +86,7 @@ class MonteCarloAnalysis(FlowValidator):
             # For each primary traffic path that goes through that link, check
             for path in ld.traffic_paths:
 
-                # Check to see if the path is current active
+                # Check to see if the path is currently active
                 if path.get_max_active_rank() == 0:
 
                     if verbose:

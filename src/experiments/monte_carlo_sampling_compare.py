@@ -255,9 +255,9 @@ def main():
                                                    "ring",
                                                    {"num_switches": 4,
                                                     "num_hosts_per_switch": 1},
-                                                   load_config=False,
-                                                   save_config=True,
-                                                   synthesis_name="AboresceneSynthesis")]
+                                                   conf_root="configurations/",
+                                                   synthesis_name="AboresceneSynthesis",
+                                                   synthesis_params={"apply_group_intents_immediately": True})]
 
     num_iterations = 1
     num_seed_runs = 5

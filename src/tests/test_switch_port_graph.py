@@ -32,18 +32,14 @@ class TestSwitchPortGraph(unittest.TestCase):
         cls.swpg_ring_aborescene_apply_true.compute_switch_admitted_traffic()
 
 
+        sw_ring_aborescene_apply_true_report_active_false = cls.ng_ring_aborescene_apply_true.get_node_object("s1")
 
-        #
-        # sw_ring_aborescene_apply_true_report_active_false = cls.ng_ring_aborescene_apply_true.get_node_object("s1")
-        #
-        # cls.swpg_ring_aborescene_apply_true_report_active_false = SwitchPortGraph(cls.ng_ring_aborescene_apply_true,
-        #                                                        sw_ring_aborescene_apply_true_report_active_false, True)
-        #
-        # sw_ring_aborescene_apply_true_report_active_false.port_graph = cls.swpg_ring_aborescene_apply_true_report_active_false
-        # cls.swpg_ring_aborescene_apply_true_report_active_false.init_switch_port_graph()
-        # cls.swpg_ring_aborescene_apply_true_report_active_false.compute_switch_admitted_traffic()
-        #
-        #
+        cls.swpg_ring_aborescene_apply_true_report_active_false = SwitchPortGraph(cls.ng_ring_aborescene_apply_true,
+                                                               sw_ring_aborescene_apply_true_report_active_false, False)
+
+        sw_ring_aborescene_apply_true_report_active_false.port_graph = cls.swpg_ring_aborescene_apply_true_report_active_false
+        cls.swpg_ring_aborescene_apply_true_report_active_false.init_switch_port_graph()
+        cls.swpg_ring_aborescene_apply_true_report_active_false.compute_switch_admitted_traffic()
 
 
 
@@ -65,7 +61,6 @@ class TestSwitchPortGraph(unittest.TestCase):
         cls.swpg_ring_aborescene_apply_false.init_switch_port_graph()
         cls.swpg_ring_aborescene_apply_false.compute_switch_admitted_traffic()
 
-
     def check_admitted_traffic(self, swpg, src_host_obj, dst_host_obj, ingress_port_num, egress_port_num):
         ingress_node = swpg.get_ingress_node(swpg.sw.node_id, ingress_port_num)
         egress_node = swpg.get_egress_node(swpg.sw.node_id, egress_port_num)
@@ -78,7 +73,8 @@ class TestSwitchPortGraph(unittest.TestCase):
         specific_traffic.set_field("vlan_id", src_host_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
         specific_traffic.set_field("has_vlan_tag", 0)
 
-        at_int = specific_traffic.intersect(swpg.get_admitted_traffic(ingress_node, egress_node))
+        at = swpg.get_admitted_traffic(ingress_node, egress_node)
+        at_int = specific_traffic.intersect(at)
         self.assertNotEqual(at_int.is_empty(), True)
 
         return at_int, ingress_node, egress_node
@@ -177,6 +173,14 @@ class TestSwitchPortGraph(unittest.TestCase):
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
                                                                         h11_obj, h41_obj, 1, 2)
 
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true_report_active_false,
+                                                                        h11_obj, h21_obj, 1, 3)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true_report_active_false,
+                                                                        h11_obj, h31_obj, 1, 2)
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true_report_active_false,
+                                                                        h11_obj, h41_obj, 1, 2)
+
+
         # This test asserts that in switch s1, for host h11, with no failures:
         # Traffic for host h21 flows out of port 3
         # Traffic for host h31 flows out of port 2
@@ -193,6 +197,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                                         h11_obj, h31_obj, 1, 2)
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_false,
                                                                         h11_obj, h41_obj, 1, 2)
+
 
     def test_ring_aborescene_synthesis_modifications(self):
 
