@@ -346,6 +346,12 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                  self.ng_clos_dijkstra.graph.edges())
         self.assertEqual(paths_match, True)
 
+    def check_get_succs_with_admitted_traffic_and_vuln_rank(self):
+        pass
+
+    def test_ring_aborescene_get_succs_with_admitted_traffic_and_vuln_rank(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()

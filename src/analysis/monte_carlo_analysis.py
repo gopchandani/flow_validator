@@ -92,7 +92,7 @@ class MonteCarloAnalysis(FlowValidator):
                     if verbose:
                         print "Considering Path: ", path
 
-                    if path.link_failure_causes_disconnect(ld):
+                    if self.port_graph.link_failure_causes_disconnect(path, ld):
                         ld.causes_disconnect = True
                         break
 

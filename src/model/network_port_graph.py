@@ -220,3 +220,93 @@ class NetworkPortGraph(PortGraph):
                 pred_admitted_traffic.union(i)
 
         return pred_admitted_traffic
+
+    def get_succs_with_admitted_traffic_and_vuln_rank(self, pred, at, vuln_rank, dst):
+
+        succs_traffic = []
+        possible_succs = self.get_admitted_traffic_succs(pred, dst)
+        for succ in possible_succs:
+
+            # First check if the successor would carry this traffic at all
+            should, enabling_edge_data_list = self.should_add_succ(pred, succ, dst, at)
+
+            # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
+            if should:
+
+                traffic_at_succ = self.get_modified_traffic_at_succ(pred,
+                                                                    succ,
+                                                                    dst,
+                                                                    at,
+                                                                    enabling_edge_data_list)
+
+                vuln_rank_check = True
+
+                # TODO: This may cause problem with duplicates (i.e. two edge data with exact same
+                # traffic carried but with different vuln_ranks)
+
+                for ed in enabling_edge_data_list:
+                    if ed.get_vuln_rank() != vuln_rank:
+                        vuln_rank_check = False
+                        break
+
+                if vuln_rank_check:
+                    succs_traffic.append((succ, traffic_at_succ))
+
+        return succs_traffic
+
+    # Returns if the given link fails, the path would have an alternative way to get around
+    def get_backup_ingress_nodes_and_traffic(self, path, ld):
+
+        ingress_nodes_and_traffic = []
+
+        # Find the path_edges that get affected by the failure of given link
+        for i in range(0, len(path.path_edges)):
+            edge, enabling_edge_data, traffic_at_pred = path.path_edges[i]
+            edge_tuple = (edge[0].node_id, edge[1].node_id)
+
+            if edge_tuple == ld.forward_port_graph_edge or edge_tuple == ld.reverse_port_graph_edge:
+
+                # Go to the switch and ask if a backup edge exists in the transfer function
+                #  for the traffic carried by this path at that link
+
+                p_edge, p_enabling_edge_data, p_traffic_at_pred = path.path_edges[i - 1]
+                backup_succs = self.get_succs_with_admitted_traffic_and_vuln_rank(p_edge[0],
+                                                                                  p_traffic_at_pred,
+                                                                                  1,
+                                                                                  path.dst_node)
+
+                # TODO: Compute the ingress node from successor (Assumption, there is always one succ on egress node)
+                for succ, succ_traffic in backup_succs:
+                    ingress_node = list(self.successors_iter(succ))[0]
+
+                    # Avoid adding as possible successor if it is for the link that has failed
+                    # This can happen for 'reversing' paths
+                    if not (ingress_node.node_id == ld.forward_port_graph_edge[1] or
+                                    ingress_node.node_id == ld.reverse_port_graph_edge[1]):
+                        ingress_nodes_and_traffic.append((ingress_node, succ_traffic))
+
+        # If so, return the ingress node on the next switch, where that edge leads to
+        return ingress_nodes_and_traffic
+
+    def link_failure_causes_disconnect(self, path, ld):
+
+        causes_disconnect = False
+        backup_ingress_nodes_and_traffic = self.get_backup_ingress_nodes_and_traffic(path, ld)
+
+        # If there is no backup successors, ld failure causes disconnect
+        if not backup_ingress_nodes_and_traffic:
+            causes_disconnect = True
+
+        # If there are backup successors, but they are not adequately carrying traffic, failure causes disconnect
+        else:
+            for ingress_node, traffic_to_carry in backup_ingress_nodes_and_traffic:
+
+                # First get what is admitted at this node
+                ingress_at = self.get_admitted_traffic(ingress_node, path.dst_node)
+
+                # The check if it carries the required traffic
+                if not ingress_at.is_subset_traffic(traffic_to_carry):
+                    causes_disconnect = True
+                    break
+
+        return causes_disconnect
