@@ -288,7 +288,7 @@ class NetworkPortGraph(PortGraph):
         # If so, return the ingress node on the next switch, where that edge leads to
         return ingress_nodes_and_traffic
 
-    def link_failure_causes_disconnect(self, path, ld):
+    def link_failure_causes_path_disconnect(self, path, ld):
 
         causes_disconnect = False
         backup_ingress_nodes_and_traffic = self.get_backup_ingress_nodes_and_traffic(path, ld)

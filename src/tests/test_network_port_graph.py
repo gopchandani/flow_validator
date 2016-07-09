@@ -9,13 +9,11 @@ from experiments.network_configuration import NetworkConfiguration
 
 
 class TestNetworkPortGraph(unittest.TestCase):
-
     @classmethod
     def attach_hosts_port_nodes_with_npg(cls, ng, npg):
 
         # Attach a destination port for each host.
         for host_id in ng.host_ids:
-
             host_obj = ng.get_node_object(host_id)
             host_obj.switch_ingress_port = npg.get_node(host_obj.switch_id +
                                                         ":ingress" +
@@ -23,6 +21,7 @@ class TestNetworkPortGraph(unittest.TestCase):
             host_obj.switch_egress_port = npg.get_node(host_obj.switch_id +
                                                        ":egress" +
                                                        str(host_obj.switch_port_attached))
+
     @classmethod
     def init_hosts_traffic_propagation(cls, ng, npg):
         for host_id in ng.host_ids:
@@ -57,28 +56,36 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         cls.ng_ring_aborescene_apply_true = cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1,
                                                                                                   synthesis_setup_gap=1)
-        cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true, True)
-        cls.npg_ring_aborescene_apply_true.init_network_port_graph()
 
-        cls.attach_hosts_port_nodes_with_npg(cls.ng_ring_aborescene_apply_true, cls.npg_ring_aborescene_apply_true)
-        cls.init_hosts_traffic_propagation(cls.ng_ring_aborescene_apply_true, cls.npg_ring_aborescene_apply_true)
+        # cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true, True)
+        # cls.npg_ring_aborescene_apply_true.init_network_port_graph()
+        # cls.attach_hosts_port_nodes_with_npg(cls.ng_ring_aborescene_apply_true, cls.npg_ring_aborescene_apply_true)
+        # cls.init_hosts_traffic_propagation(cls.ng_ring_aborescene_apply_true, cls.npg_ring_aborescene_apply_true)
 
-        cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
-                                                    "clostopo",
-                                                    {"fanout": 2,
-                                                     "core": 1,
-                                                     "num_hosts_per_switch": 1},
-                                                    conf_root=os.path.dirname(__file__) + "/",
-                                                    synthesis_name="DijkstraSynthesis",
-                                                    synthesis_params={})
-
-        cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
-                                                                        synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
-        cls.npg_clos_dijkstra.init_network_port_graph()
-
-        cls.attach_hosts_port_nodes_with_npg(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
-        cls.init_hosts_traffic_propagation(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
+        cls.npg_ring_aborescene_apply_true_report_active_false = NetworkPortGraph(cls.ng_ring_aborescene_apply_true,
+                                                                                  False)
+        cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
+        cls.attach_hosts_port_nodes_with_npg(cls.ng_ring_aborescene_apply_true,
+                                             cls.npg_ring_aborescene_apply_true_report_active_false)
+        cls.init_hosts_traffic_propagation(cls.ng_ring_aborescene_apply_true,
+                                           cls.npg_ring_aborescene_apply_true_report_active_false)
+        #
+        # cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
+        #                                             "clostopo",
+        #                                             {"fanout": 2,
+        #                                              "core": 1,
+        #                                              "num_hosts_per_switch": 1},
+        #                                             conf_root=os.path.dirname(__file__) + "/",
+        #                                             synthesis_name="DijkstraSynthesis",
+        #                                             synthesis_params={})
+        #
+        # cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
+        #                                                                 synthesis_setup_gap=1)
+        # cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
+        # cls.npg_clos_dijkstra.init_network_port_graph()
+        #
+        # cls.attach_hosts_port_nodes_with_npg(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
+        # cls.init_hosts_traffic_propagation(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
 
     def check_single_link_failure_admitted_traffic_subset(self, npg, node, dst, traffic_to_check, link_to_fail):
 
@@ -100,7 +107,6 @@ class TestNetworkPortGraph(unittest.TestCase):
     def check_two_link_failure_admitted_traffic_absence(self, npg, src_h_obj, dst_h_obj, links_to_fail):
 
         for link_to_fail in links_to_fail:
-
             before_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
             all_paths = npg.get_paths(src_h_obj.switch_ingress_port,
                                       dst_h_obj.switch_egress_port,
@@ -266,7 +272,6 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                       src_host, dst_host,
                                                                       synthesized_path, verbose)
                     if not path_matches:
-
                         print "No analyzed path matched for:", synthesized_path, "with failed link:", link
                         all_paths_match = False
                         break
@@ -279,79 +284,111 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         return all_paths_match
 
-    def test_single_link_failure_admitted_traffic_presence_ring_aborescene_apply_true(self):
+    # def test_single_link_failure_admitted_traffic_presence_ring_aborescene_apply_true(self):
+    #
+    #     node_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h21").switch_ingress_port
+    #     dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
+    #     traffic_to_check = self.get_specific_traffic(self.ng_ring_aborescene_apply_true, "h21", "h31")
+    #     link_to_fail = ("s1", "s4")
+    #
+    #     self.check_single_link_failure_admitted_traffic_subset(self.npg_ring_aborescene_apply_true,
+    #                                                            node_to_check,
+    #                                                            dst_to_check,
+    #                                                            traffic_to_check,
+    #                                                            link_to_fail)
+    #
+    #     node_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h11").switch_ingress_port
+    #     dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
+    #     traffic_to_check = self.get_specific_traffic(self.ng_ring_aborescene_apply_true, "h11", "h31")
+    #     link_to_fail = ("s3", "s4")
+    #
+    #     self.check_single_link_failure_admitted_traffic_subset(self.npg_ring_aborescene_apply_true,
+    #                                                            node_to_check,
+    #                                                            dst_to_check,
+    #                                                            traffic_to_check,
+    #                                                            link_to_fail)
+    #
+    # def test_single_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
+    #
+    #     node_to_check = self.npg_ring_aborescene_apply_true.get_egress_node("s1", 3)
+    #     dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
+    #     traffic_to_match = Traffic()
+    #     link_to_fail = ("s1", "s4")
+    #
+    #     self.check_single_link_failure_admitted_traffic_match(self.npg_ring_aborescene_apply_true,
+    #                                                           node_to_check,
+    #                                                           dst_to_check,
+    #                                                           traffic_to_match,
+    #                                                           link_to_fail)
+    #
+    # def test_two_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
+    #
+    #     src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
+    #     dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
+    #     links_to_fail = [("s1", "s4"), ("s2", "s3")]
+    #
+    #     self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
+    #                                                          src_h_obj, dst_h_obj, links_to_fail)
+    #
+    #     src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
+    #     dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h41")
+    #     links_to_fail = [("s1", "s4"), ("s2", "s3")]
+    #
+    #     self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
+    #                                                          src_h_obj, dst_h_obj, links_to_fail)
+    #
+    # def test_primary_paths_match_synthesized_clos_dijkstra(self):
+    #     analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
+    #                                                                               self.npg_clos_dijkstra)
+    #     paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
+    #                                                             analyzed_host_pairs_traffic_paths)
+    #     self.assertEqual(paths_match, True)
+    #
+    # def test_failover_paths_match_synthesized_clos_dijkstra(self):
+    #     paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
+    #                                                              self.ng_clos_dijkstra,
+    #                                                              self.npg_clos_dijkstra,
+    #                                                              self.ng_clos_dijkstra.graph.edges())
+    #     self.assertEqual(paths_match, True)
+    #
 
-        node_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h21").switch_ingress_port
-        dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
-        traffic_to_check = self.get_specific_traffic(self.ng_ring_aborescene_apply_true, "h21", "h31")
-        link_to_fail = ("s1", "s4")
+    def check_link_failure_causes_path_disconnect(self, ng, npg, src_h_obj, dst_h_obj, ld):
 
-        self.check_single_link_failure_admitted_traffic_subset(self.npg_ring_aborescene_apply_true,
-                                                               node_to_check,
-                                                               dst_to_check,
-                                                               traffic_to_check,
-                                                               link_to_fail)
+        specific_traffic = self.get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
+        at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
 
-        node_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h11").switch_ingress_port
-        dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
-        traffic_to_check = self.get_specific_traffic(self.ng_ring_aborescene_apply_true, "h11", "h31")
-        link_to_fail = ("s3", "s4")
+        at_int = specific_traffic.intersect(at)
 
-        self.check_single_link_failure_admitted_traffic_subset(self.npg_ring_aborescene_apply_true,
-                                                               node_to_check,
-                                                               dst_to_check,
-                                                               traffic_to_check,
-                                                               link_to_fail)
+        paths = npg.get_paths(src_h_obj.switch_ingress_port,
+                              dst_h_obj.switch_egress_port,
+                              at_int,
+                              [src_h_obj.switch_ingress_port],
+                              [],
+                              True)
 
-    def test_single_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
+        # Get the path that is currently active
+        active_path = None
+        for path in paths:
+            if path.get_max_active_rank() == 0:
+                active_path = path
+                break
 
-        node_to_check = self.npg_ring_aborescene_apply_true.get_egress_node("s1", 3)
-        dst_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h31").switch_egress_port
-        traffic_to_match = Traffic()
-        link_to_fail = ("s1", "s4")
+        return npg.link_failure_causes_path_disconnect(active_path, ld)
 
-        self.check_single_link_failure_admitted_traffic_match(self.npg_ring_aborescene_apply_true,
-                                                              node_to_check,
-                                                              dst_to_check,
-                                                              traffic_to_match,
-                                                              link_to_fail)
+    def test_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
+        h11_obj = self.ng_ring_aborescene_apply_true.get_node_object("h11")
+        h21_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
+        h31_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
+        h41_obj = self.ng_ring_aborescene_apply_true.get_node_object("h41")
 
-    def test_two_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
+        s1_s2_ld = self.ng_ring_aborescene_apply_true.get_link_data("s1", "s2")
 
-        src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
-        dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h31")
-        links_to_fail = [("s1", "s4"), ("s2", "s3")]
-
-        self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
-                                                             src_h_obj, dst_h_obj, links_to_fail)
-
-        src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
-        dst_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h41")
-        links_to_fail = [("s1", "s4"), ("s2", "s3")]
-
-        self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
-                                                             src_h_obj, dst_h_obj, links_to_fail)
-
-    def test_primary_paths_match_synthesized_clos_dijkstra(self):
-        analyzed_host_pairs_traffic_paths = self.get_all_host_pairs_traffic_paths(self.ng_clos_dijkstra,
-                                                                                  self.npg_clos_dijkstra)
-        paths_match = self.compare_primary_paths_with_synthesis(self.nc_clos_dijkstra,
-                                                                analyzed_host_pairs_traffic_paths)
-        self.assertEqual(paths_match, True)
-
-    def test_failover_paths_match_synthesized_clos_dijkstra(self):
-        paths_match = self.compare_failover_paths_with_synthesis(self.nc_clos_dijkstra,
-                                                                 self.ng_clos_dijkstra,
-                                                                 self.npg_clos_dijkstra,
-                                                                 self.ng_clos_dijkstra.graph.edges())
-        self.assertEqual(paths_match, True)
-
-    def check_get_succs_with_admitted_traffic_and_vuln_rank(self):
-        pass
-
-    def test_ring_aborescene_get_succs_with_admitted_traffic_and_vuln_rank(self):
-        pass
-
+        fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
+                                                               self.npg_ring_aborescene_apply_true_report_active_false,
+                                                               h11_obj,
+                                                               h31_obj,
+                                                               s1_s2_ld)
+        self.assertEqual(fails, False)
 
 if __name__ == '__main__':
     unittest.main()
