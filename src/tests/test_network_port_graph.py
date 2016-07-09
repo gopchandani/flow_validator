@@ -352,7 +352,7 @@ class TestNetworkPortGraph(unittest.TestCase):
     #     self.assertEqual(paths_match, True)
     #
 
-    def check_link_failure_causes_path_disconnect(self, ng, npg, src_h_obj, dst_h_obj, ld):
+    def get_active_path(self, ng, npg, src_h_obj, dst_h_obj):
 
         specific_traffic = self.get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
         at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
@@ -373,56 +373,60 @@ class TestNetworkPortGraph(unittest.TestCase):
                 active_path = path
                 break
 
-        return npg.link_failure_causes_path_disconnect(active_path, ld)
+        return active_path
 
-    # def test_single_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
+    def test_single_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
+
+        # Test for every host pair
+        for src_h_obj, dst_h_obj in self.ng_ring_aborescene_apply_true.host_obj_pair_iter():
+
+            # Test pretend-failure each link
+            for ld in self.ng_ring_aborescene_apply_true.get_switch_link_data():
+
+                active_path = self.get_active_path(self.ng_ring_aborescene_apply_true,
+                                                   self.npg_ring_aborescene_apply_true_report_active_false,
+                                                   src_h_obj,
+                                                   dst_h_obj)
+
+                fails = self.npg_ring_aborescene_apply_true_report_active_false.link_failure_causes_path_disconnect(active_path, ld)
+                self.assertEqual(fails, False)
     #
-    #     # Test for every host pair
-    #     for src_h_obj, dst_h_obj in self.ng_ring_aborescene_apply_true.host_obj_pair_iter():
+    # def test_two_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
     #
-    #         # Test pretend-failure each link
-    #         for ld in self.ng_ring_aborescene_apply_true.get_switch_link_data():
+    #     # First knock out one link for real
+    #     for ld1 in self.ng_ring_aborescene_apply_true.get_switch_link_data():
+    #         self.npg_ring_aborescene_apply_true_report_active_false.remove_node_graph_link(*ld1.forward_link)
     #
-    #             fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
-    #                                                                    self.npg_ring_aborescene_apply_true_report_active_false,
-    #                                                                    src_h_obj,
-    #                                                                    dst_h_obj,
-    #                                                                    ld)
-    #             self.assertEqual(fails, False)
-
-    def test_two_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
-
-        # First knock out one link for real
-        for ld1 in self.ng_ring_aborescene_apply_true.get_switch_link_data():
-            self.npg_ring_aborescene_apply_true_report_active_false.remove_node_graph_link(*ld1.forward_link)
-
-            # Test for every host pair
-            for src_h_obj, dst_h_obj in self.ng_ring_aborescene_apply_true.host_obj_pair_iter():
-
-                # Test pretend-failure each link
-                for ld2 in self.ng_ring_aborescene_apply_true.get_switch_link_data():
-
-                    # Don't fail same link twice...
-                    if ld1 == ld2:
-                        continue
-
-                    fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
-                                                                           self.npg_ring_aborescene_apply_true_report_active_false,
-                                                                           src_h_obj,
-                                                                           dst_h_obj,
-                                                                           ld2)
-
-                    if not fails:
-                        fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
-                                                                               self.npg_ring_aborescene_apply_true_report_active_false,
-                                                                               src_h_obj,
-                                                                               dst_h_obj,
-                                                                               ld2)
-                    self.assertEqual(fails, True)
-
-            # Restore the link for real
-            self.npg_ring_aborescene_apply_true_report_active_false.add_node_graph_link(*ld1.forward_link,
-                                                                                        updating=True)
+    #         # Test for every host pair
+    #         for src_h_obj, dst_h_obj in self.ng_ring_aborescene_apply_true.host_obj_pair_iter():
+    #
+    #             # Test pretend-failure each link
+    #             for ld2 in self.ng_ring_aborescene_apply_true.get_switch_link_data():
+    #
+    #                 # Don't fail same link twice...
+    #                 if ld1 == ld2:
+    #                     continue
+    #
+    #                 fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
+    #                                                                        self.npg_ring_aborescene_apply_true_report_active_false,
+    #                                                                        src_h_obj,
+    #                                                                        dst_h_obj,
+    #                                                                        ld2)
+    #
+    #                 if not fails:
+    #                     fails = self.check_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
+    #                                                                            self.npg_ring_aborescene_apply_true_report_active_false,
+    #                                                                            src_h_obj,
+    #                                                                            dst_h_obj,
+    #                                                                            ld2)
+    #
+    #                 # If the first and second links are both used by the active path,
+    #
+    #                 self.assertEqual(fails, True)
+    #
+    #         # Restore the link for real
+    #         self.npg_ring_aborescene_apply_true_report_active_false.add_node_graph_link(*ld1.forward_link,
+    #                                                                                     updating=True)
 
 
 if __name__ == '__main__':
