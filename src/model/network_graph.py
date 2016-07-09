@@ -37,6 +37,9 @@ class NetworkGraphLinkData(object):
     def __str__(self):
         return str(self.forward_link)
 
+    def __eq__(self, other):
+        return (self.forward_link == other.forward_link and self.reverse_link == other.reverse_link) or \
+               (self.forward_link == other.reverse_link and self.reverse_link == other.forward_link)
 
 class NetworkGraph(object):
 
