@@ -61,9 +61,7 @@ class MonteCarloAnalysis(FlowValidator):
                         print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "path:", path
 
                     path_links = path.get_path_links()
-                    for path_link in path_links:
-                        ld = self.network_graph.get_link_data(path_link[0], path_link[1])
-
+                    for ld in path_links:
                         # Avoid adding the same path twice for cases when a link is repeated
                         if path not in ld.traffic_paths:
                             ld.traffic_paths.append(path)

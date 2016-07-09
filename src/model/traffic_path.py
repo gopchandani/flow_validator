@@ -43,9 +43,21 @@ class TrafficPath(object):
             for i in range(0, len(self.path_edges)):
                 edge, enabling_edge_data, traffic_at_pred = self.path_edges[i]
                 if edge[0].node_type == 'egress' and edge[1].node_type == 'ingress':
-                    path_links.append((edge[0].sw.node_id, edge[1].sw.node_id))
+                    path_ld = self.port_graph.network_graph.get_link_data(edge[0].sw.node_id, edge[1].sw.node_id)
+                    path_links.append(path_ld)
 
         return path_links
+
+    def passes_link(self, ld_to_check):
+        passes = False
+        path_links = self.get_path_links()
+
+        for ld in path_links:
+            if ld == ld_to_check:
+                passes = True
+                break
+
+        return passes
 
     def __eq__(self, other):
 
