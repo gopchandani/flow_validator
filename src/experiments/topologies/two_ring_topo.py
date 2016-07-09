@@ -26,7 +26,7 @@ class TwoRingTopo(Topo):
 
         #  Add switches and hosts under them
         for i in xrange(start_offset, start_offset + self.self.num_switches):
-            curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow13")
+            curr_switch = self.addSwitch("s" + str(i+1), protocols="OpenFlow14")
             switches.append(curr_switch)
 
             for j in xrange(self.self.num_hosts_per_switch):

@@ -61,7 +61,7 @@ class RingLineTopo(Topo):
 
     def add_switch_and_host(self, switch_num):
     
-        switch_name = self.addSwitch("s" + str(switch_num), protocols="OpenFlow13")
+        switch_name = self.addSwitch("s" + str(switch_num), protocols="OpenFlow14")
 
         for j in xrange(self.num_hosts_per_switch):
             host_name = self.addHost("h" + str(switch_num) + str(j+1))

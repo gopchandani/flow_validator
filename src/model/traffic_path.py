@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+
 class TrafficPath(object):
 
     def __init__(self, port_graph, nodes=[], path_edges=[]):
@@ -42,9 +43,21 @@ class TrafficPath(object):
             for i in range(0, len(self.path_edges)):
                 edge, enabling_edge_data, traffic_at_pred = self.path_edges[i]
                 if edge[0].node_type == 'egress' and edge[1].node_type == 'ingress':
-                    path_links.append((edge[0].sw.node_id, edge[1].sw.node_id))
+                    path_ld = self.port_graph.network_graph.get_link_data(edge[0].sw.node_id, edge[1].sw.node_id)
+                    path_links.append(path_ld)
 
         return path_links
+
+    def passes_link(self, ld_to_check):
+        passes = False
+        path_links = self.get_path_links()
+
+        for ld in path_links:
+            if ld == ld_to_check:
+                passes = True
+                break
+
+        return passes
 
     def __eq__(self, other):
 
@@ -76,59 +89,3 @@ class TrafficPath(object):
 
     def __len__(self):
         return len(self.path_nodes)
-
-    # Returns if the given link fails, the path would have an alternative way to get around
-    def get_backup_ingress_nodes_and_traffic(self, ld):
-
-        ingress_nodes_and_traffic = []
-
-        # Find the path_edges that actually get affected by the failure of given link
-        for i in range(0, len(self.path_edges)):
-            edge, enabling_edge_data, traffic_at_pred = self.path_edges[i]
-            edge_tuple = (edge[0].node_id, edge[1].node_id)
-
-            if edge_tuple == ld.forward_port_graph_edge or edge_tuple == ld.reverse_port_graph_edge:
-
-                # Go to the switch and ask if a backup edge exists in the transfer function
-                #  for the traffic carried by this path at that link
-                p_edge, p_enabling_edge_data, p_traffic_at_pred  = self.path_edges[i - 1]
-
-                backup_succs = self.port_graph.get_succs_with_admitted_traffic_and_vuln_rank(p_edge[0],
-                                                                                             p_traffic_at_pred,
-                                                                                             1,
-                                                                                             self.dst_node)
-
-                # TODO: Compute the ingress node from successor (Assumption, there is always one succ on egress node)
-                for succ, traffic in backup_succs:
-                    ingress_node = list(self.port_graph.successors_iter(succ))[0]
-
-                    # Avoid adding as possible successor if it is for the link that has failed
-                    # This can happen for 'reversing' paths
-                    if not (ingress_node.node_id == ld.forward_port_graph_edge[1] or
-                                    ingress_node.node_id == ld.reverse_port_graph_edge[1]):
-                        ingress_nodes_and_traffic.append((ingress_node, traffic))
-
-        # If so, return the ingress node on the next switch, where that edge leads to
-        return ingress_nodes_and_traffic
-
-    def link_failure_causes_disconnect(self, ld):
-
-        causes_disconnect = False
-        backup_ingress_nodes_and_traffic = self.get_backup_ingress_nodes_and_traffic(ld)
-
-        # If there is no backup successors, ld failure causes disconnect
-        if not backup_ingress_nodes_and_traffic:
-            causes_disconnect = True
-        # If there are backup successors, but they are not adequately carrying traffic, ld failure causes disconnect
-        else:
-            for ingress_node, traffic_to_carry in backup_ingress_nodes_and_traffic:
-
-                # First get what is admitted at this node
-                ingress_at = self.port_graph.get_admitted_traffic(ingress_node, self.dst_node)
-
-                # The check if it carries the required traffic
-                if not ingress_at.is_subset_traffic(traffic_to_carry):
-                    causes_disconnect = True
-                    break
-
-        return causes_disconnect

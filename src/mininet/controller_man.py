@@ -7,7 +7,7 @@ __author__ = 'Shane Rogers'
 #  command line usage: python controller_man X   where X is an integer.
 #  cm = ControllerMan(X) as an import function
 #  you can then retrieve one of the containers with 
-#  cm.get_next(), which returns the port the container will be listening on.
+#  cm.start_controller(), which returns the port the container will be listening on.
 #  You can kill all containers by running cm.kill_all()
 #  WARNING
 #  This function does not currently sanitize user input in any way, so if you

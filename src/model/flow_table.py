@@ -65,7 +65,7 @@ class Flow:
             for egress_node, edge_tuple in self.instruction_set.get_applied_port_graph_edges():
                 port_graph_edges[egress_node].append(edge_tuple)
 
-            for egress_node, edge_tuple in self.instruction_set.get_applied_port_graph_edges():
+            for egress_node, edge_tuple in self.instruction_set.get_written_port_graph_edges():
                 port_graph_edges[egress_node].append(edge_tuple)
 
             if self.instruction_set.goto_table:

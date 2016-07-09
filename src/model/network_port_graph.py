@@ -5,6 +5,7 @@ from switch_port_graph import SwitchPortGraph
 from port_graph_edge import PortGraphEdge, NetworkPortGraphEdgeData
 from traffic import Traffic
 
+
 class NetworkPortGraph(PortGraph):
 
     def __init__(self, network_graph, report_active_state):
@@ -58,8 +59,8 @@ class NetworkPortGraph(PortGraph):
 
             for succ in pred.admitted_traffic:
                 admitted_traffic = sw.port_graph.get_admitted_traffic(pred, succ)
-                edge = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic, edge_sw=sw)
-                self.add_edge(pred, succ, edge)
+                edge_obj = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic, edge_sw=sw)
+                self.add_edge(pred, succ, edge_obj)
 
     def modify_switch_transfer_edges(self, sw, modified_switch_edges):
 
@@ -75,8 +76,8 @@ class NetworkPortGraph(PortGraph):
 
             # Then, add the edge back by using the new transfer traffic now
             admitted_traffic = sw.port_graph.get_admitted_traffic(pred, succ)
-            edge = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic, edge_sw=sw)
-            self.add_edge(pred, succ, edge)
+            edge_obj = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic, edge_sw=sw)
+            self.add_edge(pred, succ, edge_obj)
 
     def init_network_port_graph(self):
 
@@ -114,34 +115,40 @@ class NetworkPortGraph(PortGraph):
         sw1.ports[edge_port_dict[node1_id]].state = "up"
         sw2.ports[edge_port_dict[node2_id]].state = "up"
 
-        edge = self.get_edge_from_admitted_traffic(sw1.ports[edge_port_dict[node1_id]].switch_port_graph_egress_node,
-                                                   sw2.ports[edge_port_dict[node2_id]].switch_port_graph_ingress_node,
-                                                   Traffic(init_wildcard=True))
+        edge1 = (sw1.ports[edge_port_dict[node1_id]].switch_port_graph_egress_node,
+                 sw2.ports[edge_port_dict[node2_id]].switch_port_graph_ingress_node)
 
-        self.add_edge(sw1.ports[edge_port_dict[node1_id]].network_port_graph_egress_node,
-                      sw2.ports[edge_port_dict[node2_id]].network_port_graph_ingress_node,
-                      edge)
+        edge_obj = self.get_edge_from_admitted_traffic(edge1[0], edge1[1], Traffic(init_wildcard=True))
+        self.add_edge(edge1[0], edge1[1], edge_obj)
 
-        edge = self.get_edge_from_admitted_traffic(sw2.ports[edge_port_dict[node2_id]].switch_port_graph_egress_node,
-                                                   sw1.ports[edge_port_dict[node1_id]].switch_port_graph_ingress_node,
-                                                   Traffic(init_wildcard=True))
+        edge2 = (sw2.ports[edge_port_dict[node2_id]].switch_port_graph_egress_node,
+                 sw1.ports[edge_port_dict[node1_id]].switch_port_graph_ingress_node)
 
-        self.add_edge(sw2.ports[edge_port_dict[node2_id]].network_port_graph_egress_node,
-                      sw1.ports[edge_port_dict[node1_id]].network_port_graph_ingress_node,
-                      edge)
+        edge_obj = self.get_edge_from_admitted_traffic(edge2[0], edge2[1], Traffic(init_wildcard=True))
+        self.add_edge(edge2[0], edge2[1], edge_obj)
 
         # Update transfer and admitted traffic
         if updating:
 
             end_to_end_modified_edges = []
 
+            # Update admitted traffic due to link failure
+            edge1 = (sw1.ports[edge_port_dict[node1_id]].network_port_graph_egress_node.node_id,
+                     sw2.ports[edge_port_dict[node2_id]].network_port_graph_ingress_node.node_id)
+
+            edge2 = (sw2.ports[edge_port_dict[node2_id]].network_port_graph_egress_node.node_id,
+                     sw1.ports[edge_port_dict[node1_id]].network_port_graph_ingress_node.node_id)
+
+            self.update_admitted_traffic([edge1, edge2], end_to_end_modified_edges)
+
+            # Update admitted traffic due to switch transfer function changes
             modified_switch_edges = sw1.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node1_id],
-                                                                                         "port_up")
+                                                                                                    "port_up")
             self.modify_switch_transfer_edges(sw1, modified_switch_edges)
             self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
 
             modified_switch_edges = sw2.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node2_id],
-                                                                                         "port_up")
+                                                                                                    "port_up")
             self.modify_switch_transfer_edges(sw2, modified_switch_edges)
             self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
 
@@ -154,16 +161,33 @@ class NetworkPortGraph(PortGraph):
         sw1.ports[edge_port_dict[node1_id]].state = "down"
         sw2.ports[edge_port_dict[node2_id]].state = "down"
 
-        # Update port graph
-        self.remove_edge(sw1.ports[edge_port_dict[node1_id]].network_port_graph_egress_node,
-                         sw2.ports[edge_port_dict[node2_id]].network_port_graph_ingress_node)
+        # Update port graph edge filters corresponding to the physical link
+        edge1 = (sw1.ports[edge_port_dict[node1_id]].network_port_graph_egress_node,
+                 sw2.ports[edge_port_dict[node2_id]].network_port_graph_ingress_node)
 
-        self.remove_edge(sw2.ports[edge_port_dict[node2_id]].network_port_graph_egress_node,
-                         sw1.ports[edge_port_dict[node1_id]].network_port_graph_ingress_node)
+        self.remove_edge(*edge1)
+        edge_obj = self.get_edge_from_admitted_traffic(edge1[0], edge1[1], Traffic(init_wildcard=False))
+        self.add_edge(edge1[0], edge1[1], edge_obj)
+
+        edge2 = (sw2.ports[edge_port_dict[node2_id]].network_port_graph_egress_node,
+                 sw1.ports[edge_port_dict[node1_id]].network_port_graph_ingress_node)
+
+        self.remove_edge(*edge2)
+        edge_obj = self.get_edge_from_admitted_traffic(edge2[0], edge2[1], Traffic(init_wildcard=False))
+        self.add_edge(edge2[0], edge2[1], edge_obj)
 
         end_to_end_modified_edges = []
 
-        # Update transfer and admitted traffic
+        # Update admitted traffic due to link failure
+        edge1 = (sw1.ports[edge_port_dict[node1_id]].network_port_graph_egress_node.node_id,
+                 sw2.ports[edge_port_dict[node2_id]].network_port_graph_ingress_node.node_id)
+
+        edge2 = (sw2.ports[edge_port_dict[node2_id]].network_port_graph_egress_node.node_id,
+                 sw1.ports[edge_port_dict[node1_id]].network_port_graph_ingress_node.node_id)
+
+        self.update_admitted_traffic([edge1, edge2], end_to_end_modified_edges)
+
+        # Update admitted traffic due to switch transfer function changes
         modified_switch_edges = sw1.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node1_id], "port_down")
         self.modify_switch_transfer_edges(sw1, modified_switch_edges)
         self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
@@ -185,11 +209,7 @@ class NetworkPortGraph(PortGraph):
 
             # If there were modifications along the way...
             if ed.applied_modifications:
-
-                if edge.pred.sw == edge.succ.sw:
-                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=True)
-                else:
-                    ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications, store_switch_modifications=False)
+                ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications)
             else:
                 ttp = traffic_to_propagate
 
@@ -200,3 +220,98 @@ class NetworkPortGraph(PortGraph):
                 pred_admitted_traffic.union(i)
 
         return pred_admitted_traffic
+
+    def get_succs_with_admitted_traffic_and_vuln_rank(self, pred, at, vuln_rank, dst):
+
+        succs_traffic = []
+        possible_succs = self.get_admitted_traffic_succs(pred, dst)
+        for succ in possible_succs:
+
+            # First check if the successor would carry this traffic at all
+            should, enabling_edge_data_list = self.should_add_succ(pred, succ, dst, at)
+
+            # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
+            if should:
+
+                traffic_at_succ = self.get_modified_traffic_at_succ(pred,
+                                                                    succ,
+                                                                    dst,
+                                                                    at,
+                                                                    enabling_edge_data_list)
+
+                vuln_rank_check = True
+
+                # TODO: This may cause problem with duplicates (i.e. two edge data with exact same
+                # traffic carried but with different vuln_ranks)
+
+                for ed in enabling_edge_data_list:
+                    if ed.get_vuln_rank() != vuln_rank:
+                        vuln_rank_check = False
+                        break
+
+                if vuln_rank_check:
+                    succs_traffic.append((succ, traffic_at_succ))
+
+        return succs_traffic
+
+    # Returns if the given link fails, the path would have an alternative way to get around
+    def get_backup_ingress_nodes_and_traffic(self, path, ld):
+
+        is_path_affected = False
+        ingress_nodes_and_traffic = []
+
+        # Find the path_edges that get affected by the failure of given link
+        for i in range(0, len(path.path_edges)):
+            edge, enabling_edge_data, traffic_at_pred = path.path_edges[i]
+            edge_tuple = (edge[0].node_id, edge[1].node_id)
+
+            if edge_tuple == ld.forward_port_graph_edge or edge_tuple == ld.reverse_port_graph_edge:
+
+                is_path_affected = True
+
+                # Go to the switch and ask if a backup edge exists in the transfer function
+                #  for the traffic carried by this path at that link
+
+                p_edge, p_enabling_edge_data, p_traffic_at_pred = path.path_edges[i - 1]
+                backup_succs = self.get_succs_with_admitted_traffic_and_vuln_rank(p_edge[0],
+                                                                                  p_traffic_at_pred,
+                                                                                  1,
+                                                                                  path.dst_node)
+
+                # TODO: Compute the ingress node from successor (Assumption, there is always one succ on egress node)
+                for succ, succ_traffic in backup_succs:
+                    ingress_node = list(self.successors_iter(succ))[0]
+
+                    # Avoid adding as possible successor if it is for the link that has failed
+                    # This can happen for 'reversing' paths
+                    if not (ingress_node.node_id == ld.forward_port_graph_edge[1] or
+                                    ingress_node.node_id == ld.reverse_port_graph_edge[1]):
+                        ingress_nodes_and_traffic.append((ingress_node, succ_traffic))
+
+        # If so, return the ingress node on the next switch, where that edge leads to
+        return is_path_affected, ingress_nodes_and_traffic
+
+    def link_failure_causes_path_disconnect(self, path, ld):
+
+        causes_disconnect = False
+        is_path_affected, backup_ingress_nodes_and_traffic = self.get_backup_ingress_nodes_and_traffic(path, ld)
+
+        if is_path_affected:
+
+            # If there is no backup successors, ld failure causes disconnect
+            if not backup_ingress_nodes_and_traffic:
+                causes_disconnect = True
+
+            # If there are backup successors, but they are not adequately carrying traffic, failure causes disconnect
+            else:
+                for ingress_node, traffic_to_carry in backup_ingress_nodes_and_traffic:
+
+                    # First get what is admitted at this node
+                    ingress_at = self.get_admitted_traffic(ingress_node, path.dst_node)
+
+                    # The check if it carries the required traffic
+                    if not ingress_at.is_subset_traffic(traffic_to_carry):
+                        causes_disconnect = True
+                        break
+
+        return causes_disconnect

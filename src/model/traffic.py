@@ -2,7 +2,8 @@ import sys
 
 from netaddr import IPNetwork
 from match import field_names
-from intervaltree_modified import IntervalTree, Interval
+from model import intervaltree_modified
+from model.intervaltree_modified import IntervalTree, Interval
 
 __author__ = 'Rakesh Kumar'
 
@@ -13,10 +14,10 @@ class TrafficElement:
 
         self.switch_modifications = {}
         self.written_modifications = {}
-        self.instruction_type = None
+        self.written_modifications_apply = None
         self.traffic_fields = {}
         self.enabling_edge_data = None
-
+        
         # If a match has been provided to initialize with
         if init_match:
             for field_name in field_names:
@@ -39,7 +40,6 @@ class TrafficElement:
                 te_str += field_names[i] + ":" + str(self.traffic_fields[field_names[i]]) + "\r\n"
             else:
                 pass
-                #te_str += field_names[i] + ":" + "*" + "\r\n"
 
         te_str += field_names[len(field_names) - 1] + ":" + str(self.traffic_fields[field_names[len(field_names) - 1]])
         te_str += "\r\n"
@@ -48,7 +48,7 @@ class TrafficElement:
 
     def is_traffic_field_wildcard(self, field_val):
 
-        if isinstance(field_val, Interval):
+        if isinstance(field_val, intervaltree_modified.Interval):
             return True
         else:
             return False
@@ -101,6 +101,9 @@ class TrafficElement:
             field_intersection_intervals = []
 
             for iv in field1:
+                if type(iv) == int:
+                    self.is_traffic_field_wildcard(field1)
+
                 for matched_iv in field2.search(iv.begin, iv.end):
 
                     # Take the smaller interval of the two and put it in the field_intersection
@@ -198,9 +201,7 @@ class TrafficElement:
 
         for field_name in self.traffic_fields:
 
-            #if field_name in self.switch_modifications:
-
-            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications != None:
+            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
                 if field_name in self.enabling_edge_data.applied_modifications:
 
                     field_interval = self.enabling_edge_data.applied_modifications[field_name][1]
@@ -217,46 +218,63 @@ class TrafficElement:
                 modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
         # Accumulate field modifications
-        modified_traffic_element.written_modifications = self.written_modifications
-        modified_traffic_element.switch_modifications = self.switch_modifications
-        modified_traffic_element.instruction_type = self.instruction_type
+        modified_traffic_element.switch_modifications.update(self.switch_modifications)
+        modified_traffic_element.written_modifications.update(self.written_modifications)
+        modified_traffic_element.written_modifications_apply = self.written_modifications_apply
         modified_traffic_element.enabling_edge_data = self.enabling_edge_data
 
         return modified_traffic_element
 
-    def field_remains_unmodified(self, orig_traffic_element, field_name, mf):
+    def get_orig_field(self, orig_traffic_element, field_name, modifications):
 
         # Check to see if the value on this traffic is same as what it was modified to be for this modification
-        # If it is, then use the 'original' value of the match that caused the modification.
+        # If it is, then use the 'original' value of the traffic that caused the modification.
         # If it is not, then the assumption here would be that even though the modification is there on this chunk
         # but it does not really apply because of what the traffic chunk has gone through subsequently
 
-        field_interval = mf[field_name][1]
+        field_interval = modifications[field_name][1]
         value_tree = IntervalTree()
         value_tree.add(field_interval)
 
         intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
 
         if intersection:
-            orig_traffic_element.traffic_fields[field_name] = mf[field_name][0].traffic_fields[field_name]
+            orig_traffic_element.traffic_fields[field_name] = modifications[field_name][0].traffic_fields[field_name]
         else:
             orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
         return intersection
 
-    def get_orig_traffic_element(self, applied_modifications=None, store_switch_modifications=True):
+    def store_switch_modifications(self, modifications):
 
-        if applied_modifications:
-            mf = applied_modifications
-        else:
-            # if the output_action type is applied, no written modifications take effect.
-            if self.instruction_type == "applied":
-                return self
+        # When storing modifications, store the first one applied in the switch, with the match from the last
+        # matching rule
+        for modified_field in modifications:
 
-            mf = self.written_modifications
+            # If the modification on this field has not been seen before, simply store it.
+            if modified_field not in self.switch_modifications:
+                self.switch_modifications[modified_field] = modifications[modified_field]
 
-        mf_used = {}
-        mf_used.update(mf)
+            # Otherwise if you have seen this field being modified previously...
+            else:
+                # Check if the previous modification requires setting of the match to this modification
+                # If so, then use the match from this modification
+                this_modification_match = modifications[modified_field][0]
+                this_modification_value_tree = modifications[modified_field][1]
+
+                prev_modification_match = self.switch_modifications[modified_field][0]
+                prev_modification_value_tree = self.switch_modifications[modified_field][1]
+                prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
+
+                intersection = self.get_field_intersection(this_modification_value_tree, prev_match_field_value_tree)
+
+                if intersection:
+                    self.switch_modifications[modified_field] = (this_modification_match, prev_modification_value_tree)
+
+    def get_orig_traffic_element(self, modifications):
+
+        modifications_used = {}
+        modifications_used.update(modifications)
 
         orig_traffic_element = TrafficElement()
 
@@ -269,30 +287,25 @@ class TrafficElement:
             # If the field is modified however, it is left as-is too, unless it is modified to the exact value
             # as it is contained in the traffic
 
-            if field_name in mf:
+            if field_name in modifications:
 
                 # Checking if the rule has both push_vlan and set_vlan modifications for the header,
-                # if so, then don't apply the push_vlan modification, the other one would take care of it, see below:
-                if field_name == "has_vlan_tag" and "vlan_id" in mf:
+                # if so, then don't sweat the push_vlan modification, the other one would take care of it, see below:
+                if field_name == "has_vlan_tag" and "vlan_id" in modifications:
                     continue
 
-                elif field_name == "vlan_id" and "has_vlan_tag" in mf:
-                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                elif field_name == "vlan_id" and "has_vlan_tag" in modifications:
+                    is_modified = self.get_orig_field(orig_traffic_element, field_name, modifications)
                     
-                    if unmodified:
-                        unmodified = self.field_remains_unmodified(orig_traffic_element, "has_vlan_tag", mf)
-                        if unmodified:
-                            orig_traffic_element.traffic_fields["has_vlan_tag"] = mf["has_vlan_tag"][0].traffic_fields["has_vlan_tag"]
-                        else:
-                            orig_traffic_element.traffic_fields["has_vlan_tag"] = self.traffic_fields["has_vlan_tag"]
-    
+                    if is_modified:
+                        is_modified = self.get_orig_field(orig_traffic_element, "has_vlan_tag", modifications)
                     else:
                         # If ever reversing effects of push_vlan and not matching on it, while there is a modification
                         # on the has_vlan_tag as well then nullify this te. One way is to set has_vlan_tag to empty
                         empty_field = IntervalTree()
                         orig_traffic_element.traffic_fields["has_vlan_tag"] = empty_field
 
-                elif field_name == "vlan_id" and "has_vlan_tag" not in mf:
+                elif field_name == "vlan_id" and "has_vlan_tag" not in modifications:
 
                     # Reverse the effects of a vlan_id modification on traffic only when a vlan tag is present
                     vlan_tag_present = False
@@ -305,51 +318,25 @@ class TrafficElement:
                             vlan_tag_present = True
 
                     if vlan_tag_present:
-                        unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                        is_modified = self.get_orig_field(orig_traffic_element, field_name, modifications)
                     else:
                         orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
-                        del mf_used[field_name]
+                        del modifications_used[field_name]
 
                 # All the other fields...
                 else:
-                    unmodified = self.field_remains_unmodified(orig_traffic_element, field_name, mf)
+                    is_modified = self.get_orig_field(orig_traffic_element, field_name, modifications)
             else:
                 # Otherwise, just keep the field same as it was
                 orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
         # Accumulate field modifications
-        orig_traffic_element.written_modifications.update(self.written_modifications)
         orig_traffic_element.switch_modifications.update(self.switch_modifications)
-        orig_traffic_element.instruction_type = self.instruction_type
+        orig_traffic_element.written_modifications.update(self.written_modifications)
+        orig_traffic_element.written_modifications_apply = self.written_modifications_apply
         orig_traffic_element.enabling_edge_data = self.enabling_edge_data
 
-        # If storing modifications, store the first one applied in the switch, with the match from the last
-        # matching rule
-
-        if store_switch_modifications:
-            for modified_field in mf_used:
-                if modified_field not in orig_traffic_element.switch_modifications:
-                    orig_traffic_element.switch_modifications[modified_field] = mf_used[modified_field]
-                else:
-                    # Check if the previous modification requires setting of the match to this modification
-                    # If so, then use the match from this modification
-                    this_modification_match = mf[modified_field][0]
-                    this_modification_value_tree = mf[modified_field][1]
-
-                    prev_modification_match = orig_traffic_element.switch_modifications[modified_field][0]
-                    prev_modification_value_tree = orig_traffic_element.switch_modifications[modified_field][1]
-
-                    prev_match_field_value_tree = prev_modification_match.traffic_fields[modified_field]
-
-                    intersection = self.get_field_intersection(this_modification_value_tree,
-                                                               prev_match_field_value_tree)
-
-                    if intersection:
-                        orig_traffic_element.switch_modifications[modified_field] = (this_modification_match,
-                                                                                     prev_modification_value_tree)
-
-        else:
-            orig_traffic_element.switch_modifications.clear()
+        orig_traffic_element.store_switch_modifications(modifications_used)
 
         return orig_traffic_element
 
@@ -435,6 +422,9 @@ class Traffic:
         else:
             return False
 
+    def __eq__(self, other):
+        return self.is_equal_traffic(other)
+
     def intersect(self, in_traffic):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:
@@ -453,9 +443,9 @@ class Traffic:
                     # Add this and do the necessary book-keeping...
                     traffic_intersection.traffic_elements.append(ei)
 
+                    ei.switch_modifications.update(e_in.switch_modifications)
                     ei.written_modifications.update(e_in.written_modifications)
-                    ei.instruction_type = e_in.instruction_type
-                    ei.switch_modifications = e_in.switch_modifications
+                    ei.written_modifications_apply = e_in.written_modifications_apply
                     ei.enabling_edge_data = e_in.enabling_edge_data
 
         return traffic_intersection
@@ -470,8 +460,6 @@ class Traffic:
         if not self.traffic_elements:
             diff_traffic.traffic_elements.extend(in_traffic.traffic_elements)
             return diff_traffic
-
-        #print "in_traffic.traffic_elements:", len(in_traffic.traffic_elements), "self.traffic_elements:", len(self.traffic_elements)
 
         for in_te in in_traffic.traffic_elements:
 
@@ -503,9 +491,9 @@ class Traffic:
             if remaining:
 
                 for remaining_te in remaining:
-                    remaining_te.written_modifications = in_te.written_modifications
-                    remaining_te.switch_modifications = in_te.switch_modifications
-                    remaining_te.instruction_type = in_te.instruction_type
+                    remaining_te.switch_modifications.update(in_te.switch_modifications)
+                    remaining_te.written_modifications.update(in_te.written_modifications)
+                    remaining_te.written_modifications_apply = in_te.written_modifications_apply
                     remaining_te.enabling_edge_data = in_te.enabling_edge_data
 
                 diff_traffic.traffic_elements.extend(remaining)
@@ -516,12 +504,26 @@ class Traffic:
     def union(self, in_traffic):
         self.traffic_elements.extend(in_traffic.traffic_elements)
 
-    def get_orig_traffic(self, modifications=None, store_switch_modifications=True):
+    def get_orig_traffic(self, applied_modifications=None):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
-            orig_te = te.get_orig_traffic_element(modifications, store_switch_modifications)
+
+            if applied_modifications:
+                modifications = applied_modifications
+            else:
+                if not te.written_modifications_apply:
+                    orig_traffic.traffic_elements.append(te)
+                    continue
+                modifications = te.written_modifications
+
+            if modifications:
+                orig_te = te.get_orig_traffic_element(modifications)
+            else:
+                orig_te = te
+
             orig_traffic.traffic_elements.append(orig_te)
+
         return orig_traffic
 
     def get_intersecting_modifications(self):
@@ -540,6 +542,15 @@ class Traffic:
         for te in self.traffic_elements:
             te.enabling_edge_data = enabling_edge_data
 
+    def set_written_modifications(self, written_modifications):
+        for te in self.traffic_elements:
+            te.written_modifications.update(written_modifications)
+            te.store_switch_modifications(written_modifications)
+
+    def set_written_modifications_apply(self, written_modifications_apply):
+        for te in self.traffic_elements:
+            te.written_modifications_apply = written_modifications_apply
+
     def get_enabling_edge_data(self):
         enabling_edge_data_list = []
 
@@ -547,6 +558,7 @@ class Traffic:
             enabling_edge_data_list.append(te.enabling_edge_data)
 
         return enabling_edge_data_list
+
 
 def main():
     m1 = Traffic()

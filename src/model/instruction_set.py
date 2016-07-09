@@ -47,21 +47,19 @@ class Instruction():
 
     def parse_ryu_instruction(self):
 
-        instruction_name, instruction_actions = self.instruction_json
-
-        if instruction_name.startswith("WRITE_ACTIONS"):
+        if self.instruction_json["type"] == "WRITE_ACTIONS":
             self.instruction_type = "write-actions"
-            for action_json in instruction_actions:
+            for action_json in self.instruction_json["actions"]:
                 self.actions_list.append(Action(self.sw, action_json))
 
-        elif instruction_name.startswith("APPLY_ACTIONS"):
+        elif self.instruction_json["type"] == "APPLY_ACTIONS":
             self.instruction_type = "apply-actions"
-            for action_json in instruction_actions:
+            for action_json in self.instruction_json["actions"]:
                 self.actions_list.append(Action(self.sw, action_json))
 
-        elif instruction_name.startswith("GOTO_TABLE"):
+        elif self.instruction_json["type"] == "GOTO_TABLE":
             self.instruction_type = "go-to-table"
-            self.go_to_table = int(self.instruction_json[1])
+            self.go_to_table = self.instruction_json["table_id"]
 
         #TODO: Other instructions...
 
@@ -153,8 +151,8 @@ class InstructionSet():
 
     def parse_ryu_instruction_set(self):
 
-        for instruction_name in self.instructions_json:
-            instruction = Instruction(self.sw, (instruction_name, self.instructions_json[instruction_name]))
+        for instruction_json in self.instructions_json:
+            instruction = Instruction(self.sw, instruction_json)
             self.instruction_list.append(instruction)
 
     def parse_sel_instruction_set(self):
@@ -218,8 +216,9 @@ class InstructionSet():
 
         for out_port, output_action in output_actions:
 
+            # Avoid adding edges for actions when only reporting active state
             if self.sw.port_graph.report_active_state:
-                if output_action.get.get_active_rank() != 0:
+                if output_action.get_active_rank() != 0:
                     continue
 
             applied_modifications = self.applied_action_set.get_modified_fields_dict(self.flow.traffic_element)

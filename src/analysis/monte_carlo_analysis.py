@@ -7,8 +7,9 @@ import math
 import random
 
 from itertools import permutations
-
 from analysis.flow_validator import FlowValidator
+from model.traffic import Traffic
+
 
 class MonteCarloAnalysis(FlowValidator):
 
@@ -60,9 +61,7 @@ class MonteCarloAnalysis(FlowValidator):
                         print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "path:", path
 
                     path_links = path.get_path_links()
-                    for path_link in path_links:
-                        ld = self.network_graph.get_link_data(path_link[0], path_link[1])
-
+                    for ld in path_links:
                         # Avoid adding the same path twice for cases when a link is repeated
                         if path not in ld.traffic_paths:
                             ld.traffic_paths.append(path)
@@ -85,13 +84,13 @@ class MonteCarloAnalysis(FlowValidator):
             # For each primary traffic path that goes through that link, check
             for path in ld.traffic_paths:
 
-                # Check to see if the path is current active
+                # Check to see if the path is currently active
                 if path.get_max_active_rank() == 0:
 
                     if verbose:
                         print "Considering Path: ", path
 
-                    if path.link_failure_causes_disconnect(ld):
+                    if self.port_graph.link_failure_causes_path_disconnect(path, ld):
                         ld.causes_disconnect = True
                         break
 
@@ -116,78 +115,18 @@ class MonteCarloAnalysis(FlowValidator):
 
         all_host_pair_connected = True
 
-        for src_h_id in self.network_graph.host_ids:
-            for dst_h_id in self.network_graph.host_ids:
+        src_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
+        dst_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
 
-                if src_h_id == dst_h_id:
-                    continue
+        # src_zone = [self.network_graph.get_node_object("h21").switch_port]
+        # dst_zone = [self.network_graph.get_node_object("h31").switch_port]
 
-                if verbose:
-                    print "src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+        specific_traffic = Traffic(init_wildcard=True)
+        specific_traffic.set_field("ethernet_type", 0x0800)
 
-                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
-
-                at, all_paths = self.validate_host_pair_reachability(src_h_id,
-                                                                     dst_h_id,
-                                                                     specific_traffic,
-                                                                     verbose)
-                if not all_paths:
-                    all_host_pair_connected = False
-                    if verbose:
-                        print "Disconnected Flow: src_h_id:", src_h_id,  "dst_h_id:", dst_h_id
+        all_host_pair_connected = self.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 0)
 
         return all_host_pair_connected
-
-    # Return number of edges it took to break
-    def break_random_links_until_pair_disconnected(self, src_h_id, dst_h_id, verbose):
-        self.links_broken = []
-
-        specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
-        at, all_paths = self.validate_host_pair_reachability(src_h_id,
-                                                             dst_h_id,
-                                                             specific_traffic,
-                                                             verbose)
-
-        orig_at = at
-        orig_all_paths = all_paths
-
-        while all_paths:
-
-            # Randomly sample an edge to break, sample again if it has already been broken
-            edge = random.choice(self.network_graph.graph.edges())
-
-            # Ignore host edges
-            if edge[0].startswith("h") or edge[1].startswith("h"):
-                continue
-
-            if edge in self.links_broken:
-                continue
-
-            # Break the edge
-            self.links_broken.append((str(edge[0]), str(edge[1])))
-            self.port_graph.remove_node_graph_link(edge[0], edge[1])
-            at, all_paths = self.validate_host_pair_reachability(src_h_id,
-                                                                 dst_h_id,
-                                                                 specific_traffic,
-                                                                 verbose)
-
-        # Restore the edges for next run
-        for edge in self.links_broken:
-            self.port_graph.add_node_graph_link(edge[0], edge[1], updating=True)
-
-        if verbose:
-            print "self.links_broken:", self.links_broken
-
-        # For comparison sake:
-        now_at, now_all_paths = self.validate_host_pair_reachability(src_h_id,
-                                                                     dst_h_id,
-                                                                     specific_traffic,
-                                                                     verbose)
-
-        if now_all_paths != orig_all_paths or not(orig_at.is_subset_traffic(now_at)):
-            print "Something went wrong:", src_h_id, "<->", dst_h_id, "due to self.links_broken:", self.links_broken
-
-        return len(self.links_broken)
 
     def get_beta(self, u, b, j, verbose=False):
         beta = None
@@ -197,6 +136,7 @@ class MonteCarloAnalysis(FlowValidator):
         elif j > b + 1:
             p = 1.0
             for i in xrange(0, j-2 + 1):
+                print "i:", i, "self.alpha[i+1]:", self.alpha[i+1]
                 p = p * ((self.F_bar[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
 
             beta = (j/u) * ((self.F[j-1]) / (self.N - j + 1)) * (p)
@@ -207,6 +147,8 @@ class MonteCarloAnalysis(FlowValidator):
         return beta
 
     def get_alpha(self, u, b, j, verbose=False):
+
+        # print "j:", j, "self.F:", self.F, "self.F_bar:", self.F_bar, "self.alpha:", self.alpha
 
         if b is not None:
             beta = self.get_beta(u, b, j, verbose)
@@ -291,6 +233,7 @@ class MonteCarloAnalysis(FlowValidator):
         return b
 
     def break_random_links_until_any_pair_disconnected_importance(self, u, verbose=False):
+        print "--"
         self.links_broken = []
         self.alpha = []
         self.F = []
@@ -316,8 +259,7 @@ class MonteCarloAnalysis(FlowValidator):
             # Do a skewed sample using alpha:
             sampled_ld = self.sample_link_skewed(self.alpha[j])
 
-            if verbose:
-                print "Breaking the link:", sampled_ld
+            print "Breaking the link:", sampled_ld
 
             # Break the link
             self.links_broken.append(sampled_ld)
@@ -330,14 +272,13 @@ class MonteCarloAnalysis(FlowValidator):
 
         # Restore the links for next run
         for link in self.links_broken:
-            if verbose:
-                print "Restoring the link:", link
+            print "Restoring the link:", link
 
             self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
-        self.classify_network_graph_links(verbose)
-
         result = self.get_importance_sampling_experiment_result(len(self.links_broken))
+
+        print "result:", result
 
         return result, self.links_broken
 
@@ -412,7 +353,7 @@ class MonteCarloAnalysis(FlowValidator):
 
         return e_nf
 
-    def break_random_links_until_any_pair_disconnected(self, verbose=False):
+    def break_random_links_until_any_pair_disconnected_uniform(self, verbose=False):
 
         self.links_broken = []
 
@@ -441,39 +382,29 @@ class MonteCarloAnalysis(FlowValidator):
 
         return len(self.links_broken), self.links_broken
 
-    def break_specified_links_in_order(self, links, verbose):
+    def test_classification_breaking_specified_link_sequence(self, link_sequence, verbose=False):
 
-        self.links_broken = []
-
-        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        for link in links:
-
-            # Break the link
-            self.links_broken.append((str(link[0]), str(link[1])))
-            self.port_graph.remove_node_graph_link(link[0], link[1])
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        # Restore the links for next run
-        for link in self.links_broken:
-            self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        if verbose:
-            print "self.links_broken:", self.links_broken
-
-        return self.links_broken
-
-    def test_classification_breaking_specified_link_sequence(self, link_sequence, verbose):
+        ingress_node_of_interest = self.port_graph.get_ingress_node("s2", 3)
+        dst_node_of_interest = self.port_graph.get_egress_node("s4", 1)
+        prior_at = self.port_graph.get_admitted_traffic(ingress_node_of_interest, dst_node_of_interest)
 
         for link in link_sequence:
 
             # Break the link
-            self.links_broken.append((str(link[0]), str(link[1])))
+            print "Breaking the link:", link
             self.port_graph.remove_node_graph_link(link[0], link[1])
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
 
         # Restore the links for next run
         for link in self.links_broken:
+            print "Restoring the link:", link
             self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
-            all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+
+        after_at = self.port_graph.get_admitted_traffic(ingress_node_of_interest, dst_node_of_interest)
+
+        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
+        self.update_link_state(verbose)
+
+        print "links_causing_disconnect:", self.links_causing_disconnect
+        print "links_not_causing_disconnect:", self.links_not_causing_disconnect

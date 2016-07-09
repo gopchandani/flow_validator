@@ -2,19 +2,21 @@ __author__ = 'Rakehs Kumar'
 
 from mininet.topo import Topo
 
+
 class ClosTopo(Topo):
 
-    def __init__(self, fanout, cores, num_hosts_per_switch, **opts):
+    def __init__(self, params):
         
         # Initialize topology and default options
-        Topo.__init__(self, **opts)
+        Topo.__init__(self)
 
-        self.total_core_switches = cores
-        self.total_agg_switches = self.total_core_switches * fanout
-        self.total_edge_switches = self.total_agg_switches * fanout
+        self.params = params
+
+        self.total_core_switches = self.params["core"]
+        self.total_agg_switches = self.total_core_switches * self.params["fanout"]
+        self.total_edge_switches = self.total_agg_switches * self.params["fanout"]
 
         self.total_switches = 0
-        self.num_hosts_per_switch = num_hosts_per_switch
 
         self.core_switches = {}
         self.agg_switches = {}
@@ -22,13 +24,13 @@ class ClosTopo(Topo):
 
         for x in xrange(1, self.total_core_switches + 1):
             self.total_switches += 1
-            self.core_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow13")
+            self.core_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow14")
             
         print "Core switches:", self.core_switches
         
         for x in xrange(1, self.total_agg_switches + 1):
             self.total_switches += 1
-            self.agg_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow13")
+            self.agg_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow14")
             
         print "Aggregate switches:", self.agg_switches
 
@@ -39,7 +41,7 @@ class ClosTopo(Topo):
         for x in xrange(1, self.total_edge_switches + 1):
             self.total_switches += 1
             edge_switch_name = 's%i' % self.total_switches
-            self.edge_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow13")
+            self.edge_switches[x] = self.addSwitch('s%i' % self.total_switches, protocols="OpenFlow14")
             
         print "Edge switches:",  self.edge_switches
 
@@ -48,18 +50,16 @@ class ClosTopo(Topo):
                 self.addLink(self.agg_switches[x], self.edge_switches[y])
 
         for edge_switch_num in self.edge_switches:
-
             edge_switch_name = self.edge_switches[edge_switch_num]
-
-            # if not (edge_switch_name == 's4' or edge_switch_name == 's7'):
-            #     continue
-
-            # if not (edge_switch_name == 's7' or edge_switch_name == 's14'):
-            #     continue
-
-            # add fanout number of hosts to each edge switch
-            for y in xrange(self.num_hosts_per_switch):
+            for y in xrange(self.params["num_hosts_per_switch"]):
                 host_name = self.addHost("h" + edge_switch_name[1:] + str(y+1))
                 self.addLink(host_name, self.edge_switches[edge_switch_num])
 
-topos = {"clostopo": (lambda: ClosTopo())}
+    def get_switches_with_hosts(self):
+        return self.edge_switches.keys()
+
+    def __str__(self):
+        params_str = ''
+        for k, v in self.params.items():
+            params_str += "_" + str(k) + "_" + str(v)
+        return self.__class__.__name__ + params_str

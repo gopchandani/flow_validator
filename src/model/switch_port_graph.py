@@ -4,6 +4,7 @@ from traffic import Traffic
 from port_graph_edge import PortGraphEdge, SwitchPortGraphEdgeData
 from port_graph import PortGraph
 
+
 class SwitchPortGraph(PortGraph):
 
     def __init__(self, network_graph, sw, report_active_state):
@@ -101,7 +102,6 @@ class SwitchPortGraph(PortGraph):
             edge = self.get_edges_from_flow_table_edges(flow_table, succ)
             self.add_edge(flow_table.port_graph_node, succ, edge)
 
-
     def modify_flow_table_edges(self, flow_table, modified_flow_table_edges):
 
         for modified_edge in modified_flow_table_edges:
@@ -128,7 +128,7 @@ class SwitchPortGraph(PortGraph):
 
             dst_traffic_at_succ = Traffic(init_wildcard=True)
             end_to_end_modified_edges = []
-            self.compute_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, end_to_end_modified_edges)
+            self.propagate_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, end_to_end_modified_edges)
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 
@@ -138,30 +138,30 @@ class SwitchPortGraph(PortGraph):
 
             if edge.edge_type == "egress":
 
-                # Case when traffic changes switch boundary
-                traffic_to_propagate.set_field("in_port", is_wildcard=True)
+                # if the output_action type is applied, no written modifications take effect.
+                if ed.edge_action.instruction_type == "applied":
+                    traffic_to_propagate.set_written_modifications_apply(False)
+                else:
+                    traffic_to_propagate.set_written_modifications_apply(True)
 
-                for te in traffic_to_propagate.traffic_elements:
-                    if ed.edge_action:
-                        te.instruction_type = ed.edge_action.instruction_type
-
+            # Always roll-back applied modifications if th edge has any...
             if ed.applied_modifications:
                 ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications)
             else:
                 ttp = traffic_to_propagate
 
+            # At ingress edges, first roll-back any accumulated written modifications
             if edge.edge_type == "ingress":
-                ttp = traffic_to_propagate.get_orig_traffic()
-            else:
-                # At all the non-ingress edges accumulate written modifications
-                if ed.written_modifications:
-                    for te in ttp.traffic_elements:
-                        te.written_modifications.update(ed.written_modifications)
+                ttp = ttp.get_orig_traffic()
 
             i = ed.edge_filter_traffic.intersect(ttp)
             i.set_enabling_edge_data(ed)
 
             if not i.is_empty():
+                # At all the non-ingress edges accumulate written modifications
+                if edge.edge_type != "ingress" and ed.written_modifications:
+                    i.set_written_modifications(ed.written_modifications)
+
                 pred_admitted_traffic.union(i)
 
         return pred_admitted_traffic
@@ -191,78 +191,4 @@ class SwitchPortGraph(PortGraph):
 
             all_modified_flow_table_edges.extend(modified_flow_table_edges)
 
-        if event_type == "port_down":
-
-            edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
-            for ed in edge.edge_data_list:
-                del ed.edge_filter_traffic.traffic_elements[:]
-
-            modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
-            self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
-
-            # Add minimal changed edges by doing a cross product from this node's ingress to
-            # all egress nodes
-            for e in all_modified_flow_table_edges:
-                end_to_end_modified_edges.append((ingress_node.node_id, e[1]))
-
-        elif event_type == "port_up":
-
-            edge = self.get_edge(ingress_node, self.sw.flow_tables[0].port_graph_node)
-            for ed in edge.edge_data_list:
-                ed.edge_filter_traffic.union(ingress_node.parent_obj.ingress_node_traffic)
-
-            modified_flow_table_edges = [(ingress_node.node_id, self.sw.flow_tables[0].port_graph_node.node_id)]
-            self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
-
-            # Add minimal changed edges by doing a cross product from this node's ingress to
-            # all egress nodes
-            for e in all_modified_flow_table_edges:
-                end_to_end_modified_edges.append((ingress_node.node_id, e[1]))
-
         return end_to_end_modified_edges
-
-    def test_one_port_failure_at_a_time(self, verbose=False):
-
-        test_passed = True
-
-        # Loop over ports of the switch and fail and restore them one by one
-        for testing_port_number in self.sw.ports:
-
-            if testing_port_number != 3:
-                continue
-
-            testing_port = self.sw.ports[testing_port_number]
-
-            graph_paths_before = self.get_graph_paths(verbose)
-            graph_ats_before = self.get_graph_ats()
-
-            testing_port.state = "down"
-            end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number,
-                                                                                              "port_down")
-
-            graph_paths_intermediate = self.get_graph_paths(verbose)
-            graph_ats_intermediate = self.get_graph_ats()
-
-            testing_port.state = "up"
-            end_to_end_modified_edges = self.update_admitted_traffic_due_to_port_state_change(testing_port_number,
-                                                                                              "port_up")
-
-            graph_paths_after = self.get_graph_paths(verbose)
-            graph_ats_after = self.get_graph_ats()
-
-            all_graph_paths_equal = self.compare_graph_paths(graph_paths_before,
-                                                             graph_paths_after,
-                                                             verbose)
-
-            if not all_graph_paths_equal:
-                test_passed = all_graph_paths_equal
-                print "Test Failed."
-
-            all_graph_ats_equal = self.compare_graph_ats(graph_ats_before,
-                                                         graph_ats_after,
-                                                         verbose)
-            if not all_graph_ats_equal:
-                test_passed = all_graph_ats_equal
-                print "Test Failed."
-
-        return test_passed

@@ -1,247 +1,77 @@
-__author__ = 'Rakesh Kumar'
-
 import json
 import time
+import random
+import math
 import numpy as np
 import scipy.stats as ss
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-
 from pprint import pprint
-from controller_man import ControllerMan
-from mininet_man import MininetMan
+from model.traffic import Traffic
+from timer import Timer
 
-from model.network_graph import NetworkGraph
-from model.match import Match
-from model.traffic_path import TrafficPath
+__author__ = 'Rakesh Kumar'
 
-from synthesis.intent_synthesis import IntentSynthesis
-from synthesis.intent_synthesis_ldst import IntentSynthesisLDST
-from synthesis.intent_synthesis_load_balance import IntentSynthesisLB
-from synthesis.synthesize_failover_aborescene import SynthesizeFailoverAborescene
 
 class Experiment(object):
 
     def __init__(self,
                  experiment_name,
-                 num_iterations,
-                 load_config,
-                 save_config,
-                 controller,
-                 num_controller_instances):
+                 num_iterations):
 
-        self.experiment_tag = experiment_name + "_" + str(num_iterations) + "_iterations_" +time.strftime("%Y%m%d_%H%M%S")
-
+        self.experiment_tag = experiment_name + "_" + str(num_iterations) + "_iterations_" + time.strftime("%Y%m%d_%H%M%S")
         self.num_iterations = num_iterations
-        self.load_config = load_config
-        self.save_config = save_config
-        self.controller = controller
-        self.num_controller_instances = num_controller_instances
 
         self.data = {}
 
-        self.controller_port = 6633
-        self.cm = None
-        self.mm = None
-        self.ng = None
+    def perform_incremental_times_experiment(self, fv, link_fraction_to_sample):
 
-        if not self.load_config and self.save_config:
-            self.cm = ControllerMan(self.num_controller_instances, controller=controller)
+        all_links = list(fv.network_graph.get_switch_link_data())
+        num_links_to_sample = int(math.ceil(len(all_links) * link_fraction_to_sample))
 
-    def setup_network_graph(self,
-                            topo_description,
-                            mininet_setup_gap=None,
-                            dst_ports_to_synthesize=None,
-                            synthesis_setup_gap=None,
-                            synthesis_scheme=None):
+        incremental_times = []
 
-        if not self.load_config and self.save_config:
-            self.controller_port = self.cm.get_next()
+        for i in range(num_links_to_sample):
 
-        self.mm = MininetMan(synthesis_scheme, self.controller_port, *topo_description,
-                             dst_ports_to_synthesize=dst_ports_to_synthesize)
+            sampled_ld = random.choice(all_links)
 
-        if not self.load_config and self.save_config:
-            self.mm.start_mininet()
+            print "Failing:", sampled_ld
+            with Timer(verbose=True) as t:
+                fv.port_graph.remove_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1])
+            incremental_times.append(t.secs)
+            print incremental_times
 
-            if mininet_setup_gap:
-                time.sleep(mininet_setup_gap)
+            print "Restoring:", sampled_ld
+            with Timer(verbose=True) as t:
+                fv.port_graph.add_node_graph_link(sampled_ld.forward_link[0], sampled_ld.forward_link[1], updating=True)
+            incremental_times.append(t.secs)
+            print incremental_times
 
-        # Get a flow validator instance
-        self.ng = NetworkGraph(mm=self.mm,
-                               controller=self.controller,
-                               load_config=self.load_config,
-                               save_config=self.save_config)
+        return np.mean(incremental_times)
 
-        if not self.load_config and self.save_config:
-            if self.controller == "odl":
-                self.mm.setup_mininet_with_odl(self.ng)
-            elif self.controller == "ryu":
-                if synthesis_scheme == "IntentSynthesis":
-                    self.synthesis = IntentSynthesis(self.ng, master_switch=topo_description[0] == "linear",
-                                                     synthesized_paths_save_directory=self.ng.config_path_prefix)
+    def perform_policy_validation_experiment(self, fv):
+        src_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
+                    for h_id in fv.network_graph.host_ids]
 
-                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+        dst_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
+                    for h_id in fv.network_graph.host_ids]
 
-                elif synthesis_scheme == "IntentSynthesisLDST":
-                    self.synthesis = IntentSynthesisLDST(self.ng, master_switch=topo_description[0] == "linear")
-                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
+        traffic = Traffic(init_wildcard=True)
+        traffic.set_field("ethernet_type", 0x0800)
+        k = 1
+        l = 12
+        el = [random.choice(list(fv.network_graph.get_switch_link_data()))]
 
-                elif synthesis_scheme == "IntentSynthesisLB":
-                    self.synthesis = IntentSynthesisLB(self.ng, master_switch=topo_description[0] == "linear")
-                    self.synthesis.synthesize_all_node_pairs(dst_ports_to_synthesize)
-
-                elif synthesis_scheme == "QoS_Synthesis":
-                    #self.mm.qos_setup_single_flow_test(ng)
-
-                    self.mm.qos_setup_two_flows_on_separate_queues_to_two_different_hosts(self.ng,
-                                                                                          same_output_queue=False)
-                    #self.mm.qos_setup_two_flows_on_separate_queues_to_same_host(self.ng)
-
-                elif synthesis_scheme == "Synthesis_Failover_Aborescene":
-                    self.synth = SynthesizeFailoverAborescene(self.ng)
-
-                    flow_match = Match(is_wildcard=True)
-                    flow_match["ethernet_type"] = 0x0800
-                    self.synth.synthesize_all_switches(flow_match)
-
-                # self.mm.net.pingAll()
-
-                is_bi_connected = self.mm.is_bi_connected_manual_ping_test_all_hosts()
-
-                #
-                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h11'),
-                #                                                             self.mm.net.get('h31'))])
-
-                # is_bi_connected = self.mm.is_bi_connected_manual_ping_test([(self.mm.net.get('h31'),
-                #                                                             self.mm.net.get('h41'))],
-                #                                                            [('s1', 's2')])
-                print "is_bi_connected:", is_bi_connected
-
-                if synthesis_setup_gap:
-                    time.sleep(synthesis_setup_gap)
-
-        # Refresh the network_graph
-        self.ng.parse_switches()
-
-        print "total_flow_rules:", self.ng.total_flow_rules
-
-        return self.ng
-
-    #TODO: Eliminate the need to have this function
-    def compare_synthesis_paths(self, analyzed_path, synthesized_path, verbose):
-
-        path_matches = True
-
-        if len(analyzed_path) == len(synthesized_path):
-            i = 0
-            for path_node in analyzed_path:
-                if path_node.node_id != synthesized_path[i]:
-                    path_matches = False
-                    break
-                i += 1
-        else:
-            path_matches = False
-
-        return path_matches
-
-    def search_matching_analyzed_path(self, analyzed_host_pairs_paths, src_host, dst_host, synthesized_path, verbose):
-
-        found_matching_path = False
-
-        # Need to find at least one matching analyzed path
-        for analyzed_path in analyzed_host_pairs_paths[src_host][dst_host]:
-            found_matching_path = self.compare_synthesis_paths(analyzed_path, synthesized_path, verbose)
-
-            if found_matching_path:
-                break
-
-        return found_matching_path
-
-    def compare_primary_paths_with_synthesis(self, fv, analyzed_host_pairs_traffic_paths, verbose=False):
-
-        synthesized_primary_paths = None
-
-        if not self.load_config and self.save_config:
-            synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
-        else:
-            with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
-                synthesized_primary_paths = json.loads(in_file.read())
-
-        all_paths_match = True
-
-        for src_host in analyzed_host_pairs_traffic_paths:
-            for dst_host in analyzed_host_pairs_traffic_paths[src_host]:
-
-                synthesized_path = synthesized_primary_paths[src_host][dst_host]
-                path_matches = self.search_matching_analyzed_path(analyzed_host_pairs_traffic_paths,
-                                                                  src_host, dst_host,
-                                                                  synthesized_path, verbose)
-                if not path_matches:
-                    print "No analyzed path matched for:", synthesized_path
-                    all_paths_match = False
-
-        return all_paths_match
-
-    def compare_failover_paths_with_synthesis(self, fv, links_to_try, verbose=False):
-
-        synthesized_primary_paths = None
-        synthesized_failover_paths = None
-        
-        if not self.load_config and self.save_config:
-            synthesized_primary_paths = self.synthesis.synthesis_lib.synthesized_primary_paths
-            synthesized_failover_paths = self.synthesis.synthesis_lib.synthesized_failover_paths
-        else:
-            with open(self.ng.config_path_prefix + "synthesized_primary_paths.json", "r") as in_file:
-                synthesized_primary_paths = json.loads(in_file.read())
-            
-            with open(self.ng.config_path_prefix + "synthesized_failover_paths.json", "r") as in_file:
-                synthesized_failover_paths = json.loads(in_file.read())
-
-        for link in links_to_try:
-
-            # Ignore host links
-            if link[0].startswith("h") or link[1].startswith("h"):
-                continue
-
-            print "Breaking link:", link
-            fv.port_graph.remove_node_graph_link(link[0], link[1])
-            
-            all_paths_match = True
-
-            analyzed_host_pairs_paths = fv.get_all_host_pairs_traffic_paths()
-
-            for src_host in analyzed_host_pairs_paths:
-                for dst_host in analyzed_host_pairs_paths[src_host]:
-                    
-                    # If an link has been failed, first check both permutation of link switches, if neither is found,
-                    # then refer to primary path by assuming that the given link did not participate in the failover of
-                    # the given host pair.
-                    try:
-                        synthesized_path = synthesized_failover_paths[src_host][dst_host][link[0]][link[1]]
-                    except:
-                        try:
-                            synthesized_path = synthesized_failover_paths[src_host][dst_host][link[1]][link[0]]
-                        except:
-                            synthesized_path = synthesized_primary_paths[src_host][dst_host]                        
-
-                    path_matches = self.search_matching_analyzed_path(analyzed_host_pairs_paths,
-                                                                      src_host, dst_host,
-                                                                      synthesized_path, verbose)
-                    if not path_matches:
-                        print "No analyzed path matched for:", synthesized_path, "with failed link:", link
-                        all_paths_match = False
-                        break
-
-            print "Restoring link:", link
-            fv.port_graph.add_node_graph_link(link[0], link[1], updating=True)
-
-            if not all_paths_match:
-                break
-
-        return all_paths_match
+        with Timer(verbose=True) as t:
+            validation_result = fv.validate_zone_pair_connectivity_path_length_link_exclusivity(src_zone,
+                                                                                                dst_zone,
+                                                                                                traffic,
+                                                                                                l, el, k)
+        # Return overall validation time, and incremental times [3] in validation results
+        return t.secs, validation_result
 
     def dump_data(self):
+        print "Dumping data:"
         pprint(self.data)
         filename = "data/" + self.experiment_tag + ".json"
         print "Writing to file:", filename
@@ -256,9 +86,11 @@ class Experiment(object):
         with open(filename, "r") as infile:
             self.data = json.load(infile)
 
+        pprint(self.data)
+
     def prepare_matplotlib_data(self, data_dict):
 
-        x = sorted(data_dict.keys())
+        x = sorted(data_dict.keys(), key=int)
 
         data_means = []
         data_sems = []
@@ -379,17 +211,67 @@ class Experiment(object):
         plt.savefig("plots/" + self.experiment_tag + "_" + data_key + ".png")
         plt.show()
 
-    def plot_bar_error_bars(self, data_key, x_label, y_label):
+    def plot_lines_with_error_bars(self,
+                                   ax,
+                                   data_key,
+                                   x_label,
+                                   y_label,
+                                   subplot_title,
+                                   y_scale,
+                                   x_min_factor=1.0,
+                                   x_max_factor=1.05,
+                                   y_min_factor=0.1,
+                                   y_max_factor=1.5,
+                                   xticks=None,
+                                   xtick_labels=None,
+                                   yticks=None,
+                                   ytick_labels=None):
 
-        x, edges_broken_mean, edges_broken_sem = self.prepare_matplotlib_data(self.data[data_key])
-        ind = np.arange(len(x))
-        width = 0.3
+        ax.set_xlabel(x_label, fontsize=10, labelpad=-0)
+        ax.set_ylabel(y_label, fontsize=10, labelpad=0)
+        ax.set_title(subplot_title, fontsize=10)
 
-        plt.bar(ind + width, edges_broken_mean, yerr=edges_broken_sem, color="0.90", align='center',
-                error_kw=dict(ecolor='gray', lw=2, capsize=5, capthick=2))
+        markers = ['.', 'v', 'o', 'd', '+', '^', 'H', ',', 's', 'o', 'h', '*']
+        marker_i = 0
 
-        plt.xticks(ind + width, tuple(x))
-        plt.xlabel(x_label, fontsize=18)
-        plt.ylabel(y_label, fontsize=18)
-        plt.savefig("plots/" + self.experiment_tag + "_" + data_key + ".png")
-        plt.show()
+        for line_data_key in self.data[data_key]:
+
+            data_vals = self.data[data_key][line_data_key]
+
+            x, mean, sem = self.prepare_matplotlib_data(data_vals)
+
+            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=line_data_key, ls='none')
+
+            marker_i += 1
+
+        ax.tick_params(axis='x', labelsize=8)
+        ax.tick_params(axis='y', labelsize=8)
+
+        low_xlim, high_xlim = ax.get_xlim()
+        ax.set_xlim(xmax=(high_xlim) * x_max_factor)
+        ax.set_xlim(xmin=(low_xlim) * x_min_factor)
+
+        if y_scale == "linear":
+            low_ylim, high_ylim = ax.get_ylim()
+            ax.set_ylim(ymin=low_ylim*y_min_factor)
+            ax.set_ylim(ymax=high_ylim*y_max_factor)
+        elif y_scale == "log":
+            ax.set_ylim(ymin=1)
+            ax.set_ylim(ymax=100000)
+
+        ax.set_yscale(y_scale)
+
+        xa = ax.get_xaxis()
+        xa.set_major_locator(MaxNLocator(integer=True))
+
+        if xticks:
+            ax.set_xticks(xticks)
+
+        if xtick_labels:
+            ax.set_xticklabels(xtick_labels)
+
+        if yticks:
+            ax.set_yticks(yticks)
+
+        if ytick_labels:
+            ax.set_yticklabels(ytick_labels)
