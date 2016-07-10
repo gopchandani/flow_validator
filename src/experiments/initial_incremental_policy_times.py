@@ -187,7 +187,7 @@ class InitialIncrementalTimes(Experiment):
 
                     all_keys.add(new_key)
 
-        flow_path_keys_data["all_keys"] = all_keys
+        flow_path_keys_data["all_keys"] = list(all_keys)
         return flow_path_keys_data
 
     def load_data_merge_iterations(self, filename_list):
@@ -376,12 +376,11 @@ def main():
     #exp.trigger()
     #exp.dump_data()
 
-    #exp.data = exp.data_merge()
-
     exp.load_data("data/sgc_merged_data.json")
 
     exp.data = exp.generate_relative_cost_ratio_data(exp.data)
     exp.data = exp.generate_num_flow_path_keys(exp.data)
+
     exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
