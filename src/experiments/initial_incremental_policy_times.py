@@ -68,7 +68,7 @@ class InitialIncrementalTimes(Experiment):
 
         f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=False, figsize=(9.5, 3.0))
 
-        data_xtick_labels = list(self.data["all_keys"])
+        data_xtick_labels = self.data["all_keys"]
         data_xticks = [int(x) for x in data_xtick_labels]
 
         self.plot_lines_with_error_bars(ax1,
