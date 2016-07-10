@@ -13,6 +13,24 @@ class TestSwitchPortGraph(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        nc_linear_dijkstra = NetworkConfiguration("ryu",
+                                                  "linear",
+                                                  {"num_switches": 2,
+                                                   "num_hosts_per_switch": 1},
+                                                  conf_root="configurations/",
+                                                  synthesis_name="DijkstraSynthesis",
+                                                  synthesis_params={"apply_group_intents_immediately": True})
+
+        cls.ng_linear_dijkstra = nc_linear_dijkstra.setup_network_graph(mininet_setup_gap=1,
+                                                                        synthesis_setup_gap=1)
+        sw_linear_dijkstra = cls.ng_linear_dijkstra.get_node_object("s1")
+        cls.swpg_linear_dijkstra = SwitchPortGraph(cls.ng_linear_dijkstra,
+                                                   sw_linear_dijkstra, True)
+
+        sw_linear_dijkstra.port_graph = cls.swpg_linear_dijkstra
+        cls.swpg_linear_dijkstra.init_switch_port_graph()
+        cls.swpg_linear_dijkstra.compute_switch_admitted_traffic()
+
         nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
                                                              "ring",
                                                              {"num_switches": 4,
@@ -142,7 +160,34 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         return primary_at_int, failover_at_int
 
-    def test_ring_aborescene_synthesis_admitted_traffic(self):
+    def test_linear_dijkstra_admitted_traffic(self):
+        h1_obj = self.ng_linear_dijkstra.get_node_object("h1")
+        h2_obj = self.ng_linear_dijkstra.get_node_object("h2")
+
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_linear_dijkstra, h1_obj, h2_obj, 1, 2)
+
+    def test_linear_dijkstra_modifications(self):
+        h1_obj = self.ng_linear_dijkstra.get_node_object("h1")
+        h2_obj = self.ng_linear_dijkstra.get_node_object("h2")
+
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_linear_dijkstra, h1_obj, h2_obj, 1, 2)
+        self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(4098, 4099)})
+
+    def test_linear_dijkstra_paths(self):
+        h1_obj = self.ng_linear_dijkstra.get_node_object("h1")
+        h2_obj = self.ng_linear_dijkstra.get_node_object("h2")
+        at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_linear_dijkstra, h1_obj, h2_obj, 1, 2)
+
+        expected_path = TrafficPath(self.swpg_linear_dijkstra,
+                                    [self.swpg_linear_dijkstra.get_node("s1:ingress1"),
+                                     self.swpg_linear_dijkstra.get_node("s1:table0"),
+                                     self.swpg_linear_dijkstra.get_node("s1:table1"),
+                                     self.swpg_linear_dijkstra.get_node("s1:table2"),
+                                     self.swpg_linear_dijkstra.get_node("s1:egress2")])
+
+        self.check_path(self.swpg_linear_dijkstra, at_int, ingress_node, egress_node, expected_path)
+
+    def test_ring_aborescene_admitted_traffic(self):
 
         # This test asserts that in switch s1, for host h11, with no failures:
         # Traffic for host h21 flows out of port 3
@@ -179,7 +224,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                                         h11_obj, h41_obj, 1, 2)
 
 
-    def test_ring_aborescene_synthesis_modifications(self):
+    def test_ring_aborescene_modifications(self):
 
         # This test asserts that in switch s1, for host h11, with no failures:
         # Traffic for host h21 flows out of port 3 with modifications 5122
@@ -225,7 +270,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                                         h11_obj, h41_obj, 1, 2)
         self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)})
 
-    def test_ring_aborescene_synthesis_paths(self):
+    def test_ring_aborescene_paths(self):
 
         # This test asserts that in switch s1, for host h11, with no failures:
         # Traffic for host h21 flows out of port 3 via the specified path below
@@ -313,7 +358,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                      self.swpg_ring_aborescene_apply_false.get_node("s1:egress2")])
         self.check_path(self.swpg_ring_aborescene_apply_false, at_int, ingress_node, egress_node, expected_path)
 
-    def test_ring_aborescene_synthesis_admitted_traffic_failover(self):
+    def test_ring_aborescene_admitted_traffic_failover(self):
 
         # This test asserts that in switch s1, for host h11, with a single failures:
         # Traffic for host h21 flows out of port 3 before failure and out of port 2 after failure
@@ -343,7 +388,7 @@ class TestSwitchPortGraph(unittest.TestCase):
         self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_false, h11_obj, h31_obj, 1, 2, 3)
         self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_false, h11_obj, h41_obj, 1, 2, 3)
 
-    def test_ring_aborescene_synthesis_modifications_failover(self):
+    def test_ring_aborescene_modifications_failover(self):
 
         # This test asserts that in switch s1, for host h11, with a single failures:
         # Traffic for host h21 flows out of port 3 with modifications 5122 before failure and
@@ -407,7 +452,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)},
                                           {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6148, 6149)})
 
-    def test_ring_aborescene_synthesis_paths_failover(self):
+    def test_ring_aborescene_paths_failover(self):
 
         # This test asserts that in switch s1, for host h11, with a single failures:
         # Traffic for host h21 flows out of port 3 before failure and out of port 2 after failure

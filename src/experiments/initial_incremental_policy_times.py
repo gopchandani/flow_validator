@@ -18,13 +18,11 @@ class InitialIncrementalTimes(Experiment):
     def __init__(self,
                  num_iterations,
                  link_fraction_to_sample,
-                 num_hosts_per_switch_list,
                  network_configurations):
 
         super(InitialIncrementalTimes, self).__init__("initial_incremental_policy_times",
                                                       num_iterations)
 
-        self.num_hosts_per_switch_list = num_hosts_per_switch_list
         self.network_configurations = network_configurations
         self.link_fraction_to_sample = link_fraction_to_sample
 
@@ -41,34 +39,28 @@ class InitialIncrementalTimes(Experiment):
         for nc in self.network_configurations:
             print "network_configuration:", nc
 
-            for num_hosts_per_switch in self.num_hosts_per_switch_list:
+            ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
-                print "num_hosts_per_switch:", num_hosts_per_switch
+            self.data["initial_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]] = []
+            self.data["incremental_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]] = []
+            self.data["validation_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]] = []
 
-                nc.num_hosts_per_switch = num_hosts_per_switch
+            for i in xrange(self.num_iterations):
+                print "iteration:", i + 1
 
-                ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+                fv = FlowValidator(ng)
+                with Timer(verbose=True) as t:
+                    fv.init_network_port_graph()
+                    fv.add_hosts()
+                    fv.initialize_admitted_traffic()
 
-                self.data["initial_time"][nc.nc_topo_str][num_hosts_per_switch] = []
-                self.data["incremental_time"][nc.nc_topo_str][num_hosts_per_switch] = []
-                self.data["validation_time"][nc.nc_topo_str][num_hosts_per_switch] = []
+                self.data["initial_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]].append(t.secs)
+                self.dump_data()
 
-                for i in xrange(self.num_iterations):
-                    print "iteration:", i + 1
+                incr_time = self.perform_incremental_times_experiment(fv, self.link_fraction_to_sample)
+                self.data["incremental_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]].append(incr_time)
 
-                    fv = FlowValidator(ng)
-                    with Timer(verbose=True) as t:
-                        fv.init_network_port_graph()
-                        fv.add_hosts()
-                        fv.initialize_admitted_traffic()
-
-                    self.data["initial_time"][nc.nc_topo_str][num_hosts_per_switch].append(t.secs)
-                    self.dump_data()
-
-                    incr_time = self.perform_incremental_times_experiment(fv, self.link_fraction_to_sample)
-                    self.data["incremental_time"][nc.nc_topo_str][num_hosts_per_switch].append(incr_time)
-
-                    self.dump_data()
+                self.dump_data()
 
     def plot_initial_incremental_times(self):
         import pprint
@@ -345,38 +337,44 @@ class InitialIncrementalTimes(Experiment):
         return merged_data
 
 
+def get_network_configurations_list(num_hosts_per_switch_list):
+    nc_list = []
+    for hps in num_hosts_per_switch_list:
+        # nc = NetworkConfiguration("ryu",
+        #                           "clostopo",
+        #                           {"fanout": 2,
+        #                            "core": 2,
+        #                            "num_hosts_per_switch": hps},
+        #                           conf_root="configurations/",
+        #                           synthesis_name="AboresceneSynthesis",
+        #                           synthesis_params={"apply_group_intents_immediately": True})
+
+        nc = NetworkConfiguration("ryu",
+                                  "ring",
+                                  {"num_switches": 4,
+                                   "num_hosts_per_switch": hps},
+                                  conf_root="configurations/",
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
+
+        nc_list.append(nc)
+
+    return nc_list
+
+
 def main():
 
     num_iterations = 2
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [2, 4, 6]#[2, 4, 6, 8, 10]
-
-    # network_configurations = [NetworkConfiguration("ryu",
-    #                                                "clostopo",
-    #                                                {"fanout": 2,
-    #                                                 "core": 1,
-    #                                                 "num_hosts_per_switch": 1},
-    #                                                conf_root="configurations/",
-    #                                                synthesis_name="AboresceneSynthesis",
-    #                                                synthesis_params={"apply_group_intents_immediately": True})]
-
-    network_configurations = [NetworkConfiguration("ryu",
-                                                   "ring",
-                                                   {"num_switches": 4,
-                                                    "num_hosts_per_switch": 1},
-                                                   conf_root="configurations/",
-                                                   synthesis_name="AboresceneSynthesis",
-                                                   synthesis_params={"apply_group_intents_immediately": True})]
-
+    num_hosts_per_switch_list = [1, 2]#[2, 4]#, 6, 8, 10]
+    network_configurations = get_network_configurations_list(num_hosts_per_switch_list)
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
-                                  num_hosts_per_switch_list,
                                   network_configurations)
 
     # Trigger the experiment
     exp.trigger()
     exp.dump_data()
-
 
     # exp.data = exp.data_merge()
 

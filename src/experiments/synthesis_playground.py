@@ -56,13 +56,22 @@ def main():
     #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
 
+    # network_configuration = NetworkConfiguration("ryu",
+    #                                              "ring",
+    #                                              {"num_switches": 4,
+    #                                               "num_hosts_per_switch": 1},
+    #                                              conf_root="configurations/",
+    #                                              synthesis_name="AboresceneSynthesis",
+    #                                              synthesis_params={"apply_group_intents_immediately": True})
+
     network_configuration = NetworkConfiguration("ryu",
-                                                 "ring",
-                                                 {"num_switches": 4,
+                                                 "linear",
+                                                 {"num_switches": 2,
                                                   "num_hosts_per_switch": 1},
                                                  conf_root="configurations/",
-                                                 synthesis_name="AboresceneSynthesis",
+                                                 synthesis_name="DijkstraSynthesis",
                                                  synthesis_params={"apply_group_intents_immediately": True})
+
 
     exp = SynthesisPlayground(network_configuration)
     exp.trigger()
