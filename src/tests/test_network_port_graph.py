@@ -61,12 +61,14 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.attach_hosts_port_nodes_with_npg(cls.ng_ring_aborescene_apply_true, cls.npg_ring_aborescene_apply_true)
         cls.init_hosts_traffic_propagation(cls.ng_ring_aborescene_apply_true, cls.npg_ring_aborescene_apply_true)
 
-        cls.npg_ring_aborescene_apply_true_report_active_false = NetworkPortGraph(cls.ng_ring_aborescene_apply_true,
-                                                                                  False)
+        cls.ng_ring_aborescene_apply_true_report_active_false = \
+            cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        cls.npg_ring_aborescene_apply_true_report_active_false = \
+            NetworkPortGraph(cls.ng_ring_aborescene_apply_true_report_active_false, False)
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
-        cls.attach_hosts_port_nodes_with_npg(cls.ng_ring_aborescene_apply_true,
+        cls.attach_hosts_port_nodes_with_npg(cls.ng_ring_aborescene_apply_true_report_active_false,
                                              cls.npg_ring_aborescene_apply_true_report_active_false)
-        cls.init_hosts_traffic_propagation(cls.ng_ring_aborescene_apply_true,
+        cls.init_hosts_traffic_propagation(cls.ng_ring_aborescene_apply_true_report_active_false,
                                            cls.npg_ring_aborescene_apply_true_report_active_false)
 
         cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
@@ -77,17 +79,21 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                     conf_root=os.path.dirname(__file__) + "/",
                                                     synthesis_name="DijkstraSynthesis",
                                                     synthesis_params={})
-        cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
+        cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
         cls.npg_clos_dijkstra.init_network_port_graph()
         cls.attach_hosts_port_nodes_with_npg(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
         cls.init_hosts_traffic_propagation(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra)
 
-        cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra, False)
+        cls.ng_clos_dijkstra_report_active_false = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
+                                                                                            synthesis_setup_gap=1)
+        cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false, False)
         cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
-        cls.attach_hosts_port_nodes_with_npg(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra_report_active_false)
-        cls.init_hosts_traffic_propagation(cls.ng_clos_dijkstra, cls.npg_clos_dijkstra_report_active_false)
+        cls.attach_hosts_port_nodes_with_npg(cls.ng_clos_dijkstra_report_active_false,
+                                             cls.npg_clos_dijkstra_report_active_false)
+        cls.init_hosts_traffic_propagation(cls.ng_clos_dijkstra_report_active_false,
+                                           cls.npg_clos_dijkstra_report_active_false)
 
         cls.nc_linear_dijkstra = NetworkConfiguration("ryu",
                                                       "linear",
@@ -125,22 +131,9 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         for link_to_fail in links_to_fail:
             before_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
-            all_paths = npg.get_paths(src_h_obj.switch_ingress_port,
-                                      dst_h_obj.switch_egress_port,
-                                      before_at,
-                                      [src_h_obj.switch_ingress_port],
-                                      [],
-                                      True)
-
             npg.remove_node_graph_link(*link_to_fail)
 
         after_at = npg.get_admitted_traffic(src_h_obj.switch_ingress_port, dst_h_obj.switch_egress_port)
-        all_paths = npg.get_paths(src_h_obj.switch_ingress_port,
-                                  dst_h_obj.switch_egress_port,
-                                  after_at,
-                                  [src_h_obj.switch_ingress_port],
-                                  [],
-                                  True)
 
         for link_to_fail in links_to_fail:
             npg.add_node_graph_link(*link_to_fail, updating=True)
@@ -314,7 +307,6 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                               traffic_to_match,
                                                               link_to_fail)
 
-
     def test_single_link_failure_admitted_traffic_presence_ring_aborescene_apply_true(self):
 
         node_to_check = self.ng_ring_aborescene_apply_true.get_node_object("h21").switch_ingress_port
@@ -382,7 +374,6 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                  self.ng_clos_dijkstra.graph.edges())
         self.assertEqual(paths_match, True)
 
-
     def get_active_path(self, ng, npg, src_h_obj, dst_h_obj):
 
         specific_traffic = self.get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
@@ -448,19 +439,19 @@ class TestNetworkPortGraph(unittest.TestCase):
             npg.add_node_graph_link(*ld1.forward_link, updating=True)
 
     def test_single_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
-        self.check_single_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
+        self.check_single_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true_report_active_false,
                                                               self.npg_ring_aborescene_apply_true_report_active_false)
 
     def test_two_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
-        self.check_two_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true,
+        self.check_two_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true_report_active_false,
                                                            self.npg_ring_aborescene_apply_true_report_active_false)
 
     def test_single_link_failure_causes_path_disconnect_clos_dijkstra_report_active_false(self):
-        self.check_single_link_failure_causes_path_disconnect(self.ng_clos_dijkstra,
+        self.check_single_link_failure_causes_path_disconnect(self.ng_clos_dijkstra_report_active_false,
                                                               self.npg_clos_dijkstra_report_active_false)
 
     def test_two_link_failure_causes_path_disconnect_clos_dijkstra_report_active_false(self):
-        self.check_two_link_failure_causes_path_disconnect(self.ng_clos_dijkstra,
+        self.check_two_link_failure_causes_path_disconnect(self.ng_clos_dijkstra_report_active_false,
                                                            self.npg_clos_dijkstra_report_active_false)
 
 if __name__ == '__main__':
