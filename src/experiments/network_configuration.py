@@ -19,7 +19,7 @@ from model.match import Match
 
 from experiments.topologies.ring_topo import RingTopo
 from experiments.topologies.clos_topo import ClosTopo
-from mininet.topo import LinearTopo
+from experiments.topologies.linear_topo import LinearTopo
 from experiments.topologies.fat_tree import FatTree
 from experiments.topologies.two_ring_topo import TwoRingTopo
 from experiments.topologies.ring_line_topo import RingLineTopo
@@ -90,7 +90,7 @@ class NetworkConfiguration(object):
             self.topo = ClosTopo(self.topo_params)
             self.nc_topo_str = "Ring topology with " + str(self.topo.total_switches) + " switches"
         elif self.topo_name == "linear":
-            self.topo = LinearTopo(self.topo_params["num_switches"], self.topo_params["num_hosts_per_switch"])
+            self.topo = LinearTopo(self.topo_params)
             self.nc_topo_str = "Linear topology with " + str(self.topo_params["num_switches"]) + " switches"
         else:
             raise NotImplementedError("Topology: %s" % self.topo_name)

@@ -13,6 +13,24 @@ class TestSwitchPortGraph(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        nc_linear_dijkstra = NetworkConfiguration("ryu",
+                                                  "linear",
+                                                  {"num_switches": 2,
+                                                   "num_hosts_per_switch": 1},
+                                                  conf_root="configurations/",
+                                                  synthesis_name="DijkstraSynthesis",
+                                                  synthesis_params={"apply_group_intents_immediately": True})
+
+        cls.ng_linear_dijkstra = nc_linear_dijkstra.setup_network_graph(mininet_setup_gap=1,
+                                                                        synthesis_setup_gap=1)
+        sw_linear_dijkstra = cls.ng_linear_dijkstra.get_node_object("s1")
+        cls.swpg_linear_dijkstra = SwitchPortGraph(cls.ng_linear_dijkstra,
+                                                   sw_linear_dijkstra, True)
+
+        sw_linear_dijkstra.port_graph = cls.swpg_linear_dijkstra
+        cls.swpg_linear_dijkstra.init_switch_port_graph()
+        cls.swpg_linear_dijkstra.compute_switch_admitted_traffic()
+
         nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
                                                              "ring",
                                                              {"num_switches": 4,
