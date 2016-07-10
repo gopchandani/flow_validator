@@ -89,8 +89,11 @@ class NetworkConfiguration(object):
         elif self.topo_name == "clostopo":
             self.topo = ClosTopo(self.topo_params)
             self.nc_topo_str = "Ring topology with " + str(self.topo.total_switches) + " switches"
+        elif self.topo_name == "linear":
+            self.topo = LinearTopo(self.topo_params["num_switches"], self.topo_params["num_hosts_per_switch"])
+            self.nc_topo_str = "Linear topology with " + str(self.topo_params["num_switches"]) + " switches"
         else:
-            raise NotImplemented("Unknown topology type: " % self.topo_name)
+            raise NotImplementedError("Topology: %s" % self.topo_name)
             
     def init_synthesis(self):
         if self.synthesis_name == "DijkstraSynthesis":
@@ -113,7 +116,7 @@ class NetworkConfiguration(object):
             flow_match["ethernet_type"] = 0x0800
             self.synthesis.synthesize_all_switches(flow_match, 2)
 
-        # self.mininet_obj.pingAll()
+        self.mininet_obj.pingAll()
 
         # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
 
