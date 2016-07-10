@@ -33,39 +33,6 @@ class MonteCarloAnalysis(FlowValidator):
         # Total number of links (a constant)
         self.N = len(list(self.network_graph.get_switch_link_data())) * 1.0
 
-    def initialize_per_link_traffic_paths(self, verbose=False):
-
-        for ld in self.network_graph.get_switch_link_data():
-            ld.traffic_paths = []
-
-        for src_h_id in self.network_graph.host_ids:
-            for dst_h_id in self.network_graph.host_ids:
-
-                if src_h_id == dst_h_id:
-                    continue
-
-                src_host_obj = self.network_graph.get_node_object(src_h_id)
-                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
-
-                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
-
-                all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
-                                                      dst_host_obj.switch_egress_port,
-                                                      specific_traffic,
-                                                      [src_host_obj.switch_ingress_port],
-                                                      [],
-                                                      verbose)
-
-                for path in all_paths:
-                    if verbose:
-                        print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "path:", path
-
-                    path_links = path.get_path_links()
-                    for ld in path_links:
-                        # Avoid adding the same path twice for cases when a link is repeated
-                        if path not in ld.traffic_paths:
-                            ld.traffic_paths.append(path)
-
     def classify_network_graph_links(self, verbose=False):
 
         self.links_not_causing_disconnect = []
