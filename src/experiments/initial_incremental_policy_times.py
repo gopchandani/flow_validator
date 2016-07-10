@@ -373,10 +373,12 @@ def main():
                                   network_configurations)
 
     # Trigger the experiment
-    exp.trigger()
-    exp.dump_data()
+    #exp.trigger()
+    #exp.dump_data()
 
-    # exp.data = exp.data_merge()
+    #exp.data = exp.data_merge()
+
+    exp.load_data("data/sgc_merged_data.json")
 
     exp.data = exp.generate_relative_cost_ratio_data(exp.data)
     exp.data = exp.generate_num_flow_path_keys(exp.data)
