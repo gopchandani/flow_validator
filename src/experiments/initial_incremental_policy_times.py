@@ -39,8 +39,6 @@ class InitialIncrementalTimes(Experiment):
         for nc in self.network_configurations:
             print "network_configuration:", nc
 
-            ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-
             self.data["initial_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]] = []
             self.data["incremental_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]] = []
             self.data["validation_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]] = []
@@ -48,7 +46,7 @@ class InitialIncrementalTimes(Experiment):
             for i in xrange(self.num_iterations):
                 print "iteration:", i + 1
 
-                fv = FlowValidator(ng)
+                fv = FlowValidator(nc.ng)
                 with Timer(verbose=True) as t:
                     fv.init_network_port_graph()
 
@@ -335,7 +333,7 @@ class InitialIncrementalTimes(Experiment):
         return merged_data
 
 
-def get_network_configurations_list(num_hosts_per_switch_list):
+def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for hps in num_hosts_per_switch_list:
         # nc = NetworkConfiguration("ryu",
@@ -349,11 +347,13 @@ def get_network_configurations_list(num_hosts_per_switch_list):
 
         nc = NetworkConfiguration("ryu",
                                   "ring",
-                                  {"num_switches": 4,
+                                  {"num_switches": 8,
                                    "num_hosts_per_switch": hps},
                                   conf_root="configurations/",
                                   synthesis_name="AboresceneSynthesis",
                                   synthesis_params={"apply_group_intents_immediately": True})
+
+        nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
         nc_list.append(nc)
 
@@ -364,8 +364,8 @@ def main():
 
     num_iterations = 2
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [1, 2]#[2, 4]#, 6, 8, 10]
-    network_configurations = get_network_configurations_list(num_hosts_per_switch_list)
+    num_hosts_per_switch_list = [2, 4, 6, 8, 10]
+    network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
                                   network_configurations)
