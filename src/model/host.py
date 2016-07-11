@@ -19,8 +19,8 @@ class Host:
         switch_obj.attached_hosts.append(self)
         self.switch_port.attached_host = self
 
-        self.switch_ingress_port = None
-        self.switch_egress_port = None
+        self.port_graph_ingress_node = None
+        self.port_graph_egress_node = None
 
     def get_switch_port(self):
         self.switch_port = self.switch_obj.ports[self.switch_port_attached]

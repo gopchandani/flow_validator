@@ -25,8 +25,6 @@ class SynthesisPlayground(Experiment):
 
         fv = FlowValidator(ng)
         fv.init_network_port_graph()
-        fv.add_hosts()
-        fv.initialize_admitted_traffic()
 
         src_zone = [fv.network_graph.get_node_object(h_id).get_switch_port() for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).get_switch_port() for h_id in fv.network_graph.host_ids]

@@ -51,8 +51,6 @@ class InitialIncrementalTimes(Experiment):
                 fv = FlowValidator(ng)
                 with Timer(verbose=True) as t:
                     fv.init_network_port_graph()
-                    fv.add_hosts()
-                    fv.initialize_admitted_traffic()
 
                 self.data["initial_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]].append(t.secs)
                 self.dump_data()
@@ -373,15 +371,15 @@ def main():
                                   network_configurations)
 
     # Trigger the experiment
-    #exp.trigger()
+    exp.trigger()
     #exp.dump_data()
 
-    exp.load_data("data/sgc_merged_data.json")
+    #exp.load_data("data/sgc_merged_data.json")
 
     exp.data = exp.generate_relative_cost_ratio_data(exp.data)
     exp.data = exp.generate_num_flow_path_keys(exp.data)
 
-    exp.plot_initial_incremental_times()
+    #exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()

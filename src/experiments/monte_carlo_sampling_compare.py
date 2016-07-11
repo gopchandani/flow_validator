@@ -126,8 +126,6 @@ class MonteCarloSamplingCompare(Experiment):
 
             self.mca = MonteCarloAnalysis(ng, False)
             self.mca.init_network_port_graph()
-            self.mca.add_hosts()
-            self.mca.initialize_admitted_traffic()
 
             # self.mca.test_classification_breaking_specified_link_sequence([('s2', 's3'), ('s4', 's3')])
             # self.mca.test_classification_breaking_specified_link_sequence([('s2', 's3'), ('s4', 's1')])
