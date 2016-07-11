@@ -106,32 +106,14 @@ class NetworkPortGraph(PortGraph):
         for sw in self.network_graph.get_switches():
             sw.port_graph.de_init_switch_port_graph()
 
-    def init_network_admitted_traffic(self):
+    def init_network_admitted_traffic(self, egress_nodes, init_admitted_traffic):
 
-        for host_id in self.network_graph.host_ids:
-
-            host_obj = self.network_graph.get_node_object(host_id)
-            host_obj.port_graph_ingress_node = self.get_node(host_obj.sw.node_id +
-                                                             ":ingress" + str(host_obj.switch_port.port_number))
-            host_obj.port_graph_egress_node = self.get_node(host_obj.sw.node_id +
-                                                            ":egress" + str(host_obj.switch_port.port_number))
-
-        for host_id in self.network_graph.host_ids:
-            host_obj = self.network_graph.get_node_object(host_id)
-
-            dst_traffic_at_succ = Traffic(init_wildcard=True)
-            dst_traffic_at_succ.set_field("ethernet_type", 0x0800)
-            dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
-            dst_traffic_at_succ.set_field("ethernet_destination", dst_mac_int)
-
-            print "Initializing for host:", host_id
-
+        for i in range(len(egress_nodes)):
             end_to_end_modified_edges = []
-
-            self.propagate_admitted_traffic(host_obj.port_graph_egress_node,
-                                            dst_traffic_at_succ,
+            self.propagate_admitted_traffic(egress_nodes[i],
+                                            init_admitted_traffic[i],
                                             None,
-                                            host_obj.port_graph_egress_node,
+                                            egress_nodes[i],
                                             end_to_end_modified_edges)
 
     def add_node_graph_link(self, node1_id, node2_id, updating=False):

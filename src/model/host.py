@@ -13,5 +13,5 @@ class Host:
         self.sw = sw
         self.switch_port = switch_port
 
-        self.port_graph_ingress_node = None
-        self.port_graph_egress_node = None
+        self.port_graph_ingress_node_id = self.sw.node_id + ":ingress" + str(self.switch_port.port_number)
+        self.port_graph_egress_node_id = self.sw.node_id + ":egress" + str(self.switch_port.port_number)

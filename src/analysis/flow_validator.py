@@ -2,13 +2,12 @@ import sys
 import itertools
 import numpy as np
 
-from collections import defaultdict
-
 sys.path.append("./")
 
 from model.network_port_graph import NetworkPortGraph
-from model.traffic import Traffic
 from experiments.timer import Timer
+from util import get_host_init_egress_nodes_and_traffic
+from util import get_specific_traffic
 
 __author__ = 'Rakesh Kumar'
 
@@ -21,7 +20,11 @@ class FlowValidator(object):
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
-        self.port_graph.init_network_admitted_traffic()
+
+        host_egress_nodes, init_admitted_traffic = get_host_init_egress_nodes_and_traffic(self.network_graph,
+                                                                                          self.port_graph)
+
+        self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
 
     def de_init_network_port_graph(self):
         self.port_graph.de_init_network_port_graph()
@@ -40,7 +43,7 @@ class FlowValidator(object):
                 src_host_obj = self.network_graph.get_node_object(src_h_id)
                 dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
-                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
+                specific_traffic = get_specific_traffic(self.network_graph, src_h_id, dst_h_id)
 
                 all_paths = self.port_graph.get_paths(src_host_obj.port_graph_ingress_node,
                                                       dst_host_obj.port_graph_egress_node,
@@ -59,21 +62,6 @@ class FlowValidator(object):
                         # Avoid adding the same path twice for cases when a link is repeated
                         if path not in ld.traffic_paths:
                             ld.traffic_paths.append(path)
-
-    def get_specific_traffic(self, src_h_id, dst_h_id):
-
-        src_h_obj = self.network_graph.get_node_object(src_h_id)
-        dst_h_obj = self.network_graph.get_node_object(dst_h_id)
-
-        specific_traffic = Traffic(init_wildcard=True)
-        specific_traffic.set_field("ethernet_type", 0x0800)
-        specific_traffic.set_field("ethernet_source", int(src_h_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("ethernet_destination", int(dst_h_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("in_port", int(src_h_obj.switch_port.port_number))
-        specific_traffic.set_field("vlan_id", src_h_obj.sw.synthesis_tag + 0x1000, is_exception_value=True)
-        specific_traffic.set_field("has_vlan_tag", 0)
-
-        return specific_traffic
 
     def port_pair_iter(self, src_zone, dst_zone):
 
