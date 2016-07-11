@@ -29,7 +29,7 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         sw_linear_dijkstra.port_graph = cls.swpg_linear_dijkstra
         cls.swpg_linear_dijkstra.init_switch_port_graph()
-        cls.swpg_linear_dijkstra.compute_switch_admitted_traffic()
+        cls.swpg_linear_dijkstra.init_switch_admitted_traffic()
 
         nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
                                                              "ring",
@@ -47,7 +47,7 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         sw_ring_aborescene_apply_true.port_graph = cls.swpg_ring_aborescene_apply_true
         cls.swpg_ring_aborescene_apply_true.init_switch_port_graph()
-        cls.swpg_ring_aborescene_apply_true.compute_switch_admitted_traffic()
+        cls.swpg_ring_aborescene_apply_true.init_switch_admitted_traffic()
 
         nc_ring_aborescene_apply_false = NetworkConfiguration("ryu",
                                                               "ring",
@@ -65,7 +65,7 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         sw_ring_aborescene_apply_false.port_graph = cls.swpg_ring_aborescene_apply_false
         cls.swpg_ring_aborescene_apply_false.init_switch_port_graph()
-        cls.swpg_ring_aborescene_apply_false.compute_switch_admitted_traffic()
+        cls.swpg_ring_aborescene_apply_false.init_switch_admitted_traffic()
 
     def check_admitted_traffic(self, swpg, src_host_obj, dst_host_obj, ingress_port_num, egress_port_num):
         ingress_node = swpg.get_ingress_node(swpg.sw.node_id, ingress_port_num)
@@ -75,8 +75,8 @@ class TestSwitchPortGraph(unittest.TestCase):
         specific_traffic.set_field("ethernet_type", 0x0800)
         specific_traffic.set_field("ethernet_source", int(src_host_obj.mac_addr.replace(":", ""), 16))
         specific_traffic.set_field("ethernet_destination", int(dst_host_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("in_port", int(src_host_obj.switch_port_attached))
-        specific_traffic.set_field("vlan_id", src_host_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
+        specific_traffic.set_field("in_port", int(src_host_obj.switch_port.port_number))
+        specific_traffic.set_field("vlan_id", src_host_obj.sw.synthesis_tag + 0x1000, is_exception_value=True)
         specific_traffic.set_field("has_vlan_tag", 0)
 
         at = swpg.get_admitted_traffic(ingress_node, egress_node)

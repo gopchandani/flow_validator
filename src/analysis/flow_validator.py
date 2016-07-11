@@ -2,7 +2,6 @@ import sys
 import itertools
 import numpy as np
 
-
 from collections import defaultdict
 
 sys.path.append("./")
@@ -22,45 +21,10 @@ class FlowValidator(object):
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
+        self.port_graph.init_network_admitted_traffic()
 
     def de_init_network_port_graph(self):
         self.port_graph.de_init_network_port_graph()
-
-    def add_hosts(self):
-
-        for host_id in self.network_graph.host_ids:
-
-            host_obj = self.network_graph.get_node_object(host_id)
-            host_obj.switch_ingress_port = self.port_graph.get_node(host_obj.switch_id +
-                                                                    ":ingress" + str(host_obj.switch_port_attached))
-            host_obj.switch_egress_port = self.port_graph.get_node(host_obj.switch_id +
-                                                                   ":egress" + str(host_obj.switch_port_attached))
-
-    def remove_hosts(self):
-
-        for host_id in self.network_graph.host_ids:
-            host_obj = self.network_graph.get_node_object(host_id)
-            self.port_graph.remove_node_graph_link(host_id, host_obj.switch_id)
-
-    def initialize_admitted_traffic(self):
-
-        for host_id in self.network_graph.host_ids:
-            host_obj = self.network_graph.get_node_object(host_id)
-
-            dst_traffic_at_succ = Traffic(init_wildcard=True)
-            dst_traffic_at_succ.set_field("ethernet_type", 0x0800)
-            dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
-            dst_traffic_at_succ.set_field("ethernet_destination", dst_mac_int)
-
-            print "Initializing for host:", host_id
-
-            end_to_end_modified_edges = []
-
-            self.port_graph.propagate_admitted_traffic(host_obj.switch_egress_port,
-                                                       dst_traffic_at_succ,
-                                                       None,
-                                                       host_obj.switch_egress_port,
-                                                       end_to_end_modified_edges)
 
     def initialize_per_link_traffic_paths(self, verbose=False):
 
@@ -78,10 +42,10 @@ class FlowValidator(object):
 
                 specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
 
-                all_paths = self.port_graph.get_paths(src_host_obj.switch_ingress_port,
-                                                      dst_host_obj.switch_egress_port,
+                all_paths = self.port_graph.get_paths(src_host_obj.port_graph_ingress_node,
+                                                      dst_host_obj.port_graph_egress_node,
                                                       specific_traffic,
-                                                      [src_host_obj.switch_ingress_port],
+                                                      [src_host_obj.port_graph_ingress_node],
                                                       [],
                                                       verbose)
 
@@ -105,8 +69,8 @@ class FlowValidator(object):
         specific_traffic.set_field("ethernet_type", 0x0800)
         specific_traffic.set_field("ethernet_source", int(src_h_obj.mac_addr.replace(":", ""), 16))
         specific_traffic.set_field("ethernet_destination", int(dst_h_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("in_port", int(src_h_obj.switch_port_attached))
-        specific_traffic.set_field("vlan_id", src_h_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
+        specific_traffic.set_field("in_port", int(src_h_obj.switch_port.port_number))
+        specific_traffic.set_field("vlan_id", src_h_obj.sw.synthesis_tag + 0x1000, is_exception_value=True)
         specific_traffic.set_field("has_vlan_tag", 0)
 
         return specific_traffic

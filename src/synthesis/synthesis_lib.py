@@ -800,7 +800,7 @@ class SynthesisLib(object):
 
             # Get concerned only with hosts that are directly connected to this sw
             h_obj = self.network_graph.get_node_object(h_id)
-            if h_obj.switch_id != sw:
+            if h_obj.sw.node_id != sw:
                 continue
 
             # Get a vanilla flow
@@ -809,11 +809,11 @@ class SynthesisLib(object):
 
             # Compile match with in_port and destination mac address
             if self.network_graph.controller == "ryu":
-                flow["match"]["in_port"] = h_obj.switch_port_attached
+                flow["match"]["in_port"] = h_obj.switch_port.port_number
                 flow["match"]["eth_dst"] = h_obj.mac_addr
 
             elif self.network_graph.controller == "sel":
-                flow.match.in_port = str(h_obj.switch_port_attached)
+                flow.match.in_port = str(h_obj.switch_port.port_number)
                 flow.match.eth_dst = h_obj.mac_addr
 
                 drop_action = ConfigTree.Action()
@@ -832,7 +832,7 @@ class SynthesisLib(object):
 
             # Get concerned only with hosts that are directly connected to this sw
             h_obj = self.network_graph.get_node_object(h_id)
-            if h_obj.switch_id != sw:
+            if h_obj.sw.node_id != sw:
                 continue
 
             # Get a vanilla flow
@@ -841,7 +841,7 @@ class SynthesisLib(object):
 
             #Compile match with in_port and destination mac address
             if self.network_graph.controller == "ryu":
-                flow["match"]["in_port"] = h_obj.switch_port_attached
+                flow["match"]["in_port"] = h_obj.switch_port.port_number
                 flow["match"]["vlan_vid"] = self.network_graph.graph.node[sw]["sw"].synthesis_tag
 
             elif self.network_graph.controller == "sel":

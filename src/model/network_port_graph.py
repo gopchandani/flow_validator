@@ -29,9 +29,6 @@ class NetworkPortGraph(PortGraph):
                 traffic_paths = None
                 if edge_sw:
 
-                    if pred.node_id == 's4:ingress3' and succ.node_id == 's4:egress1':
-                        pass
-
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
 
@@ -44,16 +41,18 @@ class NetworkPortGraph(PortGraph):
 
         return edge
 
-    def add_switch_transfer_edges(self, sw):
+    def add_switch_nodes(self, sw, port_numbers):
 
         # First grab the port objects from the sw's node graph and add them to port_graph's node graph
-        for port in sw.ports:
+        for port in port_numbers:
 
             self.add_node(sw.ports[port].network_port_graph_egress_node)
             self.add_node(sw.ports[port].network_port_graph_ingress_node)
 
+    def add_switch_edges(self, sw, port_numbers):
+
         # Add edges from all possible source/destination ports
-        for src_port_number in sw.ports:
+        for src_port_number in port_numbers:
 
             pred = sw.port_graph.get_ingress_node(sw.node_id, src_port_number)
 
@@ -86,10 +85,11 @@ class NetworkPortGraph(PortGraph):
 
             sw.port_graph = SwitchPortGraph(sw.network_graph, sw, self.report_active_state)
             sw.port_graph.init_switch_port_graph()
-            sw.port_graph.compute_switch_admitted_traffic()
-            # test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
-            # print test_passed
-            self.add_switch_transfer_edges(sw)
+            sw.port_graph.init_switch_admitted_traffic()
+
+            self.add_switch_nodes(sw, sw.ports)
+            self.add_switch_edges(sw, sw.ports)
+
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
@@ -105,6 +105,34 @@ class NetworkPortGraph(PortGraph):
         # Then de-initialize switch port graph
         for sw in self.network_graph.get_switches():
             sw.port_graph.de_init_switch_port_graph()
+
+    def init_network_admitted_traffic(self):
+
+        for host_id in self.network_graph.host_ids:
+
+            host_obj = self.network_graph.get_node_object(host_id)
+            host_obj.port_graph_ingress_node = self.get_node(host_obj.sw.node_id +
+                                                             ":ingress" + str(host_obj.switch_port.port_number))
+            host_obj.port_graph_egress_node = self.get_node(host_obj.sw.node_id +
+                                                            ":egress" + str(host_obj.switch_port.port_number))
+
+        for host_id in self.network_graph.host_ids:
+            host_obj = self.network_graph.get_node_object(host_id)
+
+            dst_traffic_at_succ = Traffic(init_wildcard=True)
+            dst_traffic_at_succ.set_field("ethernet_type", 0x0800)
+            dst_mac_int = int(host_obj.mac_addr.replace(":", ""), 16)
+            dst_traffic_at_succ.set_field("ethernet_destination", dst_mac_int)
+
+            print "Initializing for host:", host_id
+
+            end_to_end_modified_edges = []
+
+            self.propagate_admitted_traffic(host_obj.port_graph_egress_node,
+                                            dst_traffic_at_succ,
+                                            None,
+                                            host_obj.port_graph_egress_node,
+                                            end_to_end_modified_edges)
 
     def add_node_graph_link(self, node1_id, node2_id, updating=False):
 

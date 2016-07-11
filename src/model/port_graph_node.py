@@ -3,6 +3,7 @@ __author__ = 'Rakesh Kumar'
 from collections import defaultdict
 from model.traffic import Traffic
 
+
 class PortGraphNode:
 
     def __init__(self, sw, node_id, node_type):

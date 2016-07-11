@@ -104,7 +104,7 @@ class DijkstraSynthesis(object):
         last_edge_ports_dict = self.network_graph.get_link_ports_dict(p[len(p) - 2], p[len(p) - 1])
         last_switch_in_port = edge_ports_dict[last_switch]
 
-        switch_port_tuple_list.append((last_switch, last_switch_in_port, dst_host.switch_port_attached))
+        switch_port_tuple_list.append((last_switch, last_switch_in_port, dst_host.switch_port.port_number))
 
         if intent_type == "primary":
             self.synthesis_lib.record_primary_path(src_host, dst_host, switch_port_tuple_list)
@@ -178,7 +178,7 @@ class DijkstraSynthesis(object):
                     for reverse_candidate_intent in reverse_candidate_intents:
 
                         # Only consider an intent a reverse if the two intents' origin is same switch
-                        if primary_intent.src_host.switch_id == reverse_candidate_intent.src_host.switch_id:
+                        if primary_intent.src_host.sw.node_id == reverse_candidate_intent.src_host.sw.node_id:
 
                             #  If this intent is at a reverse flow carrier switch
 
@@ -187,7 +187,7 @@ class DijkstraSynthesis(object):
                             if reverse_candidate_intent.in_port == primary_intent.out_port:
 
                                 # If the intent is in fact related to a flow that originates on this switch
-                                if reverse_candidate_intent.src_host.switch_id == sw:
+                                if reverse_candidate_intent.src_host.sw.node_id == sw:
                                     reverse_candidate_intent.intent_type = "reverse"
                                     continue
 
@@ -210,8 +210,8 @@ class DijkstraSynthesis(object):
 
     def _compute_destination_host_mac_intents(self, h_obj, flow_match, matching_tag):
 
-        edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.switch_id, h_obj.node_id)
-        out_port = edge_ports_dict[h_obj.switch_id]
+        edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.sw.node_id, h_obj.node_id)
+        out_port = edge_ports_dict[h_obj.sw.node_id]
 
         host_mac_match = deepcopy(flow_match)
         mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
@@ -222,13 +222,13 @@ class DijkstraSynthesis(object):
 
         # Avoiding addition of multiple mac forwarding intents for the same host 
         # by using its mac address as the key
-        self._add_intent(h_obj.switch_id, h_obj.mac_addr, host_mac_intent)
+        self._add_intent(h_obj.sw.node_id, h_obj.mac_addr, host_mac_intent)
 
     def compute_and_push_vlan_tag_intents(self, src_h_obj, dst_h_obj, flow_match, required_tag,
                                           primary_first_intent, failover_first_intent):
 
         group_id = None
-        sw = src_h_obj.switch_id
+        sw = src_h_obj.sw.node_id
 
         if primary_first_intent and failover_first_intent:
             group_id = self.synthesis_lib.push_fast_failover_group(sw,
@@ -243,8 +243,8 @@ class DijkstraSynthesis(object):
         push_vlan_match= deepcopy(flow_match)
         mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
         push_vlan_match["ethernet_destination"] = int(mac_int)
-        push_vlan_match["in_port"] = int(src_h_obj.switch_port_attached)
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port_attached, "all",
+        push_vlan_match["in_port"] = int(src_h_obj.switch_port.port_number)
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port.port_number, "all",
                                       apply_immediately=True)
 
         push_vlan_tag_intent.required_vlan_id = required_tag
@@ -258,20 +258,19 @@ class DijkstraSynthesis(object):
                 True)
 
         # Take care of vlan tag push intents for this destination
-        self.synthesis_lib.push_vlan_push_intents_2(src_h_obj.switch_id,
+        self.synthesis_lib.push_vlan_push_intents_2(src_h_obj.sw.node_id,
                                                     push_vlan_tag_intent,
                                                     self.vlan_tag_push_rules_table_id,
                                                     group_id, True)
 
-
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         # Handy info
-        in_port = src_host.switch_port_attached
-        dst_sw_obj = self.network_graph.get_node_object(dst_host.switch_id)
+        in_port = src_host.switch_port.port_number
+        dst_sw_obj = self.network_graph.get_node_object(dst_host.sw.node_id)
 
         primary_first_intent = None
-        failover_first_intent= None
+        failover_first_intent = None
 
         # Add a MAC based forwarding rule for the destination host at the last hop
         self._compute_destination_host_mac_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)
@@ -279,14 +278,14 @@ class DijkstraSynthesis(object):
         # #  First find the shortest path between src and dst.
         # if self.network_graph.graph.has_edge('s1', 's2'):
         #
-        #     if src_host.switch_id < dst_host.switch_id:
+        #     if src_host.sw.node_id < dst_host.sw.node_id:
         #         self.network_graph.graph['s1']['s2']['weight'] = 0.5
         #     else:
         #         self.network_graph.graph['s1']['s2']['weight'] = 1.5
 
         p = nx.shortest_path(self.network_graph.graph,
-                             source=src_host.switch_id,
-                             target=dst_host.switch_id,
+                             source=src_host.sw.node_id,
+                             target=dst_host.sw.node_id,
                              weight='weight')
 
         print "Primary Path:", p
@@ -325,8 +324,8 @@ class DijkstraSynthesis(object):
             # Find the shortest path that results when the link breaks
             # and compute forwarding intents for that
             try:
-                bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.switch_id)
-                print "Backup Path from src:", p[i], "to destination:", dst_host.switch_id, "is:", bp
+                bp = nx.shortest_path(self.network_graph.graph, source=p[i], target=dst_host.sw.node_id)
+                print "Backup Path from src:", p[i], "to destination:", dst_host.sw.node_id, "is:", bp
 
                 if i == 0:
                     failover_first_intent = self._compute_path_ip_intents(src_host, dst_host, bp, "failover",
@@ -341,7 +340,7 @@ class DijkstraSynthesis(object):
 
 
             except nx.exception.NetworkXNoPath:
-                print "No backup path between:", p[i], "to:", dst_host.switch_id
+                print "No backup path between:", p[i], "to:", dst_host.sw.node_id
 
             # Add the edge back and the data that goes along with it
             self.network_graph.add_link(p[i], edge_ports_dict[p[i]], p[i + 1], edge_ports_dict[p[i + 1]])
@@ -436,7 +435,7 @@ class DijkstraSynthesis(object):
                                         primary_intent.out_port != failover_intent.out_port):
 
                                 # Consolidate for failover only when the source host in both intents match
-                                if failover_intent.src_host.switch_id == primary_intent.src_host.switch_id:
+                                if failover_intent.src_host.sw.node_id == primary_intent.src_host.sw.node_id:
                                     consolidation_found = True
 
                                     primary_intent.consolidated_in_a_failover_group = True
@@ -579,7 +578,7 @@ class DijkstraSynthesis(object):
                 dst_h_obj = self.network_graph.get_node_object(dst)
 
                 # Ignore installation of paths between switches on the same switch
-                if src_h_obj.switch_id == dst_h_obj.switch_id:
+                if src_h_obj.sw.node_id == dst_h_obj.sw.node_id:
                     continue
 
                 print "-----------------------------------------------------------------------------------------------"

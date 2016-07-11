@@ -25,11 +25,9 @@ class SynthesisPlayground(Experiment):
 
         fv = FlowValidator(ng)
         fv.init_network_port_graph()
-        fv.add_hosts()
-        fv.initialize_admitted_traffic()
 
-        src_zone = [fv.network_graph.get_node_object(h_id).get_switch_port() for h_id in fv.network_graph.host_ids]
-        dst_zone = [fv.network_graph.get_node_object(h_id).get_switch_port() for h_id in fv.network_graph.host_ids]
+        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
 
         # src_zone = [fv.network_graph.get_node_object("h11").switch_port]
         # dst_zone = [fv.network_graph.get_node_object("h21").switch_port]
@@ -56,22 +54,21 @@ def main():
     #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
 
-    # network_configuration = NetworkConfiguration("ryu",
-    #                                              "ring",
-    #                                              {"num_switches": 4,
-    #                                               "num_hosts_per_switch": 1},
-    #                                              conf_root="configurations/",
-    #                                              synthesis_name="AboresceneSynthesis",
-    #                                              synthesis_params={"apply_group_intents_immediately": True})
-
     network_configuration = NetworkConfiguration("ryu",
-                                                 "linear",
-                                                 {"num_switches": 2,
+                                                 "ring",
+                                                 {"num_switches": 4,
                                                   "num_hosts_per_switch": 1},
                                                  conf_root="configurations/",
-                                                 synthesis_name="DijkstraSynthesis",
+                                                 synthesis_name="AboresceneSynthesis",
                                                  synthesis_params={"apply_group_intents_immediately": True})
 
+    # network_configuration = NetworkConfiguration("ryu",
+    #                                              "linear",
+    #                                              {"num_switches": 2,
+    #                                               "num_hosts_per_switch": 1},
+    #                                              conf_root="configurations/",
+    #                                              synthesis_name="DijkstraSynthesis",
+    #                                              synthesis_params={"apply_group_intents_immediately": True})
 
     exp = SynthesisPlayground(network_configuration)
     exp.trigger()

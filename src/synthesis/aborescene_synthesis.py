@@ -242,8 +242,8 @@ class AboresceneSynthesis(object):
             mac_int = int(h_obj.mac_addr.replace(":", ""), 16)
             host_flow_match["ethernet_destination"] = int(mac_int)
 
-            edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.switch_id, h_obj.node_id)
-            out_port = edge_ports_dict[h_obj.switch_id]
+            edge_ports_dict = self.network_graph.get_link_ports_dict(h_obj.sw.node_id, h_obj.node_id)
+            out_port = edge_ports_dict[h_obj.sw.node_id]
             host_mac_intent = Intent("mac", host_flow_match, "all", out_port)
 
             self.synthesis_lib.push_destination_host_mac_intents(sw.node_id,
