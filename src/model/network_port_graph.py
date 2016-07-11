@@ -111,9 +111,9 @@ class NetworkPortGraph(PortGraph):
         for host_id in self.network_graph.host_ids:
 
             host_obj = self.network_graph.get_node_object(host_id)
-            host_obj.port_graph_ingress_node = self.get_node(host_obj.switch_id +
+            host_obj.port_graph_ingress_node = self.get_node(host_obj.sw.node_id +
                                                              ":ingress" + str(host_obj.switch_port.port_number))
-            host_obj.port_graph_egress_node = self.get_node(host_obj.switch_id +
+            host_obj.port_graph_egress_node = self.get_node(host_obj.sw.node_id +
                                                             ":egress" + str(host_obj.switch_port.port_number))
 
         for host_id in self.network_graph.host_ids:

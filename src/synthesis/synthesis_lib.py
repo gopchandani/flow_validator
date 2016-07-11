@@ -800,7 +800,7 @@ class SynthesisLib(object):
 
             # Get concerned only with hosts that are directly connected to this sw
             h_obj = self.network_graph.get_node_object(h_id)
-            if h_obj.switch_id != sw:
+            if h_obj.sw.node_id != sw:
                 continue
 
             # Get a vanilla flow
@@ -832,7 +832,7 @@ class SynthesisLib(object):
 
             # Get concerned only with hosts that are directly connected to this sw
             h_obj = self.network_graph.get_node_object(h_id)
-            if h_obj.switch_id != sw:
+            if h_obj.sw.node_id != sw:
                 continue
 
             # Get a vanilla flow

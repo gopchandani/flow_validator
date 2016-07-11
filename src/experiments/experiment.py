@@ -50,11 +50,9 @@ class Experiment(object):
         return np.mean(incremental_times)
 
     def perform_policy_validation_experiment(self, fv):
-        src_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
-                    for h_id in fv.network_graph.host_ids]
 
-        dst_zone = [fv.network_graph.get_node_object(h_id).get_switch_port()
-                    for h_id in fv.network_graph.host_ids]
+        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
 
         traffic = Traffic(init_wildcard=True)
         traffic.set_field("ethernet_type", 0x0800)

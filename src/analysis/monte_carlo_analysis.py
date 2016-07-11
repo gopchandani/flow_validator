@@ -82,8 +82,8 @@ class MonteCarloAnalysis(FlowValidator):
 
         all_host_pair_connected = True
 
-        src_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
-        dst_zone = [self.network_graph.get_node_object(h_id).get_switch_port() for h_id in self.network_graph.host_ids]
+        src_zone = [self.network_graph.get_node_object(h_id).switch_port for h_id in self.network_graph.host_ids]
+        dst_zone = [self.network_graph.get_node_object(h_id).switch_port for h_id in self.network_graph.host_ids]
 
         # src_zone = [self.network_graph.get_node_object("h21").switch_port]
         # dst_zone = [self.network_graph.get_node_object("h31").switch_port]
