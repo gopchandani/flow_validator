@@ -29,9 +29,6 @@ class NetworkPortGraph(PortGraph):
                 traffic_paths = None
                 if edge_sw:
 
-                    if pred.node_id == 's4:ingress3' and succ.node_id == 's4:egress1':
-                        pass
-
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
 
@@ -88,7 +85,7 @@ class NetworkPortGraph(PortGraph):
 
             sw.port_graph = SwitchPortGraph(sw.network_graph, sw, self.report_active_state)
             sw.port_graph.init_switch_port_graph()
-            sw.port_graph.compute_switch_admitted_traffic()
+            sw.port_graph.init_switch_admitted_traffic()
 
             self.add_switch_nodes(sw, sw.ports)
             self.add_switch_edges(sw, sw.ports)

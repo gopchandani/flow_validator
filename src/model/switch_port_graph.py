@@ -117,7 +117,7 @@ class SwitchPortGraph(PortGraph):
 
             self.add_edge(flow_table.port_graph_node, succ, edge)
 
-    def compute_switch_admitted_traffic(self):
+    def init_switch_admitted_traffic(self):
 
         print "Computing Transfer Function for switch:", self.sw.node_id
 

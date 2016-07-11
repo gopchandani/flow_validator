@@ -29,7 +29,7 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         sw_linear_dijkstra.port_graph = cls.swpg_linear_dijkstra
         cls.swpg_linear_dijkstra.init_switch_port_graph()
-        cls.swpg_linear_dijkstra.compute_switch_admitted_traffic()
+        cls.swpg_linear_dijkstra.init_switch_admitted_traffic()
 
         nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
                                                              "ring",
@@ -47,7 +47,7 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         sw_ring_aborescene_apply_true.port_graph = cls.swpg_ring_aborescene_apply_true
         cls.swpg_ring_aborescene_apply_true.init_switch_port_graph()
-        cls.swpg_ring_aborescene_apply_true.compute_switch_admitted_traffic()
+        cls.swpg_ring_aborescene_apply_true.init_switch_admitted_traffic()
 
         nc_ring_aborescene_apply_false = NetworkConfiguration("ryu",
                                                               "ring",
@@ -65,7 +65,7 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         sw_ring_aborescene_apply_false.port_graph = cls.swpg_ring_aborescene_apply_false
         cls.swpg_ring_aborescene_apply_false.init_switch_port_graph()
-        cls.swpg_ring_aborescene_apply_false.compute_switch_admitted_traffic()
+        cls.swpg_ring_aborescene_apply_false.init_switch_admitted_traffic()
 
     def check_admitted_traffic(self, swpg, src_host_obj, dst_host_obj, ingress_port_num, egress_port_num):
         ingress_node = swpg.get_ingress_node(swpg.sw.node_id, ingress_port_num)
