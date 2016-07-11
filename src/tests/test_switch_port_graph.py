@@ -75,7 +75,7 @@ class TestSwitchPortGraph(unittest.TestCase):
         specific_traffic.set_field("ethernet_type", 0x0800)
         specific_traffic.set_field("ethernet_source", int(src_host_obj.mac_addr.replace(":", ""), 16))
         specific_traffic.set_field("ethernet_destination", int(dst_host_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("in_port", int(src_host_obj.switch_port_attached))
+        specific_traffic.set_field("in_port", int(src_host_obj.switch_port.port_number))
         specific_traffic.set_field("vlan_id", src_host_obj.switch_obj.synthesis_tag + 0x1000, is_exception_value=True)
         specific_traffic.set_field("has_vlan_tag", 0)
 

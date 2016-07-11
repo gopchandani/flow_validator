@@ -104,7 +104,7 @@ class DijkstraSynthesis(object):
         last_edge_ports_dict = self.network_graph.get_link_ports_dict(p[len(p) - 2], p[len(p) - 1])
         last_switch_in_port = edge_ports_dict[last_switch]
 
-        switch_port_tuple_list.append((last_switch, last_switch_in_port, dst_host.switch_port_attached))
+        switch_port_tuple_list.append((last_switch, last_switch_in_port, dst_host.switch_port.port_number))
 
         if intent_type == "primary":
             self.synthesis_lib.record_primary_path(src_host, dst_host, switch_port_tuple_list)
@@ -243,8 +243,8 @@ class DijkstraSynthesis(object):
         push_vlan_match= deepcopy(flow_match)
         mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
         push_vlan_match["ethernet_destination"] = int(mac_int)
-        push_vlan_match["in_port"] = int(src_h_obj.switch_port_attached)
-        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port_attached, "all",
+        push_vlan_match["in_port"] = int(src_h_obj.switch_port.port_number)
+        push_vlan_tag_intent = Intent("push_vlan", push_vlan_match, src_h_obj.switch_port.port_number, "all",
                                       apply_immediately=True)
 
         push_vlan_tag_intent.required_vlan_id = required_tag
@@ -263,15 +263,14 @@ class DijkstraSynthesis(object):
                                                     self.vlan_tag_push_rules_table_id,
                                                     group_id, True)
 
-
     def synthesize_flow(self, src_host, dst_host, flow_match):
 
         # Handy info
-        in_port = src_host.switch_port_attached
+        in_port = src_host.switch_port.port_number
         dst_sw_obj = self.network_graph.get_node_object(dst_host.switch_id)
 
         primary_first_intent = None
-        failover_first_intent= None
+        failover_first_intent = None
 
         # Add a MAC based forwarding rule for the destination host at the last hop
         self._compute_destination_host_mac_intents(dst_host, flow_match, dst_sw_obj.synthesis_tag)

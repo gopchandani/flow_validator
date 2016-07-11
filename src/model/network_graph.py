@@ -106,9 +106,10 @@ class NetworkGraph(object):
                              mininet_host_dict["host_MAC"],
                              mininet_host_dict["host_switch_id"],
                              host_switch_obj,
-                             mininet_port_links[mininet_host_dict["host_name"]]['0'][1])
+                             sw_obj.ports[mininet_port_links[mininet_host_dict["host_name"]]['0'][1]])
 
                 sw_obj.host_ports.append(mininet_port_links[mininet_host_dict["host_name"]]['0'][1])
+                sw_obj.attached_hosts.append(h_obj)
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 

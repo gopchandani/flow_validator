@@ -809,11 +809,11 @@ class SynthesisLib(object):
 
             # Compile match with in_port and destination mac address
             if self.network_graph.controller == "ryu":
-                flow["match"]["in_port"] = h_obj.switch_port_attached
+                flow["match"]["in_port"] = h_obj.switch_port.port_number
                 flow["match"]["eth_dst"] = h_obj.mac_addr
 
             elif self.network_graph.controller == "sel":
-                flow.match.in_port = str(h_obj.switch_port_attached)
+                flow.match.in_port = str(h_obj.switch_port.port_number)
                 flow.match.eth_dst = h_obj.mac_addr
 
                 drop_action = ConfigTree.Action()
@@ -841,7 +841,7 @@ class SynthesisLib(object):
 
             #Compile match with in_port and destination mac address
             if self.network_graph.controller == "ryu":
-                flow["match"]["in_port"] = h_obj.switch_port_attached
+                flow["match"]["in_port"] = h_obj.switch_port.port_number
                 flow["match"]["vlan_vid"] = self.network_graph.graph.node[sw]["sw"].synthesis_tag
 
             elif self.network_graph.controller == "sel":
