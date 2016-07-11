@@ -43,17 +43,19 @@ class NetworkPortGraph(PortGraph):
                 edge.add_edge_data(edge_data)
 
         return edge
-
-    def add_switch_transfer_edges(self, sw):
+    
+    def add_switch_nodes(self, sw, port_numbers):
 
         # First grab the port objects from the sw's node graph and add them to port_graph's node graph
-        for port in sw.ports:
+        for port in port_numbers:
 
             self.add_node(sw.ports[port].network_port_graph_egress_node)
             self.add_node(sw.ports[port].network_port_graph_ingress_node)
 
+    def add_switch_edges(self, sw, port_numbers):
+
         # Add edges from all possible source/destination ports
-        for src_port_number in sw.ports:
+        for src_port_number in port_numbers:
 
             pred = sw.port_graph.get_ingress_node(sw.node_id, src_port_number)
 
@@ -87,9 +89,10 @@ class NetworkPortGraph(PortGraph):
             sw.port_graph = SwitchPortGraph(sw.network_graph, sw, self.report_active_state)
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.compute_switch_admitted_traffic()
-            # test_passed = sw.port_graph.test_one_port_failure_at_a_time(verbose=False)
-            # print test_passed
-            self.add_switch_transfer_edges(sw)
+
+            self.add_switch_nodes(sw, sw.ports)
+            self.add_switch_edges(sw, sw.ports)
+
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
             if not node_edge[0].startswith("h") and not node_edge[1].startswith("h"):
