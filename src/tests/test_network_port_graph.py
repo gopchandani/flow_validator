@@ -6,7 +6,7 @@ from collections import defaultdict
 from model.traffic import Traffic
 from model.network_port_graph import NetworkPortGraph
 from experiments.network_configuration import NetworkConfiguration
-from analysis.util import get_specific_traffic, get_host_init_egress_nodes_and_traffic
+from analysis.util import get_specific_traffic, get_host_ports_init_egress_nodes_and_traffic
 
 
 class TestNetworkPortGraph(unittest.TestCase):
@@ -28,8 +28,8 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true, True)
         cls.npg_ring_aborescene_apply_true.init_network_port_graph()
         host_egress_nodes, init_admitted_traffic = \
-            get_host_init_egress_nodes_and_traffic(cls.ng_ring_aborescene_apply_true,
-                                                   cls.npg_ring_aborescene_apply_true)
+            get_host_ports_init_egress_nodes_and_traffic(cls.ng_ring_aborescene_apply_true,
+                                                         cls.npg_ring_aborescene_apply_true)
         cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic(host_egress_nodes,
                                                                          init_admitted_traffic)
         cls.ng_ring_aborescene_apply_true_report_active_false = \
@@ -38,8 +38,8 @@ class TestNetworkPortGraph(unittest.TestCase):
             NetworkPortGraph(cls.ng_ring_aborescene_apply_true_report_active_false, False)
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
         host_egress_nodes, init_admitted_traffic = \
-            get_host_init_egress_nodes_and_traffic(cls.ng_ring_aborescene_apply_true_report_active_false,
-                                                   cls.npg_ring_aborescene_apply_true_report_active_false)
+            get_host_ports_init_egress_nodes_and_traffic(cls.ng_ring_aborescene_apply_true_report_active_false,
+                                                         cls.npg_ring_aborescene_apply_true_report_active_false)
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic(host_egress_nodes,
                                                                                              init_admitted_traffic)
 
@@ -56,8 +56,8 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
         cls.npg_clos_dijkstra.init_network_port_graph()
         host_egress_nodes, init_admitted_traffic = \
-            get_host_init_egress_nodes_and_traffic(cls.ng_clos_dijkstra,
-                                                   cls.npg_clos_dijkstra)
+            get_host_ports_init_egress_nodes_and_traffic(cls.ng_clos_dijkstra,
+                                                         cls.npg_clos_dijkstra)
         cls.npg_clos_dijkstra.init_network_admitted_traffic(host_egress_nodes,
                                                             init_admitted_traffic)
 
@@ -66,8 +66,8 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false, False)
         cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
         host_egress_nodes, init_admitted_traffic = \
-            get_host_init_egress_nodes_and_traffic(cls.ng_clos_dijkstra_report_active_false,
-                                                   cls.npg_clos_dijkstra_report_active_false)
+            get_host_ports_init_egress_nodes_and_traffic(cls.ng_clos_dijkstra_report_active_false,
+                                                         cls.npg_clos_dijkstra_report_active_false)
         cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic(host_egress_nodes,
                                                                                 init_admitted_traffic)
 
@@ -83,8 +83,8 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra, True)
         cls.npg_linear_dijkstra.init_network_port_graph()
         host_egress_nodes, init_admitted_traffic = \
-            get_host_init_egress_nodes_and_traffic(cls.ng_linear_dijkstra,
-                                                   cls.npg_linear_dijkstra)
+            get_host_ports_init_egress_nodes_and_traffic(cls.ng_linear_dijkstra,
+                                                         cls.npg_linear_dijkstra)
         cls.npg_linear_dijkstra.init_network_admitted_traffic(host_egress_nodes,
                                                               init_admitted_traffic)
 

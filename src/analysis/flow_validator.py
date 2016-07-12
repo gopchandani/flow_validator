@@ -6,7 +6,7 @@ sys.path.append("./")
 
 from model.network_port_graph import NetworkPortGraph
 from experiments.timer import Timer
-from util import get_host_init_egress_nodes_and_traffic
+from util import get_host_ports_init_egress_nodes_and_traffic
 from util import get_specific_traffic
 
 __author__ = 'Rakesh Kumar'
@@ -21,8 +21,8 @@ class FlowValidator(object):
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
 
-        host_egress_nodes, init_admitted_traffic = get_host_init_egress_nodes_and_traffic(self.network_graph,
-                                                                                          self.port_graph)
+        host_egress_nodes, init_admitted_traffic = get_host_ports_init_egress_nodes_and_traffic(self.network_graph,
+                                                                                                self.port_graph)
 
         self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
 

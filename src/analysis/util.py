@@ -1,7 +1,7 @@
 from model.traffic import Traffic
 
 
-def get_host_init_egress_nodes_and_traffic(ng, npg):
+def get_host_ports_init_egress_nodes_and_traffic(ng, npg):
     host_egress_nodes = []
     init_admitted_traffic = []
 
@@ -16,6 +16,25 @@ def get_host_init_egress_nodes_and_traffic(ng, npg):
         init_admitted_traffic.append(init_traffic)
 
     return host_egress_nodes, init_admitted_traffic
+
+
+def get_switch_links_init_egress_nodes_and_traffic(ng, npg):
+    link_egress_nodes = []
+    init_admitted_traffic = []
+
+    for ld in ng.get_switch_link_data():
+
+        link_egress_node_1 = npg.get_node(ld.forward_port_graph_edge[0])
+        link_egress_node_2 = npg.get_node(ld.reverse_port_graph_edge[0])
+
+        init_traffic = Traffic(init_wildcard=True)
+
+        link_egress_nodes.append(link_egress_node_1)
+        link_egress_nodes.append(link_egress_node_2)
+        init_admitted_traffic.append(init_traffic)
+        init_admitted_traffic.append(init_traffic)
+
+    return link_egress_nodes, init_admitted_traffic
 
 
 def get_specific_traffic(ng, src_h_id, dst_h_id):
