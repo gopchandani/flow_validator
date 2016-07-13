@@ -86,6 +86,8 @@ class Experiment(object):
 
         pprint(self.data)
 
+        return self.data
+
     def prepare_matplotlib_data(self, data_dict):
 
         x = sorted(data_dict.keys(), key=int)

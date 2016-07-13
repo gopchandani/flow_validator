@@ -332,6 +332,20 @@ class InitialIncrementalTimes(Experiment):
 
         return merged_data
 
+    def data_merge_new(self):
+
+        path_prefix = "data_merge/"
+
+        eight_switch_ring_merge = self.load_data(path_prefix + "8_switch_ring.json")
+        seven_switch_clos_merge = self.load_data(path_prefix + "7_switch_clos.json")
+        fourteen_switch_clos_merge = self.load_data(path_prefix + "14_switch_clos.json")
+
+        merged_data = self.load_data_merge_network_config([eight_switch_ring_merge,
+                                                           seven_switch_clos_merge,
+                                                           fourteen_switch_clos_merge])
+
+        return merged_data
+
 
 def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
@@ -347,7 +361,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 
         nc = NetworkConfiguration("ryu",
                                   "ring",
-                                  {"num_switches": 8,
+                                  {"num_switches": 4,
                                    "num_hosts_per_switch": hps},
                                   conf_root="configurations/",
                                   synthesis_name="AboresceneSynthesis",
@@ -364,22 +378,23 @@ def main():
 
     num_iterations = 2
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [1]#, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
                                   network_configurations)
 
     # Trigger the experiment
-    exp.trigger()
+    #exp.trigger()
     #exp.dump_data()
 
-    #exp.load_data("data/sgc_merged_data.json")
+    #exp.load_data("data/sgc_merged_data_compare.json")
+    exp.data = exp.data_merge_new()
 
     exp.data = exp.generate_relative_cost_ratio_data(exp.data)
     exp.data = exp.generate_num_flow_path_keys(exp.data)
 
-    #exp.plot_initial_incremental_times()
+    exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()
