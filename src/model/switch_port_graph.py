@@ -152,7 +152,7 @@ class SwitchPortGraph(PortGraph):
 
             # At ingress edges, first roll-back any accumulated written modifications
             if edge.edge_type == "ingress":
-                ttp = ttp.get_orig_traffic()
+                ttp = ttp.get_orig_traffic(use_embedded_written_modifications=True)
 
             i = ed.edge_filter_traffic.intersect(ttp)
             i.set_enabling_edge_data(ed)

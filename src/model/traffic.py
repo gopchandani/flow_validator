@@ -504,18 +504,24 @@ class Traffic:
     def union(self, in_traffic):
         self.traffic_elements.extend(in_traffic.traffic_elements)
 
-    def get_orig_traffic(self, applied_modifications=None):
+    def get_orig_traffic(self, modifications=None,
+                         use_embedded_written_modifications=False,
+                         use_embedded_switch_modifications=False):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
 
-            if applied_modifications:
-                modifications = applied_modifications
-            else:
-                if not te.written_modifications_apply:
-                    orig_traffic.traffic_elements.append(te)
-                    continue
-                modifications = te.written_modifications
+            # If modifications are not provided, then fish for modifications embedded in the te
+            if not modifications:
+                if use_embedded_written_modifications:
+                    if not te.written_modifications_apply:
+                        orig_traffic.traffic_elements.append(te)
+                        continue
+                    modifications = te.written_modifications
+                elif use_embedded_switch_modifications:
+                    modifications = te.switch_modifications
+                else:
+                    raise Exception("No modifications provided")
 
             if modifications:
                 orig_te = te.get_orig_traffic_element(modifications)

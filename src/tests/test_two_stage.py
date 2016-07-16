@@ -54,28 +54,30 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         # Check to see if the two ports belong to the same switch
 
-        # If they do, just the spg will do the telling, no need to consult the npg
+        # If they do, just the spg will do the telling, no need to use the npg
         if src_port.sw.node_id == dst_port.sw.node_id:
             spg = src_port.sw.port_graph
             at = spg.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
                                           dst_port.switch_port_graph_egress_node)
 
-        # If they don't, then need to consult the spg of dst switch and the npg as well.
+        # If they don't, then need to use the spg of dst switch and the npg as well.
         else:
             dst_sw_spg = dst_port.sw.port_graph
             dst_sw_at_and_nodes = self.get_dst_sw_at_and_nodes(npg,
                                                                src_port.network_port_graph_ingress_node,
                                                                dst_port.sw)
-            for at1, dst_sw_node in dst_sw_at_and_nodes:
+            for at_ng, dst_sw_node in dst_sw_at_and_nodes:
                 dst_sw_spg_node = dst_sw_spg.get_node(dst_sw_node.node_id)
-                at2 = dst_sw_spg.get_admitted_traffic(dst_sw_spg_node, dst_port.switch_port_graph_egress_node)
+                at_dst_spg = dst_sw_spg.get_admitted_traffic(dst_sw_spg_node, dst_port.switch_port_graph_egress_node)
 
-                modified_at1 = at1.get_modified_traffic()
-                modified_at1.set_field("in_port", int(dst_sw_node.parent_obj.port_number))
+                modified_at_ng = at_ng.get_modified_traffic()
+                modified_at_ng.set_field("in_port", int(dst_sw_node.parent_obj.port_number))
 
-                if not at1.intersect(at2).is_empty():
-                    at = at1
+                i = at_dst_spg.intersect(modified_at_ng)
 
+                if not i.is_empty():
+                    i.set_field("in_port", int(src_port.port_number))
+                    at = i.get_orig_traffic(use_embedded_switch_modifications=True)
         return at
 
     def test_admitted_traffic_linear_dijkstra(self):
