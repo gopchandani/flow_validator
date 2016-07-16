@@ -6,7 +6,7 @@ from model.traffic import Traffic
 from model.network_port_graph import NetworkPortGraph
 from experiments.network_configuration import NetworkConfiguration
 from analysis.util import get_host_ports_init_egress_nodes_and_traffic
-from analysis.util import get_switch_links_init_ingress_nodes_and_traffic
+from analysis.util import get_switch_links_init_ingress_nodes_and_traffic, get_specific_traffic
 
 
 class TestNetworkPortGraph(unittest.TestCase):
@@ -50,7 +50,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
     def get_admitted_traffic(self, ng, npg, src_port, dst_port):
 
-        at = None
+        at = Traffic()
 
         # Check to see if the two ports belong to the same switch
 
@@ -77,7 +77,8 @@ class TestNetworkPortGraph(unittest.TestCase):
 
                 if not i.is_empty():
                     i.set_field("in_port", int(src_port.port_number))
-                    at = i.get_orig_traffic(use_embedded_switch_modifications=True)
+                    at.union(i.get_orig_traffic(use_embedded_switch_modifications=True))
+
         return at
 
     def test_admitted_traffic_linear_dijkstra(self):
@@ -88,11 +89,21 @@ class TestNetworkPortGraph(unittest.TestCase):
         h2s2 = self.ng_linear_dijkstra.get_node_object("h2s2").switch_port
 
         # Same switch
-        at = self.get_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h2s1)
+        at1 = self.get_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h2s1)
+        specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h2s1")
+        at_int = specific_traffic.intersect(at1)
+        self.assertNotEqual(at_int.is_empty(), True)
 
         # Different switch
-        at = self.get_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h1s2)
+        at2 = self.get_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h1s2)
+        specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h1s2")
+        at_int = specific_traffic.intersect(at2)
+        self.assertNotEqual(at_int.is_empty(), True)
 
+        at3 = self.get_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h2s2)
+        specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h2s2")
+        at_int = specific_traffic.intersect(at3)
+        self.assertNotEqual(at_int.is_empty(), True)
 
 if __name__ == '__main__':
     unittest.main()
