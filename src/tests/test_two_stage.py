@@ -3,8 +3,8 @@ import unittest
 from model.traffic_path import TrafficPath
 from model.network_port_graph import NetworkPortGraph
 from experiments.network_configuration import NetworkConfiguration
-from analysis.util import get_switch_links_init_ingress_nodes_and_traffic, get_specific_traffic
-from analysis.util import get_admitted_traffic, get_paths
+from analysis.util import get_switch_links_init_ingress_nodes_and_traffic
+from analysis.util import get_admitted_traffic, get_paths, get_specific_traffic
 
 
 class TestNetworkPortGraph(unittest.TestCase):
@@ -24,10 +24,6 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra, True)
         cls.npg_linear_dijkstra.init_network_port_graph()
-
-        # host_egress_nodes, init_admitted_traffic = \
-        #     get_host_ports_init_egress_nodes_and_traffic(cls.ng_linear_dijkstra,
-        #                                                  cls.npg_linear_dijkstra)
 
         link_egress_nodes, init_admitted_traffic = \
             get_switch_links_init_ingress_nodes_and_traffic(cls.ng_linear_dijkstra,

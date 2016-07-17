@@ -107,13 +107,14 @@ class PortGraph(object):
 
         return succ_list
 
-    def get_dst_sw_at_and_nodes(self, node, dst_sw):
+    def get_dst_sw_nodes(self, node, sw):
 
         dst_sw_at_and_nodes = []
         for dst_node in node.admitted_traffic:
-            if dst_node.sw == dst_sw:
-                at = self.get_admitted_traffic(node, dst_node)
-                dst_sw_at_and_nodes.append((at, dst_node))
+
+            # If check dst_node belongs to the specified sw and to a port that connects to another switch
+            if dst_node.sw == sw and not dst_node.parent_obj.attached_host:
+                dst_sw_at_and_nodes.append(dst_node)
 
         return dst_sw_at_and_nodes
 

@@ -69,11 +69,12 @@ def get_admitted_traffic(ng, npg, src_port, dst_port):
     # If they don't, then need to use the spg of dst switch and the npg as well.
     else:
         dst_sw_spg = dst_port.sw.port_graph
-        dst_sw_at_and_nodes = npg.get_dst_sw_at_and_nodes(src_port.network_port_graph_ingress_node, dst_port.sw)
-        for at_ng, dst_sw_node in dst_sw_at_and_nodes:
+        dst_sw_nodes = npg.get_dst_sw_nodes(src_port.network_port_graph_ingress_node, dst_port.sw)
+        for dst_sw_node in dst_sw_nodes:
             dst_sw_spg_node = dst_sw_spg.get_node(dst_sw_node.node_id)
             at_dst_spg = dst_sw_spg.get_admitted_traffic(dst_sw_spg_node, dst_port.switch_port_graph_egress_node)
 
+            at_ng = npg.get_admitted_traffic(src_port.network_port_graph_ingress_node, dst_sw_node)
             modified_at_ng = at_ng.get_modified_traffic()
             modified_at_ng.set_field("in_port", int(dst_sw_node.parent_obj.port_number))
 
@@ -108,8 +109,8 @@ def get_paths(ng, npg, specific_traffic, src_port, dst_port):
 
         # If they don't, then need to use the spg of dst switch and the npg as well.
         else:
-            dst_sw_at_and_nodes = npg.get_dst_sw_at_and_nodes(src_port.network_port_graph_ingress_node, dst_port.sw)
-            for at_ng, dst_sw_node in dst_sw_at_and_nodes:
+            dst_sw_nodes = npg.get_dst_sw_nodes(src_port.network_port_graph_ingress_node, dst_port.sw)
+            for dst_sw_node in dst_sw_nodes:
 
                 # First get the paths to node(s) at dst_sw.
                 traffic_paths.extend(npg.get_paths(src_port.network_port_graph_ingress_node,
