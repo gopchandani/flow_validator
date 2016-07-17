@@ -348,30 +348,3 @@ class MonteCarloAnalysis(FlowValidator):
             self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
         return len(self.links_broken), self.links_broken
-
-    def test_classification_breaking_specified_link_sequence(self, link_sequence, verbose=False):
-
-        ingress_node_of_interest = self.port_graph.get_ingress_node("s2", 3)
-        dst_node_of_interest = self.port_graph.get_egress_node("s4", 1)
-        prior_at = self.port_graph.get_admitted_traffic(ingress_node_of_interest, dst_node_of_interest)
-
-        for link in link_sequence:
-
-            # Break the link
-            print "Breaking the link:", link
-            self.port_graph.remove_node_graph_link(link[0], link[1])
-
-        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-
-        # Restore the links for next run
-        for link in self.links_broken:
-            print "Restoring the link:", link
-            self.port_graph.add_node_graph_link(link[0], link[1], updating=True)
-
-        after_at = self.port_graph.get_admitted_traffic(ingress_node_of_interest, dst_node_of_interest)
-
-        all_host_pair_connected = self.check_all_host_pair_connected(verbose)
-        self.update_link_state(verbose)
-
-        print "links_causing_disconnect:", self.links_causing_disconnect
-        print "links_not_causing_disconnect:", self.links_not_causing_disconnect
