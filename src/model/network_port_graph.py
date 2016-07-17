@@ -109,6 +109,7 @@ class NetworkPortGraph(PortGraph):
     def init_network_admitted_traffic(self, egress_nodes, init_admitted_traffic):
 
         for i in range(len(egress_nodes)):
+
             end_to_end_modified_edges = []
             self.propagate_admitted_traffic(egress_nodes[i],
                                             init_admitted_traffic[i],

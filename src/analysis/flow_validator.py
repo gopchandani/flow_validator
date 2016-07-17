@@ -116,14 +116,7 @@ class FlowValidator(object):
 
             at = self.port_graph.get_admitted_traffic(ingress_node, egress_node)
 
-            all_paths = self.port_graph.get_paths(ingress_node,
-                                                  egress_node,
-                                                  traffic,
-                                                  [ingress_node],
-                                                  [],
-                                                  True)
-
-            if not at.is_empty() and all_paths:
+            if not at.is_empty():
                 if at.is_subset_traffic(traffic):
                     is_connected = True
                     #print all_paths[0]

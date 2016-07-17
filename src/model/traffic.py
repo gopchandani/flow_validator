@@ -212,10 +212,10 @@ class TrafficElement:
 
                 else:
                     # Otherwise, just keep the field same as it was
-                    modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+                    modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name].copy()
             else:
                 # Otherwise, just keep the field same as it was
-                modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+                modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name].copy()
 
         # Accumulate field modifications
         modified_traffic_element.switch_modifications.update(self.switch_modifications)
