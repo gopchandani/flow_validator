@@ -40,18 +40,18 @@ class TestNetworkPortGraph(unittest.TestCase):
         h2s2 = self.ng_linear_dijkstra.get_node_object("h2s2").switch_port
 
         # Same switch
-        at1 = get_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h2s1)
+        at1 = get_admitted_traffic(self.npg_linear_dijkstra, h1s1, h2s1)
         specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h2s1")
         at_int = specific_traffic.intersect(at1)
         self.assertNotEqual(at_int.is_empty(), True)
 
         # Different switch
-        at2 = get_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h1s2)
+        at2 = get_admitted_traffic(self.npg_linear_dijkstra, h1s1, h1s2)
         specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h1s2")
         at_int = specific_traffic.intersect(at2)
         self.assertNotEqual(at_int.is_empty(), True)
 
-        at3 = get_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h2s2)
+        at3 = get_admitted_traffic(self.npg_linear_dijkstra, h1s1, h2s2)
         specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h2s2")
         at_int = specific_traffic.intersect(at3)
         self.assertNotEqual(at_int.is_empty(), True)
@@ -64,7 +64,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         # Same switch
         specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h2s1")
-        all_paths = get_paths(self.ng_linear_dijkstra, self.npg_linear_dijkstra, specific_traffic, h1s1, h2s1)
+        all_paths = get_paths(self.npg_linear_dijkstra, specific_traffic, h1s1, h2s1)
 
         expected_path = TrafficPath(self.ng_linear_dijkstra,
                                     [self.npg_linear_dijkstra.get_node("s1:ingress1"),
@@ -75,7 +75,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         # Different switch
         specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h1s2")
-        all_paths = get_paths(self.ng_linear_dijkstra, self.npg_linear_dijkstra, specific_traffic, h1s1, h1s2)
+        all_paths = get_paths(self.npg_linear_dijkstra, specific_traffic, h1s1, h1s2)
 
         expected_path = TrafficPath(self.ng_linear_dijkstra,
                                     [self.npg_linear_dijkstra.get_node("s1:ingress1"),
@@ -87,7 +87,7 @@ class TestNetworkPortGraph(unittest.TestCase):
         self.assertEqual(all_paths[0], expected_path)
 
         specific_traffic = get_specific_traffic(self.ng_linear_dijkstra, "h1s1", "h2s2")
-        all_paths = get_paths(self.ng_linear_dijkstra, self.npg_linear_dijkstra, specific_traffic, h1s1, h2s2)
+        all_paths = get_paths(self.npg_linear_dijkstra, specific_traffic, h1s1, h2s2)
 
         expected_path = TrafficPath(self.ng_linear_dijkstra,
                                     [self.npg_linear_dijkstra.get_node("s1:ingress1"),

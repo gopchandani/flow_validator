@@ -54,7 +54,7 @@ def get_specific_traffic(ng, src_h_id, dst_h_id):
     return specific_traffic
 
 
-def get_admitted_traffic(ng, npg, src_port, dst_port):
+def get_admitted_traffic(npg, src_port, dst_port):
 
     at = Traffic()
 
@@ -87,12 +87,12 @@ def get_admitted_traffic(ng, npg, src_port, dst_port):
     return at
 
 
-def get_paths(ng, npg, specific_traffic, src_port, dst_port):
+def get_paths(npg, specific_traffic, src_port, dst_port):
 
     traffic_paths = []
 
     # Check to see if the two ports belong to the same switch
-    at = get_admitted_traffic(ng, npg, src_port, dst_port)
+    at = get_admitted_traffic(npg, src_port, dst_port)
 
     # See if the at carries traffic
     at_int = specific_traffic.intersect(at)
