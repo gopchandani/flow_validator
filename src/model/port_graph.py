@@ -107,6 +107,16 @@ class PortGraph(object):
 
         return succ_list
 
+    def get_dst_sw_at_and_nodes(self, node, dst_sw):
+
+        dst_sw_at_and_nodes = []
+        for dst_node in node.admitted_traffic:
+            if dst_node.sw == dst_sw:
+                at = self.get_admitted_traffic(node, dst_node)
+                dst_sw_at_and_nodes.append((at, dst_node))
+
+        return dst_sw_at_and_nodes
+
     def propagate_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
         prev_dst_traffic_at_succ = self.get_admitted_traffic_via_succ(curr, dst, succ)
