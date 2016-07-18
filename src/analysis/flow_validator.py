@@ -7,8 +7,10 @@ sys.path.append("./")
 from model.network_port_graph import NetworkPortGraph
 from experiments.timer import Timer
 from util import get_host_ports_init_egress_nodes_and_traffic
+from util import get_switch_links_init_ingress_nodes_and_traffic
 from util import get_specific_traffic
 from util import get_admitted_traffic_2, get_paths_2
+from util import get_admitted_traffic, get_paths
 
 __author__ = 'Rakesh Kumar'
 
@@ -22,10 +24,15 @@ class FlowValidator(object):
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
 
-        host_egress_nodes, init_admitted_traffic = get_host_ports_init_egress_nodes_and_traffic(self.network_graph,
+        # host_egress_nodes, init_admitted_traffic = get_host_ports_init_egress_nodes_and_traffic(self.network_graph,
+        #                                                                                         self.port_graph)
+        #
+        # self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
+
+        link_egress_nodes, init_admitted_traffic = get_switch_links_init_ingress_nodes_and_traffic(self.network_graph,
                                                                                                 self.port_graph)
 
-        self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
+        self.port_graph.init_network_admitted_traffic(link_egress_nodes, init_admitted_traffic)
 
     def de_init_network_port_graph(self):
         self.port_graph.de_init_network_port_graph()
@@ -46,7 +53,7 @@ class FlowValidator(object):
 
                 specific_traffic = get_specific_traffic(self.network_graph, src_h_id, dst_h_id)
 
-                all_paths = get_paths_2(self.port_graph,
+                all_paths = get_paths(self.port_graph,
                                         specific_traffic,
                                         src_host_obj.switch_port,
                                         dst_host_obj.switch_port)
@@ -110,7 +117,7 @@ class FlowValidator(object):
             traffic.set_field("has_vlan_tag", 0)
             traffic.set_field("in_port", int(src_port.port_number))
 
-            at = get_admitted_traffic_2(self.port_graph, src_port, dst_port)
+            at = get_admitted_traffic(self.port_graph, src_port, dst_port)
 
             if not at.is_empty():
                 if at.is_subset_traffic(traffic):
@@ -142,7 +149,7 @@ class FlowValidator(object):
             traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
             traffic.set_field("in_port", int(src_port.port_number))
 
-            traffic_paths = get_paths_2(self.port_graph, traffic, src_port, dst_port)
+            traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
 
             for path in traffic_paths:
                 if len(path) > l:
