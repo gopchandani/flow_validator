@@ -87,22 +87,22 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra, True)
         cls.npg_linear_dijkstra.init_network_port_graph()
 
-        host_egress_nodes, init_admitted_traffic = \
-            get_host_ports_init_egress_nodes_and_traffic(cls.ng_linear_dijkstra,
-                                                         cls.npg_linear_dijkstra)
-
-        cls.npg_linear_dijkstra.init_network_admitted_traffic(host_egress_nodes,
-                                                              init_admitted_traffic)
-
-        cls.npg_linear_dijkstra_link_egress_nodes = NetworkPortGraph(cls.ng_linear_dijkstra, True)
-        cls.npg_linear_dijkstra_link_egress_nodes.init_network_port_graph()
+        # host_egress_nodes, init_admitted_traffic = \
+        #     get_host_ports_init_egress_nodes_and_traffic(cls.ng_linear_dijkstra,
+        #                                                  cls.npg_linear_dijkstra)
+        #
+        # cls.npg_linear_dijkstra.init_network_admitted_traffic(host_egress_nodes,
+        #                                                       init_admitted_traffic)
+        #
+        # cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra, True)
+        # cls.npg_linear_dijkstra.init_network_port_graph()
 
         link_egress_nodes, init_admitted_traffic = \
             get_switch_links_init_ingress_nodes_and_traffic(cls.ng_linear_dijkstra,
-                                                            cls.npg_linear_dijkstra_link_egress_nodes)
+                                                            cls.npg_linear_dijkstra)
 
-        cls.npg_linear_dijkstra_link_egress_nodes.init_network_admitted_traffic(link_egress_nodes,
-                                                                                init_admitted_traffic)
+        cls.npg_linear_dijkstra.init_network_admitted_traffic(link_egress_nodes,
+                                                              init_admitted_traffic)
 
     def check_single_link_failure_admitted_traffic_subset(self, npg, node, dst, traffic_to_check, link_to_fail):
 
@@ -114,10 +114,10 @@ class TestNetworkPortGraph(unittest.TestCase):
         self.assertEqual(is_subset, True)
         npg.add_node_graph_link(*link_to_fail, updating=True)
 
-    def check_single_link_failure_admitted_traffic_match(self, npg, node, dst, traffic_to_match, link_to_fail):
+    def check_single_link_failure_admitted_traffic_match(self, npg, src_port, dst_port, traffic_to_match, link_to_fail):
 
         npg.remove_node_graph_link(*link_to_fail)
-        after_at = npg.get_admitted_traffic(node, dst)
+        after_at = get_admitted_traffic(npg, src_port, dst_port)
         self.assertEqual(after_at, traffic_to_match)
         npg.add_node_graph_link(*link_to_fail, updating=True)
 
@@ -293,7 +293,7 @@ class TestNetworkPortGraph(unittest.TestCase):
         self.assertEqual(len(all_paths), 1)
         self.assertEqual(all_paths[0], expected_path)
 
-    def test_admitted_traffic_linear_dijkstra_link_egress_nodes(self):
+    def test_admitted_traffic_linear_dijkstra(self):
 
         h1s1 = self.ng_linear_dijkstra.get_node_object("h1s1")
         h2s1 = self.ng_linear_dijkstra.get_node_object("h2s1")
@@ -301,16 +301,16 @@ class TestNetworkPortGraph(unittest.TestCase):
         h2s2 = self.ng_linear_dijkstra.get_node_object("h2s2")
 
         # Same switch
-        at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_nodes,
+        at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra,
                                          h1s1, h2s1)
 
         # Different switch
-        at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_nodes,
+        at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra,
                                          h1s1, h1s2)
-        at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_nodes,
+        at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra,
                                          h1s1, h2s2)
 
-    def test_path_linear_dijkstra_link_egress_nodes(self):
+    def test_path_linear_dijkstra(self):
 
         h1s1 = self.ng_linear_dijkstra.get_node_object("h1s1")
         h2s1 = self.ng_linear_dijkstra.get_node_object("h2s1")
@@ -319,42 +319,41 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         # Same switch
         expected_path = TrafficPath(self.ng_linear_dijkstra,
-                                    [self.npg_linear_dijkstra_link_egress_nodes.get_node("s1:ingress1"),
-                                     self.npg_linear_dijkstra_link_egress_nodes.get_node("s1:egress2")])
+                                    [self.npg_linear_dijkstra.get_node("s1:ingress1"),
+                                     self.npg_linear_dijkstra.get_node("s1:egress2")])
 
-        self.check_path(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_nodes, h1s1, h2s1, expected_path)
+        self.check_path(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h2s1, expected_path)
 
         # Different switch
         expected_path = TrafficPath(self.ng_linear_dijkstra,
-                                    [self.npg_linear_dijkstra_link_egress_nodes.get_node("s1:ingress1"),
-                                     self.npg_linear_dijkstra_link_egress_nodes.get_node("s1:egress3"),
-                                     self.npg_linear_dijkstra_link_egress_nodes.get_node("s2:ingress3"),
-                                     self.npg_linear_dijkstra_link_egress_nodes.get_node("s2:egress1")])
+                                    [self.npg_linear_dijkstra.get_node("s1:ingress1"),
+                                     self.npg_linear_dijkstra.get_node("s1:egress3"),
+                                     self.npg_linear_dijkstra.get_node("s2:ingress3"),
+                                     self.npg_linear_dijkstra.get_node("s2:egress1")])
 
-        self.check_path(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_nodes, h1s1, h1s2, expected_path)
+        self.check_path(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h1s2, expected_path)
 
         expected_path = TrafficPath(self.ng_linear_dijkstra,
-                                    [self.npg_linear_dijkstra_link_egress_nodes.get_node("s1:ingress1"),
-                                     self.npg_linear_dijkstra_link_egress_nodes.get_node("s1:egress3"),
-                                     self.npg_linear_dijkstra_link_egress_nodes.get_node("s2:ingress3"),
-                                     self.npg_linear_dijkstra_link_egress_nodes.get_node("s2:egress2")])
+                                    [self.npg_linear_dijkstra.get_node("s1:ingress1"),
+                                     self.npg_linear_dijkstra.get_node("s1:egress3"),
+                                     self.npg_linear_dijkstra.get_node("s2:ingress3"),
+                                     self.npg_linear_dijkstra.get_node("s2:egress2")])
 
-        self.check_path(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_nodes, h1s1, h2s2, expected_path)
+        self.check_path(self.ng_linear_dijkstra, self.npg_linear_dijkstra, h1s1, h2s2, expected_path)
 
-        # def test_single_link_failure_admitted_traffic_absence_linear_dijkstra(self):
-        #
-        #     src_node = self.npg_linear_dijkstra.get_egress_node("s1", 1)
-        #     dst_node_id = self.ng_linear_dijkstra.get_node_object("h1s2").port_graph_egress_node_id
-        #     dst_node = self.npg_linear_dijkstra.get_node(dst_node_id)
-        #
-        #     traffic_to_match = Traffic()
-        #     link_to_fail = ("s1", "s2")
-        #
-        #     self.check_single_link_failure_admitted_traffic_match(self.npg_linear_dijkstra,
-        #                                                           src_node,
-        #                                                           dst_node,
-        #                                                           traffic_to_match,
-        #                                                           link_to_fail)
+    def test_single_link_failure_admitted_traffic_absence_linear_dijkstra(self):
+
+        h1s1_port = self.ng_linear_dijkstra.get_node_object("h1s1").switch_port
+        h1s2_port = self.ng_linear_dijkstra.get_node_object("h1s2").switch_port
+
+        traffic_to_match = Traffic()
+        link_to_fail = ("s1", "s2")
+
+        self.check_single_link_failure_admitted_traffic_match(self.npg_linear_dijkstra,
+                                                              h1s1_port,
+                                                              h1s2_port,
+                                                              traffic_to_match,
+                                                              link_to_fail)
 
         # def test_single_link_failure_admitted_traffic_presence_ring_aborescene_apply_true(self):
         #
@@ -386,21 +385,22 @@ class TestNetworkPortGraph(unittest.TestCase):
         #                                                            traffic_to_check,
         #                                                            link_to_fail)
         #
-        # def test_single_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
-        #
-        #     src_node = self.npg_ring_aborescene_apply_true.get_egress_node("s1", 3)
-        #     dst_node_id = self.ng_ring_aborescene_apply_true.get_node_object("h31").port_graph_egress_node_id
-        #     dst_node = self.npg_ring_aborescene_apply_true.get_node(dst_node_id)
-        #
-        #     traffic_to_match = Traffic()
-        #     link_to_fail = ("s1", "s4")
-        #
-        #     self.check_single_link_failure_admitted_traffic_match(self.npg_ring_aborescene_apply_true,
-        #                                                           src_node,
-        #                                                           dst_node,
-        #                                                           traffic_to_match,
-        #                                                           link_to_fail)
-        #
+
+    # def test_single_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
+    #
+    #     src_node = self.npg_ring_aborescene_apply_true.get_egress_node("s1", 3)
+    #     dst_node_id = self.ng_ring_aborescene_apply_true.get_node_object("h31").port_graph_egress_node_id
+    #     dst_node = self.npg_ring_aborescene_apply_true.get_node(dst_node_id)
+    #
+    #     traffic_to_match = Traffic()
+    #     link_to_fail = ("s1", "s4")
+    #
+    #     self.check_single_link_failure_admitted_traffic_match(self.npg_ring_aborescene_apply_true,
+    #                                                           src_node,
+    #                                                           dst_node,
+    #                                                           traffic_to_match,
+    #                                                           link_to_fail)
+    #
         # def test_two_link_failure_admitted_traffic_absence_ring_aborescene_apply_true(self):
         #
         #     src_h_obj = self.ng_ring_aborescene_apply_true.get_node_object("h21")
