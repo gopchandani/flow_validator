@@ -425,6 +425,25 @@ class Traffic:
     def __eq__(self, other):
         return self.is_equal_traffic(other)
 
+    def equal_modifications(self, mods1, mods2):
+
+        if mods1.keys() and mods2.keys():
+            pass
+
+        equal_mods = True
+
+        # First check if the keys in the modification are not same
+        if set(mods1.keys()) != set(mods2.keys()):
+            equal_mods = False
+        else:
+            # then compare for each key, the modification applied is same
+            for mf in mods1.keys():
+                if mods1[mf] != mods2[mf]:
+                    equal_mods = False
+                    break
+
+        return equal_mods
+
     def intersect(self, in_traffic):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:
@@ -437,7 +456,7 @@ class Traffic:
                     is_subset = traffic_intersection.is_subset_te(ei)
 
                     # If so, no need to add this one to the mix
-                    if is_subset:
+                    if is_subset and self.equal_modifications(e_self.switch_modifications, e_in.switch_modifications):
                         continue
 
                     # Add this and do the necessary book-keeping...
@@ -504,15 +523,17 @@ class Traffic:
     def union(self, in_traffic):
         self.traffic_elements.extend(in_traffic.traffic_elements)
 
-    def get_orig_traffic(self, modifications=None,
+    def get_orig_traffic(self, provided_modifications=None,
                          use_embedded_written_modifications=False,
                          use_embedded_switch_modifications=False):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
 
+            modifications = None
+
             # If modifications are not provided, then fish for modifications embedded in the te
-            if not modifications:
+            if not provided_modifications:
                 if use_embedded_written_modifications:
                     if not te.written_modifications_apply:
                         orig_traffic.traffic_elements.append(te)
@@ -522,7 +543,10 @@ class Traffic:
                     modifications = te.switch_modifications
                 else:
                     raise Exception("No modifications provided")
+            else:
+                modifications = provided_modifications
 
+            # If the modifications are not empty
             if modifications:
                 orig_te = te.get_orig_traffic_element(modifications)
             else:

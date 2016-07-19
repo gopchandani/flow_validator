@@ -9,6 +9,7 @@ class Host:
         self.model = model
         self.ip_addr = ip_addr
         self.mac_addr = mac_addr
+        self.mac_addr_int = int(self.mac_addr.replace(":", ""), 16)
 
         self.sw = sw
         self.switch_port = switch_port
