@@ -86,7 +86,7 @@ def get_admitted_traffic(pg, src_port, dst_port):
             modified_at_ng = at_ng.get_modified_traffic()
             modified_at_ng.set_field("in_port", int(dst_sw_node.parent_obj.port_number))
 
-            i = at_dst_spg.intersect(modified_at_ng)
+            i = at_dst_spg.intersect(modified_at_ng, keep_all=True)
 
             if not i.is_empty():
                 i.set_field("in_port", int(src_port.port_number))

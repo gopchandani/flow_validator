@@ -444,20 +444,22 @@ class Traffic:
 
         return equal_mods
 
-    def intersect(self, in_traffic):
+    def intersect(self, in_traffic, keep_all=False):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:
             for e_self in self.traffic_elements:
                 ei = e_self.intersect(e_in)
                 if ei:
 
-                    # Check to see if this intersection can be expressed as subset of any of the previous
-                    # te's that are already collected
-                    is_subset = traffic_intersection.is_subset_te(ei)
+                    if not keep_all:
 
-                    # If so, no need to add this one to the mix
-                    if is_subset and self.equal_modifications(e_self.switch_modifications, e_in.switch_modifications):
-                        continue
+                        # Check to see if this intersection can be expressed as subset of any of the previous
+                        # te's that are already collected
+                        is_subset = traffic_intersection.is_subset_te(ei)
+
+                        # If so, no need to add this one to the mix
+                        if is_subset:# and self.equal_modifications(e_self.switch_modifications, e_in.switch_modifications):
+                            continue
 
                     # Add this and do the necessary book-keeping...
                     traffic_intersection.traffic_elements.append(ei)

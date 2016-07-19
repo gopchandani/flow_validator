@@ -347,7 +347,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 
         nc = NetworkConfiguration("ryu",
                                   "ring",
-                                  {"num_switches": 4,
+                                  {"num_switches": 8,
                                    "num_hosts_per_switch": hps},
                                   conf_root="configurations/",
                                   synthesis_name="AboresceneSynthesis",
@@ -364,7 +364,7 @@ def main():
 
     num_iterations = 2
     link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [2, 4]#[2, 4]#, 6, 8, 10]
+    num_hosts_per_switch_list = [2]#, 4]#[2, 4]#, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
