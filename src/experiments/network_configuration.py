@@ -88,7 +88,7 @@ class NetworkConfiguration(object):
             self.nc_topo_str = "Ring topology with " + str(self.topo.total_switches) + " switches"
         elif self.topo_name == "clostopo":
             self.topo = ClosTopo(self.topo_params)
-            self.nc_topo_str = "Ring topology with " + str(self.topo.total_switches) + " switches"
+            self.nc_topo_str = "Clos topology with " + str(self.topo.total_switches) + " switches"
         elif self.topo_name == "linear":
             self.topo = LinearTopo(self.topo_params)
             self.nc_topo_str = "Linear topology with " + str(self.topo_params["num_switches"]) + " switches"
