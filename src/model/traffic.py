@@ -203,13 +203,8 @@ class TrafficElement:
 
             if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
                 if field_name in self.enabling_edge_data.applied_modifications:
-
-                    field_interval = self.enabling_edge_data.applied_modifications[field_name][1]
-                    value_tree = IntervalTree()
-                    value_tree.add(field_interval)
-
+                    value_tree = self.enabling_edge_data.applied_modifications[field_name][1]
                     modified_traffic_element.traffic_fields[field_name] = value_tree
-
                 else:
                     # Otherwise, just keep the field same as it was
                     modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name].copy()
@@ -227,19 +222,15 @@ class TrafficElement:
 
     def get_orig_field(self, orig_traffic_element, field_name, modifications):
 
-        # Check to see if the value on this traffic is same as what it was modified to be for this modification
+        # Check to see if the tree on this field has an intersection with value tree of what it is being modified to
+        intersection = self.get_field_intersection(modifications[field_name][1], self.traffic_fields[field_name])
+
         # If it is, then use the 'original' value of the traffic that caused the modification.
-        # If it is not, then the assumption here would be that even though the modification is there on this chunk
-        # but it does not really apply because of what the traffic chunk has gone through subsequently
-
-        field_interval = modifications[field_name][1]
-        value_tree = IntervalTree()
-        value_tree.add(field_interval)
-
-        intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
-
         if intersection:
             orig_traffic_element.traffic_fields[field_name] = modifications[field_name][0].traffic_fields[field_name]
+
+        # If it is not, then the assumption here would be that even though the modification is there on this chunk
+        # but it does not really apply
         else:
             orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 

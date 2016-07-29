@@ -2,7 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 import sys
 
-from intervaltree_modified import Interval
+from intervaltree_modified import Interval, IntervalTree
 
 from match import OdlMatchJsonParser
 from match import ryu_field_names_mapping
@@ -226,20 +226,17 @@ class ActionSet():
 
         # Capture the value before (in principle and after) the modification in a tuple
         for set_action in self.action_dict["set_field"]:
-
-            #TODO: Do this tree building thing more properly ground up from the parser
-            modified_fields_dict[set_action.modified_field] = (flow_match_element,
-                                                               Interval(set_action.field_modified_to,
-                                                                        set_action.field_modified_to + 1))
+            value_tree = IntervalTree([Interval(set_action.field_modified_to, set_action.field_modified_to + 1)])
+            modified_fields_dict[set_action.modified_field] = (flow_match_element, value_tree)
 
         if "push_vlan" in self.action_dict:
-            modified_fields_dict["has_vlan_tag"] = (flow_match_element, Interval(1, 2))
+            value_tree = IntervalTree([Interval(1, 2)])
+            modified_fields_dict["has_vlan_tag"] = (flow_match_element, value_tree)
 
         # A vlan tag popped means, the field does not matter anymore
         if "pop_vlan" in self.action_dict:
-            modified_fields_dict["has_vlan_tag"] = (flow_match_element, Interval(0, 1))
-
-        #if "vlan_id" not in modified_fields_dict:
+            value_tree = IntervalTree([Interval(0, 1)])
+            modified_fields_dict["has_vlan_tag"] = (flow_match_element, value_tree)
 
         return modified_fields_dict
 
