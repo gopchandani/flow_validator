@@ -49,6 +49,24 @@ class NetworkPortGraph(PortGraph):
             self.add_node(sw.ports[port].network_port_graph_egress_node)
             self.add_node(sw.ports[port].network_port_graph_ingress_node)
 
+    def add_sw_network_port_nodes(self, sw):
+
+        '''
+
+        Add nodes to the port graph that belong to its ports that are not connected to hosts.
+
+        :param sw: Switch concerned
+        :return: None
+        '''
+
+        for port_num in sw.ports:
+
+            if port_num in sw.host_ports:
+                continue
+
+            self.add_node(sw.ports[port_num].network_port_graph_egress_node)
+            self.add_node(sw.ports[port_num].network_port_graph_ingress_node)
+
     def add_switch_edges(self, sw, port_numbers):
 
         # Add edges from all possible source/destination ports
@@ -87,8 +105,10 @@ class NetworkPortGraph(PortGraph):
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.init_switch_admitted_traffic()
 
-            self.add_switch_nodes(sw, sw.ports)
-            self.add_switch_edges(sw, sw.ports)
+            self.add_sw_network_port_nodes(sw)
+
+            # self.add_switch_nodes(sw, sw.ports)
+            # self.add_switch_edges(sw, sw.ports)
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():

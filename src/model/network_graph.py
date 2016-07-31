@@ -41,6 +41,7 @@ class NetworkGraphLinkData(object):
         return (self.forward_link == other.forward_link and self.reverse_link == other.reverse_link) or \
                (self.forward_link == other.reverse_link and self.reverse_link == other.forward_link)
 
+
 class NetworkGraph(object):
 
     def __init__(self, network_configuration):

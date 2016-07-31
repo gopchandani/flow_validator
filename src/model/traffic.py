@@ -225,12 +225,11 @@ class TrafficElement:
         # Check to see if the tree on this field has an intersection with value tree of what it is being modified to
         intersection = self.get_field_intersection(modifications[field_name][1], self.traffic_fields[field_name])
 
-        # If it is, then use the 'original' value of the traffic that caused the modification.
+        # If it is, then use the 'original' traffic that caused the modification.
         if intersection:
             orig_traffic_element.traffic_fields[field_name] = modifications[field_name][0].traffic_fields[field_name]
 
-        # If it is not, then the assumption here would be that even though the modification is there on this chunk
-        # but it does not really apply
+        # If not, then  even though the modification is there on this chunk but it does not really apply
         else:
             orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 

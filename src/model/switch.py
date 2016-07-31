@@ -5,6 +5,7 @@ import networkx as nx
 from collections import defaultdict
 from switch_port_graph import SwitchPortGraph
 
+
 class Switch():
 
     def __init__(self, sw_id, network_graph):
@@ -26,3 +27,8 @@ class Switch():
 
         # Analysis stuff
         self.port_graph = None
+
+    def non_host_port_iter(self):
+        for port_num in self.ports:
+            if port_num not in self.host_ports:
+                yield self.ports[port_num]
