@@ -195,7 +195,7 @@ class TrafficElement:
         else:
             return True
 
-    def get_modified_traffic_element(self):
+    def get_modified_traffic_element(self, use_switch_modifications):
 
         modified_traffic_element = TrafficElement()
 
@@ -551,12 +551,12 @@ class Traffic:
     def get_intersecting_modifications(self):
         pass
 
-    def get_modified_traffic(self):
+    def get_modified_traffic(self, use_switch_modifications=False):
 
         modified_traffic = Traffic()
 
         for te in self.traffic_elements:
-            modified_te = te.get_modified_traffic_element()
+            modified_te = te.get_modified_traffic_element(use_switch_modifications)
             modified_traffic.traffic_elements.append(modified_te)
         return modified_traffic
 

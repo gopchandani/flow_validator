@@ -136,14 +136,32 @@ class NetworkPortGraph(PortGraph):
 
     def init_network_admitted_traffic(self, egress_nodes, init_admitted_traffic):
 
-        for i in range(len(egress_nodes)):
+        # for i in range(len(egress_nodes)):
+        #
+        #     end_to_end_modified_edges = []
+        #     self.propagate_admitted_traffic(egress_nodes[i],
+        #                                     init_admitted_traffic[i],
+        #                                     None,
+        #                                     egress_nodes[i],
+        #                                     end_to_end_modified_edges)
 
-            end_to_end_modified_edges = []
-            self.propagate_admitted_traffic(egress_nodes[i],
-                                            init_admitted_traffic[i],
-                                            None,
-                                            egress_nodes[i],
-                                            end_to_end_modified_edges)
+        # Go to each switch and find the ports that connects to other switches
+        for sw in self.network_graph.get_switches():
+            for non_host_port in sw.non_host_port_iter():
+
+                # Accumulate traffic that is admitted for each host
+                admitted_host_traffic = Traffic()
+                for host_port in sw.host_port_iter():
+                    at = sw.port_graph.get_admitted_traffic(non_host_port.switch_port_graph_ingress_node,
+                                                            host_port.switch_port_graph_egress_node)
+                    admitted_host_traffic.union(at)
+
+                end_to_end_modified_edges = []
+                self.propagate_admitted_traffic(non_host_port.network_port_graph_ingress_node,
+                                                admitted_host_traffic,
+                                                None,
+                                                non_host_port.network_port_graph_ingress_node,
+                                                end_to_end_modified_edges)
 
     def add_node_graph_link(self, node1_id, node2_id, updating=False):
 

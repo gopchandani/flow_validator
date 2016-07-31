@@ -32,3 +32,7 @@ class Switch():
         for port_num in self.ports:
             if port_num not in self.host_ports:
                 yield self.ports[port_num]
+
+    def host_port_iter(self):
+        for port_num in self.host_ports:
+            yield self.ports[port_num]
