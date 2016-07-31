@@ -199,12 +199,20 @@ class TrafficElement:
 
         modified_traffic_element = TrafficElement()
 
+        mf = None
+        if use_switch_modifications:
+            mf = self.switch_modifications
+        else:
+            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
+                mf = self.enabling_edge_data.applied_modifications
+            else:
+                mf = {}
+
         for field_name in self.traffic_fields:
 
             if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
-                if field_name in self.enabling_edge_data.applied_modifications:
-                    value_tree = self.enabling_edge_data.applied_modifications[field_name][1]
-                    modified_traffic_element.traffic_fields[field_name] = value_tree
+                if field_name in mf:
+                    modified_traffic_element.traffic_fields[field_name] = mf[field_name][1]
                 else:
                     # Otherwise, just keep the field same as it was
                     modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name].copy()
