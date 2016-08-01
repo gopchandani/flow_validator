@@ -7,8 +7,6 @@ from model.traffic import Traffic
 from model.traffic_path import TrafficPath
 from model.network_port_graph import NetworkPortGraph
 from experiments.network_configuration import NetworkConfiguration
-from analysis.util import get_host_ports_init_egress_nodes_and_traffic
-from analysis.util import get_switch_links_init_ingress_nodes_and_traffic
 from analysis.util import get_admitted_traffic, get_paths, get_specific_traffic
 
 
@@ -31,29 +29,18 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true, True)
         cls.npg_ring_aborescene_apply_true.init_network_port_graph()
-        link_egress_nodes, init_admitted_traffic = \
-            get_host_ports_init_egress_nodes_and_traffic(cls.ng_ring_aborescene_apply_true,
-                                                         cls.npg_ring_aborescene_apply_true)
-        cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic(link_egress_nodes,
-                                                                         init_admitted_traffic)
+        cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic()
 
         cls.npg_ring_aborescene_apply_true_link_egress_init = NetworkPortGraph(cls.ng_ring_aborescene_apply_true, True)
         cls.npg_ring_aborescene_apply_true_link_egress_init.init_network_port_graph(new_mode=True)
-        link_egress_nodes, init_admitted_traffic = \
-            get_switch_links_init_ingress_nodes_and_traffic(cls.ng_ring_aborescene_apply_true,
-                                                            cls.npg_ring_aborescene_apply_true_link_egress_init)
-        cls.npg_ring_aborescene_apply_true_link_egress_init.init_network_admitted_traffic()
+        cls.npg_ring_aborescene_apply_true_link_egress_init.init_network_admitted_traffic(new_mode=True)
 
         cls.ng_ring_aborescene_apply_true_report_active_false = \
             cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         cls.npg_ring_aborescene_apply_true_report_active_false = \
             NetworkPortGraph(cls.ng_ring_aborescene_apply_true_report_active_false, False)
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
-        host_egress_nodes, init_admitted_traffic = \
-            get_host_ports_init_egress_nodes_and_traffic(cls.ng_ring_aborescene_apply_true_report_active_false,
-                                                         cls.npg_ring_aborescene_apply_true_report_active_false)
-        cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic(host_egress_nodes,
-                                                                                             init_admitted_traffic)
+        cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic()
 
         cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
                                                     "clostopo",
@@ -67,21 +54,13 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
         cls.npg_clos_dijkstra.init_network_port_graph()
-        host_egress_nodes, init_admitted_traffic = \
-            get_host_ports_init_egress_nodes_and_traffic(cls.ng_clos_dijkstra,
-                                                         cls.npg_clos_dijkstra)
-        cls.npg_clos_dijkstra.init_network_admitted_traffic(host_egress_nodes,
-                                                            init_admitted_traffic)
+        cls.npg_clos_dijkstra.init_network_admitted_traffic()
 
         cls.ng_clos_dijkstra_report_active_false = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
                                                                                             synthesis_setup_gap=1)
         cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false, False)
         cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
-        host_egress_nodes, init_admitted_traffic = \
-            get_host_ports_init_egress_nodes_and_traffic(cls.ng_clos_dijkstra_report_active_false,
-                                                         cls.npg_clos_dijkstra_report_active_false)
-        cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic(host_egress_nodes,
-                                                                                init_admitted_traffic)
+        cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic()
 
         cls.nc_linear_dijkstra = NetworkConfiguration("ryu",
                                                       "linear",
@@ -95,22 +74,11 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra, True)
         cls.npg_linear_dijkstra.init_network_port_graph()
-
-        host_egress_nodes, init_admitted_traffic = \
-            get_host_ports_init_egress_nodes_and_traffic(cls.ng_linear_dijkstra,
-                                                         cls.npg_linear_dijkstra)
-
-        cls.npg_linear_dijkstra.init_network_admitted_traffic(host_egress_nodes,
-                                                              init_admitted_traffic)
+        cls.npg_linear_dijkstra.init_network_admitted_traffic()
 
         cls.npg_linear_dijkstra_link_egress_init = NetworkPortGraph(cls.ng_linear_dijkstra, True)
         cls.npg_linear_dijkstra_link_egress_init.init_network_port_graph(new_mode=True)
-
-        link_egress_nodes, init_admitted_traffic = \
-            get_switch_links_init_ingress_nodes_and_traffic(cls.ng_linear_dijkstra,
-                                                            cls.npg_linear_dijkstra_link_egress_init)
-
-        cls.npg_linear_dijkstra_link_egress_init.init_network_admitted_traffic()
+        cls.npg_linear_dijkstra_link_egress_init.init_network_admitted_traffic(new_mode=True)
 
     def check_single_link_failure_admitted_traffic_subset(self, npg, node, dst, traffic_to_check, link_to_fail):
 

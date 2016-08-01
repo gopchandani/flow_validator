@@ -135,17 +135,30 @@ class NetworkPortGraph(PortGraph):
         for sw in self.network_graph.get_switches():
             sw.port_graph.de_init_switch_port_graph()
 
-    def init_network_admitted_traffic(self, egress_nodes=None, init_admitted_traffic=None):
+    def init_network_admitted_traffic(self, new_mode=False):
 
-        if egress_nodes and init_admitted_traffic:
+        if not new_mode:
 
-            for i in range(len(egress_nodes)):
+            host_egress_nodes = []
+            init_admitted_traffic = []
+
+            for host_id in self.network_graph.host_ids:
+                host_obj = self.network_graph.get_node_object(host_id)
+                host_egress_node = self.get_node(host_obj.port_graph_egress_node_id)
+                init_traffic = Traffic(init_wildcard=True)
+                init_traffic.set_field("ethernet_type", 0x0800)
+                init_traffic.set_field("ethernet_destination", int(host_obj.mac_addr.replace(":", ""), 16))
+
+                host_egress_nodes.append(host_egress_node)
+                init_admitted_traffic.append(init_traffic)
+
+            for i in range(len(host_egress_nodes)):
 
                 end_to_end_modified_edges = []
-                self.propagate_admitted_traffic(egress_nodes[i],
+                self.propagate_admitted_traffic(host_egress_nodes[i],
                                                 init_admitted_traffic[i],
                                                 None,
-                                                egress_nodes[i],
+                                                host_egress_nodes[i],
                                                 end_to_end_modified_edges)
         else:
 

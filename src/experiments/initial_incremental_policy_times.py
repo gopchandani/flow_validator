@@ -175,7 +175,7 @@ class InitialIncrementalTimes(Experiment):
                     elif nc_topo_str == "Clos topology with 21 switches":
                         num_host_carrying_switches = 12
                     else:
-			print "nc_topo_str:", nc_topo_str
+                        print "nc_topo_str:", nc_topo_str
                         raise Exception("Unknown topology, write the translation rule")
 
                     # Total flows = total hosts squared.
@@ -337,7 +337,7 @@ class InitialIncrementalTimes(Experiment):
 def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for hps in num_hosts_per_switch_list:
-	
+
         nc = NetworkConfiguration("ryu",
                                   "clostopo",
                                   {"fanout": 2,

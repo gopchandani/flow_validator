@@ -6,10 +6,7 @@ sys.path.append("./")
 
 from model.network_port_graph import NetworkPortGraph
 from experiments.timer import Timer
-from util import get_host_ports_init_egress_nodes_and_traffic
-from util import get_switch_links_init_ingress_nodes_and_traffic
 from util import get_specific_traffic
-from util import get_admitted_traffic_2, get_paths_2
 from util import get_admitted_traffic, get_paths
 
 __author__ = 'Rakesh Kumar'
@@ -23,16 +20,7 @@ class FlowValidator(object):
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph(new_mode=True)
-
-        # host_egress_nodes, init_admitted_traffic = get_host_ports_init_egress_nodes_and_traffic(self.network_graph,
-        #                                                                                         self.port_graph)
-        #
-        # self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
-
-        link_egress_nodes, init_admitted_traffic = get_switch_links_init_ingress_nodes_and_traffic(self.network_graph,
-                                                                                                self.port_graph)
-
-        self.port_graph.init_network_admitted_traffic()
+        self.port_graph.init_network_admitted_traffic(new_mode=True)
 
     def de_init_network_port_graph(self):
         self.port_graph.de_init_network_port_graph()
