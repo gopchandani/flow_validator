@@ -62,6 +62,43 @@ def get_admitted_traffic_2(pg, src_port, dst_port):
     return pg.get_admitted_traffic(src_node, dst_node)
 
 
+def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
+    '''
+
+    Gets the admitted traffic in a two step fashion by using way-point ports on src and dst switches called
+    src_sw_port and dst_sw_port.
+
+    :param pg: Port graph concerned
+    :param src_port: src port on src switch
+    :param dst_port: dst port on dst switch
+    :return: an iterator value of 3-tuple with src_sw_port, dst_sw_port and the traffic admitted via those two ports
+    '''
+
+    for src_sw_port in src_port.sw.non_host_port_iter():
+        for dst_sw_port in dst_port.sw.non_host_port_iter():
+
+            npg_at = pg.get_admitted_traffic(src_sw_port.network_port_graph_egress_node,
+                                             dst_sw_port.network_port_graph_ingress_node)
+
+            src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
+                                                                     src_sw_port.switch_port_graph_egress_node)
+
+            dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
+                                                                     dst_port.switch_port_graph_egress_node)
+
+            # First check if any traffic reaches from the src port to switch's network egress node
+            modified_src_spg_at = src_spg_at.get_modified_traffic(use_embedded_switch_modifications=True)
+            i1 = npg_at.intersect(modified_src_spg_at, keep_all=True)
+            if not i1.is_empty():
+
+                # Then check if any traffic reaches from switch's network ingress node to dst port
+                i1.set_field("in_port", int(dst_sw_port.port_number))
+                i2 = dst_spg_at.intersect(i1, keep_all=True)
+                if not i2.is_empty():
+                    i2.set_field("in_port", int(src_port.port_number))
+                    yield src_sw_port, dst_sw_port, i2.get_orig_traffic(use_embedded_switch_modifications=True)
+
+
 def get_admitted_traffic(pg, src_port, dst_port):
 
     at = Traffic()
@@ -77,29 +114,8 @@ def get_admitted_traffic(pg, src_port, dst_port):
     # If they don't, then need to use the both (src, dst) spgs and the npg
     else:
 
-        for src_sw_port in src_port.sw.non_host_port_iter():
-            for dst_sw_port in dst_port.sw.non_host_port_iter():
-
-                npg_at = pg.get_admitted_traffic(src_sw_port.network_port_graph_egress_node,
-                                                 dst_sw_port.network_port_graph_ingress_node)
-
-                src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
-                                                                         src_sw_port.switch_port_graph_egress_node)
-
-                dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
-                                                                         dst_port.switch_port_graph_egress_node)
-
-                # First check if any traffic reaches from the src port to switch's network egress node
-                modified_src_spg_at = src_spg_at.get_modified_traffic(use_embedded_switch_modifications=True)
-                i1 = npg_at.intersect(modified_src_spg_at, keep_all=True)
-                if not i1.is_empty():
-
-                    # Then check if any traffic reaches from switch's network ingress node to dst port
-                    i1.set_field("in_port", int(dst_sw_port.port_number))
-                    i2 = dst_spg_at.intersect(i1, keep_all=True)
-                    if not i2.is_empty():
-                        i2.set_field("in_port", int(src_port.port_number))
-                        at.union(i2.get_orig_traffic(use_embedded_switch_modifications=True))
+        for src_sw_port, dst_sw_port, at_subset in get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
+            at.union(at_subset)
 
     return at
 
