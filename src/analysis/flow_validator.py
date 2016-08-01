@@ -22,17 +22,17 @@ class FlowValidator(object):
         self.port_graph = NetworkPortGraph(network_graph, report_active_state)
 
     def init_network_port_graph(self):
-        self.port_graph.init_network_port_graph()
+        self.port_graph.init_network_port_graph(new_mode=True)
 
-        host_egress_nodes, init_admitted_traffic = get_host_ports_init_egress_nodes_and_traffic(self.network_graph,
-                                                                                                self.port_graph)
-
-        self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
-
-        # link_egress_nodes, init_admitted_traffic = get_switch_links_init_ingress_nodes_and_traffic(self.network_graph,
+        # host_egress_nodes, init_admitted_traffic = get_host_ports_init_egress_nodes_and_traffic(self.network_graph,
         #                                                                                         self.port_graph)
         #
-        # self.port_graph.init_network_admitted_traffic()
+        # self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
+
+        link_egress_nodes, init_admitted_traffic = get_switch_links_init_ingress_nodes_and_traffic(self.network_graph,
+                                                                                                self.port_graph)
+
+        self.port_graph.init_network_admitted_traffic()
 
     def de_init_network_port_graph(self):
         self.port_graph.de_init_network_port_graph()
@@ -196,13 +196,13 @@ class FlowValidator(object):
 
                 for link in links_to_fail:
                     print "Failing:", link
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1], new_mode=True)
 
                 is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
 
                 for link in links_to_fail:
                     print "Restoring:", link
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True, new_mode=True)
 
                 if not is_connected:
                     break
@@ -218,12 +218,12 @@ class FlowValidator(object):
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
 
                 for link in links_to_fail:
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1], new_mode=True)
 
                 within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
 
                 for link in links_to_fail:
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True, new_mode=True)
 
                 if not within_limit:
                     break
@@ -239,12 +239,12 @@ class FlowValidator(object):
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
 
                 for link in links_to_fail:
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1], new_mode=True)
 
                 is_exclusive = self.are_zone_pair_exclusive(src_zone, dst_zone, traffic, el)
 
                 for link in links_to_fail:
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True, new_mode=True)
 
                 if not is_exclusive:
                     break
@@ -271,7 +271,7 @@ class FlowValidator(object):
                     print "Failing:", link
 
                     with Timer(verbose=True) as t:
-                        self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+                        self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1], new_mode=True)
                     incremental_times.append(t.secs)
 
                 if is_connected:
@@ -288,7 +288,7 @@ class FlowValidator(object):
                     print "Restoring:", link
 
                     with Timer(verbose=True) as t:
-                        self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+                        self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True, new_mode=True)
                     incremental_times.append(t.secs)
 
                 # Break out of here if all three properties have been proven to be false
