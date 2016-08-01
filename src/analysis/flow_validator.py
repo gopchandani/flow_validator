@@ -24,15 +24,15 @@ class FlowValidator(object):
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
 
-        # host_egress_nodes, init_admitted_traffic = get_host_ports_init_egress_nodes_and_traffic(self.network_graph,
-        #                                                                                         self.port_graph)
-        #
-        # self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
-
-        link_egress_nodes, init_admitted_traffic = get_switch_links_init_ingress_nodes_and_traffic(self.network_graph,
+        host_egress_nodes, init_admitted_traffic = get_host_ports_init_egress_nodes_and_traffic(self.network_graph,
                                                                                                 self.port_graph)
 
-        self.port_graph.init_network_admitted_traffic(link_egress_nodes, init_admitted_traffic)
+        self.port_graph.init_network_admitted_traffic(host_egress_nodes, init_admitted_traffic)
+
+        # link_egress_nodes, init_admitted_traffic = get_switch_links_init_ingress_nodes_and_traffic(self.network_graph,
+        #                                                                                         self.port_graph)
+        #
+        # self.port_graph.init_network_admitted_traffic()
 
     def de_init_network_port_graph(self):
         self.port_graph.de_init_network_port_graph()

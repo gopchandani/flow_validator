@@ -44,7 +44,10 @@ class PortGraph(object):
         self.g.remove_node(node.node_id)
 
     def get_node(self, node_id):
-        return self.g.node[node_id]["p"]
+        if node_id in self.g.node:
+            return self.g.node[node_id]["p"]
+        else:
+            return None
 
     def predecessors_iter(self, node):
         for pred_id in self.g.predecessors(node.node_id):

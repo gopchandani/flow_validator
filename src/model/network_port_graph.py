@@ -104,7 +104,7 @@ class NetworkPortGraph(PortGraph):
             edge_obj = self.get_edge_from_admitted_traffic(pred, succ, admitted_traffic, edge_sw=sw)
             self.add_edge(pred, succ, edge_obj)
 
-    def init_network_port_graph(self):
+    def init_network_port_graph(self, new_mode=False):
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
@@ -113,10 +113,11 @@ class NetworkPortGraph(PortGraph):
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.init_switch_admitted_traffic()
 
-            self.add_sw_transfer_function(sw)
-
-            # self.add_switch_nodes(sw, sw.ports)
-            # self.add_switch_edges(sw, sw.ports)
+            if new_mode:
+                self.add_sw_transfer_function(sw)
+            else:
+                self.add_switch_nodes(sw, sw.ports)
+                self.add_switch_edges(sw, sw.ports)
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
@@ -134,36 +135,39 @@ class NetworkPortGraph(PortGraph):
         for sw in self.network_graph.get_switches():
             sw.port_graph.de_init_switch_port_graph()
 
-    def init_network_admitted_traffic(self, egress_nodes, init_admitted_traffic):
+    def init_network_admitted_traffic(self, egress_nodes=None, init_admitted_traffic=None):
 
-        # for i in range(len(egress_nodes)):
-        #
-        #     end_to_end_modified_edges = []
-        #     self.propagate_admitted_traffic(egress_nodes[i],
-        #                                     init_admitted_traffic[i],
-        #                                     None,
-        #                                     egress_nodes[i],
-        #                                     end_to_end_modified_edges)
+        if egress_nodes and init_admitted_traffic:
 
-        # Go to each switch and find the ports that connects to other switches
-        for sw in self.network_graph.get_switches():
-            for non_host_port in sw.non_host_port_iter():
-
-                # Accumulate traffic that is admitted for each host
-                admitted_host_traffic = Traffic()
-                for host_port in sw.host_port_iter():
-                    at = sw.port_graph.get_admitted_traffic(non_host_port.switch_port_graph_ingress_node,
-                                                            host_port.switch_port_graph_egress_node)
-                    admitted_host_traffic.union(at)
+            for i in range(len(egress_nodes)):
 
                 end_to_end_modified_edges = []
-                self.propagate_admitted_traffic(non_host_port.network_port_graph_ingress_node,
-                                                admitted_host_traffic,
+                self.propagate_admitted_traffic(egress_nodes[i],
+                                                init_admitted_traffic[i],
                                                 None,
-                                                non_host_port.network_port_graph_ingress_node,
+                                                egress_nodes[i],
                                                 end_to_end_modified_edges)
+        else:
 
-    def add_node_graph_link(self, node1_id, node2_id, updating=False):
+            # Go to each switch and find the ports that connects to other switches
+            for sw in self.network_graph.get_switches():
+                for non_host_port in sw.non_host_port_iter():
+
+                    # Accumulate traffic that is admitted for each host
+                    admitted_host_traffic = Traffic()
+                    for host_port in sw.host_port_iter():
+                        at = sw.port_graph.get_admitted_traffic(non_host_port.switch_port_graph_ingress_node,
+                                                                host_port.switch_port_graph_egress_node)
+                        admitted_host_traffic.union(at)
+
+                    end_to_end_modified_edges = []
+                    self.propagate_admitted_traffic(non_host_port.network_port_graph_ingress_node,
+                                                    admitted_host_traffic,
+                                                    None,
+                                                    non_host_port.network_port_graph_ingress_node,
+                                                    end_to_end_modified_edges)
+
+    def add_node_graph_link(self, node1_id, node2_id, updating=False, new_mode=False):
 
         # Update the physical port representations in network graph objects
         edge_port_dict = self.network_graph.get_link_ports_dict(node1_id, node2_id)
@@ -201,15 +205,30 @@ class NetworkPortGraph(PortGraph):
             # Update admitted traffic due to switch transfer function changes
             modified_switch_edges = sw1.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node1_id],
                                                                                                     "port_up")
+            if new_mode:
+                modified_switch_edges = self.filter_modified_edges(modified_switch_edges)
+
             self.modify_switch_transfer_edges(sw1, modified_switch_edges)
             self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
 
             modified_switch_edges = sw2.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node2_id],
                                                                                                     "port_up")
+            if new_mode:
+                modified_switch_edges = self.filter_modified_edges(modified_switch_edges)
+
             self.modify_switch_transfer_edges(sw2, modified_switch_edges)
             self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
 
-    def remove_node_graph_link(self, node1_id, node2_id):
+    def filter_modified_edges(self, modified_switch_edges):
+        modified_switch_edges_new = []
+        for modified_edge in modified_switch_edges:
+            pred = self.get_node(modified_edge[0])
+            succ = self.get_node(modified_edge[1])
+            if pred and succ:
+                modified_switch_edges_new.append(modified_edge)
+        return modified_switch_edges_new
+
+    def remove_node_graph_link(self, node1_id, node2_id, new_mode=False):
 
         # Update the physical port representations in network graph objects
         edge_port_dict = self.network_graph.get_link_ports_dict(node1_id, node2_id)
@@ -246,10 +265,16 @@ class NetworkPortGraph(PortGraph):
 
         # Update admitted traffic due to switch transfer function changes
         modified_switch_edges = sw1.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node1_id], "port_down")
+        if new_mode:
+            modified_switch_edges = self.filter_modified_edges(modified_switch_edges)
+
         self.modify_switch_transfer_edges(sw1, modified_switch_edges)
         self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
 
         modified_switch_edges = sw2.port_graph.update_admitted_traffic_due_to_port_state_change(edge_port_dict[node2_id], "port_down")
+        if new_mode:
+            modified_switch_edges = self.filter_modified_edges(modified_switch_edges)
+
         self.modify_switch_transfer_edges(sw2, modified_switch_edges)
         self.update_admitted_traffic(modified_switch_edges, end_to_end_modified_edges)
 
