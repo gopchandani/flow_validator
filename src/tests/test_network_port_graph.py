@@ -31,9 +31,12 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_ring_aborescene_apply_true.init_network_port_graph()
         cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic()
 
-        cls.npg_ring_aborescene_apply_true_link_egress_init = NetworkPortGraph(cls.ng_ring_aborescene_apply_true, True)
-        cls.npg_ring_aborescene_apply_true_link_egress_init.init_network_port_graph(new_mode=True)
-        cls.npg_ring_aborescene_apply_true_link_egress_init.init_network_admitted_traffic(new_mode=True)
+        cls.npg_ring_aborescene_apply_true_link_egress_init = NetworkPortGraph(cls.ng_ring_aborescene_apply_true,
+                                                                               True,
+                                                                               new_mode=True)
+
+        cls.npg_ring_aborescene_apply_true_link_egress_init.init_network_port_graph()
+        cls.npg_ring_aborescene_apply_true_link_egress_init.init_network_admitted_traffic()
 
         cls.ng_ring_aborescene_apply_true_report_active_false = \
             cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
@@ -76,9 +79,9 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_linear_dijkstra.init_network_port_graph()
         cls.npg_linear_dijkstra.init_network_admitted_traffic()
 
-        cls.npg_linear_dijkstra_link_egress_init = NetworkPortGraph(cls.ng_linear_dijkstra, True)
-        cls.npg_linear_dijkstra_link_egress_init.init_network_port_graph(new_mode=True)
-        cls.npg_linear_dijkstra_link_egress_init.init_network_admitted_traffic(new_mode=True)
+        cls.npg_linear_dijkstra_link_egress_init = NetworkPortGraph(cls.ng_linear_dijkstra, True, new_mode=True)
+        cls.npg_linear_dijkstra_link_egress_init.init_network_port_graph()
+        cls.npg_linear_dijkstra_link_egress_init.init_network_admitted_traffic()
 
     def check_single_link_failure_admitted_traffic_subset(self, npg, node, dst, traffic_to_check, link_to_fail):
 
@@ -92,10 +95,10 @@ class TestNetworkPortGraph(unittest.TestCase):
 
     def check_single_link_failure_admitted_traffic_match(self, npg, src_port, dst_port, traffic_to_match, link_to_fail):
 
-        npg.remove_node_graph_link(*link_to_fail, new_mode=True)
+        npg.remove_node_graph_link(*link_to_fail)
         after_at = get_admitted_traffic(npg, src_port, dst_port)
         self.assertEqual(after_at, traffic_to_match)
-        npg.add_node_graph_link(*link_to_fail, updating=True, new_mode=True)
+        npg.add_node_graph_link(*link_to_fail, updating=True)
 
     def check_single_link_failure_admitted_traffic_match_2(self, npg, src_node, dst_node, traffic_to_match, link_to_fail):
 
