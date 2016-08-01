@@ -87,7 +87,7 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.nc_linear_dijkstra = NetworkConfiguration("ryu",
                                                       "linear",
                                                       {"num_switches": 2,
-                                                       "num_hosts_per_switch": 1},
+                                                       "num_hosts_per_switch": 2},
                                                       conf_root="configurations/",
                                                       synthesis_name="DijkstraSynthesis",
                                                       synthesis_params={"apply_group_intents_immediately": True})
@@ -312,26 +312,20 @@ class TestNetworkPortGraph(unittest.TestCase):
 
     def test_admitted_traffic_linear_dijkstra_link_egress_init(self):
 
-        h1 = self.ng_linear_dijkstra.get_node_object("h1")
-        h2 = self.ng_linear_dijkstra.get_node_object("h2")
+        h1s1 = self.ng_linear_dijkstra.get_node_object("h1s1")
+        h2s1 = self.ng_linear_dijkstra.get_node_object("h2s1")
+        h1s2 = self.ng_linear_dijkstra.get_node_object("h1s2")
+        h2s2 = self.ng_linear_dijkstra.get_node_object("h2s2")
 
+        # Same switch
         at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_init,
-                                         h1, h2)
+                                         h1s1, h2s1)
 
-        # h1s1 = self.ng_linear_dijkstra.get_node_object("h1s1")
-        # h2s1 = self.ng_linear_dijkstra.get_node_object("h2s1")
-        # h1s2 = self.ng_linear_dijkstra.get_node_object("h1s2")
-        # h2s2 = self.ng_linear_dijkstra.get_node_object("h2s2")
-        #
-        # # Same switch
-        # at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_init,
-        #                                  h1s1, h2s1)
-        #
-        # # Different switch
-        # at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_init,
-        #                                  h1s1, h1s2)
-        # at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_init,
-        #                                  h1s1, h2s2)
+        # Different switch
+        at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_init,
+                                         h1s1, h1s2)
+        at = self.check_admitted_traffic(self.ng_linear_dijkstra, self.npg_linear_dijkstra_link_egress_init,
+                                         h1s1, h2s2)
 
     # def test_path_linear_dijkstra_link_egress_init(self):
     #
