@@ -90,17 +90,16 @@ def get_admitted_traffic(pg, src_port, dst_port):
                                                                          dst_port.switch_port_graph_egress_node)
 
                 # First check if any traffic reaches from the src port to switch's network egress node
-                modified_src_spg_at = src_spg_at.get_modified_traffic()
+                modified_src_spg_at = src_spg_at.get_modified_traffic(use_embedded_switch_modifications=True)
                 i1 = npg_at.intersect(modified_src_spg_at, keep_all=True)
                 if not i1.is_empty():
 
                     # Then check if any traffic reaches from switch's network ingress node to dst port
-                    modified_i1 = i1.get_modified_traffic()
-                    modified_i1.set_field("in_port", int(dst_sw_port.port_number))
-                    i2 = dst_spg_at.intersect(modified_i1, keep_all=True)
+                    i1.set_field("in_port", int(dst_sw_port.port_number))
+                    i2 = dst_spg_at.intersect(i1, keep_all=True)
                     if not i2.is_empty():
                         i2.set_field("in_port", int(src_port.port_number))
-                        at.union(i1.get_orig_traffic(use_embedded_switch_modifications=True))
+                        at.union(i2.get_orig_traffic(use_embedded_switch_modifications=True))
 
     return at
 

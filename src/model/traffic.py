@@ -195,12 +195,12 @@ class TrafficElement:
         else:
             return True
 
-    def get_modified_traffic_element(self, use_switch_modifications):
+    def get_modified_traffic_element(self, use_embedded_switch_modifications):
 
         modified_traffic_element = TrafficElement()
 
         mf = None
-        if use_switch_modifications:
+        if use_embedded_switch_modifications:
             mf = self.switch_modifications
         else:
             if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
@@ -210,12 +210,8 @@ class TrafficElement:
 
         for field_name in self.traffic_fields:
 
-            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
-                if field_name in mf:
-                    modified_traffic_element.traffic_fields[field_name] = mf[field_name][1]
-                else:
-                    # Otherwise, just keep the field same as it was
-                    modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name].copy()
+            if field_name in mf:
+                modified_traffic_element.traffic_fields[field_name] = mf[field_name][1]
             else:
                 # Otherwise, just keep the field same as it was
                 modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name].copy()
@@ -559,12 +555,12 @@ class Traffic:
     def get_intersecting_modifications(self):
         pass
 
-    def get_modified_traffic(self, use_switch_modifications=False):
+    def get_modified_traffic(self, use_embedded_switch_modifications=False):
 
         modified_traffic = Traffic()
 
         for te in self.traffic_elements:
-            modified_te = te.get_modified_traffic_element(use_switch_modifications)
+            modified_te = te.get_modified_traffic_element(use_embedded_switch_modifications)
             modified_traffic.traffic_elements.append(modified_te)
         return modified_traffic
 
