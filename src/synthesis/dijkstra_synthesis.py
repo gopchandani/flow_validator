@@ -563,6 +563,17 @@ class DijkstraSynthesis(object):
                                 reverse_intent.flow_match,
                                 reverse_intent.apply_immediately)
 
+    def push_mac_acls(self):
+        for src in self.network_graph.host_ids:
+            for dst in self.network_graph.host_ids:
+
+                # Ignore paths with same src/dst
+                if src == dst:
+                    continue
+
+                src_h_obj = self.network_graph.get_node_object(src)
+                dst_h_obj = self.network_graph.get_node_object(dst)
+
     def _synthesize_all_node_pairs(self, dst_port=None):
 
         print "Synthesizing backup paths between all possible host pairs..."
@@ -597,6 +608,10 @@ class DijkstraSynthesis(object):
 
         self._identify_reverse_and_balking_intents()
         self.push_switch_changes()
+
+        if "mac_acl" in self.params:
+            if self.params["mac_acl"]:
+                self.push_mac_acls()
 
     def synthesize_all_node_pairs(self, dst_ports_to_synthesize=None):
 

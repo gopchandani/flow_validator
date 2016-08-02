@@ -338,22 +338,22 @@ def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for hps in num_hosts_per_switch_list:
 
-        nc = NetworkConfiguration("ryu",
-                                  "clostopo",
-                                  {"fanout": 2,
-                                   "core": 1,
-                                   "num_hosts_per_switch": hps},
-                                  conf_root="configurations/",
-                                  synthesis_name="AboresceneSynthesis",
-                                  synthesis_params={"apply_group_intents_immediately": True})
+        # nc = NetworkConfiguration("ryu",
+        #                           "clostopo",
+        #                           {"fanout": 2,
+        #                            "core": 1,
+        #                            "num_hosts_per_switch": hps},
+        #                           conf_root="configurations/",
+        #                           synthesis_name="AboresceneSynthesis",
+        #                           synthesis_params={"apply_group_intents_immediately": True})
 
-        #nc = NetworkConfiguration("ryu",
-        #                          "ring",
-        #                          {"num_switches": 8,
-        #                           "num_hosts_per_switch": hps},
-        #                          conf_root="configurations/",
-        #                          synthesis_name="AboresceneSynthesis",
-        #                          synthesis_params={"apply_group_intents_immediately": True})
+        nc = NetworkConfiguration("ryu",
+                                 "ring",
+                                 {"num_switches": 8,
+                                  "num_hosts_per_switch": hps},
+                                 conf_root="configurations/",
+                                 synthesis_name="AboresceneSynthesis",
+                                 synthesis_params={"apply_group_intents_immediately": True})
 
         nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
@@ -365,8 +365,8 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 2
-    link_fraction_to_sample = 0.25
-    num_hosts_per_switch_list = [1]#, 4]#[2, 4]#, 6, 8, 10]
+    link_fraction_to_sample = 1.0
+    num_hosts_per_switch_list = [5]#, 4]#[2, 4]#, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
