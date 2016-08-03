@@ -793,8 +793,24 @@ class SynthesisLib(object):
             raise NotImplementedError
 
         self.push_flow(sw, flow)
+    
+    def push_mac_acl_rules(self, sw, table_number, src_host, dst_host):
 
-    def push_loop_preventing_drop_rules(self, sw, loop_preventing_drop_table):
+        # Get a vanilla flow with an empty action list so it can be dropped
+        flow = self.create_base_flow(sw, table_number, 100)
+        action_list = []
+
+        # Make and push the flow
+        if self.network_graph.controller == "ryu":
+            flow["match"]["eth_src"] = src_host.mac_addr
+            flow["match"]["eth_dst"] = dst_host.mac_addr
+        else:
+            raise NotImplemented
+
+        self.populate_flow_action_instruction(flow, action_list, True)
+        self.push_flow(sw, flow)
+        
+    def push_loop_preventing_drop_rules(self, sw, table_number):
 
         for h_id in self.network_graph.host_ids:
 
@@ -804,7 +820,7 @@ class SynthesisLib(object):
                 continue
 
             # Get a vanilla flow
-            flow = self.create_base_flow(sw, loop_preventing_drop_table, 100)
+            flow = self.create_base_flow(sw, table_number, 100)
             action_list = []
 
             # Compile match with in_port and destination mac address
