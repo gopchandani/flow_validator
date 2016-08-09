@@ -225,7 +225,6 @@ class Match(DictMixin):
                 self[field_name] = sys.maxsize
                 continue
 
-
     def add_element_from_ryu_match_json(self, match_json):
 
         for field_name in field_names:
@@ -299,7 +298,7 @@ class Match(DictMixin):
                 self[field_name] = sys.maxsize
 
                 if field_name == 'vlan_id':
-                    self["has_vlan_tag"]= 0
+                    self["has_vlan_tag"] = sys.maxsize
 
                 continue
 

@@ -126,13 +126,12 @@ class FlowTable:
 
         for flow in self.flows:
 
-            #print "flow:", flow.flow_json
-
             intersection = flow.traffic.intersect(remaining_traffic)
 
             if not intersection.is_empty():
 
                 # See what is left after this rule is through
+                prev_remaining_traffic = remaining_traffic
                 remaining_traffic = flow.complement_traffic.intersect(remaining_traffic)
                 flow.applied_traffic = intersection
 

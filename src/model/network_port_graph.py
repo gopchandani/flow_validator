@@ -181,6 +181,8 @@ class NetworkPortGraph(PortGraph):
                                                     non_host_port.network_port_graph_ingress_node,
                                                     end_to_end_modified_edges)
 
+                    admitted_host_traffic.set_field("in_port", int(non_host_port.port_number))
+
     def add_node_graph_link(self, node1_id, node2_id, updating=False):
 
         # Update the physical port representations in network graph objects

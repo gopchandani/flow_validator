@@ -582,7 +582,6 @@ class DijkstraSynthesis(object):
                                                       src_h_obj,
                                                       dst_h_obj)
 
-
     def _synthesize_all_node_pairs(self, dst_port=None):
 
         print "Synthesizing backup paths between all possible host pairs..."
