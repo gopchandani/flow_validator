@@ -19,7 +19,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                  "ring",
                                                                  {"num_switches": 4,
                                                                   "num_hosts_per_switch": 1},
-                                                                 conf_root=os.path.dirname(__file__) + "/",
+                                                                 conf_root="configurations/",
                                                                  synthesis_name="AboresceneSynthesis",
                                                                  synthesis_params={"apply_group_intents_immediately":
                                                                                        True})
@@ -50,7 +50,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                     {"fanout": 2,
                                                      "core": 1,
                                                      "num_hosts_per_switch": 1},
-                                                    conf_root=os.path.dirname(__file__) + "/",
+                                                    conf_root="configurations/",
                                                     synthesis_name="DijkstraSynthesis",
                                                     synthesis_params={})
 
