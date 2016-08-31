@@ -103,7 +103,8 @@ class MonteCarloAnalysis(FlowValidator):
         elif j > b + 1:
             p = 1.0
             for i in xrange(0, j-2 + 1):
-                print "i:", i, "self.alpha[i+1]:", self.alpha[i+1]
+                print "i:", i, "self.alpha[i+1]:", self.alpha[i+1], "self.N - i", self.N - i
+
                 p = p * ((self.F_bar[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
 
             beta = (j/u) * ((self.F[j-1]) / (self.N - j + 1)) * (p)

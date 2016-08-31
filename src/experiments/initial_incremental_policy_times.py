@@ -62,6 +62,30 @@ class InitialIncrementalTimes(Experiment):
         import pprint
         pprint.pprint(self.data)
 
+        self.data['all_keys'].remove('64')
+        self.data['all_keys'].remove('256')
+        self.data['all_keys'].remove('576')
+
+        del self.data['initial_time']['Clos topology with 7 switches']['64']
+        del self.data['incremental_time']['Clos topology with 7 switches']['64']
+        del self.data['relative_cost_ratio']['Clos topology with 7 switches']['64']
+
+        del self.data['initial_time']['Clos topology with 7 switches']['256']
+        del self.data['incremental_time']['Clos topology with 7 switches']['256']
+        del self.data['relative_cost_ratio']['Clos topology with 7 switches']['256']
+
+        del self.data['initial_time']['Clos topology with 7 switches']['576']
+        del self.data['incremental_time']['Clos topology with 7 switches']['576']
+        del self.data['relative_cost_ratio']['Clos topology with 7 switches']['576']
+
+        del self.data['initial_time']['Ring topology with 8 switches']['256']
+        del self.data['incremental_time']['Ring topology with 8 switches']['256']
+        del self.data['relative_cost_ratio']['Ring topology with 8 switches']['256']
+
+        del self.data['initial_time']['Ring topology with 12 switches']['576']
+        del self.data['incremental_time']['Ring topology with 12 switches']['576']
+        del self.data['relative_cost_ratio']['Ring topology with 12 switches']['576']
+
         f, (ax1, ax2, ax3) = plt.subplots(1, 3, sharex=True, sharey=False, figsize=(9.5, 3.0))
 
         data_xtick_labels = self.data["all_keys"]
@@ -105,7 +129,16 @@ class InitialIncrementalTimes(Experiment):
                                         y_max_factor=1.2,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels,
-                                        yticks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+                                        yticks=[1, 5, 10, 15, 20])
+
+        xlabels = ax1.get_xticklabels()
+        plt.setp(xlabels, rotation=45, fontsize=8)
+
+        xlabels = ax2.get_xticklabels()
+        plt.setp(xlabels, rotation=45, fontsize=8)
+
+        xlabels = ax3.get_xticklabels()
+        plt.setp(xlabels, rotation=45, fontsize=8)
 
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
@@ -131,7 +164,7 @@ class InitialIncrementalTimes(Experiment):
                    markerscale=1.0,
                    frameon=True,
                    fancybox=True,
-                   columnspacing=0.5, bbox_to_anchor=[1.6, -0.25])
+                   columnspacing=0.5, bbox_to_anchor=[1.6, -0.27])
 
         plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
         plt.show()
@@ -168,6 +201,8 @@ class InitialIncrementalTimes(Experiment):
                         num_host_carrying_switches = 8
                     elif nc_topo_str == "Ring topology with 12 switches":
                         num_host_carrying_switches = 12
+                    elif nc_topo_str == "Ring topology with 16 switches":
+                        num_host_carrying_switches = 16
                     elif nc_topo_str == "Clos topology with 7 switches":
                         num_host_carrying_switches = 4
                     elif nc_topo_str == "Clos topology with 14 switches":
@@ -338,12 +373,26 @@ class InitialIncrementalTimes(Experiment):
         path_prefix = "data_merge/"
 
         eight_switch_ring_merge = self.load_data(path_prefix + "8_switch_ring.json")
+        twelve_switch_ring_merge = self.load_data(path_prefix + "12_switch_ring.json")
+        sixteen_switch_ring_merge = self.load_data(path_prefix + "16_switch_ring_2_4_hps.json")
+
         seven_switch_clos_merge = self.load_data(path_prefix + "7_switch_clos.json")
-        fourteen_switch_clos_merge = self.load_data(path_prefix + "14_switch_clos.json")
+        fourteen_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "14_switch_clos_1_iter.json",
+                                                                        path_prefix + "14_switch_clos_2_iter.json"])
+
+        # 21-switch clos merges
+        twenty_one_switch_clos_merge = self.load_data_merge_nh([path_prefix + "21_switch_clos_2_4_hps.json",
+                                                                path_prefix + "21_switch_clos_6_hps.json",
+                                                                path_prefix + "21_switch_clos_8_hps.json",
+                                                                path_prefix + "21_switch_clos_10_hps.json"],
+                                                                path_prefix + "21_switch_clos.json")
 
         merged_data = self.load_data_merge_network_config([eight_switch_ring_merge,
+                                                           twelve_switch_ring_merge,
+                                                           sixteen_switch_ring_merge,
                                                            seven_switch_clos_merge,
-                                                           fourteen_switch_clos_merge])
+                                                           fourteen_switch_clos_merge,
+                                                           twenty_one_switch_clos_merge])
 
         return merged_data
 
@@ -381,7 +430,7 @@ def main():
     num_iterations = 2
     link_fraction_to_sample = 0.25
     num_hosts_per_switch_list = [2, 4, 6, 8, 10]
-    network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
+    network_configurations = []# prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialIncrementalTimes(num_iterations,
                                   link_fraction_to_sample,
                                   network_configurations)
@@ -392,12 +441,12 @@ def main():
 
     #exp.load_data("data/sgc_merged_data.json")
 
-    # exp.data = exp.data_merge_2()
-    # exp.data = exp.generate_relative_cost_ratio_data(exp.data)
-    # exp.data = exp.generate_num_flow_path_keys(exp.data)
-    # exp.dump_data()
-    #
-    # exp.plot_initial_incremental_times()
+    exp.data = exp.data_merge_2()
+    exp.data = exp.generate_relative_cost_ratio_data(exp.data)
+    exp.data = exp.generate_num_flow_path_keys(exp.data)
+    exp.dump_data()
+
+    exp.plot_initial_incremental_times()
 
 if __name__ == "__main__":
     main()
