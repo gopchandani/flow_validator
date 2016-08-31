@@ -2,13 +2,12 @@ import sys
 import itertools
 import numpy as np
 
-from collections import defaultdict
-
 sys.path.append("./")
 
 from model.network_port_graph import NetworkPortGraph
-from model.traffic import Traffic
 from experiments.timer import Timer
+from util import get_specific_traffic
+from util import get_admitted_traffic, get_paths
 
 __author__ = 'Rakesh Kumar'
 
@@ -17,7 +16,7 @@ class FlowValidator(object):
 
     def __init__(self, network_graph, report_active_state=True):
         self.network_graph = network_graph
-        self.port_graph = NetworkPortGraph(network_graph, report_active_state)
+        self.port_graph = NetworkPortGraph(network_graph, report_active_state, new_mode=True)
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
@@ -40,14 +39,12 @@ class FlowValidator(object):
                 src_host_obj = self.network_graph.get_node_object(src_h_id)
                 dst_host_obj = self.network_graph.get_node_object(dst_h_id)
 
-                specific_traffic = self.get_specific_traffic(src_h_id, dst_h_id)
+                specific_traffic = get_specific_traffic(self.network_graph, src_h_id, dst_h_id)
 
-                all_paths = self.port_graph.get_paths(src_host_obj.port_graph_ingress_node,
-                                                      dst_host_obj.port_graph_egress_node,
-                                                      specific_traffic,
-                                                      [src_host_obj.port_graph_ingress_node],
-                                                      [],
-                                                      verbose)
+                all_paths = get_paths(self.port_graph,
+                                        specific_traffic,
+                                        src_host_obj.switch_port,
+                                        dst_host_obj.switch_port)
 
                 for path in all_paths:
                     if verbose:
@@ -59,21 +56,6 @@ class FlowValidator(object):
                         # Avoid adding the same path twice for cases when a link is repeated
                         if path not in ld.traffic_paths:
                             ld.traffic_paths.append(path)
-
-    def get_specific_traffic(self, src_h_id, dst_h_id):
-
-        src_h_obj = self.network_graph.get_node_object(src_h_id)
-        dst_h_obj = self.network_graph.get_node_object(dst_h_id)
-
-        specific_traffic = Traffic(init_wildcard=True)
-        specific_traffic.set_field("ethernet_type", 0x0800)
-        specific_traffic.set_field("ethernet_source", int(src_h_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("ethernet_destination", int(dst_h_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("in_port", int(src_h_obj.switch_port.port_number))
-        specific_traffic.set_field("vlan_id", src_h_obj.sw.synthesis_tag + 0x1000, is_exception_value=True)
-        specific_traffic.set_field("has_vlan_tag", 0)
-
-        return specific_traffic
 
     def port_pair_iter(self, src_zone, dst_zone):
 
@@ -116,9 +98,6 @@ class FlowValidator(object):
 
         for src_port, dst_port in self.port_pair_iter(src_zone, dst_zone):
 
-            ingress_node = self.port_graph.get_ingress_node(src_port.sw.node_id, src_port.port_number)
-            egress_node = self.port_graph.get_egress_node(dst_port.sw.node_id, dst_port.port_number)
-
             # Setup the appropriate filter
             traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
             traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
@@ -126,16 +105,9 @@ class FlowValidator(object):
             traffic.set_field("has_vlan_tag", 0)
             traffic.set_field("in_port", int(src_port.port_number))
 
-            at = self.port_graph.get_admitted_traffic(ingress_node, egress_node)
+            at = get_admitted_traffic(self.port_graph, src_port, dst_port)
 
-            all_paths = self.port_graph.get_paths(ingress_node,
-                                                  egress_node,
-                                                  traffic,
-                                                  [ingress_node],
-                                                  [],
-                                                  True)
-
-            if not at.is_empty() and all_paths:
+            if not at.is_empty():
                 if at.is_subset_traffic(traffic):
                     is_connected = True
                     #print all_paths[0]
@@ -159,20 +131,13 @@ class FlowValidator(object):
 
         for src_port, dst_port in self.port_pair_iter(src_zone, dst_zone):
 
-            ingress_node = self.port_graph.get_ingress_node(src_port.sw.node_id, src_port.port_number)
-            egress_node = self.port_graph.get_egress_node(dst_port.sw.node_id, dst_port.port_number)
-
             # Setup the appropriate filter
             traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
             traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
             traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
             traffic.set_field("in_port", int(src_port.port_number))
 
-            traffic_paths = self.port_graph.get_paths(ingress_node,
-                                                      egress_node,
-                                                      traffic,
-                                                      [ingress_node],
-                                                      [], verbose=False)
+            traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
 
             for path in traffic_paths:
                 if len(path) > l:

@@ -127,9 +127,6 @@ class MonteCarloSamplingCompare(Experiment):
             self.mca = MonteCarloAnalysis(ng, False)
             self.mca.init_network_port_graph()
 
-            # self.mca.test_classification_breaking_specified_link_sequence([('s2', 's3'), ('s4', 's3')])
-            # self.mca.test_classification_breaking_specified_link_sequence([('s2', 's3'), ('s4', 's1')])
-
             # self.mca.compute_e_nf_exhaustive()
             # return
 
@@ -152,8 +149,6 @@ class MonteCarloSamplingCompare(Experiment):
                 for j in xrange(self.num_iterations):
                     print "iteration:", j + 1
                     print "num_seed_runs:", self.num_seed_runs
-
-                    # self.mca.test_classification_breaking_specified_link_sequence([('s2', 's1'), ('s4', 's1')], False)
 
                     with Timer(verbose=True) as t:
                         num_required_runs_uniform = self.compute_num_required_runs(self.expected_values[i],

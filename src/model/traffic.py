@@ -195,27 +195,26 @@ class TrafficElement:
         else:
             return True
 
-    def get_modified_traffic_element(self):
+    def get_modified_traffic_element(self, use_embedded_switch_modifications):
 
         modified_traffic_element = TrafficElement()
 
+        mf = None
+        if use_embedded_switch_modifications:
+            mf = self.switch_modifications
+        else:
+            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
+                mf = self.enabling_edge_data.applied_modifications
+            else:
+                mf = {}
+
         for field_name in self.traffic_fields:
 
-            if self.enabling_edge_data and self.enabling_edge_data.applied_modifications:
-                if field_name in self.enabling_edge_data.applied_modifications:
-
-                    field_interval = self.enabling_edge_data.applied_modifications[field_name][1]
-                    value_tree = IntervalTree()
-                    value_tree.add(field_interval)
-
-                    modified_traffic_element.traffic_fields[field_name] = value_tree
-
-                else:
-                    # Otherwise, just keep the field same as it was
-                    modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+            if field_name in mf:
+                modified_traffic_element.traffic_fields[field_name] = mf[field_name][1]
             else:
                 # Otherwise, just keep the field same as it was
-                modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+                modified_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name].copy()
 
         # Accumulate field modifications
         modified_traffic_element.switch_modifications.update(self.switch_modifications)
@@ -227,19 +226,14 @@ class TrafficElement:
 
     def get_orig_field(self, orig_traffic_element, field_name, modifications):
 
-        # Check to see if the value on this traffic is same as what it was modified to be for this modification
-        # If it is, then use the 'original' value of the traffic that caused the modification.
-        # If it is not, then the assumption here would be that even though the modification is there on this chunk
-        # but it does not really apply because of what the traffic chunk has gone through subsequently
+        # Check to see if the tree on this field has an intersection with value tree of what it is being modified to
+        intersection = self.get_field_intersection(modifications[field_name][1], self.traffic_fields[field_name])
 
-        field_interval = modifications[field_name][1]
-        value_tree = IntervalTree()
-        value_tree.add(field_interval)
-
-        intersection = self.get_field_intersection(value_tree, self.traffic_fields[field_name])
-
+        # If it is, then use the 'original' traffic that caused the modification.
         if intersection:
             orig_traffic_element.traffic_fields[field_name] = modifications[field_name][0].traffic_fields[field_name]
+
+        # If not, then  even though the modification is there on this chunk but it does not really apply
         else:
             orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
 
@@ -425,20 +419,41 @@ class Traffic:
     def __eq__(self, other):
         return self.is_equal_traffic(other)
 
-    def intersect(self, in_traffic):
+    def equal_modifications(self, mods1, mods2):
+
+        if mods1.keys() and mods2.keys():
+            pass
+
+        equal_mods = True
+
+        # First check if the keys in the modification are not same
+        if set(mods1.keys()) != set(mods2.keys()):
+            equal_mods = False
+        else:
+            # then compare for each key, the modification applied is same
+            for mf in mods1.keys():
+                if mods1[mf] != mods2[mf]:
+                    equal_mods = False
+                    break
+
+        return equal_mods
+
+    def intersect(self, in_traffic, keep_all=False):
         traffic_intersection = Traffic()
         for e_in in in_traffic.traffic_elements:
             for e_self in self.traffic_elements:
                 ei = e_self.intersect(e_in)
                 if ei:
 
-                    # Check to see if this intersection can be expressed as subset of any of the previous
-                    # te's that are already collected
-                    is_subset = traffic_intersection.is_subset_te(ei)
+                    if not keep_all:
 
-                    # If so, no need to add this one to the mix
-                    if is_subset:
-                        continue
+                        # Check to see if this intersection can be expressed as subset of any of the previous
+                        # te's that are already collected
+                        is_subset = traffic_intersection.is_subset_te(ei)
+
+                        # If so, no need to add this one to the mix
+                        if is_subset:# and self.equal_modifications(e_self.switch_modifications, e_in.switch_modifications):
+                            continue
 
                     # Add this and do the necessary book-keeping...
                     traffic_intersection.traffic_elements.append(ei)
@@ -504,19 +519,30 @@ class Traffic:
     def union(self, in_traffic):
         self.traffic_elements.extend(in_traffic.traffic_elements)
 
-    def get_orig_traffic(self, applied_modifications=None):
+    def get_orig_traffic(self, provided_modifications=None,
+                         use_embedded_written_modifications=False,
+                         use_embedded_switch_modifications=False):
 
         orig_traffic = Traffic()
         for te in self.traffic_elements:
 
-            if applied_modifications:
-                modifications = applied_modifications
-            else:
-                if not te.written_modifications_apply:
-                    orig_traffic.traffic_elements.append(te)
-                    continue
-                modifications = te.written_modifications
+            modifications = None
 
+            # If modifications are not provided, then fish for modifications embedded in the te
+            if not provided_modifications:
+                if use_embedded_written_modifications:
+                    if not te.written_modifications_apply:
+                        orig_traffic.traffic_elements.append(te)
+                        continue
+                    modifications = te.written_modifications
+                elif use_embedded_switch_modifications:
+                    modifications = te.switch_modifications
+                else:
+                    raise Exception("No modifications provided")
+            else:
+                modifications = provided_modifications
+
+            # If the modifications are not empty
             if modifications:
                 orig_te = te.get_orig_traffic_element(modifications)
             else:
@@ -529,12 +555,12 @@ class Traffic:
     def get_intersecting_modifications(self):
         pass
 
-    def get_modified_traffic(self):
+    def get_modified_traffic(self, use_embedded_switch_modifications=False):
 
         modified_traffic = Traffic()
 
         for te in self.traffic_elements:
-            modified_te = te.get_modified_traffic_element()
+            modified_te = te.get_modified_traffic_element(use_embedded_switch_modifications)
             modified_traffic.traffic_elements.append(modified_te)
         return modified_traffic
 

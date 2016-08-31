@@ -44,7 +44,10 @@ class PortGraph(object):
         self.g.remove_node(node.node_id)
 
     def get_node(self, node_id):
-        return self.g.node[node_id]["p"]
+        if node_id in self.g.node:
+            return self.g.node[node_id]["p"]
+        else:
+            return None
 
     def predecessors_iter(self, node):
         for pred_id in self.g.predecessors(node.node_id):
@@ -107,10 +110,18 @@ class PortGraph(object):
 
         return succ_list
 
-    def propagate_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
+    def get_dst_sw_nodes(self, node, sw):
 
-        if succ and succ.node_id == 's1:egress2' and dst.node_id == 's1:egress2':
-            pass
+        dst_sw_at_and_nodes = []
+        for dst_node in node.admitted_traffic:
+
+            # If check dst_node belongs to the specified sw and to a port that connects to another switch
+            if dst_node.sw == sw and not dst_node.parent_obj.attached_host:
+                dst_sw_at_and_nodes.append(dst_node)
+
+        return dst_sw_at_and_nodes
+
+    def propagate_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
 
         prev_dst_traffic_at_succ = self.get_admitted_traffic_via_succ(curr, dst, succ)
         self.set_admitted_traffic_via_succ(curr, dst, succ, dst_traffic_at_succ)
@@ -261,9 +272,6 @@ class PortGraph(object):
         return traffic_at_succ
 
     def get_paths(self, this_node, dst, at, path_prefix, path_edges, verbose):
-
-        # if this_node.node_id == 's4:ingress2' and dst.node_id == 's2:egress1':
-        #     pass
 
         this_level_paths = []
         this_level_prefix = path_prefix[:]

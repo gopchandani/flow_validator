@@ -41,6 +41,7 @@ class NetworkGraphLinkData(object):
         return (self.forward_link == other.forward_link and self.reverse_link == other.reverse_link) or \
                (self.forward_link == other.reverse_link and self.reverse_link == other.forward_link)
 
+
 class NetworkGraph(object):
 
     def __init__(self, network_configuration):
@@ -322,12 +323,12 @@ class NetworkGraph(object):
         return link_data.link_ports_dict
 
     def get_link_data(self, node1_id, node2_id):
-        link_data =  self.graph[node1_id][node2_id]['link_data']
+        link_data = self.graph[node1_id][node2_id]['link_data']
         return link_data
 
     def get_switch_link_data(self):
         for edge in self.graph.edges():
-            link_data =  self.graph[edge[0]][edge[1]]['link_data']
+            link_data = self.graph[edge[0]][edge[1]]['link_data']
             if link_data.link_type == "switch":
                 yield link_data
 
