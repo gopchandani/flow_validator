@@ -3,7 +3,7 @@ import os
 from model.switch_port_graph import SwitchPortGraph
 from model.traffic import Traffic
 from model.traffic_path import TrafficPath
-from model.intervaltree_modified import Interval
+from model.intervaltree_modified import Interval, IntervalTree
 
 from experiments.network_configuration import NetworkConfiguration
 
@@ -35,7 +35,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                              "ring",
                                                              {"num_switches": 4,
                                                               "num_hosts_per_switch": 1},
-                                                             conf_root=os.path.dirname(__file__) + "/",
+                                                             conf_root="configurations/",
                                                              synthesis_name="AboresceneSynthesis",
                                                              synthesis_params={"apply_group_intents_immediately": True})
 
@@ -53,7 +53,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                                               "ring",
                                                               {"num_switches": 4,
                                                                "num_hosts_per_switch": 1},
-                                                              conf_root=os.path.dirname(__file__) + "/",
+                                                              conf_root="configurations/",
                                                               synthesis_name="AboresceneSynthesis",
                                                               synthesis_params={"apply_group_intents_immediately": False})
 
@@ -171,7 +171,8 @@ class TestSwitchPortGraph(unittest.TestCase):
         h2_obj = self.ng_linear_dijkstra.get_node_object("h2")
 
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_linear_dijkstra, h1_obj, h2_obj, 1, 2)
-        self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(4098, 4099)})
+        self.check_modifications(at_int, {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                          "vlan_id": IntervalTree([Interval(4098, 4099)])})
 
     def test_linear_dijkstra_paths(self):
         h1_obj = self.ng_linear_dijkstra.get_node_object("h1")
@@ -238,15 +239,18 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
                                                                         h11_obj, h21_obj, 1, 3)
-        self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5122, 5123)})
+        self.check_modifications(at_int, {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                          "vlan_id": IntervalTree([Interval(5122, 5123)])})
 
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
                                                                         h11_obj, h31_obj, 1, 2)
-        self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5123, 5124)})
+        self.check_modifications(at_int, {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                          "vlan_id": IntervalTree([Interval(5123, 5124)])})
 
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_true,
                                                                         h11_obj, h41_obj, 1, 2)
-        self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)})
+        self.check_modifications(at_int, {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                          "vlan_id": IntervalTree([Interval(5124, 5125)])})
 
         # This test asserts that in switch s1, for host h11, with no failures:
         # Traffic for host h21 flows out of port 3 with modifications 5122
@@ -260,15 +264,18 @@ class TestSwitchPortGraph(unittest.TestCase):
 
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_false,
                                                                         h11_obj, h21_obj, 1, 3)
-        self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5122, 5123)})
+        self.check_modifications(at_int, {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                          "vlan_id": IntervalTree([Interval(5122, 5123)])})
 
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_false,
                                                                         h11_obj, h31_obj, 1, 2)
-        self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5123, 5124)})
+        self.check_modifications(at_int, {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                          "vlan_id": IntervalTree([Interval(5123, 5124)])})
 
         at_int, ingress_node, egress_node = self.check_admitted_traffic(self.swpg_ring_aborescene_apply_false,
                                                                         h11_obj, h41_obj, 1, 2)
-        self.check_modifications(at_int, {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)})
+        self.check_modifications(at_int, {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                          "vlan_id": IntervalTree([Interval(5124, 5125)])})
 
     def test_ring_aborescene_paths(self):
 
@@ -406,20 +413,26 @@ class TestSwitchPortGraph(unittest.TestCase):
         primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true,
                                                                        h11_obj, h21_obj, 1, 3, 2)
         self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5122, 5123)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6146, 6147)})
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(5122, 5123)])},
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(6146, 6147)])})
 
         primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true,
                                                                        h11_obj, h31_obj, 1, 2, 3)
         self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5123, 5124)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6147, 6148)})
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(5123, 5124)])},
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(6147, 6148)])})
 
         primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_true,
                                                                        h11_obj, h41_obj, 1, 2, 3)
         self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6148, 6149)})
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(5124, 5125)])},
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(6148, 6149)])})
 
         # This test asserts that in switch s1, for host h11, with a single failures:
         # Traffic for host h21 flows out of port 3 with modifications 5122 before failure and
@@ -437,20 +450,26 @@ class TestSwitchPortGraph(unittest.TestCase):
         primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_false,
                                                                        h11_obj, h21_obj, 1, 3, 2)
         self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5122, 5123)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6146, 6147)})
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(5122, 5123)])},
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(6146, 6147)])})
 
         primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_false,
                                                                        h11_obj, h31_obj, 1, 2, 3)
         self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5123, 5124)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6147, 6148)})
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(5123, 5124)])},
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(6147, 6148)])})
 
         primary_at, failover_at = self.check_failover_admitted_traffic(self.swpg_ring_aborescene_apply_false,
                                                                        h11_obj, h41_obj, 1, 2, 3)
         self.check_failover_modifications(primary_at, failover_at,
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(5124, 5125)},
-                                          {"has_vlan_tag": Interval(1, 2), "vlan_id": Interval(6148, 6149)})
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(5124, 5125)])},
+                                          {"has_vlan_tag": IntervalTree([Interval(1, 2)]),
+                                           "vlan_id": IntervalTree([Interval(6148, 6149)])})
 
     def test_ring_aborescene_paths_failover(self):
 

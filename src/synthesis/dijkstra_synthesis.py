@@ -358,9 +358,6 @@ class DijkstraSynthesis(object):
 
         for sw in self.s:
 
-            # if sw != 's4':
-            #     continue
-
             print "-- Pushing at Switch:", sw
 
             # Push rules at the switch that drop packets from hosts that are connected to the switch
@@ -380,9 +377,6 @@ class DijkstraSynthesis(object):
             self.network_graph.graph.node[sw]["sw"].intents = defaultdict(dict)
 
             for dst in intents:
-
-                if sw == 's4' and dst == 11:
-                    pass
 
                 dst_intents = intents[dst]
 
@@ -563,6 +557,31 @@ class DijkstraSynthesis(object):
                                 reverse_intent.flow_match,
                                 reverse_intent.apply_immediately)
 
+    def push_mac_acls(self):
+
+        for src in self.network_graph.host_ids:
+            for dst in self.network_graph.host_ids:
+
+                src_h_obj = self.network_graph.get_node_object(src)
+                dst_h_obj = self.network_graph.get_node_object(dst)
+
+                # No ACL installed If the src and dst hosts have the same port number on their respective switches
+                if src_h_obj.switch_port.port_number == dst_h_obj.switch_port.port_number:
+                    continue
+
+                # No ACLs installed for looped traffic here
+                if src == dst:
+                    continue
+
+                # No ACLs installed for hosts on the same switch
+                if src_h_obj.sw == dst_h_obj.sw:
+                    continue
+
+                self.synthesis_lib.push_mac_acl_rules(dst_h_obj.sw.node_id,
+                                                      self.local_host_rule_table,
+                                                      src_h_obj,
+                                                      dst_h_obj)
+
     def _synthesize_all_node_pairs(self, dst_port=None):
 
         print "Synthesizing backup paths between all possible host pairs..."
@@ -597,6 +616,10 @@ class DijkstraSynthesis(object):
 
         self._identify_reverse_and_balking_intents()
         self.push_switch_changes()
+
+        if "mac_acl" in self.params:
+            if self.params["mac_acl"]:
+                self.push_mac_acls()
 
     def synthesize_all_node_pairs(self, dst_ports_to_synthesize=None):
 

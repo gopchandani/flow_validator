@@ -86,6 +86,8 @@ class Experiment(object):
 
         pprint(self.data)
 
+        return self.data
+
     def prepare_matplotlib_data(self, data_dict):
 
         x = sorted(data_dict.keys(), key=int)
@@ -229,7 +231,7 @@ class Experiment(object):
         ax.set_ylabel(y_label, fontsize=10, labelpad=0)
         ax.set_title(subplot_title, fontsize=10)
 
-        markers = ['.', 'v', 'o', 'd', '+', '^', 'H', ',', 's', 'o', 'h', '*']
+        markers = ['*', '.', 'v', '+', 'd', 'o', '^', 'H', ',', 's', '*']
         marker_i = 0
 
         for line_data_key in self.data[data_key]:
@@ -238,7 +240,7 @@ class Experiment(object):
 
             x, mean, sem = self.prepare_matplotlib_data(data_vals)
 
-            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=6.0, label=line_data_key, ls='none')
+            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=7.0, label=line_data_key, ls='none')
 
             marker_i += 1
 
@@ -254,8 +256,8 @@ class Experiment(object):
             ax.set_ylim(ymin=low_ylim*y_min_factor)
             ax.set_ylim(ymax=high_ylim*y_max_factor)
         elif y_scale == "log":
-            ax.set_ylim(ymin=1)
-            ax.set_ylim(ymax=100000)
+            ax.set_ylim(ymin=10)
+            ax.set_ylim(ymax=10000)
 
         ax.set_yscale(y_scale)
 
