@@ -34,6 +34,9 @@ from synthesis.synthesis_lib import SynthesisLib
 class NetworkConfiguration(object):
 
     def __init__(self, controller, 
+                 controller_api_base_url,
+                 controller_api_user_name,
+                 controller_api_password,
                  topo_name,
                  topo_params,
                  conf_root,
@@ -69,11 +72,9 @@ class NetworkConfiguration(object):
             self.load_config = True
             self.save_config = False
 
-        # Initialize things to talk to controller
-        self.baseUrlRyu = "http://localhost:8080/"
-
-        self.h = httplib2.Http(".cache")
-        self.h.add_credentials('admin', 'admin')
+        self.h = httplib2.Http()#(".cache")
+        self.controller_api_base_url = controller_api_base_url
+        self.h.add_credentials(controller_api_user_name, controller_api_password)
 
     def __str__(self):
         return self.controller + "_" + str(self.synthesis) + "_" + str(self.topo)
@@ -133,7 +134,7 @@ class NetworkConfiguration(object):
         # Get all the ryu_switches from the inventory API
         remaining_url = 'stats/switches'
         time.sleep(request_gap)
-        resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+        resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
 
         ryu_switch_numbers = json.loads(content)
 
@@ -143,7 +144,7 @@ class NetworkConfiguration(object):
 
             # Get the flows
             remaining_url = 'stats/flow' + "/" + str(dpid)
-            resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
             time.sleep(request_gap)
 
             if resp["status"] == "200":
@@ -157,7 +158,7 @@ class NetworkConfiguration(object):
 
             # Get the ports
             remaining_url = 'stats/portdesc' + "/" + str(dpid)
-            resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
             time.sleep(request_gap)
 
             if resp["status"] == "200":
@@ -168,7 +169,7 @@ class NetworkConfiguration(object):
 
             # Get the groups
             remaining_url = 'stats/groupdesc' + "/" + str(dpid)
-            resp, content = self.h.request(self.baseUrlRyu + remaining_url, "GET")
+            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
             time.sleep(request_gap)
 
             if resp["status"] == "200":

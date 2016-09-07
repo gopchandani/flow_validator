@@ -378,14 +378,14 @@ class InitialIncrementalTimes(Experiment):
 
         seven_switch_clos_merge = self.load_data(path_prefix + "7_switch_clos.json")
         fourteen_switch_clos_merge = self.load_data_merge_iterations([path_prefix + "14_switch_clos_1_iter.json",
-                                                                        path_prefix + "14_switch_clos_2_iter.json"])
+                                                                      path_prefix + "14_switch_clos_2_iter.json"])
 
         # 21-switch clos merges
         twenty_one_switch_clos_merge = self.load_data_merge_nh([path_prefix + "21_switch_clos_2_4_hps.json",
                                                                 path_prefix + "21_switch_clos_6_hps.json",
                                                                 path_prefix + "21_switch_clos_8_hps.json",
                                                                 path_prefix + "21_switch_clos_10_hps.json"],
-                                                                path_prefix + "21_switch_clos.json")
+                                                               path_prefix + "21_switch_clos.json")
 
         merged_data = self.load_data_merge_network_config([eight_switch_ring_merge,
                                                            twelve_switch_ring_merge,
@@ -402,6 +402,9 @@ def prepare_network_configurations(num_hosts_per_switch_list):
     for hps in num_hosts_per_switch_list:
 
         # nc = NetworkConfiguration("ryu",
+        #                           "http://localhost:8080/",
+        #                           "admin",
+        #                           "admin",
         #                           "clostopo",
         #                           {"fanout": 2,
         #                            "core": 1,
@@ -411,12 +414,15 @@ def prepare_network_configurations(num_hosts_per_switch_list):
         #                           synthesis_params={"apply_group_intents_immediately": True})
 
         nc = NetworkConfiguration("ryu",
-                                 "ring",
-                                 {"num_switches": 12,
-                                  "num_hosts_per_switch": hps},
-                                 conf_root="configurations/",
-                                 synthesis_name="AboresceneSynthesis",
-                                 synthesis_params={"apply_group_intents_immediately": True})
+                                  "ring",
+                                  "http://localhost:8080/",
+                                  "admin",
+                                  "admin",
+                                  {"num_switches": 12,
+                                   "num_hosts_per_switch": hps},
+                                  conf_root="configurations/",
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
 
         nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
