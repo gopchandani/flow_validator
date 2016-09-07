@@ -243,7 +243,8 @@ class NetworkConfiguration(object):
 
             # Refresh just the switches in the network graph, post synthesis
             self.get_switches()
-            self.ng.parse_switches()
+            self.ng.parse_network_graph()
+            #self.ng.parse_switches()
 
         else:
             self.ng = NetworkGraph(network_configuration=self)
