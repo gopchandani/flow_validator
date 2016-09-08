@@ -27,11 +27,11 @@ class Flow:
 
         self.instruction_set = None
 
-        if self.sw.network_graph.controller == "odl":
-            self.table_id = self.flow_json["table_id"]
+        if self.sw.network_graph.controller == "onos":
+            self.table_id = self.flow_json["tableId"]
             self.priority = int(self.flow_json["priority"])
-            self.match = Match(match_json=self.flow_json["match"], controller="odl", flow=self)
-            self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"]["instruction"])
+            self.match = Match(match_json=self.flow_json["selector"]["criteria"], controller="onos", flow=self)
+            self.instruction_set = InstructionSet(self.sw, self, self.flow_json["treatment"])
 
         elif self.sw.network_graph.controller == "ryu":
             self.table_id = self.flow_json["table_id"]
@@ -95,8 +95,8 @@ class FlowTable:
         self.table_id = table_id
         self.flows = []
 
-        for f in flow_list:
-            f = Flow(sw, self, f)
+        for flow_json in flow_list:
+            f = Flow(sw, self, flow_json)
             self.flows.append(f)
 
         #  Sort the flows list by priority

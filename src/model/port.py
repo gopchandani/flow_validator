@@ -19,14 +19,14 @@ class Port(object):
         self.state = None
         self.attached_host = None
 
-        if self.sw.network_graph.controller == "odl":
-            self.parse_odl_port_json(port_json)
-
-        elif self.sw.network_graph.controller == "ryu":
+        if self.sw.network_graph.controller == "ryu":
             self.parse_ryu_port_json(port_json)
 
         elif self.sw.network_graph.controller == "sel":
             self.parse_sel_port_json(port_json)
+
+        elif self.sw.network_graph.controller == "onos":
+            self.parse_onos_port_json(port_json)
 
     def init_port_graph_state(self):
 
@@ -72,6 +72,13 @@ class Port(object):
         else:
             self.state = "up"
 
+    def parse_onos_port_json(self, port_json):
+
+        self.port_number = int(port_json["port"])
+        self.port_id = str(self.sw.node_id) + ":" + str(self.port_number)
+        self.mac_address = None
+        self.state = "up"
+
     def parse_ryu_port_json(self, port_json):
 
         self.port_id = str(self.sw.node_id) + ":" + str(port_json["port_no"])
@@ -83,7 +90,6 @@ class Port(object):
         if "max_speed" in port_json:
             self.max_speed = int(port_json["max_speed"])
 
-        #TODO: Peep into port_json["state"]
         self.state = "up"
 
     def parse_sel_port_json(self, port_json):

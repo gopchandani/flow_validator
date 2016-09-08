@@ -47,8 +47,8 @@ class Action():
         self.modified_field = None
         self.field_modified_to = None
 
-        if self.sw.network_graph.controller == "odl":
-            self.parse_odl_action_json()
+        if self.sw.network_graph.controller == "onos":
+            self.parse_onos_action_json()
 
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_action_json()
@@ -64,39 +64,40 @@ class Action():
 
         return len(prior_active_watch_ports)
 
-    def parse_odl_action_json(self):
+    def parse_onos_action_json(self):
 
-        self.order = self.action_json["order"]
-
-        if "output-action" in self.action_json:
+        if self.action_json["type"] == "OUTPUT":
             self.action_type = "output"
-
-            if self.action_json["output-action"]["output-node-connector"] == u"CONTROLLER":
+            if self.action_json["port"] == "CONTROLLER":
                 self.out_port = self.sw.network_graph.OFPP_CONTROLLER
-            elif self.action_json["output-action"]["output-node-connector"] == u"INPORT":
-                self.out_port = self.sw.network_graph.OFPP_IN
             else:
-                self.out_port = int(self.action_json["output-action"]["output-node-connector"])
+                self.out_port = self.action_json["port"]
 
-        if "group-action" in self.action_json:
-            self.action_type = "group"
-            self.group_id = int(self.action_json["group-action"]["group-id"])
-
-        if "push-vlan-action" in self.action_json:
-            self.action_type = "push_vlan"
-            self.vlan_ethernet_type = self.action_json["push-vlan-action"]["ethernet-type"]
-
-        if "pop-vlan-action" in self.action_json:
-            self.action_type = "pop_vlan"
-
-        if "set-field" in self.action_json:
+        if self.action_json["type"] == "SET_FIELD":
+            raise NotImplementedError
             self.action_type = "set_field"
-            self.set_field_match_json = self.action_json["set-field"]
-            mjp = OdlMatchJsonParser(self.action_json["set-field"])
-            if mjp.keys():
-                self.modified_field = mjp.keys()[0]
-                self.field_modified_to = mjp[self.modified_field]
 
+            self.modified_field = ryu_field_names_mapping[self.action_json["field"]]
+
+            #TODO: Works fine for VLAN_ID mods, other fields may require special parsing here
+            if self.action_json["field"] == "vlan_vid":
+                self.field_modified_to = self.action_json["value"]
+                self.field_modified_to = int(self.field_modified_to)
+            else:
+                raise NotImplementedError
+
+        if self.action_json["type"] == "GROUP":
+            raise NotImplementedError
+            self.action_type = "group"
+            self.group_id = self.action_json["group_id"]
+
+        if self.action_json["type"] == "PUSH_VLAN":
+            raise NotImplementedError
+            self.action_type = "push_vlan"
+
+        if self.action_json["type"] == "POP_VLAN":
+            raise NotImplementedError
+            self.action_type = "pop_vlan"
 
     def parse_sel_action_json(self):
         self.order = self.action_json["setOrder"]

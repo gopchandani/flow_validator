@@ -80,7 +80,11 @@ class NetworkGraph(object):
 
         return mdg
 
-    def parse_host_nodes(self):
+    def onos_sw_device_id_to_node_id_mapping(self, onos_node_id):
+        node_id = "s" + str(int(onos_node_id.split(":")[1]))
+        return node_id
+
+    def parse_mininet_host_nodes(self):
 
         mininet_host_nodes = None
         mininet_port_links = None
@@ -115,7 +119,50 @@ class NetworkGraph(object):
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
-    def parse_links(self):
+    def parse_onos_host_nodes(self):
+        onos_hosts = None
+
+        with open(self.network_configuration.conf_path + "onos_hosts.json", "r") as in_file:
+            onos_hosts = json.loads(in_file.read())
+
+        for onos_host_dict in onos_hosts:
+            host_switch_id = self.onos_sw_device_id_to_node_id_mapping(onos_host_dict["location"]["elementId"])
+            host_switch_obj = self.get_node_object(host_switch_id)
+
+            # Onos links do not give host-switch links, so need to add Port to each switch
+            host_port_json = {"port": onos_host_dict["location"]["port"]}
+            host_switch_port = Port(host_switch_obj, port_json=host_port_json)
+            host_switch_obj.ports[int(host_switch_port.port_number)] = host_switch_port
+
+            # Add the host to the graph
+            host_id = "h" + host_switch_id[1:] + onos_host_dict["location"]["port"]
+            self.host_ids.append(host_id)
+
+            h_obj = Host(host_id,
+                         self,
+                         onos_host_dict["ipAddresses"][0],
+                         onos_host_dict["mac"],
+                         host_switch_obj,
+                         host_switch_port)
+
+            # Make the connections both on switch and host side
+            host_switch_obj.host_ports.append(int(onos_host_dict["location"]["port"]))
+            host_switch_obj.attached_hosts.append(h_obj)
+            host_switch_port.attached_host = h_obj
+
+            self.graph.add_node(host_id, node_type="host", h=h_obj)
+
+    def parse_host_nodes(self):
+        if self.controller == "ryu":
+            self.parse_mininet_host_nodes()
+        elif self.controller == "onos":
+            self.parse_onos_host_nodes()
+        elif self.controller == "sel":
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
+
+    def parse_mininet_links(self):
 
         mininet_port_links = None
 
@@ -132,6 +179,30 @@ class NetworkGraph(object):
                               int(src_node_port),
                               dst_node,
                               int(dst_node_port))
+
+    def parse_onos_links(self):
+
+        onos_links = None
+
+        with open(self.network_configuration.conf_path + "onos_links.json", "r") as in_file:
+            onos_links = json.loads(in_file.read())
+
+        for link in onos_links:
+
+            self.add_link(self.onos_sw_device_id_to_node_id_mapping(link["src"]["device"]),
+                          int(link["src"]["port"]),
+                          self.onos_sw_device_id_to_node_id_mapping(link["dst"]["device"]),
+                          int(link["dst"]["port"]))
+
+    def parse_links(self):
+        if self.controller == "ryu":
+            self.parse_mininet_links()
+        elif self.controller == "onos":
+            self.parse_onos_links()
+        elif self.controller == "sel":
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
 
     def add_link(self, node1_id, node1_port, node2_id, node2_port):
 
@@ -212,6 +283,44 @@ class NetworkGraph(object):
             for table_id in ryu_switches[dpid]["flow_tables"]:
                 switch_flow_tables.append(FlowTable(sw, table_id, ryu_switches[dpid]["flow_tables"][table_id]))
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+
+    def parse_onos_switches(self):
+
+        onos_switches = None
+
+        with open(self.network_configuration.conf_path + "onos_switches.json", "r") as in_file:
+            onos_switches = json.loads(in_file.read())
+
+        for onos_switch in onos_switches["devices"]:
+
+            #  prepare a switch id
+            switch_id = self.onos_sw_device_id_to_node_id_mapping(onos_switch["id"])
+
+            # Check to see if a switch with this id already exists in the graph,
+            # if so grab it, otherwise create it
+            sw = self.get_node_object(switch_id)
+            if not sw:
+                sw = Switch(switch_id, self)
+                self.graph.add_node(switch_id, node_type="switch", sw=sw)
+                self.switch_ids.append(switch_id)
+
+            # Parse out the information about all the ports in the switch
+            switch_ports = {}
+            for port_num in onos_switch["ports"]:
+                switch_ports[int(port_num)] = Port(sw, port_json=onos_switch["ports"][port_num])
+
+            sw.ports = switch_ports
+
+            # Parse group table if one is available
+            if "groups" in onos_switch:
+                sw.group_table = GroupTable(sw, onos_switch["groups"])
+
+            # Parse all the flow tables and sort them by table_id in the list
+            switch_flow_tables = []
+            for table_id in onos_switch["flow_tables"]:
+                switch_flow_tables.append(FlowTable(sw, table_id, onos_switch["flow_tables"][table_id]))
+                sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+
 
     def print_sel_flow_stats(self):
        # for each in OperationalTree.flowStatsHttpAccess(self.sel_session).read_collection():
@@ -302,6 +411,10 @@ class NetworkGraph(object):
 
         if self.network_configuration.controller == "ryu":
             self.parse_ryu_switches()
+        elif self.network_configuration.controller == "onos":
+            self.parse_onos_switches()
+        elif self.network_configuration.controller == "sel":
+            raise NotImplemented
         else:
             raise NotImplemented
 

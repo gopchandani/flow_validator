@@ -5,7 +5,8 @@ from copy import deepcopy
 from action_set import ActionSet
 from action_set import Action
 
-class Instruction():
+
+class Instruction:
 
     def __init__(self, sw, instruction_json):
 
@@ -15,8 +16,8 @@ class Instruction():
         self.actions_list = []
         self.go_to_table = None
 
-        if self.sw.network_graph.controller == "odl":
-            self.parse_odl_instruction()
+        if self.sw.network_graph.controller == "onos":
+            self.parse_onos_instruction()
 
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction()
@@ -27,21 +28,33 @@ class Instruction():
         else:
             raise NotImplementedError
 
-    def parse_odl_instruction(self):
+    def parse_onos_instruction(self):
 
-        if "write-actions" in self.instruction_json:
-            self.instruction_type = "write-actions"
-            write_actions_json = self.instruction_json["write-actions"]
-            for action_json in write_actions_json["action"]:
-                self.actions_list.append(Action(self.sw, action_json))
+        if "deferred" in self.instruction_json:
+            if self.instruction_json["deferred"]:
+                raise NotImplementedError
 
-        elif "apply-actions" in self.instruction_json:
-            self.instruction_type = "apply-actions"
-            apply_actions_json = self.instruction_json["apply-actions"]
-            for action_json in apply_actions_json["action"]:
-                self.actions_list.append(Action(self.sw, action_json))
+                self.instruction_type = "write-actions"
+                write_actions_json = self.instruction_json["deferred"]
+                for action_json in write_actions_json:
+                    self.actions_list.append(Action(self.sw, action_json))
 
-        elif "go-to-table" in self.instruction_json:
+        elif "immediate" in self.instruction_json:
+            if self.instruction_json["immediate"]:
+                raise NotImplementedError
+                self.instruction_type = "apply-actions"
+                apply_actions_json = self.instruction_json["immediate"]
+                for action_json in apply_actions_json:
+                    self.actions_list.append(Action(self.sw, action_json))
+
+        elif "instructions" in self.instruction_json:
+            if self.instruction_json["instructions"]:
+                self.instruction_type = "apply-actions"
+                apply_actions_json = self.instruction_json["instructions"]
+                for action_json in apply_actions_json:
+                    self.actions_list.append(Action(self.sw, action_json))
+
+        elif "tableTransition" in self.instruction_json:
             self.instruction_type = "go-to-table"
             self.go_to_table = self.instruction_json["go-to-table"]["table_id"]
 
@@ -128,8 +141,8 @@ class InstructionSet():
         self.instruction_list = []
         self.goto_table = None
 
-        if self.sw.network_graph.controller == "odl":
-            self.parse_odl_instruction_set()
+        if self.sw.network_graph.controller == "onos":
+            self.parse_onos_instruction_set()
 
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction_set()
@@ -143,9 +156,12 @@ class InstructionSet():
         self.applied_action_set = ActionSet(self.sw)
         self.written_action_set = ActionSet(self.sw)
 
-    def parse_odl_instruction_set(self):
+    def parse_onos_instruction_set(self):
 
-        for instruction_json in self.instructions_json:
+        for instruction_type_key in self.instructions_json:
+
+            instruction_json = {instruction_type_key: self.instructions_json[instruction_type_key]}
+
             instruction = Instruction(self.sw, instruction_json)
             self.instruction_list.append(instruction)
 

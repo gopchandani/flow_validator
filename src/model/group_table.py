@@ -228,6 +228,7 @@ class Group():
     def set_active_bucket(self):
         self.active_bucket = self.get_first_live_bucket()
 
+
 class GroupTable():
 
     def __init__(self, sw, groups_json):

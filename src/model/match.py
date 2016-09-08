@@ -6,17 +6,17 @@ from UserDict import DictMixin
 from sel_controller import ConfigTree
 
 field_names = ["in_port",
-              "ethernet_type",
-              "ethernet_source",
-              "ethernet_destination",
-              "src_ip_addr",
-              "dst_ip_addr",
-              "ip_protocol",
-              "tcp_destination_port",
-              "tcp_source_port",
-              "udp_destination_port",
-              "udp_source_port",
-              "vlan_id",
+               "ethernet_type",
+               "ethernet_source",
+               "ethernet_destination",
+               "src_ip_addr",
+               "dst_ip_addr",
+               "ip_protocol",
+               "tcp_destination_port",
+               "tcp_source_port",
+               "udp_destination_port",
+               "udp_source_port",
+               "vlan_id",
                "has_vlan_tag"]
 
 ryu_field_names_mapping = {"in_port": "in_port",
@@ -45,9 +45,34 @@ ryu_field_names_mapping_reverse = {"in_port": "in_port",
                                    "udp_source_port": "udp_src",
                                    "vlan_id": "vlan_vid"}
 
+onos_field_names_mapping = {"": "in_port",
+                            "ETH_TYPE": "ethernet_type",
+                            "": "ethernet_source",
+                            "": "ethernet_destination",
+                            "": "src_ip_addr",
+                            "": "dst_ip_addr",
+                            "": "ip_protocol",
+                            "": "tcp_destination_port",
+                            "": "tcp_source_port",
+                            "": "udp_destination_port",
+                            "": "udp_source_port",
+                            "": "vlan_id"}
+
+onos_field_names_mapping_reverse = {"in_port": ("", ""),
+                                    "ethernet_type": ("ETH_TYPE", "ethType"),
+                                    "ethernet_source": ("", ""),
+                                    "ethernet_destination": ("", ""),
+                                    "src_ip_addr": ("", ""),
+                                    "dst_ip_addr": ("", ""),
+                                    "ip_protocol": ("", ""),
+                                    "tcp_destination_port": ("", ""),
+                                    "tcp_source_port": ("", ""),
+                                    "udp_destination_port": ("", ""),
+                                    "udp_source_port": ("", ""),
+                                    "vlan_id": ("", "")}
+
 
 class OdlMatchJsonParser():
-
     def __init__(self, match_json=None):
         self.field_values = {}
         self._parse(match_json)
@@ -58,22 +83,22 @@ class OdlMatchJsonParser():
 
             try:
                 if field_name == "in_port":
-                     self[field_name] = match_json["in-port"]
+                    self[field_name] = match_json["in-port"]
 
                 elif field_name == "ethernet_type":
                     self[field_name] = match_json["ethernet-match"]["ethernet-type"]["type"]
 
                 elif field_name == "ethernet_source":
-                     self[field_name] = match_json["ethernet-match"]["ethernet-source"]["address"]
+                    self[field_name] = match_json["ethernet-match"]["ethernet-source"]["address"]
 
                 elif field_name == "ethernet_destination":
                     self[field_name] = match_json["ethernet-match"]["ethernet-destination"]["address"]
 
                 elif field_name == "src_ip_addr":
-                    self[field_name] =  match_json["src_ip_addr"]
+                    self[field_name] = match_json["src_ip_addr"]
 
                 elif field_name == "dst_ip_addr":
-                    self[field_name] =  match_json["dst_ip_addr"]
+                    self[field_name] = match_json["dst_ip_addr"]
 
                 elif field_name == "ip_protocol":
                     self[field_name] = match_json["ip-match"]["ip-protocol"]
@@ -108,8 +133,8 @@ class OdlMatchJsonParser():
     def keys(self):
         return self.field_values.keys()
 
-class Match(DictMixin):
 
+class Match(DictMixin):
     def __getitem__(self, item):
         return self.match_field_values[item]
 
@@ -127,8 +152,8 @@ class Match(DictMixin):
         self.flow = flow
         self.match_field_values = {}
 
-        if match_json and controller == "odl":
-            self.add_element_from_odl_match_json(match_json)
+        if match_json and controller == "onos":
+            self.add_element_from_onos_match_json(match_json)
         elif match_json and controller == "ryu":
             self.add_element_from_ryu_match_json(match_json)
         elif match_json and controller == "sel":
@@ -140,48 +165,98 @@ class Match(DictMixin):
     def is_match_field_wildcard(self, field_name):
         return self.match_field_values[field_name] == sys.maxsize
 
-    def add_element_from_odl_match_json(self, match_json):
+    def add_element_from_onos_match_json(self, match_json):
+
+        def get_onos_match_field_str(field_name, match_json):
+
+            for onos_field_dict in match_json:
+                if onos_field_dict["type"] == onos_field_names_mapping_reverse[field_name][0]:
+                    return onos_field_dict[onos_field_names_mapping_reverse[field_name][1]]
+
+            raise KeyError
 
         for field_name in field_names:
+
             try:
                 if field_name == "in_port":
-                    try:
-                        self[field_name] = int(match_json["in-port"])
-                    except ValueError:
-                        parsed_in_port = match_json["in-port"].split(":")[2]
-                        self[field_name] = int(parsed_in_port)
+                    in_port_str = get_onos_match_field_str(field_name, match_json)
+                    self[field_name] = int(in_port_str)
 
                 elif field_name == "ethernet_type":
-                    self[field_name] = int(match_json["ethernet-match"]["ethernet-type"]["type"])
+                    eth_type_str = get_onos_match_field_str(field_name, match_json)
+                    self[field_name] = int(eth_type_str, 16)
+
                 elif field_name == "ethernet_source":
-                    mac_int = int(match_json["ethernet-match"]["ethernet-source"]["address"].replace(":", ""), 16)
+                    mac_str = get_onos_match_field_str(field_name, match_json)
+                    mac_int = int(mac_str.replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 elif field_name == "ethernet_destination":
-                    mac_int = int(match_json["ethernet-match"]["ethernet-destination"]["address"].replace(":", ""), 16)
+                    mac_str = get_onos_match_field_str(field_name, match_json)
+                    mac_int = int(mac_str.replace(":", ""), 16)
                     self[field_name] = mac_int
 
-                #TODO: Add graceful handling of IP addresses
+                # TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
-                    self[field_name] = IPNetwork(match_json["src_ip_addr"])
+                    ip_str = get_onos_match_field_str(field_name, match_json)
+                    self[field_name] = IPNetwork(ip_str)
                 elif field_name == "dst_ip_addr":
-                    self[field_name] = IPNetwork(match_json["dst_ip_addr"])
+                    ip_str = get_onos_match_field_str(field_name, match_json)
+                    self[field_name] = IPNetwork(ip_str)
 
                 elif field_name == "ip_protocol":
-                    self[field_name] = int(match_json["ip-match"]["ip-protocol"])
+                    ip_proto_str = get_onos_match_field_str(field_name, match_json)
+                    self[field_name] = int(ip_proto_str)
+
                 elif field_name == "tcp_destination_port":
-                    self[field_name] = int(match_json["tcp-destination-port"])
+
+                    nw_proto_str = get_onos_match_field_str("nw_proto", match_json)
+                    if int(nw_proto_str) == 6:
+                        self[field_name] = int(get_onos_match_field_str(field_name, match_json))
+                    else:
+                        raise KeyError
+
                 elif field_name == "tcp_source_port":
-                    self[field_name] = int(match_json["tcp-source-port"])
+
+                    nw_proto_str = get_onos_match_field_str("nw_proto", match_json)
+                    if int(nw_proto_str) == 6:
+                        self[field_name] = int(get_onos_match_field_str(field_name, match_json))
+                    else:
+                        raise KeyError
+
                 elif field_name == "udp_destination_port":
-                    self[field_name] = int(match_json["udp-destination-port"])
+
+                    nw_proto_str = get_onos_match_field_str("nw_proto", match_json)
+                    if int(nw_proto_str) == 17:
+                        self[field_name] = int(get_onos_match_field_str(field_name, match_json))
+                    else:
+                        raise KeyError
+
                 elif field_name == "udp_source_port":
-                    self[field_name] = int(match_json["udp-source-port"])
+
+                    nw_proto_str = get_onos_match_field_str("nw_proto", match_json)
+                    if int(nw_proto_str) == 17:
+                        self[field_name] = int(get_onos_match_field_str(field_name, match_json))
+                    else:
+                        raise KeyError
+
                 elif field_name == "vlan_id":
-                    self[field_name] = int(match_json["vlan-match"]["vlan-id"]["vlan-id"])
+
+                    vlan_id_str = get_onos_match_field_str(field_name, match_json)
+
+                    if vlan_id_str == "0x1000/0x1000":
+                        self[field_name] = sys.maxsize
+                        self["has_vlan_tag"] = 1
+                    else:
+                        self[field_name] = 0x1000 + int(match_json[u"vlan_vid"])
+                        self["has_vlan_tag"] = 1
 
             except KeyError:
                 self[field_name] = sys.maxsize
+
+                if field_name == 'vlan_id':
+                    self["has_vlan_tag"] = sys.maxsize
+
                 continue
 
     def add_element_from_sel_match_json(self, match_json):
@@ -202,7 +277,7 @@ class Match(DictMixin):
                     mac_int = int(match_json["ethDst"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
-                #TODO: Add graceful handling of IP addresses
+                # TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
                     self[field_name] = IPNetwork(match_json["ipv4Src"])
                 elif field_name == "dst_ip_addr":
@@ -249,7 +324,7 @@ class Match(DictMixin):
                     mac_int = int(match_json[u"eth_dst"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
-                #TODO: Add graceful handling of IP addresses
+                # TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
                     self[field_name] = IPNetwork(match_json["nw_src"])
                 elif field_name == "dst_ip_addr":
@@ -266,9 +341,9 @@ class Match(DictMixin):
 
                 elif field_name == "tcp_source_port":
 
-                     if match_json["nw_proto"] == 6:
+                    if match_json["nw_proto"] == 6:
                         self[field_name] = int(match_json["tp_src"])
-                     else:
+                    else:
                         self[field_name] = match_json["zzzz"]
 
                 elif field_name == "udp_destination_port":
@@ -280,9 +355,9 @@ class Match(DictMixin):
 
                 elif field_name == "udp_source_port":
 
-                     if match_json["nw_proto"] == 17:
+                    if match_json["nw_proto"] == 17:
                         self[field_name] = int(match_json["tp_src"])
-                     else:
+                    else:
                         self[field_name] = match_json["zzzz"]
 
                 elif field_name == "vlan_id":
@@ -313,7 +388,6 @@ class Match(DictMixin):
             ethernet_match["ethernet-type"] = {"type": self["ethernet_type"]}
 
         if "ethernet_source" in self and self["ethernet_source"] != sys.maxsize:
-
             mac_int = self["ethernet_source"]
             mac_hex_str = hex(mac_int)[2:]
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
@@ -321,7 +395,6 @@ class Match(DictMixin):
             ethernet_match["ethernet-source"] = {"address": mac_hex_str}
 
         if "ethernet_destination" in self and self["ethernet_destination"] != sys.maxsize:
-
             mac_int = self["ethernet_destination"]
             mac_hex_str = format(mac_int, "012x")
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
@@ -353,7 +426,7 @@ class Match(DictMixin):
             match_json["ip-match"] = {"ip-protocol": self["ip_protocol"]}
 
             if "udp_destination_port" in self and self["udp_destination_port"] != sys.maxsize:
-                match_json["udp-destination-port"]= self["udp_destination_port"]
+                match_json["udp-destination-port"] = self["udp_destination_port"]
 
             if "udp_source_port" in self and self["udp_source_port"] != sys.maxsize:
                 match_json["udp-source-port"] = self["udp_source_port"]
@@ -364,7 +437,6 @@ class Match(DictMixin):
             match_json["vlan-match"] = vlan_match
 
         return match_json
-
 
     def generate_sel_match_json(self, match):
         if "in_port" in self and self["in_port"] != sys.maxsize:
@@ -379,17 +451,14 @@ class Match(DictMixin):
             # http://www.iana.org/assignments/ieee-802-numbers/ieee-802-numbers.xhtml
             match.__setattr__("eth_type", str(self["ethernet_type"]))
 
-
         if "ethernet_source" in self and self["ethernet_source"] != sys.maxsize:
-
             mac_int = self["ethernet_source"]
             mac_hex_str = hex(mac_int)[2:]
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
-            match.__setattr__("eth_src",mac_hex_str)
+            match.__setattr__("eth_src", mac_hex_str)
 
         if "ethernet_destination" in self and self["ethernet_destination"] != sys.maxsize:
-
             mac_int = self["ethernet_destination"]
             mac_hex_str = format(mac_int, "012x")
             mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
@@ -420,7 +489,7 @@ class Match(DictMixin):
             match.__setattr__("udp_src", self["udp_source_port"])
 
         if "vlan_id" in self and self["vlan_id"] != sys.maxsize:
-           match.__setattr__("vlan_id", str(self["vlan_id"]))
+            match.__setattr__("vlan_id", str(self["vlan_id"]))
 
         return match
 
@@ -436,9 +505,9 @@ class Match(DictMixin):
 
                 if field_name == "ethernet_source" or field_name == "ethernet_destination":
 
-                    #print "self[field_name]:", self[field_name]
+                    # print "self[field_name]:", self[field_name]
                     mac_hex_str = hex(self[field_name])[2:]
-                    #print "mac_hex_str:", mac_hex_str
+                    # print "mac_hex_str:", mac_hex_str
                     if len(mac_hex_str) == 11:
                         mac_hex_str = "0" + mac_hex_str
 
