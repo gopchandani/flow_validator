@@ -68,7 +68,10 @@ class Action():
 
         if self.action_json["type"] == "OUTPUT":
             self.action_type = "output"
-            self.out_port = self.action_json["port"]
+            if self.action_json["port"] == "CONTROLLER":
+                self.out_port = self.sw.network_graph.OFPP_CONTROLLER
+            else:
+                self.out_port = self.action_json["port"]
 
         if self.action_json["type"] == "SET_FIELD":
             raise NotImplementedError
