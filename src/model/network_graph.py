@@ -223,6 +223,44 @@ class NetworkGraph(object):
                 switch_flow_tables.append(FlowTable(sw, table_id, ryu_switches[dpid]["flow_tables"][table_id]))
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
+    def parse_onos_switches(self):
+
+        onos_switches = None
+
+        with open(self.network_configuration.conf_path + "onos_switches.json", "r") as in_file:
+            onos_switches = json.loads(in_file.read())
+
+        for onos_switch in onos_switches["devices"]:
+
+            #  prepare a switch id
+            switch_id = "s" + str(int(onos_switch["id"].split(":")[1]))
+
+            # Check to see if a switch with this id already exists in the graph,
+            # if so grab it, otherwise create it
+            sw = self.get_node_object(switch_id)
+            if not sw:
+                sw = Switch(switch_id, self)
+                self.graph.add_node(switch_id, node_type="switch", sw=sw)
+                self.switch_ids.append(switch_id)
+
+            # Parse out the information about all the ports in the switch
+            switch_ports = {}
+            for port_num in onos_switch["ports"]:
+                switch_ports[int(port_num)] = Port(sw, port_json=onos_switch["ports"][port_num])
+
+            sw.ports = switch_ports
+
+            # Parse group table if one is available
+            if "groups" in onos_switch:
+                sw.group_table = GroupTable(sw, onos_switch["groups"])
+
+            # Parse all the flow tables and sort them by table_id in the list
+            switch_flow_tables = []
+            for table_id in onos_switch["flow_tables"]:
+                switch_flow_tables.append(FlowTable(sw, table_id, onos_switch["flow_tables"][table_id]))
+                sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+
+
     def print_sel_flow_stats(self):
        # for each in OperationalTree.flowStatsHttpAccess(self.sel_session).read_collection():
        for each in OperationalTree.FlowStatsEntityAccess(self.sel_session).read_collection():
@@ -312,6 +350,10 @@ class NetworkGraph(object):
 
         if self.network_configuration.controller == "ryu":
             self.parse_ryu_switches()
+        elif self.network_configuration.controller == "onos":
+            self.parse_onos_switches()
+        elif self.network_configuration.controller == "sel":
+            raise NotImplemented
         else:
             raise NotImplemented
 
