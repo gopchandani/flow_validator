@@ -80,7 +80,7 @@ class NetworkGraph(object):
 
         return mdg
 
-    def parse_host_nodes(self):
+    def parse_mininet_host_nodes(self):
 
         mininet_host_nodes = None
         mininet_port_links = None
@@ -114,6 +114,16 @@ class NetworkGraph(object):
                 sw_obj.ports[mininet_port_links[mininet_host_dict["host_name"]]['0'][1]].attached_host = h_obj
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
+
+    def parse_host_nodes(self):
+        if self.controller == "ryu":
+            self.parse_mininet_host_nodes()
+        elif self.controller == "onos":
+            pass
+        elif self.controller == "sel":
+            raise NotImplemented
+        else:
+            raise NotImplemented
 
     def parse_links(self):
 

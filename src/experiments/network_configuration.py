@@ -129,11 +129,9 @@ class NetworkConfiguration(object):
 
     def get_ryu_switches(self):
         ryu_switches = {}
-        request_gap = 0
 
         # Get all the ryu_switches from the inventory API
         remaining_url = 'stats/switches'
-        time.sleep(request_gap)
         resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
 
         ryu_switch_numbers = json.loads(content)
@@ -145,7 +143,6 @@ class NetworkConfiguration(object):
             # Get the flows
             remaining_url = 'stats/flow' + "/" + str(dpid)
             resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
-            time.sleep(request_gap)
 
             if resp["status"] == "200":
                 switch_flows = json.loads(content)
@@ -159,7 +156,6 @@ class NetworkConfiguration(object):
             # Get the ports
             remaining_url = 'stats/portdesc' + "/" + str(dpid)
             resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
-            time.sleep(request_gap)
 
             if resp["status"] == "200":
                 switch_ports = json.loads(content)
@@ -170,7 +166,6 @@ class NetworkConfiguration(object):
             # Get the groups
             remaining_url = 'stats/groupdesc' + "/" + str(dpid)
             resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
-            time.sleep(request_gap)
 
             if resp["status"] == "200":
                 switch_groups = json.loads(content)
@@ -183,7 +178,58 @@ class NetworkConfiguration(object):
         with open(self.conf_path + "ryu_switches.json", "w") as outfile:
             json.dump(ryu_switches, outfile)
 
-    def get_host_nodes(self):
+    def get_onos_switches(self):
+
+        # Get all the onos_switches from the inventory API
+        remaining_url = 'devices'
+        resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+
+        onos_switches = json.loads(content)
+
+        for this_switch in onos_switches["devices"]:
+
+            # Get the flows
+            remaining_url = 'flows' + "/" + this_switch["id"]
+            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+
+            if resp["status"] == "200":
+                switch_flows = json.loads(content)
+                switch_flow_tables = defaultdict(list)
+                for flow_rule in switch_flows["flows"]:
+                    switch_flow_tables[flow_rule["tableId"]].append(flow_rule)
+                this_switch["flow_tables"] = switch_flow_tables
+            else:
+                print "Error pulling switch flows from Onos."
+
+            # Get the ports
+
+            remaining_url = "links?device=" + this_switch["id"]
+            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+
+            if resp["status"] == "200":
+                switch_links = json.loads(content)["links"]
+                this_switch["ports"] = {}
+                for link in switch_links:
+                    if link["src"]["device"] == this_switch["id"]:
+                        this_switch["ports"][link["src"]["port"]] = link["src"]
+                    elif link["dst"]["device"] == this_switch["id"]:
+                        this_switch["ports"][link["dst"]["port"]] = link["dst"]
+            else:
+                print "Error pulling switch ports from RYU."
+
+            # Get the groups
+            remaining_url = 'groups' + "/" + this_switch["id"]
+            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+
+            if resp["status"] == "200":
+                this_switch["groups"] = json.loads(content)["groups"]
+            else:
+                print "Error pulling switch ports from RYU."
+
+        with open(self.conf_path + "onos_switches.json", "w") as outfile:
+            json.dump(onos_switches, outfile)
+
+    def get_mininet_host_nodes(self):
 
         mininet_host_nodes = {}
 
@@ -202,7 +248,30 @@ class NetworkConfiguration(object):
 
         return mininet_host_nodes
 
-    def get_links(self):
+    def get_onos_host_nodes(self):
+
+        # Get all the onos_hosts from the inventory API
+        remaining_url = 'hosts'
+        resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+
+        onos_hosts = json.loads(content)["hosts"]
+
+        with open(self.conf_path + "onos_hosts.json", "w") as outfile:
+            json.dump(onos_hosts, outfile)
+
+        return onos_hosts
+
+    def get_host_nodes(self):
+        if self.controller == "ryu":
+            self.get_mininet_host_nodes()
+        elif self.controller == "onos":
+            self.get_onos_host_nodes()
+        elif self.controller == "sel":
+            raise NotImplemented
+        else:
+            raise NotImplemented
+
+    def get_mininet_links(self):
 
         mininet_port_links = {}
 
@@ -211,27 +280,54 @@ class NetworkConfiguration(object):
 
         return mininet_port_links
 
+    def get_onos_links(self):
+        # Get all the onos_links from the inventory API
+        remaining_url = 'links'
+        resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+
+        onos_links = json.loads(content)["links"]
+
+        with open(self.conf_path + "onos_links.json", "w") as outfile:
+            json.dump(onos_links, outfile)
+
+        return onos_links
+
+    def get_links(self):
+        if self.controller == "ryu":
+            self.get_mininet_links()
+        elif self.controller == "onos":
+            self.get_onos_links()
+        elif self.controller == "sel":
+            raise NotImplemented
+        else:
+            raise NotImplemented
+
     def get_switches(self):
         # Now the output of synthesis is carted away
         if self.controller == "ryu":
             self.get_ryu_switches()
+        if self.controller == "onos":
+            self.get_onos_switches()
         else:
             raise NotImplemented
 
     def setup_network_graph(self, mininet_setup_gap=None, synthesis_setup_gap=None):
 
         if not self.load_config and self.save_config:
-            self.cm = ControllerMan(controller=self.controller)
-            self.controller_port = self.cm.start_controller()
 
-            self.start_mininet()
-            if mininet_setup_gap:
-                time.sleep(mininet_setup_gap)
+            if self.controller == "ryu":
+
+                self.cm = ControllerMan(controller=self.controller)
+
+                self.controller_port = self.cm.start_controller()
+                self.start_mininet()
+                if mininet_setup_gap:
+                    time.sleep(mininet_setup_gap)
 
             # These things are needed by network graph...
+            self.get_switches()
             self.get_host_nodes()
             self.get_links()
-            self.get_switches()
 
             self.ng = NetworkGraph(network_configuration=self)
             self.ng.parse_network_graph()

@@ -45,10 +45,10 @@ class SynthesisPlayground(Experiment):
 
 
 def main():
-    network_configuration = NetworkConfiguration("ryu",
-                                                 "http://localhost:8080/",
-                                                 "admin",
-                                                 "admin",
+    network_configuration = NetworkConfiguration("onos",
+                                                 "http://10.0.2.15:8181/onos/v1/",
+                                                 "karaf",
+                                                 "karaf",
                                                  "clostopo",
                                                  {"fanout": 2,
                                                   "core": 1,
