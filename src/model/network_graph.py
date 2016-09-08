@@ -125,7 +125,7 @@ class NetworkGraph(object):
         else:
             raise NotImplemented
 
-    def parse_links(self):
+    def parse_mininet_links(self):
 
         mininet_port_links = None
 
@@ -142,6 +142,30 @@ class NetworkGraph(object):
                               int(src_node_port),
                               dst_node,
                               int(dst_node_port))
+
+    def parse_onos_links(self):
+
+        onos_links = None
+
+        with open(self.network_configuration.conf_path + "onos_links.json", "r") as in_file:
+            onos_links = json.loads(in_file.read())
+
+        for link in onos_links:
+            self.add_link("s" + str(int(link["src"]["device"].split(":")[1])),
+                          int(link["src"]["port"]),
+                          "s" + str(int(link["dst"]["device"].split(":")[1])),
+                          int(link["dst"]["port"]))
+
+
+    def parse_links(self):
+        if self.controller == "ryu":
+            self.parse_mininet_links()
+        elif self.controller == "onos":
+            self.parse_onos_links()
+        elif self.controller == "sel":
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
 
     def add_link(self, node1_id, node1_port, node2_id, node2_port):
 

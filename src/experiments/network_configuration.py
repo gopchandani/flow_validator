@@ -298,9 +298,9 @@ class NetworkConfiguration(object):
         elif self.controller == "onos":
             self.get_onos_links()
         elif self.controller == "sel":
-            raise NotImplemented
+            raise NotImplementedError
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def get_switches(self):
         # Now the output of synthesis is carted away
