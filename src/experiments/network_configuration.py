@@ -306,10 +306,10 @@ class NetworkConfiguration(object):
         # Now the output of synthesis is carted away
         if self.controller == "ryu":
             self.get_ryu_switches()
-        if self.controller == "onos":
+        elif self.controller == "onos":
             self.get_onos_switches()
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def setup_network_graph(self, mininet_setup_gap=None, synthesis_setup_gap=None):
 

@@ -45,29 +45,29 @@ class SynthesisPlayground(Experiment):
 
 
 def main():
-    network_configuration = NetworkConfiguration("onos",
-                                                 "http://10.0.2.15:8181/onos/v1/",
-                                                 "karaf",
-                                                 "karaf",
-                                                 "clostopo",
-                                                 {"fanout": 2,
-                                                  "core": 1,
-                                                  "num_hosts_per_switch": 1},
-                                                 conf_root="configurations/",
-                                                 synthesis_name="AboresceneSynthesis",
-                                                 synthesis_params={"apply_group_intents_immediately": True})
-    #
-    # network_configuration = NetworkConfiguration("ryu",
-    #                                              "http://localhost:8080/",
-    #                                              "admin",
-    #                                              "admin",
-    #                                              "ring",
-    #                                              {"num_switches": 4,
+    # network_configuration = NetworkConfiguration("onos",
+    #                                              "http://10.0.2.15:8181/onos/v1/",
+    #                                              "karaf",
+    #                                              "karaf",
+    #                                              "clostopo",
+    #                                              {"fanout": 2,
+    #                                               "core": 1,
     #                                               "num_hosts_per_switch": 1},
     #                                              conf_root="configurations/",
     #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
-    #
+    # #
+    network_configuration = NetworkConfiguration("ryu",
+                                                 "http://localhost:8080/",
+                                                 "admin",
+                                                 "admin",
+                                                 "ring",
+                                                 {"num_switches": 4,
+                                                  "num_hosts_per_switch": 1},
+                                                 conf_root="configurations/",
+                                                 synthesis_name="AboresceneSynthesis",
+                                                 synthesis_params={"apply_group_intents_immediately": True})
+
     # network_configuration = NetworkConfiguration("ryu",
     #                                              "http://localhost:8080/",
     #                                              "admin",
