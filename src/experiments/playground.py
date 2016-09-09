@@ -10,12 +10,12 @@ __author__ = 'Rakesh Kumar'
 sys.path.append("./")
 
 
-class SynthesisPlayground(Experiment):
+class Playground(Experiment):
 
     def __init__(self,
                  network_configuration):
 
-        super(SynthesisPlayground, self).__init__("synthesis_playground", 1)
+        super(Playground, self).__init__("playground", 1)
 
         self.network_configuration = network_configuration
 
@@ -45,7 +45,24 @@ class SynthesisPlayground(Experiment):
 
 
 def main():
+
+    network_configuration = NetworkConfiguration("onos",
+                                                 "10.0.2.15",
+                                                 6653,
+                                                 "http://10.0.2.15:8181/onos/v1/",
+                                                 "karaf",
+                                                 "karaf",
+                                                 "clostopo",
+                                                 {"fanout": 2,
+                                                  "core": 1,
+                                                  "num_hosts_per_switch": 1},
+                                                 conf_root="configurations/",
+                                                 synthesis_name="AboresceneSynthesis",
+                                                 synthesis_params={"apply_group_intents_immediately": True})
+
     # network_configuration = NetworkConfiguration("onos",
+    #                                              "10.0.2.15",
+    #                                              6653,
     #                                              "http://10.0.2.15:8181/onos/v1/",
     #                                              "karaf",
     #                                              "karaf",
@@ -56,7 +73,6 @@ def main():
     #                                              conf_root="configurations/",
     #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
-    # #
 
     # network_configuration = NetworkConfiguration("ryu",
     #                                              "127.0.0.1",
@@ -71,20 +87,20 @@ def main():
     #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
 
-    network_configuration = NetworkConfiguration("sel",
-                                                 "192.168.56.101",
-                                                 6653,
-                                                 "https://192.168.56.101:443/",
-                                                 "hobbs",
-                                                 "Asdf123$",
-                                                 "linear",
-                                                 {"num_switches": 2,
-                                                  "num_hosts_per_switch": 1},
-                                                 conf_root="configurations/",
-                                                 synthesis_name="DijkstraSynthesis",
-                                                 synthesis_params={"apply_group_intents_immediately": True})
+    # network_configuration = NetworkConfiguration("sel",
+    #                                              "192.168.56.101",
+    #                                              6653,
+    #                                              "https://192.168.56.101:443/",
+    #                                              "hobbs",
+    #                                              "Asdf123$",
+    #                                              "linear",
+    #                                              {"num_switches": 2,
+    #                                               "num_hosts_per_switch": 1},
+    #                                              conf_root="configurations/",
+    #                                              synthesis_name="DijkstraSynthesis",
+    #                                              synthesis_params={"apply_group_intents_immediately": True})
 
-    exp = SynthesisPlayground(network_configuration)
+    exp = Playground(network_configuration)
     exp.trigger()
 
 if __name__ == "__main__":

@@ -31,9 +31,10 @@ from synthesis.dijkstra_synthesis import DijkstraSynthesis
 from synthesis.aborescene_synthesis import AboresceneSynthesis
 from synthesis.synthesis_lib import SynthesisLib
 
-from pyselflow import session as Session
-from pyselflow import config_tree as ConfigTree
-from pyselflow import operational_tree as OperationalTree
+# from pyselflow import session as Session
+# from pyselflow import config_tree as ConfigTree
+# from pyselflow import operational_tree as OperationalTree
+#
 
 
 class NetworkConfiguration(object):
@@ -119,6 +120,9 @@ class NetworkConfiguration(object):
 
         elif self.synthesis_name == "AboresceneSynthesis":
             self.synthesis = AboresceneSynthesis(self.synthesis_params)
+
+        else:
+            self.synthesis = None
 
     def trigger_synthesis(self):
         if self.synthesis_name == "DijkstraSynthesis":
@@ -397,15 +401,17 @@ class NetworkConfiguration(object):
             self.ng = NetworkGraph(network_configuration=self)
             self.ng.parse_network_graph()
 
-            # Now the synthesis...
-            self.trigger_synthesis()
-            if synthesis_setup_gap:
-                time.sleep(synthesis_setup_gap)
+            if self.synthesis_name:
 
-            # Refresh just the switches in the network graph, post synthesis
-            self.get_switches()
-            self.ng.parse_network_graph()
-            #self.ng.parse_switches()
+                # Now the synthesis...
+                self.trigger_synthesis()
+                if synthesis_setup_gap:
+                    time.sleep(synthesis_setup_gap)
+
+                # Refresh just the switches in the network graph, post synthesis
+                self.get_switches()
+                self.ng.parse_network_graph()
+                #self.ng.parse_switches()
 
         else:
             self.ng = NetworkGraph(network_configuration=self)
