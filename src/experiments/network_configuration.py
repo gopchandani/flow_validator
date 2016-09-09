@@ -1,6 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 import time
+import subprocess
 import os
 import json
 import httplib2
@@ -30,10 +31,17 @@ from synthesis.dijkstra_synthesis import DijkstraSynthesis
 from synthesis.aborescene_synthesis import AboresceneSynthesis
 from synthesis.synthesis_lib import SynthesisLib
 
+from pyselflow import session as Session
+from pyselflow import config_tree as ConfigTree
+from pyselflow import operational_tree as OperationalTree
+
 
 class NetworkConfiguration(object):
 
-    def __init__(self, controller, 
+    def __init__(self,
+                 controller,
+                 controller_ip,
+                 controller_port,
                  controller_api_base_url,
                  controller_api_user_name,
                  controller_api_password,
@@ -51,7 +59,8 @@ class NetworkConfiguration(object):
         self.synthesis_name = synthesis_name
         self.synthesis_params = synthesis_params
 
-        self.controller_port = None
+        self.controller_ip = controller_ip
+        self.controller_port = controller_port
         self.topo = None
         self.nc_topo_str = None
         self.init_topo()
@@ -76,6 +85,13 @@ class NetworkConfiguration(object):
         self.controller_api_base_url = controller_api_base_url
         self.h.add_credentials(controller_api_user_name, controller_api_password)
 
+        if self.controller == "sel":
+            os.environ['PYSELFLOW_INSECURE_TRANSPORT'] = '1'
+            self.sel_session = Session.Http.from_(self.controller_api_base_url,
+                                                  user=controller_api_user_name,
+                                                  role="PermissionLevel3",
+                                                  password=controller_api_password)
+
     def __str__(self):
         return self.controller + "_" + str(self.synthesis) + "_" + str(self.topo)
 
@@ -95,7 +111,7 @@ class NetworkConfiguration(object):
             self.nc_topo_str = "Linear topology with " + str(self.topo_params["num_switches"]) + " switches"
         else:
             raise NotImplementedError("Topology: %s" % self.topo_name)
-            
+
     def init_synthesis(self):
         if self.synthesis_name == "DijkstraSynthesis":
             self.synthesis_params["master_switch"] = self.topo_name == "linear"
@@ -229,6 +245,48 @@ class NetworkConfiguration(object):
         with open(self.conf_path + "onos_switches.json", "w") as outfile:
             json.dump(onos_switches, outfile)
 
+    def get_sel_switches(self):
+
+        nodes = ConfigTree.NodesEntityAccess(self.sel_session)
+        sel_switches = {}
+        for each in nodes.read_collection():
+            this_switch = {}
+            if each.linked_key.startswith("OpenFlow"):
+                switch_id = each.linked_key.split(':')[1]
+
+                ports = OperationalTree.PortsEntityAccess(self.sel_session)
+                sw_ports = []
+
+                for port in ports.read_collection():
+                    if isinstance(port, OperationalTree.OpenFlowPort):
+                        if port.parent_node == each.linked_key:
+                            sw_ports.append(port.to_pyson())
+
+                this_switch["ports"] = sw_ports
+
+                groups = ConfigTree.GroupsEntityAccess(self.sel_session)
+
+                sw_groups = []
+                for group in groups.read_collection():
+                    if group.node == each.id:
+                        sw_groups.append(group.to_pyson())
+
+                this_switch["groups"] = sw_groups
+
+                flow_tables = ConfigTree.FlowsEntityAccess(self.sel_session)
+                switch_flow_tables = defaultdict(list)
+                for flow_rule in flow_tables.read_collection():
+                    if flow_rule.node == each.id:
+                        flow_rule = flow_rule.to_pyson()
+                        switch_flow_tables[flow_rule["tableId"]].append(flow_rule)
+
+                this_switch["flow_tables"] = switch_flow_tables
+
+                sel_switches[switch_id] = this_switch
+
+        with open(self.conf_path + "sel_switches.json", "w") as outfile:
+            json.dump(sel_switches, outfile)
+
     def get_mininet_host_nodes(self):
 
         mininet_host_nodes = {}
@@ -308,6 +366,8 @@ class NetworkConfiguration(object):
             self.get_ryu_switches()
         elif self.controller == "onos":
             self.get_onos_switches()
+        elif self.controller == "sel":
+            self.get_sel_switches()
         else:
             raise NotImplementedError
 
@@ -318,8 +378,13 @@ class NetworkConfiguration(object):
             if self.controller == "ryu":
 
                 self.cm = ControllerMan(controller=self.controller)
+                self.cm.start_controller()
 
-                self.controller_port = self.cm.start_controller()
+                self.start_mininet()
+                if mininet_setup_gap:
+                    time.sleep(mininet_setup_gap)
+
+            elif self.controller == "sel":
                 self.start_mininet()
                 if mininet_setup_gap:
                     time.sleep(mininet_setup_gap)
@@ -354,13 +419,36 @@ class NetworkConfiguration(object):
 
         self.cleanup_mininet()
 
-        self.mininet_obj = Mininet(topo=self.topo,
-                           cleanup=True,
-                           autoStaticArp=True,
-                           controller=lambda name: RemoteController(name, ip='127.0.0.1', port=self.controller_port),
-                           switch=partial(OVSSwitch, protocols='OpenFlow14'))
+        if self.controller == "ryu":
 
-        self.mininet_obj.start()
+            self.mininet_obj = Mininet(topo=self.topo,
+                                       cleanup=True,
+                                       autoStaticArp=True,
+                                       controller=lambda name: RemoteController(name,
+                                                                                ip=self.controller_ip,
+                                                                                port=self.controller_port),
+                                       switch=partial(OVSSwitch, protocols='OpenFlow14'))
+
+            self.mininet_obj.start()
+
+        elif self.controller == "sel":
+            subprocess.call(["sudo",
+                             "ovs-vsctl",
+                             "set-ssl",
+                             "/etc/openvswitch/switchkey.pem",
+                             "/etc/openvswitch/switchcert.pem",
+                             "/var/lib/openvswitch/pki/controllerca/fullca.pem"])
+
+            self.mininet_obj = Mininet(topo=self.topo,
+                                       cleanup=True,
+                                       autoStaticArp=True,
+                                       controller=lambda name: RemoteController(name,
+                                                                                protocol="ssl",
+                                                                                ip=self.controller_ip,
+                                                                                port=self.controller_port),
+                                       switch=partial(OVSSwitch, protocols='OpenFlow13'))
+
+            self.mininet_obj.start()
 
     def cleanup_mininet(self):
 
@@ -507,7 +595,7 @@ class NetworkConfiguration(object):
 
     def is_bi_connected_manual_ping_test_all_hosts(self,  edges_to_try=None):
 
-        is_bi_connected= True
+        is_bi_connected = True
 
         if not edges_to_try:
             edges_to_try = self.topo.g.edges()

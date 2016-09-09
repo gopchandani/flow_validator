@@ -5,14 +5,11 @@ class ControllerMan(object):
     def __init__(self,  controller):
         self.controller = controller
 
-        if controller == "odl":
-            raise NotImplemented
-
-        elif controller == "ryu":
+        if controller == "ryu":
             self.ryu_proc = None
 
         elif controller == "sel":
-            raise NotImplemented
+            pass
 
     def get_next_ryu(self):
 
@@ -24,7 +21,7 @@ class ControllerMan(object):
         if self.controller == "odl":
             raise NotImplemented
         elif self.controller == "sel":
-            raise NotImplemented
+            pass
         elif self.controller == "ryu":
             return self.get_next_ryu()
 

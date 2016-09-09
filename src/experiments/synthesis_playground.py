@@ -57,27 +57,32 @@ def main():
     #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
     # #
-    network_configuration = NetworkConfiguration("ryu",
-                                                 "http://localhost:8080/",
-                                                 "admin",
-                                                 "admin",
-                                                 "ring",
-                                                 {"num_switches": 4,
-                                                  "num_hosts_per_switch": 1},
-                                                 conf_root="configurations/",
-                                                 synthesis_name="AboresceneSynthesis",
-                                                 synthesis_params={"apply_group_intents_immediately": True})
 
     # network_configuration = NetworkConfiguration("ryu",
+    #                                              "127.0.0.1",
+    #                                              6633,
     #                                              "http://localhost:8080/",
     #                                              "admin",
     #                                              "admin",
-    #                                              "linear",
-    #                                              {"num_switches": 2,
+    #                                              "ring",
+    #                                              {"num_switches": 4,
     #                                               "num_hosts_per_switch": 1},
     #                                              conf_root="configurations/",
-    #                                              synthesis_name="DijkstraSynthesis",
+    #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
+
+    network_configuration = NetworkConfiguration("sel",
+                                                 "192.168.56.101",
+                                                 6653,
+                                                 "https://192.168.56.101:443/",
+                                                 "hobbs",
+                                                 "Asdf123$",
+                                                 "linear",
+                                                 {"num_switches": 2,
+                                                  "num_hosts_per_switch": 1},
+                                                 conf_root="configurations/",
+                                                 synthesis_name="DijkstraSynthesis",
+                                                 synthesis_params={"apply_group_intents_immediately": True})
 
     exp = SynthesisPlayground(network_configuration)
     exp.trigger()
