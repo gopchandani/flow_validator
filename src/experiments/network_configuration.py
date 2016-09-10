@@ -82,7 +82,7 @@ class NetworkConfiguration(object):
             self.load_config = True
             self.save_config = False
 
-        self.h = httplib2.Http()#(".cache")
+        self.h = httplib2.Http()
         self.controller_api_base_url = controller_api_base_url
         self.h.add_credentials(controller_api_user_name, controller_api_password)
 
@@ -124,7 +124,14 @@ class NetworkConfiguration(object):
         else:
             self.synthesis = None
 
-    def trigger_synthesis(self):
+    def trigger_synthesis(self, synthesis_setup_gap):
+
+        #TODO: Harmonize this for all controllers
+        # Perfrom cleanup before putting new rules
+        if self.controller == "ryu":
+            os.system("sudo ovs-vsctl -- --all destroy QoS")
+            os.system("sudo ovs-vsctl -- --all destroy Queue")
+
         if self.synthesis_name == "DijkstraSynthesis":
             self.synthesis.network_graph = self.ng
             self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng)
@@ -136,6 +143,9 @@ class NetworkConfiguration(object):
             flow_match = Match(is_wildcard=True)
             flow_match["ethernet_type"] = 0x0800
             self.synthesis.synthesize_all_switches(flow_match, 2)
+
+        if synthesis_setup_gap:
+            time.sleep(synthesis_setup_gap)
 
         self.mininet_obj.pingAll()
 
@@ -404,9 +414,7 @@ class NetworkConfiguration(object):
             if self.synthesis_name:
 
                 # Now the synthesis...
-                self.trigger_synthesis()
-                if synthesis_setup_gap:
-                    time.sleep(synthesis_setup_gap)
+                self.trigger_synthesis(synthesis_setup_gap)
 
                 # Refresh just the switches in the network graph, post synthesis
                 self.get_switches()

@@ -2,10 +2,10 @@ __author__ = 'Rakesh Kumar'
 
 import pprint
 import time
-import httplib2
 import json
 import os
 import sys
+import urllib
 
 from collections import  defaultdict
 
@@ -23,13 +23,7 @@ class SynthesisLib(object):
         self.flow_id_cntr = 0
         self.queue_id_cntr = 1
 
-        self.h = httplib2.Http(".cache")
-        self.h.add_credentials('admin', 'admin')
-
-        # Cleanup all Queue/QoS records from OVSDB
-        os.system("sudo ovs-vsctl -- --all destroy QoS")
-        os.system("sudo ovs-vsctl -- --all destroy Queue")
-
+        self.h = self.network_graph.network_configuration.h
         self.synthesized_primary_paths = defaultdict(defaultdict)
         self.synthesized_failover_paths = defaultdict(defaultdict)        
 
@@ -101,6 +95,12 @@ class SynthesisLib(object):
                                            headers={'Content-Type': 'application/json; charset=UTF-8'},
                                            body=json.dumps(pushed_content))
 
+        elif self.network_graph.controller == "onos":
+
+            resp, content = self.h.request(url, "POST",
+                                           headers={'Content-Type': 'application/json; charset=UTF-8'},
+                                           body=json.dumps(pushed_content))
+
         elif self.network_graph.controller == "sel":
             if isinstance(pushed_content, ConfigTree.Flow):
                # flows = ConfigTree.flowsHttpAccess(self.sel_session)
@@ -115,7 +115,6 @@ class SynthesisLib(object):
                 raise NotImplementedError
         #resp = {"status": "200"}
         #pprint.pprint(pushed_content)
-
         if resp["status"] == "200":
             print "Pushed Successfully:", pushed_content.keys()[0]
             #print resp["status"]
@@ -130,6 +129,12 @@ class SynthesisLib(object):
     def create_ryu_group_url(self):
         return "http://localhost:8080/stats/groupentry/add"
 
+    def create_onos_flow_url(self, flow):
+        flow_url = self.network_graph.network_configuration.controller_api_base_url + "flows/" +\
+                   urllib.quote(flow["deviceId"]) + "?appId=50"
+
+        return flow_url
+
     def push_flow(self, sw, flow):
 
         url = None
@@ -138,6 +143,9 @@ class SynthesisLib(object):
 
         elif self.network_graph.controller == "sel":
             flow.enabled = True
+
+        elif self.network_graph.controller == "onos":
+            url = self.create_onos_flow_url(flow)
 
         self.push_change(url, flow)
 
@@ -157,11 +165,8 @@ class SynthesisLib(object):
 
     def create_base_flow(self, sw, table_id, priority):
 
-        self.flow_id_cntr +=  1
-        flow = dict()
-
         if self.network_graph.controller == "ryu":
-
+            flow = dict()
             flow["dpid"] = sw[1:]
             flow["cookie"] = self.flow_id_cntr
             flow["cookie_mask"] = 1
@@ -173,7 +178,6 @@ class SynthesisLib(object):
             flow["match"] = {}
             flow["instructions"] = []
 
-
         elif self.network_graph.controller == "sel":
 
             flow = ConfigTree.Flow()
@@ -184,9 +188,19 @@ class SynthesisLib(object):
             flow.table_id = table_id
             flow.error_state = ConfigTree.ErrorState.in_progress()
 
+        elif self.network_graph.controller == "onos":
+            flow = dict()
+            flow["priority"] = priority + 10
+            flow["timeout"] = 0
+            flow["isPermanent"] = True
+            flow["deviceId"] = self.network_graph.node_id_to_onos_sw_device_id_mapping(sw)
+            flow["treatment"] = {"instructions": []}
+            flow["selector"] = {"criteria": []}
+
         else:
             raise NotImplementedError
 
+        self.flow_id_cntr += 1
         return flow
 
     def create_base_group(self, sw):
@@ -255,7 +269,6 @@ class SynthesisLib(object):
 
         return flow
 
-
     def push_table_miss_goto_next_table_flow(self, sw, table_id):
 
         # Create a lowest possible flow
@@ -272,6 +285,9 @@ class SynthesisLib(object):
             go_to_table_instruction.instruction_type = "GotoTable"
             go_to_table_instruction.table_id = table_id + 1
             flow.instructions.append(go_to_table_instruction)
+
+        elif self.network_graph.controller == "onos":
+            flow["treatment"]["instructions"].append({"type": "TABLE", "tableId": table_id + 1})
 
         else:
             raise NotImplementedError
