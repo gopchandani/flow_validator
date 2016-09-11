@@ -29,6 +29,25 @@ class SynthesisLib(object):
 
         if self.network_graph.controller == "onos":
             self.onos_app_id = "50"
+            self.delete_all_onos_rules()
+        elif self.network_graph.controller == "ryu":
+            self.delete_all_ryu_rules()
+        elif self.network_graph.controller == "sel":
+            raise NotImplementedError
+
+    def delete_all_onos_rules(self):
+        remaining_url = "flows/application/" + self.onos_app_id
+        url = self.network_graph.network_configuration.controller_api_base_url + remaining_url
+        resp, content = self.h.request(url, "GET")
+
+        prev_app_rules = json.loads(content)
+        for flow in prev_app_rules["flows"]:
+            remaining_url = "flows/" + urllib.quote(flow["deviceId"]) + "/" + flow["id"]
+            resp, content = self.h.request(url, "DELETE")
+
+    def delete_all_ryu_rules(self):
+        os.system("sudo ovs-vsctl -- --all destroy QoS")
+        os.system("sudo ovs-vsctl -- --all destroy Queue")
 
     def record_primary_path(self, src_host, dst_host, switch_port_tuple_list):
 

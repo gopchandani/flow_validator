@@ -126,12 +126,6 @@ class NetworkConfiguration(object):
 
     def trigger_synthesis(self, synthesis_setup_gap):
 
-        #TODO: Harmonize this for all controllers
-        # Perfrom cleanup before putting new rules
-        if self.controller == "ryu":
-            os.system("sudo ovs-vsctl -- --all destroy QoS")
-            os.system("sudo ovs-vsctl -- --all destroy Queue")
-
         if self.synthesis_name == "DijkstraSynthesis":
             self.synthesis.network_graph = self.ng
             self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng)
