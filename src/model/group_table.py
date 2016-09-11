@@ -107,7 +107,8 @@ class Bucket():
 
         return prior_active_watch_ports
 
-class Group():
+
+class Group:
     '''
     As per OF1.3 specification:
 
@@ -172,6 +173,9 @@ class Group():
 
             for bucket_json in group_json["buckets"]:
                 self.bucket_list.append(Bucket(sw, bucket_json, self))
+
+        elif self.sw.network_graph.controller == "onos":
+            raise NotImplementedError
 
         elif self.sw.network_graph.controller == "sel":
             self.group_id = group_json["groupId"]

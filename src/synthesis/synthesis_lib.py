@@ -30,6 +30,7 @@ class SynthesisLib(object):
         if self.network_graph.controller == "onos":
             self.onos_app_id = "50"
             self.delete_all_onos_rules()
+            self.delete_all_onos_groups()
         elif self.network_graph.controller == "ryu":
             self.delete_all_ryu_rules()
         elif self.network_graph.controller == "sel":
@@ -40,9 +41,20 @@ class SynthesisLib(object):
         url = self.network_graph.network_configuration.controller_api_base_url + remaining_url
         resp, content = self.h.request(url, "GET")
 
-        prev_app_rules = json.loads(content)
-        for flow in prev_app_rules["flows"]:
+        prev_app_flows = json.loads(content)
+        for flow in prev_app_flows["flows"]:
             remaining_url = "flows/" + urllib.quote(flow["deviceId"]) + "/" + flow["id"]
+            url = self.network_graph.network_configuration.controller_api_base_url + remaining_url
+            resp, content = self.h.request(url, "DELETE")
+
+    def delete_all_onos_groups(self):
+        remaining_url = "groups"
+        url = self.network_graph.network_configuration.controller_api_base_url + remaining_url
+        resp, content = self.h.request(url, "GET")
+        prev_groups = json.loads(content)
+        for group in prev_groups["groups"]:
+            remaining_url = "groups/" + urllib.quote(group["deviceId"]) + "/" + group["appCookie"]
+            url = self.network_graph.network_configuration.controller_api_base_url + remaining_url
             resp, content = self.h.request(url, "DELETE")
 
     def delete_all_ryu_rules(self):
@@ -228,11 +240,8 @@ class SynthesisLib(object):
 
     def create_base_group(self, sw):
 
-        group = dict()
-        self.group_id_cntr += 1
-
         if self.network_graph.controller == "ryu":
-
+            group = dict()
             group["dpid"] = sw[1:]
             group["type"] = ""
             group["group_id"] = self.group_id_cntr
@@ -246,8 +255,17 @@ class SynthesisLib(object):
             group.node = self.sel_get_node_id(sw)
             group.error_state=ConfigTree.ErrorState.in_progress()
 
+        elif self.network_graph.controller == "onos":
+            group = dict()
+            group["type"] = ""
+            group["appCookie"] = ""
+            group["groupId"] = str(self.group_id_cntr)
+            group["buckets"] = []
+
         else:
             raise NotImplementedError
+
+        self.group_id_cntr += 1
 
         return group
 
@@ -557,10 +575,17 @@ class SynthesisLib(object):
                     action_list = [enqueue_action, output_action]
                     this_bucket["actions"] = [output_action]
                 else:
-                    out_port, watch_port = self.get_out_and_watch_port(intent)
                     action_list = [output_action]
 
                 this_bucket["actions"] = action_list
+                group["buckets"].append(this_bucket)
+
+            group_id = group["group_id"]
+
+        elif self.network_graph.controller == "onos":
+            group["type"] = "ALL"
+            for intent in intent_list:
+                this_bucket = {"type": "OUTPUT", "port": intent.out_port}
                 group["buckets"].append(this_bucket)
 
             group_id = group["group_id"]
