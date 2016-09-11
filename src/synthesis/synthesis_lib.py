@@ -169,6 +169,12 @@ class SynthesisLib(object):
 
         return flow_url
 
+    def create_onos_group_url(self, group):
+        group_url = self.network_graph.network_configuration.controller_api_base_url + "groups/" + \
+                    urllib.quote(group["deviceId"])
+
+        return group_url
+
     def push_flow(self, sw, flow):
 
         url = None
@@ -191,6 +197,9 @@ class SynthesisLib(object):
 
         elif self.network_graph.controller == "sel":
             pass
+
+        elif self.network_graph.controller == "onos":
+            url = self.create_onos_group_url(group)
 
         else:
             raise NotImplementedError
@@ -258,10 +267,10 @@ class SynthesisLib(object):
         elif self.network_graph.controller == "onos":
             group = dict()
             group["type"] = ""
-            group["appCookie"] = ""
+            group["appCookie"] = "0x32"
             group["groupId"] = str(self.group_id_cntr)
             group["buckets"] = []
-
+            group["deviceId"] = self.network_graph.node_id_to_onos_sw_device_id_mapping(sw)
         else:
             raise NotImplementedError
 
@@ -585,10 +594,10 @@ class SynthesisLib(object):
         elif self.network_graph.controller == "onos":
             group["type"] = "ALL"
             for intent in intent_list:
-                this_bucket = {"type": "OUTPUT", "port": intent.out_port}
+                this_bucket = {"treatment": {"instructions": [{"type": "OUTPUT", "port": intent.out_port}]}}
                 group["buckets"].append(this_bucket)
 
-            group_id = group["group_id"]
+            group_id = group["groupId"]
 
         elif self.network_graph.controller == "sel":
             group.group_type = "All"
