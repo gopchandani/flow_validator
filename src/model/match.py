@@ -167,7 +167,7 @@ class Match(DictMixin):
 
     def add_element_from_onos_match_json(self, match_json):
 
-        def get_onos_match_field_str(field_name, match_json):
+        def get_onos_match_field(field_name, match_json):
 
             for onos_field_dict in match_json:
                 if onos_field_dict["type"] == onos_field_names_mapping_reverse[field_name][0]:
@@ -179,75 +179,76 @@ class Match(DictMixin):
 
             try:
                 if field_name == "in_port":
-                    in_port_str = get_onos_match_field_str(field_name, match_json)
+                    in_port_str = get_onos_match_field(field_name, match_json)
                     self[field_name] = int(in_port_str)
 
                 elif field_name == "ethernet_type":
-                    eth_type_str = get_onos_match_field_str(field_name, match_json)
+                    eth_type_str = get_onos_match_field(field_name, match_json)
                     self[field_name] = int(eth_type_str, 16)
 
                 elif field_name == "ethernet_source":
-                    mac_str = get_onos_match_field_str(field_name, match_json)
+                    mac_str = get_onos_match_field(field_name, match_json)
                     mac_int = int(mac_str.replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 elif field_name == "ethernet_destination":
-                    mac_str = get_onos_match_field_str(field_name, match_json)
+                    mac_str = get_onos_match_field(field_name, match_json)
                     mac_int = int(mac_str.replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 # TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
-                    ip_str = get_onos_match_field_str(field_name, match_json)
+                    ip_str = get_onos_match_field(field_name, match_json)
                     self[field_name] = IPNetwork(ip_str)
                 elif field_name == "dst_ip_addr":
-                    ip_str = get_onos_match_field_str(field_name, match_json)
+                    ip_str = get_onos_match_field(field_name, match_json)
                     self[field_name] = IPNetwork(ip_str)
 
                 elif field_name == "ip_protocol":
-                    ip_proto_str = get_onos_match_field_str(field_name, match_json)
+                    ip_proto_str = get_onos_match_field(field_name, match_json)
                     self[field_name] = int(ip_proto_str)
 
                 elif field_name == "tcp_destination_port":
 
-                    nw_proto_str = get_onos_match_field_str("nw_proto", match_json)
+                    nw_proto_str = get_onos_match_field("nw_proto", match_json)
                     if int(nw_proto_str) == 6:
-                        self[field_name] = int(get_onos_match_field_str(field_name, match_json))
+                        self[field_name] = int(get_onos_match_field(field_name, match_json))
                     else:
                         raise KeyError
 
                 elif field_name == "tcp_source_port":
 
-                    nw_proto_str = get_onos_match_field_str("nw_proto", match_json)
+                    nw_proto_str = get_onos_match_field("nw_proto", match_json)
                     if int(nw_proto_str) == 6:
-                        self[field_name] = int(get_onos_match_field_str(field_name, match_json))
+                        self[field_name] = int(get_onos_match_field(field_name, match_json))
                     else:
                         raise KeyError
 
                 elif field_name == "udp_destination_port":
 
-                    nw_proto_str = get_onos_match_field_str("nw_proto", match_json)
+                    nw_proto_str = get_onos_match_field("nw_proto", match_json)
                     if int(nw_proto_str) == 17:
-                        self[field_name] = int(get_onos_match_field_str(field_name, match_json))
+                        self[field_name] = int(get_onos_match_field(field_name, match_json))
                     else:
                         raise KeyError
 
                 elif field_name == "udp_source_port":
 
-                    nw_proto_str = get_onos_match_field_str("nw_proto", match_json)
+                    nw_proto_str = get_onos_match_field("nw_proto", match_json)
                     if int(nw_proto_str) == 17:
-                        self[field_name] = int(get_onos_match_field_str(field_name, match_json))
+                        self[field_name] = int(get_onos_match_field(field_name, match_json))
                     else:
                         raise KeyError
 
                 elif field_name == "vlan_id":
 
-                    vlan_id_str = get_onos_match_field_str(field_name, match_json)
+                    vlan_id = get_onos_match_field(field_name, match_json)
 
-                    if vlan_id_str == "0x1000/0x1000":
+                    if vlan_id == 4096:
                         self[field_name] = sys.maxsize
                         self["has_vlan_tag"] = 1
                     else:
+                        raise NotImplementedError
                         self[field_name] = 0x1000 + int(match_json[u"vlan_vid"])
                         self["has_vlan_tag"] = 1
 
