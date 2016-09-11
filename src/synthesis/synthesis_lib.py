@@ -52,17 +52,17 @@ class SynthesisLib(object):
     def record_primary_path(self, src_host, dst_host, switch_port_tuple_list):
 
         port_path = []
-        
+
         for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
             port_path.append(sw_name + ":ingress" + str(ingress_port_number))
             port_path.append(sw_name + ":egress" + str(egress_port_number))
 
         self.synthesized_primary_paths[src_host.node_id][dst_host.node_id] = port_path
-        
+
     def record_failover_path(self, src_host, dst_host, e, switch_port_tuple_list):
 
         port_path = []
-        
+
         if src_host.node_id not in self.synthesized_failover_paths:
             if dst_host.node_id not in self.synthesized_failover_paths[src_host.node_id]:
                 self.synthesized_failover_paths[src_host.node_id][dst_host.node_id] = defaultdict(defaultdict)
@@ -91,10 +91,10 @@ class SynthesisLib(object):
         sw_port_str = sw + "-" + "eth" + str(port)
 
         queue_cmd = "sudo ovs-vsctl -- set Port " + sw_port_str + " qos=@newqos -- " + \
-              "--id=@newqos create QoS type=linux-htb other-config:max-rate=" + "1000000000" + \
-                    " queues=" + str(self.queue_id_cntr) + "=@q" + str(self.queue_id_cntr) + " -- " +\
-              "--id=@q" + str(self.queue_id_cntr) + " create Queue other-config:min-rate=" + min_rate_str + \
-              " other-config:max-rate=" + max_rate_str
+                    "--id=@newqos create QoS type=linux-htb other-config:max-rate=" + "1000000000" + \
+                    " queues=" + str(self.queue_id_cntr) + "=@q" + str(self.queue_id_cntr) + " -- " + \
+                    "--id=@q" + str(self.queue_id_cntr) + " create Queue other-config:min-rate=" + min_rate_str + \
+                    " other-config:max-rate=" + max_rate_str
 
         os.system(queue_cmd)
         time.sleep(1)
@@ -102,8 +102,8 @@ class SynthesisLib(object):
         return self.queue_id_cntr
 
     def sel_get_node_id(self, switch):
-       # for node in ConfigTree.nodesHttpAccess(self.sel_session).read_collection():
-         for node in ConfigTree.NodesEntityAccess(self.sel_session).read_collection():
+        # for node in ConfigTree.nodesHttpAccess(self.sel_session).read_collection():
+        for node in ConfigTree.NodesEntityAccess(self.sel_session).read_collection():
             if node.linked_key == "OpenFlow:{}".format(switch[1:]):
                 return node.id
 
@@ -125,12 +125,12 @@ class SynthesisLib(object):
 
         elif self.network_graph.controller == "sel":
             if isinstance(pushed_content, ConfigTree.Flow):
-               # flows = ConfigTree.flowsHttpAccess(self.sel_session)
+                # flows = ConfigTree.flowsHttpAccess(self.sel_session)
                 flows = ConfigTree.FlowsEntityAccess(self.sel_session)
                 pushed_content.node = self.sel_get_node_id(pushed_content.node)
                 result = flows.create_single(pushed_content)
             elif isinstance(pushed_content, ConfigTree.Group):
-               # groups = ConfigTree.groupsHttpAccess(self.sel_session)
+                # groups = ConfigTree.groupsHttpAccess(self.sel_session)
                 groups = ConfigTree.GroupsEntityAccess(self.sel_session)
                 result = groups.create_single(pushed_content)
             else:
@@ -152,7 +152,7 @@ class SynthesisLib(object):
         return "http://localhost:8080/stats/groupentry/add"
 
     def create_onos_flow_url(self, flow):
-        flow_url = self.network_graph.network_configuration.controller_api_base_url + "flows/" +\
+        flow_url = self.network_graph.network_configuration.controller_api_base_url + "flows/" + \
                    urllib.quote(flow["deviceId"]) + "?appId=" + self.onos_app_id
 
         return flow_url
@@ -266,6 +266,17 @@ class SynthesisLib(object):
                     flow["instructions"] = [{"type": "WRITE_ACTIONS",
                                              "actions": action_list}]
 
+        elif self.network_graph.controller == "onos":
+            if not action_list:
+                flow["treatment"]["instructions"] = []
+            else:
+
+                if apply_immediately:
+                    flow["treatment"]["instructions"] = action_list
+                else:
+                    raise NotImplementedError
+                    flow["treatment"]["instructions"] = action_list
+
         elif self.network_graph.controller == "sel":
             instruction = ConfigTree.WriteActions()
             instruction.instruction_type = ConfigTree.OfpInstructionType.write_actions()
@@ -361,7 +372,7 @@ class SynthesisLib(object):
         return flow
 
     def push_match_per_in_port_destination_instruct_group_flow(self, sw, table_id, group_id, priority,
-                                                                flow_match, apply_immediately):
+                                                               flow_match, apply_immediately):
 
         flow = self.create_base_flow(sw, table_id, priority)
 
@@ -623,7 +634,15 @@ class SynthesisLib(object):
 
             self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
             self.push_flow(sw, flow)
-		
+
+        elif self.network_graph.controller == "onos":
+            flow["selector"]["criteria"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                                     flow["selector"]["criteria"])
+            output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
+            action_list = [output_action]
+            self.populate_flow_action_instruction(flow, action_list, mac_intent.apply_immediately)
+            self.push_flow(sw, flow)
+
         elif self.network_graph.controller == "sel":
             raise NotImplementedError
 
@@ -650,6 +669,13 @@ class SynthesisLib(object):
             output_action = ConfigTree.OutputAction()
             output_action.out_port = mac_intent.out_port
             output_action.action_type = ConfigTree.OfpActionType.output()
+
+        elif self.network_graph.controller == "onos":
+            flow["selector"]["criteria"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller,
+                                                                                     flow["selector"]["criteria"],
+                                                                                     has_vlan_tag_check=True)
+            pop_vlan_action = {"type": "L2MODIFICATION", "subtype": "VLAN_POP"}
+            output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
         else:
             raise NotImplementedError
@@ -770,7 +796,7 @@ class SynthesisLib(object):
 
             elif self.network_graph.controller == "sel":
                 flow.match = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
-                                                                                flow.match)
+                                                                             flow.match)
                 set_vlan_id_action = ConfigTree.SetFieldAction()
                 set_vlan_id_action.action_type = ConfigTree.OfpActionType.set_field()
 
@@ -816,7 +842,7 @@ class SynthesisLib(object):
 
         elif self.network_graph.controller == "sel":
             flow.match = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
-                                                                            flow.match)
+                                                                         flow.match)
             set_vlan_id_action = ConfigTree.SetFieldAction()
             set_vlan_id_action.action_type = ConfigTree.OfpActionType.set_field()
 
@@ -841,7 +867,7 @@ class SynthesisLib(object):
             raise NotImplementedError
 
         self.push_flow(sw, flow)
-    
+
     def push_mac_acl_rules(self, sw, table_number, src_host, dst_host):
 
         # Get a vanilla flow with an empty action list so it can be dropped
@@ -857,7 +883,7 @@ class SynthesisLib(object):
 
         self.populate_flow_action_instruction(flow, action_list, True)
         self.push_flow(sw, flow)
-        
+
     def push_loop_preventing_drop_rules(self, sw, table_number):
 
         for h_id in self.network_graph.host_ids:

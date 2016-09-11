@@ -141,15 +141,16 @@ class NetworkConfiguration(object):
         if synthesis_setup_gap:
             time.sleep(synthesis_setup_gap)
 
-        self.mininet_obj.pingAll()
+        if self.mininet_obj:
+            self.mininet_obj.pingAll()
 
-        # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
+            # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
 
-        # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
+            # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 
-        # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h31'), self.mininet_obj.get('h41'))],
-        #                                                            [('s1', 's2')])
-        # print "is_bi_connected:", is_bi_connected
+            # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h31'), self.mininet_obj.get('h41'))],
+            #                                                            [('s1', 's2')])
+            # print "is_bi_connected:", is_bi_connected
 
     def get_ryu_switches(self):
         ryu_switches = {}

@@ -157,6 +157,11 @@ class NetworkGraph(object):
 
             self.graph.add_node(host_id, node_type="host", h=h_obj)
 
+            self.add_link(host_id,
+                          int(0),
+                          host_switch_id,
+                          int(host_switch_port.port_number))
+
     def parse_host_nodes(self):
         if self.controller == "ryu":
             self.parse_mininet_host_nodes()
