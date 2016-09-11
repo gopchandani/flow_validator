@@ -25,7 +25,10 @@ class SynthesisLib(object):
 
         self.h = self.network_graph.network_configuration.h
         self.synthesized_primary_paths = defaultdict(defaultdict)
-        self.synthesized_failover_paths = defaultdict(defaultdict)        
+        self.synthesized_failover_paths = defaultdict(defaultdict)
+
+        if self.network_graph.controller == "onos":
+            self.onos_app_id = "50"
 
     def record_primary_path(self, src_host, dst_host, switch_port_tuple_list):
 
@@ -115,7 +118,7 @@ class SynthesisLib(object):
                 raise NotImplementedError
         #resp = {"status": "200"}
         #pprint.pprint(pushed_content)
-        if resp["status"] == "200":
+        if resp["status"].startswith("2"):
             print "Pushed Successfully:", pushed_content.keys()[0]
             #print resp["status"]
         else:
@@ -131,7 +134,7 @@ class SynthesisLib(object):
 
     def create_onos_flow_url(self, flow):
         flow_url = self.network_graph.network_configuration.controller_api_base_url + "flows/" +\
-                   urllib.quote(flow["deviceId"]) + "?appId=50"
+                   urllib.quote(flow["deviceId"]) + "?appId=" + self.onos_app_id
 
         return flow_url
 
@@ -190,6 +193,7 @@ class SynthesisLib(object):
 
         elif self.network_graph.controller == "onos":
             flow = dict()
+            flow["tableId"] = table_id
             flow["priority"] = priority + 10
             flow["timeout"] = 0
             flow["isPermanent"] = True
@@ -670,8 +674,17 @@ class SynthesisLib(object):
 
             flow["instructions"] = [{"type": "GOTO_TABLE",  "table_id": str(dst_table)}]
 
+        elif self.network_graph.controller == "onos":
+            flow["selector"]["criteria"] = flow_match.generate_match_json(self.network_graph.controller,
+                                                                          flow["selector"]["criteria"],
+                                                                          has_vlan_tag_check=True)
+
+            flow["treatment"]["instructions"].append({"type": "TABLE", "tableId": dst_table})
+
         elif self.network_graph.controller == "sel":
-            raise NotImplemented
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
 
         self.push_flow(sw, flow)
 

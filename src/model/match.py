@@ -69,7 +69,7 @@ onos_field_names_mapping_reverse = {"in_port": ("", ""),
                                     "tcp_source_port": ("", ""),
                                     "udp_destination_port": ("", ""),
                                     "udp_source_port": ("", ""),
-                                    "vlan_id": ("", "")}
+                                    "vlan_id": ("VLAN_VID", "vlanId")}
 
 
 class OdlMatchJsonParser():
@@ -377,64 +377,39 @@ class Match(DictMixin):
 
                 continue
 
-    def generate_odl_match_json(self, match_json):
+    def generate_onos_match_json(self, match_json, has_vlan_tag_check):
 
-        if "in_port" in self and self["in_port"] != sys.maxsize:
-            match_json["in-port"] = self["in_port"]
+        match_json = []
 
-        ethernet_match = {}
+        def get_onos_match_field_dict(field_name, val):
+            match_field_dict = {"type": onos_field_names_mapping_reverse[field_name][0],
+                                       onos_field_names_mapping_reverse[field_name][1]: val}
+            return match_field_dict
 
-        if "ethernet_type" in self and self["ethernet_type"] != sys.maxsize:
-            ethernet_match["ethernet-type"] = {"type": self["ethernet_type"]}
+        for field_name in field_names:
 
-        if "ethernet_source" in self and self["ethernet_source"] != sys.maxsize:
-            mac_int = self["ethernet_source"]
-            mac_hex_str = hex(mac_int)[2:]
-            mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
+            if has_vlan_tag_check:
+                if field_name == "vlan_id":
+                    val = int("0x1000", 16)
+                    match_json.append(get_onos_match_field_dict(field_name, val))
 
-            ethernet_match["ethernet-source"] = {"address": mac_hex_str}
+            if field_name in self and self[field_name] != sys.maxsize:
 
-        if "ethernet_destination" in self and self["ethernet_destination"] != sys.maxsize:
-            mac_int = self["ethernet_destination"]
-            mac_hex_str = format(mac_int, "012x")
-            mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
+                if field_name == "ethernet_source" or field_name == "ethernet_destination":
 
-            ethernet_match["ethernet-destination"] = {"address": mac_hex_str}
+                    mac_hex_str = hex(self[field_name])[2:]
+                    if len(mac_hex_str) == 11:
+                        mac_hex_str = "0" + mac_hex_str
+                    mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
-        match_json["ethernet-match"] = ethernet_match
+                    match_json.append(get_onos_match_field_dict(field_name, mac_hex_str))
 
-        if "src_ip_addr" in self and self["src_ip_addr"] != sys.maxsize:
-            match_json["ipv4-source"] = self["src_ip_addr"]
-
-        if "dst_ip_addr" in self and self["dst_ip_addr"] != sys.maxsize:
-            match_json["ipv4-destination"] = self["dst_ip_addr"]
-
-        if ("tcp_destination_port" in self and self["tcp_destination_port"] != sys.maxsize) or \
-                ("tcp_source_port" in self and self["tcp_source_port"] != sys.maxsize):
-            self["ip_protocol"] = 6
-            match_json["ip-match"] = {"ip-protocol": self["ip_protocol"]}
-
-            if "tcp_destination_port" in self and self["tcp_destination_port"] != sys.maxsize:
-                match_json["tcp-destination-port"] = self["tcp_destination_port"]
-
-            if "tcp_source_port" in self and self["tcp_source_port"] != sys.maxsize:
-                match_json["tcp-source-port"] = self["tcp_source_port"]
-
-        if ("udp_destination_port" in self and self["udp_destination_port"] != sys.maxsize) or \
-                ("udp_source_port" in self and self["udp_source_port"] != sys.maxsize):
-            self["ip_protocol"] = 17
-            match_json["ip-match"] = {"ip-protocol": self["ip_protocol"]}
-
-            if "udp_destination_port" in self and self["udp_destination_port"] != sys.maxsize:
-                match_json["udp-destination-port"] = self["udp_destination_port"]
-
-            if "udp_source_port" in self and self["udp_source_port"] != sys.maxsize:
-                match_json["udp-source-port"] = self["udp_source_port"]
-
-        if "vlan_id" in self and self["vlan_id"] != sys.maxsize:
-            vlan_match = {}
-            vlan_match["vlan-id"] = {"vlan-id": self["vlan_id"], "vlan-id-present": True}
-            match_json["vlan-match"] = vlan_match
+                elif field_name == "ethernet_type":
+                    eth_type_str = hex(self[field_name])
+                    eth_type_str = eth_type_str[0:2] + "0" + eth_type_str[2:]
+                    match_json.append(get_onos_match_field_dict(field_name, eth_type_str))
+                else:
+                    match_json.append(get_onos_match_field_dict(field_name, self[field_name]))
 
         return match_json
 
@@ -522,8 +497,8 @@ class Match(DictMixin):
 
         if controller == "ryu":
             return self.generate_ryu_match_json(match_json, has_vlan_tag_check)
-        elif controller == "odl":
-            return self.generate_odl_match_json(match_json, has_vlan_tag_check)
+        elif controller == "onos":
+            return self.generate_onos_match_json(match_json, has_vlan_tag_check)
         elif controller == "sel":
             return self.generate_sel_match_json(match_json, has_vlan_tag_check)
         else:
