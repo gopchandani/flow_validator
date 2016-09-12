@@ -2,7 +2,8 @@ __author__ = 'Rakesh Kumar'
 
 from action_set import Action, ActionSet
 
-class Bucket():
+
+class Bucket:
     def __init__(self, sw, bucket_json, group):
 
         self.sw = sw
@@ -12,22 +13,12 @@ class Bucket():
         self.weight = None
         self.group = group
 
-        if self.sw.network_graph.controller == "odl":
-
-            self.bucket_id = bucket_json["bucket-id"]
-
-            for action_json in bucket_json["action"]:
+        if self.sw.network_graph.controller == "onos":
+            for action_json in bucket_json["treatment"]["instructions"]:
                 self.action_list.append(Action(sw, action_json))
-
-            if "watch_port" in bucket_json:
-                if bucket_json["watch_port"] != 4294967295:
-                    self.watch_port = self.sw.ports[int(bucket_json["watch_port"])]
 
             if "weight" in bucket_json:
                 self.weight = str(bucket_json["weight"])
-
-            # Sort the action_list by order
-            self.action_list = sorted(self.action_list, key=lambda action: action.order)
 
         elif self.sw.network_graph.controller == "sel":
             self.bucket_id = bucket_json['id']
@@ -175,7 +166,15 @@ class Group:
                 self.bucket_list.append(Bucket(sw, bucket_json, self))
 
         elif self.sw.network_graph.controller == "onos":
-            raise NotImplementedError
+
+            self.group_id = self.sw.network_graph.parse_onos_group_id(group_json["id"])
+            if group_json["type"] == "ALL":
+                self.group_type = self.sw.network_graph.GROUP_ALL
+            else:
+                raise NotImplementedError
+
+            for bucket_json in group_json["buckets"]:
+                self.bucket_list.append(Bucket(sw, bucket_json, self))
 
         elif self.sw.network_graph.controller == "sel":
             self.group_id = group_json["groupId"]
@@ -190,8 +189,7 @@ class Group:
                 self.bucket_list.append(Bucket(sw, bucket_json, self))
 
             self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
-        #TODO: For now, assume that all edges would be up at the system initialization and failure events
-        # will occur subsequently
+
         if self.group_type == self.sw.network_graph.GROUP_FF:
                 self.active_bucket = self.bucket_list[0]
 
@@ -233,7 +231,7 @@ class Group:
         self.active_bucket = self.get_first_live_bucket()
 
 
-class GroupTable():
+class GroupTable:
 
     def __init__(self, sw, groups_json):
 

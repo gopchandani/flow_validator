@@ -236,9 +236,7 @@ class DijkstraSynthesis(object):
                                                                    failover_first_intent)
 
         elif primary_first_intent:
-
             group_id = self.synthesis_lib.push_select_all_group(sw, [primary_first_intent])
-
 
         push_vlan_match= deepcopy(flow_match)
         mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)

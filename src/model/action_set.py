@@ -8,7 +8,8 @@ from match import OdlMatchJsonParser
 from match import ryu_field_names_mapping
 from collections import defaultdict
 
-class Action():
+
+class Action:
     '''
      As per OF1.3 specification:
 
@@ -71,7 +72,7 @@ class Action():
             if self.action_json["port"] == "CONTROLLER":
                 self.out_port = self.sw.network_graph.OFPP_CONTROLLER
             else:
-                self.out_port = self.action_json["port"]
+                self.out_port = int(self.action_json["port"])
 
         if self.action_json["type"] == "SET_FIELD":
             raise NotImplementedError
@@ -87,9 +88,8 @@ class Action():
                 raise NotImplementedError
 
         if self.action_json["type"] == "GROUP":
-            raise NotImplementedError
             self.action_type = "group"
-            self.group_id = self.action_json["group_id"]
+            self.group_id = self.sw.network_graph.parse_onos_group_id(self.action_json["groupId"])
 
         if self.action_json["type"] == "PUSH_VLAN":
             raise NotImplementedError
@@ -159,7 +159,8 @@ class Action():
     def is_failover_action(self):
         return (self.bucket and self.bucket.group.group_type == self.sw.network_graph.GROUP_FF)
 
-class ActionSet():
+
+class ActionSet:
 
     '''
     As per OF1.3 specification:

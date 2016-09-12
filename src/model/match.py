@@ -248,8 +248,7 @@ class Match(DictMixin):
                         self[field_name] = sys.maxsize
                         self["has_vlan_tag"] = 1
                     else:
-                        raise NotImplementedError
-                        self[field_name] = 0x1000 + int(match_json[u"vlan_vid"])
+                        self[field_name] = 0x1000 + vlan_id
                         self["has_vlan_tag"] = 1
 
             except KeyError:

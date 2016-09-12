@@ -89,6 +89,11 @@ class NetworkGraph(object):
         onos_sw_device_id = "of:" + id_num.zfill(16)
         return onos_sw_device_id
 
+    def parse_onos_group_id(self, onos_group_id_str):
+        tokens = onos_group_id_str.split("=")
+        id_token = tokens[1][0:-1]
+        return int(id_token, 16)
+
     def parse_mininet_host_nodes(self):
 
         mininet_host_nodes = None
