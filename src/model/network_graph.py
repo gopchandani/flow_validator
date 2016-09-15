@@ -336,7 +336,6 @@ class NetworkGraph(object):
                 switch_flow_tables.append(FlowTable(sw, table_id, onos_switch["flow_tables"][table_id]))
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
-
     def print_sel_flow_stats(self):
        # for each in OperationalTree.flowStatsHttpAccess(self.sel_session).read_collection():
        for each in OperationalTree.FlowStatsEntityAccess(self.sel_session).read_collection():
