@@ -1,9 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-import os
-import time
 import json
-import httplib2
 import networkx as nx
 
 from collections import defaultdict
@@ -61,7 +58,7 @@ class NetworkGraph(object):
         self.graph = nx.Graph()
 
         # Initialize lists of host and switch ids
-        self.host_ids = []
+        self.host_ids = set()
         self.switch_ids = []
 
         self.controller = self.network_configuration.controller
@@ -112,7 +109,7 @@ class NetworkGraph(object):
                 host_switch_obj = self.get_node_object(mininet_host_dict["host_switch_id"])
 
                 # Add the host to the graph
-                self.host_ids.append(mininet_host_dict["host_name"])
+                self.host_ids.add(mininet_host_dict["host_name"])
                 sw_obj = self.get_node_object(sw)
 
                 h_obj = Host(mininet_host_dict["host_name"],
@@ -146,7 +143,7 @@ class NetworkGraph(object):
 
             # Add the host to the graph
             host_id = "h" + host_switch_id[1:] + onos_host_dict["location"]["port"]
-            self.host_ids.append(host_id)
+            self.host_ids.add(host_id)
 
             h_obj = Host(host_id,
                          self,
@@ -446,7 +443,7 @@ class NetworkGraph(object):
             yield self.get_node_object(switch_id)
 
     def get_link_ports_dict(self, node1_id, node2_id):
-        link_data =  self.graph[node1_id][node2_id]['link_data']
+        link_data = self.graph[node1_id][node2_id]['link_data']
         return link_data.link_ports_dict
 
     def get_link_data(self, node1_id, node2_id):

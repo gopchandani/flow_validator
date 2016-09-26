@@ -101,8 +101,8 @@ class FlowValidator(object):
             # Setup the appropriate filter
             traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
             traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-            traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
-            traffic.set_field("has_vlan_tag", 0)
+            #traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
+            #traffic.set_field("has_vlan_tag", 0)
             traffic.set_field("in_port", int(src_port.port_number))
 
             at = get_admitted_traffic(self.port_graph, src_port, dst_port)
