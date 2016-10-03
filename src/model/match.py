@@ -209,36 +209,16 @@ class Match(DictMixin):
                     self[field_name] = int(ip_proto_str)
 
                 elif field_name == "tcp_destination_port":
-
-                    nw_proto_str = get_onos_match_field("nw_proto", match_json)
-                    if int(nw_proto_str) == 6:
-                        self[field_name] = int(get_onos_match_field(field_name, match_json))
-                    else:
-                        raise KeyError
+                    self[field_name] = int(get_onos_match_field(field_name, match_json))
 
                 elif field_name == "tcp_source_port":
-
-                    nw_proto_str = get_onos_match_field("nw_proto", match_json)
-                    if int(nw_proto_str) == 6:
-                        self[field_name] = int(get_onos_match_field(field_name, match_json))
-                    else:
-                        raise KeyError
+                    self[field_name] = int(get_onos_match_field(field_name, match_json))
 
                 elif field_name == "udp_destination_port":
-
-                    nw_proto_str = get_onos_match_field("nw_proto", match_json)
-                    if int(nw_proto_str) == 17:
-                        self[field_name] = int(get_onos_match_field(field_name, match_json))
-                    else:
-                        raise KeyError
+                    self[field_name] = int(get_onos_match_field(field_name, match_json))
 
                 elif field_name == "udp_source_port":
-
-                    nw_proto_str = get_onos_match_field("nw_proto", match_json)
-                    if int(nw_proto_str) == 17:
-                        self[field_name] = int(get_onos_match_field(field_name, match_json))
-                    else:
-                        raise KeyError
+                    self[field_name] = int(get_onos_match_field(field_name, match_json))
 
                 elif field_name == "vlan_id":
 
