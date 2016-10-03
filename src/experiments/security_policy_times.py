@@ -70,6 +70,8 @@ class SecurityPolicyTimes(Experiment):
         control_specific_traffic.set_field("ethernet_type", 0x0800)
         control_specific_traffic.set_field("vlan_id", 255 + 0x1000)
         control_specific_traffic.set_field("has_vlan_tag", 1)
+        control_specific_traffic.set_field("tcp_source_port", 80)
+        control_specific_traffic.set_field("tcp_destination_port", 80)
 
         connected = fv.validate_zone_pair_connectivity(control_zone, control_zone, control_specific_traffic, 0)
         print "control_zone:", connected
