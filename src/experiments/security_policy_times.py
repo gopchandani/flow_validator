@@ -1,5 +1,7 @@
 import sys
 
+from collections import defaultdict
+
 from experiment import Experiment
 from network_configuration import NetworkConfiguration
 from model.traffic import Traffic
@@ -18,6 +20,10 @@ class SecurityPolicyTimes(Experiment):
         super(SecurityPolicyTimes, self).__init__("security_policy_times", 1)
 
         self.network_configuration = network_configuration
+
+        self.data = {
+            "validation_time": defaultdict(defaultdict)
+        }
 
     def trigger(self):
 
@@ -70,8 +76,8 @@ class SecurityPolicyTimes(Experiment):
         control_specific_traffic.set_field("ethernet_type", 0x0800)
         control_specific_traffic.set_field("vlan_id", 255 + 0x1000)
         control_specific_traffic.set_field("has_vlan_tag", 1)
-        control_specific_traffic.set_field("tcp_source_port", 80)
-        control_specific_traffic.set_field("tcp_destination_port", 80)
+        # control_specific_traffic.set_field("tcp_source_port", 80)
+        # control_specific_traffic.set_field("tcp_destination_port", 80)
 
         connected = fv.validate_zone_pair_connectivity(control_zone, control_zone, control_specific_traffic, 0)
         print "control_zone:", connected
