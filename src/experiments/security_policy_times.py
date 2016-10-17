@@ -39,42 +39,6 @@ class SecurityPolicyTimes(Experiment):
                 fv = FlowValidator(ng)
                 fv.init_network_port_graph()
 
-                # sw1_zone = [fv.network_graph.get_node_object("h11").switch_port,
-                #             fv.network_graph.get_node_object("h12").switch_port,
-                #             fv.network_graph.get_node_object("h13").switch_port]
-                #
-                # sw2_zone = [fv.network_graph.get_node_object("h21").switch_port,
-                #             fv.network_graph.get_node_object("h22").switch_port,
-                #             fv.network_graph.get_node_object("h23").switch_port]
-                #
-                # sw3_zone = [fv.network_graph.get_node_object("h31").switch_port,
-                #             fv.network_graph.get_node_object("h32").switch_port,
-                #             fv.network_graph.get_node_object("h33").switch_port]
-
-                # s1_specific_traffic = Traffic(init_wildcard=True)
-                # s1_specific_traffic.set_field("ethernet_type", 0x0800)
-                # s1_specific_traffic.set_field("vlan_id", 1 + 0x1000)
-                # s1_specific_traffic.set_field("has_vlan_tag", 1)
-                #
-                # connected = fv.validate_zone_pair_connectivity(sw1_zone, sw1_zone, s1_specific_traffic, 0)
-                # print "s1:", connected
-                #
-                # s2_specific_traffic = Traffic(init_wildcard=True)
-                # s2_specific_traffic.set_field("ethernet_type", 0x0800)
-                # s2_specific_traffic.set_field("vlan_id", 2 + 0x1000)
-                # s2_specific_traffic.set_field("has_vlan_tag", 1)
-                #
-                # connected = fv.validate_zone_pair_connectivity(sw2_zone, sw2_zone, s2_specific_traffic, 0)
-                # print "s2:", connected
-
-                # s3_specific_traffic = Traffic(init_wildcard=True)
-                # s3_specific_traffic.set_field("ethernet_type", 0x0800)
-                # s3_specific_traffic.set_field("vlan_id", 3 + 0x1000)
-                # s3_specific_traffic.set_field("has_vlan_tag", 1)
-                #
-                # connected = fv.validate_zone_pair_connectivity(sw3_zone, sw3_zone, s3_specific_traffic, 0)
-                # print "s3:", connected
-
                 control_zone = [fv.network_graph.get_node_object("h11").switch_port,
                                 fv.network_graph.get_node_object("h21").switch_port,
                                 fv.network_graph.get_node_object("h31").switch_port]
