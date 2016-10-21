@@ -273,7 +273,7 @@ class PortGraph(object):
 
         return traffic_at_succ
 
-    def get_paths(self, this_node, dst, at, path_prefix, path_edges, verbose):
+    def get_paths(self, this_node, dst, at, path_prefix, path_edges):
 
         paths = []
         this_level_prefix = path_prefix[:]
@@ -295,14 +295,13 @@ class PortGraph(object):
                 # Make sure no loops will be caused by going down this successor
                 if not self.path_has_loop(path_prefix, succ):
 
-                    traffic_at_succ = self.get_modified_traffic_at_succ(this_node, succ, dst, at)
+                    at_succ = self.get_modified_traffic_at_succ(this_node, succ, dst, at)
 
                     paths.extend(self.get_paths(succ,
                                                 dst,
-                                                traffic_at_succ,
+                                                at_succ,
                                                 this_level_prefix + [succ],
-                                                this_level_path_edges + [((this_node, succ),  enabling_edge_data, at)],
-                                                verbose))
+                                                this_level_path_edges + [((this_node, succ),  enabling_edge_data, at)]))
         return paths
 
     def get_graph_paths(self, verbose):
