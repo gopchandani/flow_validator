@@ -128,7 +128,7 @@ class TestSwitchPortGraph(unittest.TestCase):
                                    at,
                                    [ingress_node],
                                    [],
-                                   False)
+                                   [])
 
         self.assertEqual(len(all_paths), 1)
         self.assertEqual(all_paths[0], expected_path)

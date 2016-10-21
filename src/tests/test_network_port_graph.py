@@ -160,7 +160,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                           specific_traffic,
                                           [ingress_node],
                                           [],
-                                          verbose)
+                                          [])
 
                 if not all_paths:
                     host_pair_paths[src_h_id][dst_h_id] = []
@@ -508,7 +508,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                               at_int,
                               [ingress_node],
                               [],
-                              True)
+                              [])
 
         # Get the path that is currently active
         active_path = None

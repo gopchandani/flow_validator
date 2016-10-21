@@ -89,7 +89,7 @@ def get_paths_2(pg, specific_traffic, src_port, dst_port):
     src_node = pg.get_node(src_port.network_port_graph_ingress_node.node_id)
     dst_node = pg.get_node(dst_port.network_port_graph_egress_node.node_id)
 
-    traffic_paths = pg.get_paths(src_node, dst_node, specific_traffic, [src_node], [], verbose=False)
+    traffic_paths = pg.get_paths(src_node, dst_node, specific_traffic, [src_node], [], [])
 
     return traffic_paths
 
@@ -123,7 +123,7 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                                          at_subset,
                                          [src_sw_port.network_port_graph_egress_node],
                                          [],
-                                         False)
+                                         [])
 
                 if npg_paths:
                     for path in npg_paths:

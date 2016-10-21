@@ -31,10 +31,10 @@ class NetworkPortGraph(PortGraph):
                 if edge_sw:
 
                     # Check to see the exact path of this traffic through the switch
-                    traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
+                    traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], [])
 
                     if len(traffic_paths) == 0:
-                        traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], verbose=True)
+                        traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], [])
                         raise Exception("Found traffic but no paths to back it up.")
 
                 edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, traffic_paths)
@@ -326,16 +326,15 @@ class NetworkPortGraph(PortGraph):
         for succ in possible_succs:
 
             # First check if the successor would carry this traffic at all
-            should, enabling_edge_data_list = self.should_add_succ(pred, succ, dst, at)
+            enabling_edge_data_list = self.get_enabling_edge_data(pred, succ, dst, at)
 
             # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
-            if should:
+            if enabling_edge_data_list:
 
                 traffic_at_succ = self.get_modified_traffic_at_succ(pred,
                                                                     succ,
                                                                     dst,
-                                                                    at,
-                                                                    enabling_edge_data_list)
+                                                                    at)
 
                 vuln_rank_check = True
 

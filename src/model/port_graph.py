@@ -235,35 +235,33 @@ class PortGraph(object):
 
         return has_loop
 
-    def should_add_succ(self, this_node, succ, dst, at):
+    def get_enabling_edge_data(self, node, succ, dst, at):
         
-        should = False
         enabling_edge_data = []
 
-        if dst in self.get_admitted_traffic_dsts(this_node):
+        if dst in self.get_admitted_traffic_dsts(node):
             
             # For traffic going from ingress->egress node on any switch, set the ingress traffic
             # of specific traffic to simulate that the traffic would arrive on that port.
     
-            if this_node.node_type == "ingress" and succ.node_type == "egress":
-                at.set_field("in_port", int(this_node.parent_obj.port_number))
+            if node.node_type == "ingress" and succ.node_type == "egress":
+                at.set_field("in_port", int(node.parent_obj.port_number))
     
-            at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
+            at_dst_succ = self.get_admitted_traffic_via_succ(node, dst, succ)
     
             # Check to see if the successor would carry some of the traffic from here
             succ_int = at.intersect(at_dst_succ)
             if not succ_int.is_empty():
-                should = True
                 enabling_edge_data = succ_int.get_enabling_edge_data()
             else:
                 # Do not go further if there is no traffic admitted via this succ
                 pass
             
-        return should, enabling_edge_data
+        return enabling_edge_data
 
-    def get_modified_traffic_at_succ(self, this_node, succ, dst, at):
+    def get_modified_traffic_at_succ(self, node, succ, dst, at):
 
-        at_dst_succ = self.get_admitted_traffic_via_succ(this_node, dst, succ)
+        at_dst_succ = self.get_admitted_traffic_via_succ(node, dst, succ)
 
         # Pick off successor admitted traffic that helps the traffic at pred (at) to exist.
         traffic_at_succ = at.intersect(at_dst_succ)
@@ -273,35 +271,32 @@ class PortGraph(object):
 
         return traffic_at_succ
 
-    def get_paths(self, this_node, dst, at, path_prefix, path_edges):
+    def get_paths(self, node, dst, at, path_prefix, path_edges, paths):
 
-        paths = []
-        this_level_prefix = path_prefix[:]
-        this_level_path_edges = path_edges[:]
-        
-        for succ in self.get_admitted_traffic_succs(this_node, dst):
+        for succ in self.get_admitted_traffic_succs(node, dst):
 
-            should, enabling_edge_data = self.should_add_succ(this_node, succ, dst, at)
-            if not should:
+            enabling_edge_data = self.get_enabling_edge_data(node, succ, dst, at)
+            if not enabling_edge_data:
                 continue
 
             if succ == dst:
-                this_level_path_edges.append(((this_node, dst), enabling_edge_data, at))
-                path_nodes = list(this_level_prefix) + [dst]
-
-                this_path = TrafficPath(self, path_nodes, this_level_path_edges)
+                this_path = TrafficPath(self,
+                                        path_prefix + [dst],
+                                        path_edges + [((node, dst), enabling_edge_data, at)])
                 paths.append(this_path)
+
             else:
-                # Make sure no loops will be caused by going down this successor
                 if not self.path_has_loop(path_prefix, succ):
 
-                    at_succ = self.get_modified_traffic_at_succ(this_node, succ, dst, at)
-
-                    paths.extend(self.get_paths(succ,
+                    succ_at = self.get_modified_traffic_at_succ(node, succ, dst, at)
+                    succ_paths = self.get_paths(succ,
                                                 dst,
-                                                at_succ,
-                                                this_level_prefix + [succ],
-                                                this_level_path_edges + [((this_node, succ),  enabling_edge_data, at)]))
+                                                succ_at,
+                                                path_prefix + [succ],
+                                                path_edges + [((node, succ),  enabling_edge_data, at)],
+                                                paths)
+                    paths.extend(succ_paths)
+
         return paths
 
     def get_graph_paths(self, verbose):
@@ -311,7 +306,7 @@ class PortGraph(object):
             for dst in self.boundary_egress_nodes:
 
                 at = self.get_admitted_traffic(src, dst)
-                graph_paths[src][dst] = self.get_paths(src, dst, at, [src], [], verbose)
+                graph_paths[src][dst] = self.get_paths(src, dst, at, [src], [], [])
 
         return graph_paths
 
