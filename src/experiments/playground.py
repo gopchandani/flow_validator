@@ -46,19 +46,19 @@ class Playground(Experiment):
 
 def main():
 
-    network_configuration = NetworkConfiguration("onos",
-                                                 "72.36.82.150",
-                                                 40002,
-                                                 "http://72.36.82.150:40001/onos/v1/",
-                                                 "karaf",
-                                                 "karaf",
-                                                 "clostopo",
-                                                 {"fanout": 2,
-                                                  "core": 1,
-                                                  "num_hosts_per_switch": 1},
-                                                 conf_root="configurations/",
-                                                 synthesis_name=None,
-                                                 synthesis_params=None)
+    # network_configuration = NetworkConfiguration("onos",
+    #                                              "72.36.82.150",
+    #                                              40002,
+    #                                              "http://72.36.82.150:40001/onos/v1/",
+    #                                              "karaf",
+    #                                              "karaf",
+    #                                              "clostopo",
+    #                                              {"fanout": 2,
+    #                                               "core": 1,
+    #                                               "num_hosts_per_switch": 1},
+    #                                              conf_root="configurations/",
+    #                                              synthesis_name=None,
+    #                                              synthesis_params=None)
 
     # network_configuration = NetworkConfiguration("onos",
     #                                              "10.0.2.15",
@@ -74,18 +74,18 @@ def main():
     #                                              synthesis_name="AboresceneSynthesis",
     #                                              synthesis_params={"apply_group_intents_immediately": True})
 
-    # network_configuration = NetworkConfiguration("ryu",
-    #                                              "127.0.0.1",
-    #                                              6633,
-    #                                              "http://localhost:8080/",
-    #                                              "admin",
-    #                                              "admin",
-    #                                              "ring",
-    #                                              {"num_switches": 4,
-    #                                               "num_hosts_per_switch": 1},
-    #                                              conf_root="configurations/",
-    #                                              synthesis_name="AboresceneSynthesis",
-    #                                              synthesis_params={"apply_group_intents_immediately": True})
+    network_configuration = NetworkConfiguration("ryu",
+                                                 "127.0.0.1",
+                                                 6633,
+                                                 "http://localhost:8080/",
+                                                 "admin",
+                                                 "admin",
+                                                 "ring",
+                                                 {"num_switches": 4,
+                                                  "num_hosts_per_switch": 1},
+                                                 conf_root="configurations/",
+                                                 synthesis_name="AboresceneSynthesis",
+                                                 synthesis_params={"apply_group_intents_immediately": True})
 
     # network_configuration = NetworkConfiguration("sel",
     #                                              "192.168.56.101",

@@ -53,14 +53,6 @@ class SecurityPolicyTimes(Experiment):
                 connected = fv.validate_zone_pair_connectivity(control_zone, control_zone, control_specific_traffic, 0)
                 print "control_zone:", connected
 
-                # cross_vlan_traffic = Traffic(init_wildcard=True)
-                # cross_vlan_traffic.set_field("ethernet_type", 0x0800)
-                # cross_vlan_traffic.set_field("vlan_id", 250 + 0x1000)
-                # cross_vlan_traffic.set_field("has_vlan_tag", 1)
-                #
-                # connected = fv.validate_zone_pair_connectivity(sw1_zone, sw2_zone, cross_vlan_traffic, 0)
-                # print "sw1_zone -> sw2_zone:", connected
-
             self.data["validation_time"][self.network_configuration.nc_topo_str].append(t.secs)
 
 
