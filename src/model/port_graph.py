@@ -236,19 +236,19 @@ class PortGraph(object):
         return has_loop
 
     def get_enabling_edge_data(self, node, succ, dst, at):
-        
+
         enabling_edge_data = []
 
         if dst in self.get_admitted_traffic_dsts(node):
-            
+
             # For traffic going from ingress->egress node on any switch, set the ingress traffic
             # of specific traffic to simulate that the traffic would arrive on that port.
-    
+
             if node.node_type == "ingress" and succ.node_type == "egress":
                 at.set_field("in_port", int(node.parent_obj.port_number))
-    
+
             at_dst_succ = self.get_admitted_traffic_via_succ(node, dst, succ)
-    
+
             # Check to see if the successor would carry some of the traffic from here
             succ_int = at.intersect(at_dst_succ)
             if not succ_int.is_empty():
@@ -256,7 +256,7 @@ class PortGraph(object):
             else:
                 # Do not go further if there is no traffic admitted via this succ
                 pass
-            
+
         return enabling_edge_data
 
     def get_modified_traffic_at_succ(self, node, succ, dst, at):
@@ -289,13 +289,12 @@ class PortGraph(object):
                 if not self.path_has_loop(path_prefix, succ):
 
                     succ_at = self.get_modified_traffic_at_succ(node, succ, dst, at)
-                    succ_paths = self.get_paths(succ,
-                                                dst,
-                                                succ_at,
-                                                path_prefix + [succ],
-                                                path_edges + [((node, succ),  enabling_edge_data, at)],
-                                                paths)
-                    paths.extend(succ_paths)
+                    self.get_paths(succ,
+                                   dst,
+                                   succ_at,
+                                   path_prefix + [succ],
+                                   path_edges + [((node, succ),  enabling_edge_data, at)],
+                                   paths)
 
         return paths
 

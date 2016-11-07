@@ -13,13 +13,13 @@ __author__ = 'Rakesh Kumar'
 sys.path.append("./")
 
 
-class ResiliencyPolicyTimes(Experiment):
+class SubstationMixedPolicyValidationTimes(Experiment):
 
     def __init__(self,
                  network_configuration,
                  num_iterations):
 
-        super(ResiliencyPolicyTimes, self).__init__("resiliency_policy_times", 1)
+        super(SubstationMixedPolicyValidationTimes, self).__init__("resiliency_policy_times", 1)
 
         self.network_configuration = network_configuration
         self.num_iterations = num_iterations
@@ -104,21 +104,21 @@ def main():
 
     num_iterations = 2
 
-    network_configuration = NetworkConfiguration("onos",
-                                                 "72.36.82.150",
-                                                 40002,
-                                                 "http://72.36.82.150:40001/onos/v1/",
-                                                 "karaf",
-                                                 "karaf",
-                                                 "clostopo",
-                                                 {"fanout": 2,
-                                                  "core": 1,
-                                                  "num_hosts_per_switch": 1},
+    network_configuration = NetworkConfiguration("ryu",
+                                                 "127.0.0.1",
+                                                 6633,
+                                                 "http://localhost:8080/",
+                                                 "admin",
+                                                 "admin",
+                                                 "cliquetopo",
+                                                 {"num_switches": 4,
+                                                  "num_hosts_per_switch": 1,
+                                                  "per_switch_links": 3},
                                                  conf_root="configurations/",
-                                                 synthesis_name=None,
-                                                 synthesis_params=None)
+                                                 synthesis_name="AboresceneSynthesis",
+                                                 synthesis_params={"apply_group_intents_immediately": True})
 
-    exp = ResiliencyPolicyTimes(network_configuration, num_iterations)
+    exp = SubstationMixedPolicyValidationTimes(network_configuration, num_iterations)
     exp.trigger()
     exp.dump_data()
 

@@ -84,6 +84,7 @@ class NetworkConfiguration(object):
 
         self.h = httplib2.Http()
         self.controller_api_base_url = controller_api_base_url
+        self.controller_api_base_url = controller_api_base_url
         self.h.add_credentials(controller_api_user_name, controller_api_password)
 
         if self.controller == "sel":
@@ -107,6 +108,9 @@ class NetworkConfiguration(object):
         elif self.topo_name == "clostopo":
             self.topo = ClosTopo(self.topo_params)
             self.nc_topo_str = "Clos topology with " + str(self.topo.total_switches) + " switches"
+        elif self.topo_name == "cliquetopo":
+            self.topo = CliqueTopo(self.topo_params)
+            self.nc_topo_str = "Clique topology with " + str(self.topo.total_switches) + " switches"
         elif self.topo_name == "linear":
             self.topo = LinearTopo(self.topo_params)
             self.nc_topo_str = "Linear topology with " + str(self.topo_params["num_switches"]) + " switches"

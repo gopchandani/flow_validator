@@ -166,7 +166,7 @@ class InitialIncrementalTimes(Experiment):
                    fancybox=True,
                    columnspacing=0.5, bbox_to_anchor=[1.6, -0.27])
 
-        plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=100)
+        plt.savefig("plots/" + self.experiment_tag + "_" + "initial_incremental_policy_times" + ".png", dpi=1000)
         plt.show()
 
     def generate_relative_cost_ratio_data(self, data):
