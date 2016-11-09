@@ -45,7 +45,7 @@ class CliqueTopo(Topo):
             self.switch_names.append(curr_switch)
 
             for j in xrange(self.num_hosts_per_switch):
-                curr_host = self.addHost("h" + str(self.host_cntr))
+                curr_host = self.addHost("h" + str(i+1) + str(j+1))
 
                 self.host_names.append(curr_host)
                 self.host_cntr += 1
