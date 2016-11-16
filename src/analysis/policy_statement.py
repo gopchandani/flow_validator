@@ -1,3 +1,6 @@
+CONNECTIVITY_CONSTRAINT = "Connectivity"
+PATH_LENGTH_CONSTRAINT = "PathLength"
+LINK_EXCLUSIVITY_CONSTRAINT = "LinkExclusivity"
 
 
 class PolicyStatement(object):
@@ -8,4 +11,3 @@ class PolicyStatement(object):
         self.traffic = traffic
         self.constraints = constraints
         self.k = k
-

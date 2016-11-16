@@ -13,6 +13,7 @@ __author__ = 'Rakesh Kumar'
 sys.path.append("./")
 
 from analysis.policy_statement import PolicyStatement
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
 
 class SubstationMixedPolicyValidationTimes(Experiment):
 
@@ -40,22 +41,36 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 fv = FlowValidator(ng)
                 fv.init_network_port_graph()
 
-                s1_src_zone = [fv.network_graph.get_node_object("h11").switch_port]
-
-                s1_dst_zone = [fv.network_graph.get_node_object("h21").switch_port,
+                s1_src_zone = [fv.network_graph.get_node_object("h21").switch_port,
                                fv.network_graph.get_node_object("h31").switch_port]
+
+                s1_dst_zone = [fv.network_graph.get_node_object("h11").switch_port]
 
                 s1_traffic = Traffic(init_wildcard=True)
                 s1_traffic.set_field("ethernet_type", 0x0800)
-                s1_traffic.set_field("vlan_id", 1 + 0x1000)
-                s1_traffic.set_field("has_vlan_tag", 1)
+                s1_traffic.set_field("has_vlan_tag", 0)
 
-                s1_constraints = ["Connectivity"]
+                s1_constraints = [(CONNECTIVITY_CONSTRAINT, None),
+                                  (PATH_LENGTH_CONSTRAINT, 6),
+                                  (LINK_EXCLUSIVITY_CONSTRAINT, [("s3", "s4")])]
                 s1_k = 1
                 s1 = PolicyStatement(s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, s1_k)
 
-                connected = fv.validate_zone_pair_connectivity(sw1_zone, sw1_zone, s1_traffic, 0)
-                print "s1:", connected
+                s2_src_zone = [fv.network_graph.get_node_object("h41").switch_port]
+
+                s2_dst_zone = [fv.network_graph.get_node_object("h11").switch_port]
+
+                s2_traffic = Traffic(init_wildcard=True)
+                s2_traffic.set_field("ethernet_type", 0x0800)
+                s2_traffic.set_field("has_vlan_tag", 0)
+                s2_traffic.set_field("tcp_destination_port", 443)
+
+                s2_constraints = [(CONNECTIVITY_CONSTRAINT, None)]
+                s2_k = 0
+                s2 = PolicyStatement(s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, s2_k)
+
+                satisfies = fv.validate_policy([s1, s2])
+                print "The network configuration satisfies the given policy:", satisfies
 
             self.data["validation_time"][self.network_configuration.nc_topo_str].append(t.secs)
 

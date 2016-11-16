@@ -237,6 +237,11 @@ class FlowValidator(object):
 
         return is_exclusive
 
+    def validate_policy(self, policy_statement_list):
+
+        for ps in policy_statement_list:
+            print ps
+
     def validate_zone_pair_connectivity_path_length_link_exclusivity(self, src_zone, dst_zone, traffic, l, el, k):
 
         is_connected = True
