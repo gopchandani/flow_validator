@@ -4,6 +4,7 @@ import numpy as np
 
 sys.path.append("./")
 
+from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from experiments.timer import Timer
 from util import get_specific_traffic
@@ -239,8 +240,15 @@ class FlowValidator(object):
 
     def validate_policy(self, policy_statement_list):
 
+        # Keyed by src_port, dst_port, k
+        validation_tuples = defaultdict(list)
+
         for ps in policy_statement_list:
-            print ps
+            for i in range(ps.k+1):
+                for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
+                    validation_tuples[(src_port, dst_port, i)].append((ps.traffic, ps.constraints))
+
+        print validation_tuples
 
     def validate_zone_pair_connectivity_path_length_link_exclusivity(self, src_zone, dst_zone, traffic, l, el, k):
 

@@ -38,13 +38,10 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
             with Timer(verbose=True) as t:
 
-                fv = FlowValidator(ng)
-                fv.init_network_port_graph()
+                s1_src_zone = [ng.get_node_object("h21").switch_port,
+                               ng.get_node_object("h31").switch_port]
 
-                s1_src_zone = [fv.network_graph.get_node_object("h21").switch_port,
-                               fv.network_graph.get_node_object("h31").switch_port]
-
-                s1_dst_zone = [fv.network_graph.get_node_object("h11").switch_port]
+                s1_dst_zone = [ng.get_node_object("h11").switch_port]
 
                 s1_traffic = Traffic(init_wildcard=True)
                 s1_traffic.set_field("ethernet_type", 0x0800)
@@ -56,9 +53,9 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 s1_k = 1
                 s1 = PolicyStatement(s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, s1_k)
 
-                s2_src_zone = [fv.network_graph.get_node_object("h41").switch_port]
+                s2_src_zone = [ng.get_node_object("h41").switch_port]
 
-                s2_dst_zone = [fv.network_graph.get_node_object("h11").switch_port]
+                s2_dst_zone = [ng.get_node_object("h11").switch_port]
 
                 s2_traffic = Traffic(init_wildcard=True)
                 s2_traffic.set_field("ethernet_type", 0x0800)
@@ -69,6 +66,8 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 s2_k = 0
                 s2 = PolicyStatement(s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, s2_k)
 
+                fv = FlowValidator(ng)
+                # fv.init_network_port_graph()
                 satisfies = fv.validate_policy([s1, s2])
                 print "The network configuration satisfies the given policy:", satisfies
 
