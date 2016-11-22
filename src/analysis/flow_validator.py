@@ -9,6 +9,7 @@ from model.network_port_graph import NetworkPortGraph
 from experiments.timer import Timer
 from util import get_specific_traffic
 from util import get_admitted_traffic, get_paths
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
 
 __author__ = 'Rakesh Kumar'
 
@@ -238,31 +239,67 @@ class FlowValidator(object):
 
         return is_exclusive
 
-    def validate_policy_case(self, validation_cases):
+    def validate_connectvity_constraint(self, src_port, dst_port, traffic):
+
+        satisfied = None
+
+        # Setup the appropriate filter
+        traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+        traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+        traffic.set_field("in_port", int(src_port.port_number))
+
+        at = get_admitted_traffic(self.port_graph, src_port, dst_port)
+
+        if not at.is_empty():
+            if at.is_subset_traffic(traffic):
+                satisfied = True
+            else:
+                print "src_port:", src_port, "dst_port:", dst_port, "at does not pass traffic check."
+                satisfied = False
+        else:
+            print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
+            satisfied = False
+
+        return satisfied
+
+    def validate_policy_cases(self, validation_cases):
         print validation_cases
 
-        satisfied = False
+        satisfied = True
 
         for src_port, dst_port in validation_cases:
-            print validation_cases[(src_port, dst_port)]
+            print src_port, dst_port
 
-            for constraint in validation_cases[(src_port, dst_port)]:
-                print constraint
+            for traffic, constraint_set in validation_cases[(src_port, dst_port)]:
+                print traffic
+
+                for constraint in constraint_set:
+                    print constraint
+                    
+                    if constraint[0] == CONNECTIVITY_CONSTRAINT:
+                        satisfied = self.validate_connectvity_constraint(src_port, dst_port, traffic)
+                    if constraint[0] == PATH_LENGTH_CONSTRAINT:
+                        pass
+                    if constraint[0] == LINK_EXCLUSIVITY_CONSTRAINT:
+                        pass
+                    
+                    if not satisfied:
+                        break
 
         return satisfied
     
-    def validate_policy_cases(self, k, validation_cases):
+    def validate_policy_casess_for_k(self, k, validation_cases):
 
         satisfied = False
         if k == 0:
-            satisfied = self.validate_policy_case(validation_cases)
+            satisfied = self.validate_policy_cases(validation_cases)
         else:
             for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
 
                 for link in links_to_fail:
                     self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
                 
-                satisfied = self.validate_policy_case(validation_cases)
+                satisfied = self.validate_policy_cases(validation_cases)
                 
                 for link in links_to_fail:
                     self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
@@ -289,7 +326,7 @@ class FlowValidator(object):
                     validation_cases[i][(src_port, dst_port)].append((ps.traffic, ps.constraints))
 
         for k in validation_cases:
-            self.validate_policy_cases(k, validation_cases[k])
+            self.validate_policy_casess_for_k(k, validation_cases[k])
 
     def validate_zone_pair_connectivity_path_length_link_exclusivity(self, src_zone, dst_zone, traffic, l, el, k):
 
