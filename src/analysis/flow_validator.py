@@ -238,17 +238,58 @@ class FlowValidator(object):
 
         return is_exclusive
 
+    def validate_policy_case(self, validation_cases):
+        print validation_cases
+
+        satisfied = False
+
+        for src_port, dst_port in validation_cases:
+            print validation_cases[(src_port, dst_port)]
+
+            for constraint in validation_cases[(src_port, dst_port)]:
+                print constraint
+
+        return satisfied
+    
+    def validate_policy_cases(self, k, validation_cases):
+
+        satisfied = False
+        if k == 0:
+            satisfied = self.validate_policy_case(validation_cases)
+        else:
+            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                for link in links_to_fail:
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+                
+                satisfied = self.validate_policy_case(validation_cases)
+                
+                for link in links_to_fail:
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+                if not satisfied:
+                    break
+
+        return satisfied
+
     def validate_policy(self, policy_statement_list):
 
-        # Keyed by src_port, dst_port, k
-        validation_tuples = defaultdict(list)
+        # Avoid duplication of effort across policies
+        # Validation cases: First key 'k', then (src_port, dst_port).
+        # Value is a list of <traffic, constraint_set> pairs
+        validation_cases = defaultdict(defaultdict)
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):
                 for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
-                    validation_tuples[(src_port, dst_port, i)].append((ps.traffic, ps.constraints))
 
-        print validation_tuples
+                    if (src_port, dst_port) not in validation_cases[i]:
+                        validation_cases[i][(src_port, dst_port)] = []
+
+                    validation_cases[i][(src_port, dst_port)].append((ps.traffic, ps.constraints))
+
+        for k in validation_cases:
+            self.validate_policy_cases(k, validation_cases[k])
 
     def validate_zone_pair_connectivity_path_length_link_exclusivity(self, src_zone, dst_zone, traffic, l, el, k):
 
