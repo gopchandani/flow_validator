@@ -77,7 +77,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
 def main():
 
-    num_iterations = 2
+    num_iterations = 1
 
     network_configuration = NetworkConfiguration("ryu",
                                                  "127.0.0.1",

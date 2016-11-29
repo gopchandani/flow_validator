@@ -360,7 +360,10 @@ class FlowValidator(object):
                     validation_cases[i][(src_port, dst_port)].append((ps.traffic, ps.constraints))
 
         for k in validation_cases:
-            self.validate_policy_casess_for_k(k, validation_cases[k])
+            satisfies = self.validate_policy_casess_for_k(k, validation_cases[k])
+
+            if not satisfies:
+                return satisfies
 
     def validate_zone_pair_connectivity_path_length_link_exclusivity(self, src_zone, dst_zone, traffic, l, el, k):
 
