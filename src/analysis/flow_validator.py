@@ -241,8 +241,6 @@ class FlowValidator(object):
 
     def validate_connectvity_constraint(self, src_port, dst_port, traffic):
 
-        satisfied = None
-
         at = get_admitted_traffic(self.port_graph, src_port, dst_port)
 
         if not at.is_empty():
