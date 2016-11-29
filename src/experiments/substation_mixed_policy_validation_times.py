@@ -12,8 +12,9 @@ __author__ = 'Rakesh Kumar'
 
 sys.path.append("./")
 
-from analysis.policy_statement import PolicyStatement
+from analysis.policy_statement import PolicyStatement, PolicyConstraint
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
+
 
 class SubstationMixedPolicyValidationTimes(Experiment):
 
@@ -47,11 +48,11 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 s1_traffic.set_field("ethernet_type", 0x0800)
                 s1_traffic.set_field("has_vlan_tag", 0)
 
-                s1_constraints = [(CONNECTIVITY_CONSTRAINT, None),
-                                  (PATH_LENGTH_CONSTRAINT, 6),
-                                  (LINK_EXCLUSIVITY_CONSTRAINT, [("s3", "s4")])]
+                s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
+                                  PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6),
+                                  PolicyConstraint(LINK_EXCLUSIVITY_CONSTRAINT, [("s3", "s4")])]
                 s1_k = 1
-                s1 = PolicyStatement(s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, s1_k)
+                s1 = PolicyStatement(ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, s1_k)
 
                 s2_src_zone = [ng.get_node_object("h41").switch_port]
 
@@ -62,12 +63,12 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 s2_traffic.set_field("has_vlan_tag", 0)
                 s2_traffic.set_field("tcp_destination_port", 443)
 
-                s2_constraints = [(CONNECTIVITY_CONSTRAINT, None)]
+                s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
                 s2_k = 0
-                s2 = PolicyStatement(s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, s2_k)
+                s2 = PolicyStatement(ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, s2_k)
 
                 fv = FlowValidator(ng)
-                # fv.init_network_port_graph()
+                fv.init_network_port_graph()
                 satisfies = fv.validate_policy([s1, s2])
                 print "The network configuration satisfies the given policy:", satisfies
 

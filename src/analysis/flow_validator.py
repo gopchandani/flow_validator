@@ -44,9 +44,9 @@ class FlowValidator(object):
                 specific_traffic = get_specific_traffic(self.network_graph, src_h_id, dst_h_id)
 
                 all_paths = get_paths(self.port_graph,
-                                        specific_traffic,
-                                        src_host_obj.switch_port,
-                                        dst_host_obj.switch_port)
+                                      specific_traffic,
+                                      src_host_obj.switch_port,
+                                      dst_host_obj.switch_port)
 
                 for path in all_paths:
                     if verbose:
@@ -243,11 +243,6 @@ class FlowValidator(object):
 
         satisfied = None
 
-        # Setup the appropriate filter
-        traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-        traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-        traffic.set_field("in_port", int(src_port.port_number))
-
         at = get_admitted_traffic(self.port_graph, src_port, dst_port)
 
         if not at.is_empty():
@@ -262,6 +257,38 @@ class FlowValidator(object):
 
         return satisfied
 
+    def validate_path_length_constraint(self, src_port, dst_port, traffic, l):
+
+        satisfied = True
+
+        traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
+
+        for path in traffic_paths:
+            if len(path) > l:
+                print "src_port:", src_port, "dst_port:", dst_port, "Path does not fit in specified limit:", path
+                satisfied = False
+                break
+
+        return satisfied
+
+    def validate_link_exclusivity(self, src_port, dst_port, traffic, el):
+        satisfied = True
+
+        for l in el:
+
+            # Check to see if the paths belonging to this link are all from src_port to dst_port
+            for path in l.traffic_paths:
+
+                if (path.src_node != src_port.network_port_graph_ingress_node or
+                            path.dst_node != dst_port.network_port_graph_egress_node):
+
+                    print "el:", el
+                    print "Found path:", path
+                    satisfied = False
+                    break
+
+        return satisfied
+
     def validate_policy_cases(self, validation_cases):
         print validation_cases
 
@@ -273,21 +300,27 @@ class FlowValidator(object):
             for traffic, constraint_set in validation_cases[(src_port, dst_port)]:
                 print traffic
 
+                # Setup the appropriate filter
+                traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+                traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+                traffic.set_field("in_port", int(src_port.port_number))
+
                 for constraint in constraint_set:
-                    print constraint
-                    
-                    if constraint[0] == CONNECTIVITY_CONSTRAINT:
+
+                    if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
                         satisfied = self.validate_connectvity_constraint(src_port, dst_port, traffic)
-                    if constraint[0] == PATH_LENGTH_CONSTRAINT:
-                        pass
-                    if constraint[0] == LINK_EXCLUSIVITY_CONSTRAINT:
-                        pass
-                    
+                    if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
+                        satisfied = self.validate_path_length_constraint(src_port, dst_port, traffic,
+                                                                         constraint.constraint_params)
+                    if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
+                        satisfied = self.validate_link_exclusivity(src_port, dst_port, traffic,
+                                                                   constraint.constraint_params)
+
                     if not satisfied:
                         break
 
         return satisfied
-    
+
     def validate_policy_casess_for_k(self, k, validation_cases):
 
         satisfied = False
@@ -298,9 +331,12 @@ class FlowValidator(object):
 
                 for link in links_to_fail:
                     self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-                
+
+                # Capture any changes to where the paths flow now
+                self.initialize_per_link_traffic_paths()
+
                 satisfied = self.validate_policy_cases(validation_cases)
-                
+
                 for link in links_to_fail:
                     self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
