@@ -1,4 +1,5 @@
 import sys
+import random
 import itertools
 import numpy as np
 
@@ -378,9 +379,12 @@ class FlowValidator(object):
         if k == 0:
             satisfies = self.validate_policy_cases(validation_cases)
         else:
-            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+            randomly_shuffled_links = list(self.network_graph.get_switch_link_data())
+            random.shuffle(randomly_shuffled_links)
+            for links_to_fail in itertools.permutations(randomly_shuffled_links, k):
 
                 for link in links_to_fail:
+                    print "Failing link:", link
                     self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
 
                 # Capture any changes to where the paths flow now
@@ -389,6 +393,7 @@ class FlowValidator(object):
                 satisfies = self.validate_policy_cases(validation_cases)
 
                 for link in links_to_fail:
+                    print "Restoring link:", link
                     self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
                 if not satisfies:
