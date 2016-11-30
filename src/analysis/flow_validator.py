@@ -274,14 +274,16 @@ class FlowValidator(object):
 
         for l in el:
 
-            # Check to see if the paths belonging to this link are all from src_port to dst_port
+            # Check to see if the paths belonging to this link are all from src_port to dst_port and vice versa
             for path in l.traffic_paths:
 
-                if not self.is_node_in_zone(path.src_node, src_zone, "ingress") or \
-                        not self.is_node_in_zone(path.dst_node, dst_zone, "egress"):
-
-                    print "el:", el
-                    print "Found path:", path
+                if (self.is_node_in_zone(path.src_node, src_zone, "ingress") and
+                        self.is_node_in_zone(path.dst_node, dst_zone, "egress")) or \
+                        (self.is_node_in_zone(path.src_node, dst_zone, "ingress") and
+                             self.is_node_in_zone(path.dst_node, src_zone, "egress")):
+                        pass
+                else:
+                    print "Against policy, found path:", path, "on link:", l
                     satisfied = False
                     break
 
@@ -292,11 +294,8 @@ class FlowValidator(object):
         satisfied = True
 
         for src_port, dst_port in validation_cases:
-            print src_port, dst_port
 
             for ps in validation_cases[(src_port, dst_port)]:
-
-                print ps.traffic
 
                 # Setup the appropriate filter
                 ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))

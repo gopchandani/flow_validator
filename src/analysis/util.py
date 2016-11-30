@@ -132,4 +132,8 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
 
                     traffic_paths.extend(npg_paths)
 
+    for tp in traffic_paths:
+        tp.src_node = src_port.network_port_graph_ingress_node
+        tp.dst_node = dst_port.network_port_graph_egress_node
+
     return traffic_paths
