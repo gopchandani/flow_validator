@@ -50,7 +50,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
                 s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
                                   PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6),
-                                  PolicyConstraint(LINK_EXCLUSIVITY_CONSTRAINT, [("s3", "s4")])]
+                                  PolicyConstraint(LINK_EXCLUSIVITY_CONSTRAINT, [("s1", "s2")])]
                 s1_k = 1
                 s1 = PolicyStatement(ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, s1_k)
 
@@ -70,7 +70,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 fv = FlowValidator(ng)
                 fv.init_network_port_graph()
                 satisfies = fv.validate_policy([s1, s2])
-                print "The network configuration satisfies the given policy:", satisfies
+                print "Does the network configuration satisfies the given policy:", satisfies
 
             self.data["validation_time"][self.network_configuration.nc_topo_str].append(t.secs)
 

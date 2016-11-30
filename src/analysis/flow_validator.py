@@ -239,131 +239,6 @@ class FlowValidator(object):
 
         return is_exclusive
 
-    def validate_connectvity_constraint(self, src_port, dst_port, traffic):
-
-        at = get_admitted_traffic(self.port_graph, src_port, dst_port)
-
-        if not at.is_empty():
-            if at.is_subset_traffic(traffic):
-                satisfied = True
-            else:
-                print "src_port:", src_port, "dst_port:", dst_port, "at does not pass traffic check."
-                satisfied = False
-        else:
-            print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
-            satisfied = False
-
-        return satisfied
-
-    def validate_path_length_constraint(self, src_port, dst_port, traffic, l):
-
-        satisfied = True
-
-        traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
-
-        for path in traffic_paths:
-            if len(path) > l:
-                print "src_port:", src_port, "dst_port:", dst_port, "Path does not fit in specified limit:", path
-                satisfied = False
-                break
-
-        return satisfied
-
-    def validate_link_exclusivity(self, src_zone, dst_zone, traffic, el):
-        satisfied = True
-
-        for l in el:
-
-            # Check to see if the paths belonging to this link are all from src_port to dst_port and vice versa
-            for path in l.traffic_paths:
-
-                if (self.is_node_in_zone(path.src_node, src_zone, "ingress") and
-                        self.is_node_in_zone(path.dst_node, dst_zone, "egress")) or \
-                        (self.is_node_in_zone(path.src_node, dst_zone, "ingress") and
-                             self.is_node_in_zone(path.dst_node, src_zone, "egress")):
-                        pass
-                else:
-                    print "Against policy, found path:", path, "on link:", l
-                    satisfied = False
-                    break
-
-        return satisfied
-
-    def validate_policy_cases(self, validation_cases):
-
-        satisfied = True
-
-        for src_port, dst_port in validation_cases:
-
-            for ps in validation_cases[(src_port, dst_port)]:
-
-                # Setup the appropriate filter
-                ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-                ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-                ps.traffic.set_field("in_port", int(src_port.port_number))
-
-                for constraint in ps.constraints:
-
-                    if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
-                        satisfied = self.validate_connectvity_constraint(src_port, dst_port, ps.traffic)
-                    if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
-                        satisfied = self.validate_path_length_constraint(src_port, dst_port, ps.traffic,
-                                                                         constraint.constraint_params)
-                    if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
-                        satisfied = self.validate_link_exclusivity(ps.src_zone, ps.dst_zone, ps.traffic,
-                                                                   constraint.constraint_params)
-
-                    if not satisfied:
-                        break
-
-        return satisfied
-
-    def validate_policy_casess_for_k(self, k, validation_cases):
-
-        satisfied = False
-        if k == 0:
-            satisfied = self.validate_policy_cases(validation_cases)
-        else:
-            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
-
-                for link in links_to_fail:
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                # Capture any changes to where the paths flow now
-                self.initialize_per_link_traffic_paths()
-
-                satisfied = self.validate_policy_cases(validation_cases)
-
-                for link in links_to_fail:
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
-                if not satisfied:
-                    break
-
-        return satisfied
-
-    def validate_policy(self, policy_statement_list):
-
-        # Avoid duplication of effort across policies
-        # Validation cases: First key 'k', then (src_port, dst_port).
-        # Value is a list of statements where the pair appears
-        validation_cases = defaultdict(defaultdict)
-
-        for ps in policy_statement_list:
-            for i in range(ps.k+1):
-                for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
-
-                    if (src_port, dst_port) not in validation_cases[i]:
-                        validation_cases[i][(src_port, dst_port)] = []
-
-                    validation_cases[i][(src_port, dst_port)].append(ps)
-
-        for k in validation_cases:
-            satisfies = self.validate_policy_casess_for_k(k, validation_cases[k])
-
-            if not satisfies:
-                return satisfies
-
     def validate_zone_pair_connectivity_path_length_link_exclusivity(self, src_zone, dst_zone, traffic, l, el, k):
 
         is_connected = True
@@ -411,3 +286,137 @@ class FlowValidator(object):
         avg_incremental_time = np.mean(incremental_times)
 
         return is_connected, within_limit, is_exclusive, avg_incremental_time
+
+    def validate_connectvity_constraint(self, src_port, dst_port, traffic):
+
+        at = get_admitted_traffic(self.port_graph, src_port, dst_port)
+
+        if not at.is_empty():
+            if at.is_subset_traffic(traffic):
+                satisfies = True
+            else:
+                print "src_port:", src_port, "dst_port:", dst_port, "at does not pass traffic check."
+                satisfies = False
+        else:
+            print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
+            satisfies = False
+
+        return satisfies
+
+    def validate_path_length_constraint(self, src_port, dst_port, traffic, l):
+
+        satisfies = True
+
+        traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
+
+        for path in traffic_paths:
+            if len(path) > l:
+                print "src_port:", src_port, "dst_port:", dst_port, "Path does not fit in specified limit:", path
+                satisfies = False
+                break
+
+        return satisfies
+
+    def validate_link_exclusivity(self, src_zone, dst_zone, traffic, el):
+        satisfies = True
+
+        for l in el:
+
+            # Check to see if the paths belonging to this link are all from src_port to dst_port and vice versa
+            for path in l.traffic_paths:
+
+                if (self.is_node_in_zone(path.src_node, src_zone, "ingress") and
+                        self.is_node_in_zone(path.dst_node, dst_zone, "egress")) or \
+                        (self.is_node_in_zone(path.src_node, dst_zone, "ingress") and
+                             self.is_node_in_zone(path.dst_node, src_zone, "egress")):
+                        pass
+                else:
+                    print "Against policy, found path:", path, "on link:", l
+                    satisfies = False
+                    break
+
+        return satisfies
+
+    def validate_policy_cases(self, validation_cases):
+
+        satisfies = True
+
+        for src_port, dst_port in validation_cases:
+
+            print "src_port:", src_port, "dst_port:", dst_port
+
+            for ps in validation_cases[(src_port, dst_port)]:
+
+                # Setup the appropriate filter
+                ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+                ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+                ps.traffic.set_field("in_port", int(src_port.port_number))
+
+                for constraint in ps.constraints:
+
+                    if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
+                        satisfies = self.validate_connectvity_constraint(src_port, dst_port, ps.traffic)
+                    if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
+                        satisfies = self.validate_path_length_constraint(src_port, dst_port, ps.traffic,
+                                                                         constraint.constraint_params)
+                    if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
+                        satisfies = self.validate_link_exclusivity(ps.src_zone, ps.dst_zone, ps.traffic,
+                                                                   constraint.constraint_params)
+
+                    print "Constraint type:", constraint.constraint_type, "satisfies:", satisfies
+
+                    if not satisfies:
+                        break
+            if not satisfies:
+                break
+
+        return satisfies
+
+    def validate_policy_casess_for_k(self, k, validation_cases):
+
+        satisfies = False
+        if k == 0:
+            satisfies = self.validate_policy_cases(validation_cases)
+        else:
+            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
+
+                for link in links_to_fail:
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                # Capture any changes to where the paths flow now
+                self.initialize_per_link_traffic_paths()
+
+                satisfies = self.validate_policy_cases(validation_cases)
+
+                for link in links_to_fail:
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+                if not satisfies:
+                    break
+
+        return satisfies
+
+    def validate_policy(self, policy_statement_list):
+
+        # Assume the policy works, unless proven otherwise.
+        satisfies = True
+
+        # Avoid duplication of effort across policies
+        # Validation cases: First key 'k', then (src_port, dst_port).
+        # Value is a list of statements where the pair appears
+        validation_cases = defaultdict(defaultdict)
+
+        for ps in policy_statement_list:
+            for i in range(ps.k+1):
+                for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
+
+                    if (src_port, dst_port) not in validation_cases[i]:
+                        validation_cases[i][(src_port, dst_port)] = []
+
+                    validation_cases[i][(src_port, dst_port)].append(ps)
+
+        for k in validation_cases:
+            print "for k =", k
+            satisfies = self.validate_policy_casess_for_k(k, validation_cases[k])
+
+        return satisfies
