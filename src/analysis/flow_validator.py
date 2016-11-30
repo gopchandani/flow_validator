@@ -269,7 +269,7 @@ class FlowValidator(object):
 
         return satisfied
 
-    def validate_link_exclusivity(self, src_port, dst_port, traffic, el):
+    def validate_link_exclusivity(self, src_zone, dst_zone, traffic, el):
         satisfied = True
 
         for l in el:
@@ -277,8 +277,8 @@ class FlowValidator(object):
             # Check to see if the paths belonging to this link are all from src_port to dst_port
             for path in l.traffic_paths:
 
-                if (path.src_node != src_port.network_port_graph_ingress_node or
-                            path.dst_node != dst_port.network_port_graph_egress_node):
+                if not self.is_node_in_zone(path.src_node, src_zone, "ingress") or \
+                        not self.is_node_in_zone(path.dst_node, dst_zone, "egress"):
 
                     print "el:", el
                     print "Found path:", path
@@ -288,30 +288,30 @@ class FlowValidator(object):
         return satisfied
 
     def validate_policy_cases(self, validation_cases):
-        print validation_cases
 
         satisfied = True
 
         for src_port, dst_port in validation_cases:
             print src_port, dst_port
 
-            for traffic, constraint_set in validation_cases[(src_port, dst_port)]:
-                print traffic
+            for ps in validation_cases[(src_port, dst_port)]:
+
+                print ps.traffic
 
                 # Setup the appropriate filter
-                traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-                traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-                traffic.set_field("in_port", int(src_port.port_number))
+                ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+                ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+                ps.traffic.set_field("in_port", int(src_port.port_number))
 
-                for constraint in constraint_set:
+                for constraint in ps.constraints:
 
                     if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
-                        satisfied = self.validate_connectvity_constraint(src_port, dst_port, traffic)
+                        satisfied = self.validate_connectvity_constraint(src_port, dst_port, ps.traffic)
                     if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
-                        satisfied = self.validate_path_length_constraint(src_port, dst_port, traffic,
+                        satisfied = self.validate_path_length_constraint(src_port, dst_port, ps.traffic,
                                                                          constraint.constraint_params)
                     if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
-                        satisfied = self.validate_link_exclusivity(src_port, dst_port, traffic,
+                        satisfied = self.validate_link_exclusivity(ps.src_zone, ps.dst_zone, ps.traffic,
                                                                    constraint.constraint_params)
 
                     if not satisfied:
@@ -347,7 +347,7 @@ class FlowValidator(object):
 
         # Avoid duplication of effort across policies
         # Validation cases: First key 'k', then (src_port, dst_port).
-        # Value is a list of <traffic, constraint_set> pairs
+        # Value is a list of statements where the pair appears
         validation_cases = defaultdict(defaultdict)
 
         for ps in policy_statement_list:
@@ -357,7 +357,7 @@ class FlowValidator(object):
                     if (src_port, dst_port) not in validation_cases[i]:
                         validation_cases[i][(src_port, dst_port)] = []
 
-                    validation_cases[i][(src_port, dst_port)].append((ps.traffic, ps.constraints))
+                    validation_cases[i][(src_port, dst_port)].append(ps)
 
         for k in validation_cases:
             satisfies = self.validate_policy_casess_for_k(k, validation_cases[k])
