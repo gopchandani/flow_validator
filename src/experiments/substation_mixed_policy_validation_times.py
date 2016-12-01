@@ -30,7 +30,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         self.num_iterations = num_iterations
 
         self.data = {
-            "validation_time": defaultdict(list)
+            "validation_time": defaultdict(defaultdict)
         }
 
     def construct_policy_statements(self, nc, s1_k):
@@ -74,13 +74,19 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
                     policy_statements = self.construct_policy_statements(nc, s1_k)
 
+                    total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
+                                        nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
+
+                    self.data["validation_time"][str(s1_k)][str(total_host_pairs)] = []
+
                     with Timer(verbose=True) as t:
                         fv = FlowValidator(nc.ng)
                         fv.init_network_port_graph()
                         satisfies = fv.validate_policy(policy_statements)
 
                     print "Does the network configuration satisfies the given policy:", satisfies
-                    self.data["validation_time"][nc.nc_topo_str].append(t.secs)
+
+                    self.data["validation_time"][str(s1_k)][str(total_host_pairs)].append(t.secs)
 
 
 def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list):
