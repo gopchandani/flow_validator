@@ -338,9 +338,7 @@ class FlowValidator(object):
 
         return satisfies
 
-    def validate_policy_cases(self, validation_cases):
-
-        satisfies = True
+    def validate_policy_cases(self, validation_cases, violations):
 
         for src_port, dst_port in validation_cases:
 
@@ -364,20 +362,13 @@ class FlowValidator(object):
                         satisfies = self.validate_link_exclusivity(ps.src_zone, ps.dst_zone, ps.traffic,
                                                                    constraint.constraint_params)
 
-                    print "Constraint type:", constraint.constraint_type, "satisfies:", satisfies
-
                     if not satisfies:
-                        break
-            if not satisfies:
-                break
+                        violations.append((src_port, dst_port, constraint))
 
-        return satisfies
+    def validate_policy_casess_for_k(self, k, validation_cases, violations):
 
-    def validate_policy_casess_for_k(self, k, validation_cases):
-
-        satisfies = False
         if k == 0:
-            satisfies = self.validate_policy_cases(validation_cases)
+            self.validate_policy_cases(validation_cases, violations)
         else:
             randomly_shuffled_links = list(self.network_graph.get_switch_link_data())
             random.shuffle(randomly_shuffled_links)
@@ -390,21 +381,16 @@ class FlowValidator(object):
                 # Capture any changes to where the paths flow now
                 self.initialize_per_link_traffic_paths()
 
-                satisfies = self.validate_policy_cases(validation_cases)
+                self.validate_policy_cases(validation_cases, violations)
 
                 for link in links_to_fail:
                     print "Restoring link:", link
                     self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
-                if not satisfies:
-                    break
-
-        return satisfies
-
     def validate_policy(self, policy_statement_list):
 
         # Assume the policy works, unless proven otherwise.
-        satisfies = True
+        violations = []
 
         # Avoid duplication of effort across policies
         # Validation cases: First key 'k', then (src_port, dst_port).
@@ -422,6 +408,6 @@ class FlowValidator(object):
 
         for k in validation_cases:
             print "for k =", k
-            satisfies = self.validate_policy_casess_for_k(k, validation_cases[k])
+            self.validate_policy_casess_for_k(k, validation_cases[k], violations)
 
-        return satisfies
+        return violations
