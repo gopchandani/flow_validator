@@ -60,6 +60,10 @@ def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
                 i2 = dst_spg_at.intersect(i1, keep_all=True)
                 if not i2.is_empty():
                     i2.set_field("in_port", int(src_port.port_number))
+
+                    if src_sw_port.port_id == "s4:3" and dst_sw_port.port_id == "s1:3":
+                        pass
+
                     yield src_sw_port, dst_sw_port, i2.get_orig_traffic(use_embedded_switch_modifications=True)
 
 
@@ -118,19 +122,24 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
 
             for src_sw_port, dst_sw_port, at_subset in get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
 
-                npg_paths = pg.get_paths(src_sw_port.network_port_graph_egress_node,
-                                         dst_sw_port.network_port_graph_ingress_node,
-                                         at_subset,
-                                         [src_sw_port.network_port_graph_egress_node],
-                                         [],
-                                         [])
+                # Include these paths only if they carry parts of specific_traffic
 
-                if npg_paths:
-                    for path in npg_paths:
-                        path.path_nodes.insert(0, src_port.switch_port_graph_ingress_node)
-                        path.path_nodes.append(dst_port.switch_port_graph_egress_node)
+                at_subset_int = specific_traffic.intersect(at_subset)
+                if not at_subset_int.is_empty():
 
-                    traffic_paths.extend(npg_paths)
+                    npg_paths = pg.get_paths(src_sw_port.network_port_graph_egress_node,
+                                             dst_sw_port.network_port_graph_ingress_node,
+                                             at_subset,
+                                             [src_sw_port.network_port_graph_egress_node],
+                                             [],
+                                             [])
+
+                    if npg_paths:
+                        for path in npg_paths:
+                            path.path_nodes.insert(0, src_port.switch_port_graph_ingress_node)
+                            path.path_nodes.append(dst_port.switch_port_graph_egress_node)
+
+                        traffic_paths.extend(npg_paths)
 
     for tp in traffic_paths:
         tp.src_node = src_port.network_port_graph_ingress_node
