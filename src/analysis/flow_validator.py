@@ -296,11 +296,11 @@ class FlowValidator(object):
             if at.is_subset_traffic(traffic):
                 satisfies = True
             else:
-                print "src_port:", src_port, "dst_port:", dst_port, "at does not pass traffic check."
+                #print "src_port:", src_port, "dst_port:", dst_port, "at does not pass traffic check."
                 satisfies = False
                 counter_example = at
         else:
-            print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
+            #print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
             satisfies = False
             counter_example = at
 
@@ -315,7 +315,7 @@ class FlowValidator(object):
 
         for path in traffic_paths:
             if len(path) > l:
-                print "src_port:", src_port, "dst_port:", dst_port, "Path does not fit in specified limit:", path
+                #print "src_port:", src_port, "dst_port:", dst_port, "Path does not fit in specified limit:", path
                 satisfies = False
                 counter_example = path
                 break
@@ -337,7 +337,7 @@ class FlowValidator(object):
                              self.is_node_in_zone(path.dst_node, src_zone, "egress")):
                     pass
                 else:
-                    print "Against policy, found path:", path, "on link:", l
+                    #print "Against policy, found path:", path, "on link:", l
                     satisfies = False
                     counter_example = path
                     break
@@ -348,7 +348,7 @@ class FlowValidator(object):
 
         for src_port, dst_port in validation_cases:
 
-            print "src_port:", src_port, "dst_port:", dst_port
+            #print "src_port:", src_port, "dst_port:", dst_port
 
             for ps in validation_cases[(src_port, dst_port)]:
 

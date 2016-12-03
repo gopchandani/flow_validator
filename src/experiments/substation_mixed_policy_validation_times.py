@@ -69,6 +69,14 @@ class SubstationMixedPolicyValidationTimes(Experiment):
     def trigger(self):
 
         for nc in self.network_configurations:
+
+            print "Configuration:", nc
+
+            fv = FlowValidator(nc.ng)
+            fv.init_network_port_graph()
+
+            print "Initialized analysis."
+
             for s1_k in self.s1_k_values:
 
                 for i in range(self.num_iterations):
@@ -81,15 +89,14 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                     self.data["validation_time"][str(s1_k)][str(total_host_pairs)] = []
 
                     with Timer(verbose=True) as t:
-                        fv = FlowValidator(nc.ng)
-                        fv.init_network_port_graph()
                         violations = fv.validate_policy(policy_statements)
 
-                    print violations
+                    print "Total violations:", len(violations)
                     print "Does the network configuration satisfy the given policy:", (len(violations) == 0)
 
                     self.data["validation_time"][str(s1_k)][str(total_host_pairs)].append(t.secs)
 
+                    self.dump_data()
 
 def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list):
     nc_list = []
@@ -124,8 +131,8 @@ def main():
     num_iterations = 1
 
     num_switches_in_clique_list = [4]
-    num_hosts_per_switch_list = [1]
-    s1_k_values = [1]
+    num_hosts_per_switch_list = [1, 2]
+    s1_k_values = [0, 1]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
 
