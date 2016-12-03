@@ -1,5 +1,7 @@
 import sys
 
+import matplotlib.pyplot as plt
+
 from collections import defaultdict
 
 from timer import Timer
@@ -23,7 +25,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                  s1_k_values,
                  num_iterations):
 
-        super(SubstationMixedPolicyValidationTimes, self).__init__("resiliency_policy_times", 1)
+        super(SubstationMixedPolicyValidationTimes, self).__init__("substation_mixed_policy_validation_times", 1)
 
         self.network_configurations = network_configurations
         self.s1_k_values = s1_k_values
@@ -98,6 +100,51 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
                     self.dump_data()
 
+    def plot_data(self):
+
+        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(9.5, 3.0))
+
+        data_xtick_labels = self.data["validation_time"].keys()
+        data_xticks = [int(x) for x in data_xtick_labels]
+
+        self.plot_lines_with_error_bars(ax1,
+                                        "validation_time",
+                                        "Number of host pairs",
+                                        "Time (seconds)",
+                                        "(a)",
+                                        y_scale='log',
+                                        x_min_factor=1.0,
+                                        x_max_factor=1.0,
+                                        y_min_factor=0.01,
+                                        y_max_factor=1,
+                                        xticks=data_xticks,
+                                        xtick_labels=data_xtick_labels)
+
+        xlabels = ax1.get_xticklabels()
+        plt.setp(xlabels, rotation=45, fontsize=8)
+
+        # Shrink current axis's height by 25% on the bottom
+        box = ax1.get_position()
+        ax1.set_position([box.x0, box.y0 + box.height * 0.3,
+                          box.width, box.height * 0.7])
+
+        handles, labels = ax1.get_legend_handles_labels()
+
+        ax1.legend(handles,
+                   labels,
+                   shadow=True,
+                   fontsize=8,
+                   loc='upper center',
+                   ncol=3,
+                   markerscale=1.0,
+                   frameon=True,
+                   fancybox=True,
+                   columnspacing=0.5, bbox_to_anchor=[1.6, -0.27])
+
+        plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
+        plt.show()
+
+
 def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list):
     nc_list = []
 
@@ -128,17 +175,21 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 1
+    num_iterations = 3
 
-    num_switches_in_clique_list = [4]
-    num_hosts_per_switch_list = [1, 2]
-    s1_k_values = [0, 1]
+
+    num_switches_in_clique_list = [4]#, 5, 6]
+    num_hosts_per_switch_list = [1, 2]#, 3]
+    s1_k_values = [1, 2]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
     exp.trigger()
     exp.dump_data()
+
+    # exp.load_data("data/resiliency_policy_times_1_iterations_20161130_190520.json")
+    # exp.plot_data()
 
 if __name__ == "__main__":
     main()
