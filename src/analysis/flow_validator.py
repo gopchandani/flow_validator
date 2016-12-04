@@ -344,13 +344,13 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
-    def validate_policy_cases(self, validation_cases, violations, links_failed):
+    def validate_policy_cases(self, validation_map, violations, links_failed):
 
-        for src_port, dst_port in validation_cases:
+        for src_port, dst_port in validation_map:
 
             #print "src_port:", src_port, "dst_port:", dst_port
 
-            for ps in validation_cases[(src_port, dst_port)]:
+            for ps in validation_map[(src_port, dst_port)]:
 
                 # Setup the appropriate filter
                 ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
@@ -374,27 +374,31 @@ class FlowValidator(object):
                     if not satisfies:
                         violations.append((links_failed, src_port, dst_port, constraint, counter_example))
 
-    def validate_policy_casess_for_k(self, k, validation_cases, violations):
+    def validate_validation_map(self, validation_map, violations):
 
-        if k == 0:
-            self.validate_policy_cases(validation_cases, violations, [])
-        else:
-            randomly_shuffled_links = list(self.network_graph.get_switch_link_data())
-            random.shuffle(randomly_shuffled_links)
-            for links_to_fail in itertools.permutations(randomly_shuffled_links, k):
-
-                for link in links_to_fail:
-                    print "Failing link:", link
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                # Capture any changes to where the paths flow now
-                self.initialize_per_link_traffic_paths()
-
-                self.validate_policy_cases(validation_cases, violations, links_to_fail)
-
-                for link in links_to_fail:
-                    print "Restoring link:", link
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+        for k in validation_map:
+            print "for k =", k
+            
+            if k == 0:
+                self.validate_policy_cases(validation_map[k], violations, [])
+            else:
+                
+                randomly_shuffled_links = list(self.network_graph.get_switch_link_data())
+                random.shuffle(randomly_shuffled_links)
+                for links_to_fail in itertools.permutations(randomly_shuffled_links, k):
+    
+                    for link in links_to_fail:
+                        print "Failing link:", link
+                        self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+    
+                    # Capture any changes to where the paths flow now
+                    self.initialize_per_link_traffic_paths()
+    
+                    self.validate_policy_cases(validation_map[k], violations, links_to_fail)
+    
+                    for link in links_to_fail:
+                        print "Restoring link:", link
+                        self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
     def validate_policy(self, policy_statement_list):
 
@@ -404,19 +408,17 @@ class FlowValidator(object):
         # Avoid duplication of effort across policies
         # Validation cases: First key 'k', then (src_port, dst_port).
         # Value is a list of statements where the pair appears
-        validation_cases = defaultdict(defaultdict)
+        validation_map = defaultdict(defaultdict)
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):
                 for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
 
-                    if (src_port, dst_port) not in validation_cases[i]:
-                        validation_cases[i][(src_port, dst_port)] = []
+                    if (src_port, dst_port) not in validation_map[i]:
+                        validation_map[i][(src_port, dst_port)] = []
 
-                    validation_cases[i][(src_port, dst_port)].append(ps)
+                    validation_map[i][(src_port, dst_port)].append(ps)
 
-        for k in validation_cases:
-            print "for k =", k
-            self.validate_policy_casess_for_k(k, validation_cases[k], violations)
+        self.validate_validation_map(validation_map, violations)
 
         return violations
