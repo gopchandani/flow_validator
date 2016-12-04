@@ -378,27 +378,21 @@ class FlowValidator(object):
 
         for k in validation_map:
             print "for k =", k
-            
-            if k == 0:
-                self.validate_policy_cases(validation_map[k], violations, [])
-            else:
-                
-                randomly_shuffled_links = list(self.network_graph.get_switch_link_data())
-                random.shuffle(randomly_shuffled_links)
-                for links_to_fail in itertools.permutations(randomly_shuffled_links, k):
-    
-                    for link in links_to_fail:
-                        print "Failing link:", link
-                        self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-    
-                    # Capture any changes to where the paths flow now
-                    self.initialize_per_link_traffic_paths()
-    
-                    self.validate_policy_cases(validation_map[k], violations, links_to_fail)
-    
-                    for link in links_to_fail:
-                        print "Restoring link:", link
-                        self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+            for links_to_fail in itertools.permutations(self.network_graph.get_switch_link_data(), k):
+
+                for link in links_to_fail:
+                    print "Failing link:", link
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                # Capture any changes to where the paths flow now
+                self.initialize_per_link_traffic_paths()
+
+                self.validate_policy_cases(validation_map[k], violations, links_to_fail)
+
+                for link in links_to_fail:
+                    print "Restoring link:", link
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
     def validate_policy(self, policy_statement_list):
 
