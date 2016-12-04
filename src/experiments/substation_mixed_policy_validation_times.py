@@ -96,15 +96,15 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                     print "Total violations:", len(violations)
                     print "Does the network configuration satisfy the given policy:", (len(violations) == 0)
 
-                    self.data["validation_time"][str(s1_k)][str(total_host_pairs)].append(t.secs)
+                    self.data["validation_time"]["k:" + str(s1_k)][str(total_host_pairs)].append(t.secs)
 
                     self.dump_data()
 
     def plot_data(self):
 
-        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(9.5, 3.0))
+        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(4.5, 3.0))
 
-        data_xtick_labels = self.data["validation_time"].keys()
+        data_xtick_labels = self.data["validation_time"]['1'].keys()
         data_xticks = [int(x) for x in data_xtick_labels]
 
         self.plot_lines_with_error_bars(ax1,
@@ -135,11 +135,12 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                    shadow=True,
                    fontsize=8,
                    loc='upper center',
-                   ncol=3,
+                   ncol=2,
                    markerscale=1.0,
                    frameon=True,
                    fancybox=True,
-                   columnspacing=0.5, bbox_to_anchor=[1.6, -0.27])
+                   columnspacing=2.5,
+                   bbox_to_anchor=[0.5, -0.2])
 
         plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
         plt.show()
@@ -161,7 +162,7 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
                                       "cliquetopo",
                                       {"num_switches": nsc,
                                        "num_hosts_per_switch": hps,
-                                       "per_switch_links": nsc - 1},
+                                       "per_switch_links": 2},#nsc - 1},
                                       conf_root="configurations/",
                                       synthesis_name="AboresceneSynthesis",
                                       synthesis_params={"apply_group_intents_immediately": True})
@@ -175,21 +176,20 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 3
+    num_iterations = 2
 
-
-    num_switches_in_clique_list = [4]#, 5, 6]
-    num_hosts_per_switch_list = [1, 2]#, 3]
+    num_switches_in_clique_list = [4]#, 5]#, 6]
+    num_hosts_per_switch_list = [1]#, 2]#, 3]
     s1_k_values = [1, 2]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
-    # exp.load_data("data/resiliency_policy_times_1_iterations_20161130_190520.json")
-    # exp.plot_data()
+    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161204_093721.json")
+    exp.plot_data()
 
 if __name__ == "__main__":
     main()
