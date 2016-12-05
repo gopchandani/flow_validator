@@ -348,8 +348,6 @@ class FlowValidator(object):
 
         for src_port, dst_port in validation_map:
 
-            #print "src_port:", src_port, "dst_port:", dst_port
-
             for ps in validation_map[(src_port, dst_port)]:
 
                 # Setup the appropriate filter
@@ -374,26 +372,6 @@ class FlowValidator(object):
                     if not satisfies:
                         violations.append((links_failed, src_port, dst_port, constraint, counter_example))
 
-    def validate_validation_map(self, validation_map, violations):
-
-        for k in validation_map:
-            print "for k =", k
-
-            for links_to_fail in itertools.permutations(self.network_graph.get_switch_link_data(), k):
-
-                for link in links_to_fail:
-                    print "Failing link:", link
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                # Capture any changes to where the paths flow now
-                self.initialize_per_link_traffic_paths()
-
-                self.validate_policy_cases(validation_map[k], violations, links_to_fail)
-
-                for link in links_to_fail:
-                    print "Restoring link:", link
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
     def validate_policy(self, policy_statement_list):
 
         # Assume the policy works, unless proven otherwise.
@@ -413,6 +391,24 @@ class FlowValidator(object):
 
                     validation_map[i][(src_port, dst_port)].append(ps)
 
-        self.validate_validation_map(validation_map, violations)
+        # Now the validaiton
+
+        for k in validation_map:
+            print "for k =", k
+
+            for links_to_fail in itertools.permutations(self.network_graph.get_switch_link_data(), k):
+
+                for link in links_to_fail:
+                    print "Failing link:", link
+                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                # Capture any changes to where the paths flow now
+                self.initialize_per_link_traffic_paths()
+
+                self.validate_policy_cases(validation_map[k], violations, links_to_fail)
+
+                for link in links_to_fail:
+                    print "Restoring link:", link
+                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
 
         return violations
