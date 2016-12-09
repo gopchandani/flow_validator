@@ -244,8 +244,8 @@ class Experiment(object):
 
             marker_i += 1
 
-        ax.tick_params(axis='x', labelsize=8)
-        ax.tick_params(axis='y', labelsize=8)
+        ax.tick_params(axis='x', labelsize=10)
+        ax.tick_params(axis='y', labelsize=10)
 
         low_xlim, high_xlim = ax.get_xlim()
         ax.set_xlim(xmax=(high_xlim) * x_max_factor)
