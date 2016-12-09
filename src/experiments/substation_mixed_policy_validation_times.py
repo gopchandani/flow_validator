@@ -32,7 +32,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         self.num_iterations = num_iterations
 
         self.data = {
-            "validation_time": defaultdict(defaultdict)
+            "validation_time": defaultdict(defaultdict),
         }
 
     def construct_policy_statements(self, nc, s1_k):
@@ -81,14 +81,14 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
             for s1_k in self.s1_k_values:
 
+                policy_statements = self.construct_policy_statements(nc, s1_k)
+
+                total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
+                                    nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
+
+                self.data["validation_time"]["k:" + str(s1_k)][str(total_host_pairs)] = []
+
                 for i in range(self.num_iterations):
-
-                    policy_statements = self.construct_policy_statements(nc, s1_k)
-
-                    total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
-                                        nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
-
-                    self.data["validation_time"][str(s1_k)][str(total_host_pairs)] = []
 
                     with Timer(verbose=True) as t:
                         violations = fv.validate_policy(policy_statements)
@@ -176,20 +176,20 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 2
+    num_iterations = 1
 
     num_switches_in_clique_list = [4]#, 5]#, 6]
-    num_hosts_per_switch_list = [1]#, 2]#, 3]
+    num_hosts_per_switch_list = [1, 2, 3, 4, 5]
     s1_k_values = [1, 2]
 
     #network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
     network_configurations = []
     exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161204_125852.json")
-    exp.plot_data()
+    # exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161204_125852.json")
+    # exp.plot_data()
 
 if __name__ == "__main__":
     main()
