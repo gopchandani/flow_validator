@@ -344,7 +344,7 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
-    def validate_policy_cases(self, validation_map, violations, links_failed):
+    def validate_policy_cases(self, validation_map, links_failed):
 
         for src_port, dst_port in validation_map:
 
@@ -370,68 +370,61 @@ class FlowValidator(object):
                                                                                     constraint.constraint_params)
 
                     if not satisfies:
-                        violations.append((links_failed, src_port, dst_port, constraint, counter_example))
+                        self.violations.append((links_failed, src_port, dst_port, constraint, counter_example))
 
-    def perform_validation(self, link_prefix, all_links, max_k, validation_map, violations):
+    def perform_validation(self, lmbda):
 
         # Capture any changes to where the paths flow now
         self.initialize_per_link_traffic_paths()
 
         # Perform the validation that needs performing here...
-        print "Performing validation, prefix here:", link_prefix
-        self.validate_policy_cases(validation_map[len(link_prefix)], violations, link_prefix)
+        print "Performing validation, prefix here:", lmbda
+        self.validate_policy_cases(self.validation_map[len(lmbda)],  lmbda)
 
-        # If already max_k links have been failed, no need to do anything
-        if len(link_prefix) == max_k:
-            return
-        else:
+        # If max_k links have already been failed, no need to do anything
+        if len(lmbda) < self.max_k:
 
             # Rotate through the links
-            for link in all_links:
-                # Select the link by checking that it is not in the link_prefix already
+            for link in list(self.network_graph.get_switch_link_data()):
+                # Select the link by checking that it is not in the lmbda already
                 # Add the selected link to fail to the prefix
-
-                if link not in link_prefix:
-                    link_prefix.append(link)
-                else:
+                if link in lmbda:
                     continue
 
                 # Fail the link
                 print "Failing:", link
                 self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+                lmbda.append(link)
 
                 # Recurse
-                self.perform_validation(link_prefix, all_links, max_k, validation_map, violations  )
+                self.perform_validation(lmbda)
 
                 # Restore the link
                 print "Restoring:", link
                 self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-                link_prefix.remove(link)
+                lmbda.remove(link)
 
     def validate_policy(self, policy_statement_list):
-
-        # Assume the policy works, unless proven otherwise.
-        violations = []
 
         # Avoid duplication of effort across policies
         # Validation cases: First key 'k', then (src_port, dst_port).
         # Value is a list of statements where the pair appears
-        validation_map = defaultdict(defaultdict)
+        self.validation_map = defaultdict(defaultdict)
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):
                 for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
 
-                    if (src_port, dst_port) not in validation_map[i]:
-                        validation_map[i][(src_port, dst_port)] = []
+                    if (src_port, dst_port) not in self.validation_map[i]:
+                        self.validation_map[i][(src_port, dst_port)] = []
 
-                    validation_map[i][(src_port, dst_port)].append(ps)
+                    self.validation_map[i][(src_port, dst_port)].append(ps)
 
-        # Now the validaiton
-        all_links = list(self.network_graph.get_switch_link_data())
-        link_prefix = []
-        max_k = max(validation_map.keys())
-        self.perform_validation(link_prefix, all_links, max_k, validation_map, violations)
+        # Now the validation
+        lmbda = []
+        self.max_k = max(self.validation_map.keys())
+        self.violations = []
+        self.perform_validation(lmbda)
 
-        print len(violations)
-        return violations
+        print len(self.violations)
+        return self.violations

@@ -179,8 +179,8 @@ def main():
     num_iterations = 1
 
     num_switches_in_clique_list = [4]#, 5]#, 6]
-    num_hosts_per_switch_list = [1, 2, 3]
-    s1_k_values = [3]#, 2]
+    num_hosts_per_switch_list = [1]
+    s1_k_values = [1]#, 2, 3, 4]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
 
