@@ -434,26 +434,4 @@ class FlowValidator(object):
         self.perform_validation(link_prefix, all_links, max_k, validation_map, violations)
 
         print len(violations)
-        violations = []
-
-        for k in validation_map:
-            print "for k =", k
-
-            for links_to_fail in itertools.permutations(self.network_graph.get_switch_link_data(), k):
-
-                for link in links_to_fail:
-                    print "Failing link:", link
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                # Capture any changes to where the paths flow now
-                self.initialize_per_link_traffic_paths()
-
-                self.validate_policy_cases(validation_map[k], violations, links_to_fail)
-
-                for link in links_to_fail:
-                    print "Restoring link:", link
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
-        print len(violations)
-
         return violations

@@ -32,7 +32,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         self.num_iterations = num_iterations
 
         self.data = {
-            "validation_time": defaultdict(defaultdict)
+            "validation_time": defaultdict(defaultdict),
         }
 
     def construct_policy_statements(self, nc, s1_k):
@@ -81,14 +81,14 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
             for s1_k in self.s1_k_values:
 
+                policy_statements = self.construct_policy_statements(nc, s1_k)
+
+                total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
+                                    nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
+
+                self.data["validation_time"]["k:" + str(s1_k)][str(total_host_pairs)] = []
+
                 for i in range(self.num_iterations):
-
-                    policy_statements = self.construct_policy_statements(nc, s1_k)
-
-                    total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
-                                        nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
-
-                    self.data["validation_time"]["k:" + str(s1_k)][str(total_host_pairs)] = []
 
                     with Timer(verbose=True) as t:
                         violations = fv.validate_policy(policy_statements)
@@ -179,8 +179,8 @@ def main():
     num_iterations = 1
 
     num_switches_in_clique_list = [4]#, 5]#, 6]
-    num_hosts_per_switch_list = [1]#, 2]#, 3]
-    s1_k_values = [1]#, 2]
+    num_hosts_per_switch_list = [1, 2, 3]
+    s1_k_values = [3]#, 2]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
 
