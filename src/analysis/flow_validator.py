@@ -372,6 +372,42 @@ class FlowValidator(object):
                     if not satisfies:
                         violations.append((links_failed, src_port, dst_port, constraint, counter_example))
 
+    def perform_validation(self, link_prefix, all_links, max_k, validation_map, violations):
+
+        # Capture any changes to where the paths flow now
+        self.initialize_per_link_traffic_paths()
+
+        # Perform the validation that needs performing here...
+        print "Performing validation, prefix here:", link_prefix
+        self.validate_policy_cases(validation_map[len(link_prefix)], violations, link_prefix)
+
+        # If already max_k links have been failed, no need to do anything
+        if len(link_prefix) == max_k:
+            return
+        else:
+
+            # Rotate through the links
+            for link in all_links:
+                # Select the link by checking that it is not in the link_prefix already
+                # Add the selected link to fail to the prefix
+
+                if link not in link_prefix:
+                    link_prefix.append(link)
+                else:
+                    continue
+
+                # Fail the link
+                print "Failing:", link
+                self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
+
+                # Recurse
+                self.perform_validation(link_prefix, all_links, max_k, validation_map, violations  )
+
+                # Restore the link
+                print "Restoring:", link
+                self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+                link_prefix.remove(link)
+
     def validate_policy(self, policy_statement_list):
 
         # Assume the policy works, unless proven otherwise.
@@ -392,6 +428,13 @@ class FlowValidator(object):
                     validation_map[i][(src_port, dst_port)].append(ps)
 
         # Now the validaiton
+        all_links = list(self.network_graph.get_switch_link_data())
+        link_prefix = []
+        max_k = max(validation_map.keys())
+        self.perform_validation(link_prefix, all_links, max_k, validation_map, violations)
+
+        print len(violations)
+        violations = []
 
         for k in validation_map:
             print "for k =", k
@@ -410,5 +453,7 @@ class FlowValidator(object):
                 for link in links_to_fail:
                     print "Restoring link:", link
                     self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
+
+        print len(violations)
 
         return violations
