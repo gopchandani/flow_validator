@@ -11,6 +11,7 @@ from experiments.timer import Timer
 from util import get_specific_traffic
 from util import get_admitted_traffic, get_paths
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
+from analysis.policy_statement import PolicyViolation
 
 __author__ = 'Rakesh Kumar'
 
@@ -358,7 +359,8 @@ class FlowValidator(object):
                 for constraint in ps.constraints:
 
                     if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
-                        satisfies, counter_example = self.validate_connectvity_constraint(src_port, dst_port,
+                        satisfies, counter_example = self.validate_connectvity_constraint(src_port,
+                                                                                          dst_port,
                                                                                           ps.traffic)
 
                         # If the connectivity is not there for this src_port, dst_port pair,
@@ -382,19 +384,29 @@ class FlowValidator(object):
                                             del self.validation_map[link_perm]
 
                                         # Also all those cases of link failures are indicated to be violations
-                                        self.violations.append((tuple(link_perm), src_port, dst_port, constraint, counter_example))
+                                        self.violations.append(PolicyViolation(tuple(link_perm),
+                                                                               src_port,
+                                                                               dst_port,
+                                                                               constraint,
+                                                                               counter_example))
 
                     if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
-                        satisfies, counter_example = self.validate_path_length_constraint(src_port, dst_port,
+                        satisfies, counter_example = self.validate_path_length_constraint(src_port,
+                                                                                          dst_port,
                                                                                           ps.traffic,
                                                                                           constraint.constraint_params)
                     if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
-                        satisfies, counter_example = self.validate_link_exclusivity(ps.src_zone, ps.dst_zone,
+                        satisfies, counter_example = self.validate_link_exclusivity(ps.src_zone,
+                                                                                    ps.dst_zone,
                                                                                     ps.traffic,
                                                                                     constraint.constraint_params)
 
                     if not satisfies:
-                        self.violations.append((lmbda, src_port, dst_port, constraint, counter_example))
+                        self.violations.append(PolicyViolation(lmbda,
+                                                               src_port,
+                                                               dst_port,
+                                                               constraint,
+                                                               counter_example))
 
     def perform_validation(self, lmbda):
 
@@ -415,7 +427,7 @@ class FlowValidator(object):
         if len(lmbda) < self.max_k:
 
             # Rotate through the links
-            for link in list(self.network_graph.get_switch_link_data()):
+            for link in self.L:
                 # Select the link by checking that it is not in the lmbda already
                 # Add the selected link to fail to the prefix
                 if link in lmbda:
@@ -441,17 +453,29 @@ class FlowValidator(object):
 
     def validate_policy(self, policy_statement_list):
 
+        # 74
+        # was:  [('s2', 's3'), ('s4', 's3'), ('s2', 's1'), ('s4', 's1')]
+        # used: [('s4', 's3'), ('s2', 's3'), ('s2', 's1'), ('s4', 's1')]
+
+        # 75
+        # was:  [('s2', 's3'), ('s4', 's3'), ('s2', 's1'), ('s4', 's1')]
+        # used: [('s2', 's3'), ('s4', 's3'), ('s2', 's1'), ('s4', 's1')]
+
         # Avoid duplication of effort across policies
         # validation_map is a two-dimensional dictionary:
         #   First key 'k-size' permutations, second key: (src_port, dst_port).
         #   Value is a list of statements where the pair appears
 
         self.validation_map = defaultdict(defaultdict)
+        self.L = list(self.network_graph.get_switch_link_data())
+        print "List sequence was:", self.L
+        random.shuffle(self.L)
+        print "List sequence used:", self.L
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):
 
-                for link_perm in itertools.permutations(self.network_graph.get_switch_link_data(), i):
+                for link_perm in itertools.permutations(self.L, i):
 
                     for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
 
