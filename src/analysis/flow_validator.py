@@ -345,7 +345,7 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
-    def truncate_recursion(self, lmbda, src_port, dst_port, constraint):
+    def truncate_recursion(self, lmbda, src_port, dst_port):
 
         for link_perm in list(self.validation_map.keys()):
 
@@ -354,6 +354,7 @@ class FlowValidator(object):
 
                 if tuple(lmbda) == tuple(link_perm[0:len(lmbda)]):
                     # This is indicated by removing those cases from the validation_map
+                    ps_list = self.validation_map[link_perm][(src_port, dst_port)]
                     del self.validation_map[link_perm][(src_port, dst_port)]
 
                     print "Removed:", link_perm, "for src_port:", src_port, "dst_port:", dst_port
@@ -363,11 +364,10 @@ class FlowValidator(object):
                         print "Removed perm:", link_perm
                         del self.validation_map[link_perm]
 
-                    # Also all those cases of link failures are indicated to be violations
-                    self.violations.append(PolicyViolation(tuple(link_perm),
-                                                           src_port,
-                                                           dst_port,
-                                                           constraint))
+                    # Indicate for every deleted validation in the map, that the referred constraint is violated
+                    for ps in ps_list:
+                        for constraint in ps.constraints:
+                            self.violations.append(PolicyViolation(tuple(link_perm), src_port, dst_port, constraint))
 
     def validate_policy_cases(self, validation_map, lmbda):
 
@@ -389,11 +389,7 @@ class FlowValidator(object):
 
                         if not satisfies:
                             self.violations.append(PolicyViolation(lmbda[:], src_port, dst_port, constraint))
-
-                        # If the connectivity is not there for this src_port, dst_port pair,
-                        # there are optimizations to be had...
-                        if not satisfies:
-                            self.truncate_recursion(lmbda, src_port, dst_port, constraint)
+                            self.truncate_recursion(lmbda, src_port, dst_port)
 
                     if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
                         satisfies, counter_example = self.validate_path_length_constraint(src_port,
