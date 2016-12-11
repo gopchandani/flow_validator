@@ -345,6 +345,30 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
+    def truncate_recursion(self, lmbda, src_port, dst_port, constraint):
+
+        for link_perm in list(self.validation_map.keys()):
+
+            # For any k larger than len(lmbda) for this prefix of links.
+            if len(link_perm) > len(lmbda):
+
+                if tuple(lmbda) == tuple(link_perm[0:len(lmbda)]):
+                    # This is indicated by removing those cases from the validation_map
+                    del self.validation_map[link_perm][(src_port, dst_port)]
+
+                    print "Removed:", link_perm, "for src_port:", src_port, "dst_port:", dst_port
+
+                    # If all the cases under a perm are gone, then get rid of the key.
+                    if not self.validation_map[link_perm]:
+                        print "Removed perm:", link_perm
+                        del self.validation_map[link_perm]
+
+                    # Also all those cases of link failures are indicated to be violations
+                    self.violations.append(PolicyViolation(tuple(link_perm),
+                                                           src_port,
+                                                           dst_port,
+                                                           constraint))
+
     def validate_policy_cases(self, validation_map, lmbda):
 
         for src_port, dst_port in validation_map:
@@ -363,50 +387,40 @@ class FlowValidator(object):
                                                                                           dst_port,
                                                                                           ps.traffic)
 
+                        if not satisfies:
+                            self.violations.append(PolicyViolation(lmbda,
+                                                                   src_port,
+                                                                   dst_port,
+                                                                   constraint))
+
                         # If the connectivity is not there for this src_port, dst_port pair,
                         # there are optimizations to be had...
                         if not satisfies:
-                            for link_perm in list(self.validation_map.keys()):
-
-                                # For any k larger than len(lmbda) for this prefix of links.
-                                if len(link_perm) > len(lmbda):
-
-                                    if tuple(lmbda) == tuple(link_perm[0:len(lmbda)]):
-                                        # This is indicated by removing those cases from the validation_map
-                                        del self.validation_map[link_perm][(src_port, dst_port)]
-
-                                        print "Removed:", link_perm, "for src_port:", src_port, "dst_port:", dst_port
-
-                                        # If all the cases under a perm are gone, then get rid of the key.
-                                        if not self.validation_map[link_perm]:
-
-                                            print "Removed perm:", link_perm
-                                            del self.validation_map[link_perm]
-
-                                        # Also all those cases of link failures are indicated to be violations
-                                        self.violations.append(PolicyViolation(tuple(link_perm),
-                                                                               src_port,
-                                                                               dst_port,
-                                                                               constraint,
-                                                                               counter_example))
+                            self.truncate_recursion(lmbda, src_port, dst_port, constraint)
 
                     if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
                         satisfies, counter_example = self.validate_path_length_constraint(src_port,
                                                                                           dst_port,
                                                                                           ps.traffic,
                                                                                           constraint.constraint_params)
+
+                        if not satisfies:
+                            self.violations.append(PolicyViolation(lmbda,
+                                                                   src_port,
+                                                                   dst_port,
+                                                                   constraint))
+
                     if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
                         satisfies, counter_example = self.validate_link_exclusivity(ps.src_zone,
                                                                                     ps.dst_zone,
                                                                                     ps.traffic,
                                                                                     constraint.constraint_params)
 
-                    if not satisfies:
-                        self.violations.append(PolicyViolation(lmbda,
-                                                               src_port,
-                                                               dst_port,
-                                                               constraint,
-                                                               counter_example))
+                        if not satisfies:
+                            self.violations.append(PolicyViolation(lmbda,
+                                                                   src_port,
+                                                                   dst_port,
+                                                                   constraint))
 
     def perform_validation(self, lmbda):
 
@@ -452,14 +466,6 @@ class FlowValidator(object):
                 lmbda.remove(link)
 
     def validate_policy(self, policy_statement_list):
-
-        # 74
-        # was:  [('s2', 's3'), ('s4', 's3'), ('s2', 's1'), ('s4', 's1')]
-        # used: [('s4', 's3'), ('s2', 's3'), ('s2', 's1'), ('s4', 's1')]
-
-        # 75
-        # was:  [('s2', 's3'), ('s4', 's3'), ('s2', 's1'), ('s4', 's1')]
-        # used: [('s2', 's3'), ('s4', 's3'), ('s2', 's1'), ('s4', 's1')]
 
         # Avoid duplication of effort across policies
         # validation_map is a two-dimensional dictionary:

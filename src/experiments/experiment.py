@@ -1,4 +1,5 @@
 import json
+import pickle
 import time
 import random
 import math
@@ -76,6 +77,13 @@ class Experiment(object):
 
         with open(filename, "w") as outfile:
             json.dump(self.data, outfile)
+
+    def dump_violations(self, violations):
+        print "Dumping violations:"
+        filename = "data/" + self.experiment_tag + "_violations.pickle"
+        print "Writing violations to file:", filename
+        with open(filename, "w") as outfile:
+            pickle.dump(violations, outfile)
 
     def load_data(self, filename):
 
