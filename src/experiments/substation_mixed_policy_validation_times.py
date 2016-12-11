@@ -94,6 +94,10 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                         violations = fv.validate_policy(policy_statements)
 
                     print "Total violations:", len(violations)
+
+                    for v in violations:
+                        print v
+
                     print "Does the network configuration satisfy the given policy:", (len(violations) == 0)
 
                     self.data["validation_time"]["k:" + str(s1_k)][str(total_host_pairs)].append(t.secs)

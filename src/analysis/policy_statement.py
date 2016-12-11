@@ -8,6 +8,14 @@ class PolicyConstraint(object):
         self.constraint_type = constraint_type
         self.constraint_params = constraint_params
 
+    def __str__(self):
+        return "(constraint_type: " + str(self.constraint_type) +\
+               "constraint_params: " + str(self.constraint_params) + ")"
+
+    def __repr__(self):
+        return "(constraint_type: " + str(self.constraint_type) + \
+               "constraint_params: " + str(self.constraint_params) + ")"
+
 
 class PolicyViolation(object):
     def __init__(self, lmbda, src_port, dst_port, constraint, counter_example):
@@ -16,6 +24,21 @@ class PolicyViolation(object):
         self.dst_port = dst_port
         self.constraint = constraint
         self.counter_example = counter_example
+
+    def __str__(self):
+        return "lmbda: " + str(self.lmbda) + \
+               " src_port: " + str(self.src_port) + \
+               " dst_port: " + str(self.dst_port) + \
+               " constraint: " + str(self.constraint) + \
+               " counter_example: " + str(self.counter_example)
+
+    def __repr__(self):
+        return " lmbda: " + str(self.lmbda) + \
+               " src_port: " + str(self.src_port) + \
+               " dst_port: " + str(self.dst_port) + \
+               " constraint: " + str(self.constraint) + \
+               " counter_example: " + str(self.counter_example)
+
 
 
 class PolicyStatement(object):
