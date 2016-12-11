@@ -62,7 +62,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s2_traffic.set_field("tcp_destination_port", 443)
 
         s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None), PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6)]
-        s2_k = 0
+        s2_k = 2
         s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, s2_k)
 
         return [s1, s2]
@@ -179,7 +179,7 @@ def main():
     num_iterations = 1
     num_switches_in_clique_list = [4]#, 5]#, 6]
     num_hosts_per_switch_list = [1]
-    s1_k_values = [1]#, 2, 3, 4]
+    s1_k_values = [2]#, 2, 3, 4]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
     exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
     exp.trigger()
