@@ -182,7 +182,7 @@ def main():
     num_iterations = 1
     num_switches_in_clique_list = [4]#, 5]#, 6]
     num_hosts_per_switch_list = [1]
-    s1_k_values = [0]#, 2, 3, 4]
+    s1_k_values = [1]#, 2, 3, 4]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
     exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
     exp.trigger()

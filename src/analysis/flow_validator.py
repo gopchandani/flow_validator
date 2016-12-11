@@ -388,7 +388,7 @@ class FlowValidator(object):
                                                                                           ps.traffic)
 
                         if not satisfies:
-                            self.violations.append(PolicyViolation(lmbda, src_port, dst_port, constraint))
+                            self.violations.append(PolicyViolation(lmbda[:], src_port, dst_port, constraint))
 
                         # If the connectivity is not there for this src_port, dst_port pair,
                         # there are optimizations to be had...
@@ -402,7 +402,7 @@ class FlowValidator(object):
                                                                                           constraint.constraint_params)
 
                         if not satisfies:
-                            self.violations.append(PolicyViolation(lmbda, src_port, dst_port, constraint))
+                            self.violations.append(PolicyViolation(lmbda[:], src_port, dst_port, constraint))
 
                     if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
                         satisfies, counter_example = self.validate_link_exclusivity(ps.src_zone,
@@ -411,7 +411,7 @@ class FlowValidator(object):
                                                                                     constraint.constraint_params)
 
                         if not satisfies:
-                            self.violations.append(PolicyViolation(lmbda, src_port, dst_port, constraint))
+                            self.violations.append(PolicyViolation(lmbda[:], src_port, dst_port, constraint))
 
     def perform_validation(self, lmbda):
 
