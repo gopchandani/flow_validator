@@ -344,7 +344,7 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
-    def validate_policy_cases(self, validation_map, links_failed):
+    def validate_policy_cases(self, validation_map, lmbda):
 
         for src_port, dst_port in validation_map:
 
@@ -360,6 +360,30 @@ class FlowValidator(object):
                     if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
                         satisfies, counter_example = self.validate_connectvity_constraint(src_port, dst_port,
                                                                                           ps.traffic)
+
+                        # If the connectivity is not there for this src_port, dst_port pair,
+                        # there are optimizations to be had...
+                        if not satisfies:
+                            for link_perm in list(self.validation_map.keys()):
+
+                                # For any k larger than len(lmbda) for this prefix of links.
+                                if len(link_perm) > len(lmbda):
+
+                                    if tuple(lmbda) == tuple(link_perm[0:len(lmbda)]):
+                                        # This is indicated by removing those cases from the validation_map
+                                        del self.validation_map[link_perm][(src_port, dst_port)]
+
+                                        print "Removed:", link_perm, "for src_port:", src_port, "dst_port:", dst_port
+
+                                        # If all the cases under a perm are gone, then get rid of the key.
+                                        if not self.validation_map[link_perm]:
+
+                                            print "Removed perm:", link_perm
+                                            del self.validation_map[link_perm]
+
+                                        # Also all those cases of link failures are indicated to be violations
+                                        self.violations.append((tuple(link_perm), src_port, dst_port, constraint, counter_example))
+
                     if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
                         satisfies, counter_example = self.validate_path_length_constraint(src_port, dst_port,
                                                                                           ps.traffic,
@@ -370,7 +394,7 @@ class FlowValidator(object):
                                                                                     constraint.constraint_params)
 
                     if not satisfies:
-                        self.violations.append((links_failed, src_port, dst_port, constraint, counter_example))
+                        self.violations.append((lmbda, src_port, dst_port, constraint, counter_example))
 
     def perform_validation(self, lmbda):
 
@@ -380,24 +404,26 @@ class FlowValidator(object):
         # Perform the validation that needs performing here...
         print "Performing validation, prefix here:", lmbda
 
-        # Collect cases cases where lmbda == keys in the validation_map
+        # Collect cases cases where lmbda == keys in the validation_map and validate them
         cases = {}
         for link_perm in self.validation_map:
             if link_perm == tuple(lmbda):
                 cases.update(self.validation_map[link_perm])
+        self.validate_policy_cases(cases, lmbda)
 
-        self.validate_policy_cases(cases,  lmbda)
-
-        max_k = len(max(self.validation_map.keys(), key=lambda link_perm: len(link_perm)))
-
-        # If max_k links have already been failed, no need to do anything
-        if len(lmbda) < max_k:
+        # If max_k links have already been failed, no need to fail any more links
+        if len(lmbda) < self.max_k:
 
             # Rotate through the links
             for link in list(self.network_graph.get_switch_link_data()):
                 # Select the link by checking that it is not in the lmbda already
                 # Add the selected link to fail to the prefix
                 if link in lmbda:
+                    continue
+
+                # If the permutation is not in validation_map, then no test it
+                if tuple(lmbda + [link]) not in self.validation_map:
+                    print "Truncated recursion tree for:", tuple(lmbda + [link])
                     continue
 
                 # Fail the link
@@ -435,6 +461,7 @@ class FlowValidator(object):
                         self.validation_map[link_perm][(src_port, dst_port)].append(ps)
 
         # Now the validation
+        self.max_k = len(max(self.validation_map.keys(), key=lambda link_perm: len(link_perm)))
         lmbda = []
         self.violations = []
         self.perform_validation(lmbda)
