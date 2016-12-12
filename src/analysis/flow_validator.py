@@ -7,6 +7,7 @@ sys.path.append("./")
 
 from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
+from model.traffic import Traffic
 from experiments.timer import Timer
 from util import get_specific_traffic
 from util import get_admitted_traffic, get_paths
@@ -345,6 +346,43 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
+    def validate_policy_cases(self, validation_map, lmbda):
+
+        v = []
+
+        for src_port, dst_port in validation_map:
+
+            for ps in validation_map[(src_port, dst_port)]:
+
+                # Setup the appropriate filter
+                ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+                ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+                ps.traffic.set_field("in_port", int(src_port.port_number))
+
+                for constraint in ps.constraints:
+
+                    if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
+                        satisfies, counter_example = self.validate_connectvity_constraint(src_port,
+                                                                                          dst_port,
+                                                                                          ps.traffic)
+
+                    if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
+                        satisfies, counter_example = self.validate_path_length_constraint(src_port,
+                                                                                          dst_port,
+                                                                                          ps.traffic,
+                                                                                          constraint.constraint_params)
+
+                    if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
+                        satisfies, counter_example = self.validate_link_exclusivity(ps.src_zone,
+                                                                                    ps.dst_zone,
+                                                                                    ps.traffic,
+                                                                                    constraint.constraint_params)
+
+                    if not satisfies:
+                        v.append(PolicyViolation(lmbda[:], src_port, dst_port,  constraint, counter_example))
+
+        return v
+
     def truncate_recursion(self, lmbda, src_port, dst_port):
 
         for link_perm in list(self.validation_map.keys()):
@@ -367,47 +405,8 @@ class FlowValidator(object):
                     # Indicate for every deleted validation in the map, that the referred constraint is violated
                     for ps in ps_list:
                         for constraint in ps.constraints:
-                            self.violations.append(PolicyViolation(tuple(link_perm), src_port, dst_port, constraint))
-
-    def validate_policy_cases(self, validation_map, lmbda):
-
-        for src_port, dst_port in validation_map:
-
-            for ps in validation_map[(src_port, dst_port)]:
-
-                # Setup the appropriate filter
-                ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-                ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-                ps.traffic.set_field("in_port", int(src_port.port_number))
-
-                for constraint in ps.constraints:
-
-                    if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
-                        satisfies, counter_example = self.validate_connectvity_constraint(src_port,
-                                                                                          dst_port,
-                                                                                          ps.traffic)
-
-                        if not satisfies:
-                            self.violations.append(PolicyViolation(lmbda[:], src_port, dst_port, constraint))
-                            self.truncate_recursion(lmbda, src_port, dst_port)
-
-                    if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
-                        satisfies, counter_example = self.validate_path_length_constraint(src_port,
-                                                                                          dst_port,
-                                                                                          ps.traffic,
-                                                                                          constraint.constraint_params)
-
-                        if not satisfies:
-                            self.violations.append(PolicyViolation(lmbda[:], src_port, dst_port, constraint))
-
-                    if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
-                        satisfies, counter_example = self.validate_link_exclusivity(ps.src_zone,
-                                                                                    ps.dst_zone,
-                                                                                    ps.traffic,
-                                                                                    constraint.constraint_params)
-
-                        if not satisfies:
-                            self.violations.append(PolicyViolation(lmbda[:], src_port, dst_port, constraint))
+                            self.violations.append(PolicyViolation(tuple(link_perm), src_port, dst_port,
+                                                                   constraint, Traffic()))
 
     def perform_validation(self, lmbda):
 
@@ -422,7 +421,13 @@ class FlowValidator(object):
         for link_perm in self.validation_map:
             if link_perm == tuple(lmbda):
                 cases.update(self.validation_map[link_perm])
-        self.validate_policy_cases(cases, lmbda)
+        v = self.validate_policy_cases(cases, lmbda)
+        self.violations.extend(v)
+
+        for vio in v:
+            if vio.constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
+                if vio.counter_example.is_empty():
+                    self.truncate_recursion(lmbda, vio.src_port, vio.dst_port)
 
         # If max_k links have already been failed, no need to fail any more links
         if len(lmbda) < self.max_k:

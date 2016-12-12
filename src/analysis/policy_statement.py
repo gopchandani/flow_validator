@@ -18,11 +18,12 @@ class PolicyConstraint(object):
 
 
 class PolicyViolation(object):
-    def __init__(self, lmbda, src_port, dst_port, constraint):
+    def __init__(self, lmbda, src_port, dst_port, constraint, counter_example):
         self.lmbda = lmbda
         self.src_port = src_port
         self.dst_port = dst_port
         self.constraint = constraint
+        self.counter_example = counter_example
 
     def __str__(self):
         return "lmbda: " + str(self.lmbda) + \
