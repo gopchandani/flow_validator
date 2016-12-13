@@ -101,5 +101,7 @@ class Port(object):
         self.state = "up"
 
     def __str__(self):
+        return str(self.port_id)
 
+    def __repr__(self):
         return str(self.port_id)

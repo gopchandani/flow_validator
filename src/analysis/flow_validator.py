@@ -296,11 +296,19 @@ class FlowValidator(object):
 
         if not at.is_empty():
             if at.is_subset_traffic(traffic):
-                satisfies = True
+                traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
+
+                if traffic_paths:
+                    satisfies = True
+                else:
+                    #TODO: This needs fixing (and a test)
+                    satisfies = False
+                    counter_example = Traffic()
             else:
                 #print "src_port:", src_port, "dst_port:", dst_port, "at does not pass traffic check."
                 satisfies = False
                 counter_example = at
+
         else:
             #print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
             satisfies = False
@@ -466,6 +474,7 @@ class FlowValidator(object):
 
         self.validation_map = defaultdict(defaultdict)
         self.L = list(self.network_graph.get_switch_link_data())
+
         print "List sequence was:", self.L
         random.shuffle(self.L)
         print "List sequence used:", self.L
