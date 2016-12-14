@@ -66,7 +66,6 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, s2_k)
 
         return [s1, s2]
-        #return [s2]
 
     def trigger(self):
 
@@ -86,7 +85,9 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
                                     nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
 
-                self.data["validation_time"]["k:" + str(s1_k)][str(total_host_pairs)] = []
+                sL = str(len(list(nc.ng.get_switch_link_data())))
+
+                self.data["validation_time"]["k: " + str(s1_k) + ", |L|: " + sL][str(total_host_pairs)] = []
 
                 for i in range(self.num_iterations):
 
@@ -95,11 +96,11 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
                     print "Total violations:", len(violations)
 
-                    self.dump_violations(violations)
+                    #self.dump_violations(violations)
 
                     print "Does the network configuration satisfy the given policy:", (len(violations) == 0)
 
-                    self.data["validation_time"]["k:" + str(s1_k)][str(total_host_pairs)].append(t.secs)
+                    self.data["validation_time"]["k: " + str(s1_k) + ", |L|: " + sL][str(total_host_pairs)].append(t.secs)
 
                     self.dump_data()
 
@@ -149,30 +150,32 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         plt.show()
 
 
-def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list):
+def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list, num_per_switch_links_list):
     nc_list = []
 
     for nsc in num_switches_in_clique_list:
 
         for hps in num_hosts_per_switch_list:
 
-            nc = NetworkConfiguration("ryu",
-                                      "127.0.0.1",
-                                      6633,
-                                      "http://localhost:8080/",
-                                      "admin",
-                                      "admin",
-                                      "cliquetopo",
-                                      {"num_switches": nsc,
-                                       "num_hosts_per_switch": hps,
-                                       "per_switch_links": 2},#nsc - 1},
-                                      conf_root="configurations/",
-                                      synthesis_name="AboresceneSynthesis",
-                                      synthesis_params={"apply_group_intents_immediately": True})
+            for psl in num_per_switch_links_list:
 
-            nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+                nc = NetworkConfiguration("ryu",
+                                          "127.0.0.1",
+                                          6633,
+                                          "http://localhost:8080/",
+                                          "admin",
+                                          "admin",
+                                          "cliquetopo",
+                                          {"num_switches": nsc,
+                                           "num_hosts_per_switch": hps,
+                                           "per_switch_links": psl},#nsc - 1},
+                                          conf_root="configurations/",
+                                          synthesis_name="AboresceneSynthesis",
+                                          synthesis_params={"apply_group_intents_immediately": True})
 
-            nc_list.append(nc)
+                nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+
+                nc_list.append(nc)
 
     return nc_list
 
@@ -182,8 +185,13 @@ def main():
     num_iterations = 1
     num_switches_in_clique_list = [4]#, 5]#, 6]
     num_hosts_per_switch_list = [1]
+    num_per_switch_links_list = [2, 3]
+
     s1_k_values = [3]#, 2, 3, 4]
-    network_configurations = prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_switch_list)
+    network_configurations = prepare_network_configurations(num_switches_in_clique_list,
+                                                            num_hosts_per_switch_list,
+                                                            num_per_switch_links_list)
+
     exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
     exp.trigger()
     exp.dump_data()

@@ -1,15 +1,14 @@
 import pickle
 
-with open("data/substation_mixed_policy_validation_times_1_iterations_20161211_220227_violations.pickle", "r") as infile:
+
+#133
+with open("data/substation_mixed_policy_validation_times_1_iterations_20161214_083146_violations.pickle", "r") as infile:
     v1 = pickle.load(infile)
-#119
 
-
-with open("data/substation_mixed_policy_validation_times_1_iterations_20161213_004637_violations.pickle", "r") as infile:
+#129
+with open("data/substation_mixed_policy_validation_times_1_iterations_20161214_084434_violations.pickle", "r") as infile:
     v2 = pickle.load(infile)
-#117
-# lmbda: [('s2', 's1'), ('s4', 's1'), ('s4', 's3')] src_port: s3:1 dst_port: s1:1 constraint: (constraint_type: Connectivity, constraint_params: None)
-# lmbda: [('s2', 's1'), ('s4', 's3'), ('s4', 's1')] src_port: s3:1 dst_port: s1:1 constraint: (constraint_type: Connectivity, constraint_params: None)
+
 
 print len(v1)
 print len(v2)
