@@ -242,7 +242,7 @@ class Experiment(object):
         markers = ['*', '.', 'v', '+', 'd', 'o', '^', 'H', ',', 's', '*']
         marker_i = 0
 
-        for line_data_key in self.data[data_key]:
+        for line_data_key in sorted(self.data[data_key].keys()):
 
             data_vals = self.data[data_key][line_data_key]
 

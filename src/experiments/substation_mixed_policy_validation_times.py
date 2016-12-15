@@ -106,9 +106,9 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
     def plot_data(self):
 
-        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(4.5, 3.0))
+        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(4.5, 4.5))
 
-        data_xtick_labels = self.data["validation_time"]['k:1'].keys()
+        data_xtick_labels = self.data["validation_time"]["k: 0, |L|: 4"].keys()
         data_xticks = [int(x) for x in data_xtick_labels]
 
         self.plot_lines_with_error_bars(ax1,
@@ -144,7 +144,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                    frameon=True,
                    fancybox=True,
                    columnspacing=2.5,
-                   bbox_to_anchor=[0.5, -0.3])
+                   bbox_to_anchor=[0.5, -0.20])
 
         plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
         plt.show()
@@ -193,11 +193,11 @@ def main():
                                                             num_per_switch_links_list)
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
-    # exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161204_125852.json")
-    # exp.plot_data()
+    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161214_143932.json")
+    exp.plot_data()
 
 if __name__ == "__main__":
     main()
