@@ -111,7 +111,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         data_xtick_labels = self.data["validation_time"]["k: 0, |L|: 4"].keys()
         data_xticks = [int(x) for x in data_xtick_labels]
 
-        self.plot_lines_with_error_bars(ax1,
+        self.plot_lines_with_error_bars_2(ax1,
                                         "validation_time",
                                         "Number of host pairs",
                                         "Time (seconds)",

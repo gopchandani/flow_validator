@@ -248,7 +248,8 @@ class Experiment(object):
 
             x, mean, sem = self.prepare_matplotlib_data(data_vals)
 
-            ax.errorbar(x, mean, sem, color="black", marker=markers[marker_i], markersize=7.0, label=line_data_key, ls='none')
+            ax.errorbar(x, mean, sem, color="black",
+                        marker=markers[marker_i], markersize=7.0, label=line_data_key, ls='none')
 
             marker_i += 1
 
@@ -264,7 +265,84 @@ class Experiment(object):
             ax.set_ylim(ymin=low_ylim*y_min_factor)
             ax.set_ylim(ymax=high_ylim*y_max_factor)
         elif y_scale == "log":
-            ax.set_ylim(ymin=10)
+            ax.set_ylim(ymin=1)
+            ax.set_ylim(ymax=10000)
+
+        ax.set_yscale(y_scale)
+
+        xa = ax.get_xaxis()
+        xa.set_major_locator(MaxNLocator(integer=True))
+
+        if xticks:
+            ax.set_xticks(xticks)
+
+        if xtick_labels:
+            ax.set_xticklabels(xtick_labels)
+
+        if yticks:
+            ax.set_yticks(yticks)
+
+        if ytick_labels:
+            ax.set_yticklabels(ytick_labels)
+
+    def plot_lines_with_error_bars_2(self,
+                                   ax,
+                                   data_key,
+                                   x_label,
+                                   y_label,
+                                   subplot_title,
+                                   y_scale,
+                                   x_min_factor=1.0,
+                                   x_max_factor=1.05,
+                                   y_min_factor=0.1,
+                                   y_max_factor=1.5,
+                                   xticks=None,
+                                   xtick_labels=None,
+                                   yticks=None,
+                                   ytick_labels=None):
+
+        ax.set_xlabel(x_label, fontsize=10, labelpad=-0)
+        ax.set_ylabel(y_label, fontsize=10, labelpad=0)
+        ax.set_title(subplot_title, fontsize=10)
+
+        markers = ['*', 'x', 'v', '^', '*', '+', 'H', 's']
+        marker_i = 0
+
+        for line_data_key in sorted(self.data[data_key].keys()):
+
+            style = None
+
+            if line_data_key.find("0") == 3:
+                style = "solid"
+            elif line_data_key.find("1") == 3:
+                style = "dashed"
+            elif line_data_key.find("2") == 3:
+                style = "dashdot"
+            elif line_data_key.find("3") == 3:
+                style = "dotted"
+
+            data_vals = self.data[data_key][line_data_key]
+
+            x, mean, sem = self.prepare_matplotlib_data(data_vals)
+
+            ax.errorbar(x, mean, sem, color="black",
+                        marker=markers[marker_i], markersize=7.0, label=line_data_key, ls=style)
+
+            marker_i += 1
+
+        ax.tick_params(axis='x', labelsize=10)
+        ax.tick_params(axis='y', labelsize=10)
+
+        low_xlim, high_xlim = ax.get_xlim()
+        ax.set_xlim(xmax=(high_xlim) * x_max_factor)
+        ax.set_xlim(xmin=(low_xlim) * x_min_factor)
+
+        if y_scale == "linear":
+            low_ylim, high_ylim = ax.get_ylim()
+            ax.set_ylim(ymin=low_ylim*y_min_factor)
+            ax.set_ylim(ymax=high_ylim*y_max_factor)
+        elif y_scale == "log":
+            ax.set_ylim(ymin=1)
             ax.set_ylim(ymax=10000)
 
         ax.set_yscale(y_scale)
