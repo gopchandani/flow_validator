@@ -246,7 +246,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                             try:
                                 merged_data[ds][case][num_conns].extend(this_data[ds][case][num_conns])
                             except KeyError:
-                                print num_conns, "not found."
+                                print filename, ds, case, num_conns, "not found."
             else:
                 merged_data = this_data
 
