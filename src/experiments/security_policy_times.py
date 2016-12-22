@@ -87,19 +87,15 @@ class SecurityPolicyTimes(Experiment):
     def trigger(self):
 
         for i in range(self.num_iterations):
-
             nc = self.nc_list[0]
-
             with Timer(verbose=True) as t:
-
                 fv = FlowValidator(self.nc_list[0].ng)
                 policy_statements = self.construct_policy_statements(nc)
                 fv.init_network_port_graph()
-
                 violations = fv.validate_policy(policy_statements)
-                print "violations:", violations
 
             self.data["validation_time"][nc.nc_topo_str].append(t.secs)
+            print "Total violations:", len(violations)
 
 
 def prepare_network_configurations(num_grids_list):
@@ -110,9 +106,9 @@ def prepare_network_configurations(num_grids_list):
 
     for num_grids in num_grids_list:
         nc = NetworkConfiguration("onos",
-                                  "172.17.0.95",
+                                  "172.17.0.96",
                                   8181,
-                                  "http://172.17.0.95:8181/onos/v1/",
+                                  "http://172.17.0.96:8181/onos/v1/",
                                   "karaf",
                                   "karaf",
                                   "microgrid_topo",
@@ -134,10 +130,9 @@ def prepare_network_configurations(num_grids_list):
 def main():
 
     num_iterations = 1
-    num_grids_list = [1]#, 2, 3, 4]
+    num_grids_list = [2]#[1]#[1, 2, 3, 4]
 
     nc_list = prepare_network_configurations(num_grids_list)
-
 
     exp = SecurityPolicyTimes(nc_list, num_iterations)
     exp.trigger()

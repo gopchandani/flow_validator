@@ -155,12 +155,11 @@ class NetworkGraph(object):
                          host_switch_obj,
                          host_switch_port)
 
-            # Make the connections both on switch and host side
+            # Make the connections both on switch and host side, (for onos these things get repeated... so check before)
             if int(onos_host_dict["location"]["port"]) not in host_switch_obj.host_ports:
                 host_switch_obj.host_ports.append(int(onos_host_dict["location"]["port"]))
-
-            host_switch_obj.attached_hosts.append(h_obj)
-            host_switch_port.attached_host = h_obj
+                host_switch_obj.attached_hosts.append(h_obj)
+                host_switch_port.attached_host = h_obj
 
             self.graph.add_node(host_id, node_type="host", h=h_obj)
 
