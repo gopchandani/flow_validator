@@ -33,25 +33,56 @@ class SecurityPolicyTimes(Experiment):
 
     def construct_policy_statements(self, nc):
 
-        control_zone = [nc.ng.get_node_object("h11").switch_port,
-                        nc.ng.get_node_object("h21").switch_port,
-                        nc.ng.get_node_object("h31").switch_port]
+        statements = []
+        control_zone = []
+        control_vlan_id = 255
+
+        # The last switch is the control switch
+        all_switches = sorted(list(nc.ng.get_switches()), key=lambda x: int(x.node_id[1:]))
+        for sw in all_switches[0:len(all_switches) - 1]:
+
+            control_zone.append(nc.ng.get_node_object("h" + sw.node_id[1:] + "1").switch_port)
+
+            enclave_zone = []
+            for port_num in sw.host_ports:
+                enclave_zone.append(sw.ports[port_num])
+
+            enclave_vlan_id = int(sw.node_id[1:])
+
+            enclave_specific_traffic = Traffic(init_wildcard=True)
+            enclave_specific_traffic.set_field("ethernet_type", 0x0800)
+            enclave_specific_traffic.set_field("vlan_id", enclave_vlan_id + 0x1000)
+            enclave_specific_traffic.set_field("has_vlan_tag", 1)
+
+            enclave_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+
+            enclave_statement = PolicyStatement(nc.ng,
+                                                enclave_zone,
+                                                enclave_zone,
+                                                enclave_specific_traffic,
+                                                enclave_constraints, 0)
+
+            statements.append(enclave_statement)
+
+        control_switch = all_switches[len(all_switches) - 1]
+        control_zone.append(nc.ng.get_node_object("h" + control_switch.node_id[1:] + "1").switch_port)
 
         control_specific_traffic = Traffic(init_wildcard=True)
         control_specific_traffic.set_field("ethernet_type", 0x0800)
-        control_specific_traffic.set_field("vlan_id", 255 + 0x1000)
+        control_specific_traffic.set_field("vlan_id", control_vlan_id + 0x1000)
         control_specific_traffic.set_field("has_vlan_tag", 1)
-        control_specific_traffic.set_field("tcp_source_port", 80)
-        control_specific_traffic.set_field("tcp_destination_port", 80)
 
         control_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
         control_s = PolicyStatement(nc.ng,
                                     control_zone,
                                     control_zone,
                                     control_specific_traffic,
-                                    control_constraints, 0)
+                                    control_constraints,
+                                    0)
 
-        return [control_s]
+        statements.append(control_s)
+
+        return statements
 
     def trigger(self):
 
@@ -62,9 +93,9 @@ class SecurityPolicyTimes(Experiment):
             with Timer(verbose=True) as t:
 
                 fv = FlowValidator(self.nc_list[0].ng)
+                policy_statements = self.construct_policy_statements(nc)
                 fv.init_network_port_graph()
 
-                policy_statements = self.construct_policy_statements(nc)
                 violations = fv.validate_policy(policy_statements)
                 print "violations:", violations
 
