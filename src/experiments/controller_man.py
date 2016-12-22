@@ -21,7 +21,7 @@ class ControllerMan(object):
         if self.controller == "odl":
             raise NotImplemented
         elif self.controller == "sel":
-            pass
+            raise NotImplemented
         elif self.controller == "ryu":
             return self.get_next_ryu()
 

@@ -19,6 +19,7 @@ from model.network_graph import NetworkGraph
 from model.match import Match
 
 from experiments.topologies.ring_topo import RingTopo
+from experiments.topologies.microgrids_topo import MicrogridsTopo
 from experiments.topologies.clos_topo import ClosTopo
 from experiments.topologies.linear_topo import LinearTopo
 from experiments.topologies.fat_tree import FatTree
@@ -98,7 +99,9 @@ class NetworkConfiguration(object):
         return self.controller + "_" + str(self.synthesis) + "_" + str(self.topo)
 
     def __del__(self):
-        self.cm.stop_controller()
+        if self.cm:
+            self.cm.stop_controller()
+
         self.cleanup_mininet()
 
     def init_topo(self):
@@ -114,6 +117,9 @@ class NetworkConfiguration(object):
         elif self.topo_name == "linear":
             self.topo = LinearTopo(self.topo_params)
             self.nc_topo_str = "Linear topology with " + str(self.topo_params["num_switches"]) + " switches"
+        elif self.topo_name == "microgrid_topo":
+            self.topo = MicrogridsTopo(self.topo_params)
+            self.nc_topo_str = "Microgrid topology with " + str(self.topo_params["num_switches"]) + " switches"
         else:
             raise NotImplementedError("Topology: %s" % self.topo_name)
 
@@ -125,6 +131,8 @@ class NetworkConfiguration(object):
         elif self.synthesis_name == "AboresceneSynthesis":
             self.synthesis = AboresceneSynthesis(self.synthesis_params)
 
+        elif self.synthesis_name == "VPLSSynthesis":
+            self.synthesis = self.synthesis_name
         else:
             self.synthesis = None
 
@@ -217,43 +225,45 @@ class NetworkConfiguration(object):
 
         for this_switch in onos_switches["devices"]:
 
-            # Get the flows
-            remaining_url = 'flows' + "/" + this_switch["id"]
-            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+            if this_switch["available"]:
 
-            if resp["status"] == "200":
-                switch_flows = json.loads(content)
-                switch_flow_tables = defaultdict(list)
-                for flow_rule in switch_flows["flows"]:
-                    switch_flow_tables[flow_rule["tableId"]].append(flow_rule)
-                this_switch["flow_tables"] = switch_flow_tables
-            else:
-                print "Error pulling switch flows from Onos."
+                # Get the flows
+                remaining_url = 'flows' + "/" + this_switch["id"]
+                resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
 
-            # Get the ports
+                if resp["status"] == "200":
+                    switch_flows = json.loads(content)
+                    switch_flow_tables = defaultdict(list)
+                    for flow_rule in switch_flows["flows"]:
+                        switch_flow_tables[flow_rule["tableId"]].append(flow_rule)
+                    this_switch["flow_tables"] = switch_flow_tables
+                else:
+                    print "Error pulling switch flows from Onos."
 
-            remaining_url = "links?device=" + this_switch["id"]
-            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+                # Get the ports
 
-            if resp["status"] == "200":
-                switch_links = json.loads(content)["links"]
-                this_switch["ports"] = {}
-                for link in switch_links:
-                    if link["src"]["device"] == this_switch["id"]:
-                        this_switch["ports"][link["src"]["port"]] = link["src"]
-                    elif link["dst"]["device"] == this_switch["id"]:
-                        this_switch["ports"][link["dst"]["port"]] = link["dst"]
-            else:
-                print "Error pulling switch ports from RYU."
+                remaining_url = "links?device=" + this_switch["id"]
+                resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
 
-            # Get the groups
-            remaining_url = 'groups' + "/" + this_switch["id"]
-            resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+                if resp["status"] == "200":
+                    switch_links = json.loads(content)["links"]
+                    this_switch["ports"] = {}
+                    for link in switch_links:
+                        if link["src"]["device"] == this_switch["id"]:
+                            this_switch["ports"][link["src"]["port"]] = link["src"]
+                        elif link["dst"]["device"] == this_switch["id"]:
+                            this_switch["ports"][link["dst"]["port"]] = link["dst"]
+                else:
+                    print "Error pulling switch ports from RYU."
 
-            if resp["status"] == "200":
-                this_switch["groups"] = json.loads(content)["groups"]
-            else:
-                print "Error pulling switch ports from RYU."
+                # Get the groups
+                remaining_url = 'groups' + "/" + this_switch["id"]
+                resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
+
+                if resp["status"] == "200":
+                    this_switch["groups"] = json.loads(content)["groups"]
+                else:
+                    print "Error pulling switch ports from RYU."
 
         with open(self.conf_path + "onos_switches.json", "w") as outfile:
             json.dump(onos_switches, outfile)

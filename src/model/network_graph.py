@@ -81,7 +81,7 @@ class NetworkGraph(object):
         return mdg
 
     def onos_sw_device_id_to_node_id_mapping(self, onos_node_id):
-        node_id = "s" + str(int(onos_node_id.split(":")[1]))
+        node_id = "s" + str(int(onos_node_id.split(":")[1], 16))
         return node_id
 
     def node_id_to_onos_sw_device_id_mapping(self, node_id):
@@ -307,6 +307,9 @@ class NetworkGraph(object):
             onos_switches = json.loads(in_file.read())
 
         for onos_switch in onos_switches["devices"]:
+
+            if not onos_switch["available"]:
+                continue
 
             #  prepare a switch id
             switch_id = self.onos_sw_device_id_to_node_id_mapping(onos_switch["id"])

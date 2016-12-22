@@ -16,12 +16,12 @@ sys.path.append("./")
 class SecurityPolicyTimes(Experiment):
 
     def __init__(self,
-                 network_configuration,
+                 nc_list,
                  num_iterations):
 
         super(SecurityPolicyTimes, self).__init__("security_policy_times", 1)
 
-        self.network_configuration = network_configuration
+        self.nc_list = nc_list
         self.num_iterations = num_iterations
 
         self.data = {
@@ -30,13 +30,11 @@ class SecurityPolicyTimes(Experiment):
 
     def trigger(self):
 
-        ng = self.network_configuration.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-
         for i in range(self.num_iterations):
 
             with Timer(verbose=True) as t:
 
-                fv = FlowValidator(ng)
+                fv = FlowValidator(self.nc_list[0].ng)
                 fv.init_network_port_graph()
 
                 control_zone = [fv.network_graph.get_node_object("h11").switch_port,
@@ -53,28 +51,47 @@ class SecurityPolicyTimes(Experiment):
                 connected = fv.validate_zone_pair_connectivity(control_zone, control_zone, control_specific_traffic, 0)
                 print "control_zone:", connected
 
-            self.data["validation_time"][self.network_configuration.nc_topo_str].append(t.secs)
+            self.data["validation_time"][self.nc_list[0].nc_topo_str].append(t.secs)
+
+
+def prepare_network_configurations(num_grids_list):
+
+    nc_list = []
+    num_switches_per_grid = 3
+    num_hosts_per_switch = 3
+
+    for num_grids in num_grids_list:
+        nc = NetworkConfiguration("onos",
+                                  "172.17.0.94",
+                                  8181,
+                                  "http://172.17.0.94:8181/onos/v1/",
+                                  "karaf",
+                                  "karaf",
+                                  "microgrid_topo",
+                                  {"num_switches": 1 + num_grids * num_switches_per_grid,
+                                   "nGrids": num_grids,
+                                   "nSwitchesPerGrid": num_switches_per_grid,
+                                   "nHostsPerSwitch": num_hosts_per_switch},
+                                  conf_root="configurations/",
+                                  synthesis_name="VPLSSynthesis",
+                                  synthesis_params=None)
+
+        nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+
+        nc_list.append(nc)
+
+    return nc_list
 
 
 def main():
 
-    num_iterations = 2
+    num_iterations = 1
+    num_grids_list = [1, 2, 3, 4]
 
-    network_configuration = NetworkConfiguration("onos",
-                                                 "72.36.82.150",
-                                                 40002,
-                                                 "http://72.36.82.150:40001/onos/v1/",
-                                                 "karaf",
-                                                 "karaf",
-                                                 "clostopo",
-                                                 {"fanout": 2,
-                                                  "core": 1,
-                                                  "num_hosts_per_switch": 1},
-                                                 conf_root="configurations/",
-                                                 synthesis_name=None,
-                                                 synthesis_params=None)
+    nc_list = prepare_network_configurations(num_grids_list)
 
-    exp = SecurityPolicyTimes(network_configuration, num_iterations)
+
+    exp = SecurityPolicyTimes(nc_list, num_iterations)
     exp.trigger()
     exp.dump_data()
 
