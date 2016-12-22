@@ -12,6 +12,9 @@ __author__ = 'Rakesh Kumar'
 
 sys.path.append("./")
 
+from analysis.policy_statement import PolicyStatement, PolicyConstraint
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
+
 
 class SecurityPolicyTimes(Experiment):
 
@@ -28,30 +31,44 @@ class SecurityPolicyTimes(Experiment):
             "validation_time": defaultdict(list)
         }
 
+    def construct_policy_statements(self, nc):
+
+        control_zone = [nc.ng.get_node_object("h11").switch_port,
+                        nc.ng.get_node_object("h21").switch_port,
+                        nc.ng.get_node_object("h31").switch_port]
+
+        control_specific_traffic = Traffic(init_wildcard=True)
+        control_specific_traffic.set_field("ethernet_type", 0x0800)
+        control_specific_traffic.set_field("vlan_id", 255 + 0x1000)
+        control_specific_traffic.set_field("has_vlan_tag", 1)
+        control_specific_traffic.set_field("tcp_source_port", 80)
+        control_specific_traffic.set_field("tcp_destination_port", 80)
+
+        control_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+        control_s = PolicyStatement(nc.ng,
+                                    control_zone,
+                                    control_zone,
+                                    control_specific_traffic,
+                                    control_constraints, 0)
+
+        return [control_s]
+
     def trigger(self):
 
         for i in range(self.num_iterations):
+
+            nc = self.nc_list[0]
 
             with Timer(verbose=True) as t:
 
                 fv = FlowValidator(self.nc_list[0].ng)
                 fv.init_network_port_graph()
 
-                control_zone = [fv.network_graph.get_node_object("h11").switch_port,
-                                fv.network_graph.get_node_object("h21").switch_port,
-                                fv.network_graph.get_node_object("h31").switch_port]
+                policy_statements = self.construct_policy_statements(nc)
+                violations = fv.validate_policy(policy_statements)
+                print "violations:", violations
 
-                control_specific_traffic = Traffic(init_wildcard=True)
-                control_specific_traffic.set_field("ethernet_type", 0x0800)
-                control_specific_traffic.set_field("vlan_id", 255 + 0x1000)
-                control_specific_traffic.set_field("has_vlan_tag", 1)
-                control_specific_traffic.set_field("tcp_source_port", 80)
-                control_specific_traffic.set_field("tcp_destination_port", 80)
-
-                connected = fv.validate_zone_pair_connectivity(control_zone, control_zone, control_specific_traffic, 0)
-                print "control_zone:", connected
-
-            self.data["validation_time"][self.nc_list[0].nc_topo_str].append(t.secs)
+            self.data["validation_time"][nc.nc_topo_str].append(t.secs)
 
 
 def prepare_network_configurations(num_grids_list):
