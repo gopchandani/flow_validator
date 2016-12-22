@@ -79,9 +79,9 @@ def prepare_network_configurations(num_grids_list):
 
     for num_grids in num_grids_list:
         nc = NetworkConfiguration("onos",
-                                  "172.17.0.94",
+                                  "172.17.0.95",
                                   8181,
-                                  "http://172.17.0.94:8181/onos/v1/",
+                                  "http://172.17.0.95:8181/onos/v1/",
                                   "karaf",
                                   "karaf",
                                   "microgrid_topo",
@@ -103,7 +103,7 @@ def prepare_network_configurations(num_grids_list):
 def main():
 
     num_iterations = 1
-    num_grids_list = [1, 2, 3, 4]
+    num_grids_list = [1]#, 2, 3, 4]
 
     nc_list = prepare_network_configurations(num_grids_list)
 
