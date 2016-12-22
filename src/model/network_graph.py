@@ -129,6 +129,28 @@ class NetworkGraph(object):
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
+    def check_port_occupied(self, port, sw_id):
+
+        occupied = False
+
+        with open(self.network_configuration.conf_path + "onos_links.json", "r") as in_file:
+            onos_links = json.loads(in_file.read())
+
+        for link in onos_links:
+
+            src_sw_id = self.onos_sw_device_id_to_node_id_mapping(link["src"]["device"])
+            dst_sw_id = self.onos_sw_device_id_to_node_id_mapping(link["dst"]["device"])
+
+            if src_sw_id == sw_id and port == int(link["src"]["port"]):
+                occupied = True
+                print "Sw:", sw_id, "port:", port, "occupied due to link:", link
+
+            if dst_sw_id == sw_id and port == int(link["dst"]["port"]):
+                occupied = True
+                print "Sw:", sw_id, "port:", port, "occupied due to link:", link
+
+        return occupied
+
     def parse_onos_host_nodes(self):
         onos_hosts = None
 
@@ -138,6 +160,14 @@ class NetworkGraph(object):
         for onos_host_dict in onos_hosts:
             host_switch_id = self.onos_sw_device_id_to_node_id_mapping(onos_host_dict["location"]["elementId"])
             host_switch_obj = self.get_node_object(host_switch_id)
+
+            # For onos these things get repeated... so check before)
+            if int(onos_host_dict["location"]["port"]) in host_switch_obj.host_ports:
+                continue
+
+            # Sometimes onos says hosts are attached at places where a sw-sw link exists (!!!) Check for those cases
+            if self.check_port_occupied(int(onos_host_dict["location"]["port"]), host_switch_id):
+                continue
 
             # Onos links do not give host-switch links, so need to add Port to each switch
             host_port_json = {"port": onos_host_dict["location"]["port"]}
@@ -155,11 +185,11 @@ class NetworkGraph(object):
                          host_switch_obj,
                          host_switch_port)
 
-            # Make the connections both on switch and host side, (for onos these things get repeated... so check before)
-            if int(onos_host_dict["location"]["port"]) not in host_switch_obj.host_ports:
-                host_switch_obj.host_ports.append(int(onos_host_dict["location"]["port"]))
-                host_switch_obj.attached_hosts.append(h_obj)
-                host_switch_port.attached_host = h_obj
+            # Make the connections both on switch and host side:
+
+            host_switch_obj.host_ports.append(int(onos_host_dict["location"]["port"]))
+            host_switch_obj.attached_hosts.append(h_obj)
+            host_switch_port.attached_host = h_obj
 
             self.graph.add_node(host_id, node_type="host", h=h_obj)
 
