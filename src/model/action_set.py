@@ -291,7 +291,6 @@ class ActionSet:
                         port_graph_edges.append((str(in_port), output_action))
 
                 else:
-
                     # Add an edge, only if the output_port is currently up
                     if self.sw.ports[output_action.out_port].state == "up":
                         port_graph_edges.append((str(output_action.out_port), output_action))

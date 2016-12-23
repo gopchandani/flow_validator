@@ -242,17 +242,11 @@ class NetworkConfiguration(object):
 
                 # Get the ports
 
-                remaining_url = "links?device=" + this_switch["id"]
+                remaining_url = 'devices' + "/" + this_switch["id"] + "/ports"
                 resp, content = self.h.request(self.controller_api_base_url + remaining_url, "GET")
 
                 if resp["status"] == "200":
-                    switch_links = json.loads(content)["links"]
-                    this_switch["ports"] = {}
-                    for link in switch_links:
-                        if link["src"]["device"] == this_switch["id"]:
-                            this_switch["ports"][link["src"]["port"]] = link["src"]
-                        elif link["dst"]["device"] == this_switch["id"]:
-                            this_switch["ports"][link["dst"]["port"]] = link["dst"]
+                    this_switch["ports"] = json.loads(content)["ports"]
                 else:
                     print "Error pulling switch ports from RYU."
 

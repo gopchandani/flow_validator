@@ -159,6 +159,7 @@ class NetworkGraph(object):
 
         for onos_host_dict in onos_hosts:
             host_switch_id = self.onos_sw_device_id_to_node_id_mapping(onos_host_dict["location"]["elementId"])
+
             host_switch_obj = self.get_node_object(host_switch_id)
 
             # For onos these things get repeated... so check before)
@@ -169,10 +170,7 @@ class NetworkGraph(object):
             if self.check_port_occupied(int(onos_host_dict["location"]["port"]), host_switch_id):
                 continue
 
-            # Onos links do not give host-switch links, so need to add Port to each switch
-            host_port_json = {"port": onos_host_dict["location"]["port"]}
-            host_switch_port = Port(host_switch_obj, port_json=host_port_json)
-            host_switch_obj.ports[int(host_switch_port.port_number)] = host_switch_port
+            host_switch_port = host_switch_obj.ports[int(onos_host_dict["location"]["port"])]
 
             # Add the host to the graph
             host_id = "h" + host_switch_id[1:] + onos_host_dict["location"]["port"]
@@ -355,8 +353,10 @@ class NetworkGraph(object):
 
             # Parse out the information about all the ports in the switch
             switch_ports = {}
-            for port_num in onos_switch["ports"]:
-                switch_ports[int(port_num)] = Port(sw, port_json=onos_switch["ports"][port_num])
+            for port_json in onos_switch["ports"]:
+                if port_json["port"] == "local":
+                    continue
+                switch_ports[int(port_json["port"])] = Port(sw, port_json=port_json)
 
             sw.ports = switch_ports
 
