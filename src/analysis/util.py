@@ -75,6 +75,7 @@ def get_admitted_traffic(pg, src_port, dst_port):
 
     # If they do, just the corresponding spg will do the telling
     if src_port.sw.node_id == dst_port.sw.node_id:
+
         spg = src_port.sw.port_graph
         at = spg.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
                                       dst_port.switch_port_graph_egress_node)

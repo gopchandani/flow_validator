@@ -469,11 +469,13 @@ class NetworkConfiguration(object):
 
     def cleanup_mininet(self):
 
+        # Do clean ups only for mininets that were spawned by this guy
+
         if self.mininet_obj:
             print "Mininet cleanup..."
             self.mininet_obj.stop()
 
-        os.system("sudo mn -c")
+            os.system("sudo mn -c")
 
     def get_all_switch_hosts(self, switch_id):
 

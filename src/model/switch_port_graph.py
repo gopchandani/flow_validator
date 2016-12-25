@@ -19,6 +19,10 @@ class SwitchPortGraph(PortGraph):
 
         # Initialize switch ports' port graph state
         for port_num in self.sw.ports:
+
+            if port_num == 1 and self.sw.node_id == "s1":
+                pass
+
             self.sw.ports[port_num].init_port_graph_state()
 
         # Initialize port graph state per table and add its node to switch port graph

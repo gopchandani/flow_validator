@@ -102,27 +102,32 @@ class SecurityPolicyTimes(Experiment):
             print "Total violations:", len(violations)
 
 
-def prepare_network_configurations(num_grids_list):
+def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 
     nc_list = []
     num_switches_per_grid = 3
-    num_hosts_per_switch = 3
 
     for num_grids in num_grids_list:
-        nc = NetworkConfiguration("onos",
-                                  "172.17.0.99",
-                                  8181,
-                                  "http://172.17.0.99:8181/onos/v1/",
-                                  "karaf",
-                                  "karaf",
-                                  "microgrid_topo",
-                                  {"num_switches": 1 + num_grids * num_switches_per_grid,
-                                   "nGrids": num_grids,
-                                   "nSwitchesPerGrid": num_switches_per_grid,
-                                   "nHostsPerSwitch": num_hosts_per_switch},
-                                  conf_root="configurations/",
-                                  synthesis_name="VPLSSynthesis",
-                                  synthesis_params=None)
+
+        for num_hosts_per_switch in num_hosts_per_switch_list:
+
+            ip_str = "172.17.0.137"
+            port_str = "8181"
+
+            nc = NetworkConfiguration("onos",
+                                      ip_str,
+                                      int(port_str),
+                                      "http://" + ip_str + ":" + port_str + "/onos/v1/",
+                                      "karaf",
+                                      "karaf",
+                                      "microgrid_topo",
+                                      {"num_switches": 1 + num_grids * num_switches_per_grid,
+                                       "nGrids": num_grids,
+                                       "nSwitchesPerGrid": num_switches_per_grid,
+                                       "nHostsPerSwitch": num_hosts_per_switch},
+                                      conf_root="configurations/",
+                                      synthesis_name=None,
+                                      synthesis_params=None)
 
         nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
@@ -134,9 +139,10 @@ def prepare_network_configurations(num_grids_list):
 def main():
 
     num_iterations = 1
-    num_grids_list = [3]#[2]#[1]#[1, 2, 3, 4]
+    num_grids_list = [1]#[1, 2, 3, 4, 5]
+    num_hosts_per_switch_list = [5]
 
-    nc_list = prepare_network_configurations(num_grids_list)
+    nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
 
     exp = SecurityPolicyTimes(nc_list, num_iterations)
     exp.trigger()
