@@ -11,7 +11,8 @@ from model.traffic import Traffic
 from experiments.timer import Timer
 from util import get_specific_traffic
 from util import get_admitted_traffic, get_paths
-from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
+from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
 
 __author__ = 'Rakesh Kumar'
@@ -316,6 +317,22 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
+    def validate_dis_connectvity_constraint(self, src_port, dst_port, traffic):
+
+        at = get_admitted_traffic(self.port_graph, src_port, dst_port)
+        counter_example = None
+        satisfies = True
+
+        if not at.is_empty():
+            if at.is_subset_traffic(traffic):
+                traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
+
+                if traffic_paths:
+                    satisfies = False
+                    counter_example = at
+
+        return satisfies, counter_example
+
     def validate_path_length_constraint(self, src_port, dst_port, traffic, l):
 
         satisfies = True
@@ -373,6 +390,11 @@ class FlowValidator(object):
                         satisfies, counter_example = self.validate_connectvity_constraint(src_port,
                                                                                           dst_port,
                                                                                           ps.traffic)
+
+                    if constraint.constraint_type == ISOLATION_CONSTRAINT:
+                        satisfies, counter_example = self.validate_dis_connectvity_constraint(src_port,
+                                                                                              dst_port,
+                                                                                              ps.traffic)
 
                     if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
                         satisfies, counter_example = self.validate_path_length_constraint(src_port,
