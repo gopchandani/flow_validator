@@ -475,9 +475,9 @@ class FlowValidator(object):
         self.validation_map = defaultdict(defaultdict)
         self.L = list(self.network_graph.get_switch_link_data())
 
-        print "List sequence was:", self.L
+        #print "List sequence was:", self.L
         random.shuffle(self.L)
-        print "List sequence used:", self.L
+        #print "List sequence used:", self.L
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):

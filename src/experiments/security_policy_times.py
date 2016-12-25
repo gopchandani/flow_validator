@@ -28,6 +28,7 @@ class SecurityPolicyTimes(Experiment):
         self.num_iterations = num_iterations
 
         self.data = {
+            "initialization_time": defaultdict(list),
             "validation_time": defaultdict(list)
         }
 
@@ -86,20 +87,24 @@ class SecurityPolicyTimes(Experiment):
 
     def trigger(self):
 
-        for i in range(self.num_iterations):
-            nc = self.nc_list[0]
+        for nc in self.nc_list:
+
             with Timer(verbose=True) as t:
-                fv = FlowValidator(self.nc_list[0].ng)
-                policy_statements = self.construct_policy_statements(nc)
+                fv = FlowValidator(nc.ng)
                 fv.init_network_port_graph()
-                violations = fv.validate_policy(policy_statements)
 
-            self.data["validation_time"][nc.nc_topo_str].append(t.secs)
+            self.data["initialization_time"][nc.nc_topo_str].append(t.secs)
+            self.dump_data()
 
-            for v in violations:
-                print v
+            policy_statements = self.construct_policy_statements(nc)
 
-            print "Total violations:", len(violations)
+            for i in range(self.num_iterations):
+                with Timer(verbose=True) as t:
+                    violations = fv.validate_policy(policy_statements)
+
+                self.data["validation_time"][nc.nc_topo_str].append(t.secs)
+                self.dump_data()
+                print "Total violations:", len(violations)
 
 
 def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
@@ -138,9 +143,9 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 
 def main():
 
-    num_iterations = 1
-    num_grids_list = [1]#[1, 2, 3, 4, 5]
-    num_hosts_per_switch_list = [5]
+    num_iterations = 3
+    num_grids_list = [1, 2, 3, 4, 5]
+    num_hosts_per_switch_list = [3]
 
     nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
 
