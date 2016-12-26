@@ -130,13 +130,14 @@ class SecurityPolicyTimes(Experiment):
 
             policy_statements = self.construct_policy_statements(nc)
             policy_len_str = "# Policy Statements:" + str(len(policy_statements))
-            self.data["initialization_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]].append(t.secs)
-            self.dump_data()
 
             print "Total statements:", len(policy_statements)
 
             self.data["initialization_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]] = []
             self.data["validation_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]] = []
+
+            self.data["initialization_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]].append(t.secs)
+            self.dump_data()
 
             for i in range(self.num_iterations):
                 with Timer(verbose=True) as t:
@@ -302,7 +303,7 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 
         for num_hosts_per_switch in num_hosts_per_switch_list:
 
-            ip_str = "172.17.0.142"
+            ip_str = "172.17.0.151"
             port_str = "8181"
 
             nc = NetworkConfiguration("onos",
@@ -330,8 +331,8 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 def main():
 
     num_iterations = 3
-    num_grids_list = [5] #, 2, 3]#, 4, 5]
-    num_hosts_per_switch_list = [9] #[3, 4, 5]
+    num_grids_list = [1] #, 2, 3]#, 4, 5]
+    num_hosts_per_switch_list = [6] #[3, 6, 9]
 
     nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
 
