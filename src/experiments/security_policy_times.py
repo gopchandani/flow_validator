@@ -28,8 +28,8 @@ class SecurityPolicyTimes(Experiment):
         self.num_iterations = num_iterations
 
         self.data = {
-            "initialization_time": defaultdict(list),
-            "validation_time": defaultdict(list)
+            "initialization_time": defaultdict(defaultdict),
+            "validation_time": defaultdict(defaultdict)
         }
 
     def construct_policy_statements(self, nc):
@@ -124,17 +124,23 @@ class SecurityPolicyTimes(Experiment):
                 fv = FlowValidator(nc.ng)
                 fv.init_network_port_graph()
 
-            self.data["initialization_time"][nc.nc_topo_str].append(t.secs)
             self.dump_data()
 
             policy_statements = self.construct_policy_statements(nc)
             print "Total statements:", len(policy_statements)
 
+            policy_len_str = "# Policy Statements:" + str(len(policy_statements))
+
+            self.data["initialization_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]] = []
+            self.data["validation_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]] = []
+
+            self.data["initialization_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]].append(t.secs)
+
             for i in range(self.num_iterations):
                 with Timer(verbose=True) as t:
                     violations = fv.validate_policy(policy_statements)
 
-                self.data["validation_time"][nc.nc_topo_str].append(t.secs)
+                self.data["validation_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]].append(t.secs)
                 self.dump_data()
                 print "Total violations:", len(violations)
 
@@ -148,7 +154,7 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 
         for num_hosts_per_switch in num_hosts_per_switch_list:
 
-            ip_str = "172.17.0.138"
+            ip_str = "172.17.0.140"
             port_str = "8181"
 
             nc = NetworkConfiguration("onos",
@@ -166,9 +172,9 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
                                       synthesis_name=None,
                                       synthesis_params=None)
 
-        nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+            nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
-        nc_list.append(nc)
+            nc_list.append(nc)
 
     return nc_list
 
@@ -176,8 +182,8 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 def main():
 
     num_iterations = 3
-    num_grids_list = [1, 2, 3]#, 4, 5]
-    num_hosts_per_switch_list = [3]
+    num_grids_list = [1]#, 2, 3]#, 4, 5]
+    num_hosts_per_switch_list = [3]#[3, 4, 5]
 
     nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
 
