@@ -239,14 +239,14 @@ class SecurityPolicyTimes(Experiment):
 
         self.plot_lines_with_error_bars(ax1,
                                         "validation_time",
-                                        "Number of host pairs",
+                                        "Number of hosts per non-control enclave",
                                         "Time (seconds)",
                                         "",
-                                        y_scale='log',
-                                        x_min_factor=1.0,
+                                        y_scale='linear',
+                                        x_min_factor=0.9,
                                         x_max_factor=1.1,
                                         y_min_factor=0.01,
-                                        y_max_factor=10,
+                                        y_max_factor=1.1,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
 
@@ -283,11 +283,30 @@ class SecurityPolicyTimes(Experiment):
             if merged_data:
                 for ds in merged_data:
                     for case in merged_data[ds]:
-                        for num_conns in merged_data[ds][case]:
+                        for hps in merged_data[ds][case]:
                             try:
-                                merged_data[ds][case][num_conns].extend(this_data[ds][case][num_conns])
+                                merged_data[ds][case][hps].extend(this_data[ds][case][hps])
                             except KeyError:
-                                print filename, ds, case, num_conns, "not found."
+                                print filename, ds, case, "not found."
+            else:
+                merged_data = this_data
+
+        return merged_data
+
+    def load_data_merge_num_statements(self, filename_list):
+
+        merged_data = None
+
+        for filename in filename_list:
+
+            print "Reading file:", filename
+
+            with open(filename, "r") as infile:
+                this_data = json.load(infile)
+
+            if merged_data:
+                for ds in merged_data:
+                    merged_data[ds].update(this_data[ds])
             else:
                 merged_data = this_data
 
@@ -330,26 +349,26 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 
 def main():
 
-    num_iterations = 3
-    num_grids_list = [1] #, 2, 3]#, 4, 5]
-    num_hosts_per_switch_list = [6] #[3, 6, 9]
+    num_iterations = 10
+    num_grids_list = [3] #, 2, 3]#, 4, 5]
+    num_hosts_per_switch_list = [3, 6, 9]
 
     nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
 
     exp = SecurityPolicyTimes(nc_list, num_iterations)
 
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
+    #
 
-    #exp.load_data("data/security_policy_times_1_iterations_20161225_171116.json")
+    # exp.load_data("data/security_policy_times_1_iterations_20161226_114304.json")
+    # exp.plot_data()
 
-    # exp.data = exp.load_data_merge_iterations(
-    #     ["data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json",
-    #      "data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json"
-    #      ])
-
-    #exp.plot_data()
-
+    exp.data = exp.load_data_merge_num_statements(
+        ["data/security_policy_times_1_iterations_20161226_114304.json",
+         "data/security_policy_times_1_iterations_20161226_125827.json"
+         ])
+    exp.plot_data()
 
 if __name__ == "__main__":
     main()
