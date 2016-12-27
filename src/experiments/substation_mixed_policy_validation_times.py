@@ -98,7 +98,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
                     print "Total violations:", len(violations)
 
-                    #self.dump_violations(violations)
+                    self.dump_violations(violations)
 
                     print "Does the network configuration satisfy the given policy:", (len(violations) == 0)
 
@@ -288,7 +288,7 @@ def main():
     num_iterations = 1
     num_switches_in_clique_list = [4]#, 5]#, 6]
     num_hosts_per_switch_list = [1]
-    num_per_switch_links_list = [2, 3]
+    num_per_switch_links_list = [2]#, 3]
 
     s1_k_values = [3]#, 2, 3, 4]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
@@ -296,19 +296,19 @@ def main():
                                                             num_per_switch_links_list)
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
     #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json")
 
     #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json")
 
-    exp.data = exp.load_data_merge_iterations(
-        ["data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json",
-         "data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json"
-         ])
-
-    exp.plot_data()
+    # exp.data = exp.load_data_merge_iterations(
+    #     ["data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json",
+    #      "data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json"
+    #      ])
+    #
+    # exp.plot_data()
 
 if __name__ == "__main__":
     main()

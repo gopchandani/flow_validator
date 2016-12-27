@@ -5,6 +5,7 @@ import numpy as np
 
 sys.path.append("./")
 
+from model.network_graph import NetworkGraphLinkData
 from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
@@ -317,7 +318,7 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
-    def validate_dis_connectvity_constraint(self, src_port, dst_port, traffic):
+    def validate_isolation_constraint(self, src_port, dst_port, traffic):
 
         at = get_admitted_traffic(self.port_graph, src_port, dst_port)
         counter_example = None
@@ -390,17 +391,24 @@ class FlowValidator(object):
                         satisfies, counter_example = self.validate_connectvity_constraint(src_port,
                                                                                           dst_port,
                                                                                           ps.traffic)
+                    if not satisfies:
+                        v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
                     if constraint.constraint_type == ISOLATION_CONSTRAINT:
-                        satisfies, counter_example = self.validate_dis_connectvity_constraint(src_port,
-                                                                                              dst_port,
-                                                                                              ps.traffic)
+                        satisfies, counter_example = self.validate_isolation_constraint(src_port,
+                                                                                        dst_port,
+                                                                                        ps.traffic)
+
+                    if not satisfies:
+                        v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
                     if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
                         satisfies, counter_example = self.validate_path_length_constraint(src_port,
                                                                                           dst_port,
                                                                                           ps.traffic,
                                                                                           constraint.constraint_params)
+                    if not satisfies:
+                        v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
                     if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
                         satisfies, counter_example = self.validate_link_exclusivity(ps.src_zone,
@@ -409,7 +417,7 @@ class FlowValidator(object):
                                                                                     constraint.constraint_params)
 
                     if not satisfies:
-                        v.append(PolicyViolation(lmbda[:], src_port, dst_port,  constraint, counter_example))
+                        v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
         return v
 
@@ -421,22 +429,25 @@ class FlowValidator(object):
             if len(link_perm) > len(lmbda):
 
                 if tuple(lmbda) == tuple(link_perm[0:len(lmbda)]):
-                    # This is indicated by removing those cases from the validation_map
-                    ps_list = self.validation_map[link_perm][(src_port, dst_port)]
-                    del self.validation_map[link_perm][(src_port, dst_port)]
 
-                    print "Removed:", link_perm, "for src_port:", src_port, "dst_port:", dst_port
+                    if (src_port, dst_port) in self.validation_map[link_perm]:
 
-                    # If all the cases under a perm are gone, then get rid of the key.
-                    if not self.validation_map[link_perm]:
-                        print "Removed perm:", link_perm
-                        del self.validation_map[link_perm]
+                        # This is indicated by removing those cases from the validation_map
+                        ps_list = self.validation_map[link_perm][(src_port, dst_port)]
+                        del self.validation_map[link_perm][(src_port, dst_port)]
 
-                    # Indicate for every deleted validation in the map, that the referred constraint is violated
-                    for ps in ps_list:
-                        for constraint in ps.constraints:
-                            self.violations.append(PolicyViolation(tuple(link_perm), src_port, dst_port,
-                                                                   constraint, Traffic()))
+                        print "Removed:", link_perm, "for src_port:", src_port, "dst_port:", dst_port
+
+                        # If all the cases under a perm are gone, then get rid of the key.
+                        if not self.validation_map[link_perm]:
+                            print "Removed perm:", link_perm
+                            del self.validation_map[link_perm]
+
+                        # Indicate for every deleted validation in the map, that the referred constraint is violated
+                        for ps in ps_list:
+                            for constraint in ps.constraints:
+                                v = PolicyViolation(tuple(link_perm), src_port, dst_port, constraint, Traffic())
+                                self.violations.append(v)
 
     def perform_validation(self, lmbda):
 
@@ -445,6 +456,11 @@ class FlowValidator(object):
 
         # Perform the validation that needs performing here...
         print "Performing validation, prefix here:", lmbda
+
+        # str_test_lmbda = str([('s2', 's1'), ('s4', 's3'), ('s2', 's3')])
+        # str_lmbda = str(lmbda)
+        # if str_test_lmbda == str_lmbda:
+        #     pass
 
         # Collect cases cases where lmbda == keys in the validation_map and validate them
         cases = {}
@@ -498,7 +514,7 @@ class FlowValidator(object):
         self.L = list(self.network_graph.get_switch_link_data())
 
         #print "List sequence was:", self.L
-        random.shuffle(self.L)
+        #random.shuffle(self.L)
         #print "List sequence used:", self.L
 
         for ps in policy_statement_list:
