@@ -13,7 +13,7 @@ from experiments.timer import Timer
 from util import get_specific_traffic
 from util import get_admitted_traffic, get_paths
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
-from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
+from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
 
 __author__ = 'Rakesh Kumar'
@@ -350,21 +350,18 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
-    def validate_link_exclusivity(self, src_zone, dst_zone, traffic, el):
+    def validate_link_avoidance(self, src_zone, dst_zone, traffic, el):
         satisfies = True
         counter_example = None
 
         for l in el:
 
-            # Check to see if the paths belonging to this link are all from src_port to dst_port and vice versa
+            # Check to see if any of the paths crossing this link are all from src_port to dst_port and vice versa
             for path in l.traffic_paths:
 
-                if (self.is_node_in_zone(path.src_node, src_zone, "ingress") and
-                        self.is_node_in_zone(path.dst_node, dst_zone, "egress")) or \
-                        (self.is_node_in_zone(path.src_node, dst_zone, "ingress") and
-                             self.is_node_in_zone(path.dst_node, src_zone, "egress")):
-                    pass
-                else:
+                if self.is_node_in_zone(path.src_node, src_zone, "ingress") and \
+                        self.is_node_in_zone(path.dst_node, dst_zone, "egress"):
+
                     #print "Against policy, found path:", path, "on link:", l
                     satisfies = False
                     counter_example = path
@@ -410,14 +407,21 @@ class FlowValidator(object):
                     if not satisfies:
                         v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
-                    if constraint.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
-                        satisfies, counter_example = self.validate_link_exclusivity(ps.src_zone,
+                    if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
+                        satisfies, counter_example = self.validate_link_avoidance(ps.src_zone,
                                                                                     ps.dst_zone,
                                                                                     ps.traffic,
                                                                                     constraint.constraint_params)
 
                     if not satisfies:
                         v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+
+        str_test_lmbda = str([(('s2', 's1'), ('s2', 's3'), ('s4', 's1'))])
+        str_lmbda = str(lmbda)
+        if str_test_lmbda == str_lmbda:
+            print "Actually testing for for lmbda", str_lmbda
+            for vio in v:
+                print "str_test_lmbda:", str_test_lmbda, "v:", vio
 
         return v
 
@@ -438,6 +442,12 @@ class FlowValidator(object):
 
                         print "Removed:", link_perm, "for src_port:", src_port, "dst_port:", dst_port
 
+                        str_test_lmbda = str([(('s2', 's1'), ('s2', 's3'), ('s4', 's1'))])
+                        str_link_perm = str(link_perm)
+                        if str_test_lmbda == str_link_perm:
+                            print "Anticipating for link_perm", str_link_perm
+                            print "str_test_lmbda:", str_test_lmbda, "v:", v
+
                         # If all the cases under a perm are gone, then get rid of the key.
                         if not self.validation_map[link_perm]:
                             print "Removed perm:", link_perm
@@ -456,11 +466,6 @@ class FlowValidator(object):
 
         # Perform the validation that needs performing here...
         print "Performing validation, prefix here:", lmbda
-
-        # str_test_lmbda = str([('s2', 's1'), ('s4', 's3'), ('s2', 's3')])
-        # str_lmbda = str(lmbda)
-        # if str_test_lmbda == str_lmbda:
-        #     pass
 
         # Collect cases cases where lmbda == keys in the validation_map and validate them
         cases = {}

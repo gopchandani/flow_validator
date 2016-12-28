@@ -17,7 +17,7 @@ __author__ = 'Rakesh Kumar'
 sys.path.append("./")
 
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
-from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_EXCLUSIVITY_CONSTRAINT
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 
 
 class SubstationMixedPolicyValidationTimes(Experiment):
@@ -49,13 +49,11 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s1_traffic.set_field("has_vlan_tag", 0)
 
         s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
-                          PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6),
-                          PolicyConstraint(LINK_EXCLUSIVITY_CONSTRAINT, [("s1", "s2")])]
+                          PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6)]
 
         s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, s1_k)
 
         s2_src_zone = [nc.ng.get_node_object("h41").switch_port]
-
         s2_dst_zone = [nc.ng.get_node_object("h11").switch_port]
 
         s2_traffic = Traffic(init_wildcard=True)
@@ -63,7 +61,8 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s2_traffic.set_field("has_vlan_tag", 0)
         s2_traffic.set_field("tcp_destination_port", 443)
 
-        s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None), PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6)]
+        s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
+                          PolicyConstraint(LINK_AVOIDANCE_CONSTRAINT, [("s1", "s2")])]
         s2_k = 0
         s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, s2_k)
 
