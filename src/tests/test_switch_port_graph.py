@@ -14,6 +14,11 @@ class TestSwitchPortGraph(unittest.TestCase):
     def setUpClass(cls):
 
         nc_linear_dijkstra = NetworkConfiguration("ryu",
+                                                  "127.0.0.1",
+                                                  6633,
+                                                  "http://localhost:8080/",
+                                                  "admin",
+                                                  "admin",
                                                   "linear",
                                                   {"num_switches": 2,
                                                    "num_hosts_per_switch": 1},
@@ -32,6 +37,11 @@ class TestSwitchPortGraph(unittest.TestCase):
         cls.swpg_linear_dijkstra.init_switch_admitted_traffic()
 
         nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
+                                                             "127.0.0.1",
+                                                             6633,
+                                                             "http://localhost:8080/",
+                                                             "admin",
+                                                             "admin",
                                                              "ring",
                                                              {"num_switches": 4,
                                                               "num_hosts_per_switch": 1},
@@ -50,6 +60,11 @@ class TestSwitchPortGraph(unittest.TestCase):
         cls.swpg_ring_aborescene_apply_true.init_switch_admitted_traffic()
 
         nc_ring_aborescene_apply_false = NetworkConfiguration("ryu",
+                                                              "127.0.0.1",
+                                                              6633,
+                                                              "http://localhost:8080/",
+                                                              "admin",
+                                                              "admin",
                                                               "ring",
                                                               {"num_switches": 4,
                                                                "num_hosts_per_switch": 1},

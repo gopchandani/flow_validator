@@ -388,24 +388,24 @@ class FlowValidator(object):
                         satisfies, counter_example = self.validate_connectvity_constraint(src_port,
                                                                                           dst_port,
                                                                                           ps.traffic)
-                    if not satisfies:
-                        v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+                        if not satisfies:
+                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
                     if constraint.constraint_type == ISOLATION_CONSTRAINT:
                         satisfies, counter_example = self.validate_isolation_constraint(src_port,
                                                                                         dst_port,
                                                                                         ps.traffic)
 
-                    if not satisfies:
-                        v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+                        if not satisfies:
+                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
                     if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
                         satisfies, counter_example = self.validate_path_length_constraint(src_port,
                                                                                           dst_port,
                                                                                           ps.traffic,
                                                                                           constraint.constraint_params)
-                    if not satisfies:
-                        v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+                        if not satisfies:
+                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
                     if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
                         satisfies, counter_example = self.validate_link_avoidance(ps.src_zone,
@@ -413,8 +413,8 @@ class FlowValidator(object):
                                                                                     ps.traffic,
                                                                                     constraint.constraint_params)
 
-                    if not satisfies:
-                        v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+                        if not satisfies:
+                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
         str_test_lmbda = str([(('s2', 's1'), ('s2', 's3'), ('s4', 's1'))])
         str_lmbda = str(lmbda)
@@ -425,39 +425,30 @@ class FlowValidator(object):
 
         return v
 
-    def truncate_recursion(self, lmbda, src_port, dst_port):
+    def truncate_recursion(self, v):
 
         for link_perm in list(self.validation_map.keys()):
 
             # For any k larger than len(lmbda) for this prefix of links.
-            if len(link_perm) > len(lmbda):
+            if len(link_perm) > len(v.lmbda):
 
-                if tuple(lmbda) == tuple(link_perm[0:len(lmbda)]):
+                if tuple(v.lmbda) == tuple(link_perm[0:len(v.lmbda)]):
 
-                    if (src_port, dst_port) in self.validation_map[link_perm]:
+                    if (v.src_port, v.dst_port) in self.validation_map[link_perm]:
 
                         # This is indicated by removing those cases from the validation_map
-                        ps_list = self.validation_map[link_perm][(src_port, dst_port)]
-                        del self.validation_map[link_perm][(src_port, dst_port)]
+                        ps_list = self.validation_map[link_perm][(v.src_port, v.dst_port)]
+                        del self.validation_map[link_perm][(v.src_port, v.dst_port)]
 
-                        print "Removed:", link_perm, "for src_port:", src_port, "dst_port:", dst_port
-
-                        str_test_lmbda = str([(('s2', 's1'), ('s2', 's3'), ('s4', 's1'))])
-                        str_link_perm = str(link_perm)
-                        if str_test_lmbda == str_link_perm:
-                            print "Anticipating for link_perm", str_link_perm
-                            print "str_test_lmbda:", str_test_lmbda, "v:", v
+                        print "Removed:", link_perm, "for src_port:", v.src_port, "dst_port:", v.dst_port
 
                         # If all the cases under a perm are gone, then get rid of the key.
                         if not self.validation_map[link_perm]:
                             print "Removed perm:", link_perm
                             del self.validation_map[link_perm]
 
-                        # Indicate for every deleted validation in the map, that the referred constraint is violated
-                        for ps in ps_list:
-                            for constraint in ps.constraints:
-                                v = PolicyViolation(tuple(link_perm), src_port, dst_port, constraint, Traffic())
-                                self.violations.append(v)
+                        v_p = PolicyViolation(tuple(link_perm), v.src_port, v.dst_port, v.constraint, v.counter_example)
+                        self.violations.append(v_p)
 
     def perform_validation(self, lmbda):
 
@@ -478,7 +469,7 @@ class FlowValidator(object):
         for vio in v:
             if vio.constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
                 if vio.counter_example.is_empty():
-                    self.truncate_recursion(lmbda, vio.src_port, vio.dst_port)
+                    self.truncate_recursion(vio)
 
         # If max_k links have already been failed, no need to fail any more links
         if len(lmbda) < self.max_k:

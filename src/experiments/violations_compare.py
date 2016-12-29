@@ -1,12 +1,12 @@
 import pickle
 from collections import defaultdict
 
-#353 (came from the non-optimized)
-with open("data/substation_mixed_policy_validation_times_1_iterations_20161228_085403_violations.pickle", "r") as infile:
+# 65 (came from the non-optimized)
+with open("data/substation_mixed_policy_validation_times_1_iterations_20161229_085937_violations.pickle", "r") as infile:
     non_optimized = pickle.load(infile)
 
-#312(came from the optimized)
-with open("data/substation_mixed_policy_validation_times_1_iterations_20161228_090129_violations.pickle", "r") as infile:
+# 65 (came from the optimized)
+with open("data/substation_mixed_policy_validation_times_1_iterations_20161229_085235_violations.pickle", "r") as infile:
     optimized = pickle.load(infile)
 
 print "List Length:"
