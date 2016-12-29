@@ -284,12 +284,12 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 1
+    num_iterations = 5
     num_switches_in_clique_list = [4]#, 5]#, 6]
     num_hosts_per_switch_list = [1]
     num_per_switch_links_list = [2]#, 3]
 
-    s1_k_values = [3]#, 2, 3, 4]
+    s1_k_values = [4]#, 2, 3, 4]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
                                                             num_hosts_per_switch_list,
                                                             num_per_switch_links_list)

@@ -416,13 +416,6 @@ class FlowValidator(object):
                         if not satisfies:
                             v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
-        str_test_lmbda = str([(('s2', 's1'), ('s2', 's3'), ('s4', 's1'))])
-        str_lmbda = str(lmbda)
-        if str_test_lmbda == str_lmbda:
-            print "Actually testing for for lmbda", str_lmbda
-            for vio in v:
-                print "str_test_lmbda:", str_test_lmbda, "v:", vio
-
         return v
 
     def truncate_recursion(self, v):
@@ -450,6 +443,25 @@ class FlowValidator(object):
                         v_p = PolicyViolation(tuple(link_perm), v.src_port, v.dst_port, v.constraint, v.counter_example)
                         self.violations.append(v_p)
 
+    def perform_optimizations(self, v):
+
+        for vio in v:
+            if vio.constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
+                if vio.counter_example.is_empty():
+
+                    # Check to see if all links to the source OR the destination port's switch have already failed
+                    src_port_switch_links = self.network_graph.get_switch_link_data(vio.src_port.sw)
+                    src_port_remaining_switch_links = set(src_port_switch_links) - set(vio.lmbda)
+                    dst_port_switch_links = self.network_graph.get_switch_link_data(vio.dst_port.sw)
+                    dst_port_remaining_switch_links = set(dst_port_switch_links) - set(vio.lmbda)
+
+                    # If so, then no matter what other links fail, this src_port -> dst_port constraint will be violated
+                    if not (src_port_remaining_switch_links and dst_port_remaining_switch_links):
+                        print "Now invoke truncation of recursion"
+
+                        # Remove them for validation_map and add corresponding violations
+                        self.truncate_recursion(vio)
+
     def perform_validation(self, lmbda):
 
         # Capture any changes to where the paths flow now
@@ -466,10 +478,7 @@ class FlowValidator(object):
         v = self.validate_policy_cases(cases, lmbda)
         self.violations.extend(v)
 
-        for vio in v:
-            if vio.constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
-                if vio.counter_example.is_empty():
-                    self.truncate_recursion(vio)
+        self.perform_optimizations(v)
 
         # If max_k links have already been failed, no need to fail any more links
         if len(lmbda) < self.max_k:
@@ -507,11 +516,8 @@ class FlowValidator(object):
         #   Value is a list of statements where the pair appears
 
         self.validation_map = defaultdict(defaultdict)
-        self.L = list(self.network_graph.get_switch_link_data())
 
-        #print "List sequence was:", self.L
-        #random.shuffle(self.L)
-        #print "List sequence used:", self.L
+        self.L = sorted(self.network_graph.get_switch_link_data(), key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):
