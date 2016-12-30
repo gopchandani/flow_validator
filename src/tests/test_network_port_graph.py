@@ -16,6 +16,11 @@ class TestNetworkPortGraph(unittest.TestCase):
     def setUpClass(cls):
 
         cls.nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
+                                                                 "127.0.0.1",
+                                                                 6633,
+                                                                 "http://localhost:8080/",
+                                                                 "admin",
+                                                                 "admin",
                                                                  "ring",
                                                                  {"num_switches": 4,
                                                                   "num_hosts_per_switch": 1},
@@ -46,6 +51,11 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic()
 
         cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
+                                                    "127.0.0.1",
+                                                    6633,
+                                                    "http://localhost:8080/",
+                                                    "admin",
+                                                    "admin",
                                                     "clostopo",
                                                     {"fanout": 2,
                                                      "core": 1,
@@ -66,6 +76,11 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic()
 
         cls.nc_linear_dijkstra = NetworkConfiguration("ryu",
+                                                      "127.0.0.1",
+                                                      6633,
+                                                      "http://localhost:8080/",
+                                                      "admin",
+                                                      "admin",
                                                       "linear",
                                                       {"num_switches": 2,
                                                        "num_hosts_per_switch": 2},
@@ -84,6 +99,11 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_linear_dijkstra_new_mode_init.init_network_admitted_traffic()
 
         cls.nc_linear_dijkstra_mac_acl = NetworkConfiguration("ryu",
+                                                              "127.0.0.1",
+                                                              6633,
+                                                              "http://localhost:8080/",
+                                                              "admin",
+                                                              "admin",
                                                               "linear",
                                                               {"num_switches": 2,
                                                                "num_hosts_per_switch": 2},

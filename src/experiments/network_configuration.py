@@ -475,7 +475,7 @@ class NetworkConfiguration(object):
             print "Mininet cleanup..."
             self.mininet_obj.stop()
 
-            os.system("sudo mn -c")
+        os.system("sudo mn -c")
 
     def get_all_switch_hosts(self, switch_id):
 

@@ -1,7 +1,7 @@
 CONNECTIVITY_CONSTRAINT = "Connectivity"
 ISOLATION_CONSTRAINT = "Isolation"
 PATH_LENGTH_CONSTRAINT = "PathLength"
-LINK_EXCLUSIVITY_CONSTRAINT = "LinkExclusivity"
+LINK_AVOIDANCE_CONSTRAINT = "LinkAvoidance"
 
 
 class PolicyConstraint(object):
@@ -30,13 +30,15 @@ class PolicyViolation(object):
         return "lmbda: " + str(self.lmbda) + \
                " src_port: " + str(self.src_port) + \
                " dst_port: " + str(self.dst_port) + \
-               " constraint: " + str(self.constraint)
+               " constraint: " + str(self.constraint) + \
+               " counter_example: " + str(self.counter_example)
 
     def __repr__(self):
         return " lmbda: " + str(self.lmbda) + \
                " src_port: " + str(self.src_port) + \
                " dst_port: " + str(self.dst_port) + \
-               " constraint: " + str(self.constraint)
+               " constraint: " + str(self.constraint) + \
+               " counter_example: " + str(self.counter_example)
 
 
 class PolicyStatement(object):
@@ -51,7 +53,7 @@ class PolicyStatement(object):
 
         # Convert constraint links to NetworkGraphLinkData objects
         for c in self.constraints:
-            if c.constraint_type == LINK_EXCLUSIVITY_CONSTRAINT:
+            if c.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
                 converted_links = []
                 for link in c.constraint_params:
                     converted_links.append(self.network_graph.get_link_data(link[0], link[1]))

@@ -17,6 +17,18 @@ from sel_controller import Session, OperationalTree, ConfigTree
 class NetworkGraphLinkData(object):
 
     def __init__(self, node1_id, node1_port, node2_id, node2_port, link_type):
+
+        # Make it so that links are always added from the lower sw id to higher sw id:
+        if int(node1_id[1:]) > int(node2_id[1:]):
+            swap = node1_id
+            node1_id = node2_id
+            node2_id = swap
+
+            swap = node1_port
+            node1_port = node2_port
+            node2_port = swap
+
+        self.link_tuple = (node1_id, node2_id)
         self.link_ports_dict = {str(node1_id): node1_port, str(node2_id): node2_port}
         self.link_type = link_type
         self.traffic_paths = []
@@ -487,11 +499,25 @@ class NetworkGraph(object):
         link_data = self.graph[node1_id][node2_id]['link_data']
         return link_data
 
-    def get_switch_link_data(self):
+    def get_switch_link_data(self, sw=None):
         for edge in self.graph.edges():
             link_data = self.graph[edge[0]][edge[1]]['link_data']
             if link_data.link_type == "switch":
-                yield link_data
+                if sw:
+                    if sw.node_id in link_data.link_ports_dict:
+                        yield link_data
+                else:
+                    yield link_data
+
+    def get_all_paths_as_switch_link_data(self, src_sw, dst_sw):
+        all_paths_ld = []
+        for path in nx.all_simple_paths(self.graph, src_sw.node_id, dst_sw.node_id):
+            this_path_ld = []
+            for i in range(len(path) - 1):
+                this_path_ld.append(self.graph[path[i]][path[i+1]]['link_data'])
+            all_paths_ld.append(this_path_ld)
+        return all_paths_ld
+
 
     def get_adjacent_switch_link_data(self, switch_id):
         for link_data in self.get_switch_link_data():
