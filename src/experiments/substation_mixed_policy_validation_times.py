@@ -270,7 +270,7 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
                                           "cliquetopo",
                                           {"num_switches": nsc,
                                            "num_hosts_per_switch": hps,
-                                           "per_switch_links": psl},#nsc - 1},
+                                           "per_switch_links": psl},
                                           conf_root="configurations/",
                                           synthesis_name="AboresceneSynthesis",
                                           synthesis_params={"apply_group_intents_immediately": True})
@@ -285,11 +285,11 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 def main():
 
     num_iterations = 1
-    num_switches_in_clique_list = [4]
+    num_switches_in_clique_list = [5]#[4]
     num_hosts_per_switch_list = [1]
-    num_per_switch_links_list = [2, 3]
+    num_per_switch_links_list = [4]#[2, 3]
 
-    k_values = [2, 3, 4]#[0, 1, 2, 3]
+    k_values = [3]#[2, 3]#, 4]#[0, 1, 2, 3]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
                                                             num_hosts_per_switch_list,
                                                             num_per_switch_links_list)

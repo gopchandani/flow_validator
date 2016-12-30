@@ -509,6 +509,16 @@ class NetworkGraph(object):
                 else:
                     yield link_data
 
+    def get_all_paths_as_switch_link_data(self, src_sw, dst_sw):
+        all_paths_ld = []
+        for path in nx.all_simple_paths(self.graph, src_sw.node_id, dst_sw.node_id):
+            this_path_ld = []
+            for i in range(len(path) - 1):
+                this_path_ld.append(self.graph[path[i]][path[i+1]]['link_data'])
+            all_paths_ld.append(this_path_ld)
+        return all_paths_ld
+
+
     def get_adjacent_switch_link_data(self, switch_id):
         for link_data in self.get_switch_link_data():
             if switch_id in link_data.link_ports_dict:

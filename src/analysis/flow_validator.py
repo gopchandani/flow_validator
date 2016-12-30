@@ -459,6 +459,17 @@ class FlowValidator(object):
                 # Remove them for validation_map and add corresponding violations
                 self.truncate_recursion(vio)
 
+            # all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(vio.src_port.sw, vio.dst_port.sw)
+            # remaining_paths = all_paths_ld[:]
+            # for ld in vio.lmbda:
+            #     for path in all_paths_ld:
+            #         if ld in path and path in remaining_paths:
+            #             remaining_paths.remove(path)
+            #
+            # if not remaining_paths:
+            #     # Remove them for validation_map and add corresponding violations
+            #     self.truncate_recursion(vio)
+
     def perform_validation(self, lmbda):
 
         # Capture any changes to where the paths flow now
@@ -516,6 +527,7 @@ class FlowValidator(object):
 
         self.L = sorted(self.network_graph.get_switch_link_data(), key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
         #self.L = list(self.network_graph.get_switch_link_data())
+        #random.shuffle(self.L)
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):
