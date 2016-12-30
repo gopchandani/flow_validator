@@ -373,7 +373,7 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 def main():
 
     num_iterations = 10
-    num_grids_list = [1, 2, 3, 4, 5]
+    num_grids_list = [6]
     num_hosts_per_switch_list = [12]
     nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
     exp = SecurityPolicyTimes(nc_list, num_iterations)
@@ -393,6 +393,10 @@ def main():
 
     exp.data = exp.load_data_merge_nhps(["data/security_policy_times_1_iterations_20161229_092125.json"],
                                         prev_merged_data=exp.data)
+
+    exp.data = exp.load_data_merge_nhps(["data/security_policy_times_1_iterations_20161230_101406.json"],
+                                        prev_merged_data=exp.data)
+
 
     exp.plot_data()
 
