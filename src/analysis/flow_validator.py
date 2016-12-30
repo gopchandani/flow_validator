@@ -446,21 +446,18 @@ class FlowValidator(object):
     def perform_optimizations(self, v):
 
         for vio in v:
-            if vio.constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
-                if vio.counter_example.is_empty():
 
-                    # Check to see if all links to the source OR the destination port's switch have already failed
-                    src_port_switch_links = self.network_graph.get_switch_link_data(vio.src_port.sw)
-                    src_port_remaining_switch_links = set(src_port_switch_links) - set(vio.lmbda)
-                    dst_port_switch_links = self.network_graph.get_switch_link_data(vio.dst_port.sw)
-                    dst_port_remaining_switch_links = set(dst_port_switch_links) - set(vio.lmbda)
+            # Check to see if all links to the source OR the destination port's switch have already failed
+            src_port_switch_links = self.network_graph.get_switch_link_data(vio.src_port.sw)
+            src_port_remaining_switch_links = set(src_port_switch_links) - set(vio.lmbda)
+            dst_port_switch_links = self.network_graph.get_switch_link_data(vio.dst_port.sw)
+            dst_port_remaining_switch_links = set(dst_port_switch_links) - set(vio.lmbda)
 
-                    # If so, then no matter what other links fail, this src_port -> dst_port constraint will be violated
-                    if not (src_port_remaining_switch_links and dst_port_remaining_switch_links):
-                        print "Now invoke truncation of recursion"
+            # If so, then no matter what other links fail, this src_port -> dst_port constraint will be violated
+            if not (src_port_remaining_switch_links and dst_port_remaining_switch_links):
 
-                        # Remove them for validation_map and add corresponding violations
-                        self.truncate_recursion(vio)
+                # Remove them for validation_map and add corresponding violations
+                self.truncate_recursion(vio)
 
     def perform_validation(self, lmbda):
 
@@ -518,6 +515,7 @@ class FlowValidator(object):
         self.validation_map = defaultdict(defaultdict)
 
         self.L = sorted(self.network_graph.get_switch_link_data(), key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
+        #self.L = list(self.network_graph.get_switch_link_data())
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):

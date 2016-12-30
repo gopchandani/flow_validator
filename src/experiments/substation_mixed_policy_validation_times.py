@@ -24,20 +24,20 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
     def __init__(self,
                  network_configurations,
-                 s1_k_values,
+                 k_values,
                  num_iterations):
 
         super(SubstationMixedPolicyValidationTimes, self).__init__("substation_mixed_policy_validation_times", 1)
 
         self.network_configurations = network_configurations
-        self.s1_k_values = s1_k_values
+        self.k_values = k_values
         self.num_iterations = num_iterations
 
         self.data = {
             "validation_time": defaultdict(defaultdict),
         }
 
-    def construct_policy_statements(self, nc, s1_k):
+    def construct_policy_statements(self, nc, k):
 
         s1_src_zone = [nc.ng.get_node_object("h21").switch_port,
                        nc.ng.get_node_object("h31").switch_port]
@@ -51,7 +51,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
                           PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6)]
 
-        s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, s1_k)
+        s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, k)
 
         s2_src_zone = [nc.ng.get_node_object("h41").switch_port]
         s2_dst_zone = [nc.ng.get_node_object("h11").switch_port]
@@ -63,8 +63,8 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
         s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
                           PolicyConstraint(LINK_AVOIDANCE_CONSTRAINT, [("s1", "s2")])]
-        s2_k = 0
-        s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, s2_k)
+
+        s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, k)
 
         return [s1, s2]
 
@@ -79,16 +79,16 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
             print "Initialized analysis."
 
-            for s1_k in self.s1_k_values:
+            for k in self.k_values:
 
-                policy_statements = self.construct_policy_statements(nc, s1_k)
+                policy_statements = self.construct_policy_statements(nc, k)
 
                 total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
                                     nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
 
                 sL = str(len(list(nc.ng.get_switch_link_data())))
 
-                self.data["validation_time"]["k: " + str(s1_k) + ", |L|: " + sL][str(total_host_pairs)] = []
+                self.data["validation_time"]["k: " + str(k) + ", |L|: " + sL][str(total_host_pairs)] = []
 
                 for i in range(self.num_iterations):
 
@@ -97,11 +97,11 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
                     print "Total violations:", len(violations)
 
-                    self.dump_violations(violations)
+                    #self.dump_violations(violations)
 
                     print "Does the network configuration satisfy the given policy:", (len(violations) == 0)
 
-                    self.data["validation_time"]["k: " + str(s1_k) + ", |L|: " + sL][str(total_host_pairs)].append(t.secs)
+                    self.data["validation_time"]["k: " + str(k) + ", |L|: " + sL][str(total_host_pairs)].append(t.secs)
 
                     self.dump_data()
 
@@ -284,17 +284,17 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 5
-    num_switches_in_clique_list = [4]#, 5]#, 6]
+    num_iterations = 1
+    num_switches_in_clique_list = [4]
     num_hosts_per_switch_list = [1]
-    num_per_switch_links_list = [2]#, 3]
+    num_per_switch_links_list = [2, 3]
 
-    s1_k_values = [4]#, 2, 3, 4]
+    k_values = [2, 3, 4]#[0, 1, 2, 3]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
                                                             num_hosts_per_switch_list,
                                                             num_per_switch_links_list)
 
-    exp = SubstationMixedPolicyValidationTimes(network_configurations, s1_k_values, num_iterations)
+    exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
     exp.trigger()
     exp.dump_data()
 
@@ -306,7 +306,6 @@ def main():
     #     ["data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json",
     #      "data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json"
     #      ])
-    #
     # exp.plot_data()
 
 if __name__ == "__main__":
