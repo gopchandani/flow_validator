@@ -312,6 +312,29 @@ class SecurityPolicyTimes(Experiment):
 
         return merged_data
 
+    def load_data_merge_nhps(self, filename_list, prev_merged_data=None):
+        merged_data = prev_merged_data
+
+        for filename in filename_list:
+
+            print "Reading file:", filename
+
+            with open(filename, "r") as infile:
+                this_data = json.load(infile)
+
+            if merged_data:
+                for ds in merged_data:
+                    for nps in merged_data[ds]:
+
+                        if nps not in this_data[ds]:
+                            continue
+
+                        merged_data[ds][nps].update(this_data[ds][nps])
+            else:
+                merged_data = this_data
+
+        return merged_data
+
 
 def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 
@@ -322,7 +345,7 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 
         for num_hosts_per_switch in num_hosts_per_switch_list:
 
-            ip_str = "172.17.0.151"
+            ip_str = "172.17.0.2"
             port_str = "8181"
 
             nc = NetworkConfiguration("onos",
@@ -350,24 +373,31 @@ def prepare_network_configurations(num_grids_list, num_hosts_per_switch_list):
 def main():
 
     num_iterations = 10
-    num_grids_list = [3] #, 2, 3]#, 4, 5]
-    num_hosts_per_switch_list = [3, 6, 9]
-
+    num_grids_list = [6]
+    num_hosts_per_switch_list = [12]
     nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
-
     exp = SecurityPolicyTimes(nc_list, num_iterations)
 
     # exp.trigger()
     # exp.dump_data()
-    #
 
     # exp.load_data("data/security_policy_times_1_iterations_20161226_114304.json")
     # exp.plot_data()
 
     exp.data = exp.load_data_merge_num_statements(
         ["data/security_policy_times_1_iterations_20161226_114304.json",
-         "data/security_policy_times_1_iterations_20161226_125827.json"
+         "data/security_policy_times_1_iterations_20161226_125827.json",
+         "data/security_policy_times_1_iterations_20161226_162225.json",
+         "data/security_policy_times_1_iterations_20161228_172723.json"
          ])
+
+    exp.data = exp.load_data_merge_nhps(["data/security_policy_times_1_iterations_20161229_092125.json"],
+                                        prev_merged_data=exp.data)
+
+    exp.data = exp.load_data_merge_nhps(["data/security_policy_times_1_iterations_20161230_101406.json"],
+                                        prev_merged_data=exp.data)
+
+
     exp.plot_data()
 
 if __name__ == "__main__":
