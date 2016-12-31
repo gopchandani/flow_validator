@@ -50,8 +50,7 @@ class PolicyValidationTimes(Experiment):
         s1_traffic.set_field("ethernet_type", 0x0800)
         s1_traffic.set_field("has_vlan_tag", 0)
 
-        s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
-                          PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6)]
+        s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
         s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, k)
 
@@ -63,8 +62,7 @@ class PolicyValidationTimes(Experiment):
         s2_traffic.set_field("has_vlan_tag", 0)
         s2_traffic.set_field("tcp_destination_port", 443)
 
-        s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
-                          PolicyConstraint(LINK_AVOIDANCE_CONSTRAINT, [("s1", "s2")])]
+        s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
         s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, k)
 
@@ -276,7 +274,7 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
                                           synthesis_name="AboresceneSynthesis",
                                           synthesis_params={"apply_group_intents_immediately": True})
 
-                nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+                nc.setup_network_graph(mininet_setup_gap=10, synthesis_setup_gap=10)
 
                 nc_list.append(nc)
 
@@ -285,11 +283,11 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 1
+    num_iterations = 10
     optimizations_to_use = [None, "Deterministic_Src_Dst", "Random_Path"]
-    k_values = [3]
+    k_values = [2, 3, 4]
     num_switches_in_clique_list = [4]
-    num_per_switch_links_list = [2]
+    num_per_switch_links_list = [2, 3]
     num_hosts_per_switch_list = [1]
     
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
