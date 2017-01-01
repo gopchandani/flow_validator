@@ -447,7 +447,7 @@ class FlowValidator(object):
 
         for vio in v:
 
-            if not self.optimization_type:
+            if self.optimization_type == "No_Optimization":
                 continue
             elif self.optimization_type == "Random_Path":
                 all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(vio.src_port.sw, vio.dst_port.sw)
@@ -521,7 +521,7 @@ class FlowValidator(object):
     def validate_policy(self, policy_statement_list, optimization_type=None):
 
         self.optimization_type = optimization_type
-        if not self.optimization_type:
+        if self.optimization_type == "No_Optimization":
             self.L = list(self.network_graph.get_switch_link_data())
         elif self.optimization_type == "Deterministic_Src_Dst":
             self.L = sorted(self.network_graph.get_switch_link_data(),

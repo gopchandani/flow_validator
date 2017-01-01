@@ -239,14 +239,14 @@ class SecurityPolicyTimes(Experiment):
 
         self.plot_lines_with_error_bars(ax1,
                                         "validation_time",
-                                        "Number of hosts per non-control enclave",
+                                        "Number of hosts per enclave",
                                         "Time (seconds)",
                                         "",
                                         y_scale='linear',
-                                        x_min_factor=0.9,
+                                        x_min_factor=0.75,
                                         x_max_factor=1.1,
-                                        y_min_factor=0.01,
-                                        y_max_factor=1.1,
+                                        y_min_factor=0.9,
+                                        y_max_factor=1,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
 
@@ -258,7 +258,10 @@ class SecurityPolicyTimes(Experiment):
         ax1.set_position([box.x0, box.y0 + box.height * 0.3, box.width, box.height * 0.7])
         handles, labels = ax1.get_legend_handles_labels()
 
-        ax1.legend(handles, labels, shadow=True, fontsize=10, loc='upper center', ncol=4, markerscale=1.0,
+        handles = [handles[0], handles[4], handles[5], handles[1], handles[2], handles[3]]
+        labels = [labels[0], labels[4], labels[5], labels[1], labels[2], labels[3]]
+
+        ax1.legend(handles, labels, shadow=True, fontsize=10, loc='upper center', ncol=2, markerscale=1.0,
                    frameon=True, fancybox=True, columnspacing=0.5, bbox_to_anchor=[0.5, -0.25])
 
         plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)

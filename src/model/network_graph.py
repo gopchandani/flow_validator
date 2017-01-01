@@ -518,7 +518,6 @@ class NetworkGraph(object):
             all_paths_ld.append(this_path_ld)
         return all_paths_ld
 
-
     def get_adjacent_switch_link_data(self, switch_id):
         for link_data in self.get_switch_link_data():
             if switch_id in link_data.link_ports_dict:
@@ -567,3 +566,8 @@ class NetworkGraph(object):
         for host_id_pair in permutations(self.host_ids, 2):
             host_obj_pair = (self.get_node_object(host_id_pair[0]), self.get_node_object(host_id_pair[1]))
             yield host_obj_pair
+
+    def get_host_obj_iter(self):
+        for host_id in self.host_ids:
+            host_obj = self.get_node_object(host_id)
+            yield host_obj

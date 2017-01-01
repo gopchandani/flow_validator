@@ -17,7 +17,7 @@ __author__ = 'Rakesh Kumar'
 sys.path.append("./")
 
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
-from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
 
 
 class PolicyValidationTimes(Experiment):
@@ -39,35 +39,6 @@ class PolicyValidationTimes(Experiment):
             "validation_time": defaultdict(defaultdict),
         }
 
-    def construct_policy_statements(self, nc, k):
-
-        s1_src_zone = [nc.ng.get_node_object("h21").switch_port,
-                       nc.ng.get_node_object("h31").switch_port]
-
-        s1_dst_zone = [nc.ng.get_node_object("h11").switch_port]
-
-        s1_traffic = Traffic(init_wildcard=True)
-        s1_traffic.set_field("ethernet_type", 0x0800)
-        s1_traffic.set_field("has_vlan_tag", 0)
-
-        s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-
-        s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, k)
-
-        s2_src_zone = [nc.ng.get_node_object("h41").switch_port]
-        s2_dst_zone = [nc.ng.get_node_object("h11").switch_port]
-
-        s2_traffic = Traffic(init_wildcard=True)
-        s2_traffic.set_field("ethernet_type", 0x0800)
-        s2_traffic.set_field("has_vlan_tag", 0)
-        s2_traffic.set_field("tcp_destination_port", 443)
-
-        s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-
-        s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, k)
-
-        return [s1, s2]
-
     def trigger(self):
 
         for nc in self.network_configurations:
@@ -81,7 +52,14 @@ class PolicyValidationTimes(Experiment):
 
             for k in self.k_values:
 
-                policy_statements = self.construct_policy_statements(nc, k)
+                all_host_ports_zone = []
+                for host_obj in nc.ng.get_host_obj_iter():
+                    all_host_ports_zone.append(host_obj.switch_port)
+                t = Traffic(init_wildcard=True)
+                t.set_field("ethernet_type", 0x0800)
+                t.set_field("has_vlan_tag", 0)
+                c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+                policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, k)]
 
                 sL = str(len(list(nc.ng.get_switch_link_data())))
 
@@ -95,8 +73,6 @@ class PolicyValidationTimes(Experiment):
                             violations = fv.validate_policy(policy_statements, optimization_to_use)
 
                         print "Total violations:", len(violations)
-
-                        #self.dump_violations(violations)
 
                         print "Does the network configuration satisfy the given policy:", (len(violations) == 0)
 
@@ -191,34 +167,27 @@ class PolicyValidationTimes(Experiment):
 
         f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.0, 4.0))
 
-        data_xtick_labels = self.data["validation_time"]["k: 0, |L|: 4"].keys()
-        data_xticks = [int(x) for x in data_xtick_labels]
-
-        self.plot_lines_with_error_bars(ax1,
-                                        "validation_time",
-                                        "Number of host pairs",
-                                        "Time (seconds)",
-                                        "",
-                                        y_scale='log',
-                                        x_min_factor=1.0,
-                                        x_max_factor=1.1,
-                                        y_min_factor=0.01,
-                                        y_max_factor=10,
-                                        xticks=data_xticks,
-                                        xtick_labels=data_xtick_labels)
-
-        xlabels = ax1.get_xticklabels()
-        plt.setp(xlabels, rotation=0, fontsize=10)
+        self.plot_bar_error_bars(ax1,
+                                 "validation_time",
+                                 x_label="Case",
+                                 y_label="Validation Time")
 
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
         ax1.set_position([box.x0, box.y0 + box.height * 0.3, box.width, box.height * 0.7])
+
         handles, labels = ax1.get_legend_handles_labels()
+        plt.legend(handles, labels, loc='upper center',
+                   shadow=True, ncol=2, fontsize=10, bbox_to_anchor=[0.5, -0.25],
+                   frameon=True, fancybox=True, columnspacing=2.5, markerscale=1.0)
 
-        ax1.legend(handles, labels, shadow=True, fontsize=10, loc='upper center', ncol=4, markerscale=1.0,
-                   frameon=True, fancybox=True, columnspacing=0.5, bbox_to_anchor=[0.5, -0.25])
+        xlabels = ax1.get_xticklabels()
+        plt.setp(xlabels, rotation=0, fontsize=10)
 
-        plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
+        ylabels = ax1.get_yticklabels()
+        plt.setp(ylabels, rotation=0, fontsize=10)
+
+        plt.savefig("plots/" + self.experiment_tag + "_policy_validation_times" + ".png", dpi=1000)
         plt.show()
 
     def load_data_merge_iterations(self, filename_list):
@@ -283,11 +252,11 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 10
-    optimizations_to_use = [None, "Deterministic_Src_Dst", "Random_Path"]
-    k_values = [2, 3, 4]
+    num_iterations = 2
+    optimizations_to_use = ["No_Optimization", "Random_Path"]
+    k_values = [1, 2]#[2, 3, 4]
     num_switches_in_clique_list = [4]
-    num_per_switch_links_list = [2, 3]
+    num_per_switch_links_list = [2]#[2, 3]
     num_hosts_per_switch_list = [1]
     
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
@@ -295,10 +264,12 @@ def main():
                                                             num_per_switch_links_list)
 
     exp = PolicyValidationTimes(network_configurations, k_values, num_iterations, optimizations_to_use)
-    exp.trigger()
-    exp.dump_data()
 
-    # exp.plot_data()
+    # exp.trigger()
+    # exp.dump_data()
+
+    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161231_153958.json")
+    exp.plot_data()
 
 if __name__ == "__main__":
     main()
