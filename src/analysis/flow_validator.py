@@ -460,6 +460,20 @@ class FlowValidator(object):
                 if not remaining_paths:
                     # Remove them for validation_map and add corresponding violations
                     self.truncate_recursion(vio)
+
+            elif self.optimization_type == "DeterministicPermutation_PathCheck":
+                    all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(vio.src_port.sw,
+                                                                                        vio.dst_port.sw)
+                    remaining_paths = all_paths_ld[:]
+                    for ld in vio.lmbda:
+                        for path in all_paths_ld:
+                            if ld in path and path in remaining_paths:
+                                remaining_paths.remove(path)
+
+                    if not remaining_paths:
+                        # Remove them for validation_map and add corresponding violations
+                        self.truncate_recursion(vio)
+
             elif self.optimization_type == "Deterministic_Src_Dst":
                 # Check to see if all links to the source OR the destination port's switch have already failed
                 src_port_switch_links = self.network_graph.get_switch_link_data(vio.src_port.sw)
@@ -521,6 +535,7 @@ class FlowValidator(object):
     def validate_policy(self, policy_statement_list, optimization_type=None):
 
         self.optimization_type = optimization_type
+
         if self.optimization_type == "No_Optimization":
             self.L = list(self.network_graph.get_switch_link_data())
         elif self.optimization_type == "Deterministic_Src_Dst":
@@ -529,6 +544,9 @@ class FlowValidator(object):
         elif self.optimization_type == "Random_Path":
             self.L = list(self.network_graph.get_switch_link_data())
             random.shuffle(self.L)
+        elif self.optimization_type == "DeterministicPermutation_PathCheck":
+            self.L = sorted(self.network_graph.get_switch_link_data(),
+                            key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
 
         # Avoid duplication of effort across policies
         # validation_map is a two-dimensional dictionary:

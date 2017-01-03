@@ -39,6 +39,37 @@ class PolicyValidationTimes(Experiment):
             "validation_time": defaultdict(defaultdict),
         }
 
+    def construct_policy_statements(self, nc, k):
+
+        policy_statements = []
+
+        src_zone = [nc.ng.get_node_object("h11").switch_port]
+        # dst_zone = [nc.ng.get_node_object("h21").switch_port,
+        #             nc.ng.get_node_object("h31").switch_port,
+        #             nc.ng.get_node_object("h41").switch_port]
+
+        dst_zone = [nc.ng.get_node_object("h31").switch_port]
+
+        # all_host_ports_zone = []
+        # for host_obj in nc.ng.get_host_obj_iter():
+        #     all_host_ports_zone.append(host_obj.switch_port)
+        # t = Traffic(init_wildcard=True)
+        # t.set_field("ethernet_type", 0x0800)
+        # t.set_field("has_vlan_tag", 0)
+        # c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+        # policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, k)]
+
+
+        t = Traffic(init_wildcard=True)
+        t.set_field("ethernet_type", 0x0800)
+        t.set_field("has_vlan_tag", 0)
+        c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+        p = PolicyStatement(nc.ng, src_zone, dst_zone, t, c, k)
+
+        policy_statements.append(p)
+
+        return policy_statements
+
     def trigger(self):
 
         for nc in self.network_configurations:
@@ -52,14 +83,7 @@ class PolicyValidationTimes(Experiment):
 
             for k in self.k_values:
 
-                all_host_ports_zone = []
-                for host_obj in nc.ng.get_host_obj_iter():
-                    all_host_ports_zone.append(host_obj.switch_port)
-                t = Traffic(init_wildcard=True)
-                t.set_field("ethernet_type", 0x0800)
-                t.set_field("has_vlan_tag", 0)
-                c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-                policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, k)]
+                policy_statements = self.construct_policy_statements(nc, k)
 
                 sL = str(len(list(nc.ng.get_switch_link_data())))
 
@@ -165,24 +189,29 @@ class PolicyValidationTimes(Experiment):
 
     def plot_data(self):
 
-        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.0, 4.0))
+        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.5, 4.0))
 
         self.plot_bar_error_bars(ax1,
                                  "validation_time",
-                                 x_label="Case",
-                                 y_label="Validation Time")
+                                 x_label="",
+                                 y_label="Time (seconds)",
+                                 bar_width=0.2,
+                                 y_max_factor=1.05)
 
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
         ax1.set_position([box.x0, box.y0 + box.height * 0.3, box.width, box.height * 0.7])
 
         handles, labels = ax1.get_legend_handles_labels()
+        handles = [handles[0], handles[1]]
+        labels = ["With Preemption", "Without Preemption"]
+
         plt.legend(handles, labels, loc='upper center',
                    shadow=True, ncol=2, fontsize=10, bbox_to_anchor=[0.5, -0.25],
                    frameon=True, fancybox=True, columnspacing=2.5, markerscale=1.0)
 
         xlabels = ax1.get_xticklabels()
-        plt.setp(xlabels, rotation=0, fontsize=10)
+        plt.setp(xlabels, rotation=15, fontsize=10)
 
         ylabels = ax1.get_yticklabels()
         plt.setp(ylabels, rotation=0, fontsize=10)
@@ -253,10 +282,10 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 def main():
 
     num_iterations = 2
-    optimizations_to_use = ["No_Optimization", "Random_Path"]
-    k_values = [1, 2]#[2, 3, 4]
+    optimizations_to_use = ["No_Optimization", "DeterministicPermutation_PathCheck"]
+    k_values = [2, 3, 4]
     num_switches_in_clique_list = [4]
-    num_per_switch_links_list = [2]#[2, 3]
+    num_per_switch_links_list = [2, 3]
     num_hosts_per_switch_list = [1]
     
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
@@ -268,7 +297,14 @@ def main():
     # exp.trigger()
     # exp.dump_data()
 
-    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161231_153958.json")
+    #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170101_181845.json")
+
+    exp.data = exp.load_data_merge_iterations([
+        "data/substation_mixed_policy_validation_times_1_iterations_20170101_181845.json",
+        "data/substation_mixed_policy_validation_times_1_iterations_20170102_102250.json",
+        "data/substation_mixed_policy_validation_times_1_iterations_20170102_130004.json"
+    ])
+
     exp.plot_data()
 
 if __name__ == "__main__":

@@ -139,10 +139,10 @@ class Experiment(object):
         return data_min, data_max
 
     def plot_bar_error_bars(self, ax, data_key, x_label, y_label, title="",
-                            bar_width=0.35, opacity=0.4, error_config={'ecolor': '0.3'}):
+                            bar_width=0.35, opacity=0.4, error_config={'ecolor': '0.3'},
+                            y_scale="linear", y_min_factor=0.1, y_max_factor=1.5):
 
         index = np.arange(len(self.data[data_key].keys()))
-
 
         categories_mean_dict = defaultdict(list)
         categories_se_dict = defaultdict(list)
@@ -155,8 +155,7 @@ class Experiment(object):
                 categories_mean_dict[categories[i]].append(mean[i])
                 categories_se_dict[categories[i]].append(sem[i])
 
-        categories_hatches = ['*', '.', 'O', 'o', '/', '-', '+', 'x', '\\']
-
+        categories_hatches = ['/', '', 'o', 'O', '*', '.', '-', '+', 'x', '\\']
         for i in range(len(categories)):
             c = categories[i]
             rects = ax.bar(index + bar_width * i, categories_mean_dict[c],
@@ -167,6 +166,16 @@ class Experiment(object):
                            yerr=categories_se_dict[c],
                            error_kw=error_config,
                            label=c)
+
+        if y_scale == "linear":
+            low_ylim, high_ylim = ax.get_ylim()
+            ax.set_ylim(ymin=low_ylim*y_min_factor)
+            ax.set_ylim(ymax=high_ylim*y_max_factor)
+        elif y_scale == "log":
+            ax.set_ylim(ymin=1)
+            ax.set_ylim(ymax=10000)
+
+        ax.set_yscale(y_scale)
 
         plt.xlabel(x_label)
         plt.ylabel(y_label)
