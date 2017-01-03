@@ -93,7 +93,8 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 for i in range(self.num_iterations):
 
                     with Timer(verbose=True) as t:
-                        violations = fv.validate_policy(policy_statements)
+                        violations = fv.validate_policy(policy_statements,
+                                                        optimization_type="DeterministicPermutation_PathCheck")
 
                     print "Total violations:", len(violations)
 
@@ -286,25 +287,26 @@ def main():
 
     num_iterations = 1
     num_switches_in_clique_list = [4]#[4]
-    num_hosts_per_switch_list = [2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [2]#, 4, 6, 8, 10]
     num_per_switch_links_list = [3]
 
-    k_values = [0, 1, 2, 3]
+    k_values = [0]#, 2, 4, 6]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
                                                             num_hosts_per_switch_list,
                                                             num_per_switch_links_list)
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
+
     exp.trigger()
     exp.dump_data()
 
     #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json")
-
     #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json")
 
     # exp.data = exp.load_data_merge_iterations(
     #     ["data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json",
-    #      "data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json"
+    #      "data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json",
+    #      "data/substation_mixed_policy_validation_times_1_iterations_20170102_130004.json"
     #      ])
     # exp.plot_data()
 

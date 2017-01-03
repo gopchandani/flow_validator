@@ -449,17 +449,20 @@ class FlowValidator(object):
 
             if self.optimization_type == "No_Optimization":
                 continue
-            elif self.optimization_type == "Deterministic_Src_Dst":
-                # Check to see if all links to the source OR the destination port's switch have already failed
-                src_port_switch_links = self.network_graph.get_switch_link_data(vio.src_port.sw)
-                src_port_remaining_switch_links = set(src_port_switch_links) - set(vio.lmbda)
-                dst_port_switch_links = self.network_graph.get_switch_link_data(vio.dst_port.sw)
-                dst_port_remaining_switch_links = set(dst_port_switch_links) - set(vio.lmbda)
 
-                # If so, then no matter what other links fail, this src_port -> dst_port constraint will be violated
-                if not (src_port_remaining_switch_links and dst_port_remaining_switch_links):
-                    # Remove them for validation_map and add corresponding violations
-                    self.truncate_recursion(vio)
+            elif self.optimization_type == "DeterministicPermutation_PathCheck":
+                    all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(vio.src_port.sw,
+                                                                                        vio.dst_port.sw)
+                    remaining_paths = all_paths_ld[:]
+                    for ld in vio.lmbda:
+                        for path in all_paths_ld:
+                            if ld in path and path in remaining_paths:
+                                remaining_paths.remove(path)
+
+                    if not remaining_paths:
+                        # Remove them for validation_map and add corresponding violations
+                        self.truncate_recursion(vio)
+
 
     def perform_validation(self, lmbda):
 
@@ -510,14 +513,12 @@ class FlowValidator(object):
     def validate_policy(self, policy_statement_list, optimization_type=None):
 
         self.optimization_type = optimization_type
+
         if self.optimization_type == "No_Optimization":
             self.L = list(self.network_graph.get_switch_link_data())
-        elif self.optimization_type == "Deterministic_Src_Dst":
+        elif self.optimization_type == "DeterministicPermutation_PathCheck":
             self.L = sorted(self.network_graph.get_switch_link_data(),
                             key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
-        elif self.optimization_type == "Random_Path":
-            self.L = list(self.network_graph.get_switch_link_data())
-            random.shuffle(self.L)
 
         # Avoid duplication of effort across policies
         # validation_map is a two-dimensional dictionary:
