@@ -449,17 +449,6 @@ class FlowValidator(object):
 
             if self.optimization_type == "No_Optimization":
                 continue
-            elif self.optimization_type == "Random_Path":
-                all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(vio.src_port.sw, vio.dst_port.sw)
-                remaining_paths = all_paths_ld[:]
-                for ld in vio.lmbda:
-                    for path in all_paths_ld:
-                        if ld in path and path in remaining_paths:
-                            remaining_paths.remove(path)
-
-                if not remaining_paths:
-                    # Remove them for validation_map and add corresponding violations
-                    self.truncate_recursion(vio)
             elif self.optimization_type == "Deterministic_Src_Dst":
                 # Check to see if all links to the source OR the destination port's switch have already failed
                 src_port_switch_links = self.network_graph.get_switch_link_data(vio.src_port.sw)

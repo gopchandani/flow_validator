@@ -143,7 +143,6 @@ class Experiment(object):
 
         index = np.arange(len(self.data[data_key].keys()))
 
-
         categories_mean_dict = defaultdict(list)
         categories_se_dict = defaultdict(list)
 
@@ -155,7 +154,7 @@ class Experiment(object):
                 categories_mean_dict[categories[i]].append(mean[i])
                 categories_se_dict[categories[i]].append(sem[i])
 
-        categories_hatches = ['*', '.', 'O', 'o', '/', '-', '+', 'x', '\\']
+        categories_hatches = ['', '*', '.', 'O', 'o', '/', '-', '+', 'x', '\\']
 
         for i in range(len(categories)):
             c = categories[i]
