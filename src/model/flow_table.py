@@ -144,7 +144,6 @@ class FlowTable:
         return port_graph_edges
 
     def compute_flow_table_port_graph_edges(self):
-
         self.current_port_graph_edges = self._get_port_graph_edges_dict()
 
     def update_port_graph_edges(self):

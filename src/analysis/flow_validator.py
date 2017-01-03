@@ -5,7 +5,6 @@ import numpy as np
 
 sys.path.append("./")
 
-from model.network_graph import NetworkGraphLinkData
 from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
@@ -510,7 +509,7 @@ class FlowValidator(object):
                 self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
                 lmbda.remove(link)
 
-    def validate_policy(self, policy_statement_list, optimization_type=None):
+    def validate_policy(self, policy_statement_list, optimization_type="DeterministicPermutation_PathCheck"):
 
         self.optimization_type = optimization_type
 
