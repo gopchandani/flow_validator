@@ -245,12 +245,17 @@ def main():
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     network_configurations = [NetworkConfiguration("ryu",
-                                                   "ring",
-                                                   {"num_switches": 4,
-                                                    "num_hosts_per_switch": 1},
-                                                   conf_root="configurations/",
-                                                   synthesis_name="AboresceneSynthesis",
-                                                   synthesis_params={"apply_group_intents_immediately": True})]
+                              "127.0.0.1",
+                              6633,
+                              "http://localhost:8080/",
+                              "admin",
+                              "admin",
+                              "ring",
+                              {"num_switches": 4,
+                               "num_hosts_per_switch": 1},
+                              conf_root="configurations/",
+                              synthesis_name="AboresceneSynthesis",
+                              synthesis_params={"apply_group_intents_immediately": True})]
 
     num_iterations = 1
     num_seed_runs = 5

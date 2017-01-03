@@ -290,7 +290,7 @@ def main():
     num_hosts_per_switch_list = [2]#, 4, 6, 8, 10]
     num_per_switch_links_list = [3]
 
-    k_values = [0]#, 2, 4, 6]
+    k_values = [1]#0, 2, 4, 6]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
                                                             num_hosts_per_switch_list,
                                                             num_per_switch_links_list)
