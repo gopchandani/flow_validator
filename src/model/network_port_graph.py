@@ -285,22 +285,44 @@ class NetworkPortGraph(PortGraph):
 
         return pred_admitted_traffic
 
-    def get_succs_with_admitted_traffic_and_vuln_rank(self, pred, at, vuln_rank, dst):
+    def get_succs_with_admitted_traffic_and_vuln_rank(self, pred, failed_succ, at, vuln_rank, dst):
 
         succs_traffic = []
-        possible_succs = self.get_admitted_traffic_succs(pred, dst)
+
+        # If the dst is from the same switch where this at dst goes, take the successors that go there as candidates
+        possible_succs = set()
+        for at_dst_node in pred.admitted_traffic:
+            if at_dst_node.sw == dst.sw:
+                possible_succs.update(pred.admitted_traffic[at_dst_node].keys())
+
         for succ in possible_succs:
 
+            if succ == failed_succ:
+                continue
+
             # First check if the successor would carry this traffic at all
-            enabling_edge_data_list = self.get_enabling_edge_data(pred, succ, dst, at)
+            enabling_edge_data_list = []
+
+            from analysis.util import get_admitted_traffic_via_succ
+            at_dst_succ = get_admitted_traffic_via_succ(self, pred, succ, dst)
+
+            # For traffic going from ingress->egress node on any switch, set the ingress traffic
+            # of specific traffic to simulate that the traffic would arrive on that port.
+            if pred.node_type == "ingress" and succ.node_type == "egress":
+                at.set_field("in_port", int(pred.parent_obj.port_number))
+
+            # Check to see if the successor would carry some of the traffic from here
+            succ_int = at.intersect(at_dst_succ)
+            if not succ_int.is_empty():
+                enabling_edge_data_list = succ_int.get_enabling_edge_data()
+            else:
+                # Do not go further if there is no traffic admitted via this succ
+                pass
+
+            traffic_at_succ = succ_int.get_modified_traffic()
 
             # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
             if enabling_edge_data_list:
-
-                traffic_at_succ = self.get_modified_traffic_at_succ(pred,
-                                                                    succ,
-                                                                    dst,
-                                                                    at)
 
                 vuln_rank_check = True
 
@@ -310,10 +332,12 @@ class NetworkPortGraph(PortGraph):
                 for ed in enabling_edge_data_list:
                     if ed.get_vuln_rank() != vuln_rank:
                         vuln_rank_check = False
-                        break
 
                 if vuln_rank_check:
                     succs_traffic.append((succ, traffic_at_succ))
+
+        if not succs_traffic:
+            print "No alternative successors."
 
         return succs_traffic
 
@@ -337,6 +361,7 @@ class NetworkPortGraph(PortGraph):
 
                 p_edge, p_enabling_edge_data, p_traffic_at_pred = path.path_edges[i - 1]
                 backup_succs = self.get_succs_with_admitted_traffic_and_vuln_rank(p_edge[0],
+                                                                                  p_edge[1],
                                                                                   p_traffic_at_pred,
                                                                                   1,
                                                                                   path.dst_node)
@@ -370,7 +395,10 @@ class NetworkPortGraph(PortGraph):
                 for ingress_node, traffic_to_carry in backup_ingress_nodes_and_traffic:
 
                     # First get what is admitted at this node
-                    ingress_at = self.get_admitted_traffic(ingress_node, path.dst_node)
+                    #ingress_at = self.get_admitted_traffic(ingress_node, path.dst_node)
+
+                    from analysis.util import get_admitted_traffic
+                    ingress_at = get_admitted_traffic(self, ingress_node.parent_obj, path.dst_node.parent_obj)
 
                     # The check if it carries the required traffic
                     if not ingress_at.is_subset_traffic(traffic_to_carry):

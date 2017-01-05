@@ -1,7 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 
-class PortGraphEdge():
+class PortGraphEdge:
 
     def __init__(self, pred, succ):
 
@@ -25,7 +25,7 @@ class PortGraphEdge():
         self.edge_data_list.append(edge_data)
 
 
-class NetworkPortGraphEdgeData():
+class NetworkPortGraphEdgeData:
 
     def __init__(self, edge_filter_traffic, applied_modifications, switch_port_graph_paths):
 
@@ -63,7 +63,8 @@ class NetworkPortGraphEdgeData():
 
         return max_active_rank
 
-class SwitchPortGraphEdgeData():
+
+class SwitchPortGraphEdgeData:
 
     def __init__(self, edge_filter_traffic, edge_action, applied_modifications, written_modifications):
 
