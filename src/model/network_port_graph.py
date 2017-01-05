@@ -344,8 +344,7 @@ class NetworkPortGraph(PortGraph):
     # Returns if the given link fails, the path would have an alternative way to get around
     def get_backup_ingress_nodes_and_traffic(self, path, ld):
 
-        is_path_affected = False
-        ingress_nodes_and_traffic = []
+        backup_ingress_nodes_and_traffic = []
 
         # Find the path_edges that get affected by the failure of given link
         for i in range(0, len(path.path_edges)):
@@ -353,8 +352,6 @@ class NetworkPortGraph(PortGraph):
             edge_tuple = (edge[0].node_id, edge[1].node_id)
 
             if edge_tuple == ld.forward_port_graph_edge or edge_tuple == ld.reverse_port_graph_edge:
-
-                is_path_affected = True
 
                 # Go to the switch and ask if a backup edge exists in the transfer function
                 #  for the traffic carried by this path at that link
@@ -374,35 +371,31 @@ class NetworkPortGraph(PortGraph):
                     # This can happen for 'reversing' paths
                     if not (ingress_node.node_id == ld.forward_port_graph_edge[1] or
                                     ingress_node.node_id == ld.reverse_port_graph_edge[1]):
-                        ingress_nodes_and_traffic.append((ingress_node, succ_traffic))
+                        backup_ingress_nodes_and_traffic.append((ingress_node, succ_traffic))
 
         # If so, return the ingress node on the next switch, where that edge leads to
-        return is_path_affected, ingress_nodes_and_traffic
+        return backup_ingress_nodes_and_traffic
 
     def link_failure_causes_path_disconnect(self, path, ld):
 
         causes_disconnect = False
-        is_path_affected, backup_ingress_nodes_and_traffic = self.get_backup_ingress_nodes_and_traffic(path, ld)
+        backup_ingress_nodes_and_traffic = self.get_backup_ingress_nodes_and_traffic(path, ld)
 
-        if is_path_affected:
+        # If there is no backup successors, ld failure causes disconnect
+        if not backup_ingress_nodes_and_traffic:
+            causes_disconnect = True
 
-            # If there is no backup successors, ld failure causes disconnect
-            if not backup_ingress_nodes_and_traffic:
-                causes_disconnect = True
+        # If there are backup successors, but they are not adequately carrying traffic, failure causes disconnect
+        else:
+            for ingress_node, traffic_to_carry in backup_ingress_nodes_and_traffic:
 
-            # If there are backup successors, but they are not adequately carrying traffic, failure causes disconnect
-            else:
-                for ingress_node, traffic_to_carry in backup_ingress_nodes_and_traffic:
+                # First get what is admitted at this node
+                from analysis.util import get_admitted_traffic
+                ingress_at = get_admitted_traffic(self, ingress_node.parent_obj, path.dst_node.parent_obj)
 
-                    # First get what is admitted at this node
-                    #ingress_at = self.get_admitted_traffic(ingress_node, path.dst_node)
-
-                    from analysis.util import get_admitted_traffic
-                    ingress_at = get_admitted_traffic(self, ingress_node.parent_obj, path.dst_node.parent_obj)
-
-                    # The check if it carries the required traffic
-                    if not ingress_at.is_subset_traffic(traffic_to_carry):
-                        causes_disconnect = True
-                        break
+                # The check if it carries the required traffic
+                if not ingress_at.is_subset_traffic(traffic_to_carry):
+                    causes_disconnect = True
+                    break
 
         return causes_disconnect
