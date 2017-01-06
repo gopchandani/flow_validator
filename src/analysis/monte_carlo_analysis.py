@@ -58,20 +58,19 @@ class MonteCarloAnalysis(FlowValidator):
                 # Check to see if the path is currently active
                 if path.get_max_active_rank() == 0:
 
+                    ld.causes_disconnect = link_failure_causes_path_disconnect(self.port_graph, path, ld)
+
                     if verbose:
                         print "Considering Path: ", path
+                        print "Causes Disconnect:", ld.causes_disconnect
 
-                    if link_failure_causes_path_disconnect(self.port_graph, path, ld):
-                        ld.causes_disconnect = True
+                    if ld.causes_disconnect:
                         break
 
             if ld.causes_disconnect:
                 self.links_causing_disconnect.append(ld)
             else:
                 self.links_not_causing_disconnect.append(ld)
-
-            if verbose:
-                print "Causes Disconnect:", ld.causes_disconnect
 
         if verbose:
             print "links_not_causing_disconnect:"
