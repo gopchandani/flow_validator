@@ -271,29 +271,29 @@ class PortGraph(object):
 
         return traffic_at_succ
 
-    def get_paths(self, node, dst, at, path_prefix, path_edges, paths):
+    def get_paths(self, node, dst, node_at, path_prefix, path_edges, paths):
 
         for succ in self.get_admitted_traffic_succs(node, dst):
 
-            enabling_edge_data = self.get_enabling_edge_data(node, succ, dst, at)
+            enabling_edge_data = self.get_enabling_edge_data(node, succ, dst, node_at)
             if not enabling_edge_data:
                 continue
 
             if succ == dst:
                 this_path = TrafficPath(self,
                                         path_prefix + [dst],
-                                        path_edges + [((node, dst), enabling_edge_data, at)])
+                                        path_edges + [((node, dst), enabling_edge_data, node_at)])
                 paths.append(this_path)
 
             else:
                 if not self.path_has_loop(path_prefix, succ):
 
-                    succ_at = self.get_modified_traffic_at_succ(node, succ, dst, at)
+                    succ_at = self.get_modified_traffic_at_succ(node, succ, dst, node_at)
                     self.get_paths(succ,
                                    dst,
                                    succ_at,
                                    path_prefix + [succ],
-                                   path_edges + [((node, succ),  enabling_edge_data, at)],
+                                   path_edges + [((node, succ),  enabling_edge_data, node_at)],
                                    paths)
 
         return paths
