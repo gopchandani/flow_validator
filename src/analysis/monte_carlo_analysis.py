@@ -12,6 +12,7 @@ from model.traffic import Traffic
 
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
+from util import link_failure_causes_path_disconnect
 
 
 class MonteCarloAnalysis(FlowValidator):
@@ -60,7 +61,7 @@ class MonteCarloAnalysis(FlowValidator):
                     if verbose:
                         print "Considering Path: ", path
 
-                    if self.port_graph.link_failure_causes_path_disconnect(path, ld):
+                    if link_failure_causes_path_disconnect(self.port_graph, path, ld):
                         ld.causes_disconnect = True
                         break
 
