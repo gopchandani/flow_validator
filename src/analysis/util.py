@@ -261,18 +261,18 @@ def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic
 def link_failure_causes_path_disconnect(pg, path, failed_link):
 
     if path.src_node.node_id == "s1:ingress1" and path.dst_node.node_id == "s3:egress1":
-        #if failed_link.forward_link == ('s2', 's3'):
-        print path, failed_link.forward_link
-        # src_h_id = "h11"
-        # dst_h_id = "h31"
-        # specific_traffic = get_specific_traffic(pg.network_graph, src_h_id, dst_h_id)
-        # src_host_obj = pg.network_graph.get_node_object(src_h_id)
-        # dst_host_obj = pg.network_graph.get_node_object(dst_h_id)
-        #
-        # p = get_paths(pg, specific_traffic, src_host_obj.switch_port, dst_host_obj.switch_port)
-        # print p
+        if failed_link.forward_link == ('s1', 's2'):
+            print path, failed_link.forward_link
+            # src_h_id = "h11"
+            # dst_h_id = "h31"
+            # specific_traffic = get_specific_traffic(pg.network_graph, src_h_id, dst_h_id)
+            # src_host_obj = pg.network_graph.get_node_object(src_h_id)
+            # dst_host_obj = pg.network_graph.get_node_object(dst_h_id)
+            #
+            # p = get_paths(pg, specific_traffic, src_host_obj.switch_port, dst_host_obj.switch_port)
+            # print p
 
-    causes_disconnect = False
+    link_causes_disconnect = False
 
     # Check if a backup successors nodes exist that would carry this traffic
     for i in range(0, len(path.path_edges)):
@@ -282,7 +282,6 @@ def link_failure_causes_path_disconnect(pg, path, failed_link):
         failed_edge_tuple = (f_edge[0].node_id, f_edge[1].node_id)
 
         # If this path actually gets affected by this link's failure...
-
         if ((failed_edge_tuple == failed_link.forward_port_graph_edge) or
                 (failed_edge_tuple == failed_link.reverse_port_graph_edge)):
 
@@ -294,23 +293,23 @@ def link_failure_causes_path_disconnect(pg, path, failed_link):
                                                               vuln_rank=1,
                                                               dst=path.dst_node)
 
-            # If there is no backup successors, ld failure causes disconnect
-            if not backup_succ_nodes_and_traffic_at_succ_nodes:
-                causes_disconnect = True
+            failed_edge_causes_disconnect = True
 
-            # If there are backup successors, check if the next switch ingress node carries them
-            else:
-                for backup_succ_node, traffic_at_backup_succ in backup_succ_nodes_and_traffic_at_succ_nodes:
+            for backup_succ_node, traffic_at_backup_succ in backup_succ_nodes_and_traffic_at_succ_nodes:
 
-                    next_switch_ingress_node = list(pg.successors_iter(backup_succ_node))[0]
-                    traffic_at_backup_succ.set_field("in_port", next_switch_ingress_node.parent_obj.port_number)
+                next_switch_ingress_node = list(pg.successors_iter(backup_succ_node))[0]
+                traffic_at_backup_succ.set_field("in_port", next_switch_ingress_node.parent_obj.port_number)
 
-                    # First get what is admitted at this node
-                    ingress_at = get_admitted_traffic(pg, next_switch_ingress_node.parent_obj, path.dst_node.parent_obj)
+                # First get what is admitted at this node
+                ingress_at = get_admitted_traffic(pg, next_switch_ingress_node.parent_obj, path.dst_node.parent_obj)
 
-                    # The check if it carries the required traffic
-                    if not ingress_at.is_subset_traffic(traffic_at_backup_succ):
-                        causes_disconnect = True
-                        break
+                # The check if it carries the required traffic
+                if ingress_at.is_subset_traffic(traffic_at_backup_succ):
+                    failed_edge_causes_disconnect = False
+                    break
 
-    return causes_disconnect
+            if failed_edge_causes_disconnect:
+                link_causes_disconnect = True
+                break
+
+    return link_causes_disconnect
