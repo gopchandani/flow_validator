@@ -18,30 +18,57 @@ def get_specific_traffic(ng, src_h_id, dst_h_id):
     return specific_traffic
 
 
+def get_admitted_traffic_via_succ_port(pg, src_port, succ_port, dst_port):
+    at_via_succ = Traffic()
+    for dst_sw_port in dst_port.sw.non_host_port_iter():
+        npg_at = pg.get_admitted_traffic(succ_port.network_port_graph_egress_node,
+                                         dst_sw_port.network_port_graph_ingress_node)
+        src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
+                                                                 succ_port.switch_port_graph_egress_node)
+        dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
+                                                                 dst_port.switch_port_graph_egress_node)
+        # First check if any traffic reaches from the src port to switch's network egress node
+        modified_src_spg_at = src_spg_at.get_modified_traffic(use_embedded_switch_modifications=True)
+        i1 = npg_at.intersect(modified_src_spg_at, keep_all=True)
+        if not i1.is_empty():
+            # Then check if any traffic reaches from switch's network ingress node to dst port
+            i1.set_field("in_port", int(dst_sw_port.port_number))
+            i2 = dst_spg_at.intersect(i1, keep_all=True)
+            if not i2.is_empty():
+                i2.set_field("in_port", int(src_port.port_number))
+                at_via_succ.union(i2.get_orig_traffic(use_embedded_switch_modifications=True))
+
+    port_graph_edge = pg.get_edge_from_admitted_traffic(src_port.switch_port_graph_ingress_node,
+                                                        succ_port.switch_port_graph_egress_node,
+                                                        at_via_succ,
+                                                        src_port.sw)
+
+    for i in range(len(at_via_succ.traffic_elements)):
+        at_via_succ.traffic_elements[i].enabling_edge_data = port_graph_edge.edge_data_list[i]
+
+    return at_via_succ
+
+
 def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
-
     for src_sw_port in src_port.sw.non_host_port_iter():
-        for dst_sw_port in dst_port.sw.non_host_port_iter():
 
+        for dst_sw_port in dst_port.sw.non_host_port_iter():
             npg_at = pg.get_admitted_traffic(src_sw_port.network_port_graph_egress_node,
                                              dst_sw_port.network_port_graph_ingress_node)
-
             src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
                                                                      src_sw_port.switch_port_graph_egress_node)
-
             dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
                                                                      dst_port.switch_port_graph_egress_node)
-
             # First check if any traffic reaches from the src port to switch's network egress node
             modified_src_spg_at = src_spg_at.get_modified_traffic(use_embedded_switch_modifications=True)
             i1 = npg_at.intersect(modified_src_spg_at, keep_all=True)
-
             if not i1.is_empty():
                 # Then check if any traffic reaches from switch's network ingress node to dst port
                 i1.set_field("in_port", int(dst_sw_port.port_number))
                 i2 = dst_spg_at.intersect(i1, keep_all=True)
                 if not i2.is_empty():
                     i2.set_field("in_port", int(src_port.port_number))
+
                     yield src_sw_port, dst_sw_port, i2.get_orig_traffic(use_embedded_switch_modifications=True)
 
 
@@ -101,33 +128,6 @@ def get_admitted_traffic(pg, src_port, dst_port):
             at.union(at_subset)
 
     return at
-
-
-def get_admitted_traffic_via_succ(pg, node, succ, dst):
-    at_via_succ = Traffic()
-
-    for dst_sw_port in dst.sw.non_host_port_iter():
-
-        npg_at = pg.get_admitted_traffic(succ, dst_sw_port.network_port_graph_ingress_node)
-
-        src_npg_at = pg.get_admitted_traffic(node.parent_obj.network_port_graph_ingress_node,
-                                             succ.parent_obj.network_port_graph_ingress_node)
-
-        dst_spg_at = dst.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
-                                                            dst.parent_obj.switch_port_graph_egress_node)
-
-        # First check if any traffic reaches from the src port to switch's network egress node
-        modified_src_npg_at = src_npg_at.get_modified_traffic(use_embedded_switch_modifications=True)
-        i1 = npg_at.intersect(modified_src_npg_at, keep_all=True)
-        if not i1.is_empty():
-            # Then check if any traffic reaches from switch's network ingress node to dst port
-            i1.set_field("in_port", int(dst_sw_port.port_number))
-            i2 = dst_spg_at.intersect(i1, keep_all=True)
-            if not i2.is_empty():
-                i2.set_field("in_port", int(succ.parent_obj.port_number))
-                at_via_succ.union(i2.get_orig_traffic(use_embedded_switch_modifications=True))
-
-    return at_via_succ
 
 
 def get_paths(pg, specific_traffic, src_port, dst_port):
@@ -191,9 +191,6 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                                                                                 dst_spg_at_frac,
                                                                                 dst_sw_port.sw)
 
-                            for ed in port_graph_edge.edge_data_list:
-                                ar = ed.get_active_rank()
-
                             path.path_edges.append(((dst_sw_port.network_port_graph_ingress_node,
                                                     dst_port.network_port_graph_egress_node),
                                                     port_graph_edge.edge_data_list,
@@ -208,15 +205,24 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
     return traffic_paths
 
 
+def get_admitted_traffic_succs_to_dst_sw(node, sw):
+    succs = set()
+
+    if node.parent_obj.attached_host:
+        pass
+    else:
+        for at_dst_node in node.admitted_traffic:
+            if at_dst_node.sw == sw:
+                succs.update(node.admitted_traffic[at_dst_node].keys())
+
+    return succs
+
+
 def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic_at_pred, vuln_rank, dst):
 
     succs_traffic = []
 
-    # Compile a list of all possible succs that can possibly take traffic from failed_succ to dst
-    possible_succs = set()
-    for at_dst_node in pred.admitted_traffic:
-        if at_dst_node.sw == dst.sw:
-            possible_succs.update(pred.admitted_traffic[at_dst_node].keys())
+    possible_succs = get_admitted_traffic_succs_to_dst_sw(pred, dst.sw)
 
     # Avoid adding as possible successor if it is for the link that has failed (reversing paths case)
     possible_succs.remove(failed_succ)
@@ -224,14 +230,10 @@ def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic
     for succ in possible_succs:
 
         # First, check to see if the successor would carry some of the traffic from here
-        at_dst_via_succ = get_admitted_traffic_via_succ(pg, pred, succ, dst)
+        at_dst_via_succ = get_admitted_traffic_via_succ_port(pg, pred.parent_obj, succ.parent_obj, dst.parent_obj)
 
-        # For traffic going from ingress -> egress node on any switch, set the ingress traffic
-        # of specific traffic to simulate that the traffic would arrive on that port.
-        if pred.node_type == "ingress" and succ.node_type == "egress":
-            traffic_at_pred.set_field("in_port", int(pred.parent_obj.port_number))
+        succ_int = traffic_at_pred.intersect(at_dst_via_succ, keep_all=True)
 
-        succ_int = traffic_at_pred.intersect(at_dst_via_succ)
         if not succ_int.is_empty():
 
             traffic_at_backup_succ = succ_int.get_modified_traffic()
@@ -254,6 +256,7 @@ def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic
 def link_failure_causes_path_disconnect(pg, path, failed_link):
 
     if path.src_node.node_id == "s1:ingress1" and path.dst_node.node_id == "s3:egress1":
+        # if failed_link.forward_link == ('s2', 's3'):
         if failed_link.forward_link == ('s1', 's2'):
             print path, failed_link.forward_link
             # src_h_id = "h11"
