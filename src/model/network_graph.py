@@ -18,15 +18,16 @@ class NetworkGraphLinkData(object):
 
     def __init__(self, node1_id, node1_port, node2_id, node2_port, link_type):
 
-        # Make it so that links are always added from the lower sw id to higher sw id:
-        if int(node1_id[1:]) > int(node2_id[1:]):
-            swap = node1_id
-            node1_id = node2_id
-            node2_id = swap
+        # Make it so that links between switches are always added from the lower sw id to higher sw id:
+        if link_type == "switch":
+            if int(node1_id[1:]) > int(node2_id[1:]):
+                swap = node1_id
+                node1_id = node2_id
+                node2_id = swap
 
-            swap = node1_port
-            node1_port = node2_port
-            node2_port = swap
+                swap = node1_port
+                node1_port = node2_port
+                node2_port = swap
 
         self.link_tuple = (node1_id, node2_id)
         self.link_ports_dict = {str(node1_id): node1_port, str(node2_id): node2_port}

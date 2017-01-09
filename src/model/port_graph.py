@@ -253,9 +253,6 @@ class PortGraph(object):
             succ_int = at.intersect(at_dst_succ)
             if not succ_int.is_empty():
                 enabling_edge_data = succ_int.get_enabling_edge_data()
-            else:
-                # Do not go further if there is no traffic admitted via this succ
-                pass
 
         return enabling_edge_data
 
