@@ -205,14 +205,20 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
     return traffic_paths
 
 
-def get_admitted_traffic_succs_to_dst_sw(node, sw):
+def get_admitted_traffic_succs_to_dst_sw(pg, node, dst, traffic_at_pred):
     succs = set()
 
     if node.parent_obj.attached_host:
-        pass
+
+        for src_sw_port, dst_sw_port, at_subset, src_spg_at_frac, dst_spg_at_frac \
+                in get_two_stage_path_iter(pg, node.parent_obj, dst.parent_obj, traffic_at_pred):
+
+            if not at_subset.is_empty():
+                succs.add(src_sw_port.network_port_graph_egress_node)
+
     else:
         for at_dst_node in node.admitted_traffic:
-            if at_dst_node.sw == sw:
+            if at_dst_node.sw == dst.sw:
                 succs.update(node.admitted_traffic[at_dst_node].keys())
 
     return succs
@@ -222,7 +228,7 @@ def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic
 
     succs_traffic = []
 
-    possible_succs = get_admitted_traffic_succs_to_dst_sw(pred, dst.sw)
+    possible_succs = get_admitted_traffic_succs_to_dst_sw(pg, pred, dst, traffic_at_pred)
 
     # Avoid adding as possible successor if it is for the link that has failed (reversing paths case)
     possible_succs.remove(failed_succ)
@@ -255,10 +261,9 @@ def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic
 
 def link_failure_causes_path_disconnect(pg, path, failed_link):
 
-    if path.src_node.node_id == "s1:ingress1" and path.dst_node.node_id == "s3:egress1":
-        # if failed_link.forward_link == ('s2', 's3'):
-        if failed_link.forward_link == ('s1', 's2'):
-            print path, failed_link.forward_link
+    # if path.src_node.node_id == "s1:ingress1" and path.dst_node.node_id == "s3:egress1":
+    #     if failed_link.forward_link == ('s1', 's2'):
+    #         print path, failed_link.forward_link
             # src_h_id = "h11"
             # dst_h_id = "h31"
             # specific_traffic = get_specific_traffic(pg.network_graph, src_h_id, dst_h_id)
