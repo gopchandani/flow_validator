@@ -36,19 +36,12 @@ def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
             modified_src_spg_at = src_spg_at.get_modified_traffic(use_embedded_switch_modifications=True)
             i1 = npg_at.intersect(modified_src_spg_at, keep_all=True)
 
-            src_spg_at_frac = npg_at.intersect(src_spg_at)
-            src_spg_at_frac = src_spg_at_frac.get_orig_traffic(use_embedded_switch_modifications=True)
-
             if not i1.is_empty():
                 # Then check if any traffic reaches from switch's network ingress node to dst port
                 i1.set_field("in_port", int(dst_sw_port.port_number))
                 i2 = dst_spg_at.intersect(i1, keep_all=True)
-
-                dst_spg_at_frac = dst_spg_at.intersect(i1)
-
                 if not i2.is_empty():
                     i2.set_field("in_port", int(src_port.port_number))
-
                     yield src_sw_port, dst_sw_port, i2.get_orig_traffic(use_embedded_switch_modifications=True)
 
 
