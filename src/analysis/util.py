@@ -161,12 +161,13 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                     in get_two_stage_path_iter(pg, src_port, dst_port, at_int):
 
                 # Include these paths only if they carry parts of specific_traffic
-                at_subset_int = specific_traffic.intersect(at_subset)
-                if not at_subset_int.is_empty():
+                if not at_subset.is_empty():
+
+                    at_subset_modified = at_subset.get_modified_traffic(use_embedded_switch_modifications=True)
 
                     npg_paths = pg.get_paths(src_sw_port.network_port_graph_egress_node,
                                              dst_sw_port.network_port_graph_ingress_node,
-                                             at_subset_int,
+                                             at_subset_modified,
                                              [src_sw_port.network_port_graph_egress_node],
                                              [],
                                              [])
