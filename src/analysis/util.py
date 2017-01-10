@@ -86,7 +86,7 @@ def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic):
             dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
                                                                      dst_port.switch_port_graph_egress_node)
 
-            src_spg_at = src_spg_at.intersect(specific_traffic)
+            src_spg_at = src_spg_at.intersect(specific_traffic, keep_all=True)
 
             # First check if any traffic reaches from the src port to switch's network egress node
             modified_src_spg_at = src_spg_at.get_modified_traffic(use_embedded_switch_modifications=True)
@@ -137,7 +137,7 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
     at = get_admitted_traffic(pg, src_port, dst_port)
 
     # See if the at carries traffic
-    at_int = specific_traffic.intersect(at)
+    at_int = specific_traffic.intersect(at, keep_all=True)
 
     # If the intersection is empty, then no paths exist, but if not...
     if not at_int.is_empty():

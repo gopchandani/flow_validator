@@ -519,9 +519,10 @@ class TestNetworkPortGraph(unittest.TestCase):
         # Test for every host pair
         for src_h_obj, dst_h_obj in ng.host_obj_pair_iter():
 
+            active_path = self.get_active_path(ng, npg, src_h_obj, dst_h_obj)
+
             # Test pretend-failure each link
             for ld in ng.get_switch_link_data():
-                active_path = self.get_active_path(ng, npg, src_h_obj, dst_h_obj)
                 fails = link_failure_causes_path_disconnect(npg, active_path, ld)
                 self.assertEqual(fails, False)
 
