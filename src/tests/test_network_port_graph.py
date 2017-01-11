@@ -49,30 +49,30 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic()
 
-        cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
-                                                    "127.0.0.1",
-                                                    6633,
-                                                    "http://localhost:8080/",
-                                                    "admin",
-                                                    "admin",
-                                                    "clostopo",
-                                                    {"fanout": 2,
-                                                     "core": 1,
-                                                     "num_hosts_per_switch": 1},
-                                                    conf_root="configurations/",
-                                                    synthesis_name="DijkstraSynthesis",
-                                                    synthesis_params={})
-
-        cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
-        cls.npg_clos_dijkstra.init_network_port_graph()
-        cls.npg_clos_dijkstra.init_network_admitted_traffic()
-
-        cls.ng_clos_dijkstra_report_active_false = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
-                                                                                            synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false, False)
-        cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
-        cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic()
+        # cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
+        #                                             "127.0.0.1",
+        #                                             6633,
+        #                                             "http://localhost:8080/",
+        #                                             "admin",
+        #                                             "admin",
+        #                                             "clostopo",
+        #                                             {"fanout": 2,
+        #                                              "core": 1,
+        #                                              "num_hosts_per_switch": 1},
+        #                                             conf_root="configurations/",
+        #                                             synthesis_name="DijkstraSynthesis",
+        #                                             synthesis_params={})
+        #
+        # cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        # cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
+        # cls.npg_clos_dijkstra.init_network_port_graph()
+        # cls.npg_clos_dijkstra.init_network_admitted_traffic()
+        #
+        # cls.ng_clos_dijkstra_report_active_false = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
+        #                                                                                     synthesis_setup_gap=1)
+        # cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false, False)
+        # cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
+        # cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic()
 
         # cls.nc_linear_dijkstra = NetworkConfiguration("ryu",
         #                                               "127.0.0.1",
@@ -556,17 +556,17 @@ class TestNetworkPortGraph(unittest.TestCase):
             # Restore the link for real
             npg.add_node_graph_link(*ld1.forward_link, updating=True)
 
-    # def test_single_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
-    #     self.check_single_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true_report_active_false,
-    #                                                           self.npg_ring_aborescene_apply_true_report_active_false)
-    #
-    # def test_two_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
-    #     self.check_two_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true_report_active_false,
-    #                                                        self.npg_ring_aborescene_apply_true_report_active_false)
+    def test_single_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
+        self.check_single_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true_report_active_false,
+                                                              self.npg_ring_aborescene_apply_true_report_active_false)
 
-    def test_single_link_failure_causes_path_disconnect_clos_dijkstra_report_active_false(self):
-        self.check_single_link_failure_causes_path_disconnect(self.ng_clos_dijkstra_report_active_false,
-                                                              self.npg_clos_dijkstra_report_active_false)
+    def test_two_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
+        self.check_two_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true_report_active_false,
+                                                           self.npg_ring_aborescene_apply_true_report_active_false)
+
+    # def test_single_link_failure_causes_path_disconnect_clos_dijkstra_report_active_false(self):
+    #     self.check_single_link_failure_causes_path_disconnect(self.ng_clos_dijkstra_report_active_false,
+    #                                                           self.npg_clos_dijkstra_report_active_false)
 
     # def test_two_link_failure_causes_path_disconnect_clos_dijkstra_report_active_false(self):
     #     self.check_two_link_failure_causes_path_disconnect(self.ng_clos_dijkstra_report_active_false,

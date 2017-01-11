@@ -243,8 +243,7 @@ class PortGraph(object):
 
             # For traffic going from ingress->egress node on any switch, set the ingress traffic
             # of specific traffic to simulate that the traffic would arrive on that port.
-
-            if node.node_type == "ingress" and succ.node_type == "egress":
+            if node.node_type == "ingress" and succ.node_type in ["egress", "table"]:
                 at.set_field("in_port", int(node.parent_obj.port_number))
 
             at_dst_succ = self.get_admitted_traffic_via_succ(node, dst, succ)
