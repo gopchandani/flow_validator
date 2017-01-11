@@ -149,6 +149,7 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
 
                 if npg_paths:
                     for path in npg_paths:
+
                         path.path_nodes.insert(0, src_port.switch_port_graph_ingress_node)
                         path.path_nodes.append(dst_port.switch_port_graph_egress_node)
 
@@ -236,18 +237,6 @@ def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic
 
 
 def link_failure_causes_path_disconnect(pg, path, failed_link):
-
-    print path, failed_link
-    #
-    # if path.src_node.node_id == "s6:ingress3" and path.dst_node.node_id == "s5:egress3":
-    #     if failed_link.forward_link == ('s2', 's6'):
-    #         print path, failed_link.forward_link
-    #
-    #         src_h_id = path.src_node.parent_obj.attached_host.node_id
-    #         dst_h_id = path.dst_node.parent_obj.attached_host.node_id
-    #         specific_traffic = get_specific_traffic(pg.network_graph, src_h_id, dst_h_id)
-    #         p = get_paths(pg, specific_traffic, path.src_node.parent_obj, path.dst_node.parent_obj)
-    #         print p
 
     link_causes_disconnect = False
 
