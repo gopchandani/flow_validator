@@ -92,7 +92,7 @@ class MonteCarloAnalysis(FlowValidator):
         t.set_field("has_vlan_tag", 0)
         c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
         policy_statements = [PolicyStatement(self.network_graph, all_host_ports_zone, all_host_ports_zone, t, c, 0)]
-        v = self.validate_policy(policy_statements)
+        v = self.perform_policy_validation(policy_statements)
 
         if v:
             return False
