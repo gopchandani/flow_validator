@@ -127,9 +127,6 @@ class MonteCarloSamplingCompare(Experiment):
             self.mca = MonteCarloAnalysis(ng, report_active_state=False)
             self.mca.init_network_port_graph()
 
-            self.mca.initialize_per_link_traffic_paths()
-            self.mca.classify_network_graph_links(True)
-
             # self.mca.compute_e_nf_exhaustive()
             # return
 
