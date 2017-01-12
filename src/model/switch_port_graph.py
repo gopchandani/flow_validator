@@ -174,13 +174,13 @@ class SwitchPortGraph(PortGraph):
 
         end_to_end_modified_edges = []
 
-        ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
         egress_node = self.get_egress_node(self.sw.node_id, port_num)
 
         # This will keep track of all the edges due to flow tables that were modified due to port event
         # This assumes that ports are always successors on these edges.
         all_modified_flow_table_edges = []
 
+        # First the egress node causes bunch of changes
         for pred in self.predecessors_iter(egress_node):
 
             edge = self.get_edge(pred, egress_node)
@@ -194,5 +194,26 @@ class SwitchPortGraph(PortGraph):
             self.update_admitted_traffic(modified_flow_table_edges, end_to_end_modified_edges)
 
             all_modified_flow_table_edges.extend(modified_flow_table_edges)
+
+        # Take care of the ingress node which holds the traffic that can get from here to others nodes
+        ingress_node = self.get_ingress_node(self.sw.node_id, port_num)
+        ingress_node_succ = self.sw.flow_tables[0].port_graph_node
+        ingress_node_succ_edge = self.get_edge(ingress_node, ingress_node_succ)
+
+        for other_port in self.sw.ports:
+
+            dst = self.get_egress_node(self.sw.node_id, other_port)
+
+            dst_traffic_at_succ = Traffic()
+            if event_type == "port_down":
+                pass
+            elif event_type == "port_up":
+                dst_traffic_at_succ = self.get_admitted_traffic(ingress_node_succ, dst)
+            else:
+                raise
+
+            ingress_node_traffic = self.compute_edge_admitted_traffic(dst_traffic_at_succ, ingress_node_succ_edge)
+            self.propagate_admitted_traffic(ingress_node, ingress_node_traffic, ingress_node_succ, dst,
+                                            end_to_end_modified_edges)
 
         return end_to_end_modified_edges

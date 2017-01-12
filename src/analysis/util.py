@@ -50,6 +50,7 @@ def get_admitted_traffic_via_succ_port(pg, src_port, succ_port, dst_port):
 
 
 def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
+
     for src_sw_port in src_port.sw.non_host_port_iter():
 
         for dst_sw_port in dst_port.sw.non_host_port_iter():
@@ -122,14 +123,22 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
     # If the ports belong to the same switch, path always has two nodes
     if src_port.sw.node_id == dst_port.sw.node_id:
 
-        paths = src_port.sw.port_graph.get_paths(src_port.switch_port_graph_ingress_node,
-                                                 dst_port.switch_port_graph_egress_node,
-                                                 specific_traffic,
-                                                 [src_port.switch_port_graph_ingress_node],
-                                                 [],
-                                                 [])
+        at = get_admitted_traffic(pg, src_port, dst_port)
+        at_int = specific_traffic.intersect(at)
 
-        traffic_paths.extend(paths)
+        if not at_int.is_empty():
+
+            port_graph_edge = pg.get_edge_from_admitted_traffic(src_port.switch_port_graph_ingress_node,
+                                                                dst_port.switch_port_graph_egress_node,
+                                                                at_int,
+                                                                src_port.sw)
+
+            path = TrafficPath(src_port.sw.port_graph,
+                               nodes=[src_port.switch_port_graph_ingress_node,
+                                      dst_port.switch_port_graph_egress_node],
+                               path_edges=[port_graph_edge])
+
+            traffic_paths.append(path)
 
     # If they don't, then need to use the spg of dst switch and the npg as well.
     else:
