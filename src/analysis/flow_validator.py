@@ -7,7 +7,7 @@ from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
 from util import get_specific_traffic
-from util import get_admitted_traffic, get_paths
+from util import get_admitted_traffic, get_paths, link_failure_causes_path_disconnect
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
@@ -226,57 +226,71 @@ class FlowValidator(object):
                                 v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
         self.violations.extend(v)
-        self.perform_optimizations(v)
+        return v
 
-    def truncate_recursion(self, v):
+    def remove_from_validation_map(self, src_port, dst_port, future_lmbda):
+        del self.validation_map[future_lmbda][(src_port, dst_port)]
 
-        for link_perm in list(self.validation_map.keys()):
+        print "Removed:", future_lmbda, "for src_port:", src_port, "dst_port:", dst_port
 
-            # For any k larger than len(lmbda) for this prefix of links.
-            if len(link_perm) > len(v.lmbda):
+        # If all the cases under a perm are gone, then get rid of the key.
+        if not self.validation_map[future_lmbda]:
+            print "Removed perm:", future_lmbda
+            del self.validation_map[future_lmbda]
 
-                if tuple(v.lmbda) == tuple(link_perm[0:len(v.lmbda)]):
+    def preempt_validation_based_on_topological_path(self, src_port, dst_port, lmbda):
 
-                    if (v.src_port, v.dst_port) in self.validation_map[link_perm]:
+        # Check to see if these two ports do not have a topological path any more...
+        all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
+        topologial_paths = all_paths_ld[:]
+        for ld in lmbda:
+            for path in all_paths_ld:
+                if ld in path and path in topologial_paths:
+                    topologial_paths.remove(path)
 
-                        # This is indicated by removing those cases from the validation_map
-                        ps_list = self.validation_map[link_perm][(v.src_port, v.dst_port)]
-                        del self.validation_map[link_perm][(v.src_port, v.dst_port)]
+        if topologial_paths:
+            return False
+        else:
+            return True
 
-                        print "Removed:", link_perm, "for src_port:", v.src_port, "dst_port:", v.dst_port
+    def preempt_validation(self, lmbda):
 
-                        # If all the cases under a perm are gone, then get rid of the key.
-                        if not self.validation_map[link_perm]:
-                            print "Removed perm:", link_perm
-                            del self.validation_map[link_perm]
+        if self.optimization_type != "No_Optimization":
 
-                        v_p = PolicyViolation(tuple(link_perm), v.src_port, v.dst_port, v.constraint, v.counter_example)
-                        self.violations.append(v_p)
+            for future_lmbda in list(self.validation_map.keys()):
 
-    def perform_optimizations(self, v):
+                # For any k larger than len(lmbda) with this prefix of links same as lmbda
+                if len(future_lmbda) > len(lmbda) and tuple(lmbda) == tuple(future_lmbda[0:len(lmbda)]):
 
-        for vio in v:
+                    for src_port, dst_port in list(self.validation_map[future_lmbda].keys()):
+                        preempt_validation = False
+                        if self.optimization_type == "DeterministicPermutation_PathCheck":
+                            preempt_validation = self.preempt_validation_based_on_topological_path(src_port,
+                                                                                                   dst_port,
+                                                                                                   lmbda)
 
-            if self.optimization_type == "No_Optimization":
-                continue
+                        if preempt_validation:
 
-            elif self.optimization_type == "DeterministicPermutation_PathCheck":
-                    all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(vio.src_port.sw,
-                                                                                        vio.dst_port.sw)
-                    remaining_paths = all_paths_ld[:]
-                    for ld in vio.lmbda:
-                        for path in all_paths_ld:
-                            if ld in path and path in remaining_paths:
-                                remaining_paths.remove(path)
+                            for ps in self.validation_map[future_lmbda][(src_port, dst_port)]:
+                                for constraint in ps.constraints:
+                                    v_p = PolicyViolation(tuple(future_lmbda), src_port, dst_port,
+                                                          constraint,
+                                                          "preempted due to absence topological paths at " + str(lmbda))
 
-                    if not remaining_paths:
-                        # Remove them for validation_map and add corresponding violations
-                        self.truncate_recursion(vio)
+                                    self.violations.append(v_p)
+
+                            # This is indicated by removing those cases from the validation_map
+                            self.remove_from_validation_map(src_port, dst_port, future_lmbda)
 
     def validate_policy(self, lmbda):
 
         # Capture any changes to where the paths flow now
         self.initialize_per_link_traffic_paths()
+
+        # Perform the validation that needs performing here...
+        self.validate_port_pair_constraints(lmbda)
+
+        self.preempt_validation(lmbda)
 
         # If max_k links have already been failed, no need to fail any more links
         if len(lmbda) < self.max_k:
@@ -288,7 +302,7 @@ class FlowValidator(object):
                 if next_link_to_fail in lmbda:
                     continue
 
-                # If the permutation is not in validation_map, then no test it
+                # If the permutation is not in validation_map, then no need to test it
                 if tuple(lmbda + [next_link_to_fail]) not in self.validation_map:
                     print "Truncated recursion tree for:", tuple(lmbda + [next_link_to_fail])
                     continue
@@ -298,9 +312,6 @@ class FlowValidator(object):
                 self.port_graph.remove_node_graph_link(next_link_to_fail.forward_link[0],
                                                        next_link_to_fail.forward_link[1])
                 lmbda.append(next_link_to_fail)
-
-                # Perform the validation that needs performing here...
-                self.validate_port_pair_constraints(lmbda)
 
                 # Recurse
                 self.validate_policy(lmbda)
@@ -312,7 +323,7 @@ class FlowValidator(object):
                                                     updating=True)
                 lmbda.remove(next_link_to_fail)
 
-    def perform_policy_validation(self, policy_statement_list, optimization_type="DeterministicPermutation_PathCheck"):
+    def init_policy_validation(self, policy_statement_list, optimization_type="DeterministicPermutation_PathCheck"):
 
         self.optimization_type = optimization_type
 

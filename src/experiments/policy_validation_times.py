@@ -94,7 +94,7 @@ class PolicyValidationTimes(Experiment):
                     for i in range(self.num_iterations):
 
                         with Timer(verbose=True) as t:
-                            violations = fv.perform_policy_validation(policy_statements, optimization_to_use)
+                            violations = fv.init_policy_validation(policy_statements, optimization_to_use)
 
                         print "Total violations:", len(violations)
 
@@ -283,7 +283,7 @@ def main():
 
     num_iterations = 1
     optimizations_to_use = ["No_Optimization", "DeterministicPermutation_PathCheck"]
-    k_values = [2]#, 3, 4]
+    k_values = [3]#, 3, 4]
     num_switches_in_clique_list = [4]
     num_per_switch_links_list = [2]#, 3]
     num_hosts_per_switch_list = [1]

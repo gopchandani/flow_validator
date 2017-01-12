@@ -288,3 +288,7 @@ def link_failure_causes_path_disconnect(pg, path, failed_link):
                 break
 
     return link_causes_disconnect
+
+
+def get_alternative_path(pg, path, failed_link):
+    pass
