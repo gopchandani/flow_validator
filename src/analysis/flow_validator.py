@@ -214,9 +214,9 @@ class FlowValidator(object):
 
                     if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
                         satisfies, counter_example = self.validate_link_avoidance(ps.src_zone,
-                                                                                    ps.dst_zone,
-                                                                                    ps.traffic,
-                                                                                    constraint.constraint_params)
+                                                                                  ps.dst_zone,
+                                                                                  ps.traffic,
+                                                                                  constraint.constraint_params)
 
                         if not satisfies:
                             v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
@@ -234,27 +234,35 @@ class FlowValidator(object):
             print "Removed perm:", future_lmbda
             del self.validation_map[future_lmbda]
 
-    def preempt_validation_based_on_topological_path(self, src_port, dst_port, future_lmbda):
+    def preempt_validation_based_on_topological_path(self, src_port, dst_port, future_lmbda, ps_list):
 
         # Check to see if these two ports do not have a topological path any more...
-        topologial_paths = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
+        topological_paths = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
         paths_to_remove = []
 
         for ld in future_lmbda:
 
             del paths_to_remove[:]
 
-            for path in topologial_paths:
+            for path in topological_paths:
                 if ld in path:
                     paths_to_remove.append(path)
 
             for path in paths_to_remove:
-                topologial_paths.remove(path)
+                topological_paths.remove(path)
 
-        if topologial_paths:
-            return False
-        else:
-            return True
+        violations = []
+        if not topological_paths:
+            for ps in ps_list:
+                for constraint in ps.constraints:
+                    v_p = PolicyViolation(tuple(future_lmbda), src_port, dst_port, constraint,
+                                          "preempted due to absence of topological")
+                    violations.append(v_p)
+        return violations
+
+    def preempt_validation_based_on_failover_ranks(self, src_port, dst_port, next_link_to_fail, ps_list):
+        violations = []
+        return violations
 
     def preempt_validation(self, lmbda, next_link_to_fail):
 
@@ -266,21 +274,24 @@ class FlowValidator(object):
                 if len(future_lmbda) > len(lmbda) and tuple(lmbda) == tuple(future_lmbda[0:len(lmbda)]):
 
                     for src_port, dst_port in list(self.validation_map[future_lmbda].keys()):
-                        preempt_validation = False
+                        violations_via_preemption = None
+                        ps_list = self.validation_map[future_lmbda][(src_port, dst_port)]
+
                         if self.optimization_type == "DeterministicPermutation_PathCheck":
-                            preempt_validation = self.preempt_validation_based_on_topological_path(src_port,
-                                                                                                   dst_port,
-                                                                                                   future_lmbda)
+                            violations_via_preemption = self.preempt_validation_based_on_topological_path(src_port,
+                                                                                                          dst_port,
+                                                                                                          future_lmbda,
+                                                                                                          ps_list)
 
-                        if preempt_validation:
+                        if self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
+                            violations_via_preemption = self.preempt_validation_based_on_failover_ranks(src_port,
+                                                                                                        dst_port,
+                                                                                                        next_link_to_fail,
+                                                                                                        ps_list)
 
-                            for ps in self.validation_map[future_lmbda][(src_port, dst_port)]:
-                                for constraint in ps.constraints:
-                                    v_p = PolicyViolation(tuple(future_lmbda), src_port, dst_port,
-                                                          constraint,
-                                                          "preempted due to absence topological paths at " + str(lmbda))
+                        if violations_via_preemption:
 
-                                    self.violations.append(v_p)
+                            self.violations.extend(violations_via_preemption)
 
                             # This is indicated by removing those cases from the validation_map
                             self.remove_from_validation_map(src_port, dst_port, future_lmbda)
@@ -334,6 +345,9 @@ class FlowValidator(object):
         if self.optimization_type == "No_Optimization":
             self.L = list(self.network_graph.get_switch_link_data())
         elif self.optimization_type == "DeterministicPermutation_PathCheck":
+            self.L = sorted(self.network_graph.get_switch_link_data(),
+                            key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
+        elif self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
             self.L = sorted(self.network_graph.get_switch_link_data(),
                             key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
 
