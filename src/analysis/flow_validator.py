@@ -234,22 +234,29 @@ class FlowValidator(object):
             print "Removed perm:", future_lmbda
             del self.validation_map[future_lmbda]
 
-    def preempt_validation_based_on_topological_path(self, src_port, dst_port, lmbda):
+    def preempt_validation_based_on_topological_path(self, src_port, dst_port, future_lmbda):
 
         # Check to see if these two ports do not have a topological path any more...
-        all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
-        topologial_paths = all_paths_ld[:]
-        for ld in lmbda:
-            for path in all_paths_ld:
-                if ld in path and path in topologial_paths:
-                    topologial_paths.remove(path)
+        topologial_paths = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
+        paths_to_remove = []
+
+        for ld in future_lmbda:
+
+            del paths_to_remove[:]
+
+            for path in topologial_paths:
+                if ld in path:
+                    paths_to_remove.append(path)
+
+            for path in paths_to_remove:
+                topologial_paths.remove(path)
 
         if topologial_paths:
             return False
         else:
             return True
 
-    def preempt_validation(self, lmbda):
+    def preempt_validation(self, lmbda, next_link_to_fail):
 
         if self.optimization_type != "No_Optimization":
 
@@ -263,7 +270,7 @@ class FlowValidator(object):
                         if self.optimization_type == "DeterministicPermutation_PathCheck":
                             preempt_validation = self.preempt_validation_based_on_topological_path(src_port,
                                                                                                    dst_port,
-                                                                                                   lmbda)
+                                                                                                   future_lmbda)
 
                         if preempt_validation:
 
@@ -286,8 +293,6 @@ class FlowValidator(object):
         # Perform the validation that needs performing here...
         self.validate_port_pair_constraints(lmbda)
 
-        self.preempt_validation(lmbda)
-
         # If max_k links have already been failed, no need to fail any more links
         if len(lmbda) < self.max_k:
 
@@ -298,7 +303,10 @@ class FlowValidator(object):
                 if next_link_to_fail in lmbda:
                     continue
 
-                # If the permutation is not in validation_map, then no need to test it
+                # Check to see if any preemption is in the offing.
+                self.preempt_validation(lmbda, next_link_to_fail)
+
+                # After checking for preemption, if the permutation is not in validation_map, then no need to test it
                 if tuple(lmbda + [next_link_to_fail]) not in self.validation_map:
                     print "Truncated recursion tree for:", tuple(lmbda + [next_link_to_fail])
                     continue

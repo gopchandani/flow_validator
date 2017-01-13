@@ -283,6 +283,7 @@ def main():
 
     num_iterations = 1
     optimizations_to_use = ["No_Optimization", "DeterministicPermutation_PathCheck"]
+    #optimizations_to_use = ["DeterministicPermutation_PathCheck"]
     k_values = [2]#, 3, 4]
     num_switches_in_clique_list = [4]
     num_per_switch_links_list = [2]#, 3]
