@@ -178,52 +178,48 @@ class FlowValidator(object):
         print "Performing validation, prefix here:", lmbda
         v = []
 
-        for link_perm in self.validation_map:
-            if link_perm != tuple(lmbda):
-                continue
+        for src_port, dst_port in self.validation_map[tuple(lmbda)]:
 
-            for src_port, dst_port in self.validation_map[link_perm]:
+            for ps in self.validation_map[tuple(lmbda)][(src_port, dst_port)]:
 
-                for ps in self.validation_map[link_perm][(src_port, dst_port)]:
+                # Setup the appropriate filter
+                ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+                ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+                ps.traffic.set_field("in_port", int(src_port.port_number))
 
-                    # Setup the appropriate filter
-                    ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-                    ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-                    ps.traffic.set_field("in_port", int(src_port.port_number))
+                for constraint in ps.constraints:
 
-                    for constraint in ps.constraints:
+                    if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
+                        satisfies, counter_example = self.validate_connectvity_constraint(src_port,
+                                                                                          dst_port,
+                                                                                          ps.traffic)
+                        if not satisfies:
+                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
-                        if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
-                            satisfies, counter_example = self.validate_connectvity_constraint(src_port,
-                                                                                              dst_port,
-                                                                                              ps.traffic)
-                            if not satisfies:
-                                v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+                    if constraint.constraint_type == ISOLATION_CONSTRAINT:
+                        satisfies, counter_example = self.validate_isolation_constraint(src_port,
+                                                                                        dst_port,
+                                                                                        ps.traffic)
 
-                        if constraint.constraint_type == ISOLATION_CONSTRAINT:
-                            satisfies, counter_example = self.validate_isolation_constraint(src_port,
-                                                                                            dst_port,
-                                                                                            ps.traffic)
+                        if not satisfies:
+                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
-                            if not satisfies:
-                                v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+                    if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
+                        satisfies, counter_example = self.validate_path_length_constraint(src_port,
+                                                                                          dst_port,
+                                                                                          ps.traffic,
+                                                                                          constraint.constraint_params)
+                        if not satisfies:
+                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
-                        if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
-                            satisfies, counter_example = self.validate_path_length_constraint(src_port,
-                                                                                              dst_port,
-                                                                                              ps.traffic,
-                                                                                              constraint.constraint_params)
-                            if not satisfies:
-                                v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+                    if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
+                        satisfies, counter_example = self.validate_link_avoidance(ps.src_zone,
+                                                                                    ps.dst_zone,
+                                                                                    ps.traffic,
+                                                                                    constraint.constraint_params)
 
-                        if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
-                            satisfies, counter_example = self.validate_link_avoidance(ps.src_zone,
-                                                                                        ps.dst_zone,
-                                                                                        ps.traffic,
-                                                                                        constraint.constraint_params)
-
-                            if not satisfies:
-                                v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
+                        if not satisfies:
+                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
         self.violations.extend(v)
         return v
