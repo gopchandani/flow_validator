@@ -193,7 +193,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
         f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.0, 4.0))
 
-        data_xtick_labels = self.data["validation_time"]["k: 0, |L|: 4"].keys()
+        data_xtick_labels = self.data["validation_time"]["k: 0, |L|: 6"].keys()
         data_xticks = [int(x) for x in data_xtick_labels]
 
         self.plot_lines_with_error_bars(ax1,
@@ -203,7 +203,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                                         "",
                                         y_scale='log',
                                         x_min_factor=1.0,
-                                        x_max_factor=1.1,
+                                        x_max_factor=1,
                                         y_min_factor=0.01,
                                         y_max_factor=10,
                                         xticks=data_xticks,
@@ -217,20 +217,20 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         ax1.set_position([box.x0, box.y0 + box.height * 0.3, box.width, box.height * 0.7])
         handles, labels = ax1.get_legend_handles_labels()
 
-        ax1.legend(handles, labels, shadow=True, fontsize=10, loc='upper center', ncol=4, markerscale=1.0,
-                   frameon=True, fancybox=True, columnspacing=0.5, bbox_to_anchor=[0.5, -0.25])
+        ax1.legend(handles, labels, shadow=True, fontsize=10, loc='upper center', ncol=2, markerscale=1.0,
+                   frameon=True, fancybox=True, columnspacing=3.5, bbox_to_anchor=[0.5, -0.25])
 
         plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
         plt.show()
 
-    def load_data_merge_iterations(self, filename_list):
+    def load_data_merge_iterations(self, filename_list, prev_merged_data=None):
 
         '''
         :param filename_list: List of files with exact same network configurations in them
         :return: merged data
         '''
 
-        merged_data = None
+        merged_data = prev_merged_data
 
         for filename in filename_list:
 
@@ -247,6 +247,29 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                                 merged_data[ds][case][num_conns].extend(this_data[ds][case][num_conns])
                             except KeyError:
                                 print filename, ds, case, num_conns, "not found."
+            else:
+                merged_data = this_data
+
+        return merged_data
+
+    def load_data_merge_nhps(self, filename_list, prev_merged_data=None):
+        merged_data = prev_merged_data
+
+        for filename in filename_list:
+
+            print "Reading file:", filename
+
+            with open(filename, "r") as infile:
+                this_data = json.load(infile)
+
+            if merged_data:
+                for ds in merged_data:
+                    for nhps in merged_data[ds]:
+
+                        if nhps not in this_data[ds]:
+                            continue
+
+                        merged_data[ds][nhps].update(this_data[ds][nhps])
             else:
                 merged_data = this_data
 
@@ -287,8 +310,9 @@ def main():
 
     num_iterations = 1
     num_switches_in_clique_list = [4]#[4]
-    num_hosts_per_switch_list = [2]#, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [2, 4, 6, 8]#, 4, 6, 8, 10]
     num_per_switch_links_list = [3]
+
 
     k_values = [1]#0, 2, 4, 6]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
@@ -299,6 +323,17 @@ def main():
 
     exp.trigger()
     exp.dump_data()
+
+    # exp.data = exp.load_data_merge_nhps(
+    #     ["data/substation_mixed_policy_validation_times_1_iterations_20170103_171921.json",
+    #      "data/substation_mixed_policy_validation_times_1_iterations_20170104_094809.json"])
+    #
+    # exp.data = exp.load_data_merge_iterations(
+    #     ["data/substation_mixed_policy_validation_times_1_iterations_20170105_161120.json",
+    #      "data/substation_mixed_policy_validation_times_1_iterations_20170106_094319.json"], exp.data)
+    #
+    # exp.plot_data()
+
 
     #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json")
     #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json")
