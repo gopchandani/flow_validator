@@ -175,7 +175,8 @@ class FlowValidator(object):
 
     def validate_port_pair_constraints(self, lmbda):
 
-        print "Performing validation, prefix here:", lmbda
+        print "Performing validation, lmbda:", lmbda
+
         v = []
 
         for src_port, dst_port in self.validation_map[tuple(lmbda)]:
@@ -234,7 +235,7 @@ class FlowValidator(object):
             print "Removed perm:", future_lmbda
             del self.validation_map[future_lmbda]
 
-    def preempt_validation_based_on_topological_path(self, src_port, dst_port, future_lmbda, ps_list):
+    def preempt_validation_based_on_topological_path(self, src_port, dst_port, lmbda, future_lmbda, ps_list):
 
         # Check to see if these two ports do not have a topological path any more...
         topological_paths = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
@@ -262,6 +263,10 @@ class FlowValidator(object):
 
     def preempt_validation_based_on_failover_ranks(self, src_port, dst_port, lmbda, next_link_to_fail, ps_list):
 
+        if str(lmbda) == "[('s2', 's3')]":
+            pass
+
+
         ps = ps_list[0]
 
         ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
@@ -281,12 +286,12 @@ class FlowValidator(object):
             for ps in ps_list:
                 for constraint in ps.constraints:
                     v_p = PolicyViolation(tuple(lmbda + [next_link_to_fail]), src_port, dst_port, constraint,
-                                          "preempted due to failover ranks")
+                                          "preempted due to failover ranks active_path:" + str(active_path))
                     violations.append(v_p)
 
         return violations
 
-    def preempt_validation(self, lmbda, next_link_to_fail):
+    def preempt_validation(self, lmbda):
 
         if self.optimization_type != "No_Optimization":
 
@@ -300,17 +305,20 @@ class FlowValidator(object):
                         ps_list = self.validation_map[future_lmbda][(src_port, dst_port)]
 
                         if self.optimization_type == "DeterministicPermutation_PathCheck":
-                            violations_via_preemption = self.preempt_validation_based_on_topological_path(src_port,
-                                                                                                          dst_port,
-                                                                                                          future_lmbda,
-                                                                                                          ps_list)
+                            violations_via_preemption = \
+                                self.preempt_validation_based_on_topological_path(src_port,
+                                                                                  dst_port,
+                                                                                  lmbda,
+                                                                                  future_lmbda,
+                                                                                  ps_list)
 
                         if self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
-                            violations_via_preemption = self.preempt_validation_based_on_failover_ranks(src_port,
-                                                                                                        dst_port,
-                                                                                                        lmbda,
-                                                                                                        next_link_to_fail,
-                                                                                                        ps_list)
+                            violations_via_preemption = \
+                                self.preempt_validation_based_on_failover_ranks(src_port,
+                                                                                dst_port,
+                                                                                lmbda,
+                                                                                future_lmbda[len(lmbda)],
+                                                                                ps_list)
 
                         if violations_via_preemption:
 
@@ -338,7 +346,7 @@ class FlowValidator(object):
                     continue
 
                 # Check to see if any preemption is in the offing.
-                self.preempt_validation(lmbda, next_link_to_fail)
+                self.preempt_validation(lmbda)
 
                 # After checking for preemption, if the permutation is not in validation_map, then no need to test it
                 if tuple(lmbda + [next_link_to_fail]) not in self.validation_map:
