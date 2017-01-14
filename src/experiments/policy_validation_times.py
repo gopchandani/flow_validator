@@ -94,7 +94,7 @@ class PolicyValidationTimes(Experiment):
                     for i in range(self.num_iterations):
 
                         with Timer(verbose=True) as t:
-                            violations = fv.validate_policy(policy_statements, optimization_to_use)
+                            violations = fv.init_policy_validation(policy_statements, optimization_to_use)
 
                         print "Total violations:", len(violations)
 
@@ -281,11 +281,18 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 2
-    optimizations_to_use = ["No_Optimization", "DeterministicPermutation_PathCheck"]
-    k_values = [2, 3, 4]
+    num_iterations = 1
+    # optimizations_to_use = ["No_Optimization",
+    #                         "DeterministicPermutation_PathCheck",
+    #                         "DeterministicPermutation_FailoverRankCheck"]
+    #
+    optimizations_to_use = ["DeterministicPermutation_PathCheck", "DeterministicPermutation_FailoverRankCheck"]
+
+    #optimizations_to_use = ["DeterministicPermutation_PathCheck"]
+
+    k_values = [2]#, 3]#, 4]
     num_switches_in_clique_list = [4]
-    num_per_switch_links_list = [2, 3]
+    num_per_switch_links_list = [2]#, 3]
     num_hosts_per_switch_list = [1]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
@@ -294,18 +301,18 @@ def main():
 
     exp = PolicyValidationTimes(network_configurations, k_values, num_iterations, optimizations_to_use)
 
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
     #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170101_181845.json")
-
-    exp.data = exp.load_data_merge_iterations([
-        "data/substation_mixed_policy_validation_times_1_iterations_20170101_181845.json",
-        "data/substation_mixed_policy_validation_times_1_iterations_20170102_102250.json",
-        "data/substation_mixed_policy_validation_times_1_iterations_20170102_130004.json"
-    ])
-
-    exp.plot_data()
+    #
+    # exp.data = exp.load_data_merge_iterations([
+    #     "data/substation_mixed_policy_validation_times_1_iterations_20170101_181845.json",
+    #     "data/substation_mixed_policy_validation_times_1_iterations_20170102_102250.json",
+    #     "data/substation_mixed_policy_validation_times_1_iterations_20170102_130004.json"
+    # ])
+    #
+    # exp.plot_data()
 
 if __name__ == "__main__":
     main()

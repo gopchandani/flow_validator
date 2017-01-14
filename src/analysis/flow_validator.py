@@ -1,17 +1,13 @@
 import sys
-import random
 import itertools
-import numpy as np
 
 sys.path.append("./")
 
-from model.network_graph import NetworkGraphLinkData
 from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
-from experiments.timer import Timer
 from util import get_specific_traffic
-from util import get_admitted_traffic, get_paths
+from util import get_admitted_traffic, get_paths, link_failure_causes_path_disconnect, get_active_path
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
@@ -21,9 +17,9 @@ __author__ = 'Rakesh Kumar'
 
 class FlowValidator(object):
 
-    def __init__(self, network_graph, report_active_state=True):
+    def __init__(self, network_graph, report_active_state=False):
         self.network_graph = network_graph
-        self.port_graph = NetworkPortGraph(network_graph, report_active_state, new_mode=True)
+        self.port_graph = NetworkPortGraph(network_graph, report_active_state)
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
@@ -98,198 +94,6 @@ class FlowValidator(object):
                 raise Exception("Unknown as_ingress_egress")
 
         return result
-
-    def are_zones_connected(self, src_zone, dst_zone, traffic):
-
-        is_connected = True
-
-        for src_port, dst_port in self.port_pair_iter(src_zone, dst_zone):
-
-            # Setup the appropriate filter
-            traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-            traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-            #traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
-            #traffic.set_field("has_vlan_tag", 0)
-            traffic.set_field("in_port", int(src_port.port_number))
-
-            at = get_admitted_traffic(self.port_graph, src_port, dst_port)
-
-            if not at.is_empty():
-                if at.is_subset_traffic(traffic):
-                    is_connected = True
-                else:
-                    print "src_port:", src_port, "dst_port:", dst_port, "at does not pass specific_traffic check."
-                    is_connected = False
-            else:
-                # print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
-                is_connected = False
-
-            if not is_connected:
-                break
-
-        return is_connected
-
-    def are_zone_paths_within_limit(self, src_zone, dst_zone, traffic, l):
-
-        within_limit = True
-
-        for src_port, dst_port in self.port_pair_iter(src_zone, dst_zone):
-
-            # Setup the appropriate filter
-            traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-            traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-            traffic.set_field("vlan_id", src_port.sw.synthesis_tag + 0x1000, is_exception_value=True)
-            traffic.set_field("in_port", int(src_port.port_number))
-
-            traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
-
-            for path in traffic_paths:
-                if len(path) > l:
-                    print "src_port:", src_port, "dst_port:", dst_port, "Path does not fit in specified limit:", path
-                    within_limit = False
-                    break
-
-            if not within_limit:
-                break
-
-        return within_limit
-
-    def are_zone_pair_exclusive(self, src_zone, dst_zone, traffic, el):
-        is_exclusive = True
-
-        self.initialize_per_link_traffic_paths()
-
-        for l in el:
-
-            # Check to see if the paths belonging to this link are all from src_zone to dst_zone
-            for path in l.traffic_paths:
-
-                if not self.is_node_in_zone(path.src_node, src_zone, "ingress") or \
-                        not self.is_node_in_zone(path.dst_node, dst_zone, "egress"):
-
-                    print "el:", el
-                    print "Found path:", path
-                    is_exclusive = False
-                    break
-
-            if not is_exclusive:
-                break
-
-        return is_exclusive
-
-    def validate_zone_pair_connectivity(self, src_zone, dst_zone, traffic, k):
-
-        is_connected = False
-
-        if k == 0:
-            is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
-        else:
-            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
-
-                for link in links_to_fail:
-                    print "Failing:", link
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
-
-                for link in links_to_fail:
-                    print "Restoring:", link
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
-                if not is_connected:
-                    break
-
-        return is_connected
-
-    def validate_zone_pair_path_length(self, src_zone, dst_zone, traffic, l, k):
-        within_limit = False
-
-        if k == 0:
-            within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
-        else:
-            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
-
-                for link in links_to_fail:
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
-
-                for link in links_to_fail:
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
-                if not within_limit:
-                    break
-
-        return within_limit
-
-    def validate_zone_pair_link_exclusivity(self, src_zone, dst_zone, traffic, el, k):
-        is_exclusive = False
-
-        if k == 0:
-            is_exclusive = self.are_zone_pair_exclusive(src_zone, dst_zone, traffic, el)
-        else:
-            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
-
-                for link in links_to_fail:
-                    self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-
-                is_exclusive = self.are_zone_pair_exclusive(src_zone, dst_zone, traffic, el)
-
-                for link in links_to_fail:
-                    self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-
-                if not is_exclusive:
-                    break
-
-        return is_exclusive
-
-    def validate_zone_pair_connectivity_path_length_link_exclusivity(self, src_zone, dst_zone, traffic, l, el, k):
-
-        is_connected = True
-        within_limit = True
-        is_exclusive = True
-
-        incremental_times = []
-
-        if k == 0:
-            is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
-            within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
-            is_exclusive = self.are_zone_pair_exclusive(src_zone, dst_zone, traffic, el)
-        else:
-            for links_to_fail in itertools.permutations(list(self.network_graph.get_switch_link_data()), k):
-
-                for link in links_to_fail:
-
-                    print "Failing:", link
-
-                    with Timer(verbose=True) as t:
-                        self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-                    incremental_times.append(t.secs)
-
-                if is_connected:
-                    is_connected = self.are_zones_connected(src_zone, dst_zone, traffic)
-
-                if within_limit:
-                    within_limit = self.are_zone_paths_within_limit(src_zone, dst_zone, traffic, l)
-
-                if is_exclusive:
-                    is_exclusive = self.are_zone_pair_exclusive(src_zone, dst_zone, traffic, el)
-
-                for link in links_to_fail:
-
-                    print "Restoring:", link
-
-                    with Timer(verbose=True) as t:
-                        self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-                    incremental_times.append(t.secs)
-
-                # Break out of here if all three properties have been proven to be false
-                if not is_connected and not within_limit and not is_exclusive:
-                    break
-
-        avg_incremental_time = np.mean(incremental_times)
-
-        return is_connected, within_limit, is_exclusive, avg_incremental_time
 
     def validate_connectvity_constraint(self, src_port, dst_port, traffic):
 
@@ -369,13 +173,14 @@ class FlowValidator(object):
 
         return satisfies, counter_example
 
-    def validate_policy_cases(self, validation_map, lmbda):
+    def validate_port_pair_constraints(self, lmbda):
 
+        print "Performing validation, prefix here:", lmbda
         v = []
 
-        for src_port, dst_port in validation_map:
+        for src_port, dst_port in self.validation_map[tuple(lmbda)]:
 
-            for ps in validation_map[(src_port, dst_port)]:
+            for ps in self.validation_map[tuple(lmbda)][(src_port, dst_port)]:
 
                 # Setup the appropriate filter
                 ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
@@ -409,142 +214,163 @@ class FlowValidator(object):
 
                     if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
                         satisfies, counter_example = self.validate_link_avoidance(ps.src_zone,
-                                                                                    ps.dst_zone,
-                                                                                    ps.traffic,
-                                                                                    constraint.constraint_params)
+                                                                                  ps.dst_zone,
+                                                                                  ps.traffic,
+                                                                                  constraint.constraint_params)
 
                         if not satisfies:
                             v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
+        self.violations.extend(v)
         return v
 
-    def truncate_recursion(self, v):
+    def remove_from_validation_map(self, src_port, dst_port, future_lmbda):
+        del self.validation_map[future_lmbda][(src_port, dst_port)]
 
-        for link_perm in list(self.validation_map.keys()):
+        print "Removed:", future_lmbda, "for src_port:", src_port, "dst_port:", dst_port
 
-            # For any k larger than len(lmbda) for this prefix of links.
-            if len(link_perm) > len(v.lmbda):
+        # If all the cases under a perm are gone, then get rid of the key.
+        if not self.validation_map[future_lmbda]:
+            print "Removed perm:", future_lmbda
+            del self.validation_map[future_lmbda]
 
-                if tuple(v.lmbda) == tuple(link_perm[0:len(v.lmbda)]):
+    def preempt_validation_based_on_topological_path(self, src_port, dst_port, future_lmbda, ps_list):
 
-                    if (v.src_port, v.dst_port) in self.validation_map[link_perm]:
+        # Check to see if these two ports do not have a topological path any more...
+        topological_paths = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
+        paths_to_remove = []
 
-                        # This is indicated by removing those cases from the validation_map
-                        ps_list = self.validation_map[link_perm][(v.src_port, v.dst_port)]
-                        del self.validation_map[link_perm][(v.src_port, v.dst_port)]
+        for ld in future_lmbda:
 
-                        print "Removed:", link_perm, "for src_port:", v.src_port, "dst_port:", v.dst_port
+            del paths_to_remove[:]
 
-                        # If all the cases under a perm are gone, then get rid of the key.
-                        if not self.validation_map[link_perm]:
-                            print "Removed perm:", link_perm
-                            del self.validation_map[link_perm]
+            for path in topological_paths:
+                if ld in path:
+                    paths_to_remove.append(path)
 
-                        v_p = PolicyViolation(tuple(link_perm), v.src_port, v.dst_port, v.constraint, v.counter_example)
-                        self.violations.append(v_p)
+            for path in paths_to_remove:
+                topological_paths.remove(path)
 
-    def perform_optimizations(self, v):
+        violations = []
+        if not topological_paths:
+            for ps in ps_list:
+                for constraint in ps.constraints:
+                    v_p = PolicyViolation(tuple(future_lmbda), src_port, dst_port, constraint,
+                                          "preempted due to absence of topology")
+                    violations.append(v_p)
+        return violations
 
-        for vio in v:
+    def preempt_validation_based_on_failover_ranks(self, src_port, dst_port, lmbda, next_link_to_fail, ps_list):
 
-            if self.optimization_type == "No_Optimization":
-                continue
-            elif self.optimization_type == "Random_Path":
-                all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(vio.src_port.sw, vio.dst_port.sw)
-                remaining_paths = all_paths_ld[:]
-                for ld in vio.lmbda:
-                    for path in all_paths_ld:
-                        if ld in path and path in remaining_paths:
-                            remaining_paths.remove(path)
+        ps = ps_list[0]
 
-                if not remaining_paths:
-                    # Remove them for validation_map and add corresponding violations
-                    self.truncate_recursion(vio)
+        ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+        ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+        ps.traffic.set_field("in_port", int(src_port.port_number))
 
-            elif self.optimization_type == "DeterministicPermutation_PathCheck":
-                    all_paths_ld = self.network_graph.get_all_paths_as_switch_link_data(vio.src_port.sw,
-                                                                                        vio.dst_port.sw)
-                    remaining_paths = all_paths_ld[:]
-                    for ld in vio.lmbda:
-                        for path in all_paths_ld:
-                            if ld in path and path in remaining_paths:
-                                remaining_paths.remove(path)
+        active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)
 
-                    if not remaining_paths:
-                        # Remove them for validation_map and add corresponding violations
-                        self.truncate_recursion(vio)
+        if active_path:
+            disconnected_path = link_failure_causes_path_disconnect(self.port_graph, active_path, next_link_to_fail)
+        else:
+            # If no active paths are found, then report violations
+            disconnected_path = True
 
-            elif self.optimization_type == "Deterministic_Src_Dst":
-                # Check to see if all links to the source OR the destination port's switch have already failed
-                src_port_switch_links = self.network_graph.get_switch_link_data(vio.src_port.sw)
-                src_port_remaining_switch_links = set(src_port_switch_links) - set(vio.lmbda)
-                dst_port_switch_links = self.network_graph.get_switch_link_data(vio.dst_port.sw)
-                dst_port_remaining_switch_links = set(dst_port_switch_links) - set(vio.lmbda)
+        violations = []
+        if disconnected_path:
+            for ps in ps_list:
+                for constraint in ps.constraints:
+                    v_p = PolicyViolation(tuple(lmbda + [next_link_to_fail]), src_port, dst_port, constraint,
+                                          "preempted due to failover ranks")
+                    violations.append(v_p)
 
-                # If so, then no matter what other links fail, this src_port -> dst_port constraint will be violated
-                if not (src_port_remaining_switch_links and dst_port_remaining_switch_links):
-                    # Remove them for validation_map and add corresponding violations
-                    self.truncate_recursion(vio)
+        return violations
 
-    def perform_validation(self, lmbda):
+    def preempt_validation(self, lmbda, next_link_to_fail):
+
+        if self.optimization_type != "No_Optimization":
+
+            for future_lmbda in list(self.validation_map.keys()):
+
+                # For any k larger than len(lmbda) with this prefix of links same as lmbda
+                if len(future_lmbda) > len(lmbda) and tuple(lmbda) == tuple(future_lmbda[0:len(lmbda)]):
+
+                    for src_port, dst_port in list(self.validation_map[future_lmbda].keys()):
+                        violations_via_preemption = None
+                        ps_list = self.validation_map[future_lmbda][(src_port, dst_port)]
+
+                        if self.optimization_type == "DeterministicPermutation_PathCheck":
+                            violations_via_preemption = self.preempt_validation_based_on_topological_path(src_port,
+                                                                                                          dst_port,
+                                                                                                          future_lmbda,
+                                                                                                          ps_list)
+
+                        if self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
+                            violations_via_preemption = self.preempt_validation_based_on_failover_ranks(src_port,
+                                                                                                        dst_port,
+                                                                                                        lmbda,
+                                                                                                        next_link_to_fail,
+                                                                                                        ps_list)
+
+                        if violations_via_preemption:
+
+                            self.violations.extend(violations_via_preemption)
+
+                            # This is indicated by removing those cases from the validation_map
+                            self.remove_from_validation_map(src_port, dst_port, future_lmbda)
+
+    def validate_policy(self, lmbda):
 
         # Capture any changes to where the paths flow now
         self.initialize_per_link_traffic_paths()
 
         # Perform the validation that needs performing here...
-        print "Performing validation, prefix here:", lmbda
-
-        # Collect cases cases where lmbda == keys in the validation_map and validate them
-        cases = {}
-        for link_perm in self.validation_map:
-            if link_perm == tuple(lmbda):
-                cases.update(self.validation_map[link_perm])
-        v = self.validate_policy_cases(cases, lmbda)
-        self.violations.extend(v)
-
-        self.perform_optimizations(v)
+        self.validate_port_pair_constraints(lmbda)
 
         # If max_k links have already been failed, no need to fail any more links
         if len(lmbda) < self.max_k:
 
             # Rotate through the links
-            for link in self.L:
+            for next_link_to_fail in self.L:
                 # Select the link by checking that it is not in the lmbda already
                 # Add the selected link to fail to the prefix
-                if link in lmbda:
+                if next_link_to_fail in lmbda:
                     continue
 
-                # If the permutation is not in validation_map, then no test it
-                if tuple(lmbda + [link]) not in self.validation_map:
-                    print "Truncated recursion tree for:", tuple(lmbda + [link])
+                # Check to see if any preemption is in the offing.
+                self.preempt_validation(lmbda, next_link_to_fail)
+
+                # After checking for preemption, if the permutation is not in validation_map, then no need to test it
+                if tuple(lmbda + [next_link_to_fail]) not in self.validation_map:
+                    print "Truncated recursion tree for:", tuple(lmbda + [next_link_to_fail])
                     continue
 
                 # Fail the link
-                print "Failing:", link
-                self.port_graph.remove_node_graph_link(link.forward_link[0], link.forward_link[1])
-                lmbda.append(link)
+                print "Failing:", next_link_to_fail
+                self.port_graph.remove_node_graph_link(next_link_to_fail.forward_link[0],
+                                                       next_link_to_fail.forward_link[1])
+                lmbda.append(next_link_to_fail)
 
                 # Recurse
-                self.perform_validation(lmbda)
+                self.validate_policy(lmbda)
 
                 # Restore the link
-                print "Restoring:", link
-                self.port_graph.add_node_graph_link(link.forward_link[0], link.forward_link[1], updating=True)
-                lmbda.remove(link)
+                print "Restoring:", next_link_to_fail
+                self.port_graph.add_node_graph_link(next_link_to_fail.forward_link[0],
+                                                    next_link_to_fail.forward_link[1],
+                                                    updating=True)
+                lmbda.remove(next_link_to_fail)
 
-    def validate_policy(self, policy_statement_list, optimization_type=None):
+    def init_policy_validation(self, policy_statement_list, optimization_type="DeterministicPermutation_PathCheck"):
 
         self.optimization_type = optimization_type
 
         if self.optimization_type == "No_Optimization":
             self.L = list(self.network_graph.get_switch_link_data())
-        elif self.optimization_type == "Deterministic_Src_Dst":
+        elif self.optimization_type == "DeterministicPermutation_PathCheck":
             self.L = sorted(self.network_graph.get_switch_link_data(),
                             key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
-        elif self.optimization_type == "Random_Path":
-            self.L = list(self.network_graph.get_switch_link_data())
-            random.shuffle(self.L)
-        elif self.optimization_type == "DeterministicPermutation_PathCheck":
+        elif self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
             self.L = sorted(self.network_graph.get_switch_link_data(),
                             key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
 
@@ -571,7 +397,10 @@ class FlowValidator(object):
         self.max_k = len(max(self.validation_map.keys(), key=lambda link_perm: len(link_perm)))
         lmbda = []
         self.violations = []
-        self.perform_validation(lmbda)
+        self.validate_policy(lmbda)
+
+        for v in self.violations:
+            print v
 
         print len(self.violations)
         return self.violations

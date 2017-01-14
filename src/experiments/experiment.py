@@ -51,25 +51,6 @@ class Experiment(object):
 
         return np.mean(incremental_times)
 
-    def perform_policy_validation_experiment(self, fv):
-
-        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-
-        traffic = Traffic(init_wildcard=True)
-        traffic.set_field("ethernet_type", 0x0800)
-        k = 1
-        l = 12
-        el = [random.choice(list(fv.network_graph.get_switch_link_data()))]
-
-        with Timer(verbose=True) as t:
-            validation_result = fv.validate_zone_pair_connectivity_path_length_link_exclusivity(src_zone,
-                                                                                                dst_zone,
-                                                                                                traffic,
-                                                                                                l, el, k)
-        # Return overall validation time, and incremental times [3] in validation results
-        return t.secs, validation_result
-
     def dump_data(self):
         print "Dumping data:"
         pprint(self.data)

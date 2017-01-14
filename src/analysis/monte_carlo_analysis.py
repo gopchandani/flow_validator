@@ -10,6 +10,10 @@ from itertools import permutations
 from analysis.flow_validator import FlowValidator
 from model.traffic import Traffic
 
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
+from analysis.policy_statement import PolicyStatement, PolicyConstraint
+from util import link_failure_causes_path_disconnect
+
 
 class MonteCarloAnalysis(FlowValidator):
 
@@ -54,20 +58,19 @@ class MonteCarloAnalysis(FlowValidator):
                 # Check to see if the path is currently active
                 if path.get_max_active_rank() == 0:
 
+                    ld.causes_disconnect = link_failure_causes_path_disconnect(self.port_graph, path, ld)
+
                     if verbose:
                         print "Considering Path: ", path
+                        print "Causes Disconnect:", ld.causes_disconnect
 
-                    if self.port_graph.link_failure_causes_path_disconnect(path, ld):
-                        ld.causes_disconnect = True
+                    if ld.causes_disconnect:
                         break
 
             if ld.causes_disconnect:
                 self.links_causing_disconnect.append(ld)
             else:
                 self.links_not_causing_disconnect.append(ld)
-
-            if verbose:
-                print "Causes Disconnect:", ld.causes_disconnect
 
         if verbose:
             print "links_not_causing_disconnect:"
@@ -80,20 +83,21 @@ class MonteCarloAnalysis(FlowValidator):
 
     def check_all_host_pair_connected(self, verbose=True):
 
-        all_host_pair_connected = True
+        all_host_ports_zone = []
+        for host_obj in self.network_graph.get_host_obj_iter():
+            all_host_ports_zone.append(host_obj.switch_port)
 
-        src_zone = [self.network_graph.get_node_object(h_id).switch_port for h_id in self.network_graph.host_ids]
-        dst_zone = [self.network_graph.get_node_object(h_id).switch_port for h_id in self.network_graph.host_ids]
+        t = Traffic(init_wildcard=True)
+        t.set_field("ethernet_type", 0x0800)
+        t.set_field("has_vlan_tag", 0)
+        c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+        policy_statements = [PolicyStatement(self.network_graph, all_host_ports_zone, all_host_ports_zone, t, c, 0)]
+        v = self.init_policy_validation(policy_statements)
 
-        # src_zone = [self.network_graph.get_node_object("h21").switch_port]
-        # dst_zone = [self.network_graph.get_node_object("h31").switch_port]
-
-        specific_traffic = Traffic(init_wildcard=True)
-        specific_traffic.set_field("ethernet_type", 0x0800)
-
-        all_host_pair_connected = self.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 0)
-
-        return all_host_pair_connected
+        if v:
+            return False
+        else:
+            return True
 
     def get_beta(self, u, b, j, verbose=False):
         beta = None
@@ -105,7 +109,7 @@ class MonteCarloAnalysis(FlowValidator):
             for i in xrange(0, j-2 + 1):
                 print "i:", i, "self.alpha[i+1]:", self.alpha[i+1], "self.N - i", self.N - i
 
-                p = p * ((self.F_bar[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
+                p *= ((self.F_bar[i]) / ((1 - self.alpha[i+1]) * (self.N - i)))
 
             beta = (j/u) * ((self.F[j-1]) / (self.N - j + 1)) * (p)
 

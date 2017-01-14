@@ -29,7 +29,6 @@ class TrafficPath(object):
 
         for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
             for enabling_edge_data in enabling_edge_data_list:
-
                 current_edge_data_active_rank = enabling_edge_data.get_active_rank()
                 if current_edge_data_active_rank > max_active_rank:
                     max_active_rank = current_edge_data_active_rank

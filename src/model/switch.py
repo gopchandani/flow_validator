@@ -6,7 +6,7 @@ from collections import defaultdict
 from switch_port_graph import SwitchPortGraph
 
 
-class Switch():
+class Switch:
 
     def __init__(self, sw_id, network_graph):
 

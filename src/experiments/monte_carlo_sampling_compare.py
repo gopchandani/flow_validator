@@ -70,10 +70,10 @@ class MonteCarloSamplingCompare(Experiment):
             run_broken_links = None
 
             if sampling_type == "uniform":
-                run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_uniform(verbose=False)
+                run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_uniform(verbose=True)
             elif sampling_type == "importance":
                 run_value, run_broken_links = self.mca.break_random_links_until_any_pair_disconnected_importance(seed_mean,
-                                                                                                                 verbose=False)
+                                                                                                                 verbose=True)
             run_links.append(run_broken_links)
             run_values.append(run_value)
 
@@ -124,7 +124,7 @@ class MonteCarloSamplingCompare(Experiment):
 
             ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
-            self.mca = MonteCarloAnalysis(ng, False)
+            self.mca = MonteCarloAnalysis(ng, report_active_state=False)
             self.mca.init_network_port_graph()
 
             # self.mca.compute_e_nf_exhaustive()
@@ -245,15 +245,20 @@ def main():
     # expected_values = [2.33, 2.5, 2.16, 2.77142857143]
 
     network_configurations = [NetworkConfiguration("ryu",
-                                                   "ring",
-                                                   {"num_switches": 4,
-                                                    "num_hosts_per_switch": 1},
-                                                   conf_root="configurations/",
-                                                   synthesis_name="AboresceneSynthesis",
-                                                   synthesis_params={"apply_group_intents_immediately": True})]
+                              "127.0.0.1",
+                              6633,
+                              "http://localhost:8080/",
+                              "admin",
+                              "admin",
+                              "ring",
+                              {"num_switches": 4,
+                               "num_hosts_per_switch": 1},
+                              conf_root="configurations/",
+                              synthesis_name="AboresceneSynthesis",
+                              synthesis_params={"apply_group_intents_immediately": True})]
 
     num_iterations = 1
-    num_seed_runs = 5
+    num_seed_runs = 2
     relative_errors = ["10"]#,"1", "5", "10"]
     expected_values = [2.0]
 
