@@ -7,7 +7,8 @@ from model.traffic import Traffic
 from model.traffic_path import TrafficPath
 from model.network_port_graph import NetworkPortGraph
 from experiments.network_configuration import NetworkConfiguration
-from analysis.util import get_admitted_traffic, get_paths, get_specific_traffic, link_failure_causes_path_disconnect
+from analysis.util import get_paths, get_active_path, link_failure_causes_path_disconnect
+from analysis.util import get_specific_traffic, get_admitted_traffic
 
 
 class TestNetworkPortGraph(unittest.TestCase):
@@ -104,7 +105,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                                             synthesis_setup_gap=1)
 
         cls.npg_linear_dijkstra_mac_acl = NetworkPortGraph(cls.ng_linear_dijkstra_mac_acl,
-                                                                         True)
+                                                           True)
         cls.npg_linear_dijkstra_mac_acl.init_network_port_graph()
         cls.npg_linear_dijkstra_mac_acl.init_network_admitted_traffic()
 
@@ -468,31 +469,16 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                  self.ng_clos_dijkstra.graph.edges())
         self.assertEqual(paths_match, True)
 
-    def get_active_path(self, ng, npg, src_h_obj, dst_h_obj):
-
-        specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
-        at = get_admitted_traffic(npg, src_h_obj.switch_port, dst_h_obj.switch_port)
-
-        at_int = specific_traffic.intersect(at)
-
-        paths = get_paths(npg, at_int, src_h_obj.switch_port, dst_h_obj.switch_port)
-
-        # Get the path that is currently active
-        active_path = None
-        for path in paths:
-            active_rank = path.get_max_active_rank()
-            if active_rank == 0:
-                active_path = path
-                break
-
-        return active_path
-
     def check_single_link_failure_causes_path_disconnect(self, ng, npg):
 
         # Test for every host pair
         for src_h_obj, dst_h_obj in ng.host_obj_pair_iter():
 
-            active_path = self.get_active_path(ng, npg, src_h_obj, dst_h_obj)
+            specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
+            active_path = get_active_path(npg,
+                                          specific_traffic,
+                                          src_h_obj.switch_port,
+                                          dst_h_obj.switch_port)
 
             # Test pretend-failure each link
             for ld in ng.get_switch_link_data():
@@ -509,7 +495,11 @@ class TestNetworkPortGraph(unittest.TestCase):
             # Test for every host pair
             for src_h_obj, dst_h_obj in ng.host_obj_pair_iter():
 
-                active_path_before = self.get_active_path(ng, npg, src_h_obj, dst_h_obj)
+                specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
+                active_path_before = get_active_path(npg,
+                                                     specific_traffic,
+                                                     src_h_obj.switch_port,
+                                                     dst_h_obj.switch_port)
 
                 # Test pretend-failure each link
                 for ld2 in ng.get_switch_link_data():
@@ -518,7 +508,11 @@ class TestNetworkPortGraph(unittest.TestCase):
                     if ld1 == ld2:
                         continue
 
-                    active_path_after = self.get_active_path(ng,  npg, src_h_obj, dst_h_obj)
+                    specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
+                    active_path_after = get_active_path(npg,
+                                                        specific_traffic,
+                                                        src_h_obj.switch_port,
+                                                        dst_h_obj.switch_port)
 
                     fails = link_failure_causes_path_disconnect(npg, active_path_after, ld2)
 

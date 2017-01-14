@@ -7,7 +7,7 @@ from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
 from util import get_specific_traffic
-from util import get_admitted_traffic, get_paths, link_failure_causes_path_disconnect
+from util import get_admitted_traffic, get_paths, link_failure_causes_path_disconnect, get_active_path
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
@@ -17,7 +17,7 @@ __author__ = 'Rakesh Kumar'
 
 class FlowValidator(object):
 
-    def __init__(self, network_graph, report_active_state=True):
+    def __init__(self, network_graph, report_active_state=False):
         self.network_graph = network_graph
         self.port_graph = NetworkPortGraph(network_graph, report_active_state)
 
@@ -256,12 +256,34 @@ class FlowValidator(object):
             for ps in ps_list:
                 for constraint in ps.constraints:
                     v_p = PolicyViolation(tuple(future_lmbda), src_port, dst_port, constraint,
-                                          "preempted due to absence of topological")
+                                          "preempted due to absence of topology")
                     violations.append(v_p)
         return violations
 
-    def preempt_validation_based_on_failover_ranks(self, src_port, dst_port, next_link_to_fail, ps_list):
+    def preempt_validation_based_on_failover_ranks(self, src_port, dst_port, lmbda, next_link_to_fail, ps_list):
+
+        ps = ps_list[0]
+
+        ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+        ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+        ps.traffic.set_field("in_port", int(src_port.port_number))
+
+        active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)
+
+        if active_path:
+            disconnected_path = link_failure_causes_path_disconnect(self.port_graph, active_path, next_link_to_fail)
+        else:
+            # If no active paths are found, then report violations
+            disconnected_path = True
+
         violations = []
+        if disconnected_path:
+            for ps in ps_list:
+                for constraint in ps.constraints:
+                    v_p = PolicyViolation(tuple(lmbda + [next_link_to_fail]), src_port, dst_port, constraint,
+                                          "preempted due to failover ranks")
+                    violations.append(v_p)
+
         return violations
 
     def preempt_validation(self, lmbda, next_link_to_fail):
@@ -286,6 +308,7 @@ class FlowValidator(object):
                         if self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
                             violations_via_preemption = self.preempt_validation_based_on_failover_ranks(src_port,
                                                                                                         dst_port,
+                                                                                                        lmbda,
                                                                                                         next_link_to_fail,
                                                                                                         ps_list)
 
@@ -375,6 +398,9 @@ class FlowValidator(object):
         lmbda = []
         self.violations = []
         self.validate_policy(lmbda)
+
+        for v in self.violations:
+            print v
 
         print len(self.violations)
         return self.violations

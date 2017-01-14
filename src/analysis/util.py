@@ -116,6 +116,23 @@ def get_admitted_traffic(pg, src_port, dst_port):
     return at
 
 
+def get_active_path(pg, specific_traffic, src_port, dst_port):
+
+    at = get_admitted_traffic(pg, src_port, dst_port)
+    at_int = specific_traffic.intersect(at)
+    paths = get_paths(pg, at_int, src_port, dst_port)
+
+    # Get the path that is currently active
+    active_path = None
+    for path in paths:
+        active_rank = path.get_max_active_rank()
+        if active_rank == 0:
+            active_path = path
+            break
+
+    return active_path
+
+
 def get_paths(pg, specific_traffic, src_port, dst_port):
 
     traffic_paths = []
