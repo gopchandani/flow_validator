@@ -235,97 +235,81 @@ class FlowValidator(object):
             print "Removed perm:", future_lmbda
             del self.validation_map[future_lmbda]
 
-    def preempt_validation_based_on_topological_path(self, src_port, dst_port, lmbda, future_lmbda, ps_list):
+    def preempt_validation_based_on_topological_path(self, lmbda):
 
-        # Check to see if these two ports do not have a topological path any more...
-        topological_paths = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
-        paths_to_remove = []
+        for future_lmbda in list(self.validation_map.keys()):
+            # For any k larger than len(lmbda) with this prefix of links same as lmbda
+            if len(future_lmbda) > len(lmbda) and tuple(lmbda) == tuple(future_lmbda[0:len(lmbda)]):
+                for src_port, dst_port in list(self.validation_map[future_lmbda].keys()):
 
-        for ld in future_lmbda:
+                    # Check to see if these two ports do not have a topological path any more...
+                    topological_paths = self.network_graph.get_all_paths_as_switch_link_data(src_port.sw, dst_port.sw)
+                    paths_to_remove = []
+                    for ld in future_lmbda:
+                        del paths_to_remove[:]
+                        for path in topological_paths:
+                            if ld in path:
+                                paths_to_remove.append(path)
+                        for path in paths_to_remove:
+                            topological_paths.remove(path)
 
-            del paths_to_remove[:]
+                    # If no paths are left, add preempted violations and remove entries from validation_map
+                    if not topological_paths:
+                        for ps in self.validation_map[future_lmbda][(src_port, dst_port)]:
+                            for constraint in ps.constraints:
+                                v_p = PolicyViolation(tuple(future_lmbda), src_port, dst_port, constraint,
+                                                      "preempted due to absence of topology")
+                                self.violations.append(v_p)
+                        self.remove_from_validation_map(src_port, dst_port, future_lmbda)
 
-            for path in topological_paths:
-                if ld in path:
-                    paths_to_remove.append(path)
+    def preempt_validation_based_on_failover_ranks(self, lmbda):
 
-            for path in paths_to_remove:
-                topological_paths.remove(path)
+        for future_lmbda in list(self.validation_map.keys()):
 
-        violations = []
-        if not topological_paths:
-            for ps in ps_list:
-                for constraint in ps.constraints:
-                    v_p = PolicyViolation(tuple(future_lmbda), src_port, dst_port, constraint,
-                                          "preempted due to absence of topology")
-                    violations.append(v_p)
-        return violations
+            if len(future_lmbda) != len(lmbda) + 1:
+                continue
 
-    def preempt_validation_based_on_failover_ranks(self, src_port, dst_port, lmbda, next_link_to_fail, ps_list):
+            # For any k larger than len(lmbda) with this prefix of links same as lmbda
+            if len(future_lmbda) > len(lmbda) and tuple(lmbda) == tuple(future_lmbda[0:len(lmbda)]):
+                for src_port, dst_port in list(self.validation_map[future_lmbda].keys()):
+                    for ps in self.validation_map[future_lmbda][(src_port, dst_port)]:
 
-        if str(lmbda) == "[('s2', 's3')]":
-            pass
+                        ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+                        ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+                        ps.traffic.set_field("in_port", int(src_port.port_number))
 
+                        active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)
+                        next_link_to_fail = future_lmbda[len(lmbda)]
 
-        ps = ps_list[0]
+                        if active_path:
+                            disconnected_path = link_failure_causes_path_disconnect(self.port_graph,
+                                                                                    active_path,
+                                                                                    next_link_to_fail)
+                        else:
+                            # If no active paths are found, then report violations
+                            disconnected_path = True
 
-        ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-        ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-        ps.traffic.set_field("in_port", int(src_port.port_number))
+                        if disconnected_path:
 
-        active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)
+                            for constraint in ps.constraints:
 
-        if active_path:
-            disconnected_path = link_failure_causes_path_disconnect(self.port_graph, active_path, next_link_to_fail)
-        else:
-            # If no active paths are found, then report violations
-            disconnected_path = True
+                                v_p = PolicyViolation(future_lmbda,
+                                                      src_port,
+                                                      dst_port,
+                                                      constraint,
+                                                      "preempted due to failover ranks active_path:" + str(active_path))
+                                self.violations.append(v_p)
 
-        violations = []
-        if disconnected_path:
-            for ps in ps_list:
-                for constraint in ps.constraints:
-                    v_p = PolicyViolation(tuple(lmbda + [next_link_to_fail]), src_port, dst_port, constraint,
-                                          "preempted due to failover ranks active_path:" + str(active_path))
-                    violations.append(v_p)
-
-        return violations
+                        self.remove_from_validation_map(src_port, dst_port, tuple(lmbda + [next_link_to_fail]))
 
     def preempt_validation(self, lmbda):
 
-        if self.optimization_type != "No_Optimization":
-
-            for future_lmbda in list(self.validation_map.keys()):
-
-                # For any k larger than len(lmbda) with this prefix of links same as lmbda
-                if len(future_lmbda) > len(lmbda) and tuple(lmbda) == tuple(future_lmbda[0:len(lmbda)]):
-
-                    for src_port, dst_port in list(self.validation_map[future_lmbda].keys()):
-                        violations_via_preemption = None
-                        ps_list = self.validation_map[future_lmbda][(src_port, dst_port)]
-
-                        if self.optimization_type == "DeterministicPermutation_PathCheck":
-                            violations_via_preemption = \
-                                self.preempt_validation_based_on_topological_path(src_port,
-                                                                                  dst_port,
-                                                                                  lmbda,
-                                                                                  future_lmbda,
-                                                                                  ps_list)
-
-                        if self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
-                            violations_via_preemption = \
-                                self.preempt_validation_based_on_failover_ranks(src_port,
-                                                                                dst_port,
-                                                                                lmbda,
-                                                                                future_lmbda[len(lmbda)],
-                                                                                ps_list)
-
-                        if violations_via_preemption:
-
-                            self.violations.extend(violations_via_preemption)
-
-                            # This is indicated by removing those cases from the validation_map
-                            self.remove_from_validation_map(src_port, dst_port, future_lmbda)
+        if self.optimization_type == "No_Optimization":
+            pass
+        elif self.optimization_type == "DeterministicPermutation_PathCheck":
+            self.preempt_validation_based_on_topological_path(lmbda)
+        elif self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
+            self.preempt_validation_based_on_failover_ranks(lmbda)
 
     def validate_policy(self, lmbda):
 
