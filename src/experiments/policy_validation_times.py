@@ -287,9 +287,9 @@ def main():
     #                         "DeterministicPermutation_PathCheck",
     #                         "DeterministicPermutation_FailoverRankCheck"]
 
-    optimizations_to_use = ["DeterministicPermutation_FailoverRankCheck"]
+    #optimizations_to_use = ["DeterministicPermutation_FailoverRankCheck"]
     #optimizations_to_use = ["DeterministicPermutation_PathCheck"]
-    #optimizations_to_use = ["No_Optimization"]
+    optimizations_to_use = ["No_Optimization"]
 
 
     k_values = [2]#, 3]#, 4]

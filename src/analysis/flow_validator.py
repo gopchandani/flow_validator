@@ -302,15 +302,6 @@ class FlowValidator(object):
 
                         self.remove_from_validation_map(src_port, dst_port, tuple(lmbda + [next_link_to_fail]))
 
-    def preempt_validation(self, lmbda):
-
-        if self.optimization_type == "No_Optimization":
-            pass
-        elif self.optimization_type == "DeterministicPermutation_PathCheck":
-            self.preempt_validation_based_on_topological_path(lmbda)
-        elif self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
-            self.preempt_validation_based_on_failover_ranks(lmbda)
-
     def validate_policy(self, lmbda):
 
         # Capture any changes to where the paths flow now
@@ -330,7 +321,10 @@ class FlowValidator(object):
                     continue
 
                 # Check to see if any preemption is in the offing.
-                self.preempt_validation(lmbda)
+                if self.optimization_type == "No_Optimization":
+                    pass
+                elif self.optimization_type == "DeterministicPermutation_PathCheck":
+                    self.preempt_validation_based_on_topological_path(lmbda)
 
                 # After checking for preemption, if the permutation is not in validation_map, then no need to test it
                 if tuple(lmbda + [next_link_to_fail]) not in self.validation_map:
@@ -389,7 +383,11 @@ class FlowValidator(object):
         self.max_k = len(max(self.validation_map.keys(), key=lambda link_perm: len(link_perm)))
         lmbda = []
         self.violations = []
-        self.validate_policy(lmbda)
+
+        if self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
+            self.preempt_validation_based_on_failover_ranks(lmbda)
+        else:
+            self.validate_policy(lmbda)
 
         for v in self.violations:
             print v
