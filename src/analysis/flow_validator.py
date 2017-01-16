@@ -175,6 +175,9 @@ class FlowValidator(object):
 
     def validate_port_pair_constraints(self, lmbda):
 
+        # Capture any changes to where the paths flow now
+        self.initialize_per_link_traffic_paths()
+
         print "Performing validation, lmbda:", lmbda
 
         v = []
@@ -304,9 +307,6 @@ class FlowValidator(object):
 
     def validate_policy(self, lmbda):
 
-        # Capture any changes to where the paths flow now
-        self.initialize_per_link_traffic_paths()
-
         # Perform the validation that needs performing here...
         self.validate_port_pair_constraints(lmbda)
 
@@ -325,6 +325,44 @@ class FlowValidator(object):
                     pass
                 elif self.optimization_type == "DeterministicPermutation_PathCheck":
                     self.preempt_validation_based_on_topological_path(lmbda)
+
+                # After checking for preemption, if the permutation is not in validation_map, then no need to test it
+                if tuple(lmbda + [next_link_to_fail]) not in self.validation_map:
+                    print "Truncated recursion tree for:", tuple(lmbda + [next_link_to_fail])
+                    continue
+
+                # Fail the link
+                print "Failing:", next_link_to_fail
+                self.port_graph.remove_node_graph_link(next_link_to_fail.forward_link[0],
+                                                       next_link_to_fail.forward_link[1])
+                lmbda.append(next_link_to_fail)
+
+                # Recurse
+                self.validate_policy(lmbda)
+
+                # Restore the link
+                print "Restoring:", next_link_to_fail
+                self.port_graph.add_node_graph_link(next_link_to_fail.forward_link[0],
+                                                    next_link_to_fail.forward_link[1],
+                                                    updating=True)
+                lmbda.remove(next_link_to_fail)
+
+    def validate_policy_using_failover_ranks(self, lmbda):
+
+        # Perform the validation that needs performing here...
+        self.validate_port_pair_constraints(lmbda)
+
+        # If max_k links have already been failed, no need to fail any more links
+        if len(lmbda) < self.max_k:
+
+            # Rotate through the links
+            for next_link_to_fail in self.L:
+                # Select the link by checking that it is not in the lmbda already
+                # Add the selected link to fail to the prefix
+                if next_link_to_fail in lmbda:
+                    continue
+
+                self.preempt_validation_based_on_failover_ranks(lmbda)
 
                 # After checking for preemption, if the permutation is not in validation_map, then no need to test it
                 if tuple(lmbda + [next_link_to_fail]) not in self.validation_map:
@@ -385,7 +423,7 @@ class FlowValidator(object):
         self.violations = []
 
         if self.optimization_type == "DeterministicPermutation_FailoverRankCheck":
-            self.preempt_validation_based_on_failover_ranks(lmbda)
+            self.validate_policy_using_failover_ranks(lmbda)
         else:
             self.validate_policy(lmbda)
 
