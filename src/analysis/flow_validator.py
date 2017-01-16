@@ -283,7 +283,7 @@ class FlowValidator(object):
                 # Check to see if any preemption is in the offing.
                 if self.optimization_type == "No_Optimization":
                     pass
-                elif self.optimization_type == "DeterministicPermutation_PathCheck":
+                elif self.optimization_type == "DeterministticPermutation_PathCheck":
                     self.preempt_validation_based_on_topological_path(lmbda)
 
                 # After checking for preemption, if the permutation is not in validation_map, then no need to test it
@@ -345,6 +345,8 @@ class FlowValidator(object):
                                                       constraint,
                                                       "preempted due to failover ranks active_path:" + str(active_path))
                                 self.violations.append(v_p)
+                        else:
+                            pass
 
                         self.remove_from_validation_map(src_port, dst_port, tuple(lmbda + [next_link_to_fail]))
 
