@@ -283,18 +283,18 @@ def main():
 
     num_iterations = 1
 
-    # optimizations_to_use = ["No_Optimization",
-    #                         "DeterministicPermutation_PathCheck",
-    #                         "DeterministicPermutation_FailoverRankCheck"]
+    optimizations_to_use = ["No_Optimization",
+                            "DeterministicPermutation_PathCheck",
+                            "DeterministicPermutation_FailoverRankCheck"]
 
     #optimizations_to_use = ["DeterministicPermutation_FailoverRankCheck"]
-    optimizations_to_use = ["DeterministicPermutation_PathCheck"]
+    #optimizations_to_use = ["DeterministicPermutation_PathCheck"]
     #optimizations_to_use = ["No_Optimization"]
 
 
     k_values = [2]#, 3]#, 4]
     num_switches_in_clique_list = [4]
-    num_per_switch_links_list = [2]#, 3]
+    num_per_switch_links_list = [3]#, 3]
     num_hosts_per_switch_list = [1]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
