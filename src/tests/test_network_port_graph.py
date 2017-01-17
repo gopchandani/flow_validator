@@ -586,14 +586,14 @@ class TestNetworkPortGraph(unittest.TestCase):
                     except KeyError:
                         synthesized_path = synthesized_primary_paths[src_host.node_id][dst_host.node_id]
 
-                synthesized_path = TrafficPath(npg, node_ids=synthesized_path)
+                if src_host.node_id == "h31" and dst_host.node_id == "h11":
+                    pass
 
                 specific_traffic = get_specific_traffic(ng, src_host.node_id, dst_host.node_id)
                 active_analyzed_path = get_active_path(npg, specific_traffic, src_host.switch_port, dst_host.switch_port)
                 failover_path = get_failover_path(npg, active_analyzed_path, ld)
-                print synthesized_path
-                print failover_path
-                self.assertEqual(synthesized_path, failover_path)
+
+                self.assertEqual(True, failover_path.compare_using_nodes_ids(synthesized_path))
 
     def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
         self.compare_failover_paths_with_synthesis_report_active_false(self.nc_ring_dijkstra_apply_true,

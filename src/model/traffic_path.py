@@ -3,14 +3,19 @@ __author__ = 'Rakesh Kumar'
 
 class TrafficPath(object):
 
-    def __init__(self, port_graph, nodes=[], path_edges=[], node_ids=[]):
+    def __init__(self, port_graph, nodes=None, path_edges=None):
 
         self.port_graph = port_graph
-        self.path_nodes = nodes
-        self.path_edges = path_edges
 
-        if node_ids and not nodes:
-            self.populate_nodes_using_nodes(node_ids)
+        if nodes:
+            self.path_nodes = nodes
+        else:
+            self.path_nodes = []
+
+        if path_edges:
+            self.path_edges = path_edges
+        else:
+            self.path_edges = []
 
         if path_edges and not nodes:
             self.populate_nodes_using_edges(self.path_edges)
@@ -18,9 +23,15 @@ class TrafficPath(object):
         self.src_node = self.path_nodes[0]
         self.dst_node = self.path_nodes[len(self.path_nodes) - 1]
 
-    def populate_nodes_using_nodes(self, node_ids):
-        for node_id in node_ids:
-            self.path_nodes.append(self.port_graph.get_node(node_id))
+    def compare_using_nodes_ids(self, other_node_ids):
+        equal_paths = True
+
+        for i in range(len(other_node_ids)):
+            if other_node_ids[i] != self.path_nodes[i].node_id:
+                equal_paths = False
+                break
+
+        return equal_paths
 
     def populate_nodes_using_edges(self, path_edges):
 
