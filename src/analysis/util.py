@@ -185,7 +185,7 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                                                                             src_sw_port.sw)
 
                         path.path_edges.insert(0, ((src_port.network_port_graph_ingress_node,
-                                                   src_sw_port.network_port_graph_egress_node),
+                                                    src_sw_port.network_port_graph_egress_node),
                                                    port_graph_edge.edge_data_list,
                                                    src_spg_at_frac))
 
@@ -195,7 +195,7 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                                                                             dst_sw_port.sw)
 
                         path.path_edges.append(((dst_sw_port.network_port_graph_ingress_node,
-                                                dst_port.network_port_graph_egress_node),
+                                                 dst_port.network_port_graph_egress_node),
                                                 port_graph_edge.edge_data_list,
                                                 dst_spg_at_frac))
 
@@ -231,7 +231,7 @@ def get_admitted_traffic_succs_to_dst_sw(pg, node, dst, traffic_at_pred, exclude
     return succs
 
 
-def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic_carried_pred, vuln_rank, dst):
+def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, affected_traffic, vuln_rank, dst):
 
     succs_traffic = []
 
@@ -239,14 +239,14 @@ def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic
     possible_succs = get_admitted_traffic_succs_to_dst_sw(pg,
                                                           pred,
                                                           dst,
-                                                          traffic_carried_pred,
+                                                          affected_traffic,
                                                           excluded_succ=failed_succ)
 
     for succ in possible_succs:
 
         # First, check to see if the successor would carry some of the traffic from here
         at_dst_via_succ = get_admitted_traffic_via_succ_port(pg, pred.parent_obj, succ.parent_obj, dst.parent_obj)
-        traffic_to_carry_succ = traffic_carried_pred.get_modified_traffic(use_embedded_switch_modifications=True)
+        traffic_to_carry_succ = affected_traffic.get_modified_traffic(use_embedded_switch_modifications=True)
 
         if at_dst_via_succ.is_subset_traffic(traffic_to_carry_succ):
 
@@ -269,43 +269,20 @@ def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, traffic
     return succs_traffic
 
 
-def is_path_affected(path, failed_link):
-    affected_edge = None
-    affected_enabling_edge_data = None
-    traffic_carried_pred = None
-
-    link_affects_path = False
-
-    for i in range(0, len(path.path_edges)):
-        f_edge, f_enabling_edge_data, f_traffic_at_pred = path.path_edges[i]
-        affected_edge, affected_enabling_edge_data, traffic_carried_pred = path.path_edges[i - 1]
-
-        failed_edge_tuple = (f_edge[0].node_id, f_edge[1].node_id)
-
-        # If this path actually gets affected by this link's failure...
-        if ((failed_edge_tuple == failed_link.forward_port_graph_edge) or
-                (failed_edge_tuple == failed_link.reverse_port_graph_edge)):
-
-            link_affects_path = True
-            break
-
-    return link_affects_path, affected_edge, affected_enabling_edge_data, traffic_carried_pred
-
-
 def link_failure_causes_path_disconnect(pg, path, failed_link):
 
-    link_affects_path, affected_edge, affected_enabling_edge_data, traffic_carried_pred = is_path_affected(path, failed_link)
+    prior_edges, affected_edge = path.is_path_affected(failed_link)
     link_causes_disconnect = False
 
-    if link_affects_path:
+    if affected_edge:
 
         # Check if a backup successors nodes exist that would carry this traffic
         # Find the first instance of when the failed link appears in the path
         backup_succ_nodes_and_traffic_at_succ_nodes = \
             get_succs_with_admitted_traffic_and_vuln_rank(pg,
-                                                          pred=affected_edge[0],
-                                                          failed_succ=affected_edge[1],
-                                                          traffic_carried_pred=traffic_carried_pred,
+                                                          pred=affected_edge[0][0],
+                                                          failed_succ=affected_edge[0][1],
+                                                          affected_traffic=affected_edge[2],
                                                           vuln_rank=1,
                                                           dst=path.dst_node)
 
@@ -316,3 +293,49 @@ def link_failure_causes_path_disconnect(pg, path, failed_link):
 
     return link_causes_disconnect
 
+
+def get_failover_path(pg, path, failed_link):
+
+    prior_edges, affected_edge = path.is_path_affected(failed_link)
+
+    if not affected_edge:
+        return path
+
+    affected_pred = affected_edge[0][0]
+    affected_succ = affected_edge[0][1]
+    affected_traffic = affected_edge[2]
+    dst = path.dst_node
+
+    remaining_edges = None
+    failover_path = None
+
+    for src_sw_port, dst_sw_port, src_spg_at_frac, modified_src_spg_at_frac, dst_spg_at_frac \
+            in get_two_stage_path_iter(pg, affected_pred.parent_obj, dst.parent_obj, affected_traffic):
+
+        backup_succ = src_sw_port.network_port_graph_egress_node
+
+        # If the successor node is the affected one due to link failure, ignore it
+        if affected_succ == backup_succ:
+            continue
+
+        # Check if the admitted traffic via this successor would carry previously carried traffic...
+        if not src_spg_at_frac.is_subset_traffic(affected_traffic):
+            continue
+
+        # If the admitted traffic's vuln rank is higher than the traffic that was failed
+        # TODO: Setting it statically to 1 for now, i.e. not considering multiple link failures (i.e. k=1 synthesis)
+
+        succ_paths = get_paths(pg, src_spg_at_frac, affected_pred.parent_obj, dst.parent_obj)
+        for path in succ_paths:
+            path_vuln_rank = path.get_max_vuln_rank()
+
+            if path_vuln_rank == 1:
+                remaining_edges = path.path_edges
+                failover_path = TrafficPath(pg, path_edges=prior_edges + remaining_edges)
+                break
+
+        # Found the alternative path already, no need to keep looking
+        if remaining_edges:
+            break
+
+    return failover_path

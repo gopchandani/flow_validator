@@ -3,14 +3,39 @@ __author__ = 'Rakesh Kumar'
 
 class TrafficPath(object):
 
-    def __init__(self, port_graph, nodes=[], path_edges=[]):
+    def __init__(self, port_graph, nodes=[], path_edges=[], node_ids=[]):
 
         self.port_graph = port_graph
         self.path_nodes = nodes
         self.path_edges = path_edges
 
+        if node_ids and not nodes:
+            self.populate_nodes_using_nodes(node_ids)
+
+        if path_edges and not nodes:
+            self.populate_nodes_using_edges(self.path_edges)
+
         self.src_node = self.path_nodes[0]
         self.dst_node = self.path_nodes[len(self.path_nodes) - 1]
+
+    def populate_nodes_using_nodes(self, node_ids):
+        for node_id in node_ids:
+            self.path_nodes.append(self.port_graph.get_node(node_id))
+
+    def populate_nodes_using_edges(self, path_edges):
+
+        # Add the first node
+        self.path_nodes.append(path_edges[0][0][0])
+
+        if len(path_edges) > 1:
+            for i in range(len(path_edges) - 1):
+                if path_edges[i][0][1] == path_edges[i+1][0][0]:
+                    self.path_nodes.append(path_edges[i][0][1])
+                else:
+                    raise Exception("Found unexpected sequence of edge nodes that does not chain together")
+
+        # Add the last node in the path
+        self.path_nodes.append(path_edges[len(path_edges) - 1][0][1])
 
     def get_max_vuln_rank(self):
         max_vuln_rank = -1
@@ -46,6 +71,28 @@ class TrafficPath(object):
                     path_links.append(path_ld)
 
         return path_links
+
+    def is_path_affected(self, failed_link):
+        prior_edges = []
+        affected_edge = None
+
+        # Assumes that there is going to be at least one prior edge here.
+        for i in range(0, len(self.path_edges)):
+
+            f_edge_tuple, f_enabling_edge_data, f_traffic_at_pred = self.path_edges[i]
+
+            failed_edge_tuple = (f_edge_tuple[0].node_id, f_edge_tuple[1].node_id)
+
+            # If this path actually gets affected by this link's failure...
+            if ((failed_edge_tuple == failed_link.forward_port_graph_edge) or
+                    (failed_edge_tuple == failed_link.reverse_port_graph_edge)):
+                affected_edge = self.path_edges[i - 1]
+                prior_edges.pop()
+                break
+            else:
+                prior_edges.append(self.path_edges[i])
+
+        return prior_edges, affected_edge
 
     def passes_link(self, ld_to_check):
         passes = False

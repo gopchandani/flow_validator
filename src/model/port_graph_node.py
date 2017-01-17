@@ -22,5 +22,4 @@ class PortGraphNode:
             raise Exception("Invalid port type specified.")
 
     def __str__(self):
-
         return str(self.node_id)
