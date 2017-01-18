@@ -283,11 +283,11 @@ def main():
 
     num_iterations = 1
 
-    optimizations_to_use = ["No_Optimization",
-                            "DeterministicPermutation_PathCheck",
-                            "DeterministicPermutation_FailoverRankCheck"]
+    # optimizations_to_use = ["No_Optimization",
+    #                         "DeterministicPermutation_PathCheck",
+    #                         "DeterministicPermutation_FailoverPathCheck"]
 
-    #optimizations_to_use = ["DeterministicPermutation_FailoverRankCheck"]
+    optimizations_to_use = ["DeterministicPermutation_FailoverPathCheck"]
     #optimizations_to_use = ["DeterministicPermutation_PathCheck"]
     #optimizations_to_use = ["No_Optimization"]
 

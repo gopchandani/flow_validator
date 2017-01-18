@@ -26,8 +26,6 @@ class SynthesisLib(object):
         self.queue_id_cntr = 1
 
         self.h = self.network_graph.network_configuration.h
-        self.synthesized_primary_paths = defaultdict(defaultdict)
-        self.synthesized_failover_paths = defaultdict(defaultdict)
 
         if self.network_graph.controller == "onos":
             self.onos_app_id = "50"
@@ -62,40 +60,6 @@ class SynthesisLib(object):
     def delete_all_ryu_rules(self):
         os.system("sudo ovs-vsctl -- --all destroy QoS")
         os.system("sudo ovs-vsctl -- --all destroy Queue")
-
-    def record_primary_path(self, src_host, dst_host, switch_port_tuple_list):
-
-        port_path = []
-
-        for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
-            port_path.append(sw_name + ":ingress" + str(ingress_port_number))
-            port_path.append(sw_name + ":egress" + str(egress_port_number))
-
-        self.synthesized_primary_paths[src_host.node_id][dst_host.node_id] = port_path
-
-    def record_failover_path(self, src_host, dst_host, e, switch_port_tuple_list):
-
-        port_path = []
-
-        if src_host.node_id not in self.synthesized_failover_paths:
-            if dst_host.node_id not in self.synthesized_failover_paths[src_host.node_id]:
-                self.synthesized_failover_paths[src_host.node_id][dst_host.node_id] = defaultdict(defaultdict)
-        else:
-            if dst_host.node_id not in self.synthesized_failover_paths[src_host.node_id]:
-                self.synthesized_failover_paths[src_host.node_id][dst_host.node_id] = defaultdict(defaultdict)
-
-        for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
-            port_path.append(sw_name + ":ingress" + str(ingress_port_number))
-            port_path.append(sw_name + ":egress" + str(egress_port_number))
-
-        self.synthesized_failover_paths[src_host.node_id][dst_host.node_id][e[0]][e[1]] = port_path
-
-    def save_synthesized_paths(self, conf_path):
-        with open(conf_path + "synthesized_primary_paths.json", "w") as outfile:
-            json.dump(self.synthesized_primary_paths, outfile)
-
-        with open(conf_path + "synthesized_failover_paths.json", "w") as outfile:
-            json.dump(self.synthesized_failover_paths, outfile)
 
     def push_queue(self, sw, port, min_rate, max_rate):
 

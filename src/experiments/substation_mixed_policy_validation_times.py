@@ -94,7 +94,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
 
                     with Timer(verbose=True) as t:
                         violations = fv.init_policy_validation(policy_statements,
-                                                               optimization_type="DeterministicPermutation_FailoverRankCheck")
+                                                               optimization_type="DeterministicPermutation_FailoverPathCheck")
 
                     print "Total violations:", len(violations)
 

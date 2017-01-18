@@ -151,6 +151,7 @@ def get_path_with_active_rank(pg, specific_traffic, src_port, dst_port, required
 
     return active_path
 
+
 def get_paths(pg, specific_traffic, src_port, dst_port):
 
     traffic_paths = []
