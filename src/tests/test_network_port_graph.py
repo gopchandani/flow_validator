@@ -593,6 +593,11 @@ class TestNetworkPortGraph(unittest.TestCase):
                 active_analyzed_path = get_active_path(npg, specific_traffic, src_host.switch_port, dst_host.switch_port)
                 failover_path = get_failover_path(npg, active_analyzed_path, ld)
 
+                print ld
+                print synthesized_path
+                print active_analyzed_path
+                print failover_path
+
                 self.assertEqual(True, failover_path.compare_using_nodes_ids(synthesized_path))
 
     def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):

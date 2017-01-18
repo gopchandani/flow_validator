@@ -43,6 +43,8 @@ class TrafficPath(object):
                 if path_edges[i][0][1] == path_edges[i+1][0][0]:
                     self.path_nodes.append(path_edges[i][0][1])
                 else:
+                    print path_edges[i][0][1]
+                    print path_edges[i+1][0][0]
                     raise Exception("Found unexpected sequence of edge nodes that does not chain together")
 
         # Add the last node in the path
@@ -53,7 +55,6 @@ class TrafficPath(object):
 
         for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
             for enabling_edge_data in enabling_edge_data_list:
-
                 current_edge_data_vuln_rank = enabling_edge_data.get_vuln_rank()
                 if current_edge_data_vuln_rank > max_vuln_rank:
                     max_vuln_rank = current_edge_data_vuln_rank

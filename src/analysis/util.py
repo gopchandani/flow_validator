@@ -86,7 +86,11 @@ def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic):
                                                                      dst_port.switch_port_graph_egress_node)
 
             modified_src_spg_at_frac = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
-            modified_src_spg_at_frac_npg_at_int = npg_at.intersect(modified_src_spg_at_frac, keep_all=True)
+
+            # Creating this extra Traffic object to avoid over-writing in_port in modified_src_spg_at_frac
+            modified_src_spg_at_frac_2 = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
+
+            modified_src_spg_at_frac_npg_at_int = npg_at.intersect(modified_src_spg_at_frac_2, keep_all=True)
             if not modified_src_spg_at_frac_npg_at_int.is_empty():
 
                 modified_src_spg_at_frac_npg_at_int.set_field("in_port", int(dst_sw_port.port_number))
@@ -132,6 +136,20 @@ def get_active_path(pg, specific_traffic, src_port, dst_port):
 
     return active_path
 
+
+def get_path_with_active_rank(pg, specific_traffic, src_port, dst_port, required_active_rank):
+
+    paths = get_paths(pg, specific_traffic, src_port, dst_port)
+
+    # Get the path that is currently active
+    active_path = None
+    for path in paths:
+        active_rank = path.get_max_active_rank()
+        if active_rank == required_active_rank:
+            active_path = path
+            break
+
+    return active_path
 
 def get_paths(pg, specific_traffic, src_port, dst_port):
 
@@ -306,7 +324,6 @@ def get_failover_path(pg, path, failed_link):
     affected_traffic = affected_edge[2]
     dst = path.dst_node
 
-    remaining_edges = None
     failover_path = None
 
     for src_sw_port, dst_sw_port, src_spg_at_frac, modified_src_spg_at_frac, dst_spg_at_frac \
@@ -322,20 +339,46 @@ def get_failover_path(pg, path, failed_link):
         if not src_spg_at_frac.is_subset_traffic(affected_traffic):
             continue
 
-        # If the admitted traffic's vuln rank is higher than the traffic that was failed
+        # Construct the backup edge
+        port_graph_edge = pg.get_edge_from_admitted_traffic(affected_pred.parent_obj.switch_port_graph_ingress_node,
+                                                            backup_succ.parent_obj.switch_port_graph_egress_node,
+                                                            src_spg_at_frac,
+                                                            src_sw_port.sw)
+
+        backup_edge = ((affected_pred.parent_obj.network_port_graph_ingress_node,
+                        backup_succ.parent_obj.network_port_graph_egress_node),
+                       port_graph_edge.edge_data_list,
+                       src_spg_at_frac)
+
+        max_vuln_rank = -1
+        for enabling_edge_data in port_graph_edge.edge_data_list:
+            current_edge_data_vuln_rank = enabling_edge_data.get_vuln_rank()
+            if current_edge_data_vuln_rank > max_vuln_rank:
+                max_vuln_rank = current_edge_data_vuln_rank
+
+        # If the admitted traffic's vuln rank via backup_edge is higher than the traffic that was failed
         # TODO: Setting it statically to 1 for now, i.e. not considering multiple link failures (i.e. k=1 synthesis)
+        if max_vuln_rank == 1:
 
-        succ_paths = get_paths(pg, src_spg_at_frac, affected_pred.parent_obj, dst.parent_obj)
-        for path in succ_paths:
-            path_vuln_rank = path.get_max_vuln_rank()
+            # Get the remainder of the active path and stick up the whole path together
+            failover_active_path = get_path_with_active_rank(pg,
+                                                             modified_src_spg_at_frac,
+                                                             backup_succ.parent_obj,
+                                                             dst.parent_obj, 1)
 
-            if path_vuln_rank == 1:
-                remaining_edges = path.path_edges
-                failover_path = TrafficPath(pg, path_edges=prior_edges + remaining_edges)
+
+            backup_succ_succ = list(pg.successors_iter(backup_succ))[0]
+            modified_src_spg_at_frac.set_field("in_port", int(backup_succ_succ.parent_obj.port_number))
+
+            # Get the remainder of the active path and stick up the whole path together
+            other = get_path_with_active_rank(pg,
+                                              modified_src_spg_at_frac,
+                                              backup_succ_succ.parent_obj,
+                                              dst.parent_obj, 0)
+
+            if failover_active_path:
+                failover_path = TrafficPath(pg,
+                                            path_edges=prior_edges + [backup_edge] + failover_active_path.path_edges[1:])
                 break
-
-        # Found the alternative path already, no need to keep looking
-        if remaining_edges:
-            break
 
     return failover_path
