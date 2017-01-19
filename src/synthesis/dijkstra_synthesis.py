@@ -1,11 +1,9 @@
 __author__ = 'Rakesh Kumar'
 
-import json
 import networkx as nx
 
 from collections import defaultdict
 from copy import deepcopy
-from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 from model.match import Match
 
@@ -23,9 +21,6 @@ class DijkstraSynthesis(object):
         # s represents the set of all switches that are
         # affected as a result of flow synthesis
         self.s = set()
-
-        self.synthesized_primary_paths = defaultdict(defaultdict)
-        self.synthesized_failover_paths = defaultdict(defaultdict)
 
         self.primary_path_edges = []
 
@@ -56,40 +51,6 @@ class DijkstraSynthesis(object):
             params_str += "_" + str(k) + "_" + str(v)
         return self.__class__.__name__ + params_str
 
-    def record_primary_path(self, src_host, dst_host, switch_port_tuple_list):
-
-        port_path = []
-
-        for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
-            port_path.append(sw_name + ":ingress" + str(ingress_port_number))
-            port_path.append(sw_name + ":egress" + str(egress_port_number))
-
-        self.synthesized_primary_paths[src_host.node_id][dst_host.node_id] = port_path
-
-    def record_failover_path(self, src_host, dst_host, e, switch_port_tuple_list):
-
-        port_path = []
-
-        if src_host.node_id not in self.synthesized_failover_paths:
-            if dst_host.node_id not in self.synthesized_failover_paths[src_host.node_id]:
-                self.synthesized_failover_paths[src_host.node_id][dst_host.node_id] = defaultdict(defaultdict)
-        else:
-            if dst_host.node_id not in self.synthesized_failover_paths[src_host.node_id]:
-                self.synthesized_failover_paths[src_host.node_id][dst_host.node_id] = defaultdict(defaultdict)
-
-        for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
-            port_path.append(sw_name + ":ingress" + str(ingress_port_number))
-            port_path.append(sw_name + ":egress" + str(egress_port_number))
-
-        self.synthesized_failover_paths[src_host.node_id][dst_host.node_id][e[0]][e[1]] = port_path
-
-    def save_synthesized_paths(self, conf_path):
-        with open(conf_path + "synthesized_primary_paths.json", "w") as outfile:
-            json.dump(self.synthesized_primary_paths, outfile)
-
-        with open(conf_path + "synthesized_failover_paths.json", "w") as outfile:
-            json.dump(self.synthesized_failover_paths, outfile)
-
     def _compute_path_ip_intents(self, src_host, dst_host, p, intent_type, flow_match, first_in_port, dst_switch_tag,
                                  edge_broken=None, switch_port_tuple_prefix_list=None):
 
@@ -111,9 +72,6 @@ class DijkstraSynthesis(object):
             # All intents except the first one in the primary path must specify the vlan tag
             if not (i == 0 and intent_type == "primary"):
                 fwd_flow_match["vlan_id"] = int(dst_switch_tag)
-
-            if in_port == out_port:
-                pass
 
             intent = Intent(intent_type, fwd_flow_match, in_port, out_port)
             intent.src_host = src_host
@@ -144,10 +102,10 @@ class DijkstraSynthesis(object):
         switch_port_tuple_list.append((last_switch, last_switch_in_port, dst_host.switch_port.port_number))
 
         if intent_type == "primary":
-            self.record_primary_path(src_host, dst_host, switch_port_tuple_list)
+            self.synthesis_lib.record_primary_path(src_host, dst_host, switch_port_tuple_list)
 
         elif intent_type == "failover":
-            self.record_failover_path(src_host, dst_host, edge_broken,
+            self.synthesis_lib.record_failover_path(src_host, dst_host, edge_broken,
                                                     switch_port_tuple_prefix_list + switch_port_tuple_list)
 
         return first_path_intent
@@ -664,4 +622,4 @@ class DijkstraSynthesis(object):
             for dst_port in dst_ports_to_synthesize:
                 self._synthesize_all_node_pairs(dst_port)
 
-        self.save_synthesized_paths(self.network_graph.network_configuration.conf_path)
+        self.synthesis_lib.save_synthesized_paths(self.network_graph.network_configuration.conf_path)

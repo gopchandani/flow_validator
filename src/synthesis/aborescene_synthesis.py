@@ -5,7 +5,6 @@ import sys
 
 from collections import defaultdict
 from copy import deepcopy
-from synthesis.synthesis_lib import SynthesisLib
 from model.intent import Intent
 
 
@@ -259,24 +258,93 @@ class AboresceneSynthesis(object):
                                                             self.other_switch_vlan_tagged_packet_rules,
                                                             self.aborescene_forwarding_rules)
 
+    def record_host_host_primary_paths(self, src_sw_node_id, dst_sw_node_id, p):
+
+        src_sw = self.network_graph.get_node_object(src_sw_node_id)
+        dst_sw = self.network_graph.get_node_object(dst_sw_node_id)
+
+        for src_host in src_sw.attached_hosts:
+            for dst_host in dst_sw.attached_hosts:
+
+                switch_port_tuple_list = []
+                in_port = src_host.switch_port.port_number
+
+                for i in xrange(len(p) - 1):
+                    edge_ports_dict = self.network_graph.get_link_ports_dict(p[i], p[i + 1])
+                    out_port = edge_ports_dict[p[i]]
+                    switch_port_tuple_list.append((p[i], in_port, out_port))
+                    in_port = edge_ports_dict[p[i + 1]]
+
+                switch_port_tuple_list.append((p[len(p) - 1], in_port, dst_host.switch_port.port_number))
+                self.synthesis_lib.record_primary_path(src_host, dst_host, switch_port_tuple_list)
+
+    def record_paths(self, k, dst_sw, k_eda):
+
+        # First the primary paths
+        primary_tree = k_eda[0]
+        failover_tree = k_eda[1]
+
+        sw_primary_tree_paths = defaultdict(defaultdict)
+        sw_failover_tree_paths = defaultdict(defaultdict)
+
+        for src_n in primary_tree:
+
+            if dst_sw.node_id == src_n:
+                continue
+
+            # Guaranteed to have a path like from each source to the destination in the Arborescence
+            path = list(nx.all_simple_paths(primary_tree, dst_sw.node_id, src_n))[0]
+            path.reverse()
+
+            sw_primary_tree_paths[src_n][dst_sw.node_id] = path
+            self.record_host_host_primary_paths(src_n, dst_sw.node_id, path)
+
+        for src_n in failover_tree:
+
+            if dst_sw.node_id == src_n:
+                continue
+
+            # Guaranteed to have a path like from each source to the destination in the Arborescence
+            path = list(nx.all_simple_paths(failover_tree, dst_sw.node_id, src_n))[0]
+            path.reverse()
+
+            sw_failover_tree_paths[src_n][dst_sw.node_id] = path
+
+        for src_sw_node in sw_primary_tree_paths:
+            for dst_sw_node in sw_primary_tree_paths[src_sw_node]:
+                primary_path = sw_primary_tree_paths[src_sw_node][dst_sw_node]
+                for i in range(len(primary_path) - 1):
+                    e = primary_path[i], primary_path[i + 1]
+                    failover_path = sw_failover_tree_paths[src_sw_node][dst_sw_node]
+
+                    print primary_path, failover_path
+
+        self.synthesis_lib.save_synthesized_paths(self.network_graph.network_configuration.conf_path)
+
     def synthesize_all_switches(self, flow_match, k):
 
-        for sw in self.network_graph.get_switches():
+        # For each possible switch that can be a destination for traffic
+        for dst_sw in self.network_graph.get_switches():
 
             # Push table switch rules
-            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.local_mac_forwarding_rules)
-            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.other_switch_vlan_tagged_packet_rules)
-            self.synthesis_lib.push_table_miss_goto_next_table_flow(sw.node_id, self.tree_vlan_tag_push_rules)
+            self.synthesis_lib.push_table_miss_goto_next_table_flow(dst_sw.node_id,
+                                                                    self.local_mac_forwarding_rules)
+            self.synthesis_lib.push_table_miss_goto_next_table_flow(dst_sw.node_id,
+                                                                    self.other_switch_vlan_tagged_packet_rules)
+            self.synthesis_lib.push_table_miss_goto_next_table_flow(dst_sw.node_id,
+                                                                    self.tree_vlan_tag_push_rules)
 
-            self.push_other_switch_vlan_tagged_packet_rules(sw, flow_match)
+            self.push_other_switch_vlan_tagged_packet_rules(dst_sw, flow_match)
 
-            if sw.attached_hosts:
+            if dst_sw.attached_hosts:
 
-                self.push_local_mac_forwarding_rules_rules(sw, flow_match)
+                self.push_local_mac_forwarding_rules_rules(dst_sw, flow_match)
 
-                k_eda = self.compute_k_edge_disjoint_aborescenes(k, sw)
+                k_eda = self.compute_k_edge_disjoint_aborescenes(k, dst_sw)
+
+                self.record_paths(k, dst_sw, k_eda)
 
                 for i in range(k):
-                    self.compute_sw_intent_lists(sw, flow_match, k_eda[i], i+1)
+                    self.compute_sw_intent_lists(dst_sw, flow_match, k_eda[i], i+1)
 
         self.push_sw_intent_lists(flow_match, k)

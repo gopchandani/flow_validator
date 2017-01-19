@@ -16,26 +16,26 @@ class TestNetworkPortGraph(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        cls.nc_ring_dijkstra_apply_true = NetworkConfiguration("ryu",
-                                                               "127.0.0.1",
-                                                               6633,
-                                                               "http://localhost:8080/",
-                                                               "admin",
-                                                               "admin",
-                                                               "ring",
-                                                               {"num_switches": 4,
-                                                                "num_hosts_per_switch": 1},
-                                                               conf_root="configurations/",
-                                                               synthesis_name="DijkstraSynthesis",
-                                                               synthesis_params={"apply_group_intents_immediately":
-                                                                                     True})
-
-        cls.ng_ring_dijkstra_apply_true_report_active_false = \
-            cls.nc_ring_dijkstra_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_ring_dijkstra_apply_true_report_active_false = \
-            NetworkPortGraph(cls.ng_ring_dijkstra_apply_true_report_active_false, False)
-        cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_port_graph()
-        cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_admitted_traffic()
+        # cls.nc_ring_dijkstra_apply_true = NetworkConfiguration("ryu",
+        #                                                        "127.0.0.1",
+        #                                                        6633,
+        #                                                        "http://localhost:8080/",
+        #                                                        "admin",
+        #                                                        "admin",
+        #                                                        "ring",
+        #                                                        {"num_switches": 4,
+        #                                                         "num_hosts_per_switch": 1},
+        #                                                        conf_root="configurations/",
+        #                                                        synthesis_name="DijkstraSynthesis",
+        #                                                        synthesis_params={"apply_group_intents_immediately":
+        #                                                                              True})
+        #
+        # cls.ng_ring_dijkstra_apply_true_report_active_false = \
+        #     cls.nc_ring_dijkstra_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        # cls.npg_ring_dijkstra_apply_true_report_active_false = \
+        #     NetworkPortGraph(cls.ng_ring_dijkstra_apply_true_report_active_false, False)
+        # cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_port_graph()
+        # cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_admitted_traffic()
 
         cls.nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
                                                                  "127.0.0.1",
@@ -65,70 +65,70 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic()
         #
-        cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
-                                                    "127.0.0.1",
-                                                    6633,
-                                                    "http://localhost:8080/",
-                                                    "admin",
-                                                    "admin",
-                                                    "clostopo",
-                                                    {"fanout": 2,
-                                                     "core": 1,
-                                                     "num_hosts_per_switch": 1},
-                                                    conf_root="configurations/",
-                                                    synthesis_name="DijkstraSynthesis",
-                                                    synthesis_params={})
-
-        cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
-        cls.npg_clos_dijkstra.init_network_port_graph()
-        cls.npg_clos_dijkstra.init_network_admitted_traffic()
-
-        cls.ng_clos_dijkstra_report_active_false = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
-                                                                                            synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false, False)
-        cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
-        cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic()
-
-        cls.nc_linear_dijkstra = NetworkConfiguration("ryu",
-                                                      "127.0.0.1",
-                                                      6633,
-                                                      "http://localhost:8080/",
-                                                      "admin",
-                                                      "admin",
-                                                      "linear",
-                                                      {"num_switches": 2,
-                                                       "num_hosts_per_switch": 2},
-                                                      conf_root="configurations/",
-                                                      synthesis_name="DijkstraSynthesis",
-                                                      synthesis_params={"apply_group_intents_immediately": True})
-
-        cls.ng_linear_dijkstra = cls.nc_linear_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra, True)
-        cls.npg_linear_dijkstra.init_network_port_graph()
-        cls.npg_linear_dijkstra.init_network_admitted_traffic()
-
-        cls.nc_linear_dijkstra_mac_acl = NetworkConfiguration("ryu",
-                                                              "127.0.0.1",
-                                                              6633,
-                                                              "http://localhost:8080/",
-                                                              "admin",
-                                                              "admin",
-                                                              "linear",
-                                                              {"num_switches": 2,
-                                                               "num_hosts_per_switch": 2},
-                                                              conf_root="configurations/",
-                                                              synthesis_name="DijkstraSynthesis",
-                                                              synthesis_params={"apply_group_intents_immediately": True,
-                                                                                "mac_acl": True})
-
-        cls.ng_linear_dijkstra_mac_acl = cls.nc_linear_dijkstra_mac_acl.setup_network_graph(mininet_setup_gap=1,
-                                                                                            synthesis_setup_gap=1)
-
-        cls.npg_linear_dijkstra_mac_acl = NetworkPortGraph(cls.ng_linear_dijkstra_mac_acl,
-                                                           True)
-        cls.npg_linear_dijkstra_mac_acl.init_network_port_graph()
-        cls.npg_linear_dijkstra_mac_acl.init_network_admitted_traffic()
+        # cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
+        #                                             "127.0.0.1",
+        #                                             6633,
+        #                                             "http://localhost:8080/",
+        #                                             "admin",
+        #                                             "admin",
+        #                                             "clostopo",
+        #                                             {"fanout": 2,
+        #                                              "core": 1,
+        #                                              "num_hosts_per_switch": 1},
+        #                                             conf_root="configurations/",
+        #                                             synthesis_name="DijkstraSynthesis",
+        #                                             synthesis_params={})
+        #
+        # cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        # cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
+        # cls.npg_clos_dijkstra.init_network_port_graph()
+        # cls.npg_clos_dijkstra.init_network_admitted_traffic()
+        #
+        # cls.ng_clos_dijkstra_report_active_false = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
+        #                                                                                     synthesis_setup_gap=1)
+        # cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false, False)
+        # cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
+        # cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic()
+        #
+        # cls.nc_linear_dijkstra = NetworkConfiguration("ryu",
+        #                                               "127.0.0.1",
+        #                                               6633,
+        #                                               "http://localhost:8080/",
+        #                                               "admin",
+        #                                               "admin",
+        #                                               "linear",
+        #                                               {"num_switches": 2,
+        #                                                "num_hosts_per_switch": 2},
+        #                                               conf_root="configurations/",
+        #                                               synthesis_name="DijkstraSynthesis",
+        #                                               synthesis_params={"apply_group_intents_immediately": True})
+        #
+        # cls.ng_linear_dijkstra = cls.nc_linear_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        # cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra, True)
+        # cls.npg_linear_dijkstra.init_network_port_graph()
+        # cls.npg_linear_dijkstra.init_network_admitted_traffic()
+        #
+        # cls.nc_linear_dijkstra_mac_acl = NetworkConfiguration("ryu",
+        #                                                       "127.0.0.1",
+        #                                                       6633,
+        #                                                       "http://localhost:8080/",
+        #                                                       "admin",
+        #                                                       "admin",
+        #                                                       "linear",
+        #                                                       {"num_switches": 2,
+        #                                                        "num_hosts_per_switch": 2},
+        #                                                       conf_root="configurations/",
+        #                                                       synthesis_name="DijkstraSynthesis",
+        #                                                       synthesis_params={"apply_group_intents_immediately": True,
+        #                                                                         "mac_acl": True})
+        #
+        # cls.ng_linear_dijkstra_mac_acl = cls.nc_linear_dijkstra_mac_acl.setup_network_graph(mininet_setup_gap=1,
+        #                                                                                     synthesis_setup_gap=1)
+        #
+        # cls.npg_linear_dijkstra_mac_acl = NetworkPortGraph(cls.ng_linear_dijkstra_mac_acl,
+        #                                                    True)
+        # cls.npg_linear_dijkstra_mac_acl.init_network_port_graph()
+        # cls.npg_linear_dijkstra_mac_acl.init_network_admitted_traffic()
 
     def check_single_link_failure_admitted_traffic_subset(self, npg, src_port, dst_port, traffic_to_check, link_to_fail):
 
@@ -221,7 +221,7 @@ class TestNetworkPortGraph(unittest.TestCase):
         synthesized_primary_paths = None
 
         if not nc.load_config and nc.save_config:
-            synthesized_primary_paths = nc.synthesis.synthesized_primary_paths
+            synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
         else:
             with open(nc.conf_path + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
@@ -246,8 +246,8 @@ class TestNetworkPortGraph(unittest.TestCase):
         all_paths_match = True
 
         if not nc.load_config and nc.save_config:
-            synthesized_primary_paths = nc.synthesis.synthesized_primary_paths
-            synthesized_failover_paths = nc.synthesis.synthesized_failover_paths
+            synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
+            synthesized_failover_paths = nc.synthesis.synthesis_lib.synthesized_failover_paths
         else:
             with open(nc.conf_path + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
@@ -322,7 +322,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
         self.assertEqual(len(all_paths), 1)
         self.assertEqual(all_paths[0], expected_path)
-
+    #
     # def test_admitted_traffic_linear_dijkstra(self):
     #
     #     h1s1 = self.ng_linear_dijkstra_mac_acl.get_node_object("h1s1")
@@ -563,8 +563,8 @@ class TestNetworkPortGraph(unittest.TestCase):
     def compare_failover_paths_with_synthesis_report_active_false_single_failure(self, nc, ng, npg):
 
         if not nc.load_config and nc.save_config:
-            synthesized_primary_paths = nc.synthesis.synthesized_primary_paths
-            synthesized_failover_paths = nc.synthesis.synthesized_failover_paths
+            synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
+            synthesized_failover_paths = nc.synthesis.synthesis_lib.synthesized_failover_paths
         else:
             with open(nc.conf_path + "synthesized_primary_paths.json", "r") as in_file:
                 synthesized_primary_paths = json.loads(in_file.read())
@@ -626,15 +626,24 @@ class TestNetworkPortGraph(unittest.TestCase):
                         # Restore the link for real
                         npg.add_node_graph_link(*ld1.forward_link, updating=True)
 
-    def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(self.nc_ring_dijkstra_apply_true,
-                                                                                      self.ng_ring_dijkstra_apply_true_report_active_false,
-                                                                                      self.npg_ring_dijkstra_apply_true_report_active_false)
+    # def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
+    #     self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+    #         self.nc_ring_dijkstra_apply_true,
+    #         self.ng_ring_dijkstra_apply_true_report_active_false,
+    #         self.npg_ring_dijkstra_apply_true_report_active_false)
 
-    # def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-    #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(self.nc_ring_dijkstra_apply_true,
-    #                                                                                   self.ng_ring_dijkstra_apply_true_report_active_false,
-    #                                                                                   self.npg_ring_dijkstra_apply_true_report_active_false)
+    def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
+        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+            self.nc_ring_aborescene_apply_true,
+            self.ng_ring_aborescene_apply_true_report_active_false,
+            self.npg_ring_aborescene_apply_true_report_active_false)
+
+
+        # def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
+        #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
+        #         self.nc_ring_dijkstra_apply_true,
+        #         self.ng_ring_dijkstra_apply_true_report_active_false,
+        #         self.npg_ring_dijkstra_apply_true_report_active_false)
 
 if __name__ == '__main__':
     unittest.main()
