@@ -102,9 +102,9 @@ class FlowValidator(object):
 
         if not at.is_empty():
             if at.is_subset_traffic(traffic):
-                traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
+                traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
 
-                if traffic_paths:
+                if traffic_path:
                     satisfies = True
                 else:
                     #TODO: This needs fixing (and a test)
@@ -130,9 +130,9 @@ class FlowValidator(object):
 
         if not at.is_empty():
             if at.is_subset_traffic(traffic):
-                traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
+                traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
 
-                if traffic_paths:
+                if traffic_path:
                     satisfies = False
                     counter_example = at
 
@@ -143,32 +143,27 @@ class FlowValidator(object):
         satisfies = True
         counter_example = None
 
-        traffic_paths = get_paths(self.port_graph, traffic, src_port, dst_port)
+        traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
 
-        for path in traffic_paths:
-            if len(path) > l:
-                #print "src_port:", src_port, "dst_port:", dst_port, "Path does not fit in specified limit:", path
+        if traffic_path:
+            if len(traffic_path) > l:
                 satisfies = False
-                counter_example = path
-                break
+                counter_example = traffic_path
 
         return satisfies, counter_example
 
-    def validate_link_avoidance(self, src_zone, dst_zone, traffic, el):
+    def validate_link_avoidance(self, src_port, dst_port, traffic, el):
         satisfies = True
         counter_example = None
 
-        for l in el:
+        active_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
 
-            # Check to see if any of the paths crossing this link are all from src_port to dst_port and vice versa
-            for path in l.traffic_paths:
-
-                if self.is_node_in_zone(path.src_node, src_zone, "ingress") and \
-                        self.is_node_in_zone(path.dst_node, dst_zone, "egress"):
-
-                    #print "Against policy, found path:", path, "on link:", l
+        # There needs to be a path to violate a link...
+        if active_path:
+            for ld in el:
+                if active_path.passes_link(ld):
                     satisfies = False
-                    counter_example = path
+                    counter_example = active_path
                     break
 
         return satisfies, counter_example
@@ -217,8 +212,8 @@ class FlowValidator(object):
                             v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
 
                     if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
-                        satisfies, counter_example = self.validate_link_avoidance(ps.src_zone,
-                                                                                  ps.dst_zone,
+                        satisfies, counter_example = self.validate_link_avoidance(src_port,
+                                                                                  dst_port,
                                                                                   ps.traffic,
                                                                                   constraint.constraint_params)
 
@@ -345,7 +340,16 @@ class FlowValidator(object):
                                 # If there is a disconnection, the isolation  is satisfied, others are violated
                                 if constraint.constraint_type == ISOLATION_CONSTRAINT:
                                     continue
-                                    
+
+                                # There needs to be a path to violate link avoidance constraint
+                                if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
+                                    continue
+
+                                # There needs to be a path to violate the length constraint
+
+                                if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
+                                    continue
+
                                 v_p = PolicyViolation(future_lmbda,
                                                       src_port,
                                                       dst_port,
