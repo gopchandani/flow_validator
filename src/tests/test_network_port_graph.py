@@ -589,17 +589,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                 specific_traffic = get_specific_traffic(ng, src_host.node_id, dst_host.node_id)
                 active_analyzed_path = get_active_path(npg, specific_traffic, src_host.switch_port, dst_host.switch_port)
 
-                if src_host.node_id == "h41" and dst_host.node_id == "h11":
-                    pass
-
-                print "--"
-                print synthesized_path
-                print active_analyzed_path
-                print ld
-
                 failover_path = get_failover_path(npg, active_analyzed_path, ld)
-
-                print failover_path
 
                 self.assertEqual(True, failover_path.compare_using_nodes_ids(synthesized_path))
 
@@ -643,18 +633,23 @@ class TestNetworkPortGraph(unittest.TestCase):
     #         self.ng_ring_dijkstra_apply_true_report_active_false,
     #         self.npg_ring_dijkstra_apply_true_report_active_false)
 
-    def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+    # def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
+    #     self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+    #         self.nc_ring_aborescene_apply_true,
+    #         self.ng_ring_aborescene_apply_true_report_active_false,
+    #         self.npg_ring_aborescene_apply_true_report_active_false)
+
+    def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
+        self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
             self.nc_ring_aborescene_apply_true,
             self.ng_ring_aborescene_apply_true_report_active_false,
             self.npg_ring_aborescene_apply_true_report_active_false)
 
-
-        # def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-        #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
-        #         self.nc_ring_dijkstra_apply_true,
-        #         self.ng_ring_dijkstra_apply_true_report_active_false,
-        #         self.npg_ring_dijkstra_apply_true_report_active_false)
+    # def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
+    #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
+    #         self.nc_ring_dijkstra_apply_true,
+    #         self.ng_ring_dijkstra_apply_true_report_active_false,
+    #         self.npg_ring_dijkstra_apply_true_report_active_false)
 
 if __name__ == '__main__':
     unittest.main()
