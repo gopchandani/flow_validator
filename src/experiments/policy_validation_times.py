@@ -41,32 +41,15 @@ class PolicyValidationTimes(Experiment):
 
     def construct_policy_statements(self, nc, k):
 
-        policy_statements = []
-
-        src_zone = [nc.ng.get_node_object("h11").switch_port]
-        # dst_zone = [nc.ng.get_node_object("h21").switch_port,
-        #             nc.ng.get_node_object("h31").switch_port,
-        #             nc.ng.get_node_object("h41").switch_port]
-
-        dst_zone = [nc.ng.get_node_object("h31").switch_port]
-
-        # all_host_ports_zone = []
-        # for host_obj in nc.ng.get_host_obj_iter():
-        #     all_host_ports_zone.append(host_obj.switch_port)
-        # t = Traffic(init_wildcard=True)
-        # t.set_field("ethernet_type", 0x0800)
-        # t.set_field("has_vlan_tag", 0)
-        # c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-        # policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, k)]
-
+        all_host_ports_zone = []
+        for host_obj in nc.ng.get_host_obj_iter():
+            all_host_ports_zone.append(host_obj.switch_port)
 
         t = Traffic(init_wildcard=True)
         t.set_field("ethernet_type", 0x0800)
         t.set_field("has_vlan_tag", 0)
         c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-        p = PolicyStatement(nc.ng, src_zone, dst_zone, t, c, k)
-
-        policy_statements.append(p)
+        policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, k)]
 
         return policy_statements
 
@@ -283,14 +266,10 @@ def main():
 
     num_iterations = 1
 
-    optimizations_to_use = ["No_Optimization",
-                            "DeterministicPermutation_PathCheck",
-                            "DeterministicPermutation_FailoverPathCheck"]
+    optimizations_to_use = ["Without Preemption", "With Preemption"]
 
-    #optimizations_to_use = ["DeterministicPermutation_FailoverPathCheck"]
-    #optimizations_to_use = ["DeterministicPermutation_PathCheck"]
-    #optimizations_to_use = ["No_Optimization"]
-
+    # optimizations_to_use = ["With Preemption"]
+    # optimizations_to_use = ["Without Preemption"]
 
     k_values = [2]#, 3]#, 4]
     num_switches_in_clique_list = [4]

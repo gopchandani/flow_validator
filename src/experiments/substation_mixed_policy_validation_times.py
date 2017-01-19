@@ -93,8 +93,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 for i in range(self.num_iterations):
 
                     with Timer(verbose=True) as t:
-                        violations = fv.init_policy_validation(policy_statements,
-                                                               optimization_type="DeterministicPermutation_FailoverPathCheck")
+                        violations = fv.init_policy_validation(policy_statements, optimization_type="With Preemption")
 
                     print "Total violations:", len(violations)
 
@@ -312,7 +311,6 @@ def main():
     num_switches_in_clique_list = [4]#[4]
     num_hosts_per_switch_list = [1]#, 4, 6, 8]#, 4, 6, 8, 10]
     num_per_switch_links_list = [2]
-
 
     k_values = [1]#0, 2, 4, 6]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
