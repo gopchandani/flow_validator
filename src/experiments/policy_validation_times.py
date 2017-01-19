@@ -271,7 +271,7 @@ def main():
     # optimizations_to_use = ["With Preemption"]
     # optimizations_to_use = ["Without Preemption"]
 
-    k_values = [2]#, 3]#, 4]
+    k_values = [0]#, 3]#, 4]
     num_switches_in_clique_list = [4]
     num_per_switch_links_list = [2]#, 3]
     num_hosts_per_switch_list = [1]
@@ -284,15 +284,6 @@ def main():
 
     exp.trigger()
     exp.dump_data()
-
-    #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170101_181845.json")
-    #
-    # exp.data = exp.load_data_merge_iterations([
-    #     "data/substation_mixed_policy_validation_times_1_iterations_20170101_181845.json",
-    #     "data/substation_mixed_policy_validation_times_1_iterations_20170102_102250.json",
-    #     "data/substation_mixed_policy_validation_times_1_iterations_20170102_130004.json"
-    # ])
-    #
     # exp.plot_data()
 
 if __name__ == "__main__":

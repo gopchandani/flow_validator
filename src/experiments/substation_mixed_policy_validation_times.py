@@ -310,9 +310,9 @@ def main():
     num_iterations = 1
     num_switches_in_clique_list = [4]#[4]
     num_hosts_per_switch_list = [1]#, 4, 6, 8]#, 4, 6, 8, 10]
-    num_per_switch_links_list = [2]
+    num_per_switch_links_list = [3]
 
-    k_values = [1]#0, 2, 4, 6]
+    k_values = [0, 1, 2, 3]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
                                                             num_hosts_per_switch_list,
                                                             num_per_switch_links_list)
@@ -322,26 +322,8 @@ def main():
     exp.trigger()
     exp.dump_data()
 
-    # exp.data = exp.load_data_merge_nhps(
-    #     ["data/substation_mixed_policy_validation_times_1_iterations_20170103_171921.json",
-    #      "data/substation_mixed_policy_validation_times_1_iterations_20170104_094809.json"])
-    #
-    # exp.data = exp.load_data_merge_iterations(
-    #     ["data/substation_mixed_policy_validation_times_1_iterations_20170105_161120.json",
-    #      "data/substation_mixed_policy_validation_times_1_iterations_20170106_094319.json"], exp.data)
-    #
     # exp.plot_data()
 
-
-    #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json")
-    #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json")
-
-    # exp.data = exp.load_data_merge_iterations(
-    #     ["data/substation_mixed_policy_validation_times_1_iterations_20161214_182509.json",
-    #      "data/substation_mixed_policy_validation_times_1_iterations_20161216_112622.json",
-    #      "data/substation_mixed_policy_validation_times_1_iterations_20170102_130004.json"
-    #      ])
-    # exp.plot_data()
 
 if __name__ == "__main__":
     main()
