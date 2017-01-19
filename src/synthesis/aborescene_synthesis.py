@@ -258,7 +258,7 @@ class AboresceneSynthesis(object):
                                                             self.other_switch_vlan_tagged_packet_rules,
                                                             self.aborescene_forwarding_rules)
 
-    def record_host_host_primary_paths(self, src_sw_node_id, dst_sw_node_id, p):
+    def record_host_host_primary_paths(self, src_sw_node_id, dst_sw_node_id, p, failed_edge=None):
 
         src_sw = self.network_graph.get_node_object(src_sw_node_id)
         dst_sw = self.network_graph.get_node_object(dst_sw_node_id)
@@ -276,7 +276,11 @@ class AboresceneSynthesis(object):
                     in_port = edge_ports_dict[p[i + 1]]
 
                 switch_port_tuple_list.append((p[len(p) - 1], in_port, dst_host.switch_port.port_number))
-                self.synthesis_lib.record_primary_path(src_host, dst_host, switch_port_tuple_list)
+
+                if not failed_edge:
+                    self.synthesis_lib.record_primary_path(src_host, dst_host, switch_port_tuple_list)
+                else:
+                    self.synthesis_lib.record_failover_path(src_host, dst_host, failed_edge, switch_port_tuple_list)
 
     def record_paths(self, k, dst_sw, k_eda):
 
@@ -315,9 +319,11 @@ class AboresceneSynthesis(object):
                 primary_path = sw_primary_tree_paths[src_sw_node][dst_sw_node]
                 for i in range(len(primary_path) - 1):
                     e = primary_path[i], primary_path[i + 1]
-                    failover_path = sw_failover_tree_paths[src_sw_node][dst_sw_node]
 
-                    print primary_path, failover_path
+                    primary_path_chunk = primary_path[0:i]
+                    failover_path = sw_failover_tree_paths[primary_path[i]][dst_sw_node]
+                    total_path = primary_path_chunk + failover_path
+                    self.record_host_host_primary_paths(src_sw_node, dst_sw_node, total_path, e)
 
         self.synthesis_lib.save_synthesized_paths(self.network_graph.network_configuration.conf_path)
 
