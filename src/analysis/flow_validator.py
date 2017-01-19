@@ -351,7 +351,6 @@ class FlowValidator(object):
                                                       dst_port,
                                                       constraint,
                                                       "preempted due to failover ranks active_path:" + str(active_path))
-                                
                                 self.violations.append(v_p)
                         else:
                             for constraint in ps.constraints:
@@ -366,23 +365,26 @@ class FlowValidator(object):
                                                               constraint,
                                                               "preempted due to failover ranks active_path:" + str(
                                                                   active_path))
-
                                         self.violations.append(v_p)
 
                                 if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
 
-                                    if self.is_node_in_zone(failover_path.src_node, ps.src_zone, "ingress") and \
-                                            self.is_node_in_zone(failover_path.dst_node, ps.dst_zone, "egress"):
+                                    passes_links = False
 
+                                    for ld in constraint.constraint_params:
+                                        if failover_path.passes_link(ld):
+                                            passes_links = True
+                                            break
+
+                                    if passes_links:
                                         v_p = PolicyViolation(future_lmbda,
                                                               src_port,
                                                               dst_port,
                                                               constraint,
                                                               "preempted due to failover ranks active_path:" + str(
                                                                   active_path))
-
                                         self.violations.append(v_p)
-                                    
+
     def validate_policy_using_failover_ranks(self, lmbda):
 
         # Perform the validation that needs performing here...
