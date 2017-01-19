@@ -588,7 +588,18 @@ class TestNetworkPortGraph(unittest.TestCase):
 
                 specific_traffic = get_specific_traffic(ng, src_host.node_id, dst_host.node_id)
                 active_analyzed_path = get_active_path(npg, specific_traffic, src_host.switch_port, dst_host.switch_port)
+
+                if src_host.node_id == "h41" and dst_host.node_id == "h11":
+                    pass
+
+                print "--"
+                print synthesized_path
+                print active_analyzed_path
+                print ld
+
                 failover_path = get_failover_path(npg, active_analyzed_path, ld)
+
+                print failover_path
 
                 self.assertEqual(True, failover_path.compare_using_nodes_ids(synthesized_path))
 
