@@ -311,7 +311,7 @@ def main():
     num_iterations = 1
     num_switches_in_clique_list = [4]#[4]
     num_hosts_per_switch_list = [2]#, 4, 6, 8]#, 4, 6, 8, 10]
-    num_per_switch_links_list = [3]
+    num_per_switch_links_list = [2]
 
 
     k_values = [1]#0, 2, 4, 6]
