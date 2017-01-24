@@ -355,11 +355,7 @@ def get_failover_path(pg, path, failed_link):
                        port_graph_edge.edge_data_list,
                        src_spg_at_frac)
 
-        max_vuln_rank = -1
-        for enabling_edge_data in port_graph_edge.edge_data_list:
-            current_edge_data_vuln_rank = enabling_edge_data.get_vuln_rank()
-            if current_edge_data_vuln_rank > max_vuln_rank:
-                max_vuln_rank = current_edge_data_vuln_rank
+        max_vuln_rank = port_graph_edge.get_max_vuln_rank()
 
         # If the admitted traffic's vuln rank via backup_edge is higher than the traffic that was failed
         # TODO: Setting it statically to 1 for now, i.e. not considering multiple link failures (i.e. k=1 synthesis)

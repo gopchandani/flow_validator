@@ -24,6 +24,14 @@ class PortGraphEdge:
     def add_edge_data(self, edge_data):
         self.edge_data_list.append(edge_data)
 
+    def get_max_vuln_rank(self):
+        max_vuln_rank = -1
+        for enabling_edge_data in self.edge_data_list:
+            current_edge_data_vuln_rank = enabling_edge_data.get_vuln_rank()
+            if current_edge_data_vuln_rank > max_vuln_rank:
+                max_vuln_rank = current_edge_data_vuln_rank
+        return max_vuln_rank
+
 
 class NetworkPortGraphEdgeData:
 

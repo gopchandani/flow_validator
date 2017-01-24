@@ -271,9 +271,9 @@ def main():
     # optimizations_to_use = ["With Preemption"]
     # optimizations_to_use = ["Without Preemption"]
 
-    k_values = [0]#, 3]#, 4]
+    k_values = [1, 2, 3]
     num_switches_in_clique_list = [4]
-    num_per_switch_links_list = [2]#, 3]
+    num_per_switch_links_list = [2, 3]
     num_hosts_per_switch_list = [1]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
@@ -284,7 +284,7 @@ def main():
 
     exp.trigger()
     exp.dump_data()
-    # exp.plot_data()
+    exp.plot_data()
 
 if __name__ == "__main__":
     main()
