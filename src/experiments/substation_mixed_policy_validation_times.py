@@ -309,7 +309,7 @@ def main():
 
     num_iterations = 1
     num_switches_in_clique_list = [4]
-    num_hosts_per_switch_list = [2]# 4, 6, 8]
+    num_hosts_per_switch_list = [2, 4, 6, 8]
     num_per_switch_links_list = [3]
 
     k_values = [0, 1, 2, 3]
@@ -319,10 +319,9 @@ def main():
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
 
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170119_135941.json")
     exp.plot_data()
 
 

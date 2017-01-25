@@ -226,11 +226,11 @@ class FlowValidator(object):
     def remove_from_validation_map(self, src_port, dst_port, future_lmbda):
         del self.validation_map[future_lmbda][(src_port, dst_port)]
 
-        print "Removed:", future_lmbda, "for src_port:", src_port, "dst_port:", dst_port
+        #print "Removed:", future_lmbda, "for src_port:", src_port, "dst_port:", dst_port
 
         # If all the cases under a perm are gone, then get rid of the key.
         if not self.validation_map[future_lmbda]:
-            print "Removed perm:", future_lmbda
+            #print "Removed perm:", future_lmbda
             del self.validation_map[future_lmbda]
 
     def validate_policy_without_preemption(self, lmbda):
@@ -254,7 +254,7 @@ class FlowValidator(object):
                     continue
 
                 # Fail the link
-                print "Failing:", next_link_to_fail
+                #print "Failing:", next_link_to_fail
                 self.port_graph.remove_node_graph_link(next_link_to_fail.forward_link[0],
                                                        next_link_to_fail.forward_link[1])
                 lmbda.append(next_link_to_fail)
@@ -263,7 +263,7 @@ class FlowValidator(object):
                 self.validate_policy_without_preemption(lmbda)
 
                 # Restore the link
-                print "Restoring:", next_link_to_fail
+                #print "Restoring:", next_link_to_fail
                 self.port_graph.add_node_graph_link(next_link_to_fail.forward_link[0],
                                                     next_link_to_fail.forward_link[1],
                                                     updating=True)
@@ -375,11 +375,10 @@ class FlowValidator(object):
 
                 # After checking for preemption, if the permutation is not in validation_map, then no need to test it
                 if len(lmbda) == self.max_k - 1:
-                    print "Truncated recursion tree for:", tuple(lmbda + [next_link_to_fail])
+                    #print "Truncated recursion tree for:", tuple(lmbda + [next_link_to_fail])
                     continue
-
                 # Fail the link
-                print "Failing:", next_link_to_fail
+                #print "Failing:", next_link_to_fail
                 self.port_graph.remove_node_graph_link(next_link_to_fail.forward_link[0],
                                                        next_link_to_fail.forward_link[1])
                 lmbda.append(next_link_to_fail)
@@ -388,7 +387,7 @@ class FlowValidator(object):
                 self.validate_policy_with_preemption(lmbda)
 
                 # Restore the link
-                print "Restoring:", next_link_to_fail
+                #print "Restoring:", next_link_to_fail
                 self.port_graph.add_node_graph_link(next_link_to_fail.forward_link[0],
                                                     next_link_to_fail.forward_link[1],
                                                     updating=True)
