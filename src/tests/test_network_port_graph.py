@@ -7,7 +7,7 @@ from model.traffic import Traffic
 from model.traffic_path import TrafficPath
 from model.network_port_graph import NetworkPortGraph
 from experiments.network_configuration import NetworkConfiguration
-from analysis.util import get_paths, get_active_path, link_failure_causes_path_disconnect, get_failover_path
+from analysis.util import get_paths, get_active_path, link_failure_causes_path_disconnect, get_failover_path, get_failover_path_after_failed_sequence
 from analysis.util import get_specific_traffic, get_admitted_traffic
 
 
@@ -627,6 +627,56 @@ class TestNetworkPortGraph(unittest.TestCase):
                         # Restore the link for real
                         npg.add_node_graph_link(*ld1.forward_link, updating=True)
 
+
+    def compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(self, nc, ng, npg):
+
+        if not nc.load_config and nc.save_config:
+            synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
+            synthesized_failover_paths = nc.synthesis.synthesis_lib.synthesized_failover_paths
+        else:
+            with open(nc.conf_path + "synthesized_primary_paths.json", "r") as in_file:
+                synthesized_primary_paths = json.loads(in_file.read())
+
+            with open(nc.conf_path + "synthesized_failover_paths.json", "r") as in_file:
+                synthesized_failover_paths = json.loads(in_file.read())
+
+        # First knock out one link for real
+        for src_host, dst_host in ng.host_obj_pair_iter():
+
+            specific_traffic = get_specific_traffic(ng, src_host.node_id, dst_host.node_id)
+
+            active_path_before_failures = get_active_path(npg, specific_traffic,
+                                                          src_host.switch_port, dst_host.switch_port)
+
+            for ld1 in ng.get_switch_link_data():
+
+                # If an link has been failed, first check both permutation of link switches, if neither is found,
+                # then refer to primary path by assuming that the given link did not participate in the failover of
+                # the given host pair.
+                try:
+                    synthesized_path = synthesized_failover_paths[src_host.node_id][dst_host.node_id][ld1.forward_link[0]][ld1.forward_link[1]]
+                except KeyError:
+                    try:
+                        synthesized_path = synthesized_failover_paths[src_host.node_id][dst_host.node_id][ld1.forward_link[1]][ld1.forward_link[0]]
+                    except KeyError:
+                        synthesized_path = synthesized_primary_paths[src_host.node_id][dst_host.node_id]
+
+                for ld2 in ng.get_switch_link_data():
+
+                    # Don't fail same link twice...
+                    if ld1 == ld2:
+                        continue
+
+                    failover_path = get_failover_path_after_failed_sequence(npg,
+                                                                            active_path_before_failures,
+                                                                            [ld1, ld2])
+
+                    if active_path_before_failures.passes_link(ld1) and not active_path_before_failures.passes_link(ld2):
+                        self.assertEqual(failover_path, None)
+
+                    # elif active_path_before_failures.passes_link(ld1) and active_path_before_failures.passes_link(ld2):
+                    #     self.assertEqual(True, failover_path.compare_using_nodes_ids(synthesized_path))
+
     def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
         self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
             self.nc_ring_aborescene_apply_true,
@@ -650,6 +700,18 @@ class TestNetworkPortGraph(unittest.TestCase):
             self.nc_ring_dijkstra_apply_true,
             self.ng_ring_dijkstra_apply_true_report_active_false,
             self.npg_ring_dijkstra_apply_true_report_active_false)
+
+    def test_fail_two_link_sequence_failover_path_ring_dijkstra_apply_true_report_active_false(self):
+        self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
+            self.nc_ring_dijkstra_apply_true,
+            self.ng_ring_dijkstra_apply_true_report_active_false,
+            self.npg_ring_dijkstra_apply_true_report_active_false)
+
+    def test_fail_two_link_sequence_failover_path_ring_aborescene_apply_true_report_active_false(self):
+        self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
+            self.nc_ring_aborescene_apply_true,
+            self.ng_ring_aborescene_apply_true_report_active_false,
+            self.npg_ring_aborescene_apply_true_report_active_false)
 
 if __name__ == '__main__':
     unittest.main()

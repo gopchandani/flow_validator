@@ -385,3 +385,16 @@ def get_failover_path(pg, path, failed_link):
                 break
 
     return failover_path
+
+
+def get_failover_path_after_failed_sequence(pg, current_path, failed_link_sequence):
+    
+    for ld in failed_link_sequence:
+        failover_path_after_failure = get_failover_path(pg, current_path, ld)
+        
+        if failover_path_after_failure:
+            current_path = failover_path_after_failure
+        else:
+            break
+
+    return failover_path_after_failure
