@@ -265,10 +265,8 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 def main():
 
     num_iterations = 1
-
     #optimizations_to_use = ["Without Preemption", "With Preemption"]
-
-    optimizations_to_use = ["Without Preemption", "With Preemption", "With Preemption 2"]
+    optimizations_to_use = ["With Preemption"]
     # optimizations_to_use = ["Without Preemption"]
 
     k_values = [1, 2]#[1, 2, 3]
