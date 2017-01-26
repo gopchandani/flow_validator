@@ -16,7 +16,7 @@ from sel_controller import Session, OperationalTree, ConfigTree
 
 class NetworkGraphLinkData(object):
 
-    def __init__(self, node1_id, node1_port, node2_id, node2_port, link_type):
+    def __init__(self, network_graph, node1_id, node1_port, node2_id, node2_port, link_type):
 
         # Make it so that links between switches are always added from the lower sw id to higher sw id:
         if link_type == "switch":
@@ -29,6 +29,10 @@ class NetworkGraphLinkData(object):
                 node1_port = node2_port
                 node2_port = swap
 
+        self.node1_id = str(node1_id)
+        self.node2_id = str(node2_id)
+
+        self.network_graph = network_graph
         self.link_tuple = (node1_id, node2_id)
         self.link_ports_dict = {str(node1_id): node1_port, str(node2_id): node2_port}
         self.link_type = link_type
@@ -43,6 +47,20 @@ class NetworkGraphLinkData(object):
 
         self.forward_link = (str(node1_id), str(node2_id))
         self.reverse_link = (str(node2_id), str(node1_id))
+
+    def set_link_ports_down(self):
+        sw1 = self.network_graph.get_node_object(self.node1_id)
+        sw2 = self.network_graph.get_node_object(self.node2_id)
+
+        sw1.ports[self.link_ports_dict[self.node1_id]].state = "down"
+        sw2.ports[self.link_ports_dict[self.node2_id]].state = "down"
+
+    def set_link_ports_up(self):
+        sw1 = self.network_graph.get_node_object(self.node1_id)
+        sw2 = self.network_graph.get_node_object(self.node2_id)
+
+        sw1.ports[self.link_ports_dict[self.node1_id]].state = "up"
+        sw2.ports[self.link_ports_dict[self.node2_id]].state = "up"
 
     def __str__(self):
         return str(self.forward_link)
@@ -274,7 +292,7 @@ class NetworkGraph(object):
         else:
             raise Exception("Unknown Link Type")
 
-        link_data = NetworkGraphLinkData(node1_id, node1_port, node2_id, node2_port, link_type)
+        link_data = NetworkGraphLinkData(self, node1_id, node1_port, node2_id, node2_port, link_type)
 
         self.graph.add_edge(node1_id,
                             node2_id,

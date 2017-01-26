@@ -58,12 +58,26 @@ class Action:
             self.parse_sel_action_json()
 
     def get_active_rank(self):
+        active_rank = -1
 
-        prior_active_watch_ports = []
         if self.bucket:
-            prior_active_watch_ports = self.bucket.prior_active_watch_ports()
+            # If it is one of those buckets that comes with a watch port, check for liveness
+            if self.bucket.watch_port:
+                if self.bucket.is_live():
+                    prior_active_watch_ports = self.bucket.prior_active_watch_ports()
+                    active_rank = len(prior_active_watch_ports)
+            else:
+            # Otherwise, the only reason this action would be active is that its out_port is up
+                if self.action_type == "output":
+                    if self.sw.ports[self.out_port].state == "up":
+                        active_rank = 0
+        else:
+            # If there are no buckets involved..
+            if self.action_type == "output":
+                if self.sw.ports[self.out_port].state == "up":
+                    active_rank = 0
 
-        return len(prior_active_watch_ports)
+        return active_rank
 
     def parse_onos_action_json(self):
 

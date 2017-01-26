@@ -94,7 +94,7 @@ class Instruction:
             raise NotImplementedError
 
 
-class InstructionSet():
+class InstructionSet:
 
     '''
     As per OF1.3 specification:

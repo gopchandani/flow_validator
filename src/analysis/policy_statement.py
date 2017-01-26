@@ -51,7 +51,7 @@ class PolicyStatement(object):
         self.constraints = constraints
         self.k = k
 
-        # Convert constraint links to NetworkGraphLinkData objects
+        # Convert constraint link tuples to objects
         for c in self.constraints:
             if c.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
                 converted_links = []

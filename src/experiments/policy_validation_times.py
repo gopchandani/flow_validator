@@ -266,14 +266,14 @@ def main():
 
     num_iterations = 1
 
-    optimizations_to_use = ["Without Preemption", "With Preemption"]
+    #optimizations_to_use = ["Without Preemption", "With Preemption"]
 
-    # optimizations_to_use = ["With Preemption"]
+    optimizations_to_use = ["With Preemption 2"]
     # optimizations_to_use = ["Without Preemption"]
 
-    k_values = [1, 2, 3]
+    k_values = [2]#[1, 2, 3]
     num_switches_in_clique_list = [4]
-    num_per_switch_links_list = [2, 3]
+    num_per_switch_links_list = [2]#[2, 3]
     num_hosts_per_switch_list = [1]
 
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,

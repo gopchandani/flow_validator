@@ -144,8 +144,10 @@ def get_path_with_active_rank(pg, specific_traffic, src_port, dst_port, required
     # Get the path that is currently active
     active_path = None
     for path in paths:
-        active_rank = path.get_max_active_rank()
-        if active_rank == required_active_rank:
+        min_active_rank = path.get_min_active_rank()
+        max_active_rank = path.get_max_active_rank()
+
+        if min_active_rank == required_active_rank and max_active_rank == required_active_rank:
             active_path = path
             break
 
@@ -355,11 +357,10 @@ def get_failover_path(pg, path, failed_link):
                        port_graph_edge.edge_data_list,
                        src_spg_at_frac)
 
-        max_vuln_rank = port_graph_edge.get_max_vuln_rank()
+        # Ensure that this alternative edge is currently in effect
+        max_active_rank = port_graph_edge.get_max_active_rank()
 
-        # If the admitted traffic's vuln rank via backup_edge is higher than the traffic that was failed
-        # TODO: Setting it statically to 1 for now, i.e. not considering multiple link failures (i.e. k=1 synthesis)
-        if max_vuln_rank == 1:
+        if max_active_rank == 0:
 
             backup_succ_succ = list(pg.successors_iter(backup_succ))[0]
 
@@ -370,14 +371,14 @@ def get_failover_path(pg, path, failed_link):
 
             succ_succ_edge = ((backup_succ, backup_succ_succ), port_graph_edge.edge_data_list, src_spg_at_frac)
 
-            modified_src_spg_at_frac.set_field("in_port", int( backup_succ_succ.parent_obj.port_number))
+            modified_src_spg_at_frac.set_field("in_port", int(backup_succ_succ.parent_obj.port_number))
 
             # Get the remainder of the active path and stick up the whole path together
-
             rest_of_the_active_path = get_path_with_active_rank(pg,
                                                                 modified_src_spg_at_frac,
                                                                 backup_succ_succ.parent_obj,
                                                                 dst.parent_obj, 0)
+
             if rest_of_the_active_path:
                 rest_of_edges = rest_of_the_active_path.path_edges
                 failover_path = TrafficPath(pg,
@@ -388,13 +389,20 @@ def get_failover_path(pg, path, failed_link):
 
 
 def get_failover_path_after_failed_sequence(pg, current_path, failed_link_sequence):
-    
+
+    failover_path_after_failure = current_path
+
     for ld in failed_link_sequence:
+        ld.set_link_ports_down()
+
         failover_path_after_failure = get_failover_path(pg, current_path, ld)
-        
+
         if failover_path_after_failure:
             current_path = failover_path_after_failure
         else:
             break
+
+    for ld in failed_link_sequence:
+        ld.set_link_ports_up()
 
     return failover_path_after_failure

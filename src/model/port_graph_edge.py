@@ -32,6 +32,14 @@ class PortGraphEdge:
                 max_vuln_rank = current_edge_data_vuln_rank
         return max_vuln_rank
 
+    def get_max_active_rank(self):
+        max_active_rank = -1
+        for enabling_edge_data in self.edge_data_list:
+            current_edge_data_active_rank = enabling_edge_data.get_active_rank()
+            if current_edge_data_active_rank > max_active_rank:
+                max_active_rank = current_edge_data_active_rank
+        return max_active_rank
+
 
 class NetworkPortGraphEdgeData:
 
@@ -85,10 +93,10 @@ class SwitchPortGraphEdgeData:
         if self.edge_action:
             return self.edge_action.vuln_rank
         else:
-            return 0
+            return -1
 
     def get_active_rank(self):
         if self.edge_action:
             return self.edge_action.get_active_rank()
         else:
-            return 0
+            return -1

@@ -7,7 +7,7 @@ from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
 from util import get_specific_traffic
-from util import get_admitted_traffic, get_paths, get_active_path, get_failover_path
+from util import get_admitted_traffic, get_paths, get_active_path, get_failover_path, get_failover_path_after_failed_sequence
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
@@ -393,6 +393,87 @@ class FlowValidator(object):
                                                     updating=True)
                 lmbda.remove(next_link_to_fail)
 
+    def validate_policy_with_preemption_2(self):
+
+        for lmbda in self.validation_map:
+            for src_port, dst_port in list(self.validation_map[lmbda].keys()):
+                for ps in self.validation_map[lmbda][(src_port, dst_port)]:
+
+                    if src_port.port_id == "s1:1" and dst_port.port_id == "s2:1":
+                        pass
+
+                    ps.traffic.set_field("ethernet_source",
+                                         int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+                    ps.traffic.set_field("ethernet_destination",
+                                         int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+                    ps.traffic.set_field("in_port",
+                                         int(src_port.port_number))
+
+                    active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)
+
+                    if active_path:
+                        failover_path = get_failover_path_after_failed_sequence(self.port_graph, active_path, lmbda)
+
+                    else:
+                        # If no active paths are found, then report violations
+                        disconnected_path = True
+
+                    if not failover_path:
+
+                        for constraint in ps.constraints:
+
+                            # If there is a disconnection, the isolation  is satisfied, others are violated
+                            if constraint.constraint_type == ISOLATION_CONSTRAINT:
+                                continue
+
+                            # There needs to be a path to violate link avoidance constraint
+                            if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
+                                continue
+
+                            # There needs to be a path to violate the length constraint
+                            if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
+                                continue
+
+                            v_p = PolicyViolation(lmbda,
+                                                  src_port,
+                                                  dst_port,
+                                                  constraint,
+                                                  "preempted due to failover ranks active_path:" + str(active_path))
+
+                            self.violations.append(v_p)
+                    else:
+                        for constraint in ps.constraints:
+
+                            # Need to still check what the path is going to be for these two constraints.
+                            if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
+
+                                if len(failover_path) > constraint.constraint_params:
+                                    v_p = PolicyViolation(lmbda,
+                                                          src_port,
+                                                          dst_port,
+                                                          constraint,
+                                                          "preempted due to failover ranks active_path:" + str(
+                                                              active_path))
+                                    self.violations.append(v_p)
+
+                            if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
+
+                                passes_links = False
+
+                                for ld in constraint.constraint_params:
+                                    if failover_path.passes_link(ld):
+                                        passes_links = True
+                                        break
+
+                                if passes_links:
+                                    v_p = PolicyViolation(lmbda,
+                                                          src_port,
+                                                          dst_port,
+                                                          constraint,
+                                                          "preempted due to failover ranks active_path:" + str(
+                                                              active_path))
+                                    self.violations.append(v_p)
+
     def init_policy_validation(self, policy_statement_list, optimization_type):
 
         self.optimization_type = optimization_type
@@ -409,14 +490,10 @@ class FlowValidator(object):
 
         for ps in policy_statement_list:
             for i in range(ps.k+1):
-
                 for link_perm in itertools.permutations(self.L, i):
-
                     for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
-
                         if (src_port, dst_port) not in self.validation_map[link_perm]:
                             self.validation_map[link_perm][(src_port, dst_port)] = []
-
                         self.validation_map[link_perm][(src_port, dst_port)].append(ps)
 
         # Now the validation
@@ -426,6 +503,8 @@ class FlowValidator(object):
 
         if self.optimization_type == "With Preemption":
             self.validate_policy_with_preemption(lmbda)
+        elif self.optimization_type == "With Preemption 2":
+            self.validate_policy_with_preemption_2()
         elif self.optimization_type == "Without Preemption":
             self.validate_policy_without_preemption(lmbda)
 
