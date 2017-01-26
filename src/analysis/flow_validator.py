@@ -294,7 +294,9 @@ class FlowValidator(object):
                         self.remove_from_validation_map(src_port, dst_port, tuple(lmbda + [next_link_to_fail]))
 
                         if active_path:
+                            next_link_to_fail.set_link_ports_down()
                             failover_path = get_failover_path(self.port_graph, active_path, next_link_to_fail)
+                            next_link_to_fail.set_link_ports_up()
 
                         else:
                             # If no active paths are found, then report violations
@@ -397,10 +399,8 @@ class FlowValidator(object):
 
         for lmbda in self.validation_map:
             for src_port, dst_port in list(self.validation_map[lmbda].keys()):
-                for ps in self.validation_map[lmbda][(src_port, dst_port)]:
 
-                    if src_port.port_id == "s1:1" and dst_port.port_id == "s2:1":
-                        pass
+                for ps in self.validation_map[lmbda][(src_port, dst_port)]:
 
                     ps.traffic.set_field("ethernet_source",
                                          int(src_port.attached_host.mac_addr.replace(":", ""), 16))
