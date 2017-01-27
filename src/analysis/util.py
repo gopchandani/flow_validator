@@ -122,23 +122,6 @@ def get_admitted_traffic(pg, src_port, dst_port):
 
 def get_active_path(pg, specific_traffic, src_port, dst_port):
 
-    at = get_admitted_traffic(pg, src_port, dst_port)
-    at_int = specific_traffic.intersect(at)
-    paths = get_paths(pg, at_int, src_port, dst_port)
-
-    # Get the path that is currently active
-    active_path = None
-    for path in paths:
-        active_rank = path.get_max_active_rank()
-        if active_rank == 0:
-            active_path = path
-            break
-
-    return active_path
-
-
-def get_path_with_active_rank(pg, specific_traffic, src_port, dst_port, required_active_rank):
-
     paths = get_paths(pg, specific_traffic, src_port, dst_port)
 
     # Get the path that is currently active
@@ -146,8 +129,7 @@ def get_path_with_active_rank(pg, specific_traffic, src_port, dst_port, required
     for path in paths:
         min_active_rank = path.get_min_active_rank()
         max_active_rank = path.get_max_active_rank()
-
-        if min_active_rank == required_active_rank and max_active_rank == required_active_rank:
+        if min_active_rank == 0 and max_active_rank == 0:
             active_path = path
             break
 
@@ -311,10 +293,10 @@ def get_failover_path(pg, path, failed_link):
             modified_src_spg_at_frac.set_field("in_port", int(backup_succ_succ.parent_obj.port_number))
 
             # Get the remainder of the active path and stick up the whole path together
-            rest_of_the_active_path = get_path_with_active_rank(pg,
-                                                                modified_src_spg_at_frac,
-                                                                backup_succ_succ.parent_obj,
-                                                                dst.parent_obj, 0)
+            rest_of_the_active_path = get_active_path(pg,
+                                                      modified_src_spg_at_frac,
+                                                      backup_succ_succ.parent_obj,
+                                                      dst.parent_obj)
 
             if rest_of_the_active_path:
                 rest_of_edges = rest_of_the_active_path.path_edges
