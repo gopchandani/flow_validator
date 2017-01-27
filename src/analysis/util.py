@@ -122,23 +122,6 @@ def get_admitted_traffic(pg, src_port, dst_port):
 
 def get_active_path(pg, specific_traffic, src_port, dst_port):
 
-    at = get_admitted_traffic(pg, src_port, dst_port)
-    at_int = specific_traffic.intersect(at)
-    paths = get_paths(pg, at_int, src_port, dst_port)
-
-    # Get the path that is currently active
-    active_path = None
-    for path in paths:
-        active_rank = path.get_max_active_rank()
-        if active_rank == 0:
-            active_path = path
-            break
-
-    return active_path
-
-
-def get_path_with_active_rank(pg, specific_traffic, src_port, dst_port, required_active_rank):
-
     paths = get_paths(pg, specific_traffic, src_port, dst_port)
 
     # Get the path that is currently active
@@ -146,8 +129,7 @@ def get_path_with_active_rank(pg, specific_traffic, src_port, dst_port, required
     for path in paths:
         min_active_rank = path.get_min_active_rank()
         max_active_rank = path.get_max_active_rank()
-
-        if min_active_rank == required_active_rank and max_active_rank == required_active_rank:
+        if min_active_rank == 0 and max_active_rank == 0:
             active_path = path
             break
 
@@ -256,69 +238,6 @@ def get_admitted_traffic_succs_to_dst_sw(pg, node, dst, traffic_at_pred, exclude
     return succs
 
 
-def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, affected_traffic, vuln_rank, dst):
-
-    succs_traffic = []
-
-    # Get possible successors except the one which that has failed
-    possible_succs = get_admitted_traffic_succs_to_dst_sw(pg,
-                                                          pred,
-                                                          dst,
-                                                          affected_traffic,
-                                                          excluded_succ=failed_succ)
-
-    for succ in possible_succs:
-
-        # First, check to see if the successor would carry some of the traffic from here
-        at_dst_via_succ = get_admitted_traffic_via_succ_port(pg, pred.parent_obj, succ.parent_obj, dst.parent_obj)
-        traffic_to_carry_succ = affected_traffic.get_modified_traffic(use_embedded_switch_modifications=True)
-
-        if at_dst_via_succ.is_subset_traffic(traffic_to_carry_succ):
-
-            succ_int = traffic_to_carry_succ.intersect(at_dst_via_succ, keep_all=True)
-
-            traffic_at_backup_succ = succ_int.get_modified_traffic()
-            enabling_edge_data_list = succ_int.get_enabling_edge_data()
-
-            # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
-            if enabling_edge_data_list:
-
-                vuln_rank_check = True
-                for ed in enabling_edge_data_list:
-                    if ed.get_vuln_rank() != vuln_rank:
-                        vuln_rank_check = False
-
-                if vuln_rank_check:
-                    succs_traffic.append((succ, traffic_at_backup_succ))
-
-    return succs_traffic
-
-
-def link_failure_causes_path_disconnect(pg, path, failed_link):
-
-    prior_edges, affected_edge = path.is_path_affected(failed_link)
-    link_causes_disconnect = False
-
-    if affected_edge:
-
-        # Check if a backup successors nodes exist that would carry this traffic
-        # Find the first instance of when the failed link appears in the path
-        backup_succ_nodes_and_traffic_at_succ_nodes = \
-            get_succs_with_admitted_traffic_and_vuln_rank(pg,
-                                                          pred=affected_edge[0][0],
-                                                          failed_succ=affected_edge[0][1],
-                                                          affected_traffic=affected_edge[2],
-                                                          vuln_rank=1,
-                                                          dst=path.dst_node)
-
-        if backup_succ_nodes_and_traffic_at_succ_nodes:
-            link_causes_disconnect = False
-        else:
-            link_causes_disconnect = True
-
-    return link_causes_disconnect
-
-
 def get_failover_path(pg, path, failed_link):
 
     prior_edges, affected_edge = path.is_path_affected(failed_link)
@@ -374,10 +293,10 @@ def get_failover_path(pg, path, failed_link):
             modified_src_spg_at_frac.set_field("in_port", int(backup_succ_succ.parent_obj.port_number))
 
             # Get the remainder of the active path and stick up the whole path together
-            rest_of_the_active_path = get_path_with_active_rank(pg,
-                                                                modified_src_spg_at_frac,
-                                                                backup_succ_succ.parent_obj,
-                                                                dst.parent_obj, 0)
+            rest_of_the_active_path = get_active_path(pg,
+                                                      modified_src_spg_at_frac,
+                                                      backup_succ_succ.parent_obj,
+                                                      dst.parent_obj)
 
             if rest_of_the_active_path:
                 rest_of_edges = rest_of_the_active_path.path_edges

@@ -7,7 +7,7 @@ from model.traffic import Traffic
 from model.traffic_path import TrafficPath
 from model.network_port_graph import NetworkPortGraph
 from experiments.network_configuration import NetworkConfiguration
-from analysis.util import get_paths, get_active_path, link_failure_causes_path_disconnect, get_failover_path, get_failover_path_after_failed_sequence
+from analysis.util import get_paths, get_active_path, get_failover_path, get_failover_path_after_failed_sequence
 from analysis.util import get_specific_traffic, get_admitted_traffic
 
 
@@ -490,76 +490,6 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                  self.ng_clos_dijkstra.graph.edges())
         self.assertEqual(paths_match, True)
 
-    def check_single_link_failure_causes_path_disconnect(self, ng, npg):
-
-        # Test for every host pair
-        for src_h_obj, dst_h_obj in ng.host_obj_pair_iter():
-
-            specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
-            active_path = get_active_path(npg,
-                                          specific_traffic,
-                                          src_h_obj.switch_port,
-                                          dst_h_obj.switch_port)
-
-            # Test pretend-failure each link
-            for ld in ng.get_switch_link_data():
-                fails = link_failure_causes_path_disconnect(npg, active_path, ld)
-                self.assertEqual(fails, False)
-
-    def check_two_link_failure_causes_path_disconnect(self, ng, npg):
-
-        # First knock out one link for real
-        for ld1 in ng.get_switch_link_data():
-
-            npg.remove_node_graph_link(*ld1.forward_link)
-
-            # Test for every host pair
-            for src_h_obj, dst_h_obj in ng.host_obj_pair_iter():
-
-                specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
-                active_path_before = get_active_path(npg,
-                                                     specific_traffic,
-                                                     src_h_obj.switch_port,
-                                                     dst_h_obj.switch_port)
-
-                # Test pretend-failure each link
-                for ld2 in ng.get_switch_link_data():
-
-                    # Don't fail same link twice...
-                    if ld1 == ld2:
-                        continue
-
-                    specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
-                    active_path_after = get_active_path(npg,
-                                                        specific_traffic,
-                                                        src_h_obj.switch_port,
-                                                        dst_h_obj.switch_port)
-
-                    fails = link_failure_causes_path_disconnect(npg, active_path_after, ld2)
-
-                    if active_path_before.passes_link(ld1):
-                        if active_path_after.passes_link(ld2):
-                            self.assertEqual(fails, True)
-
-            # Restore the link for real
-            npg.add_node_graph_link(*ld1.forward_link, updating=True)
-
-    def test_single_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
-        self.check_single_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true_report_active_false,
-                                                              self.npg_ring_aborescene_apply_true_report_active_false)
-
-    def test_two_link_failure_causes_path_disconnect_ring_aborescene_apply_true_report_active_false(self):
-        self.check_two_link_failure_causes_path_disconnect(self.ng_ring_aborescene_apply_true_report_active_false,
-                                                           self.npg_ring_aborescene_apply_true_report_active_false)
-
-    def test_single_link_failure_causes_path_disconnect_clos_dijkstra_report_active_false(self):
-        self.check_single_link_failure_causes_path_disconnect(self.ng_clos_dijkstra_report_active_false,
-                                                              self.npg_clos_dijkstra_report_active_false)
-
-    def test_two_link_failure_causes_path_disconnect_clos_dijkstra_report_active_false(self):
-        self.check_two_link_failure_causes_path_disconnect(self.ng_clos_dijkstra_report_active_false,
-                                                           self.npg_clos_dijkstra_report_active_false)
-
     def compare_failover_paths_with_synthesis_report_active_false_single_failure(self, nc, ng, npg):
 
         if not nc.load_config and nc.save_config:
@@ -677,35 +607,35 @@ class TestNetworkPortGraph(unittest.TestCase):
                     if active_path_before_failures.passes_link(ld1) and not active_path_before_failures.passes_link(ld2):
                         self.assertEqual(failover_path, None)
 
-    def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
-            self.nc_ring_aborescene_apply_true,
-            self.ng_ring_aborescene_apply_true_report_active_false,
-            self.npg_ring_aborescene_apply_true_report_active_false)
-
     def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
         self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
             self.nc_ring_dijkstra_apply_true,
             self.ng_ring_dijkstra_apply_true_report_active_false,
             self.npg_ring_dijkstra_apply_true_report_active_false)
 
-    def test_double_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
-            self.nc_ring_aborescene_apply_true,
-            self.ng_ring_aborescene_apply_true_report_active_false,
-            self.npg_ring_aborescene_apply_true_report_active_false)
-
-    def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
-            self.nc_ring_dijkstra_apply_true,
-            self.ng_ring_dijkstra_apply_true_report_active_false,
-            self.npg_ring_dijkstra_apply_true_report_active_false)
+    # def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
+    #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
+    #         self.nc_ring_dijkstra_apply_true,
+    #         self.ng_ring_dijkstra_apply_true_report_active_false,
+    #         self.npg_ring_dijkstra_apply_true_report_active_false)
 
     def test_fail_two_link_sequence_failover_path_ring_dijkstra_apply_true_report_active_false(self):
         self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
             self.nc_ring_dijkstra_apply_true,
             self.ng_ring_dijkstra_apply_true_report_active_false,
             self.npg_ring_dijkstra_apply_true_report_active_false)
+
+    def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
+        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+            self.nc_ring_aborescene_apply_true,
+            self.ng_ring_aborescene_apply_true_report_active_false,
+            self.npg_ring_aborescene_apply_true_report_active_false)
+
+    # def test_double_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
+    #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
+    #         self.nc_ring_aborescene_apply_true,
+    #         self.ng_ring_aborescene_apply_true_report_active_false,
+    #         self.npg_ring_aborescene_apply_true_report_active_false)
 
     def test_fail_two_link_sequence_failover_path_ring_aborescene_apply_true_report_active_false(self):
         self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(

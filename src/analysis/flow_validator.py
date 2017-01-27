@@ -7,7 +7,7 @@ from collections import defaultdict
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
 from util import get_specific_traffic
-from util import get_admitted_traffic, get_paths, get_active_path, get_failover_path, get_failover_path_after_failed_sequence
+from util import get_admitted_traffic, get_active_path, get_failover_path_after_failed_sequence
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
@@ -44,12 +44,13 @@ class FlowValidator(object):
 
                 specific_traffic = get_specific_traffic(self.network_graph, src_h_id, dst_h_id)
 
-                all_paths = get_paths(self.port_graph,
-                                      specific_traffic,
-                                      src_host_obj.switch_port,
-                                      dst_host_obj.switch_port)
+                path = get_active_path(self.port_graph,
+                                       specific_traffic,
+                                       src_host_obj.switch_port,
+                                       dst_host_obj.switch_port)
 
-                for path in all_paths:
+                if path:
+
                     if verbose:
                         print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "path:", path
 
@@ -290,7 +291,7 @@ class FlowValidator(object):
 
                     else:
                         # If no active paths are found, then report violations
-                        disconnected_path = True
+                        failover_path = None
 
                     if not failover_path:
 

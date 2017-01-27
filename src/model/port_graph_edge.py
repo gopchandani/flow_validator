@@ -24,14 +24,6 @@ class PortGraphEdge:
     def add_edge_data(self, edge_data):
         self.edge_data_list.append(edge_data)
 
-    def get_max_vuln_rank(self):
-        max_vuln_rank = -1
-        for enabling_edge_data in self.edge_data_list:
-            current_edge_data_vuln_rank = enabling_edge_data.get_vuln_rank()
-            if current_edge_data_vuln_rank > max_vuln_rank:
-                max_vuln_rank = current_edge_data_vuln_rank
-        return max_vuln_rank
-
     def get_max_active_rank(self):
         max_active_rank = -1
         for enabling_edge_data in self.edge_data_list:
@@ -48,21 +40,6 @@ class NetworkPortGraphEdgeData:
         self.edge_filter_traffic = edge_filter_traffic
         self.applied_modifications = applied_modifications
         self.switch_port_graph_paths = switch_port_graph_paths
-
-    def get_vuln_rank(self):
-
-        # If it is an edge that does not depend on switch_port_graph_paths, then say zero
-        if self.switch_port_graph_paths == None:
-            return 0
-
-        # Do a min over paths for getting vuln_rank
-        min_vuln_rank = 100000
-        for tp in self.switch_port_graph_paths:
-            path_max_vuln_rank = tp.get_max_vuln_rank()
-            if path_max_vuln_rank < min_vuln_rank:
-                min_vuln_rank = path_max_vuln_rank
-
-        return min_vuln_rank
 
     def get_active_rank(self):
 
@@ -88,12 +65,6 @@ class SwitchPortGraphEdgeData:
         self.edge_action = edge_action
         self.applied_modifications = applied_modifications
         self.written_modifications = written_modifications
-
-    def get_vuln_rank(self):
-        if self.edge_action:
-            return self.edge_action.vuln_rank
-        else:
-            return -1
 
     def get_active_rank(self):
         if self.edge_action:
