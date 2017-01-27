@@ -205,18 +205,12 @@ class Group:
         # If it is a fast-failover group, collect the bucket which is active
         elif self.group_type == self.sw.network_graph.GROUP_FF:
 
-            # Add all actions, set the vuln ranks
+            # Add all actions
             i = 0
             while i < len(self.bucket_list):
                 this_bucket = self.bucket_list[i]
-
-                for action in this_bucket.action_list:
-                    action.vuln_rank = i
-
                 action_list.extend(this_bucket.action_list)
-
                 i += 1
-
         return action_list
 
     def get_first_live_bucket(self):

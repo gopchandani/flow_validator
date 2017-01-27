@@ -256,69 +256,6 @@ def get_admitted_traffic_succs_to_dst_sw(pg, node, dst, traffic_at_pred, exclude
     return succs
 
 
-def get_succs_with_admitted_traffic_and_vuln_rank(pg, pred, failed_succ, affected_traffic, vuln_rank, dst):
-
-    succs_traffic = []
-
-    # Get possible successors except the one which that has failed
-    possible_succs = get_admitted_traffic_succs_to_dst_sw(pg,
-                                                          pred,
-                                                          dst,
-                                                          affected_traffic,
-                                                          excluded_succ=failed_succ)
-
-    for succ in possible_succs:
-
-        # First, check to see if the successor would carry some of the traffic from here
-        at_dst_via_succ = get_admitted_traffic_via_succ_port(pg, pred.parent_obj, succ.parent_obj, dst.parent_obj)
-        traffic_to_carry_succ = affected_traffic.get_modified_traffic(use_embedded_switch_modifications=True)
-
-        if at_dst_via_succ.is_subset_traffic(traffic_to_carry_succ):
-
-            succ_int = traffic_to_carry_succ.intersect(at_dst_via_succ, keep_all=True)
-
-            traffic_at_backup_succ = succ_int.get_modified_traffic()
-            enabling_edge_data_list = succ_int.get_enabling_edge_data()
-
-            # If so, make sure the traffic is carried because of edge_data with vuln_rank as specified
-            if enabling_edge_data_list:
-
-                vuln_rank_check = True
-                for ed in enabling_edge_data_list:
-                    if ed.get_vuln_rank() != vuln_rank:
-                        vuln_rank_check = False
-
-                if vuln_rank_check:
-                    succs_traffic.append((succ, traffic_at_backup_succ))
-
-    return succs_traffic
-
-
-def link_failure_causes_path_disconnect(pg, path, failed_link):
-
-    prior_edges, affected_edge = path.is_path_affected(failed_link)
-    link_causes_disconnect = False
-
-    if affected_edge:
-
-        # Check if a backup successors nodes exist that would carry this traffic
-        # Find the first instance of when the failed link appears in the path
-        backup_succ_nodes_and_traffic_at_succ_nodes = \
-            get_succs_with_admitted_traffic_and_vuln_rank(pg,
-                                                          pred=affected_edge[0][0],
-                                                          failed_succ=affected_edge[0][1],
-                                                          affected_traffic=affected_edge[2],
-                                                          vuln_rank=1,
-                                                          dst=path.dst_node)
-
-        if backup_succ_nodes_and_traffic_at_succ_nodes:
-            link_causes_disconnect = False
-        else:
-            link_causes_disconnect = True
-
-    return link_causes_disconnect
-
-
 def get_failover_path(pg, path, failed_link):
 
     prior_edges, affected_edge = path.is_path_affected(failed_link)

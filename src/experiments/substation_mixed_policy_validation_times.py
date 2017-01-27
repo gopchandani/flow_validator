@@ -309,10 +309,10 @@ def main():
 
     num_iterations = 1
     num_switches_in_clique_list = [4]
-    num_hosts_per_switch_list = [2, 4, 6, 8]
+    num_hosts_per_switch_list = [1]#[2, 4, 6, 8]
     num_per_switch_links_list = [3]
 
-    k_values = [0, 1, 2, 3]
+    k_values = [1]#[0, 1, 2, 3]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
                                                             num_hosts_per_switch_list,
                                                             num_per_switch_links_list)
@@ -322,7 +322,7 @@ def main():
     exp.trigger()
     exp.dump_data()
 
-    exp.plot_data()
+    #exp.plot_data()
 
 
 if __name__ == "__main__":

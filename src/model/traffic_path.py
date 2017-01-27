@@ -50,17 +50,6 @@ class TrafficPath(object):
         # Add the last node in the path
         self.path_nodes.append(path_edges[len(path_edges) - 1][0][1])
 
-    def get_max_vuln_rank(self):
-        max_vuln_rank = -1
-
-        for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
-            for enabling_edge_data in enabling_edge_data_list:
-                current_edge_data_vuln_rank = enabling_edge_data.get_vuln_rank()
-                if current_edge_data_vuln_rank > max_vuln_rank:
-                    max_vuln_rank = current_edge_data_vuln_rank
-
-        return max_vuln_rank
-
     def get_max_active_rank(self):
         max_active_rank = -1
 

@@ -12,7 +12,7 @@ from model.traffic import Traffic
 
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
-from util import link_failure_causes_path_disconnect
+from util import get_failover_path
 
 
 class MonteCarloAnalysis(FlowValidator):
@@ -58,7 +58,11 @@ class MonteCarloAnalysis(FlowValidator):
                 # Check to see if the path is currently active
                 if path.get_max_active_rank() == 0:
 
-                    ld.causes_disconnect = link_failure_causes_path_disconnect(self.port_graph, path, ld)
+                    ld.set_link_ports_down()
+                    failover_path_after_failure = get_failover_path(self.port_graph, path, ld)
+                    if not failover_path_after_failure:
+                        ld.causes_disconnect = True
+                    ld.set_link_ports_up()
 
                     if verbose:
                         print "Considering Path: ", path
@@ -92,7 +96,7 @@ class MonteCarloAnalysis(FlowValidator):
         t.set_field("has_vlan_tag", 0)
         c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
         policy_statements = [PolicyStatement(self.network_graph, all_host_ports_zone, all_host_ports_zone, t, c, 0)]
-        v = self.init_policy_validation(policy_statements)
+        v = self.init_policy_validation(policy_statements, "With Preemption")
 
         if v:
             return False

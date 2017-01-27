@@ -42,8 +42,6 @@ class Action:
         self.bucket = None
         self.instruction_type = None
 
-        self.vuln_rank = 0
-
         # Captures what the action is doing.
         self.modified_field = None
         self.field_modified_to = None
