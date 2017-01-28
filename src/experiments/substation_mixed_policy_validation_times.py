@@ -34,6 +34,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         self.num_iterations = num_iterations
 
         self.data = {
+            "initial_time": defaultdict(defaultdict),
             "validation_time": defaultdict(defaultdict),
         }
 
@@ -73,35 +74,31 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         for nc in self.network_configurations:
 
             print "Configuration:", nc
+            sL = str(len(list(nc.ng.get_switch_link_data())))
 
-            fv = FlowValidator(nc.ng)
-            fv.init_network_port_graph()
-
-            print "Initialized analysis."
+            total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
+                                nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
 
             for k in self.k_values:
-
                 policy_statements = self.construct_policy_statements(nc, k)
-
-                total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
-                                    nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
-
-                sL = str(len(list(nc.ng.get_switch_link_data())))
-
                 self.data["validation_time"]["k: " + str(k) + ", |L|: " + sL][str(total_host_pairs)] = []
+                self.data["initial_time"]["|L|: " + sL][str(total_host_pairs)] = []
 
                 for i in range(self.num_iterations):
 
                     with Timer(verbose=True) as t:
+                        fv = FlowValidator(nc.ng)
+                        fv.init_network_port_graph()
+                    self.data["initial_time"]["|L|: " + sL][str(total_host_pairs)].append(t.secs)
+
+                    print "Initialized analysis."
+
+                    with Timer(verbose=True) as t:
                         violations = fv.init_policy_validation(policy_statements, optimization_type="With Preemption")
+                    self.data["validation_time"]["k: " + str(k) + ", |L|: " + sL][str(total_host_pairs)].append(t.secs)
 
                     print "Total violations:", len(violations)
-
-                    #self.dump_violations(violations)
-
                     print "Does the network configuration satisfy the given policy:", (len(violations) == 0)
-
-                    self.data["validation_time"]["k: " + str(k) + ", |L|: " + sL][str(total_host_pairs)].append(t.secs)
 
                     self.dump_data()
 
@@ -188,15 +185,15 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         if ytick_labels:
             ax.set_yticklabels(ytick_labels)
 
-    def plot_data(self):
+    def plot_data(self, key, subkeys):
 
         f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.0, 4.0))
 
-        data_xtick_labels = self.data["validation_time"]["k: 0, |L|: 6"].keys()
+        data_xtick_labels = subkeys
         data_xticks = [int(x) for x in data_xtick_labels]
 
         self.plot_lines_with_error_bars(ax1,
-                                        "validation_time",
+                                        key,
                                         "Number of host pairs",
                                         "Time (seconds)",
                                         "",
@@ -307,7 +304,7 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 1
+    num_iterations = 5
     num_switches_in_clique_list = [4]
     num_hosts_per_switch_list = [1]#[2, 4, 6, 8]
     num_per_switch_links_list = [3]
@@ -319,11 +316,13 @@ def main():
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
 
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
-    #exp.plot_data()
 
+    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170126_172701.json")
+    #exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
+    exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
 
 if __name__ == "__main__":
     main()
