@@ -4,6 +4,8 @@ from experiment import Experiment
 from network_configuration import NetworkConfiguration
 from model.traffic import Traffic
 from analysis.flow_validator import FlowValidator
+from analysis.policy_statement import PolicyStatement, PolicyConstraint
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 
 __author__ = 'Rakesh Kumar'
 
@@ -12,16 +14,15 @@ sys.path.append("./")
 
 class Playground(Experiment):
 
-    def __init__(self,
-                 network_configuration):
+    def __init__(self, nc):
 
         super(Playground, self).__init__("playground", 1)
 
-        self.network_configuration = network_configuration
+        self.nc = nc
 
     def trigger(self):
 
-        ng = self.network_configuration.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
         fv = FlowValidator(ng)
         fv.init_network_port_graph()
@@ -29,78 +30,38 @@ class Playground(Experiment):
         src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
 
-        # src_zone = [fv.network_graph.get_node_object("h11").switch_port]
-        # dst_zone = [fv.network_graph.get_node_object("h21").switch_port]
-
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
 
-        connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 0)
-        print connected
+        constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
-        connected = fv.validate_zone_pair_connectivity(src_zone, dst_zone, specific_traffic, 1)
-        print connected
+        s = PolicyStatement(self.nc.ng, src_zone, dst_zone, specific_traffic, constraints,
+                            lmbda=tuple(ng.get_switch_link_data(sw=ng.get_node_object("s1"))))
+
+        violations = fv.init_policy_validation([s], optimization_type="With Preemption")
+
+        for v in violations:
+            print v
 
         print "Done..."
 
 
 def main():
+    nc = NetworkConfiguration("ryu",
+                              "127.0.0.1",
+                              6633,
+                              "http://localhost:8080/",
+                              "admin",
+                              "admin",
+                              "cliquetopo",
+                              {"num_switches": 4,
+                               "num_hosts_per_switch": 1,
+                               "per_switch_links": 2},
+                              conf_root="configurations/",
+                              synthesis_name="AboresceneSynthesis",
+                              synthesis_params={"apply_group_intents_immediately": True})
 
-    # network_configuration = NetworkConfiguration("onos",
-    #                                              "72.36.82.150",
-    #                                              40002,
-    #                                              "http://72.36.82.150:40001/onos/v1/",
-    #                                              "karaf",
-    #                                              "karaf",
-    #                                              "clostopo",
-    #                                              {"fanout": 2,
-    #                                               "core": 1,
-    #                                               "num_hosts_per_switch": 1},
-    #                                              conf_root="configurations/",
-    #                                              synthesis_name=None,
-    #                                              synthesis_params=None)
-
-    # network_configuration = NetworkConfiguration("onos",
-    #                                              "10.0.2.15",
-    #                                              6653,
-    #                                              "http://10.0.2.15:8181/onos/v1/",
-    #                                              "karaf",
-    #                                              "karaf",
-    #                                              "clostopo",
-    #                                              {"fanout": 2,
-    #                                               "core": 1,
-    #                                               "num_hosts_per_switch": 1},
-    #                                              conf_root="configurations/",
-    #                                              synthesis_name="AboresceneSynthesis",
-    #                                              synthesis_params={"apply_group_intents_immediately": True})
-
-    network_configuration = NetworkConfiguration("ryu",
-                                                 "127.0.0.1",
-                                                 6633,
-                                                 "http://localhost:8080/",
-                                                 "admin",
-                                                 "admin",
-                                                 "ring",
-                                                 {"num_switches": 4,
-                                                  "num_hosts_per_switch": 1},
-                                                 conf_root="configurations/",
-                                                 synthesis_name="AboresceneSynthesis",
-                                                 synthesis_params={"apply_group_intents_immediately": True})
-
-    # network_configuration = NetworkConfiguration("sel",
-    #                                              "192.168.56.101",
-    #                                              6653,
-    #                                              "https://192.168.56.101:443/",
-    #                                              "hobbs",
-    #                                              "Asdf123$",
-    #                                              "linear",
-    #                                              {"num_switches": 2,
-    #                                               "num_hosts_per_switch": 1},
-    #                                              conf_root="configurations/",
-    #                                              synthesis_name="DijkstraSynthesis",
-    #                                              synthesis_params={"apply_group_intents_immediately": True})
-
-    exp = Playground(network_configuration)
+    exp = Playground(nc)
     exp.trigger()
 
 if __name__ == "__main__":

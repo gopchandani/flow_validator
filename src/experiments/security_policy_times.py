@@ -72,7 +72,8 @@ class SecurityPolicyTimes(Experiment):
                                                         src_enclave_zone,
                                                         dst_enclave_zone,
                                                         src_enclave_specific_traffic,
-                                                        enclave_constraints, 0)
+                                                        enclave_constraints,
+                                                        k=0)
 
                     statements.append(enclave_statement)
                 else:
@@ -82,7 +83,8 @@ class SecurityPolicyTimes(Experiment):
                                                         src_enclave_zone,
                                                         dst_enclave_zone,
                                                         src_enclave_specific_traffic,
-                                                        enclave_constraints, 0)
+                                                        enclave_constraints,
+                                                        k=0)
 
                     statements.append(enclave_statement)
 
@@ -99,7 +101,8 @@ class SecurityPolicyTimes(Experiment):
                                             control_zone,
                                             control_zone,
                                             control_enclave_specific_traffic,
-                                            enclave_constraints, 0)
+                                            enclave_constraints,
+                                            k=0)
         statements.append(enclave_statement)
 
         enclave_constraints = [PolicyConstraint(ISOLATION_CONSTRAINT, None)]
@@ -107,7 +110,8 @@ class SecurityPolicyTimes(Experiment):
                                             control_zone,
                                             non_control_zone,
                                             control_enclave_specific_traffic,
-                                            enclave_constraints, 0)
+                                            enclave_constraints,
+                                            k=0)
         statements.append(enclave_statement)
 
         enclave_constraints = [PolicyConstraint(ISOLATION_CONSTRAINT, None)]
@@ -115,7 +119,9 @@ class SecurityPolicyTimes(Experiment):
                                             non_control_zone,
                                             control_zone,
                                             control_enclave_specific_traffic,
-                                            enclave_constraints, 0)
+                                            enclave_constraints,
+                                            k=0)
+
         statements.append(enclave_statement)
 
         return statements

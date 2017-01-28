@@ -51,7 +51,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
                           PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6)]
 
-        s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, k)
+        s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, k=k)
 
         s2_src_zone = [nc.ng.get_node_object("h41").switch_port]
         s2_dst_zone = [nc.ng.get_node_object("h11").switch_port]
@@ -64,7 +64,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
                           PolicyConstraint(LINK_AVOIDANCE_CONSTRAINT, [("s1", "s2")])]
 
-        s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, k)
+        s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, k=k)
 
         return [s1, s2]
 

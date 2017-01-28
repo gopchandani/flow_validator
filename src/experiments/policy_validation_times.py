@@ -49,7 +49,7 @@ class PolicyValidationTimes(Experiment):
         t.set_field("ethernet_type", 0x0800)
         t.set_field("has_vlan_tag", 0)
         c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-        policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, k)]
+        policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, k=k)]
 
         return policy_statements
 
