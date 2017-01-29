@@ -43,14 +43,13 @@ class PolicyViolation(object):
 
 class PolicyStatement(object):
 
-    def __init__(self, network_graph, src_zone, dst_zone, traffic, constraints, k=None, lmbda=None):
+    def __init__(self, network_graph, src_zone, dst_zone, traffic, constraints, lmbdas):
         self.network_graph = network_graph
         self.src_zone = src_zone
         self.dst_zone = dst_zone
         self.traffic = traffic
         self.constraints = constraints
-        self.k = k
-        self.lmbda = lmbda
+        self.lmbdas = lmbdas
 
         # Convert constraint link tuples to objects
         for c in self.constraints:

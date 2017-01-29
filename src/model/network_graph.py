@@ -97,6 +97,8 @@ class NetworkGraph(object):
 
         self.controller = self.network_configuration.controller
 
+        self.L = []
+
     # Gets a switch-only multi-di-graph for the present topology
     def get_mdg(self):
 
@@ -278,6 +280,8 @@ class NetworkGraph(object):
             raise NotImplementedError
         else:
             raise NotImplementedError
+
+        self.L = sorted(self.get_switch_link_data(), key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
 
     def add_link(self, node1_id, node1_port, node2_id, node2_port):
 

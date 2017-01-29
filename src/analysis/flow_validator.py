@@ -1,5 +1,4 @@
 import sys
-import itertools
 
 sys.path.append("./")
 
@@ -233,7 +232,7 @@ class FlowValidator(object):
         if len(lmbda) < self.max_k:
 
             # Rotate through the links
-            for next_link_to_fail in self.L:
+            for next_link_to_fail in self.network_graph.L:
                 # Select the link by checking that it is not in the lmbda already
                 # Add the selected link to fail to the prefix
                 if next_link_to_fail in lmbda:
@@ -343,9 +342,6 @@ class FlowValidator(object):
 
         self.optimization_type = optimization_type
 
-        self.L = sorted(self.network_graph.get_switch_link_data(),
-                        key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
-
         # Avoid duplication of effort across policies
         # validation_map is a two-dimensional dictionary:
         #   First key 'k-size' permutations, second key: (src_port, dst_port).
@@ -354,20 +350,11 @@ class FlowValidator(object):
         self.validation_map = defaultdict(defaultdict)
 
         for ps in policy_statement_list:
-
-            if ps.k:
-                for i in range(ps.k + 1):
-                    for lmbda in itertools.permutations(self.L, i):
-                        for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
-                            if (src_port, dst_port) not in self.validation_map[lmbda]:
-                                self.validation_map[lmbda][(src_port, dst_port)] = []
-                            self.validation_map[lmbda][(src_port, dst_port)].append(ps)
-
-            elif ps.lmbda:
+            for lmbda in ps.lmbdas:
                 for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
-                    if (src_port, dst_port) not in self.validation_map[ps.lmbda]:
-                        self.validation_map[ps.lmbda][(src_port, dst_port)] = []
-                    self.validation_map[ps.lmbda][(src_port, dst_port)].append(ps)
+                    if (src_port, dst_port) not in self.validation_map[lmbda]:
+                        self.validation_map[lmbda][(src_port, dst_port)] = []
+                    self.validation_map[lmbda][(src_port, dst_port)].append(ps)
 
 
         # Now the validation

@@ -36,7 +36,7 @@ class Playground(Experiment):
         constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
         s = PolicyStatement(self.nc.ng, src_zone, dst_zone, specific_traffic, constraints,
-                            lmbda=tuple(ng.get_switch_link_data(sw=ng.get_node_object("s1"))))
+                            lmbdas=[tuple(ng.get_switch_link_data(sw=ng.get_node_object("s4")))])
 
         violations = fv.init_policy_validation([s], optimization_type="With Preemption")
 
@@ -58,7 +58,7 @@ def main():
                                "num_hosts_per_switch": 1,
                                "per_switch_links": 2},
                               conf_root="configurations/",
-                              synthesis_name="AboresceneSynthesis",
+                              synthesis_name="DijkstraSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True})
 
     exp = Playground(nc)
