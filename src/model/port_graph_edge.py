@@ -48,7 +48,7 @@ class NetworkPortGraphEdgeData:
             return 0
 
         # Do a max over paths for getting active_rank
-        max_active_rank= -1
+        max_active_rank = -1
         for tp in self.switch_port_graph_paths:
             path_max_active_rank = tp.get_max_active_rank()
             if path_max_active_rank > max_active_rank:

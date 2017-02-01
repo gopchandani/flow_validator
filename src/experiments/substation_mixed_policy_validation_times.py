@@ -1,6 +1,6 @@
 import sys
 import json
-
+import itertools
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
@@ -52,7 +52,9 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s1_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
                           PolicyConstraint(PATH_LENGTH_CONSTRAINT, 6)]
 
-        s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, k)
+        lmbdas = list(itertools.permutations(nc.ng.L, k))
+
+        s1 = PolicyStatement(nc.ng, s1_src_zone, s1_dst_zone, s1_traffic, s1_constraints, lmbdas)
 
         s2_src_zone = [nc.ng.get_node_object("h41").switch_port]
         s2_dst_zone = [nc.ng.get_node_object("h11").switch_port]
@@ -65,7 +67,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
         s2_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None),
                           PolicyConstraint(LINK_AVOIDANCE_CONSTRAINT, [("s1", "s2")])]
 
-        s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, k)
+        s2 = PolicyStatement(nc.ng, s2_src_zone, s2_dst_zone, s2_traffic, s2_constraints, lmbdas)
 
         return [s1, s2]
 
@@ -316,13 +318,13 @@ def main():
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
 
-    # exp.trigger()
+    exp.trigger()
     # exp.dump_data()
 
 
-    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170126_172701.json")
+    #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170126_172701.json")
     #exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
-    exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
+    #exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,4 @@
 import sys
-import itertools
 
 sys.path.append("./")
 
@@ -224,16 +223,6 @@ class FlowValidator(object):
         self.violations.extend(v)
         return v
 
-    def remove_from_validation_map(self, src_port, dst_port, future_lmbda):
-        del self.validation_map[future_lmbda][(src_port, dst_port)]
-
-        #print "Removed:", future_lmbda, "for src_port:", src_port, "dst_port:", dst_port
-
-        # If all the cases under a perm are gone, then get rid of the key.
-        if not self.validation_map[future_lmbda]:
-            #print "Removed perm:", future_lmbda
-            del self.validation_map[future_lmbda]
-
     def validate_policy_without_preemption(self, lmbda):
 
         # Perform the validation that needs performing here...
@@ -243,7 +232,7 @@ class FlowValidator(object):
         if len(lmbda) < self.max_k:
 
             # Rotate through the links
-            for next_link_to_fail in self.L:
+            for next_link_to_fail in self.network_graph.L:
                 # Select the link by checking that it is not in the lmbda already
                 # Add the selected link to fail to the prefix
                 if next_link_to_fail in lmbda:
@@ -353,9 +342,6 @@ class FlowValidator(object):
 
         self.optimization_type = optimization_type
 
-        self.L = sorted(self.network_graph.get_switch_link_data(),
-                        key=lambda ld: (ld.link_tuple[0], ld.link_tuple[1]))
-
         # Avoid duplication of effort across policies
         # validation_map is a two-dimensional dictionary:
         #   First key 'k-size' permutations, second key: (src_port, dst_port).
@@ -364,12 +350,12 @@ class FlowValidator(object):
         self.validation_map = defaultdict(defaultdict)
 
         for ps in policy_statement_list:
-            for i in range(ps.k+1):
-                for link_perm in itertools.permutations(self.L, i):
-                    for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
-                        if (src_port, dst_port) not in self.validation_map[link_perm]:
-                            self.validation_map[link_perm][(src_port, dst_port)] = []
-                        self.validation_map[link_perm][(src_port, dst_port)].append(ps)
+            for lmbda in ps.lmbdas:
+                for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
+                    if (src_port, dst_port) not in self.validation_map[lmbda]:
+                        self.validation_map[lmbda][(src_port, dst_port)] = []
+                    self.validation_map[lmbda][(src_port, dst_port)].append(ps)
+
 
         # Now the validation
         self.max_k = len(max(self.validation_map.keys(), key=lambda link_perm: len(link_perm)))
