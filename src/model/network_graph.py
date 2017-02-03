@@ -148,6 +148,9 @@ class NetworkGraph(object):
                 self.host_ids.add(mininet_host_dict["host_name"])
                 sw_obj = self.get_node_object(sw)
 
+                if not sw_obj:
+                    raise Exception("Switch with id: " + sw + " does not exist.")
+
                 h_obj = Host(mininet_host_dict["host_name"],
                              self,
                              mininet_host_dict["host_IP"],
