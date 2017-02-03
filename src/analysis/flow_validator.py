@@ -263,7 +263,6 @@ class FlowValidator(object):
 
         for lmbda in self.validation_map:
             for src_port, dst_port in list(self.validation_map[lmbda].keys()):
-
                 for ps in self.validation_map[lmbda][(src_port, dst_port)]:
 
                     ps.traffic.set_field("ethernet_source",
@@ -338,15 +337,12 @@ class FlowValidator(object):
                                                               active_path))
                                     self.violations.append(v_p)
 
-    def init_policy_validation(self, policy_statement_list, optimization_type):
-
-        self.optimization_type = optimization_type
+    def validate_policy(self, policy_statement_list, optimization_type):
 
         # Avoid duplication of effort across policies
         # validation_map is a two-dimensional dictionary:
-        #   First key 'k-size' permutations, second key: (src_port, dst_port).
+        #   First key permutation of link failures, second key: (src_port, dst_port).
         #   Value is a list of statements where the pair appears
-
         self.validation_map = defaultdict(defaultdict)
 
         for ps in policy_statement_list:
@@ -356,16 +352,13 @@ class FlowValidator(object):
                         self.validation_map[lmbda][(src_port, dst_port)] = []
                     self.validation_map[lmbda][(src_port, dst_port)].append(ps)
 
-
         # Now the validation
         self.max_k = len(max(self.validation_map.keys(), key=lambda link_perm: len(link_perm)))
-        lmbda = []
         self.violations = []
 
-        if self.optimization_type == "With Preemption":
+        if optimization_type == "With Preemption":
             self.validate_policy_with_preemption()
-        elif self.optimization_type == "Without Preemption":
-            self.validate_policy_without_preemption(lmbda)
+        elif optimization_type == "Without Preemption":
+            self.validate_policy_without_preemption([])
 
-        print len(self.violations)
         return self.violations

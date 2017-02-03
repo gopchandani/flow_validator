@@ -78,7 +78,7 @@ class PolicyValidationTimes(Experiment):
                     for i in range(self.num_iterations):
 
                         with Timer(verbose=True) as t:
-                            violations = fv.init_policy_validation(policy_statements, optimization_to_use)
+                            violations = fv.validate_policy(policy_statements, optimization_to_use)
 
                         print "Total violations:", len(violations)
 

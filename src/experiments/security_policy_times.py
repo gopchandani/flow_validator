@@ -147,7 +147,7 @@ class SecurityPolicyTimes(Experiment):
 
             for i in range(self.num_iterations):
                 with Timer(verbose=True) as t:
-                    violations = fv.init_policy_validation(policy_statements)
+                    violations = fv.validate_policy(policy_statements)
 
                 self.data["validation_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]].append(t.secs)
                 self.dump_data()
