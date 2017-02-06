@@ -38,7 +38,7 @@ class Playground(Experiment):
         s = PolicyStatement(self.nc.ng, src_zone, dst_zone, specific_traffic, constraints,
                             lmbdas=[tuple(ng.get_switch_link_data(sw=ng.get_node_object("s4")))])
 
-        violations = fv.init_policy_validation([s], optimization_type="With Preemption")
+        violations = fv.validate_policy([s], optimization_type="With Preemption")
 
         for v in violations:
             print v
