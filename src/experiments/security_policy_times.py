@@ -147,7 +147,7 @@ class SecurityPolicyTimes(Experiment):
 
             for i in range(self.num_iterations):
                 with Timer(verbose=True) as t:
-                    violations = fv.validate_policy(policy_statements)
+                    violations = fv.validate_policy(policy_statements, optimization_type="With Preemption")
 
                 self.data["validation_time"][policy_len_str][nc.topo_params["nHostsPerSwitch"]].append(t.secs)
                 self.dump_data()
@@ -383,7 +383,7 @@ def main():
 
     num_iterations = 1
     num_grids_list = [1]
-    num_hosts_per_switch_list = [1]
+    num_hosts_per_switch_list = [3]
     nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
     exp = SecurityPolicyTimes(nc_list, num_iterations)
 
