@@ -67,15 +67,40 @@ class InitialTimes(Experiment):
 
         return merged_data
 
+    def load_data_merge_network_config(self, data_dict_list):
+        merged_data = None
+
+        for this_data in data_dict_list:
+
+            if merged_data:
+                for ds in merged_data:
+                    merged_data[ds].update(this_data[ds])
+
+            else:
+                merged_data = this_data
+
+        return merged_data
+
     def merge_data(self):
+        path_prefix = "data/14_switch_clos/"
+        data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps.json",
+                                                       path_prefix + "6_hps.json",
+                                                       path_prefix + "8_hps.json",
+                                                       path_prefix + "10_hps.json"],
+                                                      path_prefix + "2_iter.json")
+
         path_prefix = "data/10_switch_ring/"
+        data_10_switch_ring = self.load_data_merge_nh([path_prefix + "2_4_6_hps.json",
+                                                       path_prefix + "8_hps.json",
+                                                       path_prefix + "10_hps.json"],
+                                                      path_prefix + "2_iter.json")
 
-        self.data = self.load_data_merge_nh([path_prefix + "2_4_6_hps.json",
-                                             path_prefix + "8_hps.json",
-                                             path_prefix + "10_hps.json"],
-                                            "2_iter.json")
+        merged_data = self.load_data_merge_network_config([data_14_switch_clos,
+                                                           data_10_switch_ring])
 
-        print self.data
+        self.data = merged_data
+
+        return self.data
 
     def plot_lines_with_error_bars(self,
                                    ax,
@@ -197,14 +222,28 @@ def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for hps in num_hosts_per_switch_list:
 
+        # nc = NetworkConfiguration("ryu",
+        #                           "127.0.0.1",
+        #                           6633,
+        #                           "http://localhost:8080/",
+        #                           "admin",
+        #                           "admin",
+        #                           "ring",
+        #                           {"num_switches": 10,
+        #                            "num_hosts_per_switch": hps},
+        #                           conf_root="configurations/",
+        #                           synthesis_name="AboresceneSynthesis",
+        #                           synthesis_params={"apply_group_intents_immediately": True})
+
         nc = NetworkConfiguration("ryu",
                                   "127.0.0.1",
                                   6633,
                                   "http://localhost:8080/",
                                   "admin",
                                   "admin",
-                                  "ring",
-                                  {"num_switches": 10,
+                                  "clostopo",
+                                  {"fanout": 2,
+                                   "core": 2,
                                    "num_hosts_per_switch": hps},
                                   conf_root="configurations/",
                                   synthesis_name="AboresceneSynthesis",
@@ -231,12 +270,10 @@ def prepare_network_configurations(num_hosts_per_switch_list):
     return nc_list
 
 
-
-
 def main():
 
-    num_iterations = 2
-    num_hosts_per_switch_list = [10]#[2, 4, 6, 8, 10]
+    num_iterations = 1
+    num_hosts_per_switch_list = [10]#[2, 4, 6]#[2, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialTimes(num_iterations, network_configurations)
     # Trigger the experiment
