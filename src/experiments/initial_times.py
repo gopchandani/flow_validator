@@ -81,6 +81,38 @@ class InitialTimes(Experiment):
 
         return merged_data
 
+    def generate_num_flow_path_keys(self, data):
+
+        all_keys = set()
+
+        flow_path_keys_data = {
+            "initial_time": defaultdict(defaultdict)}
+
+        for ds in data:
+            for nc_topo_str in data[ds]:
+                for nh in data[ds][nc_topo_str]:
+
+                    num_host_carrying_switches = 0
+
+                    if nc_topo_str == "Ring topology with 10 switches":
+                        num_host_carrying_switches = 10
+                    elif nc_topo_str == "Clos topology with 14 switches":
+                        num_host_carrying_switches = 8
+                    elif nc_topo_str == "Clique topology with 4 switches":
+                        num_host_carrying_switches = 4
+                    else:
+                        print "nc_topo_str:", nc_topo_str
+                        raise Exception("Unknown topology, write the translation rule")
+
+                    # Total flows = total hosts squared.
+                    new_key = str(int(nh) * num_host_carrying_switches * int(nh) * num_host_carrying_switches)
+                    flow_path_keys_data[ds][nc_topo_str][new_key] = data[ds][nc_topo_str][nh]
+
+                    all_keys.add(new_key)
+
+        flow_path_keys_data["all_keys"] = list(all_keys)
+        return flow_path_keys_data
+
     def merge_data(self):
         path_prefix = "data/14_switch_clos/"
         data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps.json",
@@ -95,8 +127,16 @@ class InitialTimes(Experiment):
                                                        path_prefix + "10_hps.json"],
                                                       path_prefix + "2_iter.json")
 
+        path_prefix = "data/4_switch_clique/"
+        data_4_switch_clique = self.load_data_merge_nh([path_prefix + "4_8_10_hps.json",
+                                                        path_prefix + "20_hps.json",
+                                                        path_prefix + "25_hps.json",
+                                                        path_prefix + "16_hps.json"],
+                                                      path_prefix + "2_iter.json")
+
         merged_data = self.load_data_merge_network_config([data_14_switch_clos,
-                                                           data_10_switch_ring])
+                                                           data_10_switch_ring,
+                                                           data_4_switch_clique])
 
         self.data = merged_data
 
@@ -196,15 +236,15 @@ class InitialTimes(Experiment):
                                         "Time (seconds)",
                                         "",
                                         y_scale='log',
-                                        x_min_factor=1.0,
-                                        x_max_factor=1,
+                                        x_min_factor=0.9,
+                                        x_max_factor=1.10,
                                         y_min_factor=0.01,
                                         y_max_factor=10,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
 
         xlabels = ax1.get_xticklabels()
-        plt.setp(xlabels, rotation=0, fontsize=10)
+        plt.setp(xlabels, rotation=45, fontsize=10)
 
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
@@ -222,6 +262,20 @@ def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for hps in num_hosts_per_switch_list:
 
+        nc = NetworkConfiguration("ryu",
+                                  "127.0.0.1",
+                                  6633,
+                                  "http://localhost:8080/",
+                                  "admin",
+                                  "admin",
+                                  "cliquetopo",
+                                  {"num_switches": 4,
+                                   "per_switch_links": 3,
+                                   "num_hosts_per_switch": hps},
+                                  conf_root="configurations/",
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
+
         # nc = NetworkConfiguration("ryu",
         #                           "127.0.0.1",
         #                           6633,
@@ -235,36 +289,41 @@ def prepare_network_configurations(num_hosts_per_switch_list):
         #                           synthesis_name="AboresceneSynthesis",
         #                           synthesis_params={"apply_group_intents_immediately": True})
 
-        nc = NetworkConfiguration("ryu",
-                                  "127.0.0.1",
-                                  6633,
-                                  "http://localhost:8080/",
-                                  "admin",
-                                  "admin",
-                                  "clostopo",
-                                  {"fanout": 2,
-                                   "core": 2,
-                                   "num_hosts_per_switch": hps},
-                                  conf_root="configurations/",
-                                  synthesis_name="AboresceneSynthesis",
-                                  synthesis_params={"apply_group_intents_immediately": True})
-
         # nc = NetworkConfiguration("ryu",
         #                           "127.0.0.1",
         #                           6633,
         #                           "http://localhost:8080/",
         #                           "admin",
         #                           "admin",
-        #                           "cliquetopo",
-        #                           {"num_switches": 10,
-        #                            "num_hosts_per_switch": hps,
-        #                            "per_switch_links": 9},
+        #                           "clostopo",
+        #                           {"fanout": 2,
+        #                            "core": 2,
+        #                            "num_hosts_per_switch": hps},
         #                           conf_root="configurations/",
         #                           synthesis_name="AboresceneSynthesis",
         #                           synthesis_params={"apply_group_intents_immediately": True})
 
-        nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        # ip_str = "172.17.0.2"
+        # port_str = "8181"
+        # num_grids = 4
+        # num_switches_per_grid = 3
+        #
+        # nc = NetworkConfiguration("onos",
+        #                           ip_str,
+        #                           int(port_str),
+        #                           "http://" + ip_str + ":" + port_str + "/onos/v1/",
+        #                           "karaf",
+        #                           "karaf",
+        #                           "microgrid_topo",
+        #                           {"num_switches": 1 + num_grids * num_switches_per_grid,
+        #                            "nGrids": num_grids,
+        #                            "nSwitchesPerGrid": num_switches_per_grid,
+        #                            "nHostsPerSwitch": hps},
+        #                           conf_root="configurations/",
+        #                           synthesis_name=None,
+        #                           synthesis_params=None)
 
+        nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         nc_list.append(nc)
 
     return nc_list
@@ -272,8 +331,8 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 
 def main():
 
-    num_iterations = 1
-    num_hosts_per_switch_list = [10]#[2, 4, 6]#[2, 4, 6, 8, 10]
+    num_iterations = 2
+    num_hosts_per_switch_list = [16]#[2, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialTimes(num_iterations, network_configurations)
     # Trigger the experiment
@@ -281,7 +340,8 @@ def main():
     # exp.dump_data()
 
     exp.merge_data()
-    exp.plot_data("initial_time", ["2", "4", "6", "8", "10"])
+    exp.data = exp.generate_num_flow_path_keys(exp.data)
+    exp.plot_data("initial_time", exp.data["all_keys"])
 
 
 if __name__ == "__main__":
