@@ -36,7 +36,14 @@ class InitialTimes(Experiment):
         for nc in self.network_configurations:
             print "network_configuration:", nc
 
-            self.data["initial_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]] = []
+            nhps = None
+
+            if nc.topo_name == "microgrid_topo":
+                nhps = 3
+            else:
+                nhps = nc.topo_params["num_hosts_per_switch"]
+
+            self.data["initial_time"][nc.nc_topo_str][nhps] = []
 
             for i in xrange(self.num_iterations):
                 print "iteration:", i + 1
@@ -45,7 +52,7 @@ class InitialTimes(Experiment):
                 with Timer(verbose=True) as t:
                     fv.init_network_port_graph()
 
-                self.data["initial_time"][nc.nc_topo_str][nc.topo_params["num_hosts_per_switch"]].append(t.secs)
+                self.data["initial_time"][nc.nc_topo_str][nhps].append(t.secs)
                 self.dump_data()
 
     def load_data_merge_nh(self, filename_list, merged_out_file):
@@ -85,8 +92,7 @@ class InitialTimes(Experiment):
 
         all_keys = set()
 
-        flow_path_keys_data = {
-            "initial_time": defaultdict(defaultdict)}
+        flow_path_keys_data = {"initial_time": defaultdict(defaultdict)}
 
         for ds in data:
             for nc_topo_str in data[ds]:
@@ -141,6 +147,23 @@ class InitialTimes(Experiment):
         self.data = merged_data
 
         return self.data
+
+    def merge_microgrid_data(self, microgrids_data_locations, current_data):
+        current_data["initial_time"]["Microgrid Topology"] = defaultdict(list)
+        ds = "initial_time"
+
+        for loc in microgrids_data_locations:
+            this_data = None
+            with open(loc, "r") as infile:
+                this_data = json.load(infile)
+                nc_topo_str = this_data[ds].keys()[0]
+                num_ug_switches = int(nc_topo_str.split()[3])  - 1
+
+                num_host_pairs = (3 * num_ug_switches + 1) * (3 * num_ug_switches + 1)
+                current_data[ds]["Microgrid Topology"][str(num_host_pairs)] = this_data[ds][nc_topo_str]['3']
+                current_data["all_keys"].append(str(num_host_pairs))
+
+        return current_data
 
     def plot_lines_with_error_bars(self,
                                    ax,
@@ -262,19 +285,19 @@ def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for hps in num_hosts_per_switch_list:
 
-        nc = NetworkConfiguration("ryu",
-                                  "127.0.0.1",
-                                  6633,
-                                  "http://localhost:8080/",
-                                  "admin",
-                                  "admin",
-                                  "cliquetopo",
-                                  {"num_switches": 4,
-                                   "per_switch_links": 3,
-                                   "num_hosts_per_switch": hps},
-                                  conf_root="configurations/",
-                                  synthesis_name="AboresceneSynthesis",
-                                  synthesis_params={"apply_group_intents_immediately": True})
+        # nc = NetworkConfiguration("ryu",
+        #                           "127.0.0.1",
+        #                           6633,
+        #                           "http://localhost:8080/",
+        #                           "admin",
+        #                           "admin",
+        #                           "cliquetopo",
+        #                           {"num_switches": 4,
+        #                            "per_switch_links": 3,
+        #                            "num_hosts_per_switch": hps},
+        #                           conf_root="configurations/",
+        #                           synthesis_name="AboresceneSynthesis",
+        #                           synthesis_params={"apply_group_intents_immediately": True})
 
         # nc = NetworkConfiguration("ryu",
         #                           "127.0.0.1",
@@ -303,25 +326,25 @@ def prepare_network_configurations(num_hosts_per_switch_list):
         #                           synthesis_name="AboresceneSynthesis",
         #                           synthesis_params={"apply_group_intents_immediately": True})
 
-        # ip_str = "172.17.0.2"
-        # port_str = "8181"
-        # num_grids = 4
-        # num_switches_per_grid = 3
-        #
-        # nc = NetworkConfiguration("onos",
-        #                           ip_str,
-        #                           int(port_str),
-        #                           "http://" + ip_str + ":" + port_str + "/onos/v1/",
-        #                           "karaf",
-        #                           "karaf",
-        #                           "microgrid_topo",
-        #                           {"num_switches": 1 + num_grids * num_switches_per_grid,
-        #                            "nGrids": num_grids,
-        #                            "nSwitchesPerGrid": num_switches_per_grid,
-        #                            "nHostsPerSwitch": hps},
-        #                           conf_root="configurations/",
-        #                           synthesis_name=None,
-        #                           synthesis_params=None)
+        ip_str = "172.17.0.2"
+        port_str = "8181"
+        num_grids = 1
+        num_switches_per_grid = 3
+
+        nc = NetworkConfiguration("onos",
+                                  ip_str,
+                                  int(port_str),
+                                  "http://" + ip_str + ":" + port_str + "/onos/v1/",
+                                  "karaf",
+                                  "karaf",
+                                  "microgrid_topo",
+                                  {"num_switches": 1 + num_grids * num_switches_per_grid,
+                                   "nGrids": num_grids,
+                                   "nSwitchesPerGrid": num_switches_per_grid,
+                                   "nHostsPerSwitch": hps},
+                                  conf_root="configurations/",
+                                  synthesis_name=None,
+                                  synthesis_params=None)
 
         nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         nc_list.append(nc)
@@ -332,17 +355,20 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 2
-    num_hosts_per_switch_list = [16]#[2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [3]#[2, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialTimes(num_iterations, network_configurations)
+
     # Trigger the experiment
     # exp.trigger()
     # exp.dump_data()
 
     exp.merge_data()
     exp.data = exp.generate_num_flow_path_keys(exp.data)
-    exp.plot_data("initial_time", exp.data["all_keys"])
+    exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/ugtopo/4_switch.json"],
+                                        current_data=exp.data)
 
+    exp.plot_data("initial_time", exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()
