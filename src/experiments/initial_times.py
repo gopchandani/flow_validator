@@ -27,6 +27,7 @@ class InitialTimes(Experiment):
 
         self.data = {
             "initial_time": defaultdict(defaultdict),
+            "all_keys": []
         }
 
     def trigger(self):
@@ -39,7 +40,7 @@ class InitialTimes(Experiment):
             nhps = None
 
             if nc.topo_name == "microgrid_topo":
-                nhps = 3
+                nhps = nc.topo_params["nHostsPerSwitch"]
             else:
                 nhps = nc.topo_params["num_hosts_per_switch"]
 
@@ -157,10 +158,14 @@ class InitialTimes(Experiment):
             with open(loc, "r") as infile:
                 this_data = json.load(infile)
                 nc_topo_str = this_data[ds].keys()[0]
-                num_ug_switches = int(nc_topo_str.split()[3])  - 1
+                num_ug_switches = int(nc_topo_str.split()[3]) - 1
+                num_sw_per_ug = 3
+                num_microgrids = num_ug_switches / num_sw_per_ug
+                nhps = int(nc_topo_str.split()[5])
 
-                num_host_pairs = (3 * num_ug_switches + 1) * (3 * num_ug_switches + 1)
-                current_data[ds]["Microgrid Topology"][str(num_host_pairs)] = this_data[ds][nc_topo_str]['3']
+                num_host_pairs = (num_microgrids * (nhps * num_sw_per_ug) * (nhps * num_sw_per_ug)) + ((num_microgrids + 1) * (num_microgrids + 1))
+
+                current_data[ds]["Microgrid Topology"][str(num_host_pairs)] = this_data[ds][nc_topo_str][str(nhps)]
                 current_data["all_keys"].append(str(num_host_pairs))
 
         return current_data
@@ -210,8 +215,7 @@ class InitialTimes(Experiment):
                         color="black",
                         marker=markers[marker_i],
                         markersize=7.0,
-                        label=line_data_key,
-                        ls="none")
+                        label=line_data_key)
 
             marker_i += 1
 
@@ -255,7 +259,7 @@ class InitialTimes(Experiment):
 
         self.plot_lines_with_error_bars(ax1,
                                         key,
-                                        "Number of host pairs",
+                                        "Number of host pair traffic paths",
                                         "Time (seconds)",
                                         "",
                                         y_scale='log',
@@ -328,7 +332,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 
         ip_str = "172.17.0.2"
         port_str = "8181"
-        num_grids = 1
+        num_grids = 3
         num_switches_per_grid = 3
 
         nc = NetworkConfiguration("onos",
@@ -355,7 +359,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 2
-    num_hosts_per_switch_list = [3]#[2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [9]#[2, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = InitialTimes(num_iterations, network_configurations)
 
@@ -365,9 +369,23 @@ def main():
 
     exp.merge_data()
     exp.data = exp.generate_num_flow_path_keys(exp.data)
-    exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/ugtopo/4_switch.json"],
+    exp.data = exp.merge_microgrid_data(microgrids_data_locations=[#"data/ugtopo/4_switch_3_hps.json",
+                                                                   "data/ugtopo/4_switch_12_hps.json",
+                                                                   #"data/ugtopo/7_switch_3_hps.json",
+                                                                   "data/ugtopo/7_switch_12_hps.json",
+                                                                   #"data/ugtopo/10_switch_3_hps.json",
+                                                                   "data/ugtopo/10_switch_12_hps.json",
+        #"data/ugtopo/10_switch_9_hps.json",
+                                                                   #"data/ugtopo/16_switch_3_hps.json",
+                                                                   "data/ugtopo/16_switch_12_hps.json",
+                                                                   #"data/ugtopo/19_switch_3_hps.json",
+                                                                   "data/ugtopo/19_switch_12_hps.json",
+                                                                   #"data/ugtopo/13_switch_3_hps.json",
+                                                                   "data/ugtopo/13_switch_12_hps.json"],
                                         current_data=exp.data)
 
+    print exp.data
+    exp.dump_data()
     exp.plot_data("initial_time", exp.data["all_keys"])
 
 if __name__ == "__main__":

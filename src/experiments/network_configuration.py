@@ -119,7 +119,7 @@ class NetworkConfiguration(object):
             self.nc_topo_str = "Linear topology with " + str(self.topo_params["num_switches"]) + " switches"
         elif self.topo_name == "microgrid_topo":
             self.topo = MicrogridsTopo(self.topo_params)
-            self.nc_topo_str = "Microgrid topology with " + str(self.topo_params["num_switches"]) + " switches"
+            self.nc_topo_str = "Microgrid topology with " + str(self.topo_params["num_switches"]) + " switches " + str(self.topo_params["nHostsPerSwitch"]) + " hps"
         else:
             raise NotImplementedError("Topology: %s" % self.topo_name)
 
