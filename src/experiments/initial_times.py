@@ -384,8 +384,15 @@ def main():
                                                                    "data/ugtopo/13_switch_12_hps.json"],
                                         current_data=exp.data)
 
-    print exp.data
     exp.dump_data()
+
+    exp.data["all_keys"].remove('328')
+    exp.data["all_keys"].remove('400')
+    exp.data["all_keys"].remove('657')
+    exp.data["all_keys"].remove('2304')
+    exp.data["all_keys"].remove('6516')
+    exp.data["all_keys"].remove('3904')
+
     exp.plot_data("initial_time", exp.data["all_keys"])
 
 if __name__ == "__main__":

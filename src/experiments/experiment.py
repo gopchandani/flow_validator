@@ -83,7 +83,7 @@ class Experiment(object):
         if type(data_dict.keys()[0]) == int:
             x = sorted(data_dict.keys(), key=int)
         elif type(data_dict.keys()[0]) == str or type(data_dict.keys()[0]) == unicode:
-            x = sorted(data_dict.keys())
+            x = sorted(data_dict.keys(), key=int)
 
         data_means = []
         data_sems = []
