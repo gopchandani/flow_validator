@@ -101,11 +101,11 @@ class InitialTimes(Experiment):
 
                     num_host_carrying_switches = 0
 
-                    if nc_topo_str == "Ring topology with 10 switches":
+                    if nc_topo_str == "Ring topology":
                         num_host_carrying_switches = 10
-                    elif nc_topo_str == "Clos topology with 14 switches":
+                    elif nc_topo_str == "Clos topology":
                         num_host_carrying_switches = 8
-                    elif nc_topo_str == "Clique topology with 4 switches":
+                    elif nc_topo_str == "Clique topology":
                         num_host_carrying_switches = 4
                     else:
                         print "nc_topo_str:", nc_topo_str
@@ -370,28 +370,30 @@ def main():
     exp.merge_data()
     exp.data = exp.generate_num_flow_path_keys(exp.data)
     exp.data = exp.merge_microgrid_data(microgrids_data_locations=[#"data/ugtopo/4_switch_3_hps.json",
-                                                                   "data/ugtopo/4_switch_12_hps.json",
+                                                                   #"data/ugtopo/4_switch_12_hps.json",
                                                                    #"data/ugtopo/7_switch_3_hps.json",
-                                                                   "data/ugtopo/7_switch_12_hps.json",
+                                                                   #"data/ugtopo/7_switch_12_hps.json",
                                                                    #"data/ugtopo/10_switch_3_hps.json",
-                                                                   "data/ugtopo/10_switch_12_hps.json",
+                                                                   #"data/ugtopo/10_switch_12_hps.json",
         #"data/ugtopo/10_switch_9_hps.json",
                                                                    #"data/ugtopo/16_switch_3_hps.json",
-                                                                   "data/ugtopo/16_switch_12_hps.json",
-                                                                   #"data/ugtopo/19_switch_3_hps.json",
-                                                                   "data/ugtopo/19_switch_12_hps.json",
+                                                                   #"data/ugtopo/16_switch_12_hps.json",
+                                                                   "data/ugtopo/19_switch_3_hps.json",
+                                                                   "data/ugtopo/19_switch_12_hps.json"],
                                                                    #"data/ugtopo/13_switch_3_hps.json",
-                                                                   "data/ugtopo/13_switch_12_hps.json"],
+                                                                   #"data/ugtopo/13_switch_12_hps.json"],
                                         current_data=exp.data)
 
     exp.dump_data()
 
-    exp.data["all_keys"].remove('328')
+    exp.data["all_keys"].remove('256')
+
+    #exp.data["all_keys"].remove('328')
     exp.data["all_keys"].remove('400')
-    exp.data["all_keys"].remove('657')
-    exp.data["all_keys"].remove('2304')
-    exp.data["all_keys"].remove('6516')
-    exp.data["all_keys"].remove('3904')
+    #exp.data["all_keys"].remove('657')
+    #exp.data["all_keys"].remove('2304')
+    #exp.data["all_keys"].remove('6516')
+    #exp.data["all_keys"].remove('3904')
 
     exp.plot_data("initial_time", exp.data["all_keys"])
 
