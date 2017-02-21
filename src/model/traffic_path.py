@@ -20,8 +20,9 @@ class TrafficPath(object):
         if path_edges and not nodes:
             self.populate_nodes_using_edges(self.path_edges)
 
-        self.src_node = self.path_nodes[0]
-        self.dst_node = self.path_nodes[len(self.path_nodes) - 1]
+        if self.path_nodes:
+            self.src_node = self.path_nodes[0]
+            self.dst_node = self.path_nodes[len(self.path_nodes) - 1]
 
     def compare_using_nodes_ids(self, other_node_ids):
         equal_paths = True
