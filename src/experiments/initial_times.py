@@ -332,7 +332,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 
         ip_str = "172.17.0.2"
         port_str = "8181"
-        num_grids = 3
+        num_grids = 6
         num_switches_per_grid = 3
 
         nc = NetworkConfiguration("onos",
@@ -364,6 +364,7 @@ def main():
     exp = InitialTimes(num_iterations, network_configurations)
 
     # Trigger the experiment
+
     # exp.trigger()
     # exp.dump_data()
 
@@ -394,8 +395,6 @@ def main():
     #exp.data["all_keys"].remove('2304')
     #exp.data["all_keys"].remove('6516')
     #exp.data["all_keys"].remove('3904')
-
-    exp.plot_data("initial_time", exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()
