@@ -332,7 +332,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 
         ip_str = "172.17.0.2"
         port_str = "8181"
-        num_grids = 3
+        num_grids = 6
         num_switches_per_grid = 3
 
         nc = NetworkConfiguration("onos",
@@ -364,29 +364,29 @@ def main():
     exp = InitialTimes(num_iterations, network_configurations)
 
     # Trigger the experiment
-    # exp.trigger()
-    # exp.dump_data()
-
-    exp.merge_data()
-    exp.data = exp.generate_num_flow_path_keys(exp.data)
-    exp.data = exp.merge_microgrid_data(microgrids_data_locations=[#"data/ugtopo/4_switch_3_hps.json",
-                                                                   "data/ugtopo/4_switch_12_hps.json",
-                                                                   #"data/ugtopo/7_switch_3_hps.json",
-                                                                   "data/ugtopo/7_switch_12_hps.json",
-                                                                   #"data/ugtopo/10_switch_3_hps.json",
-                                                                   "data/ugtopo/10_switch_12_hps.json",
-        #"data/ugtopo/10_switch_9_hps.json",
-                                                                   #"data/ugtopo/16_switch_3_hps.json",
-                                                                   "data/ugtopo/16_switch_12_hps.json",
-                                                                   #"data/ugtopo/19_switch_3_hps.json",
-                                                                   "data/ugtopo/19_switch_12_hps.json",
-                                                                   #"data/ugtopo/13_switch_3_hps.json",
-                                                                   "data/ugtopo/13_switch_12_hps.json"],
-                                        current_data=exp.data)
-
-    print exp.data
+    exp.trigger()
     exp.dump_data()
-    exp.plot_data("initial_time", exp.data["all_keys"])
+
+    # exp.merge_data()
+    # exp.data = exp.generate_num_flow_path_keys(exp.data)
+    # exp.data = exp.merge_microgrid_data(microgrids_data_locations=[#"data/ugtopo/4_switch_3_hps.json",
+    #                                                                "data/ugtopo/4_switch_12_hps.json",
+    #                                                                #"data/ugtopo/7_switch_3_hps.json",
+    #                                                                "data/ugtopo/7_switch_12_hps.json",
+    #                                                                #"data/ugtopo/10_switch_3_hps.json",
+    #                                                                "data/ugtopo/10_switch_12_hps.json",
+    #     #"data/ugtopo/10_switch_9_hps.json",
+    #                                                                #"data/ugtopo/16_switch_3_hps.json",
+    #                                                                "data/ugtopo/16_switch_12_hps.json",
+    #                                                                #"data/ugtopo/19_switch_3_hps.json",
+    #                                                                "data/ugtopo/19_switch_12_hps.json",
+    #                                                                #"data/ugtopo/13_switch_3_hps.json",
+    #                                                                "data/ugtopo/13_switch_12_hps.json"],
+    #                                     current_data=exp.data)
+    #
+    # print exp.data
+    # exp.dump_data()
+    # exp.plot_data("initial_time", exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()
