@@ -3,32 +3,54 @@ from matplotlib.ticker import MaxNLocator
 
 import sys
 import json
-import numpy as np
+import itertools
 
 from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
 from network_configuration import NetworkConfiguration
+from model.traffic import Traffic
+
+from analysis.policy_statement import PolicyStatement, PolicyConstraint
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
+
 
 __author__ = 'Rakesh Kumar'
 
 sys.path.append("./")
 
 
-class InitialTimes(Experiment):
+class PrecomputationIncrementalTimes(Experiment):
     def __init__(self,
                  num_iterations,
                  network_configurations):
 
-        super(InitialTimes, self).__init__("initial_times", num_iterations)
+        super(PrecomputationIncrementalTimes, self).__init__("precomputation_incremental_times", num_iterations)
 
         self.network_configurations = network_configurations
 
         self.data = {
             "initial_time": defaultdict(defaultdict),
+            "incremental_time": defaultdict(defaultdict),
             "all_keys": []
         }
+
+    def construct_policy_statements(self, nc, k):
+
+
+        all_host_ports_zone = []
+        for host_obj in nc.ng.get_host_obj_iter():
+            all_host_ports_zone.append(host_obj.switch_port)
+
+        t = Traffic(init_wildcard=True)
+        t.set_field("ethernet_type", 0x0800)
+        t.set_field("has_vlan_tag", 0)
+        c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+        lmbdas = list(itertools.permutations(nc.ng.L, k))
+        policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, lmbdas)]
+
+        return policy_statements
 
     def trigger(self):
 
@@ -37,6 +59,7 @@ class InitialTimes(Experiment):
         for nc in self.network_configurations:
             print "network_configuration:", nc
 
+            policy_statements = self.construct_policy_statements(nc, 2)
             nhps = None
 
             if nc.topo_name == "microgrid_topo":
@@ -45,6 +68,7 @@ class InitialTimes(Experiment):
                 nhps = nc.topo_params["num_hosts_per_switch"]
 
             self.data["initial_time"][nc.nc_topo_str][nhps] = []
+            self.data["incremental_time"][nc.nc_topo_str][nhps] = []
 
             for i in xrange(self.num_iterations):
                 print "iteration:", i + 1
@@ -54,6 +78,11 @@ class InitialTimes(Experiment):
                     fv.init_network_port_graph()
 
                 self.data["initial_time"][nc.nc_topo_str][nhps].append(t.secs)
+
+                with Timer(verbose=True) as t:
+                    violations = fv.validate_policy(policy_statements, optimization_type="With Preemption")
+
+                self.data["incremental_time"][nc.nc_topo_str][nhps].append(t.secs)
                 self.dump_data()
 
     def load_data_merge_nh(self, filename_list, merged_out_file):
@@ -303,18 +332,18 @@ def prepare_network_configurations(num_hosts_per_switch_list):
         #                           synthesis_name="AboresceneSynthesis",
         #                           synthesis_params={"apply_group_intents_immediately": True})
 
-        # nc = NetworkConfiguration("ryu",
-        #                           "127.0.0.1",
-        #                           6633,
-        #                           "http://localhost:8080/",
-        #                           "admin",
-        #                           "admin",
-        #                           "ring",
-        #                           {"num_switches": 10,
-        #                            "num_hosts_per_switch": hps},
-        #                           conf_root="configurations/",
-        #                           synthesis_name="AboresceneSynthesis",
-        #                           synthesis_params={"apply_group_intents_immediately": True})
+        nc = NetworkConfiguration("ryu",
+                                  "127.0.0.1",
+                                  6633,
+                                  "http://localhost:8080/",
+                                  "admin",
+                                  "admin",
+                                  "ring",
+                                  {"num_switches": 10,
+                                   "num_hosts_per_switch": hps},
+                                  conf_root="configurations/",
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
 
         # nc = NetworkConfiguration("ryu",
         #                           "127.0.0.1",
@@ -330,25 +359,25 @@ def prepare_network_configurations(num_hosts_per_switch_list):
         #                           synthesis_name="AboresceneSynthesis",
         #                           synthesis_params={"apply_group_intents_immediately": True})
 
-        ip_str = "172.17.0.2"
-        port_str = "8181"
-        num_grids = 6
-        num_switches_per_grid = 3
-
-        nc = NetworkConfiguration("onos",
-                                  ip_str,
-                                  int(port_str),
-                                  "http://" + ip_str + ":" + port_str + "/onos/v1/",
-                                  "karaf",
-                                  "karaf",
-                                  "microgrid_topo",
-                                  {"num_switches": 1 + num_grids * num_switches_per_grid,
-                                   "nGrids": num_grids,
-                                   "nSwitchesPerGrid": num_switches_per_grid,
-                                   "nHostsPerSwitch": hps},
-                                  conf_root="configurations/",
-                                  synthesis_name=None,
-                                  synthesis_params=None)
+        # ip_str = "172.17.0.2"
+        # port_str = "8181"
+        # num_grids = 6
+        # num_switches_per_grid = 3
+        #
+        # nc = NetworkConfiguration("onos",
+        #                           ip_str,
+        #                           int(port_str),
+        #                           "http://" + ip_str + ":" + port_str + "/onos/v1/",
+        #                           "karaf",
+        #                           "karaf",
+        #                           "microgrid_topo",
+        #                           {"num_switches": 1 + num_grids * num_switches_per_grid,
+        #                            "nGrids": num_grids,
+        #                            "nSwitchesPerGrid": num_switches_per_grid,
+        #                            "nHostsPerSwitch": hps},
+        #                           conf_root="configurations/",
+        #                           synthesis_name=None,
+        #                           synthesis_params=None)
 
         nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         nc_list.append(nc)
@@ -359,29 +388,29 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 2
-    num_hosts_per_switch_list = [9]#[2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
-    exp = InitialTimes(num_iterations, network_configurations)
+    exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 
     # Trigger the experiment
 
-    # exp.trigger()
-    # exp.dump_data()
-
-    exp.merge_data()
-    exp.data = exp.generate_num_flow_path_keys(exp.data)
-    exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/ugtopo/19_switch_3_hps.json",
-                                                                   "data/ugtopo/19_switch_6_hps.json",
-                                                                   "data/ugtopo/19_switch_9_hps.json",
-                                                                   "data/ugtopo/19_switch_12_hps.json"],
-                                        current_data=exp.data)
-
+    exp.trigger()
     exp.dump_data()
-    exp.data["all_keys"].remove('256')
-    exp.data["all_keys"].remove('400')
-    exp.data["all_keys"].remove('1993')
-    exp.data["all_keys"].remove('4423')
-    exp.plot_data("initial_time", exp.data["all_keys"])
+
+    # exp.merge_data()
+    # exp.data = exp.generate_num_flow_path_keys(exp.data)
+    # exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/ugtopo/19_switch_3_hps.json",
+    #                                                                "data/ugtopo/19_switch_6_hps.json",
+    #                                                                "data/ugtopo/19_switch_9_hps.json",
+    #                                                                "data/ugtopo/19_switch_12_hps.json"],
+    #                                     current_data=exp.data)
+    #
+    # exp.dump_data()
+    # exp.data["all_keys"].remove('256')
+    # exp.data["all_keys"].remove('400')
+    # exp.data["all_keys"].remove('1993')
+    # exp.data["all_keys"].remove('4423')
+    # exp.plot_data("initial_time", exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()

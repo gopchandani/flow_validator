@@ -318,13 +318,13 @@ def main():
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
 
-    exp.trigger()
+    #exp.trigger()
     # exp.dump_data()
 
 
-    #exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170126_172701.json")
-    #exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
-    #exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
+    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170126_172701.json")
+    exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
+    exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
 
 if __name__ == "__main__":
     main()
