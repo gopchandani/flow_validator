@@ -370,31 +370,18 @@ def main():
 
     exp.merge_data()
     exp.data = exp.generate_num_flow_path_keys(exp.data)
-    exp.data = exp.merge_microgrid_data(microgrids_data_locations=[#"data/ugtopo/4_switch_3_hps.json",
-                                                                   #"data/ugtopo/4_switch_12_hps.json",
-                                                                   #"data/ugtopo/7_switch_3_hps.json",
-                                                                   #"data/ugtopo/7_switch_12_hps.json",
-                                                                   #"data/ugtopo/10_switch_3_hps.json",
-                                                                   #"data/ugtopo/10_switch_12_hps.json",
-        #"data/ugtopo/10_switch_9_hps.json",
-                                                                   #"data/ugtopo/16_switch_3_hps.json",
-                                                                   #"data/ugtopo/16_switch_12_hps.json",
-                                                                   "data/ugtopo/19_switch_3_hps.json",
+    exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/ugtopo/19_switch_3_hps.json",
+                                                                   "data/ugtopo/19_switch_6_hps.json",
+                                                                   "data/ugtopo/19_switch_9_hps.json",
                                                                    "data/ugtopo/19_switch_12_hps.json"],
-                                                                   #"data/ugtopo/13_switch_3_hps.json",
-                                                                   #"data/ugtopo/13_switch_12_hps.json"],
                                         current_data=exp.data)
 
     exp.dump_data()
-
     exp.data["all_keys"].remove('256')
-
-    #exp.data["all_keys"].remove('328')
     exp.data["all_keys"].remove('400')
-    #exp.data["all_keys"].remove('657')
-    #exp.data["all_keys"].remove('2304')
-    #exp.data["all_keys"].remove('6516')
-    #exp.data["all_keys"].remove('3904')
+    exp.data["all_keys"].remove('1993')
+    exp.data["all_keys"].remove('4423')
+    exp.plot_data("initial_time", exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()
