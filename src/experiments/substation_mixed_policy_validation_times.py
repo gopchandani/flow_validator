@@ -81,19 +81,20 @@ class SubstationMixedPolicyValidationTimes(Experiment):
             total_host_pairs = (nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"] *
                                 nc.topo_params["num_switches"] * nc.topo_params["num_hosts_per_switch"])
 
+            self.data["initial_time"]["|L|: " + sL][str(total_host_pairs)] = []
+
+            with Timer(verbose=True) as t:
+                fv = FlowValidator(nc.ng)
+                fv.init_network_port_graph()
+            self.data["initial_time"]["|L|: " + sL][str(total_host_pairs)].append(t.secs)
+
+            print "Initialized analysis."
+
             for k in self.k_values:
                 policy_statements = self.construct_policy_statements(nc, k)
                 self.data["validation_time"]["k: " + str(k) + ", |L|: " + sL][str(total_host_pairs)] = []
-                self.data["initial_time"]["|L|: " + sL][str(total_host_pairs)] = []
 
                 for i in range(self.num_iterations):
-
-                    with Timer(verbose=True) as t:
-                        fv = FlowValidator(nc.ng)
-                        fv.init_network_port_graph()
-                    self.data["initial_time"]["|L|: " + sL][str(total_host_pairs)].append(t.secs)
-
-                    print "Initialized analysis."
 
                     with Timer(verbose=True) as t:
                         violations = fv.validate_policy(policy_statements, optimization_type="With Preemption")
@@ -306,7 +307,7 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 15
+    num_iterations = 1
     num_switches_in_clique_list = [4]
     num_hosts_per_switch_list = [2, 4, 6, 8]
     num_per_switch_links_list = [3]
@@ -318,14 +319,15 @@ def main():
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
 
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
-    # exp.data = exp.load_data_merge_iterations(["data/case_study_1/5_iter_1.json",
-    #                                            "data/case_study_1/5_iter_2.json",
-    #                                            "data/case_study_1/5_iter_3.json"])
-    # exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
-    # exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
+    exp.data = exp.load_data_merge_iterations(["data/case_study_1/1_iter_1.json",
+                                               "data/case_study_1/5_iter_1.json",
+                                               "data/case_study_1/5_iter_2.json",
+                                               "data/case_study_1/5_iter_3.json"])
+    exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
+    exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
 
 if __name__ == "__main__":
     main()
