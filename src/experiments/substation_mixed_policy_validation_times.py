@@ -167,8 +167,8 @@ class SubstationMixedPolicyValidationTimes(Experiment):
             ax.set_ylim(ymin=low_ylim*y_min_factor)
             ax.set_ylim(ymax=high_ylim*y_max_factor)
         elif y_scale == "log":
-            ax.set_ylim(ymin=2)
-            ax.set_ylim(ymax=1000)
+            ax.set_ylim(ymin=0.1)
+            ax.set_ylim(ymax=250)
 
         ax.set_yscale(y_scale)
 
@@ -306,7 +306,7 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 5
+    num_iterations = 15
     num_switches_in_clique_list = [4]
     num_hosts_per_switch_list = [2, 4, 6, 8]
     num_per_switch_links_list = [3]
@@ -318,13 +318,14 @@ def main():
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
 
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
-    exp.data = exp.load_data_merge_iterations(["data/case_study_1/5_iter_1.json",
-                                               "data/case_study_1/5_iter_2.json"])
-    exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
-    exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
+    # exp.data = exp.load_data_merge_iterations(["data/case_study_1/5_iter_1.json",
+    #                                            "data/case_study_1/5_iter_2.json",
+    #                                            "data/case_study_1/5_iter_3.json"])
+    # exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
+    # exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
 
 if __name__ == "__main__":
     main()
