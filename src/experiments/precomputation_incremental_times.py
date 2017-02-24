@@ -318,32 +318,32 @@ def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for hps in num_hosts_per_switch_list:
 
-        # nc = NetworkConfiguration("ryu",
-        #                           "127.0.0.1",
-        #                           6633,
-        #                           "http://localhost:8080/",
-        #                           "admin",
-        #                           "admin",
-        #                           "cliquetopo",
-        #                           {"num_switches": 4,
-        #                            "per_switch_links": 3,
-        #                            "num_hosts_per_switch": hps},
-        #                           conf_root="configurations/",
-        #                           synthesis_name="AboresceneSynthesis",
-        #                           synthesis_params={"apply_group_intents_immediately": True})
-
         nc = NetworkConfiguration("ryu",
                                   "127.0.0.1",
                                   6633,
                                   "http://localhost:8080/",
                                   "admin",
                                   "admin",
-                                  "ring",
-                                  {"num_switches": 10,
+                                  "cliquetopo",
+                                  {"num_switches": 4,
+                                   "per_switch_links": 3,
                                    "num_hosts_per_switch": hps},
                                   conf_root="configurations/",
                                   synthesis_name="AboresceneSynthesis",
                                   synthesis_params={"apply_group_intents_immediately": True})
+
+        # nc = NetworkConfiguration("ryu",
+        #                           "127.0.0.1",
+        #                           6633,
+        #                           "http://localhost:8080/",
+        #                           "admin",
+        #                           "admin",
+        #                           "ring",
+        #                           {"num_switches": 10,
+        #                            "num_hosts_per_switch": hps},
+        #                           conf_root="configurations/",
+        #                           synthesis_name="AboresceneSynthesis",
+        #                           synthesis_params={"apply_group_intents_immediately": True})
 
         # nc = NetworkConfiguration("ryu",
         #                           "127.0.0.1",
@@ -387,8 +387,8 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 
 def main():
 
-    num_iterations = 2
-    num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
+    num_iterations = 1
+    num_hosts_per_switch_list = [4]#[2, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 

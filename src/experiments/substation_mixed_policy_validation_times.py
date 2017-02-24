@@ -168,7 +168,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
             ax.set_ylim(ymax=high_ylim*y_max_factor)
         elif y_scale == "log":
             ax.set_ylim(ymin=2)
-            ax.set_ylim(ymax=100000)
+            ax.set_ylim(ymax=1000)
 
         ax.set_yscale(y_scale)
 
@@ -308,21 +308,21 @@ def main():
 
     num_iterations = 5
     num_switches_in_clique_list = [4]
-    num_hosts_per_switch_list = [1]#[2, 4, 6, 8]
+    num_hosts_per_switch_list = [2, 4, 6, 8]
     num_per_switch_links_list = [3]
 
-    k_values = [1]#[0, 1, 2, 3]
+    k_values = [0, 1, 2, 3]
     network_configurations = prepare_network_configurations(num_switches_in_clique_list,
                                                             num_hosts_per_switch_list,
                                                             num_per_switch_links_list)
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
 
-    #exp.trigger()
+    # exp.trigger()
     # exp.dump_data()
 
-
-    exp.load_data("data/substation_mixed_policy_validation_times_1_iterations_20170126_172701.json")
+    exp.data = exp.load_data_merge_iterations(["data/case_study_1/5_iter_1.json",
+                                               "data/case_study_1/5_iter_2.json"])
     exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
     exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
 
