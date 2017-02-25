@@ -307,7 +307,7 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 1
+    num_iterations = 15
     num_switches_in_clique_list = [4]
     num_hosts_per_switch_list = [2, 4, 6, 8]
     num_per_switch_links_list = [3]
@@ -323,6 +323,7 @@ def main():
     # exp.dump_data()
 
     exp.data = exp.load_data_merge_iterations(["data/case_study_1/1_iter_1.json",
+                                               "data/case_study_1/15_iter_1.json",
                                                "data/case_study_1/5_iter_1.json",
                                                "data/case_study_1/5_iter_2.json",
                                                "data/case_study_1/5_iter_3.json"])

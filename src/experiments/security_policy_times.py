@@ -387,27 +387,27 @@ def main():
     nc_list = prepare_network_configurations(num_grids_list, num_hosts_per_switch_list)
     exp = SecurityPolicyTimes(nc_list, num_iterations)
 
-    exp.trigger()
+    # exp.trigger()
     # exp.dump_data()
 
-    # exp.load_data("data/security_policy_times_1_iterations_20161226_114304.json")
-    # exp.plot_data()
-    #
-    # exp.data = exp.load_data_merge_num_statements(
-    #     ["data/security_policy_times_1_iterations_20161226_114304.json",
-    #      "data/security_policy_times_1_iterations_20161226_125827.json",
-    #      "data/security_policy_times_1_iterations_20161226_162225.json",
-    #      "data/security_policy_times_1_iterations_20161228_172723.json"
-    #      ])
-    #
-    # exp.data = exp.load_data_merge_nhps(["data/security_policy_times_1_iterations_20161229_092125.json"],
-    #                                     prev_merged_data=exp.data)
-    #
-    # exp.data = exp.load_data_merge_nhps(["data/security_policy_times_1_iterations_20161230_101406.json"],
-    #                                     prev_merged_data=exp.data)
-    #
-    #
-    # exp.plot_data()
+    exp.load_data("data/security_policy_times_1_iterations_20161226_114304.json")
+    exp.plot_data()
+
+    exp.data = exp.load_data_merge_num_statements(
+        ["data/security_policy_times_1_iterations_20161226_114304.json",
+         "data/security_policy_times_1_iterations_20161226_125827.json",
+         "data/security_policy_times_1_iterations_20161226_162225.json",
+         "data/security_policy_times_1_iterations_20161228_172723.json"
+         ])
+
+    exp.data = exp.load_data_merge_nhps(["data/security_policy_times_1_iterations_20161229_092125.json"],
+                                        prev_merged_data=exp.data)
+
+    exp.data = exp.load_data_merge_nhps(["data/security_policy_times_1_iterations_20161230_101406.json"],
+                                        prev_merged_data=exp.data)
+
+
+    exp.plot_data()
 
 if __name__ == "__main__":
     main()
