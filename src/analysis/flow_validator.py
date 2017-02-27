@@ -3,6 +3,7 @@ import sys
 sys.path.append("./")
 
 from collections import defaultdict
+from timer import Timer
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
 from util import get_specific_traffic
@@ -259,7 +260,7 @@ class FlowValidator(object):
                                                     updating=True)
                 lmbda.remove(next_link_to_fail)
 
-    def validate_policy_with_preemption(self):
+    def validate_policy_with_preemption(self, active_path_computation_times):
 
         for lmbda in self.p_map:
             for src_port, dst_port in list(self.p_map[lmbda].keys()):
@@ -272,7 +273,12 @@ class FlowValidator(object):
                     ps.traffic.set_field("in_port",
                                          int(src_port.port_number))
 
-                    active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)
+                    with Timer(verbose=True) as t:
+                        active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)
+
+                    if active_path_computation_times != None:
+                        active_path_computation_times.append(t.secs)
+
                     failover_path = None
 
                     if active_path:
@@ -324,7 +330,7 @@ class FlowValidator(object):
                                                     "")
                                 self.violations.append(v)
 
-    def validate_policy(self, policy_statement_list, optimization_type):
+    def validate_policy(self, policy_statement_list, optimization_type, active_path_computation_times=None):
 
         # Avoid duplication of effort across policies
         # p_map is a two-dimensional dictionary:
@@ -344,7 +350,7 @@ class FlowValidator(object):
         self.violations = []
 
         if optimization_type == "With Preemption":
-            self.validate_policy_with_preemption()
+            self.validate_policy_with_preemption(active_path_computation_times)
         elif optimization_type == "Without Preemption":
             self.validate_policy_without_preemption([])
 

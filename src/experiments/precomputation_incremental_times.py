@@ -32,7 +32,7 @@ class PrecomputationIncrementalTimes(Experiment):
 
         self.data = {
             "initial_time": defaultdict(defaultdict),
-            "incremental_time": defaultdict(defaultdict),
+            "active_path_computation_time": defaultdict(defaultdict),
             "all_keys": []
         }
 
@@ -68,7 +68,7 @@ class PrecomputationIncrementalTimes(Experiment):
                 nhps = nc.topo_params["num_hosts_per_switch"]
 
             self.data["initial_time"][nc.nc_topo_str][nhps] = []
-            self.data["incremental_time"][nc.nc_topo_str][nhps] = []
+            self.data["active_path_computation_time"][nc.nc_topo_str][nhps] = []
 
             for i in xrange(self.num_iterations):
                 print "iteration:", i + 1
@@ -80,10 +80,9 @@ class PrecomputationIncrementalTimes(Experiment):
                 self.data["initial_time"][nc.nc_topo_str][nhps].append(t.secs)
 
                 with Timer(verbose=True) as t:
-                    violations = fv.validate_policy(policy_statements, optimization_type="With Preemption")
-
-                self.data["incremental_time"][nc.nc_topo_str][nhps].append(t.secs)
-                self.dump_data()
+                    violations = fv.validate_policy(policy_statements,
+                                                    optimization_type="With Preemption",
+                                                    active_path_computation_times=self.data["active_path_computation_time"][nc.nc_topo_str][nhps])
 
     def load_data_merge_nh(self, filename_list, merged_out_file):
         merged_data = None
@@ -388,7 +387,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 1
-    num_hosts_per_switch_list = [4]#[2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 
