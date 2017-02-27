@@ -169,7 +169,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
             ax.set_ylim(ymax=high_ylim*y_max_factor)
         elif y_scale == "log":
             ax.set_ylim(ymin=0.1)
-            ax.set_ylim(ymax=250)
+            ax.set_ylim(ymax=500)
 
         ax.set_yscale(y_scale)
 
@@ -202,14 +202,14 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                                         "",
                                         y_scale='log',
                                         x_min_factor=1.0,
-                                        x_max_factor=1,
+                                        x_max_factor=1.01,
                                         y_min_factor=0.01,
                                         y_max_factor=10,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
 
         xlabels = ax1.get_xticklabels()
-        plt.setp(xlabels, rotation=0, fontsize=10)
+        plt.setp(xlabels, rotation=45, fontsize=10)
 
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
@@ -298,7 +298,7 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
                                           synthesis_name="AboresceneSynthesis",
                                           synthesis_params={"apply_group_intents_immediately": True})
 
-                nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+                nc.setup_network_graph(mininet_setup_gap=15, synthesis_setup_gap=15)
 
                 nc_list.append(nc)
 
@@ -307,9 +307,9 @@ def prepare_network_configurations(num_switches_in_clique_list, num_hosts_per_sw
 
 def main():
 
-    num_iterations = 15
+    num_iterations = 20
     num_switches_in_clique_list = [4]
-    num_hosts_per_switch_list = [2, 4, 6, 8]
+    num_hosts_per_switch_list = [5, 10, 15, 20, 25, 30] # [4, 8, 12, 16, 20]
     num_per_switch_links_list = [3]
 
     k_values = [0, 1, 2, 3]
@@ -318,15 +318,11 @@ def main():
                                                             num_per_switch_links_list)
 
     exp = SubstationMixedPolicyValidationTimes(network_configurations, k_values, num_iterations)
-
     # exp.trigger()
     # exp.dump_data()
 
-    exp.data = exp.load_data_merge_iterations(["data/case_study_1/1_iter_1.json",
-                                               "data/case_study_1/15_iter_1.json",
-                                               "data/case_study_1/5_iter_1.json",
-                                               "data/case_study_1/5_iter_2.json",
-                                               "data/case_study_1/5_iter_3.json"])
+    exp.data = exp.load_data_merge_iterations(["data/case_study_1/20_iter_1.json",
+                                               "data/case_study_1/20_iter_2.json"])
     exp.plot_data(key="initial_time", subkeys=exp.data["initial_time"]["|L|: 6"].keys())
     exp.plot_data(key="validation_time", subkeys=exp.data["validation_time"]["k: 0, |L|: 6"].keys())
 
