@@ -101,6 +101,36 @@ class PrecomputationIncrementalTimes(Experiment):
 
         return merged_data
 
+    def load_data_merge_iterations(self, filename_list):
+
+        '''
+        :param filename_list: List of files with exact same network configurations in them
+        :return: merged data
+        '''
+
+        merged_data = None
+
+        for filename in filename_list:
+
+            print "Reading file:", filename
+
+            with open(filename, "r") as infile:
+                this_data = json.load(infile)
+
+            if merged_data:
+                for ds in merged_data:
+                    for case in merged_data[ds]:
+                        for num_conns in merged_data[ds][case]:
+                            try:
+                                merged_data[ds][case][num_conns].extend(this_data[ds][case][num_conns])
+                            except KeyError:
+                                print filename, ds, case, num_conns, "not found."
+            else:
+                merged_data = this_data
+
+        return merged_data
+
+
     def load_data_merge_network_config(self, data_dict_list):
         merged_data = None
 
@@ -147,25 +177,28 @@ class PrecomputationIncrementalTimes(Experiment):
         return flow_path_keys_data
 
     def merge_data(self):
-        path_prefix = "data/14_switch_clos/"
+        path_prefix = "data/precomputation_time/14_switch_clos/"
         data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps.json",
                                                        path_prefix + "6_hps.json",
                                                        path_prefix + "8_hps.json",
                                                        path_prefix + "10_hps.json"],
                                                       path_prefix + "2_iter.json")
 
-        path_prefix = "data/10_switch_ring/"
+        path_prefix = "data/precomputation_time/10_switch_ring/"
         data_10_switch_ring = self.load_data_merge_nh([path_prefix + "2_4_6_hps.json",
                                                        path_prefix + "8_hps.json",
                                                        path_prefix + "10_hps.json"],
                                                       path_prefix + "2_iter.json")
 
-        path_prefix = "data/4_switch_clique/"
+        path_prefix = "data/precomputation_time/4_switch_clique/"
         data_4_switch_clique = self.load_data_merge_nh([path_prefix + "4_8_10_hps.json",
                                                         path_prefix + "20_hps.json",
                                                         path_prefix + "25_hps.json",
                                                         path_prefix + "16_hps.json"],
                                                       path_prefix + "2_iter.json")
+
+        data_4_switch_clique = self.load_data_merge_iterations([path_prefix + "2_iter.json",
+                                                                path_prefix + "1_iter.json"])
 
         merged_data = self.load_data_merge_network_config([data_14_switch_clos,
                                                            data_10_switch_ring,
@@ -175,9 +208,8 @@ class PrecomputationIncrementalTimes(Experiment):
 
         return self.data
 
-    def merge_microgrid_data(self, microgrids_data_locations, current_data):
+    def merge_microgrid_data(self, microgrids_data_locations, current_data, ds):
         current_data["initial_time"]["Microgrid Topology"] = defaultdict(list)
-        ds = "initial_time"
 
         for loc in microgrids_data_locations:
             this_data = None
@@ -417,29 +449,32 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 1
-    num_hosts_per_switch_list = [2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [1]#, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 
     # Trigger the experiment
 
-    exp.trigger()
-    exp.dump_data()
-
-    # exp.merge_data()
-    # exp.data = exp.generate_num_flow_path_keys(exp.data)
-    # exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/ugtopo/19_switch_3_hps.json",
-    #                                                                "data/ugtopo/19_switch_6_hps.json",
-    #                                                                "data/ugtopo/19_switch_9_hps.json",
-    #                                                                "data/ugtopo/19_switch_12_hps.json"],
-    #                                     current_data=exp.data)
-    #
+    # exp.trigger()
     # exp.dump_data()
-    # exp.data["all_keys"].remove('256')
-    # exp.data["all_keys"].remove('400')
-    # exp.data["all_keys"].remove('1993')
-    # exp.data["all_keys"].remove('4423')
-    # exp.plot_data("initial_time", exp.data["all_keys"])
+
+    # Merge the data
+    exp.merge_data()
+    exp.data = exp.generate_num_flow_path_keys(exp.data)
+    exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/precomputation_time/ugtopo/19_switch_3_hps.json",
+                                                                   "data/precomputation_time/ugtopo/19_switch_6_hps.json",
+                                                                   "data/precomputation_time/ugtopo/19_switch_9_hps.json",
+                                                                   "data/precomputation_time/ugtopo/19_switch_12_hps.json"],
+                                        current_data=exp.data,
+                                        ds="initial_time")
+
+    # Plotting the data
+    exp.dump_data()
+    exp.data["all_keys"].remove('256')
+    exp.data["all_keys"].remove('400')
+    exp.data["all_keys"].remove('1993')
+    exp.data["all_keys"].remove('4423')
+    exp.plot_data("initial_time", exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()
