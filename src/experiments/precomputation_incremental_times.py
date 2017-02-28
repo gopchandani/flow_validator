@@ -130,7 +130,6 @@ class PrecomputationIncrementalTimes(Experiment):
 
         return merged_data
 
-
     def load_data_merge_network_config(self, data_dict_list):
         merged_data = None
 
@@ -145,15 +144,36 @@ class PrecomputationIncrementalTimes(Experiment):
 
         return merged_data
 
-    def generate_num_flow_path_keys(self, data):
+    def load_data_merge_ds(self, data_dict_list):
+        merged_data = self.data
 
-        all_keys = set()
+        for this_data in data_dict_list:
 
-        flow_path_keys_data = {"initial_time": defaultdict(defaultdict)}
+            if merged_data:
+                for ds in this_data:
+                    if ds not in merged_data:
+                        merged_data[ds] = this_data[ds]
+            else:
+                merged_data = this_data
+
+        return merged_data
+
+    def generate_num_flow_path_keys(self, data, ds_key):
+
+        if "all_keys" in data:
+            all_keys = set(data["all_keys"])
+        else:
+            all_keys = set()
+
+        merged_data = {ds_key: defaultdict(defaultdict)}
 
         for ds in data:
-            for nc_topo_str in data[ds]:
-                for nh in data[ds][nc_topo_str]:
+            if ds != ds_key:
+                merged_data[ds] = data[ds]
+                continue
+
+            for nc_topo_str in data[ds_key]:
+                for nh in data[ds_key][nc_topo_str]:
 
                     num_host_carrying_switches = 0
 
@@ -169,12 +189,12 @@ class PrecomputationIncrementalTimes(Experiment):
 
                     # Total flows = total hosts squared.
                     new_key = str(int(nh) * num_host_carrying_switches * int(nh) * num_host_carrying_switches)
-                    flow_path_keys_data[ds][nc_topo_str][new_key] = data[ds][nc_topo_str][nh]
+                    merged_data[ds_key][nc_topo_str][new_key] = data[ds_key][nc_topo_str][nh]
 
                     all_keys.add(new_key)
 
-        flow_path_keys_data["all_keys"] = list(all_keys)
-        return flow_path_keys_data
+        merged_data["all_keys"] = list(all_keys)
+        return merged_data
 
     def merge_data(self):
         path_prefix = "data/precomputation_time/14_switch_clos/"
@@ -309,16 +329,16 @@ class PrecomputationIncrementalTimes(Experiment):
         if ytick_labels:
             ax.set_yticklabels(ytick_labels)
 
-    def plot_data(self, key, subkeys):
+    def plot_data(self, subkeys):
         f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.0, 4.0))
 
         data_xtick_labels = subkeys
         data_xticks = [int(x) for x in data_xtick_labels]
 
         self.plot_lines_with_error_bars(ax1,
-                                        key,
+                                        "initial_time",
                                         "Number of host pair traffic paths",
-                                        "Time (seconds)",
+                                        "Precomputation (seconds)",
                                         "",
                                         y_scale='log',
                                         x_min_factor=0.9,
@@ -348,15 +368,15 @@ class PrecomputationIncrementalTimes(Experiment):
         data_xticks = [int(x) for x in data_xtick_labels]
 
         self.plot_lines_with_error_bars(ax1,
-                                        key,
+                                        "active_path_computation_time",
                                         "Number of host pair traffic paths",
-                                        "Time (seconds)",
+                                        "Active Path Computation (seconds)",
                                         "",
-                                        y_scale='log',
+                                        y_scale='linear',
                                         x_min_factor=0.9,
                                         x_max_factor=1.10,
                                         y_min_factor=0.01,
-                                        y_max_factor=10,
+                                        y_max_factor=1,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
 
@@ -460,7 +480,7 @@ def main():
 
     # Merge the data
     exp.merge_data()
-    exp.data = exp.generate_num_flow_path_keys(exp.data)
+    exp.data = exp.generate_num_flow_path_keys(exp.data, "initial_time")
     exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/precomputation_time/ugtopo/19_switch_3_hps.json",
                                                                    "data/precomputation_time/ugtopo/19_switch_6_hps.json",
                                                                    "data/precomputation_time/ugtopo/19_switch_9_hps.json",
@@ -468,13 +488,17 @@ def main():
                                         current_data=exp.data,
                                         ds="initial_time")
 
+    exp.data = exp.load_data_merge_ds([json.load(open("data/incremental_time/4_switch_clique.json", "r"))])
+    exp.data = exp.generate_num_flow_path_keys(exp.data, "active_path_computation_time")
+
     # Plotting the data
     exp.dump_data()
     exp.data["all_keys"].remove('256')
     exp.data["all_keys"].remove('400')
+    exp.data["all_keys"].remove('535')
     exp.data["all_keys"].remove('1993')
     exp.data["all_keys"].remove('4423')
-    exp.plot_data("initial_time", exp.data["all_keys"])
+    exp.plot_data(exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()
