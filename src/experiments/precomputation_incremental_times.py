@@ -310,24 +310,42 @@ class PrecomputationIncrementalTimes(Experiment):
         plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
         plt.show()
 
+        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.0, 4.0))
+
+        data_xtick_labels = subkeys
+        data_xticks = [int(x) for x in data_xtick_labels]
+
+        self.plot_lines_with_error_bars(ax1,
+                                        key,
+                                        "Number of host pair traffic paths",
+                                        "Time (seconds)",
+                                        "",
+                                        y_scale='log',
+                                        x_min_factor=0.9,
+                                        x_max_factor=1.10,
+                                        y_min_factor=0.01,
+                                        y_max_factor=10,
+                                        xticks=data_xticks,
+                                        xtick_labels=data_xtick_labels)
+
+        xlabels = ax1.get_xticklabels()
+        plt.setp(xlabels, rotation=45, fontsize=10)
+
+        # Shrink current axis's height by 25% on the bottom
+        box = ax1.get_position()
+        ax1.set_position([box.x0, box.y0 + box.height * 0.3, box.width, box.height * 0.7])
+        handles, labels = ax1.get_legend_handles_labels()
+
+        ax1.legend(handles, labels, shadow=True, fontsize=10, loc='upper center', ncol=2, markerscale=1.0,
+                   frameon=True, fancybox=True, columnspacing=3.5, bbox_to_anchor=[0.5, -0.25])
+
+        plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
+        plt.show()
+
 
 def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for hps in num_hosts_per_switch_list:
-
-        nc = NetworkConfiguration("ryu",
-                                  "127.0.0.1",
-                                  6633,
-                                  "http://localhost:8080/",
-                                  "admin",
-                                  "admin",
-                                  "cliquetopo",
-                                  {"num_switches": 4,
-                                   "per_switch_links": 3,
-                                   "num_hosts_per_switch": hps},
-                                  conf_root="configurations/",
-                                  synthesis_name="AboresceneSynthesis",
-                                  synthesis_params={"apply_group_intents_immediately": True})
 
         # nc = NetworkConfiguration("ryu",
         #                           "127.0.0.1",
@@ -335,12 +353,26 @@ def prepare_network_configurations(num_hosts_per_switch_list):
         #                           "http://localhost:8080/",
         #                           "admin",
         #                           "admin",
-        #                           "ring",
-        #                           {"num_switches": 10,
+        #                           "cliquetopo",
+        #                           {"num_switches": 4,
+        #                            "per_switch_links": 3,
         #                            "num_hosts_per_switch": hps},
         #                           conf_root="configurations/",
         #                           synthesis_name="AboresceneSynthesis",
         #                           synthesis_params={"apply_group_intents_immediately": True})
+
+        nc = NetworkConfiguration("ryu",
+                                  "127.0.0.1",
+                                  6633,
+                                  "http://localhost:8080/",
+                                  "admin",
+                                  "admin",
+                                  "ring",
+                                  {"num_switches": 10,
+                                   "num_hosts_per_switch": hps},
+                                  conf_root="configurations/",
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
 
         # nc = NetworkConfiguration("ryu",
         #                           "127.0.0.1",
@@ -385,7 +417,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 1
-    num_hosts_per_switch_list = [1]#[2, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [2, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 
