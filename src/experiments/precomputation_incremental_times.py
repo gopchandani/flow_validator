@@ -36,8 +36,7 @@ class PrecomputationIncrementalTimes(Experiment):
             "all_keys": []
         }
 
-    def construct_policy_statements(self, nc, k):
-
+    def construct_policy_statements(self, nc):
 
         all_host_ports_zone = []
         for host_obj in nc.ng.get_host_obj_iter():
@@ -46,9 +45,8 @@ class PrecomputationIncrementalTimes(Experiment):
         t = Traffic(init_wildcard=True)
         t.set_field("ethernet_type", 0x0800)
         t.set_field("has_vlan_tag", 0)
-        c = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-        lmbdas = list(itertools.permutations(nc.ng.L, k))
-        policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, lmbdas)]
+        c = [PolicyConstraint(PATH_LENGTH_CONSTRAINT, None)]
+        policy_statements = [PolicyStatement(nc.ng, all_host_ports_zone, all_host_ports_zone, t, c, [()])]
 
         return policy_statements
 
@@ -59,7 +57,7 @@ class PrecomputationIncrementalTimes(Experiment):
         for nc in self.network_configurations:
             print "network_configuration:", nc
 
-            policy_statements = self.construct_policy_statements(nc, 2)
+            policy_statements = self.construct_policy_statements(nc)
             nhps = None
 
             if nc.topo_name == "microgrid_topo":
