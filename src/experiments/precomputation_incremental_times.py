@@ -196,7 +196,7 @@ class PrecomputationIncrementalTimes(Experiment):
         merged_data["all_keys"] = list(all_keys)
         return merged_data
 
-    def merge_data(self):
+    def merge_precomputation_data(self):
         path_prefix = "data/precomputation_time/14_switch_clos/"
         data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps.json",
                                                        path_prefix + "6_hps.json",
@@ -205,10 +205,17 @@ class PrecomputationIncrementalTimes(Experiment):
                                                       path_prefix + "2_iter.json")
 
         path_prefix = "data/precomputation_time/10_switch_ring/"
-        data_10_switch_ring = self.load_data_merge_nh([path_prefix + "2_4_6_hps.json",
-                                                       path_prefix + "8_hps.json",
-                                                       path_prefix + "10_hps.json"],
+        data_10_switch_ring_2_iter = self.load_data_merge_nh([path_prefix + "2_4_6_hps_2_iter.json",
+                                                       path_prefix + "8_hps_2_iter.json",
+                                                       path_prefix + "10_hps_2_iter.json"],
                                                       path_prefix + "2_iter.json")
+
+        data_10_switch_ring_1_iter = self.load_data_merge_nh([path_prefix + "2_4_6_8_hps_1_iter.json",
+                                                       path_prefix + "10_hps_1_iter.json"],
+                                                      path_prefix + "1_iter.json")
+
+        data_10_switch_ring = self.load_data_merge_iterations([path_prefix + "2_iter.json",
+                                                                path_prefix + "1_iter.json"])
 
         path_prefix = "data/precomputation_time/4_switch_clique/"
         data_4_switch_clique = self.load_data_merge_nh([path_prefix + "4_8_10_hps.json",
@@ -224,9 +231,44 @@ class PrecomputationIncrementalTimes(Experiment):
                                                            data_10_switch_ring,
                                                            data_4_switch_clique])
 
-        self.data = merged_data
+        return merged_data
 
-        return self.data
+    def merge_incremental_data(self):
+        path_prefix = "data/precomputation_time/14_switch_clos/"
+        data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps.json",
+                                                       path_prefix + "6_hps.json",
+                                                       path_prefix + "8_hps.json",
+                                                       path_prefix + "10_hps.json"],
+                                                      path_prefix + "2_iter.json")
+
+        path_prefix = "data/precomputation_time/10_switch_ring/"
+        data_10_switch_ring_2_iter = self.load_data_merge_nh([path_prefix + "2_4_6_hps_2_iter.json",
+                                                       path_prefix + "8_hps_2_iter.json",
+                                                       path_prefix + "10_hps_2_iter.json"],
+                                                      path_prefix + "2_iter.json")
+
+        data_10_switch_ring_1_iter = self.load_data_merge_nh([path_prefix + "2_4_6_8_hps_1_iter.json",
+                                                       path_prefix + "10_hps_1_iter.json"],
+                                                      path_prefix + "1_iter.json")
+
+        data_10_switch_ring = self.load_data_merge_iterations([path_prefix + "2_iter.json",
+                                                                path_prefix + "1_iter.json"])
+
+        path_prefix = "data/precomputation_time/4_switch_clique/"
+        data_4_switch_clique = self.load_data_merge_nh([path_prefix + "4_8_10_hps.json",
+                                                        path_prefix + "20_hps.json",
+                                                        path_prefix + "25_hps.json",
+                                                        path_prefix + "16_hps.json"],
+                                                      path_prefix + "2_iter.json")
+
+        data_4_switch_clique = self.load_data_merge_iterations([path_prefix + "2_iter.json",
+                                                                path_prefix + "1_iter.json"])
+
+        merged_data = self.load_data_merge_network_config([data_14_switch_clos,
+                                                           data_10_switch_ring,
+                                                           data_4_switch_clique])
+
+        return merged_data
 
     def merge_microgrid_data(self, microgrids_data_locations, current_data, ds):
         current_data["initial_time"]["Microgrid Topology"] = defaultdict(list)
@@ -469,7 +511,7 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 1
-    num_hosts_per_switch_list = [1]#, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [2]#, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 
@@ -479,7 +521,7 @@ def main():
     # exp.dump_data()
 
     # Merge the data
-    exp.merge_data()
+    exp.data = exp.merge_precomputation_data()
     exp.data = exp.generate_num_flow_path_keys(exp.data, "initial_time")
     exp.data = exp.merge_microgrid_data(microgrids_data_locations=["data/precomputation_time/ugtopo/19_switch_3_hps.json",
                                                                    "data/precomputation_time/ugtopo/19_switch_6_hps.json",
@@ -487,6 +529,8 @@ def main():
                                                                    "data/precomputation_time/ugtopo/19_switch_12_hps.json"],
                                         current_data=exp.data,
                                         ds="initial_time")
+
+    #exp.data = exp.merge_incremental_data()
 
     exp.data = exp.load_data_merge_ds([json.load(open("data/incremental_time/4_switch_clique.json", "r"))])
     exp.data = exp.generate_num_flow_path_keys(exp.data, "active_path_computation_time")
