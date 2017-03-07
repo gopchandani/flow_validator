@@ -250,6 +250,13 @@ class PrecomputationIncrementalTimes(Experiment):
 
     def merge_incremental_data(self):
 
+        path_prefix = "data/precomputation_time/14_switch_clos/"
+        data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
+                                                       path_prefix + "6_hps_1_iter.json",
+                                                       path_prefix + "8_hps_1_iter.json",
+                                                       path_prefix + "10_hps_1_iter.json"],
+                                                      path_prefix + "1_iter.json")
+
         path_prefix = "data/precomputation_time/10_switch_ring/"
         data_10_switch_ring = self.load_data_merge_nh([path_prefix + "2_4_6_8_hps_1_iter.json",
                                                        path_prefix + "10_hps_1_iter.json"],
@@ -258,7 +265,8 @@ class PrecomputationIncrementalTimes(Experiment):
         path_prefix = "data/incremental_time/4_switch_clique/"
         data_4_switch_clique = json.load(open(path_prefix + "4_switch_clique.json", "r"))
 
-        merged_data = self.load_data_merge_network_config([data_10_switch_ring,
+        merged_data = self.load_data_merge_network_config([data_14_switch_clos,
+                                                           data_10_switch_ring,
                                                            data_4_switch_clique])
 
         return merged_data
@@ -523,7 +531,7 @@ def main():
                                                    ds="initial_time")
 
     incremental_data = exp.merge_incremental_data()
-    incremental_data = exp.generate_num_flow_path_keys(exp.data, "active_path_computation_time")
+    incremental_data = exp.generate_num_flow_path_keys(incremental_data, "active_path_computation_time")
     # incremental_data = exp.merge_microgrid_data(microgrids_data_locations=["data/precomputation_incremental_times_1_iterations_20170303_100859.json"],
     #                                     current_data=incremental_data,
     #                                     ds="active_path_computation_time")
