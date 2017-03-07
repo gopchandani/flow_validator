@@ -451,40 +451,40 @@ def prepare_network_configurations(num_hosts_per_switch_list):
         #                           synthesis_name="AboresceneSynthesis",
         #                           synthesis_params={"apply_group_intents_immediately": True})
 
-        # nc = NetworkConfiguration("ryu",
-        #                           "127.0.0.1",
-        #                           6633,
-        #                           "http://localhost:8080/",
-        #                           "admin",
-        #                           "admin",
-        #                           "clostopo",
-        #                           {"fanout": 2,
-        #                            "core": 2,
-        #                            "num_hosts_per_switch": hps},
-        #                           conf_root="configurations/",
-        #                           synthesis_name="AboresceneSynthesis",
-        #                           synthesis_params={"apply_group_intents_immediately": True})
-
-        ip_str = "172.17.0.2"
-        port_str = "8181"
-        num_grids = 6
-        num_switches_per_grid = 3
-
-        nc = NetworkConfiguration("onos",
-                                  ip_str,
-                                  int(port_str),
-                                  "http://" + ip_str + ":" + port_str + "/onos/v1/",
-                                  "karaf",
-                                  "karaf",
-                                  "microgrid_topo",
-                                  {"num_switches": 1 + num_grids * num_switches_per_grid,
-                                   "nGrids": num_grids,
-                                   "nSwitchesPerGrid": num_switches_per_grid,
-                                   "nHostsPerSwitch": hps},
+        nc = NetworkConfiguration("ryu",
+                                  "127.0.0.1",
+                                  6633,
+                                  "http://localhost:8080/",
+                                  "admin",
+                                  "admin",
+                                  "clostopo",
+                                  {"fanout": 2,
+                                   "core": 2,
+                                   "num_hosts_per_switch": hps},
                                   conf_root="configurations/",
-                                  synthesis_name=None,
-                                  synthesis_params=None)
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
 
+        # ip_str = "172.17.0.2"
+        # port_str = "8181"
+        # num_grids = 6
+        # num_switches_per_grid = 3
+        #
+        # nc = NetworkConfiguration("onos",
+        #                           ip_str,
+        #                           int(port_str),
+        #                           "http://" + ip_str + ":" + port_str + "/onos/v1/",
+        #                           "karaf",
+        #                           "karaf",
+        #                           "microgrid_topo",
+        #                           {"num_switches": 1 + num_grids * num_switches_per_grid,
+        #                            "nGrids": num_grids,
+        #                            "nSwitchesPerGrid": num_switches_per_grid,
+        #                            "nHostsPerSwitch": hps},
+        #                           conf_root="configurations/",
+        #                           synthesis_name=None,
+        #                           synthesis_params=None)
+        #
         nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         nc_list.append(nc)
 
@@ -494,12 +494,11 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 1
-    num_hosts_per_switch_list = [3]#[2]#, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [10]#[2]#, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 
     # Trigger the experiment
-
     exp.trigger()
     exp.dump_data()
 
