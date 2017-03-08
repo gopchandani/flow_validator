@@ -359,9 +359,8 @@ class PrecomputationIncrementalTimes(Experiment):
         ax.set_xlim(xmax=(high_xlim) * x_max_factor)
 
         if y_scale == "linear":
-            low_ylim, high_ylim = ax.get_ylim()
-            ax.set_ylim(ymin=low_ylim * y_min_factor)
-            ax.set_ylim(ymax=high_ylim * y_max_factor)
+            ax.set_ylim(ymin=-0.2)
+            ax.set_ylim(ymax=2.3)
 
         elif y_scale == "log":
             ax.set_ylim(ymin=2)
@@ -411,7 +410,7 @@ class PrecomputationIncrementalTimes(Experiment):
                                         y_scale='linear',
                                         x_min_factor=0.9,
                                         x_max_factor=1.10,
-                                        y_min_factor=0.01,
+                                        y_min_factor=-1.1,
                                         y_max_factor=1,
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
