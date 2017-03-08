@@ -250,6 +250,13 @@ class PrecomputationIncrementalTimes(Experiment):
 
     def merge_incremental_data(self):
 
+        path_prefix = "data/precomputation_time/14_switch_clos/"
+        data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
+                                                       path_prefix + "6_hps_1_iter.json",
+                                                       path_prefix + "8_hps_1_iter.json",
+                                                       path_prefix + "10_hps_1_iter.json"],
+                                                      path_prefix + "1_iter.json")
+
         path_prefix = "data/precomputation_time/10_switch_ring/"
         data_10_switch_ring = self.load_data_merge_nh([path_prefix + "2_4_6_8_hps_1_iter.json",
                                                        path_prefix + "10_hps_1_iter.json"],
@@ -258,7 +265,8 @@ class PrecomputationIncrementalTimes(Experiment):
         path_prefix = "data/incremental_time/4_switch_clique/"
         data_4_switch_clique = json.load(open(path_prefix + "4_switch_clique.json", "r"))
 
-        merged_data = self.load_data_merge_network_config([data_10_switch_ring,
+        merged_data = self.load_data_merge_network_config([data_14_switch_clos,
+                                                           data_10_switch_ring,
                                                            data_4_switch_clique])
 
         return merged_data
@@ -335,14 +343,15 @@ class PrecomputationIncrementalTimes(Experiment):
         ax.tick_params(axis='x', labelsize=11)
         ax.tick_params(axis='y', labelsize=11)
 
-        low_xlim, high_xlim = ax.get_xlim()
-        ax.set_xlim(xmax=(high_xlim) * x_max_factor)
+        low_xlim, high_xlim = 0, 10000
         ax.set_xlim(xmin=(low_xlim) * x_min_factor)
+        ax.set_xlim(xmax=(high_xlim) * x_max_factor)
 
         if y_scale == "linear":
             low_ylim, high_ylim = ax.get_ylim()
             ax.set_ylim(ymin=low_ylim * y_min_factor)
             ax.set_ylim(ymax=high_ylim * y_max_factor)
+
         elif y_scale == "log":
             ax.set_ylim(ymin=2)
             ax.set_ylim(ymax=100000)
@@ -365,7 +374,7 @@ class PrecomputationIncrementalTimes(Experiment):
             ax.set_yticklabels(ytick_labels)
 
     def plot_data(self, subkeys):
-        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.0, 4.0))
+        f, (ax1, ax2) = plt.subplots(1, 2, sharex=False, sharey=False, figsize=(10.5, 4.0))
 
         data_xtick_labels = subkeys
         data_xticks = [int(x) for x in data_xtick_labels]
@@ -383,26 +392,7 @@ class PrecomputationIncrementalTimes(Experiment):
                                         xticks=data_xticks,
                                         xtick_labels=data_xtick_labels)
 
-        xlabels = ax1.get_xticklabels()
-        plt.setp(xlabels, rotation=45, fontsize=10)
-
-        # Shrink current axis's height by 25% on the bottom
-        box = ax1.get_position()
-        ax1.set_position([box.x0, box.y0 + box.height * 0.3, box.width, box.height * 0.7])
-        handles, labels = ax1.get_legend_handles_labels()
-
-        ax1.legend(handles, labels, shadow=True, fontsize=10, loc='upper center', ncol=2, markerscale=1.0,
-                   frameon=True, fancybox=True, columnspacing=3.5, bbox_to_anchor=[0.5, -0.25])
-
-        plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
-        plt.show()
-
-        f, (ax1) = plt.subplots(1, 1, sharex=True, sharey=False, figsize=(5.0, 4.0))
-
-        data_xtick_labels = subkeys
-        data_xticks = [int(x) for x in data_xtick_labels]
-
-        self.plot_lines_with_error_bars(ax1,
+        self.plot_lines_with_error_bars(ax2,
                                         "active_path_computation_time",
                                         "Number of host pair traffic paths",
                                         "Active Path Computation (seconds)",
@@ -418,15 +408,30 @@ class PrecomputationIncrementalTimes(Experiment):
         xlabels = ax1.get_xticklabels()
         plt.setp(xlabels, rotation=45, fontsize=10)
 
+        xlabels = ax2.get_xticklabels()
+        plt.setp(xlabels, rotation=45, fontsize=10)
+
         # Shrink current axis's height by 25% on the bottom
         box = ax1.get_position()
         ax1.set_position([box.x0, box.y0 + box.height * 0.3, box.width, box.height * 0.7])
+        box = ax2.get_position()
+        ax2.set_position([box.x0, box.y0 + box.height * 0.3, box.width, box.height * 0.7])
+
         handles, labels = ax1.get_legend_handles_labels()
 
-        ax1.legend(handles, labels, shadow=True, fontsize=10, loc='upper center', ncol=2, markerscale=1.0,
-                   frameon=True, fancybox=True, columnspacing=3.5, bbox_to_anchor=[0.5, -0.25])
+        ax1.legend(handles,
+                   labels,
+                   shadow=True,
+                   fontsize=10,
+                   loc='upper center',
+                   ncol=4,
+                   markerscale=1.0,
+                   frameon=True,
+                   fancybox=True,
+                   columnspacing=3.5,
+                   bbox_to_anchor=[1.1, -0.25])
 
-        plt.savefig("plots/" + self.experiment_tag + "_substation_mixed_policy_validation_times" + ".png", dpi=1000)
+        plt.savefig("plots/" + self.experiment_tag + "_precomputation_incremental_times" + ".png", dpi=1000)
         plt.show()
 
 
@@ -523,7 +528,7 @@ def main():
                                                    ds="initial_time")
 
     incremental_data = exp.merge_incremental_data()
-    incremental_data = exp.generate_num_flow_path_keys(exp.data, "active_path_computation_time")
+    incremental_data = exp.generate_num_flow_path_keys(incremental_data, "active_path_computation_time")
     # incremental_data = exp.merge_microgrid_data(microgrids_data_locations=["data/precomputation_incremental_times_1_iterations_20170303_100859.json"],
     #                                     current_data=incremental_data,
     #                                     ds="active_path_computation_time")
