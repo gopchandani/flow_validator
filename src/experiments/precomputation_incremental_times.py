@@ -275,18 +275,19 @@ class PrecomputationIncrementalTimes(Experiment):
 
         path_prefix = "data/precomputation_time/ugtopo/"
 
-        microgrids_data_locations_1 = [path_prefix + "19_switch_3_hps.json",
-                                     path_prefix + "19_switch_6_hps.json",
-                                     path_prefix + "19_switch_9_hps.json",
-                                     path_prefix + "19_switch_12_hps.json"]
-
-        microgrids_data_locations_2 = [path_prefix + "19_switch_3_hps_1_iter.json",
+        microgrids_data_locations_1 = [path_prefix + "19_switch_3_hps_1_iter.json",
                                      path_prefix + "19_switch_6_hps_1_iter.json",
                                      path_prefix + "19_switch_9_hps_1_iter.json",
                                      path_prefix + "19_switch_12_hps_1_iter.json"]
 
+        microgrids_data_locations_2 = [path_prefix + "19_switch_3_hps.json",
+                                     path_prefix + "19_switch_6_hps.json",
+                                     path_prefix + "19_switch_9_hps.json",
+                                     path_prefix + "19_switch_12_hps.json"]
+
         data_microgrid_1 = self.load_data_merge_nh(microgrids_data_locations_1, path_prefix + "1_iter_1.json")
         data_microgrid_2 = self.load_data_merge_nh(microgrids_data_locations_2, path_prefix + "1_iter_2.json")
+
         data_microgrid = self.load_data_merge_iterations([path_prefix + "1_iter_1.json", path_prefix + "1_iter_2.json"])
 
         nc_topo_str = "Microgrid topology"
@@ -295,7 +296,6 @@ class PrecomputationIncrementalTimes(Experiment):
         num_microgrids = 6
 
         for nhps in data_microgrid[ds][nc_topo_str]:
-
             num_host_pairs = (num_microgrids * (int(nhps) * num_sw_per_ug) * (int(nhps) * num_sw_per_ug)) + ((num_microgrids + 1) * (num_microgrids + 1))
             current_data[ds][nc_topo_str][str(num_host_pairs)] = data_microgrid[ds][nc_topo_str][str(nhps)]
             current_data["all_keys"].append(str(num_host_pairs))
@@ -535,9 +535,7 @@ def main():
 
     incremental_data = exp.merge_incremental_data()
     incremental_data = exp.generate_num_flow_path_keys(incremental_data, "active_path_computation_time")
-    # incremental_data = exp.merge_microgrid_data(microgrids_data_locations=["data/precomputation_incremental_times_1_iterations_20170303_100859.json"],
-    #                                     current_data=incremental_data,
-    #                                     ds="active_path_computation_time")
+    incremental_data = exp.merge_microgrid_data(current_data=incremental_data, ds="active_path_computation_time")
 
     exp.data = exp.load_data_merge_ds([precomputation_data,
                                        incremental_data,
