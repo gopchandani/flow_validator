@@ -250,14 +250,14 @@ class PrecomputationIncrementalTimes(Experiment):
 
     def merge_incremental_data(self):
 
-        path_prefix = "data/precomputation_time/14_switch_clos/"
+        path_prefix = "data/incremental_time/14_switch_clos/"
         data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
                                                        path_prefix + "6_hps_1_iter.json",
                                                        path_prefix + "8_hps_1_iter.json",
                                                        path_prefix + "10_hps_1_iter.json"],
                                                       path_prefix + "1_iter.json")
 
-        path_prefix = "data/precomputation_time/10_switch_ring/"
+        path_prefix = "data/incremental_time/10_switch_ring/"
         data_10_switch_ring = self.load_data_merge_nh([path_prefix + "2_4_6_8_hps_1_iter.json",
                                                        path_prefix + "10_hps_1_iter.json"],
                                                       path_prefix + "1_iter.json")
@@ -271,23 +271,34 @@ class PrecomputationIncrementalTimes(Experiment):
 
         return merged_data
 
-    def merge_microgrid_data(self, microgrids_data_locations, current_data, ds):
-        current_data[ds]["Microgrid Topology"] = defaultdict(list)
+    def merge_microgrid_data(self, current_data, ds):
 
-        for loc in microgrids_data_locations:
-            this_data = None
-            with open(loc, "r") as infile:
-                this_data = json.load(infile)
-                nc_topo_str = this_data[ds].keys()[0]
-                num_ug_switches = int(nc_topo_str.split()[3]) - 1
-                num_sw_per_ug = 3
-                num_microgrids = num_ug_switches / num_sw_per_ug
-                nhps = int(nc_topo_str.split()[5])
+        path_prefix = "data/precomputation_time/ugtopo/"
 
-                num_host_pairs = (num_microgrids * (nhps * num_sw_per_ug) * (nhps * num_sw_per_ug)) + ((num_microgrids + 1) * (num_microgrids + 1))
+        microgrids_data_locations_1 = [path_prefix + "19_switch_3_hps.json",
+                                     path_prefix + "19_switch_6_hps.json",
+                                     path_prefix + "19_switch_9_hps.json",
+                                     path_prefix + "19_switch_12_hps.json"]
 
-                current_data[ds]["Microgrid Topology"][str(num_host_pairs)] = this_data[ds][nc_topo_str][str(nhps)]
-                current_data["all_keys"].append(str(num_host_pairs))
+        microgrids_data_locations_2 = [path_prefix + "19_switch_3_hps_1_iter.json",
+                                     path_prefix + "19_switch_6_hps_1_iter.json",
+                                     path_prefix + "19_switch_9_hps_1_iter.json",
+                                     path_prefix + "19_switch_12_hps_1_iter.json"]
+
+        data_microgrid_1 = self.load_data_merge_nh(microgrids_data_locations_1, path_prefix + "1_iter_1.json")
+        data_microgrid_2 = self.load_data_merge_nh(microgrids_data_locations_2, path_prefix + "1_iter_2.json")
+        data_microgrid = self.load_data_merge_iterations([path_prefix + "1_iter_1.json", path_prefix + "1_iter_2.json"])
+
+        nc_topo_str = "Microgrid topology"
+        current_data[ds][nc_topo_str] = defaultdict(list)
+        num_sw_per_ug = 3
+        num_microgrids = 6
+
+        for nhps in data_microgrid[ds][nc_topo_str]:
+
+            num_host_pairs = (num_microgrids * (int(nhps) * num_sw_per_ug) * (int(nhps) * num_sw_per_ug)) + ((num_microgrids + 1) * (num_microgrids + 1))
+            current_data[ds][nc_topo_str][str(num_host_pairs)] = data_microgrid[ds][nc_topo_str][str(nhps)]
+            current_data["all_keys"].append(str(num_host_pairs))
 
         return current_data
 
@@ -520,12 +531,7 @@ def main():
     # Merge the data
     precomputation_data = exp.merge_precomputation_data()
     precomputation_data = exp.generate_num_flow_path_keys(precomputation_data, "initial_time")
-    precomputation_data = exp.merge_microgrid_data(microgrids_data_locations=["data/precomputation_time/ugtopo/19_switch_3_hps.json",
-                                                                              "data/precomputation_time/ugtopo/19_switch_6_hps.json",
-                                                                              "data/precomputation_time/ugtopo/19_switch_9_hps.json",
-                                                                              "data/precomputation_time/ugtopo/19_switch_12_hps.json"],
-                                                   current_data=precomputation_data,
-                                                   ds="initial_time")
+    precomputation_data = exp.merge_microgrid_data(current_data=precomputation_data, ds="initial_time")
 
     incremental_data = exp.merge_incremental_data()
     incremental_data = exp.generate_num_flow_path_keys(incremental_data, "active_path_computation_time")
