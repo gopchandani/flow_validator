@@ -3,7 +3,8 @@ from matplotlib.ticker import MaxNLocator
 
 import sys
 import json
-import itertools
+
+from heapq import nlargest
 
 from collections import defaultdict
 from timer import Timer
@@ -297,7 +298,9 @@ class PrecomputationIncrementalTimes(Experiment):
 
         for nhps in data_microgrid[ds][nc_topo_str]:
             num_host_pairs = (num_microgrids * (int(nhps) * num_sw_per_ug) * (int(nhps) * num_sw_per_ug)) + ((num_microgrids + 1) * (num_microgrids + 1))
-            current_data[ds][nc_topo_str][str(num_host_pairs)] = data_microgrid[ds][nc_topo_str][str(nhps)]
+            data = data_microgrid[ds][nc_topo_str][str(nhps)]
+            data_n_largest = nlargest(10, data)
+            current_data[ds][nc_topo_str][str(num_host_pairs)] = nlargest(10, data)
             current_data["all_keys"].append(str(num_host_pairs))
 
         return current_data
