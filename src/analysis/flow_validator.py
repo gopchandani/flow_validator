@@ -260,7 +260,7 @@ class FlowValidator(object):
                                                     updating=True)
                 lmbda.remove(next_link_to_fail)
 
-    def validate_policy_with_preemption(self, active_path_computation_times):
+    def validate_policy_with_preemption(self, active_path_computation_times, path_lengths):
 
         for lmbda in self.p_map:
             for src_port, dst_port in list(self.p_map[lmbda].keys()):
@@ -278,6 +278,9 @@ class FlowValidator(object):
 
                     if active_path_computation_times != None:
                         active_path_computation_times.append(t.secs)
+
+                    if path_lengths != None:
+                        path_lengths.append(len(active_path))
 
                     failover_path = None
 
@@ -330,7 +333,9 @@ class FlowValidator(object):
                                                     "")
                                 self.violations.append(v)
 
-    def validate_policy(self, policy_statement_list, optimization_type, active_path_computation_times=None):
+    def validate_policy(self, policy_statement_list, optimization_type,
+                        active_path_computation_times=None,
+                        path_lengths=None):
 
         # Avoid duplication of effort across policies
         # p_map is a two-dimensional dictionary:
@@ -350,7 +355,7 @@ class FlowValidator(object):
         self.violations = []
 
         if optimization_type == "With Preemption":
-            self.validate_policy_with_preemption(active_path_computation_times)
+            self.validate_policy_with_preemption(active_path_computation_times, path_lengths)
         elif optimization_type == "Without Preemption":
             self.validate_policy_without_preemption([])
 
