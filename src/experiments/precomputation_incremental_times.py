@@ -584,35 +584,35 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 1
-    num_hosts_per_switch_list = [8]#, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [6]#, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 
     # Trigger the experiment
-    # exp.trigger()
-    # exp.dump_data()
+    exp.trigger()
+    exp.dump_data()
 
     # Merge the data
-    precomputation_data = exp.merge_precomputation_data()
-    precomputation_data = exp.generate_num_flow_path_keys(precomputation_data, "initial_time")
-    precomputation_data = exp.merge_microgrid_data(current_data=precomputation_data, ds="initial_time")
-
-    incremental_data = exp.merge_incremental_data()
-    incremental_data = exp.generate_num_flow_path_keys(incremental_data, "active_path_computation_time")
-    incremental_data = exp.merge_microgrid_data(current_data=incremental_data, ds="active_path_computation_time")
-
-    exp.data = exp.load_data_merge_ds([precomputation_data,
-                                       incremental_data,
-                                       ])
-
-    # Plotting the data
-    exp.dump_data()
-    exp.data["all_keys"].remove('256')
-    exp.data["all_keys"].remove('400')
-    exp.data["all_keys"].remove('535')
-    exp.data["all_keys"].remove('1993')
-    exp.data["all_keys"].remove('4423')
-    exp.plot_data(exp.data["all_keys"])
+    # precomputation_data = exp.merge_precomputation_data()
+    # precomputation_data = exp.generate_num_flow_path_keys(precomputation_data, "initial_time")
+    # precomputation_data = exp.merge_microgrid_data(current_data=precomputation_data, ds="initial_time")
+    #
+    # incremental_data = exp.merge_incremental_data()
+    # incremental_data = exp.generate_num_flow_path_keys(incremental_data, "active_path_computation_time")
+    # incremental_data = exp.merge_microgrid_data(current_data=incremental_data, ds="active_path_computation_time")
+    #
+    # exp.data = exp.load_data_merge_ds([precomputation_data,
+    #                                    incremental_data,
+    #                                    ])
+    #
+    # # Plotting the data
+    # exp.dump_data()
+    # exp.data["all_keys"].remove('256')
+    # exp.data["all_keys"].remove('400')
+    # exp.data["all_keys"].remove('535')
+    # exp.data["all_keys"].remove('1993')
+    # exp.data["all_keys"].remove('4423')
+    # exp.plot_data(exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()
