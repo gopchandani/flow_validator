@@ -2,6 +2,7 @@ __author__ = 'Rakesh Kumar'
 
 import networkx as nx
 import sys
+import json
 
 from collections import defaultdict
 from copy import deepcopy
@@ -14,8 +15,9 @@ class AboresceneSynthesis(object):
 
         self.network_graph = None
         self.synthesis_lib = None
-
         self.params = params
+
+        self.dst_k_eda = None
 
         # VLAN tag constitutes 12 bits.
         # We use 2 left most bits for representing the tree_id
@@ -45,6 +47,8 @@ class AboresceneSynthesis(object):
     def __str__(self):
         params_str = ''
         for k, v in self.params.items():
+            if k == "dst_k_eda_path":
+                continue
             params_str += "_" + str(k) + "_" + str(v)
         return self.__class__.__name__ + params_str
 
@@ -72,8 +76,8 @@ class AboresceneSynthesis(object):
 
         mdg = self.network_graph.get_mdg()
 
-        dst_sw_preds = list(mdg.predecessors(dst_sw.node_id))
-        dst_sw_succs = list(mdg.successors(dst_sw.node_id))
+        dst_sw_preds = sorted(list(mdg.predecessors(dst_sw.node_id)))
+        dst_sw_succs = sorted(list(mdg.successors(dst_sw.node_id)))
 
         # Remove the predecessor edges to dst_sw, to make it the "root"
         for pred in dst_sw_preds:
@@ -329,6 +333,27 @@ class AboresceneSynthesis(object):
 
     def synthesize_all_switches(self, flow_match, k):
 
+        if "dst_k_eda_path" in self.params:
+            with open(self.params["dst_k_eda_path"], "r") as infile:
+                self.dst_k_eda = dict()
+                read_dst_k_eda = json.loads(infile.read())
+
+                for dst_sw_node in read_dst_k_eda:
+                    self.dst_k_eda[dst_sw_node] = []
+                    for edge_list in read_dst_k_eda[dst_sw_node]:
+                        self.dst_k_eda[dst_sw_node].append([tuple(l) for l in edge_list])
+
+        else:
+            self.dst_k_eda = dict()
+            # For each possible switch that can be a destination for traffic
+            for dst_sw in self.network_graph.get_switches():
+                if dst_sw.attached_hosts:
+                    k_eda = self.compute_k_edge_disjoint_aborescenes(k, dst_sw)
+                    self.dst_k_eda[dst_sw.node_id] = [list(x.edges()) for x in k_eda]
+
+            with open(self.network_graph.network_configuration.conf_path + "/dst_k_eda.json", "w") as outfile:
+                json.dump(self.dst_k_eda, outfile)
+
         # For each possible switch that can be a destination for traffic
         for dst_sw in self.network_graph.get_switches():
 
@@ -346,7 +371,9 @@ class AboresceneSynthesis(object):
 
                 self.push_local_mac_forwarding_rules_rules(dst_sw, flow_match)
 
-                k_eda = self.compute_k_edge_disjoint_aborescenes(k, dst_sw)
+                k_eda = []
+                for edges in self.dst_k_eda[dst_sw.node_id]:
+                    k_eda.append(nx.MultiDiGraph(edges))
 
                 self.record_paths(k, dst_sw, k_eda)
 
