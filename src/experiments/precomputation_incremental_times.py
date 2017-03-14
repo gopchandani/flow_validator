@@ -267,6 +267,25 @@ class PrecomputationIncrementalTimes(Experiment):
 
     def merge_precomputation_data(self):
         path_prefix = "data/precomputation_time/14_switch_clos/"
+
+        six_hps = self.load_data_merge_iterations([path_prefix + "6_hps_1_iter.json",
+                                                   path_prefix + "6_hps_1_iter_1.json",
+                                                   path_prefix + "6_hps_1_iter_2.json",
+                                                   path_prefix + "6_hps_1_iter_3.json",
+                                                   path_prefix + "6_hps_1_iter_4.json"])
+
+        with open(path_prefix + "6_hps_merged.json", "w") as outfile:
+            json.dump(six_hps, outfile)
+
+        eight_hps = self.load_data_merge_iterations([path_prefix + "8_hps_1_iter.json",
+                                                     path_prefix + "8_hps_1_iter_1.json",
+                                                     path_prefix + "8_hps_1_iter_2.json",
+                                                     path_prefix + "8_hps_1_iter_3.json",
+                                                     path_prefix + "8_hps_1_iter_4.json"])
+
+        with open(path_prefix + "8_hps_merged.json", "w") as outfile:
+            json.dump(eight_hps, outfile)
+
         data_14_switch_clos_2_iter = self.load_data_merge_nh([path_prefix + "2_4_hps_2_iter.json",
                                                               path_prefix + "6_hps_2_iter.json",
                                                               path_prefix + "8_hps_2_iter.json",
@@ -274,8 +293,8 @@ class PrecomputationIncrementalTimes(Experiment):
                                                              path_prefix + "2_iter.json")
 
         data_14_switch_clos_1_iter = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
-                                                              path_prefix + "6_hps_1_iter.json",
-                                                              path_prefix + "8_hps_1_iter.json",
+                                                              path_prefix + "6_hps_merged.json",
+                                                              path_prefix + "8_hps_merged.json",
                                                               path_prefix + "10_hps_1_iter.json"],
                                                              path_prefix + "1_iter.json")
 
@@ -317,12 +336,20 @@ class PrecomputationIncrementalTimes(Experiment):
         path_prefix = "data/incremental_time/14_switch_clos/"
 
         six_hps = self.load_data_merge_iterations([path_prefix + "6_hps_1_iter.json",
-                                                   path_prefix + "6_hps_1_iter_1.json"])
+                                                   path_prefix + "6_hps_1_iter_1.json",
+                                                   path_prefix + "6_hps_1_iter_2.json",
+                                                   path_prefix + "6_hps_1_iter_3.json",
+                                                   path_prefix + "6_hps_1_iter_4.json"])
+
         with open(path_prefix + "6_hps_merged.json", "w") as outfile:
             json.dump(six_hps, outfile)
 
         eight_hps = self.load_data_merge_iterations([path_prefix + "8_hps_1_iter.json",
-                                                     path_prefix + "8_hps_1_iter_1.json"])
+                                                     path_prefix + "8_hps_1_iter_1.json",
+                                                     path_prefix + "8_hps_1_iter_2.json",
+                                                     path_prefix + "8_hps_1_iter_3.json",
+                                                     path_prefix + "8_hps_1_iter_4.json"])
+
         with open(path_prefix + "8_hps_merged.json", "w") as outfile:
             json.dump(eight_hps, outfile)
 
