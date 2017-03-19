@@ -286,20 +286,28 @@ class PrecomputationIncrementalTimes(Experiment):
         with open(path_prefix + "8_hps_merged.json", "w") as outfile:
             json.dump(eight_hps, outfile)
 
-        data_14_switch_clos_2_iter = self.load_data_merge_nh([path_prefix + "2_4_hps_2_iter.json",
-                                                              path_prefix + "6_hps_2_iter.json",
-                                                              path_prefix + "8_hps_2_iter.json",
-                                                              path_prefix + "10_hps_2_iter.json"],
-                                                             path_prefix + "2_iter.json")
+        # data_14_switch_clos_2_iter = self.load_data_merge_nh([path_prefix + "2_4_hps_2_iter.json",
+        #                                                       path_prefix + "6_hps_2_iter.json",
+        #                                                       path_prefix + "8_hps_2_iter.json",
+        #                                                       path_prefix + "10_hps_2_iter.json"],
+        #                                                      path_prefix + "2_iter.json")
+        #
+        # data_14_switch_clos_1_iter = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
+        #                                                       path_prefix + "6_hps_merged.json",
+        #                                                       path_prefix + "8_hps_merged.json",
+        #                                                       path_prefix + "10_hps_1_iter.json"],
+        #                                                      path_prefix + "1_iter.json")
+        #
+        # data_14_switch_clos = self.load_data_merge_iterations([path_prefix + "2_iter.json",
+        #                                                        path_prefix + "1_iter.json"])
 
         data_14_switch_clos_1_iter = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
-                                                              path_prefix + "6_hps_merged.json",
-                                                              path_prefix + "8_hps_merged.json",
-                                                              path_prefix + "10_hps_1_iter.json"],
+                                                              path_prefix + "6_hps_1_iter_new.json",
+                                                              path_prefix + "8_hps_1_iter_new.json"],
+                                                              #path_prefix + "10_hps_1_iter_new.json"],
                                                              path_prefix + "1_iter.json")
 
-        data_14_switch_clos = self.load_data_merge_iterations([path_prefix + "2_iter.json",
-                                                               path_prefix + "1_iter.json"])
+        data_14_switch_clos = self.load_data_merge_iterations([path_prefix + "1_iter.json"])
 
 
         path_prefix = "data/precomputation_time/10_switch_ring/"
@@ -325,38 +333,45 @@ class PrecomputationIncrementalTimes(Experiment):
         data_4_switch_clique = self.load_data_merge_iterations([path_prefix + "2_iter.json",
                                                                 path_prefix + "1_iter.json"])
 
-        merged_data = self.load_data_merge_network_config([data_14_switch_clos,
-                                                           data_10_switch_ring,
-                                                           data_4_switch_clique])
+        merged_data = self.load_data_merge_network_config([data_4_switch_clique,
+                                                           data_14_switch_clos,
+                                                           data_10_switch_ring])
 
         return merged_data
 
     def merge_incremental_data(self):
 
         path_prefix = "data/incremental_time/14_switch_clos/"
-
-        six_hps = self.load_data_merge_iterations([path_prefix + "6_hps_1_iter.json",
-                                                   path_prefix + "6_hps_1_iter_1.json",
-                                                   path_prefix + "6_hps_1_iter_2.json",
-                                                   path_prefix + "6_hps_1_iter_3.json",
-                                                   path_prefix + "6_hps_1_iter_4.json"])
-
-        with open(path_prefix + "6_hps_merged.json", "w") as outfile:
-            json.dump(six_hps, outfile)
-
-        eight_hps = self.load_data_merge_iterations([path_prefix + "8_hps_1_iter.json",
-                                                     path_prefix + "8_hps_1_iter_1.json",
-                                                     path_prefix + "8_hps_1_iter_2.json",
-                                                     path_prefix + "8_hps_1_iter_3.json",
-                                                     path_prefix + "8_hps_1_iter_4.json"])
-
-        with open(path_prefix + "8_hps_merged.json", "w") as outfile:
-            json.dump(eight_hps, outfile)
+        #
+        # six_hps = self.load_data_merge_iterations([path_prefix + "6_hps_1_iter.json",
+        #                                            path_prefix + "6_hps_1_iter_1.json",
+        #                                            path_prefix + "6_hps_1_iter_2.json",
+        #                                            path_prefix + "6_hps_1_iter_3.json",
+        #                                            path_prefix + "6_hps_1_iter_4.json"])
+        #
+        # with open(path_prefix + "6_hps_merged.json", "w") as outfile:
+        #     json.dump(six_hps, outfile)
+        #
+        # eight_hps = self.load_data_merge_iterations([path_prefix + "8_hps_1_iter.json",
+        #                                              path_prefix + "8_hps_1_iter_1.json",
+        #                                              path_prefix + "8_hps_1_iter_2.json",
+        #                                              path_prefix + "8_hps_1_iter_3.json",
+        #                                              path_prefix + "8_hps_1_iter_4.json"])
+        #
+        # with open(path_prefix + "8_hps_merged.json", "w") as outfile:
+        #     json.dump(eight_hps, outfile)
+        #
+        # data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
+        #                                                path_prefix + "6_hps_merged.json",
+        #                                                path_prefix + "8_hps_merged.json",
+        #                                                path_prefix + "10_hps_1_iter.json"],
+        #                                               path_prefix + "1_iter.json")
 
         data_14_switch_clos = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
-                                                       path_prefix + "6_hps_merged.json",
-                                                       path_prefix + "8_hps_merged.json",
-                                                       path_prefix + "10_hps_1_iter.json"],
+                                                       path_prefix + "4_hps_1_iter_new.json",
+                                                       path_prefix + "6_hps_1_iter_new.json",
+                                                       path_prefix + "8_hps_1_iter_new.json",
+                                                       path_prefix + "10_hps_1_iter_new.json"],
                                                       path_prefix + "1_iter.json")
 
         path_prefix = "data/incremental_time/10_switch_ring/"
@@ -367,8 +382,8 @@ class PrecomputationIncrementalTimes(Experiment):
         path_prefix = "data/incremental_time/4_switch_clique/"
         data_4_switch_clique = json.load(open(path_prefix + "4_switch_clique.json", "r"))
 
-        merged_data = self.load_data_merge_network_config([data_14_switch_clos,
-                                                           data_10_switch_ring,
+        merged_data = self.load_data_merge_network_config([data_10_switch_ring,
+                                                           data_14_switch_clos,
                                                            data_4_switch_clique])
 
         # ds = "active_path_computation_time"
@@ -558,19 +573,19 @@ def prepare_network_configurations(num_hosts_per_switch_list):
     nc_list = []
     for i in range(len(num_hosts_per_switch_list)):
 
-        # nc = NetworkConfiguration("ryu",
-        #                           "127.0.0.1",
-        #                           6633,
-        #                           "http://localhost:8080/",
-        #                           "admin",
-        #                           "admin",
-        #                           "cliquetopo",
-        #                           {"num_switches": 4,
-        #                            "per_switch_links": 3,
-        #                            "num_hosts_per_switch": hps},
-        #                           conf_root="configurations/",
-        #                           synthesis_name="AboresceneSynthesis",
-        #                           synthesis_params={"apply_group_intents_immediately": True})
+        nc = NetworkConfiguration("ryu",
+                                  "127.0.0.1",
+                                  6633,
+                                  "http://localhost:8080/",
+                                  "admin",
+                                  "admin",
+                                  "cliquetopo",
+                                  {"num_switches": 4,
+                                   "per_switch_links": 3,
+                                   "num_hosts_per_switch": num_hosts_per_switch_list[i]},
+                                  conf_root="configurations/",
+                                  synthesis_name="AboresceneSynthesis",
+                                  synthesis_params={"apply_group_intents_immediately": True})
 
         # nc = NetworkConfiguration("ryu",
         #                           "127.0.0.1",
@@ -585,25 +600,25 @@ def prepare_network_configurations(num_hosts_per_switch_list):
         #                           synthesis_name="AboresceneSynthesis",
         #                           synthesis_params={"apply_group_intents_immediately": True})
 
-        if i == 0:
-            clos_synthesis_params = {"apply_group_intents_immediately": True}
-        else:
-            clos_synthesis_params = {"apply_group_intents_immediately": True,
-                                     "dst_k_eda_path": nc_list[0].ng.network_configuration.conf_path + "/dst_k_eda.json"}
-
-        nc = NetworkConfiguration("ryu",
-                                  "127.0.0.1",
-                                  6633,
-                                  "http://localhost:8080/",
-                                  "admin",
-                                  "admin",
-                                  "clostopo",
-                                  {"fanout": 2,
-                                   "core": 2,
-                                   "num_hosts_per_switch": num_hosts_per_switch_list[i]},
-                                  conf_root="configurations/",
-                                  synthesis_name="AboresceneSynthesis",
-                                  synthesis_params=clos_synthesis_params)
+        # if i == 0:
+        #     clos_synthesis_params = {"apply_group_intents_immediately": True}
+        # else:
+        #     clos_synthesis_params = {"apply_group_intents_immediately": True,
+        #                              "dst_k_eda_path": nc_list[0].ng.network_configuration.conf_path + "/dst_k_eda.json"}
+        #
+        # nc = NetworkConfiguration("ryu",
+        #                           "127.0.0.1",
+        #                           6633,
+        #                           "http://localhost:8080/",
+        #                           "admin",
+        #                           "admin",
+        #                           "clostopo",
+        #                           {"fanout": 2,
+        #                            "core": 2,
+        #                            "num_hosts_per_switch": num_hosts_per_switch_list[i]},
+        #                           conf_root="configurations/",
+        #                           synthesis_name="AboresceneSynthesis",
+        #                           synthesis_params=clos_synthesis_params)
 
         # ip_str = "172.17.0.2"
         # port_str = "8181"
@@ -634,46 +649,35 @@ def prepare_network_configurations(num_hosts_per_switch_list):
 def main():
 
     num_iterations = 1
-    num_hosts_per_switch_list = [6, 8]# [6, 8]#, 4, 6, 8, 10]
+    num_hosts_per_switch_list = [2]#[6, 8]# [6, 8]#, 4, 6, 8, 10]
     network_configurations = prepare_network_configurations(num_hosts_per_switch_list)
     exp = PrecomputationIncrementalTimes(num_iterations, network_configurations)
 
-    for dst in network_configurations[0].synthesis.dst_k_eda:
-        for i in range(len(network_configurations[0].synthesis.dst_k_eda[dst])):
-            eda1_edges = network_configurations[0].synthesis.dst_k_eda[dst][i]
-            eda2_edges = network_configurations[1].synthesis.dst_k_eda[dst][i]
-            edge_difference = set(eda1_edges) - set(eda2_edges)
-            if edge_difference:
-                print "Edges differ for dst:", dst
-                print "eda1 edges:", eda1_edges
-                print "eda2 edges:", eda2_edges
-                print "difference:", edge_difference
-
     # Trigger the experiment
-    exp.trigger()
-    exp.dump_data()
+    # exp.trigger()
+    # exp.dump_data()
 
     # Merge the data
-    # precomputation_data = exp.merge_precomputation_data()
-    # precomputation_data = exp.generate_num_flow_path_keys(precomputation_data, "initial_time")
-    # precomputation_data = exp.merge_microgrid_data(current_data=precomputation_data, ds="initial_time")
-    #
-    # incremental_data = exp.merge_incremental_data()
-    # incremental_data = exp.generate_num_flow_path_keys(incremental_data, "active_path_computation_time")
-    # incremental_data = exp.merge_microgrid_data(current_data=incremental_data, ds="active_path_computation_time")
-    #
-    # exp.data = exp.load_data_merge_ds([precomputation_data,
-    #                                    incremental_data,
-    #                                    ])
-    #
-    # # Plotting the data
-    # exp.dump_data()
-    # exp.data["all_keys"].remove('256')
-    # exp.data["all_keys"].remove('400')
-    # exp.data["all_keys"].remove('535')
-    # exp.data["all_keys"].remove('1993')
-    # exp.data["all_keys"].remove('4423')
-    # exp.plot_data(exp.data["all_keys"])
+    precomputation_data = exp.merge_precomputation_data()
+    precomputation_data = exp.generate_num_flow_path_keys(precomputation_data, "initial_time")
+    precomputation_data = exp.merge_microgrid_data(current_data=precomputation_data, ds="initial_time")
+
+    incremental_data = exp.merge_incremental_data()
+    incremental_data = exp.generate_num_flow_path_keys(incremental_data, "active_path_computation_time")
+    incremental_data = exp.merge_microgrid_data(current_data=incremental_data, ds="active_path_computation_time")
+
+    exp.data = exp.load_data_merge_ds([precomputation_data,
+                                       incremental_data,
+                                       ])
+
+    # Plotting the data
+    exp.dump_data()
+    exp.data["all_keys"].remove('256')
+    exp.data["all_keys"].remove('400')
+    exp.data["all_keys"].remove('535')
+    exp.data["all_keys"].remove('1993')
+    exp.data["all_keys"].remove('4423')
+    exp.plot_data(exp.data["all_keys"])
 
 if __name__ == "__main__":
     main()
