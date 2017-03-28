@@ -303,8 +303,8 @@ class PrecomputationIncrementalTimes(Experiment):
 
         data_14_switch_clos_1_iter = self.load_data_merge_nh([path_prefix + "2_4_hps_1_iter.json",
                                                               path_prefix + "6_hps_1_iter_new.json",
-                                                              path_prefix + "8_hps_1_iter_new.json"],
-                                                              #path_prefix + "10_hps_1_iter_new.json"],
+                                                              path_prefix + "8_hps_1_iter_new.json",
+                                                              path_prefix + "10_hps_1_iter_new.json"],
                                                              path_prefix + "1_iter.json")
 
         data_14_switch_clos = self.load_data_merge_iterations([path_prefix + "1_iter.json"])
