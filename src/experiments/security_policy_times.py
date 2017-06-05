@@ -390,8 +390,8 @@ def main():
     # exp.trigger()
     # exp.dump_data()
 
-    exp.load_data("data/security_policy_times_1_iterations_20161226_114304.json")
-    exp.plot_data()
+    # exp.load_data("data/security_policy_times_1_iterations_20161226_114304.json")
+    # exp.plot_data()
 
     exp.data = exp.load_data_merge_num_statements(
         ["data/security_policy_times_1_iterations_20161226_114304.json",
