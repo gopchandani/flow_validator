@@ -1,4 +1,4 @@
-### How do I get going? ###
+### How do I setup? ###
 
 * This project been tested to run fine on Ubuntu 14.04 and 16.04 LTS. 
 * Install openvswitch 2.3.0 or higher.
@@ -14,5 +14,7 @@
 * sudo apt-get install python-matplotlib
 * Setup PYTHONPATH to src folder by adding following to ~/.bashrc: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/ 
 * Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo: Defaults env_keep += "PYTHONPATH"
+
+### How do I get going with an example? ###
 * Take a look at the simple example of validation in the file: flow_validator/src/experiments/playground.py
 * To run cd into flow_validator/src and run: sudo python experiments/playground.py
