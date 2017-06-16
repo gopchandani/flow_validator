@@ -1,4 +1,4 @@
-### How do I get set up? ###
+### How do I get going? ###
 
 * This project been tested to run fine on Ubuntu 14.04 and 16.04 LTS. 
 * Install openvswitch 2.3.0 or higher.
