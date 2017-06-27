@@ -53,6 +53,20 @@ class TrafficElement:
         else:
             return False
 
+    def is_wildcard(self):
+        is_wildcard = False
+
+        for field_name in self.traffic_fields:
+            field = self.traffic_fields[field_name]
+
+            if self.is_traffic_field_wildcard(field):
+                is_wildcard = True
+            else:
+                is_wildcard = False
+                break
+
+        return is_wildcard
+
     def set_traffic_field(self, field_name, value=None, set_wildcard=False, is_exception_value=False):
 
         if set_wildcard:
@@ -367,6 +381,18 @@ class Traffic:
     def is_empty(self):
         return len(self.traffic_elements) == 0
 
+    def is_wildcard(self):
+        is_wildcard = False
+
+        for te in self.traffic_elements:
+            if te.is_wildcard():
+                is_wildcard = True
+            else:
+                is_wildcard = False
+                break
+
+        return is_wildcard
+
     def set_field(self, key, value=None, is_wildcard=False, is_exception_value=False):
 
         if key not in field_names:
@@ -584,15 +610,3 @@ class Traffic:
             enabling_edge_data_list.append(te.enabling_edge_data)
 
         return enabling_edge_data_list
-
-
-def main():
-    m1 = Traffic()
-    print m1
-
-    m2 = Traffic()
-    m3 = m1.intersect(m2)
-    print m3
-
-if __name__ == "__main__":
-    main()
