@@ -12,9 +12,9 @@ def get_specific_traffic_per_field_dict(val, ipn_val):
         t = Traffic(init_wildcard=True)
 
         if field_name == 'src_ip_addr' or field_name == 'dst_ip_addr':
-            t.traffic_elements[0].set_traffic_field(field_name, ipn_val)
+            t.set_field(field_name, ipn_val)
         else:
-            t.traffic_elements[0].set_traffic_field(field_name, val)
+            t.set_field(field_name, val)
 
         specific_traffic_per_field_dict[field_name] = t
 
@@ -76,6 +76,28 @@ class TestTraffic(unittest.TestCase):
                 t1 = self.specific_traffic_per_field_1[field_1]
                 t2 = self.specific_traffic_per_field_2[field_2]
                 self.assertEqual(t1.is_subset_traffic(t2), False)
+
+    def test_set_field_equal(self):
+
+        wct1 = Traffic(init_wildcard=True)
+        wct2 = Traffic(init_wildcard=True)
+
+        # Set each field to something specific
+        for field_name in field_names:
+            if field_name == 'src_ip_addr' or field_name == 'dst_ip_addr':
+                wct1.set_field(field_name, IPNetwork("192.168.1.1"))
+            else:
+                wct1.set_field(field_name, 1)
+
+        # Try doing an equal with the wildcard, they should not be...
+        self.assertEqual(wct1.is_equal_traffic(wct2), False)
+
+        for field_name in field_names:
+            wct1.set_field(field_name, is_wildcard=True)
+
+        # Try doing an equal with the wildcard, they should be...
+        self.assertEqual(wct1.is_equal_traffic(wct2), True)
+
 
 if __name__ == '__main__':
     unittest.main()

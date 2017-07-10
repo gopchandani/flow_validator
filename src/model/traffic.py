@@ -200,7 +200,8 @@ class Traffic:
     def union(self, in_traffic):
         self.traffic_elements.extend(in_traffic.traffic_elements)
 
-    def get_orig_traffic(self, provided_modifications=None,
+    def get_orig_traffic(self,
+                         provided_modifications=None,
                          use_embedded_written_modifications=False,
                          use_embedded_switch_modifications=False):
 
