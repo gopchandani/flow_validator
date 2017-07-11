@@ -97,7 +97,15 @@ class TrafficElement:
                 self.traffic_fields[field_name].clear()
 
             self.traffic_fields[field_name].add(Interval(0, sys.maxsize))
-            self.traffic_fields[field_name].chop(value, value + 1)
+
+            # Deal with IP Network fields
+            if field_name == 'src_ip_addr' or field_name == 'dst_ip_addr':
+                if isinstance(value, IPNetwork):
+                    self.traffic_fields[field_name].chop(value.first, value.last + 1)
+                else:
+                    raise Exception("Gotta be IPNetwork!")
+            else:
+                self.traffic_fields[field_name].chop(value, value + 1)
 
     def get_field_intersection(self, field1, field2):
 

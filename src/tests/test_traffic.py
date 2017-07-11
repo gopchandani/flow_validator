@@ -77,7 +77,7 @@ class TestTraffic(unittest.TestCase):
                 t2 = self.specific_traffic_per_field_2[field_2]
                 self.assertEqual(t1.is_subset_traffic(t2), False)
 
-    def test_set_field_equal(self):
+    def test_set_field_specific_value_check_equal(self):
 
         wct1 = Traffic(init_wildcard=True)
         wct2 = Traffic(init_wildcard=True)
@@ -98,6 +98,29 @@ class TestTraffic(unittest.TestCase):
         # Try doing an equal with the wildcard, they should be...
         self.assertEqual(wct1.is_equal_traffic(wct2), True)
 
+    def test_set_field_exception_check_intersection(self):
+
+        wct = Traffic(init_wildcard=True)
+        specific_traffic_per_field = get_specific_traffic_per_field_dict(1, IPNetwork("192.168.1.1"))
+
+        # Set each field to exclude the value:
+        for field_name in field_names:
+            # Set to exception value
+            if field_name == 'src_ip_addr' or field_name == 'dst_ip_addr':
+                wct.set_field(field_name, IPNetwork("192.168.1.1"), is_exception_value=True)
+            else:
+                wct.set_field(field_name, 1, is_exception_value=True)
+
+            # Check intersection with specific traffic after setting to exception value, it should be empty
+            int = specific_traffic_per_field[field_name].intersect(wct)
+            self.assertEqual(int.is_empty(), True)
+
+            # Set the field back to wildcard
+            wct.set_field(field_name, is_wildcard=True)
+
+            # Check intersection with specific traffic after setting to wildcard, it should not be empty
+            int = specific_traffic_per_field[field_name].intersect(wct)
+            self.assertEqual(int.is_empty(), False)
 
 if __name__ == '__main__':
     unittest.main()
