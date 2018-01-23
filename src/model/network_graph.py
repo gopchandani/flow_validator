@@ -237,8 +237,6 @@ class NetworkGraph(object):
             self.parse_mininet_host_nodes()
         elif self.controller == "onos":
             self.parse_onos_host_nodes()
-        elif self.controller == "sel":
-            raise NotImplementedError
         else:
             raise NotImplementedError
 
@@ -279,8 +277,6 @@ class NetworkGraph(object):
             self.parse_mininet_links()
         elif self.controller == "onos":
             self.parse_onos_links()
-        elif self.controller == "sel":
-            raise NotImplementedError
         else:
             raise NotImplementedError
 
@@ -499,8 +495,6 @@ class NetworkGraph(object):
             self.parse_ryu_switches()
         elif self.network_configuration.controller == "onos":
             self.parse_onos_switches()
-        elif self.network_configuration.controller == "sel":
-            raise NotImplemented
         else:
             raise NotImplemented
 

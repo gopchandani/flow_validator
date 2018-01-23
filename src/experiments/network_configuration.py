@@ -83,13 +83,6 @@ class NetworkConfiguration(object):
         self.controller_api_base_url = controller_api_base_url
         self.h.add_credentials(controller_api_user_name, controller_api_password)
 
-        if self.controller == "sel":
-            os.environ['PYSELFLOW_INSECURE_TRANSPORT'] = '1'
-            self.sel_session = Session.Http.from_(self.controller_api_base_url,
-                                                  user=controller_api_user_name,
-                                                  role="PermissionLevel3",
-                                                  password=controller_api_password)
-
     def __str__(self):
         return self.controller + "_" + str(self.synthesis) + "_" + str(self.topo)
 
@@ -294,8 +287,6 @@ class NetworkConfiguration(object):
             self.get_mininet_host_nodes()
         elif self.controller == "onos":
             self.get_onos_host_nodes()
-        elif self.controller == "sel":
-            raise NotImplemented
         else:
             raise NotImplemented
 
@@ -325,8 +316,6 @@ class NetworkConfiguration(object):
             self.get_mininet_links()
         elif self.controller == "onos":
             self.get_onos_links()
-        elif self.controller == "sel":
-            raise NotImplementedError
         else:
             raise NotImplementedError
 
@@ -348,11 +337,6 @@ class NetworkConfiguration(object):
                 self.cm = ControllerMan(controller=self.controller)
                 self.cm.start_controller()
 
-                self.start_mininet()
-                if mininet_setup_gap:
-                    time.sleep(mininet_setup_gap)
-
-            elif self.controller == "sel":
                 self.start_mininet()
                 if mininet_setup_gap:
                     time.sleep(mininet_setup_gap)
@@ -396,25 +380,6 @@ class NetworkConfiguration(object):
                                                                                 ip=self.controller_ip,
                                                                                 port=self.controller_port),
                                        switch=partial(OVSSwitch, protocols='OpenFlow14'))
-
-            self.mininet_obj.start()
-
-        elif self.controller == "sel":
-            subprocess.call(["sudo",
-                             "ovs-vsctl",
-                             "set-ssl",
-                             "/etc/openvswitch/switchkey.pem",
-                             "/etc/openvswitch/switchcert.pem",
-                             "/var/lib/openvswitch/pki/controllerca/fullca.pem"])
-
-            self.mininet_obj = Mininet(topo=self.topo,
-                                       cleanup=True,
-                                       autoStaticArp=True,
-                                       controller=lambda name: RemoteController(name,
-                                                                                protocol="ssl",
-                                                                                ip=self.controller_ip,
-                                                                                port=self.controller_port),
-                                       switch=partial(OVSSwitch, protocols='OpenFlow13'))
 
             self.mininet_obj.start()
 
