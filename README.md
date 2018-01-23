@@ -17,4 +17,4 @@
 
 ### How do I get going with an example? ###
 * Take a look at the simple example of validation in the file: flow_validator/src/experiments/playground.py
-* To run cd into flow_validator/src and run: sudo python experiments/playground.py
+* To run cd into flow_validator/src/experiments and run: sudo python playground.py
