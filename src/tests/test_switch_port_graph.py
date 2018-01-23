@@ -6,7 +6,7 @@ from model.traffic_path import TrafficPath
 from model.intervaltree_modified import Interval, IntervalTree
 
 from experiments.network_configuration import NetworkConfiguration
-
+from analysis.util import get_specific_traffic
 
 class TestSwitchPortGraph(unittest.TestCase):
 
@@ -86,13 +86,7 @@ class TestSwitchPortGraph(unittest.TestCase):
         ingress_node = swpg.get_ingress_node(swpg.sw.node_id, ingress_port_num)
         egress_node = swpg.get_egress_node(swpg.sw.node_id, egress_port_num)
 
-        specific_traffic = Traffic(init_wildcard=True)
-        specific_traffic.set_field("ethernet_type", 0x0800)
-        specific_traffic.set_field("ethernet_source", int(src_host_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("ethernet_destination", int(dst_host_obj.mac_addr.replace(":", ""), 16))
-        specific_traffic.set_field("in_port", int(src_host_obj.switch_port.port_number))
-        specific_traffic.set_field("vlan_id", src_host_obj.sw.synthesis_tag + 0x1000, is_exception_value=True)
-        specific_traffic.set_field("has_vlan_tag", 0)
+        specific_traffic = get_specific_traffic(swpg.network_graph, src_host_obj.node_id, dst_host_obj.node_id)
 
         at = swpg.get_admitted_traffic(ingress_node, egress_node)
         at_int = specific_traffic.intersect(at)
