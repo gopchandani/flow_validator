@@ -262,48 +262,6 @@ class NetworkConfiguration(object):
         with open(self.conf_path + "onos_switches.json", "w") as outfile:
             json.dump(onos_switches, outfile)
 
-    def get_sel_switches(self):
-
-        nodes = ConfigTree.NodesEntityAccess(self.sel_session)
-        sel_switches = {}
-        for each in nodes.read_collection():
-            this_switch = {}
-            if each.linked_key.startswith("OpenFlow"):
-                switch_id = each.linked_key.split(':')[1]
-
-                ports = OperationalTree.PortsEntityAccess(self.sel_session)
-                sw_ports = []
-
-                for port in ports.read_collection():
-                    if isinstance(port, OperationalTree.OpenFlowPort):
-                        if port.parent_node == each.linked_key:
-                            sw_ports.append(port.to_pyson())
-
-                this_switch["ports"] = sw_ports
-
-                groups = ConfigTree.GroupsEntityAccess(self.sel_session)
-
-                sw_groups = []
-                for group in groups.read_collection():
-                    if group.node == each.id:
-                        sw_groups.append(group.to_pyson())
-
-                this_switch["groups"] = sw_groups
-
-                flow_tables = ConfigTree.FlowsEntityAccess(self.sel_session)
-                switch_flow_tables = defaultdict(list)
-                for flow_rule in flow_tables.read_collection():
-                    if flow_rule.node == each.id:
-                        flow_rule = flow_rule.to_pyson()
-                        switch_flow_tables[flow_rule["tableId"]].append(flow_rule)
-
-                this_switch["flow_tables"] = switch_flow_tables
-
-                sel_switches[switch_id] = this_switch
-
-        with open(self.conf_path + "sel_switches.json", "w") as outfile:
-            json.dump(sel_switches, outfile)
-
     def get_mininet_host_nodes(self):
 
         mininet_host_nodes = {}
@@ -383,8 +341,6 @@ class NetworkConfiguration(object):
             self.get_ryu_switches()
         elif self.controller == "onos":
             self.get_onos_switches()
-        elif self.controller == "sel":
-            self.get_sel_switches()
         else:
             raise NotImplementedError
 
