@@ -8,9 +8,6 @@ class ControllerMan(object):
         if controller == "ryu":
             self.ryu_proc = None
 
-        elif controller == "sel":
-            pass
-
     def get_next_ryu(self):
 
         ryu_cmd = ["ryu-manager", "--observe-links", "ryu.app.ofctl_rest", "ryu.app.rest_topology"]
@@ -20,8 +17,6 @@ class ControllerMan(object):
     def start_controller(self):
         if self.controller == "odl":
             raise NotImplemented
-        elif self.controller == "sel":
-            raise NotImplemented
         elif self.controller == "ryu":
             return self.get_next_ryu()
 
@@ -30,8 +25,6 @@ class ControllerMan(object):
         if self.controller == "ryu":
             self.ryu_proc.kill()
             subprocess.Popen.wait(self.ryu_proc)
-        elif self.controller == "sel":
-            pass
         else:
             raise NotImplemented
 

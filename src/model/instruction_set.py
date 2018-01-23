@@ -22,9 +22,6 @@ class Instruction:
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction()
 
-        elif self.sw.network_graph.controller == "sel":
-            self.parse_sel_instruction()
-
         else:
             raise NotImplementedError
 
@@ -75,23 +72,6 @@ class Instruction:
             self.go_to_table = self.instruction_json["table_id"]
 
         #TODO: Other instructions...
-
-
-    def parse_sel_instruction(self):
-
-        if self.instruction_json['instructionType'] == "WriteActions":
-            self.instruction_type = "write-actions"
-            for action in self.instruction_json['actions']:
-                self.actions_list.append(Action(self.sw, action))
-        elif self.instruction_json['instructionType'] == "ApplyActions":
-            self.instruction_type = "apply-actions"
-            for action in self.instruction_json['actions']:
-                self.actions_list.append(Action(self.sw, action))
-        elif self.instruction_json['instructionType'] == "GotoTable":
-            self.go_to_table = int(self.instruction_json['tableId'])
-            self.instruction_type = "go-to-table"
-        else:
-            raise NotImplementedError
 
 
 class InstructionSet:
@@ -147,9 +127,6 @@ class InstructionSet:
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction_set()
 
-        elif self.sw.network_graph.controller == "sel":
-            self.parse_sel_instruction_set()
-
         else:
             raise NotImplementedError
 
@@ -169,12 +146,6 @@ class InstructionSet:
 
         for instruction_json in self.instructions_json:
             instruction = Instruction(self.sw, instruction_json)
-            self.instruction_list.append(instruction)
-
-    def parse_sel_instruction_set(self):
-
-        for instruction in self.instructions_json:
-            instruction = Instruction(self.sw, instruction)
             self.instruction_list.append(instruction)
 
     def populate_action_sets_for_port_graph_edges(self):

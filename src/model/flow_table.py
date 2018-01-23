@@ -39,12 +39,6 @@ class Flow:
             self.match = Match(match_json=self.flow_json["match"], controller="ryu", flow=self)
             self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
 
-        elif self.sw.network_graph.controller == "sel":
-            self.table_id = self.flow_json["tableId"]
-            self.priority = int(self.flow_json["priority"])
-            self.match = Match(match_json=self.flow_json["match"], controller="sel", flow=self)
-            self.instruction_set = InstructionSet(self.sw, self, self.flow_json["instructions"])
-
     def init_port_graph_state(self):
 
         self.traffic_element = TrafficElement(init_match=self.match)
