@@ -341,6 +341,11 @@ class NetworkConfiguration(object):
                 if mininet_setup_gap:
                     time.sleep(mininet_setup_gap)
 
+            elif self.controller == "sel":
+                self.start_mininet()
+                if mininet_setup_gap:
+                    time.sleep(mininet_setup_gap)
+
             # These things are needed by network graph...
             self.get_switches()
             self.get_host_nodes()
@@ -380,6 +385,25 @@ class NetworkConfiguration(object):
                                                                                 ip=self.controller_ip,
                                                                                 port=self.controller_port),
                                        switch=partial(OVSSwitch, protocols='OpenFlow14'))
+
+            self.mininet_obj.start()
+
+        elif self.controller == "sel":
+            subprocess.call(["sudo",
+                             "ovs-vsctl",
+                             "set-ssl",
+                             "/etc/openvswitch/switchkey.pem",
+                             "/etc/openvswitch/switchcert.pem",
+                             "/var/lib/openvswitch/pki/controllerca/fullca.pem"])
+
+            self.mininet_obj = Mininet(topo=self.topo,
+                                       cleanup=True,
+                                       autoStaticArp=True,
+                                       controller=lambda name: RemoteController(name,
+                                                                                protocol="ssl",
+                                                                                ip=self.controller_ip,
+                                                                                port=self.controller_port),
+                                       switch=partial(OVSSwitch, protocols='OpenFlow13'))
 
             self.mininet_obj.start()
 
