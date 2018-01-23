@@ -32,11 +32,6 @@ from synthesis.dijkstra_synthesis import DijkstraSynthesis
 from synthesis.aborescene_synthesis import AboresceneSynthesis
 from synthesis.synthesis_lib import SynthesisLib
 
-# from pyselflow import session as Session
-# from pyselflow import config_tree as ConfigTree
-# from pyselflow import operational_tree as OperationalTree
-#
-
 
 class NetworkConfiguration(object):
 
