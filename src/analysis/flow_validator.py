@@ -3,7 +3,7 @@ import sys
 sys.path.append("./")
 
 from collections import defaultdict
-from timer import Timer
+from experiments.timer import Timer
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
 from util import get_specific_traffic
