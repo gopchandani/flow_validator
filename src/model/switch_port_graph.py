@@ -210,7 +210,7 @@ class SwitchPortGraph(PortGraph):
             elif event_type == "port_up":
                 dst_traffic_at_succ = self.get_admitted_traffic(ingress_node_succ, dst)
             else:
-                raise
+                raise Exception("Unknown event")
 
             ingress_node_traffic = self.compute_edge_admitted_traffic(dst_traffic_at_succ, ingress_node_succ_edge)
             self.propagate_admitted_traffic(ingress_node, ingress_node_traffic, ingress_node_succ, dst,

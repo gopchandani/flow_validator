@@ -8,6 +8,12 @@ from switch_port_graph import SwitchPortGraph
 
 class Switch:
 
+    def __str__(self):
+        return str(self.node_id)
+
+    def __repr__(self):
+        return str(self.node_id)
+
     def __init__(self, sw_id, network_graph):
 
         self.node_id = sw_id
