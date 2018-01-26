@@ -649,5 +649,6 @@ class TestNetworkPortGraph(unittest.TestCase):
             self.ng_ring_aborescene_apply_true_report_active_false,
             self.npg_ring_aborescene_apply_true_report_active_false)
 
+
 if __name__ == '__main__':
     unittest.main()

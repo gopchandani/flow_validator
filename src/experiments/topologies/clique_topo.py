@@ -11,9 +11,9 @@ class CliqueTopo(Topo):
         Topo.__init__(self)
         self.params = params
 
-        if params["num_switches"] < 2:
-            print "Need to have at least three switches for a ring."
-            raise
+        if params["num_switches"] < 3:
+            print "Need to have at least three switches for a clique."
+            raise Exception("Need to have at least three switches for a ring.")
 
         if params["per_switch_links"] < 2 and params["per_switch_links"] > params["num_switches"] - 1:
             print "Cannot have less than 2 and more than " + str(params["num_switches"] -1) + " links."
