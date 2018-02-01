@@ -31,12 +31,10 @@ class TestFlowValidator(unittest.TestCase):
 
     def test_connectivity_with_single_switch_failure(self):
         # On a 4-clique topology with one switch per host, every one of the four hosts is connected to the others
-        # killing out all the links to one switch (s4) and testing to see
+        # killing out all the links to one switch and testing to see
         # if the FlowValidator detects all the violations
 
         for sw_obj in self.ng.get_switches():
-
-            print sw_obj.node_id
 
             sw_host_port = sw_obj.attached_hosts[0].switch_port
             src_zone = [sw_host_port]
@@ -51,19 +49,26 @@ class TestFlowValidator(unittest.TestCase):
             constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
             lmbdas = tuple(self.ng.get_switch_link_data(sw=sw_obj))
-            print lmbdas
 
-            s = PolicyStatement(self.nc.ng,
-                                src_zone,
-                                dst_zone,
-                                specific_traffic,
-                                constraints,
-                                lmbdas=[lmbdas])
+            # Outgoing flows
+            s_o = PolicyStatement(self.nc.ng,
+                                  src_zone,
+                                  dst_zone,
+                                  specific_traffic,
+                                  constraints,
+                                  lmbdas=[lmbdas])
 
-            violations = self.fv.validate_policy([s], optimization_type="With Preemption")
+            s_i = PolicyStatement(self.nc.ng,
+                                  dst_zone,
+                                  src_zone,
+                                  specific_traffic,
+                                  constraints,
+                                  lmbdas=[lmbdas])
 
-            for v in violations:
-                print v
+            violations = self.fv.validate_policy([s_o, s_i], optimization_type="With Preemption")
+
+            # There are six flows in each case
+            self.assertEqual(len(violations), 6)
 
 
 if __name__ == '__main__':
