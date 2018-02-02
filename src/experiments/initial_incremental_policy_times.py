@@ -7,7 +7,7 @@ from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
-from network_configuration import NetworkConfiguration
+from model.network_configuration import NetworkConfiguration
 
 __author__ = 'Rakesh Kumar'
 

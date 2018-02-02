@@ -10,12 +10,11 @@ from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
-from network_configuration import NetworkConfiguration
+from model.network_configuration import NetworkConfiguration
 from model.traffic import Traffic
 
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
-from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
-
+from analysis.policy_statement import PATH_LENGTH_CONSTRAINT
 
 __author__ = 'Rakesh Kumar'
 

@@ -1,10 +1,10 @@
 import unittest
 import itertools
 from model.traffic import Traffic
-from experiments.network_configuration import NetworkConfiguration
+from model.network_configuration import NetworkConfiguration
 from analysis.flow_validator import FlowValidator
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
-from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
 
 
 class TestFlowValidator(unittest.TestCase):

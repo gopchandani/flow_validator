@@ -1,12 +1,11 @@
 import unittest
-import os
 import json
 
 from collections import defaultdict
 from model.traffic import Traffic
 from model.traffic_path import TrafficPath
 from model.network_port_graph import NetworkPortGraph
-from experiments.network_configuration import NetworkConfiguration
+from model.network_configuration import NetworkConfiguration
 from analysis.util import get_paths, get_active_path, get_failover_path, get_failover_path_after_failed_sequence
 from analysis.util import get_specific_traffic, get_admitted_traffic
 

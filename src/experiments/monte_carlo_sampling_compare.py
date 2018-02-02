@@ -11,7 +11,7 @@ from collections import defaultdict
 from timer import Timer
 from analysis.monte_carlo_analysis import MonteCarloAnalysis
 from experiment import Experiment
-from network_configuration import NetworkConfiguration
+from model.network_configuration import NetworkConfiguration
 
 
 class MonteCarloSamplingCompare(Experiment):

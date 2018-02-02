@@ -14,7 +14,7 @@ from functools import partial
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
-from controller_man import ControllerMan
+from experiments.controller_man import ControllerMan
 from model.network_graph import NetworkGraph
 from model.match import Match
 
