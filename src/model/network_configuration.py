@@ -143,6 +143,9 @@ class NetworkConfiguration(object):
 
         if self.mininet_obj:
             self.mininet_obj.pingAll()
+            self.mininet_obj.ping([self.mininet_obj.get('h11'),
+                                   self.mininet_obj.get('h21')],
+                                  '1')
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
 
