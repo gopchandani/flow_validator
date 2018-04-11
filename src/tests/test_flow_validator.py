@@ -1,7 +1,7 @@
 import unittest
 import itertools
 from model.traffic import Traffic
-from model.network_configuration import NetworkConfiguration
+from experiments.network_configuration import NetworkConfiguration
 from analysis.flow_validator import FlowValidator
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
