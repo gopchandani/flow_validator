@@ -127,8 +127,12 @@ def get_active_path(pg, specific_traffic, src_port, dst_port):
     # Get the path that is currently active
     active_path = None
     for path in paths:
+        print path
         min_active_rank = path.get_min_active_rank()
         max_active_rank = path.get_max_active_rank()
+
+        max_min_active_rank = path.get_max_min_active_rank()
+
         if min_active_rank == 0 and max_active_rank == 0:
             active_path = path
             break
@@ -281,6 +285,7 @@ def get_failover_path(pg, path, failed_link):
 
         if max_active_rank == 0:
 
+            # Grab the successor of the backup successor and fix up the in_port in the traffic
             backup_succ_succ = list(pg.successors_iter(backup_succ))[0]
 
             port_graph_edge = pg.get_edge_from_admitted_traffic(backup_succ,

@@ -73,6 +73,23 @@ class TrafficPath(object):
 
         return min_active_rank
 
+    def get_max_min_active_rank(self):
+        max_min_active_rank = -1
+
+        for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
+
+            min_active_rank = 10000
+
+            for enabling_edge_data in enabling_edge_data_list:
+                current_edge_data_active_rank = enabling_edge_data.get_min_active_rank()
+                if current_edge_data_active_rank < min_active_rank:
+                    min_active_rank = current_edge_data_active_rank
+
+            if min_active_rank > max_min_active_rank:
+                max_min_active_rank = min_active_rank
+
+        return max_min_active_rank
+
     def get_path_links(self):
         path_links = []
 

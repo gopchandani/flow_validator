@@ -37,7 +37,13 @@ class NetworkPortGraph(PortGraph):
                         raise Exception("Found traffic but no paths to back it up.")
 
                 edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, traffic_paths)
+
+                # ea_rank = edge_data.get_active_rank()
+                # if ea_rank:
+                #     continue
+
                 edge.add_edge_data(edge_data)
+
 
         return edge
 
