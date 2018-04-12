@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package FlowValidator;
+
+service FlowValidator {
+
+  rpc Initialize(NetworkGraph) returns (Status) {}
+
+  rpc ValidatePolicy(Policy) returns (Violations) {}
+
+}
+
+message Status {
+  int32 init_successful = 1;
+}
+
+
+message Port {
+    int32 port_num = 1;
+    string hw_addr = 2;
+}
+
+message Bucket {
+
+}
+
+message Group {
+
+}
+
+message FlowRule {
+
+}
+
+message FlowTable {
+
+}
+
+message Switch {
+    repeated Port ports = 1;
+}
+
+message NetworkGraph {
+  repeated Switch switches = 1;
+}
+
+
+message Policy {
+  int32 p = 2;
+}
+
+message Violations {
+  int32 v = 3;
+}
+

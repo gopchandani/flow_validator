@@ -3,7 +3,6 @@ __author__ = 'Rakesh Kumar'
 import json
 import networkx as nx
 
-from collections import defaultdict
 from itertools import permutations
 
 from switch import Switch
