@@ -20,24 +20,54 @@ message Port {
     string hw_addr = 2;
 }
 
-message Bucket {
+message Action {
+    string type = 1;
+    string modified_field = 2;
+    string modified_value = 3;
+    int32 output_port_nu = 4;
+}
 
+message Bucket {
+    int32 watch_port_num = 1;
+    int32 weight = 2;
+    repeated Action actions = 3;
 }
 
 message Group {
+    string type = 1;
+    int32 id = 2;
+    repeated Bucket buckets = 3;
+}
 
+message FieldRange {
+    int64 low = 1;
+    int64 high = 2;
+}
+
+message Match {
+    map<string, FieldRange> fields = 1;
+}
+
+message Instruction {
+    string type = 1;
+    repeated Action actions = 2;
 }
 
 message FlowRule {
-
+    int32 priority = 1;
+    Match match = 2;
+    repeated Instruction instructions = 3;
 }
 
 message FlowTable {
-
+    int32 table_num = 1;
+    repeated FlowRule flow_rules = 2;
 }
 
 message Switch {
     repeated Port ports = 1;
+    repeated FlowTable flow_tables = 2;
+    repeated Group group_table = 3;
 }
 
 message NetworkGraph {
