@@ -70,8 +70,18 @@ message Switch {
     repeated Group group_table = 3;
 }
 
+message Host {
+
+}
+
+message Link {
+
+}
+
 message NetworkGraph {
   repeated Switch switches = 1;
+  repeated Host hosts = 2;
+  repeated Link links = 3;
 }
 
 
