@@ -8,9 +8,12 @@ from rpc import flow_validator_pb2_grpc
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 
-def initialize(network_graph):
-    print network_graph
-    return 1
+def get_network_graph_object(context):
+    ng_obj = 1
+
+    print(context)
+
+    return ng_obj
 
 
 class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
@@ -19,7 +22,9 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
         pass
 
     def Initialize(self, request, context):
-        init_successful = initialize(request)
+        ng_obj = get_network_graph_object(context)
+
+        init_successful = 1
 
         return flow_validator_pb2.Status(init_successful=init_successful)
 
