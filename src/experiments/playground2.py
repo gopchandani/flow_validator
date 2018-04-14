@@ -124,6 +124,19 @@ class Playground2(Experiment):
     def prepare_rpc_instructions(self, instructions):
         rpc_instructions = []
 
+        for instruction in instructions:
+
+            if instruction["type"] == "GOTO_TABLE":
+                rpc_instruction = flow_validator_pb2.Instruction(
+                    type=instruction["type"],
+                    go_to_table_num=instruction["table_id"])
+            else:
+                rpc_instruction = flow_validator_pb2.Instruction(
+                    type=instruction["type"],
+                    actions=self.prepare_rpc_actions(instruction["actions"]))
+
+            rpc_instructions.append(rpc_instruction)
+
         return rpc_instructions
 
     def prepare_rpc_switches(self):

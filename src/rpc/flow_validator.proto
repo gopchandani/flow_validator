@@ -50,6 +50,7 @@ message Match {
 message Instruction {
     string type = 1;
     repeated Action actions = 2;
+    int32 go_to_table_num = 3;
 }
 
 message FlowRule {
