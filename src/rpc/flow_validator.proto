@@ -16,7 +16,7 @@ message Status {
 
 
 message Port {
-    int32 port_num = 1;
+    uint64 port_num = 1;
     string hw_addr = 2;
 }
 
@@ -24,11 +24,11 @@ message Action {
     string type = 1;
     string modified_field = 2;
     string modified_value = 3;
-    int32 output_port_nu = 4;
+    uint64 output_port_num = 4;
 }
 
 message Bucket {
-    int32 watch_port_num = 1;
+    uint64 watch_port_num = 1;
     int32 weight = 2;
     repeated Action actions = 3;
 }
@@ -39,13 +39,12 @@ message Group {
     repeated Bucket buckets = 3;
 }
 
-message FieldRange {
-    int64 low = 1;
-    int64 high = 2;
+message FieldVal {
+    int64 value = 1;
 }
 
 message Match {
-    map<string, FieldRange> fields = 1;
+    map<string, FieldVal> fields = 1;
 }
 
 message Instruction {
@@ -65,9 +64,10 @@ message FlowTable {
 }
 
 message Switch {
-    repeated Port ports = 1;
-    repeated FlowTable flow_tables = 2;
-    repeated Group group_table = 3;
+    string switch_id = 1;
+    repeated Port ports = 2;
+    repeated FlowTable flow_tables = 3;
+    repeated Group group_table = 4;
 }
 
 message Host {

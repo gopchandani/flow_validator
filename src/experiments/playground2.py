@@ -8,6 +8,8 @@ from model.traffic import Traffic
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
 
+from netaddr import IPNetwork
+
 __author__ = 'Rakesh Kumar'
 
 sys.path.append("./")
@@ -21,15 +23,179 @@ class Playground2(Experiment):
         self.nc = nc
         ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
-    def prepare_rpc_network_graph(self):
+    def prepare_rpc_actions(self, actions):
+        rpc_actions = []
 
+        for action in actions:
+
+            rpc_action = flow_validator_pb2.Action(type=action["type"])
+
+            if "field" in action and "value" in action:
+                rpc_action.modified_field = action["field"]
+                rpc_action.modified_value = str(action["value"])
+
+            rpc_actions.append(rpc_action)
+
+        return rpc_actions
+
+    def prepare_rpc_field_value(self, field_name, field_value):
+        field_val = None
+        has_vlan_tag = False
+
+        if field_name == "in_port":
+            try:
+                field_val = int(field_value)
+            except ValueError:
+                parsed_in_port = field_value.split(":")[2]
+                field_val = int(parsed_in_port)
+
+        elif field_name == "ethernet_type":
+            field_val = int(field_value)
+
+        elif field_name == "ethernet_source":
+            mac_int = int(field_value.replace(":", ""), 16)
+            field_val = mac_int
+
+        elif field_name == "ethernet_destination":
+            mac_int = int(field_value.replace(":", ""), 16)
+            field_val = mac_int
+
+        # TODO: Add graceful handling of IP addresses
+        elif field_name == "src_ip_addr":
+            field_val = IPNetwork(field_value)
+        elif field_name == "dst_ip_addr":
+            field_val = IPNetwork(field_value)
+
+        elif field_name == "ip_protocol":
+            field_val = int(field_value)
+        elif field_name == "tcp_destination_port":
+
+            if field_value == 6:
+                field_val = int(field_value)
+            else:
+                field_val = sys.maxsize
+
+        elif field_name == "tcp_source_port":
+
+            if field_value == 6:
+                field_val = int(field_value)
+            else:
+                field_val = sys.maxsize
+
+        elif field_name == "udp_destination_port":
+
+            if field_value == 17:
+                field_val = int(field_value)
+            else:
+                field_val = sys.maxsize
+
+        elif field_name == "udp_source_port":
+
+            if field_value == 17:
+                field_val = int(field_value)
+            else:
+                field_val = sys.maxsize
+
+        elif field_name == "vlan_id":
+
+            if field_value == "0x1000/0x1000":
+                field_val = sys.maxsize
+                has_vlan_tag = True
+            else:
+                field_val = 0x1000 + int(field_value)
+                has_vlan_tag = True
+
+        return flow_validator_pb2.FieldVal(value=field_val), has_vlan_tag
+
+    def prepare_rpc_match(self, match):
+
+        match_fields = {}
+        for field_name, field_value in match.items():
+            field_val, has_vlan_tag = self.prepare_rpc_field_value(field_name, field_value)
+
+            match_fields[field_name] = field_val
+            if has_vlan_tag:
+                match_fields["has_vlan_tag"] = 1
+
+        rpc_match = flow_validator_pb2.Match(fields=match_fields)
+
+        return rpc_match
+
+    def prepare_rpc_instructions(self, instructions):
+        rpc_instructions = []
+
+        return rpc_instructions
+
+    def prepare_rpc_switches(self):
         switches = self.nc.get_switches()
+
+        rpc_switches = []
+
+        for sw_id, switch in switches.items():
+
+            rpc_ports = []
+            for port in switch["ports"]:
+                rpc_port = flow_validator_pb2.Port(port_num=port["port_no"], hw_addr=port["hw_addr"])
+                rpc_ports.append(rpc_port)
+
+            rpc_groups = []
+            for group in switch["groups"]:
+
+                rpc_buckets = []
+                for bucket in group["buckets"]:
+                    rpc_actions = self.prepare_rpc_actions(bucket["actions"])
+                    rpc_bucket = flow_validator_pb2.Bucket(watch_port_num=bucket["watch_port"],
+                                                           weight=bucket["weight"],
+                                                           actions=rpc_actions)
+                    rpc_buckets.append(rpc_bucket)
+
+                rpc_group = flow_validator_pb2.Group(id=group["group_id"], type=group["type"], buckets=rpc_buckets)
+                rpc_groups.append(rpc_group)
+
+            rpc_flow_tables = []
+            for table_num, flow_table in switch["flow_tables"].items():
+
+                rpc_flow_rules = []
+                for flow_rule in flow_table:
+                    rpc_flow_rule = flow_validator_pb2.FlowRule(
+                        priority=int(flow_rule["priority"]),
+                        match=self.prepare_rpc_match(flow_rule["match"]),
+                        instructions=self.prepare_rpc_instructions(flow_rule["instructions"]))
+
+                    rpc_flow_rules.append(rpc_flow_rule)
+
+                rpc_flow_table = flow_validator_pb2.FlowTable(table_num=int(table_num), flow_rules=rpc_flow_rules)
+                rpc_flow_tables.append(rpc_flow_table)
+
+            rpc_switch = flow_validator_pb2.Switch(group_table=rpc_groups,
+                                                   ports=rpc_ports,
+                                                   switch_id='s' + str(sw_id))
+
+            rpc_switches.append(rpc_switch)
+
+        return rpc_switches
+
+    def prepare_rpc_hosts(self):
         hosts = self.nc.get_host_nodes()
+
+        rpc_hosts = []
+
+        return rpc_hosts
+
+    def prepare_rpc_links(self):
         links = self.nc.get_links()
 
-        port = flow_validator_pb2.Port(port_num=1, hw_addr="aa:bb")
-        switch = flow_validator_pb2.Switch(ports=[port])
-        rpc_ng = flow_validator_pb2.NetworkGraph(switches=[switch], hosts=[], links=[])
+        rpc_links = []
+
+        return rpc_links
+
+    def prepare_rpc_network_graph(self):
+
+        rpc_switches = self.prepare_rpc_switches()
+        rpc_hosts = self.prepare_rpc_hosts()
+        rpc_links = self.prepare_rpc_links()
+
+        rpc_ng = flow_validator_pb2.NetworkGraph(switches=rpc_switches, hosts=rpc_hosts, links=rpc_links)
 
         return rpc_ng
 
