@@ -72,11 +72,17 @@ message Switch {
 }
 
 message Host {
-
+    string host_name = 1;
+    string host_MAC = 2;
+    string host_IP = 3;
+    string host_switch_id = 4;
 }
 
 message Link {
-
+    string src_node = 1;
+    uint64 src_port_num = 2;
+    string dst_node = 3;
+    uint64 dst_port_num = 4;
 }
 
 message NetworkGraph {

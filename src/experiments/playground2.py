@@ -193,12 +193,30 @@ class Playground2(Experiment):
 
         rpc_hosts = []
 
+        for host_switch in hosts.values():
+            for host in host_switch:
+                rpc_host = flow_validator_pb2.Host(host_IP=host["host_IP"], host_MAC=host["host_MAC"],
+                                                   host_name=host["host_name"], host_switch_id=host["host_switch_id"])
+                rpc_hosts.append(rpc_host)
+
         return rpc_hosts
 
     def prepare_rpc_links(self):
         links = self.nc.get_links()
 
         rpc_links = []
+
+        for src_node in links:
+            for src_node_port in links[src_node]:
+                dst_list = links[src_node][src_node_port]
+                dst_node = dst_list[0]
+                dst_node_port = dst_list[1]
+
+                rpc_link = flow_validator_pb2.Link(src_node=src_node,
+                                                   src_port_num=int(src_node_port),
+                                                   dst_node=dst_node,
+                                                   dst_port_num=int(dst_node_port))
+                rpc_links.append(rpc_link)
 
         return rpc_links
 
