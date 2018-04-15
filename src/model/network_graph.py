@@ -72,9 +72,10 @@ class NetworkGraphLinkData(object):
 
 class NetworkGraph(object):
 
-    def __init__(self, network_configuration):
+    def __init__(self, controller):
 
-        self.network_configuration = network_configuration
+        self.controller = controller
+
         self.total_flow_rules = 0
 
         self.OFPP_CONTROLLER = 0xfffffffd
@@ -91,8 +92,6 @@ class NetworkGraph(object):
         # Initialize lists of host and switch ids
         self.host_ids = set()
         self.switch_ids = []
-
-        self.controller = self.network_configuration.controller
 
         self.L = []
 
@@ -373,9 +372,9 @@ class NetworkGraph(object):
     def parse_switches(self, switches):
         self.total_flow_rules = 0
 
-        if self.network_configuration.controller == "ryu":
+        if self.controller == "ryu":
             self.parse_ryu_switches(switches)
-        elif self.network_configuration.controller == "onos":
+        elif self.controller == "onos":
             self.parse_onos_switches(switches)
         else:
             raise NotImplemented

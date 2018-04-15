@@ -86,9 +86,10 @@ message Link {
 }
 
 message NetworkGraph {
-  repeated Switch switches = 1;
-  repeated Host hosts = 2;
-  repeated Link links = 3;
+    string controller = 1;
+    repeated Switch switches = 2;
+    repeated Host hosts = 3;
+    repeated Link links = 4;
 }
 
 

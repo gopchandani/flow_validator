@@ -226,7 +226,8 @@ class Playground2(Experiment):
         rpc_hosts = self.prepare_rpc_hosts()
         rpc_links = self.prepare_rpc_links()
 
-        rpc_ng = flow_validator_pb2.NetworkGraph(switches=rpc_switches, hosts=rpc_hosts, links=rpc_links)
+        rpc_ng = flow_validator_pb2.NetworkGraph(controller="ryu",
+                                                 switches=rpc_switches, hosts=rpc_hosts, links=rpc_links)
 
         return rpc_ng
 

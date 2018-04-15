@@ -14,6 +14,7 @@ from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRA
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
 
+from model.network_graph import NetworkGraph
 from concurrent import futures
 from rpc import flow_validator_pb2
 from rpc import flow_validator_pb2_grpc
@@ -371,8 +372,9 @@ class FlowValidator(object):
 
 
 def get_network_graph_object(request):
-    ng_obj = 1
+    ng_obj = NetworkGraph(request.controller)
 
+    print request.controller
     print request.switches
     print request.hosts
     print request.links
@@ -383,10 +385,13 @@ def get_network_graph_object(request):
 class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
     def __init__(self):
-        pass
+        self.fv = None
 
     def Initialize(self, request, context):
         ng_obj = get_network_graph_object(request)
+
+        self.fv = FlowValidator(ng_obj)
+        self.fv.init_network_port_graph()
 
         init_successful = 1
 

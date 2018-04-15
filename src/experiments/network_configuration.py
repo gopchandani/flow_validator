@@ -391,7 +391,7 @@ class NetworkConfiguration(object):
             hosts = self.get_host_nodes()
             links = self.get_links()
 
-            self.ng = NetworkGraph(network_configuration=self)
+            self.ng = NetworkGraph(self.controller)
             self.ng.parse_network_graph(switches, (hosts, links), links)
 
             if self.synthesis_name:
@@ -409,7 +409,7 @@ class NetworkConfiguration(object):
             hosts = self.get_host_nodes()
             links = self.get_links()
 
-            self.ng = NetworkGraph(network_configuration=self)
+            self.ng = NetworkGraph(self.controller)
             self.ng.parse_network_graph(switches, (hosts, links), links)
 
         print "total_flow_rules:", self.ng.total_flow_rules
