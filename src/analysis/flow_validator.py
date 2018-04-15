@@ -1,4 +1,6 @@
 import sys
+import time
+import grpc
 
 sys.path.append("./")
 
@@ -11,6 +13,12 @@ from util import get_admitted_traffic, get_active_path, get_failover_path_after_
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation
+
+from concurrent import futures
+from rpc import flow_validator_pb2
+from rpc import flow_validator_pb2_grpc
+
+_ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 __author__ = 'Rakesh Kumar'
 
@@ -360,3 +368,43 @@ class FlowValidator(object):
             self.validate_policy_without_preemption([])
 
         return self.violations
+
+
+def get_network_graph_object(request):
+    ng_obj = 1
+
+    print request.switches
+    print request.hosts
+    print request.links
+
+    return ng_obj
+
+
+class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
+
+    def __init__(self):
+        pass
+
+    def Initialize(self, request, context):
+        ng_obj = get_network_graph_object(request)
+
+        init_successful = 1
+
+        return flow_validator_pb2.Status(init_successful=init_successful)
+
+
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    flow_validator_pb2_grpc.add_FlowValidatorServicer_to_server(
+        FlowValidatorServicer(), server)
+    server.add_insecure_port('[::]:50051')
+    server.start()
+    try:
+        while True:
+            time.sleep(_ONE_DAY_IN_SECONDS)
+    except KeyboardInterrupt:
+        server.stop(0)
+
+
+if __name__ == '__main__':
+    serve()
