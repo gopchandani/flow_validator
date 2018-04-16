@@ -283,7 +283,7 @@ class Playground2(Experiment):
         channel = grpc.insecure_channel('localhost:50051')
         stub = flow_validator_pb2_grpc.FlowValidatorStub(channel)
 
-        # self.flow_validator_initialize(stub)
+        self.flow_validator_initialize(stub)
 
         rpc_policy_statement = self.prepare_policy_statement_all_host_pair_connectivity()
 

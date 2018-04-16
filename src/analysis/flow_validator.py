@@ -382,6 +382,14 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
         ng_obj.parse_network_graph(request.switches, (request.hosts, request.links), request.links)
         return ng_obj
 
+    def get_zone(self, zone_grpc):
+        zone = []
+        for port_grpc in zone_grpc.ports:
+            host_sw_obj = self.ng_obj.get_node_object(port_grpc.switch_id)
+            zone.append(host_sw_obj.ports[port_grpc.port_num])
+
+        return zone
+
     def Initialize(self, request, context):
         self.ng_obj = self.get_network_graph_object(request)
 
@@ -394,29 +402,36 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
     def ValidatePolicy(self, request, context):
 
-        print request
+        policy = []
+        for policy_statement in request.policy_statements:
 
-        src_zone = [self.ng_obj.get_node_object(h_id).switch_port for h_id in self.ng_obj.host_ids]
-        dst_zone = [self.ng_obj.get_node_object(h_id).switch_port for h_id in self.ng_obj.host_ids]
+            src_zone = self.get_zone(policy_statement.src_zone)
+            dst_zone = self.get_zone(policy_statement.dst_zone)
 
-        specific_traffic = Traffic(init_wildcard=True)
-        specific_traffic.set_field("ethernet_type", 0x0800)
+            specific_traffic = Traffic(init_wildcard=True)
+            specific_traffic.set_field("ethernet_type", 0x0800)
 
-        constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+            constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
-        s = PolicyStatement(self.ng_obj,
-                            src_zone,
-                            dst_zone,
-                            specific_traffic,
-                            constraints,
-                            lmbdas=[tuple(self.ng_obj.get_switch_link_data(sw=self.ng_obj.get_node_object("s4")))])
+            s = PolicyStatement(self.ng_obj,
+                                src_zone,
+                                dst_zone,
+                                specific_traffic,
+                                constraints,
+                                lmbdas=[tuple(self.ng_obj.get_switch_link_data(sw=self.ng_obj.get_node_object("s4")))])
 
-        violations = self.fv.validate_policy([s], optimization_type="With Preemption")
+            policy.append(s)
+
+        violations = self.fv.validate_policy(policy, optimization_type="With Preemption")
 
         # Generate and return policy PolicyViolations
         policy_violations = []
         for v in violations:
-            policy_violations.append(flow_validator_pb2.PolicyViolation())
+            policy_violations.append(flow_validator_pb2.PolicyViolation(lmbda=v.lmbda,
+                                                                        src_port=v.src_port,
+                                                                        dst_port=v.dst_port,
+                                                                        constraint_type=v.constraint_type,
+                                                                        counter_example=v.counter_example))
 
         return flow_validator_pb2.PolicyViolations(violations=policy_violations)
 
