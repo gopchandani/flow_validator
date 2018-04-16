@@ -6,14 +6,13 @@ service FlowValidator {
 
   rpc Initialize(NetworkGraph) returns (Status) {}
 
-  rpc ValidatePolicy(Policy) returns (Violations) {}
+  rpc ValidatePolicy(Policy) returns (PolicyViolations) {}
 
 }
 
 message Status {
   int32 init_successful = 1;
 }
-
 
 message Port {
     uint64 port_num = 1;
@@ -93,12 +92,45 @@ message NetworkGraph {
     repeated Link links = 4;
 }
 
+message Zone {
+    repeated string ports = 1;
+}
+
+message Constraint {
+    string type = 1;
+    int32 path_length = 2;
+    repeated PolicyLink avoid_links = 3;
+}
+
+message PolicyLink {
+    string src_node = 1;
+    string dst_node = 2;
+}
+
+message Lmbda {
+    repeated PolicyLink links = 1;
+}
+
+message PolicyStatement {
+  Zone src_zone = 1;
+  Zone dst_zone = 2;
+  Match traffic_match = 3;
+  repeated Constraint constraints = 4;
+  repeated Lmbda lmbdas = 5;
+}
 
 message Policy {
-  int32 p = 2;
+    repeated PolicyStatement policy_statements = 1;
 }
 
-message Violations {
-  int32 v = 3;
+message PolicyViolation {
+  Lmbda lmbda = 1;
+  string src_port = 2;
+  string dst_port = 3;
+  string constraint_type = 4;
+  string counter_example = 5;
 }
 
+message PolicyViolations {
+    repeated PolicyViolation violations = 1;
+}

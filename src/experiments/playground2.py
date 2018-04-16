@@ -4,9 +4,6 @@ from rpc import flow_validator_pb2
 from rpc import flow_validator_pb2_grpc
 from experiment import Experiment
 from experiments.network_configuration import NetworkConfiguration
-from model.traffic import Traffic
-from analysis.policy_statement import PolicyStatement, PolicyConstraint
-from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
 
 from netaddr import IPNetwork
 
@@ -195,8 +192,10 @@ class Playground2(Experiment):
 
         for host_switch in hosts.values():
             for host in host_switch:
-                rpc_host = flow_validator_pb2.Host(host_IP=host["host_IP"], host_MAC=host["host_MAC"],
-                                                   host_name=host["host_name"], host_switch_id=host["host_switch_id"])
+                rpc_host = flow_validator_pb2.Host(host_IP=host["host_IP"],
+                                                   host_MAC=host["host_MAC"],
+                                                   host_name=host["host_name"],
+                                                   host_switch_id=host["host_switch_id"])
                 rpc_hosts.append(rpc_host)
 
         return rpc_hosts
@@ -241,33 +240,28 @@ class Playground2(Experiment):
         if status.init_successful == 2:
             print("Server said Init was not successful")
 
+    def validated_connectivity_every_host_pair(self, stub):
+
+        rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
+                                                                  dst_zone=rpc_dst_zone,
+                                                                  traffic_match=rpc_traffic_match,
+                                                                  constraints=rpc_constraints,
+                                                                  lmbdas=rpc_lmbdas)
+
+        rpc_p = flow_validator_pb2.Policy(policy_statements=[rpc_policy_statement])
+
+        violations = stub.ValidatePolicy(rpc_p)
+
+        for v in violations:
+            print v
+
     def trigger(self):
 
         channel = grpc.insecure_channel('localhost:50051')
         stub = flow_validator_pb2_grpc.FlowValidatorStub(channel)
         self.flow_validator_initialize(stub)
 
-        src_zone = [self.nc.ng.get_node_object(h_id).switch_port for h_id in self.nc.ng.host_ids]
-        dst_zone = [self.nc.ng.get_node_object(h_id).switch_port for h_id in self.nc.ng.host_ids]
-
-        specific_traffic = Traffic(init_wildcard=True)
-        specific_traffic.set_field("ethernet_type", 0x0800)
-
-        constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-
-        s = PolicyStatement(self.nc.ng,
-                            src_zone,
-                            dst_zone,
-                            specific_traffic,
-                            constraints,
-                            lmbdas=[tuple(ng.get_switch_link_data(sw=ng.get_node_object("s4")))])
-
-        # violations = fv.validate_policy([s], optimization_type="With Preemption")
-        #
-        # for v in violations:
-        #     print v
-        #
-        # print "Done..."
+        self.validated_connectivity_every_host_pair(stub)
 
 
 def main():
