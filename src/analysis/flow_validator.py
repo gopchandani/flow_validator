@@ -373,11 +373,7 @@ class FlowValidator(object):
 
 def get_network_graph_object(request):
     ng_obj = NetworkGraph(request.controller)
-
-    print request.controller
-    print request.switches
-    print request.hosts
-    print request.links
+    ng_obj.parse_network_graph(request.switches, (request.hosts, request.links), request.links)
 
     return ng_obj
 

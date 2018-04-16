@@ -25,6 +25,7 @@ message Action {
     string modified_field = 2;
     string modified_value = 3;
     uint64 output_port_num = 4;
+    int32 group_id = 5;
 }
 
 message Bucket {

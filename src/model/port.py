@@ -7,7 +7,7 @@ from traffic import Traffic
 
 class Port(object):
 
-    def __init__(self, sw, port_json):
+    def __init__(self, sw, port_raw):
 
         self.sw = sw
         self.port_id = None
@@ -20,10 +20,15 @@ class Port(object):
         self.attached_host = None
 
         if self.sw.network_graph.controller == "ryu":
-            self.parse_ryu_port_json(port_json)
+            self.parse_ryu_port_json(port_raw)
 
         elif self.sw.network_graph.controller == "onos":
-            self.parse_onos_port_json(port_json)
+            self.parse_onos_port_json(port_raw)
+
+        elif self.sw.network_graph.controller == "grpc":
+            self.parse_grpc_port(port_raw)
+        else:
+            raise NotImplemented
 
     def init_port_graph_state(self):
 
@@ -56,36 +61,43 @@ class Port(object):
         self.ingress_node_traffic = Traffic(init_wildcard=True)
         self.ingress_node_traffic.set_field("in_port", int(self.port_number))
 
-    def parse_odl_port_json(self, port_json):
+    def parse_odl_port_json(self, port_raw):
 
-        self.port_id = str(self.sw.node_id) + ":" + str(port_json["flow-node-inventory:port-number"])
-        self.port_number = port_json["flow-node-inventory:port-number"]
-        self.mac_address = port_json["flow-node-inventory:hardware-address"]
-        self.curr_speed = int(port_json["flow-node-inventory:current-speed"])
-        self.max_speed = int(port_json["flow-node-inventory:maximum-speed"])
+        self.port_id = str(self.sw.node_id) + ":" + str(port_raw["flow-node-inventory:port-number"])
+        self.port_number = port_raw["flow-node-inventory:port-number"]
+        self.mac_address = port_raw["flow-node-inventory:hardware-address"]
+        self.curr_speed = int(port_raw["flow-node-inventory:current-speed"])
+        self.max_speed = int(port_raw["flow-node-inventory:maximum-speed"])
 
-        if port_json["flow-node-inventory:state"]["link-down"]:
+        if port_raw["flow-node-inventory:state"]["link-down"]:
             self.state = "down"
         else:
             self.state = "up"
 
-    def parse_onos_port_json(self, port_json):
+    def parse_onos_port_json(self, port_raw):
 
-        self.port_number = int(port_json["port"])
+        self.port_number = int(port_raw["port"])
         self.port_id = str(self.sw.node_id) + ":" + str(self.port_number)
         self.mac_address = None
         self.state = "up"
 
-    def parse_ryu_port_json(self, port_json):
+    def parse_ryu_port_json(self, port_raw):
 
-        self.port_id = str(self.sw.node_id) + ":" + str(port_json["port_no"])
-        self.port_number = port_json["port_no"]
-        self.mac_address = port_json["hw_addr"]
+        self.port_id = str(self.sw.node_id) + ":" + str(port_raw["port_no"])
+        self.port_number = port_raw["port_no"]
+        self.mac_address = port_raw["hw_addr"]
 
-        if "curr_speed" in port_json:
-            self.curr_speed = int(port_json["curr_speed"])
-        if "max_speed" in port_json:
-            self.max_speed = int(port_json["max_speed"])
+        if "curr_speed" in port_raw:
+            self.curr_speed = int(port_raw["curr_speed"])
+        if "max_speed" in port_raw:
+            self.max_speed = int(port_raw["max_speed"])
+
+        self.state = "up"
+
+    def parse_grpc_port(self, port_raw):
+        self.port_id = str(self.sw.node_id) + ":" + str(port_raw.port_num)
+        self.port_number = port_raw.port_num
+        self.mac_address = port_raw.port_num
 
         self.state = "up"
 

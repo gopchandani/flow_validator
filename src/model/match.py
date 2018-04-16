@@ -30,7 +30,8 @@ ryu_field_names_mapping = {"in_port": "in_port",
                            "tcp_src": "tcp_source_port",
                            "udp_dst": "udp_destination_port",
                            "udp_src": "udp_source_port",
-                           "vlan_vid": "vlan_id"}
+                           "vlan_vid": "vlan_id",
+                           "has_vlan_tag": "has_vlan_tag"}
 
 ryu_field_names_mapping_reverse = {"in_port": "in_port",
                                    "ethernet_type": "eth_type",
@@ -43,7 +44,8 @@ ryu_field_names_mapping_reverse = {"in_port": "in_port",
                                    "tcp_source_port": "tcp_src",
                                    "udp_destination_port": "udp_dst",
                                    "udp_source_port": "udp_src",
-                                   "vlan_id": "vlan_vid"}
+                                   "vlan_id": "vlan_vid",
+                                   "has_vlan_tag": "has_vlan_tag"}
 
 onos_field_names_mapping = {"IN_PORT": "in_port",
                             "ETH_TYPE": "ethernet_type",
@@ -73,50 +75,50 @@ onos_field_names_mapping_reverse = {"in_port": ("IN_PORT", "port"),
 
 
 class OdlMatchJsonParser():
-    def __init__(self, match_json=None):
+    def __init__(self, match_raw=None):
         self.field_values = {}
-        self._parse(match_json)
+        self._parse(match_raw)
 
-    def _parse(self, match_json):
+    def _parse(self, match_raw):
 
         for field_name in field_names:
 
             try:
                 if field_name == "in_port":
-                    self[field_name] = match_json["in-port"]
+                    self[field_name] = match_raw["in-port"]
 
                 elif field_name == "ethernet_type":
-                    self[field_name] = match_json["ethernet-match"]["ethernet-type"]["type"]
+                    self[field_name] = match_raw["ethernet-match"]["ethernet-type"]["type"]
 
                 elif field_name == "ethernet_source":
-                    self[field_name] = match_json["ethernet-match"]["ethernet-source"]["address"]
+                    self[field_name] = match_raw["ethernet-match"]["ethernet-source"]["address"]
 
                 elif field_name == "ethernet_destination":
-                    self[field_name] = match_json["ethernet-match"]["ethernet-destination"]["address"]
+                    self[field_name] = match_raw["ethernet-match"]["ethernet-destination"]["address"]
 
                 elif field_name == "src_ip_addr":
-                    self[field_name] = match_json["src_ip_addr"]
+                    self[field_name] = match_raw["src_ip_addr"]
 
                 elif field_name == "dst_ip_addr":
-                    self[field_name] = match_json["dst_ip_addr"]
+                    self[field_name] = match_raw["dst_ip_addr"]
 
                 elif field_name == "ip_protocol":
-                    self[field_name] = match_json["ip-match"]["ip-protocol"]
+                    self[field_name] = match_raw["ip-match"]["ip-protocol"]
 
                 elif field_name == "tcp_destination_port":
-                    self[field_name] = match_json["tcp-destination-port"]
+                    self[field_name] = match_raw["tcp-destination-port"]
 
                 elif field_name == "tcp_source_port":
-                    self[field_name] = match_json["tcp-source-port"]
+                    self[field_name] = match_raw["tcp-source-port"]
 
                 elif field_name == "udp_destination_port":
-                    self[field_name] = match_json["udp-destination-port"]
+                    self[field_name] = match_raw["udp-destination-port"]
 
                 elif field_name == "udp_source_port":
-                    self[field_name] = match_json["udp-source-port"]
+                    self[field_name] = match_raw["udp-source-port"]
 
                 elif field_name == "vlan_id":
-                    self[field_name] = match_json["vlan-match"]["vlan-id"]["vlan-id"]
+                    self[field_name] = match_raw["vlan-match"]["vlan-id"]["vlan-id"]
 
             except KeyError:
                 continue
@@ -147,15 +149,19 @@ class Match(DictMixin):
     def keys(self):
         return self.match_field_values.keys()
 
-    def __init__(self, match_json=None, controller=None, flow=None, is_wildcard=True):
+    def __init__(self, match_raw=None, controller=None, flow=None, is_wildcard=True):
 
         self.flow = flow
         self.match_field_values = {}
 
-        if match_json and controller == "onos":
-            self.add_element_from_onos_match_json(match_json)
-        elif match_json and controller == "ryu":
-            self.add_element_from_ryu_match_json(match_json)
+        if match_raw and controller == "onos":
+            self.add_element_from_onos_match_raw(match_raw)
+        elif match_raw and controller == "ryu":
+            self.add_element_from_ryu_match_raw(match_raw)
+        elif match_raw and controller == "grpc":
+            self.add_element_from_grpc_match_raw(match_raw)
+        elif match_raw:
+            raise NotImplemented
         elif is_wildcard:
             for field_name in field_names:
                 self.match_field_values[field_name] = sys.maxsize
@@ -163,11 +169,11 @@ class Match(DictMixin):
     def is_match_field_wildcard(self, field_name):
         return self.match_field_values[field_name] == sys.maxsize
 
-    def add_element_from_onos_match_json(self, match_json):
+    def add_element_from_onos_match_raw(self, match_raw):
 
-        def get_onos_match_field(field_name, match_json):
+        def get_onos_match_field(field_name, match_raw):
 
-            for onos_field_dict in match_json:
+            for onos_field_dict in match_raw:
                 if onos_field_dict["type"] == onos_field_names_mapping_reverse[field_name][0]:
                     return onos_field_dict[onos_field_names_mapping_reverse[field_name][1]]
 
@@ -177,50 +183,50 @@ class Match(DictMixin):
 
             try:
                 if field_name == "in_port":
-                    in_port_str = get_onos_match_field(field_name, match_json)
+                    in_port_str = get_onos_match_field(field_name, match_raw)
                     self[field_name] = int(in_port_str)
 
                 elif field_name == "ethernet_type":
-                    eth_type_str = get_onos_match_field(field_name, match_json)
+                    eth_type_str = get_onos_match_field(field_name, match_raw)
                     self[field_name] = int(eth_type_str, 16)
 
                 elif field_name == "ethernet_source":
-                    mac_str = get_onos_match_field(field_name, match_json)
+                    mac_str = get_onos_match_field(field_name, match_raw)
                     mac_int = int(mac_str.replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 elif field_name == "ethernet_destination":
-                    mac_str = get_onos_match_field(field_name, match_json)
+                    mac_str = get_onos_match_field(field_name, match_raw)
                     mac_int = int(mac_str.replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 # TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
-                    ip_str = get_onos_match_field(field_name, match_json)
+                    ip_str = get_onos_match_field(field_name, match_raw)
                     self[field_name] = IPNetwork(ip_str)
                 elif field_name == "dst_ip_addr":
-                    ip_str = get_onos_match_field(field_name, match_json)
+                    ip_str = get_onos_match_field(field_name, match_raw)
                     self[field_name] = IPNetwork(ip_str)
 
                 elif field_name == "ip_protocol":
-                    ip_proto_str = get_onos_match_field(field_name, match_json)
+                    ip_proto_str = get_onos_match_field(field_name, match_raw)
                     self[field_name] = int(ip_proto_str)
 
                 elif field_name == "tcp_destination_port":
-                    self[field_name] = int(get_onos_match_field(field_name, match_json))
+                    self[field_name] = int(get_onos_match_field(field_name, match_raw))
 
                 elif field_name == "tcp_source_port":
-                    self[field_name] = int(get_onos_match_field(field_name, match_json))
+                    self[field_name] = int(get_onos_match_field(field_name, match_raw))
 
                 elif field_name == "udp_destination_port":
-                    self[field_name] = int(get_onos_match_field(field_name, match_json))
+                    self[field_name] = int(get_onos_match_field(field_name, match_raw))
 
                 elif field_name == "udp_source_port":
-                    self[field_name] = int(get_onos_match_field(field_name, match_json))
+                    self[field_name] = int(get_onos_match_field(field_name, match_raw))
 
                 elif field_name == "vlan_id":
 
-                    vlan_id = get_onos_match_field(field_name, match_json)
+                    vlan_id = get_onos_match_field(field_name, match_raw)
 
                     if vlan_id == 4096:
                         self[field_name] = sys.maxsize
@@ -237,73 +243,73 @@ class Match(DictMixin):
 
                 continue
 
-    def add_element_from_ryu_match_json(self, match_json):
+    def add_element_from_ryu_match_raw(self, match_raw):
 
         for field_name in field_names:
 
             try:
                 if field_name == "in_port":
                     try:
-                        self[field_name] = int(match_json["in_port"])
+                        self[field_name] = int(match_raw["in_port"])
 
                     except ValueError:
-                        parsed_in_port = match_json["in-port"].split(":")[2]
+                        parsed_in_port = match_raw["in-port"].split(":")[2]
                         self[field_name] = int(parsed_in_port)
 
                 elif field_name == "ethernet_type":
-                    self[field_name] = int(match_json["eth_type"])
+                    self[field_name] = int(match_raw["eth_type"])
 
                 elif field_name == "ethernet_source":
-                    mac_int = int(match_json[u"eth_src"].replace(":", ""), 16)
+                    mac_int = int(match_raw[u"eth_src"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 elif field_name == "ethernet_destination":
-                    mac_int = int(match_json[u"eth_dst"].replace(":", ""), 16)
+                    mac_int = int(match_raw[u"eth_dst"].replace(":", ""), 16)
                     self[field_name] = mac_int
 
                 # TODO: Add graceful handling of IP addresses
                 elif field_name == "src_ip_addr":
-                    self[field_name] = IPNetwork(match_json["nw_src"])
+                    self[field_name] = IPNetwork(match_raw["nw_src"])
                 elif field_name == "dst_ip_addr":
-                    self[field_name] = IPNetwork(match_json["nw_dst"])
+                    self[field_name] = IPNetwork(match_raw["nw_dst"])
 
                 elif field_name == "ip_protocol":
-                    self[field_name] = int(match_json["nw_proto"])
+                    self[field_name] = int(match_raw["nw_proto"])
                 elif field_name == "tcp_destination_port":
 
-                    if match_json["nw_proto"] == 6:
-                        self[field_name] = int(match_json["tp_dst"])
+                    if match_raw["nw_proto"] == 6:
+                        self[field_name] = int(match_raw["tp_dst"])
                     else:
-                        self[field_name] = match_json["zzzz"]
+                        self[field_name] = match_raw["zzzz"]
 
                 elif field_name == "tcp_source_port":
 
-                    if match_json["nw_proto"] == 6:
-                        self[field_name] = int(match_json["tp_src"])
+                    if match_raw["nw_proto"] == 6:
+                        self[field_name] = int(match_raw["tp_src"])
                     else:
-                        self[field_name] = match_json["zzzz"]
+                        self[field_name] = match_raw["zzzz"]
 
                 elif field_name == "udp_destination_port":
 
-                    if match_json["nw_proto"] == 17:
-                        self[field_name] = int(match_json["tp_dst"])
+                    if match_raw["nw_proto"] == 17:
+                        self[field_name] = int(match_raw["tp_dst"])
                     else:
-                        self[field_name] = match_json["zzzz"]
+                        self[field_name] = match_raw["zzzz"]
 
                 elif field_name == "udp_source_port":
 
-                    if match_json["nw_proto"] == 17:
-                        self[field_name] = int(match_json["tp_src"])
+                    if match_raw["nw_proto"] == 17:
+                        self[field_name] = int(match_raw["tp_src"])
                     else:
-                        self[field_name] = match_json["zzzz"]
+                        self[field_name] = match_raw["zzzz"]
 
                 elif field_name == "vlan_id":
 
-                    if match_json[u"vlan_vid"] == "0x1000/0x1000":
+                    if match_raw[u"vlan_vid"] == "0x1000/0x1000":
                         self[field_name] = sys.maxsize
                         self["has_vlan_tag"] = 1
                     else:
-                        self[field_name] = 0x1000 + int(match_json[u"vlan_vid"])
+                        self[field_name] = 0x1000 + int(match_raw[u"vlan_vid"])
                         self["has_vlan_tag"] = 1
 
             except KeyError:
@@ -314,9 +320,27 @@ class Match(DictMixin):
 
                 continue
 
-    def generate_onos_match_json(self, match_json, has_vlan_tag_check):
+    def add_element_from_grpc_match_raw(self, match_raw):
 
-        match_json = []
+        for field_name in field_names:
+
+            ryu_field_name = ryu_field_names_mapping_reverse[field_name]
+
+            if ryu_field_name in match_raw.fields:
+                self[field_name] = match_raw.fields[ryu_field_name].value
+            else:
+                self[field_name] = sys.maxsize
+
+        if self[ryu_field_names_mapping["vlan_vid"]] != sys.maxsize:
+            if match_raw.fields["vlan_vid"].value == 0x1000:
+                self["has_vlan_tag"] = 1
+            else:
+                self["has_vlan_tag"] = sys.maxsize
+
+
+    def generate_onos_match_raw(self, match_raw, has_vlan_tag_check):
+
+        match_raw = []
 
         def get_onos_match_field_dict(field_name, val):
             match_field_dict = {"type": onos_field_names_mapping_reverse[field_name][0],
@@ -328,7 +352,7 @@ class Match(DictMixin):
             if has_vlan_tag_check:
                 if field_name == "vlan_id":
                     val = int("0x1000", 16)
-                    match_json.append(get_onos_match_field_dict(field_name, val))
+                    match_raw.append(get_onos_match_field_dict(field_name, val))
 
             if field_name in self and self[field_name] != sys.maxsize:
 
@@ -339,24 +363,24 @@ class Match(DictMixin):
                         mac_hex_str = "0" + mac_hex_str
                     mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
 
-                    match_json.append(get_onos_match_field_dict(field_name, mac_hex_str))
+                    match_raw.append(get_onos_match_field_dict(field_name, mac_hex_str))
 
                 elif field_name == "ethernet_type":
                     eth_type_str = hex(self[field_name])
                     eth_type_str = eth_type_str[0:2] + "0" + eth_type_str[2:]
-                    match_json.append(get_onos_match_field_dict(field_name, eth_type_str))
+                    match_raw.append(get_onos_match_field_dict(field_name, eth_type_str))
                 else:
-                    match_json.append(get_onos_match_field_dict(field_name, self[field_name]))
+                    match_raw.append(get_onos_match_field_dict(field_name, self[field_name]))
 
-        return match_json
+        return match_raw
 
-    def generate_ryu_match_json(self, match_json, has_vlan_tag_check=False):
+    def generate_ryu_match_raw(self, match_raw, has_vlan_tag_check=False):
 
         for field_name in field_names:
 
             if has_vlan_tag_check:
                 if field_name == "vlan_id":
-                    match_json[ryu_field_names_mapping_reverse[field_name]] = "0x1000/0x1000"
+                    match_raw[ryu_field_names_mapping_reverse[field_name]] = "0x1000/0x1000"
 
             if field_name in self and self[field_name] != sys.maxsize:
 
@@ -369,17 +393,17 @@ class Match(DictMixin):
                         mac_hex_str = "0" + mac_hex_str
 
                     mac_hex_str = unicode(':'.join(s.encode('hex') for s in mac_hex_str.decode('hex')))
-                    match_json[ryu_field_names_mapping_reverse[field_name]] = mac_hex_str
+                    match_raw[ryu_field_names_mapping_reverse[field_name]] = mac_hex_str
                 else:
-                    match_json[ryu_field_names_mapping_reverse[field_name]] = self[field_name]
+                    match_raw[ryu_field_names_mapping_reverse[field_name]] = self[field_name]
 
-        return match_json
+        return match_raw
 
-    def generate_match_json(self, controller, match_json, has_vlan_tag_check=False):
+    def generate_match_raw(self, controller, match_raw, has_vlan_tag_check=False):
 
         if controller == "ryu":
-            return self.generate_ryu_match_json(match_json, has_vlan_tag_check)
+            return self.generate_ryu_match_raw(match_raw, has_vlan_tag_check)
         elif controller == "onos":
-            return self.generate_onos_match_json(match_json, has_vlan_tag_check)
+            return self.generate_onos_match_raw(match_raw, has_vlan_tag_check)
         else:
             raise NotImplementedError

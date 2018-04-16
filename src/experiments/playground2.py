@@ -21,7 +21,6 @@ class Playground2(Experiment):
 
         super(Playground2, self).__init__("playground", 1)
         self.nc = nc
-        ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
     def prepare_rpc_actions(self, actions):
         rpc_actions = []
@@ -33,6 +32,9 @@ class Playground2(Experiment):
             if "field" in action and "value" in action:
                 rpc_action.modified_field = action["field"]
                 rpc_action.modified_value = str(action["value"])
+
+            if "group_id" in action:
+                rpc_action.group_id = int(action["group_id"])
 
             rpc_actions.append(rpc_action)
 
@@ -49,73 +51,67 @@ class Playground2(Experiment):
                 parsed_in_port = field_value.split(":")[2]
                 field_val = int(parsed_in_port)
 
-        elif field_name == "ethernet_type":
+        elif field_name == "eth_type":
             field_val = int(field_value)
 
-        elif field_name == "ethernet_source":
+        elif field_name == "eth_src":
             mac_int = int(field_value.replace(":", ""), 16)
             field_val = mac_int
 
-        elif field_name == "ethernet_destination":
+        elif field_name == "eth_dst":
             mac_int = int(field_value.replace(":", ""), 16)
             field_val = mac_int
 
         # TODO: Add graceful handling of IP addresses
-        elif field_name == "src_ip_addr":
+        elif field_name == "nw_src":
             field_val = IPNetwork(field_value)
-        elif field_name == "dst_ip_addr":
+        elif field_name == "nw_dst":
             field_val = IPNetwork(field_value)
 
-        elif field_name == "ip_protocol":
+        elif field_name == "ip_proto":
             field_val = int(field_value)
-        elif field_name == "tcp_destination_port":
+        elif field_name == "tcp_dst":
 
             if field_value == 6:
                 field_val = int(field_value)
             else:
                 field_val = sys.maxsize
 
-        elif field_name == "tcp_source_port":
+        elif field_name == "tcp_src":
 
             if field_value == 6:
                 field_val = int(field_value)
             else:
                 field_val = sys.maxsize
 
-        elif field_name == "udp_destination_port":
+        elif field_name == "udp_dst":
 
             if field_value == 17:
                 field_val = int(field_value)
             else:
                 field_val = sys.maxsize
 
-        elif field_name == "udp_source_port":
+        elif field_name == "udp_src":
 
             if field_value == 17:
                 field_val = int(field_value)
             else:
                 field_val = sys.maxsize
 
-        elif field_name == "vlan_id":
+        elif field_name == "vlan_vid":
 
             if field_value == "0x1000/0x1000":
-                field_val = sys.maxsize
-                has_vlan_tag = True
+                field_val = 0x1000
             else:
                 field_val = 0x1000 + int(field_value)
-                has_vlan_tag = True
 
-        return flow_validator_pb2.FieldVal(value=field_val), has_vlan_tag
+        return flow_validator_pb2.FieldVal(value=field_val)
 
     def prepare_rpc_match(self, match):
 
         match_fields = {}
         for field_name, field_value in match.items():
-            field_val, has_vlan_tag = self.prepare_rpc_field_value(field_name, field_value)
-
-            match_fields[field_name] = field_val
-            if has_vlan_tag:
-                match_fields["has_vlan_tag"] = 1
+            match_fields[field_name] = self.prepare_rpc_field_value(field_name, field_value)
 
         rpc_match = flow_validator_pb2.Match(fields=match_fields)
 
@@ -180,7 +176,8 @@ class Playground2(Experiment):
                 rpc_flow_table = flow_validator_pb2.FlowTable(table_num=int(table_num), flow_rules=rpc_flow_rules)
                 rpc_flow_tables.append(rpc_flow_table)
 
-            rpc_switch = flow_validator_pb2.Switch(group_table=rpc_groups,
+            rpc_switch = flow_validator_pb2.Switch(flow_tables = rpc_flow_tables,
+                                                   group_table=rpc_groups,
                                                    ports=rpc_ports,
                                                    switch_id='s' + str(sw_id))
 
@@ -226,7 +223,7 @@ class Playground2(Experiment):
         rpc_hosts = self.prepare_rpc_hosts()
         rpc_links = self.prepare_rpc_links()
 
-        rpc_ng = flow_validator_pb2.NetworkGraph(controller="ryu",
+        rpc_ng = flow_validator_pb2.NetworkGraph(controller="grpc",
                                                  switches=rpc_switches, hosts=rpc_hosts, links=rpc_links)
 
         return rpc_ng

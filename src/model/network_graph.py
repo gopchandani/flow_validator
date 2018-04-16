@@ -318,7 +318,7 @@ class NetworkGraph(object):
                 if port["port_no"] == "LOCAL":
                     continue
 
-                switch_ports[int(port["port_no"])] = Port(sw, port_json=port)
+                switch_ports[int(port["port_no"])] = Port(sw, port_raw=port)
 
             sw.ports = switch_ports
 
@@ -355,7 +355,7 @@ class NetworkGraph(object):
             for port_json in onos_switch["ports"]:
                 if port_json["port"] == "local":
                     continue
-                switch_ports[int(port_json["port"])] = Port(sw, port_json=port_json)
+                switch_ports[int(port_json["port"])] = Port(sw, port_raw=port_json)
 
             sw.ports = switch_ports
 
@@ -369,6 +369,42 @@ class NetworkGraph(object):
                 switch_flow_tables.append(FlowTable(sw, table_id, onos_switch["flow_tables"][table_id]))
                 sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
 
+    def parse_grpc_switches(self, grpc_switches):
+
+        #  Go through each node and grab the ryu_switches and the corresponding hosts associated with the switch
+        for switch in grpc_switches:
+
+            # Check to see if a switch with this id already exists in the graph,
+            # if so grab it, otherwise create it
+            sw = self.get_node_object(switch.switch_id)
+            if not sw:
+                sw = Switch(switch.switch_id, self)
+                self.graph.add_node(switch.switch_id, node_type="switch", sw=sw)
+                self.switch_ids.append(switch.switch_id)
+
+            # Parse out the information about all the ports in the switch
+            switch_ports = {}
+            for port in switch.ports:
+                if port.port_num == 4294967294:
+                    continue
+
+                if port.port_num == "LOCAL":
+                    continue
+
+                switch_ports[int(port.port_num)] = Port(sw, port_raw=port)
+
+            sw.ports = switch_ports
+
+            # Parse group table if one is available
+            if len(switch.group_table) > 0:
+                sw.group_table = GroupTable(sw, switch.group_table)
+
+            # Parse all the flow tables and sort them by table_id in the list
+            switch_flow_tables = []
+            for flow_table in switch.flow_tables:
+                switch_flow_tables.append(FlowTable(sw, flow_table.table_num, flow_table))
+                sw.flow_tables = sorted(switch_flow_tables, key=lambda flow_table: flow_table.table_id)
+
     def parse_switches(self, switches):
         self.total_flow_rules = 0
 
@@ -376,6 +412,8 @@ class NetworkGraph(object):
             self.parse_ryu_switches(switches)
         elif self.controller == "onos":
             self.parse_onos_switches(switches)
+        elif self.controller == "grpc":
+            self.parse_grpc_switches(switches)
         else:
             raise NotImplemented
 
