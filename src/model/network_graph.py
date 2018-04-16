@@ -157,6 +157,27 @@ class NetworkGraph(object):
 
                 self.graph.add_node(mininet_host_dict["host_name"], node_type="host", h=h_obj)
 
+    def parse_grpc_host_nodes(self, grpc_host_nodes, grpc_port_links):
+
+        for grpc_host in grpc_host_nodes:
+
+            sw_obj = self.get_node_object(grpc_host.host_switch_id)
+
+            # Add the host to the graph
+            self.host_ids.add(grpc_host.host_name)
+
+            if not sw_obj:
+                raise Exception("Switch with id: " + grpc_host.host_switch_id + " does not exist.")
+
+            h_obj = Host(grpc_host.host_name,
+                         self,
+                         grpc_host.host_IP,
+                         grpc_host.host_MAC,
+                         sw_obj,
+                         None)
+
+            self.graph.add_node(grpc_host.host_name, node_type="host", h=h_obj)
+
     def check_port_occupied(self, port, sw_id, onos_links):
 
         occupied = False
@@ -222,8 +243,41 @@ class NetworkGraph(object):
             self.parse_mininet_host_nodes(*hosts)
         elif self.controller == "onos":
             self.parse_onos_host_nodes(*hosts)
+        elif self.controller == "grpc":
+            self.parse_grpc_host_nodes(*hosts)
         else:
             raise NotImplementedError
+
+    def parse_grpc_links(self, grpc_links):
+
+        for grpc_link in grpc_links:
+
+            src_node_obj = self.get_node_object(grpc_link.src_node)
+            dst_node_obj = self.get_node_object(grpc_link.dst_node)
+
+            self.add_link(grpc_link.src_node,
+                          grpc_link.src_port_num,
+                          grpc_link.dst_node,
+                          grpc_link.dst_port_num)
+
+            if grpc_link.src_node.startswith("h"):
+                h_obj = src_node_obj
+                sw_obj = dst_node_obj
+                switch_port_num = grpc_link.dst_port_num
+
+            if grpc_link.dst_node.startswith("h"):
+                h_obj = dst_node_obj
+                sw_obj = src_node_obj
+                switch_port_num = grpc_link.src_port_num
+
+            # Host, switch links: Make the connections both on switch and host side
+            if grpc_link.src_node.startswith("h") or grpc_link.dst_node.startswith("h"):
+                h_obj.switch_port = sw_obj.ports[switch_port_num]
+                h_obj.generate_ingress_egress_node_ids()
+
+                sw_obj.host_ports.append(switch_port_num)
+                sw_obj.attached_hosts.append(h_obj)
+                sw_obj.ports[switch_port_num].attached_host = h_obj
 
     def parse_mininet_links(self, mininet_port_links):
 
@@ -252,6 +306,8 @@ class NetworkGraph(object):
             self.parse_mininet_links(links)
         elif self.controller == "onos":
             self.parse_onos_links(links)
+        elif self.controller == "grpc":
+            self.parse_grpc_links(links)
         else:
             raise NotImplementedError
 
