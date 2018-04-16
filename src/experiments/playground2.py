@@ -251,7 +251,7 @@ class Playground2(Experiment):
         rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
 
         match_fields = dict()
-        match_fields["ethernet_type"] = flow_validator_pb2.FieldVal(value=0x0800)
+        match_fields["eth_type"] = flow_validator_pb2.FieldVal(value=0x0800)
         rpc_traffic_match = flow_validator_pb2.Match(fields=match_fields)
 
         rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]

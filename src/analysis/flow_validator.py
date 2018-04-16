@@ -8,6 +8,8 @@ from collections import defaultdict
 from experiments.timer import Timer
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
+from model.traffic_element import TrafficElement
+from model.match import Match
 from util import get_specific_traffic
 from util import get_admitted_traffic, get_active_path, get_failover_path_after_failed_sequence
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
@@ -408,8 +410,10 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
             src_zone = self.get_zone(policy_statement.src_zone)
             dst_zone = self.get_zone(policy_statement.dst_zone)
 
-            specific_traffic = Traffic(init_wildcard=True)
-            specific_traffic.set_field("ethernet_type", 0x0800)
+            traffic_match = Match(match_raw=policy_statement.traffic_match, controller="grpc", flow=self)
+            te = TrafficElement(init_match=traffic_match)
+            specific_traffic = Traffic()
+            specific_traffic.add_traffic_elements([te])
 
             constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
