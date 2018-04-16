@@ -40,10 +40,7 @@ class Playground(Experiment):
 
         violations = fv.validate_policy([s], optimization_type="With Preemption")
 
-        for v in violations:
-            print v
-
-        print "Done..."
+        print "Total violations:", len(violations)
 
 
 def main():

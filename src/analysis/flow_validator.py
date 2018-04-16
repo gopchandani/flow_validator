@@ -429,6 +429,34 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
         return lmbdas
 
+    def get_violations_grpc(self, violations):
+
+        # Generate and return policy PolicyViolations
+        violations_grpc = []
+        for v in violations:
+
+            grpc_lmbda_links = []
+            for ld in v.lmbda:
+                grpc_lmbda_links.append(flow_validator_pb2.PolicyLink(src_node=ld.node1_id, dst_node=ld.node2_id))
+
+            grpc_lmbda = flow_validator_pb2.Lmbda(links=grpc_lmbda_links)
+            grpc_src_port = flow_validator_pb2.PolicyPort(switch_id=v.src_port.sw.node_id,
+                                                          port_num=v.src_port.port_number)
+
+            grpc_dst_port = flow_validator_pb2.PolicyPort(switch_id=v.dst_port.sw.node_id,
+                                                          port_num=v.dst_port.port_number)
+
+            grpc_constraint_type = v.constraint.constraint_type
+            grpc_counter_example = str(v.counter_example)
+
+            violations_grpc.append(flow_validator_pb2.PolicyViolation(lmbda=grpc_lmbda,
+                                                                      src_port=grpc_src_port,
+                                                                      dst_port=grpc_dst_port,
+                                                                      constraint_type=grpc_constraint_type,
+                                                                      counter_example=grpc_counter_example))
+
+        return flow_validator_pb2.PolicyViolations(violations=violations_grpc)
+
     def Initialize(self, request, context):
         self.ng_obj = self.get_network_graph_object(request)
 
@@ -455,16 +483,7 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
         violations = self.fv.validate_policy(policy, optimization_type="With Preemption")
 
-        # Generate and return policy PolicyViolations
-        policy_violations = []
-        for v in violations:
-            policy_violations.append(flow_validator_pb2.PolicyViolation(lmbda=v.lmbda,
-                                                                        src_port=v.src_port,
-                                                                        dst_port=v.dst_port,
-                                                                        constraint_type=v.constraint_type,
-                                                                        counter_example=v.counter_example))
-
-        return flow_validator_pb2.PolicyViolations(violations=policy_violations)
+        return self.get_violations_grpc(violations)
 
 
 def serve():

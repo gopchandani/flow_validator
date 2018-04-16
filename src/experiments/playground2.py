@@ -272,10 +272,9 @@ class Playground2(Experiment):
 
         rpc_p = flow_validator_pb2.Policy(policy_statements=rpc_policy_statements)
 
-        violations = stub.ValidatePolicy(rpc_p)
+        rpc_policy_violations = stub.ValidatePolicy(rpc_p)
 
-        for v in violations:
-            print v
+        print "Total violations:", len(rpc_policy_violations.violations)
 
     def trigger(self):
 
