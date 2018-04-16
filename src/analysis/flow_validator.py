@@ -392,6 +392,43 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
         return zone
 
+    def get_traffic(self, traffic_match_grpc):
+        tm = Match(match_raw=traffic_match_grpc, controller="grpc", flow=self)
+        te = TrafficElement(init_match=tm)
+        t = Traffic()
+        t.add_traffic_elements([te])
+        return t
+
+    def get_constraints(self, constraints_grpc):
+
+        c = []
+        for constraint_grpc in constraints_grpc:
+
+            if constraint_grpc.type == CONNECTIVITY_CONSTRAINT:
+                pc = PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)
+            elif constraint_grpc.type == ISOLATION_CONSTRAINT:
+                pc = PolicyConstraint(ISOLATION_CONSTRAINT, None)
+            elif constraint_grpc.type == PATH_LENGTH_CONSTRAINT:
+                pc = PolicyConstraint(PATH_LENGTH_CONSTRAINT, constraint_grpc.path_length)
+            elif constraint_grpc.type == LINK_AVOIDANCE_CONSTRAINT:
+                pc = PolicyConstraint(LINK_AVOIDANCE_CONSTRAINT, constraint_grpc.avoid_links)
+
+            c.append(pc)
+
+        return c
+
+    def get_lmbdas(self, lmbdas_grpc):
+        lmbdas = []
+
+        for lmbda_grpc in lmbdas_grpc:
+            lmbda = []
+            for link_grpc in lmbda_grpc.links:
+                lmbda.append(self.ng_obj.get_link_data(link_grpc.src_node, link_grpc.dst_node))
+
+            lmbdas.append(tuple(lmbda))
+
+        return lmbdas
+
     def Initialize(self, request, context):
         self.ng_obj = self.get_network_graph_object(request)
 
@@ -409,21 +446,11 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
             src_zone = self.get_zone(policy_statement.src_zone)
             dst_zone = self.get_zone(policy_statement.dst_zone)
+            t = self.get_traffic(policy_statement.traffic_match)
+            c = self.get_constraints(policy_statement.constraints)
+            l = self.get_lmbdas(policy_statement.lmbdas)
 
-            traffic_match = Match(match_raw=policy_statement.traffic_match, controller="grpc", flow=self)
-            te = TrafficElement(init_match=traffic_match)
-            specific_traffic = Traffic()
-            specific_traffic.add_traffic_elements([te])
-
-            constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-
-            s = PolicyStatement(self.ng_obj,
-                                src_zone,
-                                dst_zone,
-                                specific_traffic,
-                                constraints,
-                                lmbdas=[tuple(self.ng_obj.get_switch_link_data(sw=self.ng_obj.get_node_object("s4")))])
-
+            s = PolicyStatement(self.ng_obj, src_zone, dst_zone, t, c, l)
             policy.append(s)
 
         violations = self.fv.validate_policy(policy, optimization_type="With Preemption")

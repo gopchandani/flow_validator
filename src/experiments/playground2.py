@@ -258,7 +258,6 @@ class Playground2(Experiment):
 
         rpc_lmbdas = [flow_validator_pb2.Lmbda(links=
                                                [flow_validator_pb2.PolicyLink(src_node="s4", dst_node="s1"),
-                                                flow_validator_pb2.PolicyLink(src_node="s4", dst_node="s2"),
                                                 flow_validator_pb2.PolicyLink(src_node="s4", dst_node="s3")])]
 
         rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
