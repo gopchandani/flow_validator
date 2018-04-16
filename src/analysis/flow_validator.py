@@ -394,6 +394,8 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
     def ValidatePolicy(self, request, context):
 
+        print request
+
         src_zone = [self.ng_obj.get_node_object(h_id).switch_port for h_id in self.ng_obj.host_ids]
         dst_zone = [self.ng_obj.get_node_object(h_id).switch_port for h_id in self.ng_obj.host_ids]
 

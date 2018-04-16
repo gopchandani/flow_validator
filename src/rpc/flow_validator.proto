@@ -92,19 +92,24 @@ message NetworkGraph {
     repeated Link links = 4;
 }
 
+message PolicyPort {
+    string switch_id = 1;
+    uint64 port_num = 2;
+}
+
+message PolicyLink {
+    string src_node = 1;
+    string dst_node = 2;
+}
+
 message Zone {
-    repeated string ports = 1;
+    repeated PolicyPort ports = 1;
 }
 
 message Constraint {
     string type = 1;
     int32 path_length = 2;
     repeated PolicyLink avoid_links = 3;
-}
-
-message PolicyLink {
-    string src_node = 1;
-    string dst_node = 2;
 }
 
 message Lmbda {
@@ -125,8 +130,8 @@ message Policy {
 
 message PolicyViolation {
   Lmbda lmbda = 1;
-  string src_port = 2;
-  string dst_port = 3;
+  PolicyPort src_port = 2;
+  PolicyPort dst_port = 3;
   string constraint_type = 4;
   string counter_example = 5;
 }

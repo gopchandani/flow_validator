@@ -4,7 +4,7 @@ from rpc import flow_validator_pb2
 from rpc import flow_validator_pb2_grpc
 from experiment import Experiment
 from experiments.network_configuration import NetworkConfiguration
-
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
 from netaddr import IPNetwork
 
 __author__ = 'Rakesh Kumar'
@@ -235,12 +235,31 @@ class Playground2(Experiment):
         status = stub.Initialize(rpc_ng)
 
         if status.init_successful == 1:
-            print("Server said Init was successful")
+            print "Server said Init was successful"
 
         if status.init_successful == 2:
-            print("Server said Init was not successful")
+            print "Server said Init was not successful"
 
-    def validated_connectivity_every_host_pair(self, stub):
+    def prepare_policy_statement_all_host_pair_connectivity(self):
+
+        rpc_all_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1),
+                              flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1),
+                              flow_validator_pb2.PolicyPort(switch_id="s3", port_num=1),
+                              flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+
+        rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
+        rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
+
+        match_fields = dict()
+        match_fields["ethernet_type"] = flow_validator_pb2.FieldVal(value=0x0800)
+        rpc_traffic_match = flow_validator_pb2.Match(fields=match_fields)
+
+        rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
+
+        rpc_lmbdas = [flow_validator_pb2.Lmbda(links=
+                                               [flow_validator_pb2.PolicyLink(src_node="s4", dst_node="s1"),
+                                                flow_validator_pb2.PolicyLink(src_node="s4", dst_node="s2"),
+                                                flow_validator_pb2.PolicyLink(src_node="s4", dst_node="s3")])]
 
         rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
                                                                   dst_zone=rpc_dst_zone,
@@ -248,7 +267,11 @@ class Playground2(Experiment):
                                                                   constraints=rpc_constraints,
                                                                   lmbdas=rpc_lmbdas)
 
-        rpc_p = flow_validator_pb2.Policy(policy_statements=[rpc_policy_statement])
+        return rpc_policy_statement
+
+    def flow_validator_validate_policy(self, stub, rpc_policy_statements):
+
+        rpc_p = flow_validator_pb2.Policy(policy_statements=rpc_policy_statements)
 
         violations = stub.ValidatePolicy(rpc_p)
 
@@ -259,9 +282,12 @@ class Playground2(Experiment):
 
         channel = grpc.insecure_channel('localhost:50051')
         stub = flow_validator_pb2_grpc.FlowValidatorStub(channel)
-        self.flow_validator_initialize(stub)
 
-        self.validated_connectivity_every_host_pair(stub)
+        # self.flow_validator_initialize(stub)
+
+        rpc_policy_statement = self.prepare_policy_statement_all_host_pair_connectivity()
+
+        self.flow_validator_validate_policy(stub, [rpc_policy_statement])
 
 
 def main():
