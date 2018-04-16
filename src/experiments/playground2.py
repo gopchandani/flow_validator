@@ -29,12 +29,15 @@ class Playground2(Experiment):
 
             rpc_action = flow_validator_pb2.Action(type=action["type"])
 
-            if "field" in action and "value" in action:
+            if action["type"] == "SET_FIELD" and "field" in action and "value" in action:
                 rpc_action.modified_field = action["field"]
                 rpc_action.modified_value = str(action["value"])
 
-            if "group_id" in action:
+            if action["type"] == "GROUP" and "group_id" in action:
                 rpc_action.group_id = int(action["group_id"])
+
+            if action["type"] == "OUTPUT" and "port" in action:
+                rpc_action.output_port_num = action["port"]
 
             rpc_actions.append(rpc_action)
 
