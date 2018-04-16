@@ -151,7 +151,7 @@ class Action:
             self.modified_field = ryu_field_names_mapping[self.action_raw.modified_field]
 
             if self.action_raw.modified_field == "vlan_vid":
-                self.field_modified_to = self.action_raw.modified_value
+                self.field_modified_to = int(self.action_raw.modified_value)
             else:
                 raise NotImplemented
 
