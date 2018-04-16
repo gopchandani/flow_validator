@@ -331,12 +331,15 @@ class Match(DictMixin):
             else:
                 self[field_name] = sys.maxsize
 
-        if self[ryu_field_names_mapping["vlan_vid"]] != sys.maxsize:
+        # Check if VLAN_VID was present
+        if self["vlan_id"] != sys.maxsize:
+
+            # If the value is 0x1000, that means the match is that ANY tag exists...
             if match_raw.fields["vlan_vid"].value == 0x1000:
                 self["has_vlan_tag"] = 1
+                self["vlan_id"] = sys.maxsize
             else:
-                self["has_vlan_tag"] = sys.maxsize
-
+                self["has_vlan_tag"] = 1
 
     def generate_onos_match_raw(self, match_raw, has_vlan_tag_check):
 

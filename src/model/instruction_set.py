@@ -8,9 +8,9 @@ from action_set import Action
 
 class Instruction:
 
-    def __init__(self, sw, instruction_json):
+    def __init__(self, sw, instruction_raw):
 
-        self.instruction_json = instruction_json
+        self.instruction_raw = instruction_raw
         self.instruction_type = None
         self.sw = sw
         self.actions_list = []
@@ -22,57 +22,77 @@ class Instruction:
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction()
 
+        elif self.sw.network_graph.controller == "grpc":
+            self.parse_grpc_instruction()
+
         else:
             raise NotImplementedError
 
     def parse_onos_instruction(self):
 
-        if "deferred" in self.instruction_json:
-            if self.instruction_json["deferred"]:
+        if "deferred" in self.instruction_raw:
+            if self.instruction_raw["deferred"]:
                 raise NotImplementedError
 
                 self.instruction_type = "write-actions"
-                write_actions_json = self.instruction_json["deferred"]
+                write_actions_json = self.instruction_raw["deferred"]
                 for action_json in write_actions_json:
                     self.actions_list.append(Action(self.sw, action_json))
 
-        elif "immediate" in self.instruction_json:
-            if self.instruction_json["immediate"]:
+        elif "immediate" in self.instruction_raw:
+            if self.instruction_raw["immediate"]:
                 raise NotImplementedError
                 self.instruction_type = "apply-actions"
-                apply_actions_json = self.instruction_json["immediate"]
+                apply_actions_json = self.instruction_raw["immediate"]
                 for action_json in apply_actions_json:
                     self.actions_list.append(Action(self.sw, action_json))
 
-        elif "instructions" in self.instruction_json:
-            if self.instruction_json["instructions"]:
+        elif "instructions" in self.instruction_raw:
+            if self.instruction_raw["instructions"]:
                 self.instruction_type = "apply-actions"
-                apply_actions_json = self.instruction_json["instructions"]
+                apply_actions_json = self.instruction_raw["instructions"]
                 for action_json in apply_actions_json:
                     self.actions_list.append(Action(self.sw, action_json))
 
-        elif "tableTransition" in self.instruction_json:
+        elif "tableTransition" in self.instruction_raw:
             self.instruction_type = "go-to-table"
-            self.go_to_table = self.instruction_json["go-to-table"]["table_id"]
+            self.go_to_table = self.instruction_raw["go-to-table"]["table_id"]
 
     def parse_ryu_instruction(self):
 
-        if self.instruction_json["type"] == "WRITE_ACTIONS":
+        if self.instruction_raw["type"] == "WRITE_ACTIONS":
             self.instruction_type = "write-actions"
-            for action_json in self.instruction_json["actions"]:
+            for action_json in self.instruction_raw["actions"]:
                 self.actions_list.append(Action(self.sw, action_json))
 
-        elif self.instruction_json["type"] == "APPLY_ACTIONS":
+        elif self.instruction_raw["type"] == "APPLY_ACTIONS":
             self.instruction_type = "apply-actions"
-            for action_json in self.instruction_json["actions"]:
+            for action_json in self.instruction_raw["actions"]:
                 self.actions_list.append(Action(self.sw, action_json))
 
-        elif self.instruction_json["type"] == "GOTO_TABLE":
+        elif self.instruction_raw["type"] == "GOTO_TABLE":
             self.instruction_type = "go-to-table"
-            self.go_to_table = self.instruction_json["table_id"]
+            self.go_to_table = self.instruction_raw["table_id"]
 
         #TODO: Other instructions...
 
+    def parse_grpc_instruction(self):
+
+        if self.instruction_raw.type == "WRITE_ACTIONS":
+            self.instruction_type = "write-actions"
+            for action_json in self.instruction_raw.actions:
+                self.actions_list.append(Action(self.sw, action_json))
+
+        elif self.instruction_raw.type == "APPLY_ACTIONS":
+            self.instruction_type = "apply-actions"
+            for action_json in self.instruction_raw.actions:
+                self.actions_list.append(Action(self.sw, action_json))
+
+        elif self.instruction_raw.type == "GOTO_TABLE":
+            self.instruction_type = "go-to-table"
+            self.go_to_table = self.instruction_raw.go_to_table_num
+
+        #TODO: Other instructions...
 
 class InstructionSet:
 
@@ -112,9 +132,9 @@ class InstructionSet:
     and that Goto-Table is executed last.
     '''
 
-    def __init__(self, sw, flow, instructions_json):
+    def __init__(self, sw, flow, instructions_raw):
 
-        self.instructions_json = instructions_json
+        self.instructions_raw = instructions_raw
         self.sw = sw
         self.flow = flow
         self.network_graph = self.sw.network_graph
@@ -123,10 +143,10 @@ class InstructionSet:
 
         if self.sw.network_graph.controller == "onos":
             self.parse_onos_instruction_set()
-
         elif self.sw.network_graph.controller == "ryu":
             self.parse_ryu_instruction_set()
-
+        elif self.sw.network_graph.controller == "grpc":
+            self.parse_grpc_instruction_set()
         else:
             raise NotImplementedError
 
@@ -135,17 +155,23 @@ class InstructionSet:
 
     def parse_onos_instruction_set(self):
 
-        for instruction_type_key in self.instructions_json:
+        for instruction_type_key in self.instructions_raw:
 
-            instruction_json = {instruction_type_key: self.instructions_json[instruction_type_key]}
+            instruction_raw = {instruction_type_key: self.instructions_raw[instruction_type_key]}
 
-            instruction = Instruction(self.sw, instruction_json)
+            instruction = Instruction(self.sw, instruction_raw)
             self.instruction_list.append(instruction)
 
     def parse_ryu_instruction_set(self):
 
-        for instruction_json in self.instructions_json:
-            instruction = Instruction(self.sw, instruction_json)
+        for instruction_raw in self.instructions_raw:
+            instruction = Instruction(self.sw, instruction_raw)
+            self.instruction_list.append(instruction)
+            
+    def parse_grpc_instruction_set(self):
+
+        for instruction_raw in self.instructions_raw:
+            instruction = Instruction(self.sw, instruction_raw)
             self.instruction_list.append(instruction)
 
     def populate_action_sets_for_port_graph_edges(self):
