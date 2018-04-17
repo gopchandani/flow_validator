@@ -268,6 +268,27 @@ class Playground2(Experiment):
 
         return rpc_policy_statement
 
+    def prepare_policy_statement_test_case(self):
+
+        rpc_src_zone = flow_validator_pb2.Zone(ports=[flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)])
+        rpc_dst_zone = flow_validator_pb2.Zone(ports=[flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1)])
+
+        match_fields = dict()
+        match_fields["eth_type"] = flow_validator_pb2.FieldVal(value=0x0800)
+        rpc_traffic_match = flow_validator_pb2.Match(fields=match_fields)
+
+        rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
+
+        rpc_lmbdas = [flow_validator_pb2.Lmbda(links=[flow_validator_pb2.PolicyLink(src_node="s2", dst_node="s1")])]
+
+        rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
+                                                                  dst_zone=rpc_dst_zone,
+                                                                  traffic_match=rpc_traffic_match,
+                                                                  constraints=rpc_constraints,
+                                                                  lmbdas=rpc_lmbdas)
+
+        return rpc_policy_statement
+
     def flow_validator_validate_policy(self, stub, rpc_policy_statements):
 
         rpc_p = flow_validator_pb2.Policy(policy_statements=rpc_policy_statements)
@@ -276,6 +297,8 @@ class Playground2(Experiment):
 
         print "Total violations:", len(rpc_policy_violations.violations)
 
+        print rpc_policy_violations.violations
+
     def trigger(self):
 
         channel = grpc.insecure_channel('localhost:50051')
@@ -283,7 +306,9 @@ class Playground2(Experiment):
 
         self.flow_validator_initialize(stub)
 
-        rpc_policy_statement = self.prepare_policy_statement_all_host_pair_connectivity()
+        #rpc_policy_statement = self.prepare_policy_statement_all_host_pair_connectivity()
+
+        rpc_policy_statement = self.prepare_policy_statement_test_case()
 
         self.flow_validator_validate_policy(stub, [rpc_policy_statement])
 
