@@ -1,7 +1,7 @@
 import sys
 
 from experiment import Experiment
-from model.network_configuration import NetworkConfiguration
+from experiments.network_configuration import NetworkConfiguration
 from model.traffic import Traffic
 from analysis.flow_validator import FlowValidator
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
@@ -40,10 +40,7 @@ class Playground(Experiment):
 
         violations = fv.validate_policy([s], optimization_type="With Preemption")
 
-        for v in violations:
-            print v
-
-        print "Done..."
+        print "Total violations:", len(violations)
 
 
 def main():

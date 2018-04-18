@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from timer import Timer
 from experiment import Experiment
-from model.network_configuration import NetworkConfiguration
+from experiments.network_configuration import NetworkConfiguration
 from model.traffic import Traffic
 from analysis.flow_validator import FlowValidator
 

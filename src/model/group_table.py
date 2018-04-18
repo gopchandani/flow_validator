@@ -4,7 +4,7 @@ from action_set import Action, ActionSet
 
 
 class Bucket:
-    def __init__(self, sw, bucket_json, group):
+    def __init__(self, sw, bucket_raw, group):
 
         self.sw = sw
         self.action_list = []
@@ -14,23 +14,32 @@ class Bucket:
         self.group = group
 
         if self.sw.network_graph.controller == "onos":
-            for action_json in bucket_json["treatment"]["instructions"]:
-                self.action_list.append(Action(sw, action_json))
+            for action_raw in bucket_raw["treatment"]["instructions"]:
+                self.action_list.append(Action(sw, action_raw))
 
-            if "weight" in bucket_json:
-                self.weight = str(bucket_json["weight"])
+            if "weight" in bucket_raw:
+                self.weight = str(bucket_raw["weight"])
 
         elif self.sw.network_graph.controller == "ryu":
 
-            for action_json in bucket_json["actions"]:
-                self.action_list.append(Action(sw, action_json))
+            for action_raw in bucket_raw["actions"]:
+                self.action_list.append(Action(sw, action_raw))
 
-            if "watch_port" in bucket_json:
-                if bucket_json["watch_port"] != 4294967295:
-                    self.watch_port = self.sw.ports[int(bucket_json["watch_port"])]
+            if "watch_port" in bucket_raw:
+                if bucket_raw["watch_port"] != 4294967295:
+                    self.watch_port = self.sw.ports[int(bucket_raw["watch_port"])]
 
-            if "weight" in bucket_json:
-                self.weight = str(bucket_json["weight"])
+            if "weight" in bucket_raw:
+                self.weight = str(bucket_raw["weight"])
+
+        elif self.sw.network_graph.controller == "grpc":
+            for action_raw in bucket_raw.actions:
+                self.action_list.append(Action(sw, action_raw))
+
+            if bucket_raw.watch_port_num != 4294967295:
+                self.watch_port = self.sw.ports[int(bucket_raw.watch_port_num)]
+
+            self.weight = str(bucket_raw.weight)
 
         else:
             raise NotImplementedError
@@ -116,22 +125,22 @@ class Group:
                         If no buckets are live, packets are dropped.
     '''
 
-    def __init__(self, sw, group_json):
+    def __init__(self, sw, group_raw):
 
         self.sw = sw
         self.bucket_list = []
 
         if self.sw.network_graph.controller == "odl":
-            self.group_id = group_json["group-id"]
-            self.group_type = group_json["group-type"]
+            self.group_id = group_raw["group-id"]
+            self.group_type = group_raw["group-type"]
 
-            if group_json["group-type"] == "group-ff":
+            if group_raw["group-type"] == "group-ff":
                 self.group_type = self.sw.network_graph.GROUP_FF
-            elif group_json["group-type"] == "group-all":
+            elif group_raw["group-type"] == "group-all":
                 self.group_type = self.sw.network_graph.GROUP_ALL
 
-            for bucket_json in group_json["buckets"]["bucket"]:
-                self.bucket_list.append(Bucket(sw, bucket_json, self))
+            for bucket_raw in group_raw["buckets"]["bucket"]:
+                self.bucket_list.append(Bucket(sw, bucket_raw, self))
 
             #  Sort the bucket_list by bucket-id
             self.bucket_list = sorted(self.bucket_list, key=lambda bucket: bucket.bucket_id)
@@ -140,29 +149,43 @@ class Group:
             self.set_active_bucket()
 
         elif self.sw.network_graph.controller == "ryu":
-            self.group_id = group_json["group_id"]
+            self.group_id = group_raw["group_id"]
 
-            if group_json["type"] == u"ALL":
+            if group_raw["type"] == u"ALL":
                 self.group_type = self.sw.network_graph.GROUP_ALL
-            elif group_json["type"] == u"FF":
+            elif group_raw["type"] == u"FF":
                 self.group_type = self.sw.network_graph.GROUP_FF
 
-            for bucket_json in group_json["buckets"]:
-                self.bucket_list.append(Bucket(sw, bucket_json, self))
+            for bucket_raw in group_raw["buckets"]:
+                self.bucket_list.append(Bucket(sw, bucket_raw, self))
 
         elif self.sw.network_graph.controller == "onos":
 
-            self.group_id = self.sw.network_graph.parse_onos_group_id(group_json["id"])
-            if group_json["type"] == "ALL":
+            self.group_id = self.sw.network_graph.parse_onos_group_id(group_raw["id"])
+            if group_raw["type"] == "ALL":
                 self.group_type = self.sw.network_graph.GROUP_ALL
             else:
                 raise NotImplementedError
 
-            for bucket_json in group_json["buckets"]:
-                self.bucket_list.append(Bucket(sw, bucket_json, self))
+            for bucket_raw in group_raw["buckets"]:
+                self.bucket_list.append(Bucket(sw, bucket_raw, self))
+        elif self.sw.network_graph.controller == "grpc":
+            self.group_id = group_raw.id
+
+            if group_raw.type== u"ALL":
+                self.group_type = self.sw.network_graph.GROUP_ALL
+            elif group_raw.type == u"FF":
+                self.group_type = self.sw.network_graph.GROUP_FF
+
+            for bucket_raw in group_raw.buckets:
+                self.bucket_list.append(Bucket(sw, bucket_raw, self))
+        else:
+            raise NotImplemented
 
         if self.group_type == self.sw.network_graph.GROUP_FF:
                 self.active_bucket = self.bucket_list[0]
+
+
 
     def get_action_list(self):
         action_list = []
@@ -198,11 +221,11 @@ class Group:
 
 class GroupTable:
 
-    def __init__(self, sw, groups_json):
+    def __init__(self, sw, groups_raw):
 
         self.sw = sw
         self.groups = {}
 
-        for group_json in groups_json:
-            grp = Group(sw, group_json)
+        for group_raw in groups_raw:
+            grp = Group(sw, group_raw)
             self.groups[int(grp.group_id)] = grp

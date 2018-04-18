@@ -1,0 +1,141 @@
+syntax = "proto3";
+
+package FlowValidator;
+
+service FlowValidator {
+
+  rpc Initialize(NetworkGraph) returns (Status) {}
+
+  rpc ValidatePolicy(Policy) returns (PolicyViolations) {}
+
+}
+
+message Status {
+  int32 init_successful = 1;
+}
+
+message Port {
+    uint64 port_num = 1;
+    string hw_addr = 2;
+}
+
+message Action {
+    string type = 1;
+    string modified_field = 2;
+    string modified_value = 3;
+    uint64 output_port_num = 4;
+    int32 group_id = 5;
+}
+
+message Bucket {
+    uint64 watch_port_num = 1;
+    int32 weight = 2;
+    repeated Action actions = 3;
+}
+
+message Group {
+    string type = 1;
+    int32 id = 2;
+    repeated Bucket buckets = 3;
+}
+
+message FieldVal {
+    int64 value = 1;
+}
+
+message Match {
+    map<string, FieldVal> fields = 1;
+}
+
+message Instruction {
+    string type = 1;
+    repeated Action actions = 2;
+    int32 go_to_table_num = 3;
+}
+
+message FlowRule {
+    int32 priority = 1;
+    Match match = 2;
+    repeated Instruction instructions = 3;
+}
+
+message FlowTable {
+    int32 table_num = 1;
+    repeated FlowRule flow_rules = 2;
+}
+
+message Switch {
+    string switch_id = 1;
+    repeated Port ports = 2;
+    repeated FlowTable flow_tables = 3;
+    repeated Group group_table = 4;
+}
+
+message Host {
+    string host_name = 1;
+    string host_MAC = 2;
+    string host_IP = 3;
+    string host_switch_id = 4;
+}
+
+message Link {
+    string src_node = 1;
+    uint64 src_port_num = 2;
+    string dst_node = 3;
+    uint64 dst_port_num = 4;
+}
+
+message NetworkGraph {
+    string controller = 1;
+    repeated Switch switches = 2;
+    repeated Host hosts = 3;
+    repeated Link links = 4;
+}
+
+message PolicyPort {
+    string switch_id = 1;
+    uint64 port_num = 2;
+}
+
+message PolicyLink {
+    string src_node = 1;
+    string dst_node = 2;
+}
+
+message Zone {
+    repeated PolicyPort ports = 1;
+}
+
+message Constraint {
+    string type = 1;
+    int32 path_length = 2;
+    repeated PolicyLink avoid_links = 3;
+}
+
+message Lmbda {
+    repeated PolicyLink links = 1;
+}
+
+message PolicyStatement {
+  Zone src_zone = 1;
+  Zone dst_zone = 2;
+  Match traffic_match = 3;
+  repeated Constraint constraints = 4;
+  repeated Lmbda lmbdas = 5;
+}
+
+message Policy {
+    repeated PolicyStatement policy_statements = 1;
+}
+
+message PolicyViolation {
+  Lmbda lmbda = 1;
+  PolicyPort src_port = 2;
+  PolicyPort dst_port = 3;
+  string constraint_type = 4;
+  string counter_example = 5;
+}
+
+message PolicyViolations {
+    repeated PolicyViolation violations = 1;
+}

@@ -1,4 +1,6 @@
 import sys
+import time
+import grpc
 
 sys.path.append("./")
 
@@ -6,11 +8,20 @@ from collections import defaultdict
 from experiments.timer import Timer
 from model.network_port_graph import NetworkPortGraph
 from model.traffic import Traffic
+from model.traffic_element import TrafficElement
+from model.match import Match
 from util import get_specific_traffic
 from util import get_admitted_traffic, get_active_path, get_failover_path_after_failed_sequence
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
-from analysis.policy_statement import PolicyViolation
+from analysis.policy_statement import PolicyViolation, PolicyStatement, PolicyConstraint
+
+from model.network_graph import NetworkGraph
+from concurrent import futures
+from rpc import flow_validator_pb2
+from rpc import flow_validator_pb2_grpc
+
+_ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 __author__ = 'Rakesh Kumar'
 
@@ -360,3 +371,133 @@ class FlowValidator(object):
             self.validate_policy_without_preemption([])
 
         return self.violations
+
+
+class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
+
+    def __init__(self):
+        self.fv = None
+        self.ng_obj = None
+
+    def get_network_graph_object(self, request):
+        ng_obj = NetworkGraph(request.controller)
+        ng_obj.parse_network_graph(request.switches, (request.hosts, request.links), request.links)
+        return ng_obj
+
+    def get_zone(self, zone_grpc):
+        zone = []
+        for port_grpc in zone_grpc.ports:
+            host_sw_obj = self.ng_obj.get_node_object(port_grpc.switch_id)
+            zone.append(host_sw_obj.ports[port_grpc.port_num])
+
+        return zone
+
+    def get_traffic(self, traffic_match_grpc):
+        tm = Match(match_raw=traffic_match_grpc, controller="grpc", flow=self)
+        te = TrafficElement(init_match=tm)
+        t = Traffic()
+        t.add_traffic_elements([te])
+        return t
+
+    def get_constraints(self, constraints_grpc):
+
+        c = []
+        for constraint_grpc in constraints_grpc:
+
+            if constraint_grpc.type == CONNECTIVITY_CONSTRAINT:
+                pc = PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)
+            elif constraint_grpc.type == ISOLATION_CONSTRAINT:
+                pc = PolicyConstraint(ISOLATION_CONSTRAINT, None)
+            elif constraint_grpc.type == PATH_LENGTH_CONSTRAINT:
+                pc = PolicyConstraint(PATH_LENGTH_CONSTRAINT, constraint_grpc.path_length)
+            elif constraint_grpc.type == LINK_AVOIDANCE_CONSTRAINT:
+                pc = PolicyConstraint(LINK_AVOIDANCE_CONSTRAINT, constraint_grpc.avoid_links)
+
+            c.append(pc)
+
+        return c
+
+    def get_lmbdas(self, lmbdas_grpc):
+        lmbdas = []
+
+        for lmbda_grpc in lmbdas_grpc:
+            lmbda = []
+            for link_grpc in lmbda_grpc.links:
+                lmbda.append(self.ng_obj.get_link_data(link_grpc.src_node, link_grpc.dst_node))
+
+            lmbdas.append(tuple(lmbda))
+
+        return lmbdas
+
+    def get_violations_grpc(self, violations):
+
+        # Generate and return policy PolicyViolations
+        violations_grpc = []
+        for v in violations:
+
+            grpc_lmbda_links = []
+            for ld in v.lmbda:
+                grpc_lmbda_links.append(flow_validator_pb2.PolicyLink(src_node=ld.node1_id, dst_node=ld.node2_id))
+
+            grpc_lmbda = flow_validator_pb2.Lmbda(links=grpc_lmbda_links)
+            grpc_src_port = flow_validator_pb2.PolicyPort(switch_id=v.src_port.sw.node_id,
+                                                          port_num=v.src_port.port_number)
+
+            grpc_dst_port = flow_validator_pb2.PolicyPort(switch_id=v.dst_port.sw.node_id,
+                                                          port_num=v.dst_port.port_number)
+
+            grpc_constraint_type = v.constraint.constraint_type
+            grpc_counter_example = str(v.counter_example)
+
+            violations_grpc.append(flow_validator_pb2.PolicyViolation(lmbda=grpc_lmbda,
+                                                                      src_port=grpc_src_port,
+                                                                      dst_port=grpc_dst_port,
+                                                                      constraint_type=grpc_constraint_type,
+                                                                      counter_example=grpc_counter_example))
+
+        return flow_validator_pb2.PolicyViolations(violations=violations_grpc)
+
+    def Initialize(self, request, context):
+        self.ng_obj = self.get_network_graph_object(request)
+
+        self.fv = FlowValidator(self.ng_obj)
+        self.fv.init_network_port_graph()
+
+        init_successful = 1
+
+        return flow_validator_pb2.Status(init_successful=init_successful)
+
+    def ValidatePolicy(self, request, context):
+
+        policy = []
+        for policy_statement in request.policy_statements:
+
+            src_zone = self.get_zone(policy_statement.src_zone)
+            dst_zone = self.get_zone(policy_statement.dst_zone)
+            t = self.get_traffic(policy_statement.traffic_match)
+            c = self.get_constraints(policy_statement.constraints)
+            l = self.get_lmbdas(policy_statement.lmbdas)
+
+            s = PolicyStatement(self.ng_obj, src_zone, dst_zone, t, c, l)
+            policy.append(s)
+
+        violations = self.fv.validate_policy(policy, optimization_type="With Preemption")
+
+        return self.get_violations_grpc(violations)
+
+
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    flow_validator_pb2_grpc.add_FlowValidatorServicer_to_server(
+        FlowValidatorServicer(), server)
+    server.add_insecure_port('[::]:50051')
+    server.start()
+    try:
+        while True:
+            time.sleep(_ONE_DAY_IN_SECONDS)
+    except KeyboardInterrupt:
+        server.stop(0)
+
+
+if __name__ == '__main__':
+    serve()

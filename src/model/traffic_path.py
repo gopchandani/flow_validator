@@ -1,5 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
+from traffic import Traffic
+
 
 class TrafficPath(object):
 
@@ -89,6 +91,33 @@ class TrafficPath(object):
                 max_min_active_rank = min_active_rank
 
         return max_min_active_rank
+
+    def is_active(self):
+
+        is_active = True
+
+        for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
+
+            active_edge_filter_traffic = Traffic()
+
+            for enabling_edge_data in enabling_edge_data_list:
+                current_edge_data_active_rank = enabling_edge_data.get_active_rank()
+                if current_edge_data_active_rank == 0:
+                    active_edge_filter_traffic.union(enabling_edge_data.edge_filter_traffic)
+
+            # If any of the edges is not active, then bail
+            if not active_edge_filter_traffic.is_subset_traffic(traffic_at_pred):
+                is_active = False
+                break
+
+        return is_active
+
+        #
+        # min_active_rank = self.get_min_active_rank()
+        # max_active_rank = self.get_max_active_rank()
+        #
+        # if min_active_rank == 0 and max_active_rank == 0:
+        #     is_active = True
 
     def get_path_links(self):
         path_links = []
