@@ -120,17 +120,6 @@ def get_admitted_traffic(pg, src_port, dst_port):
     return at
 
 
-def is_active_path(path):
-    is_active = False
-
-    min_active_rank = path.get_min_active_rank()
-    max_active_rank = path.get_max_active_rank()
-    if min_active_rank == 0 and max_active_rank == 0:
-        is_active = True
-
-    return is_active
-
-
 def get_active_path(pg, specific_traffic, src_port, dst_port):
 
     paths = get_paths(pg, specific_traffic, src_port, dst_port)
@@ -138,7 +127,7 @@ def get_active_path(pg, specific_traffic, src_port, dst_port):
     # Get the path that is currently active
     active_path = None
     for path in paths:
-        if is_active_path(path):
+        if path.is_active():
             active_path = path
             break
 
@@ -149,7 +138,7 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
 
     traffic_paths = []
 
-    # If the ports belong to the same switch, path always has two nodes
+    # If the ports belong to the same switch, path always has only two nodes
     if src_port.sw.node_id == dst_port.sw.node_id:
 
         at = get_admitted_traffic(pg, src_port, dst_port)
