@@ -50,6 +50,7 @@ class NetworkPortGraph(PortGraph):
                                 continue
 
                 edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, traffic_paths)
+
                 edge.add_edge_data(edge_data)
 
         return edge
