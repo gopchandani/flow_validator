@@ -235,7 +235,7 @@ class PortGraph(object):
 
         return has_loop
 
-    def get_enabling_edge_data(self, node, succ, dst, at):
+    def get_enabling_edge_data(self, node, succ, dst, at, exclude_inactive=False):
 
         enabling_edge_data = []
 
@@ -247,6 +247,9 @@ class PortGraph(object):
                 at.set_field("in_port", int(node.parent_obj.port_number))
 
             at_dst_succ = self.get_admitted_traffic_via_succ(node, dst, succ)
+
+            if exclude_inactive:
+                at_dst_succ.exclude_inactive_traffic_elements()
 
             # Check to see if the successor would carry some of the traffic from here
             succ_int = at.intersect(at_dst_succ)
@@ -267,11 +270,11 @@ class PortGraph(object):
 
         return traffic_at_succ
 
-    def get_paths(self, node, dst, node_at, path_prefix, path_edges, paths):
+    def get_paths(self, node, dst, node_at, path_prefix, path_edges, paths, exclude_inactive=False):
 
         for succ in self.get_admitted_traffic_succs(node, dst):
 
-            enabling_edge_data = self.get_enabling_edge_data(node, succ, dst, node_at)
+            enabling_edge_data = self.get_enabling_edge_data(node, succ, dst, node_at, exclude_inactive)
             if not enabling_edge_data:
                 continue
 

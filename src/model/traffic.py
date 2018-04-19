@@ -14,6 +14,16 @@ class Traffic:
         if init_wildcard:
             self.traffic_elements.append(TrafficElement(init_field_wildcard=True))
 
+    def exclude_inactive_traffic_elements(self):
+
+        new_traffic_elements = []
+
+        for te in self.traffic_elements:
+            if te.enabling_edge_data.get_active_rank() == 0:
+                new_traffic_elements.append(te)
+
+        self.traffic_elements = new_traffic_elements
+
     def __str__(self):
         t_str = ''
 

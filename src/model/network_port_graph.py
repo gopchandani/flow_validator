@@ -12,7 +12,7 @@ class NetworkPortGraph(PortGraph):
 
         super(NetworkPortGraph, self).__init__(network_graph, report_active_state)
 
-    def get_edge_from_admitted_traffic(self, pred, succ, admitted_traffic, edge_sw=None):
+    def get_edge_from_admitted_traffic(self, pred, succ, admitted_traffic, edge_sw=None, exclude_inactive=False):
 
         edge = PortGraphEdge(pred, succ)
 
@@ -23,27 +23,34 @@ class NetworkPortGraph(PortGraph):
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
             for te in admitted_traffic.traffic_elements:
+
                 t = Traffic()
                 t.add_traffic_elements([te])
-
                 traffic_paths = None
+
                 if edge_sw:
 
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], [])
 
                     if len(traffic_paths) == 0:
-                        traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], [])
                         raise Exception("Found traffic but no paths to back it up.")
+                    else:
+                        # IF asked to exclude in-active...
+                        # As long as there a single active path and carries the te, then we are good,
+                        # otherwise, continue
+                        if exclude_inactive:
+                            active_path = False
+                            for p in traffic_paths:
+                                if p.get_max_active_rank() == 0:
+                                    active_path = True
+                                    break
+
+                            if not active_path:
+                                continue
 
                 edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, traffic_paths)
-
-                # ea_rank = edge_data.get_active_rank()
-                # if ea_rank:
-                #     continue
-
                 edge.add_edge_data(edge_data)
-
 
         return edge
 

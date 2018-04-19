@@ -122,19 +122,19 @@ def get_admitted_traffic(pg, src_port, dst_port):
 
 def get_active_path(pg, specific_traffic, src_port, dst_port):
 
-    paths = get_paths(pg, specific_traffic, src_port, dst_port)
+    paths = get_paths(pg, specific_traffic, src_port, dst_port, exclude_inactive=True)
 
     # Get the path that is currently active
     active_path = None
     for path in paths:
         if path.is_active():
             active_path = path
-            break
+            #break
 
     return active_path
 
 
-def get_paths(pg, specific_traffic, src_port, dst_port):
+def get_paths(pg, specific_traffic, src_port, dst_port, exclude_inactive=False):
 
     traffic_paths = []
 
@@ -176,7 +176,8 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                                          modified_src_spg_at_frac,
                                          [src_sw_port.network_port_graph_egress_node],
                                          [],
-                                         [])
+                                         [],
+                                         exclude_inactive)
 
                 if npg_paths:
                     for path in npg_paths:
@@ -187,7 +188,8 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                         port_graph_edge = pg.get_edge_from_admitted_traffic(src_port.switch_port_graph_ingress_node,
                                                                             src_sw_port.switch_port_graph_egress_node,
                                                                             src_spg_at_frac,
-                                                                            src_sw_port.sw)
+                                                                            src_sw_port.sw,
+                                                                            exclude_inactive=exclude_inactive)
 
                         path.path_edges.insert(0, ((src_port.network_port_graph_ingress_node,
                                                     src_sw_port.network_port_graph_egress_node),
