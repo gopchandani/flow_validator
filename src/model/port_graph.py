@@ -293,7 +293,8 @@ class PortGraph(object):
                                    succ_at,
                                    path_prefix + [succ],
                                    path_edges + [((node, succ),  enabling_edge_data, node_at)],
-                                   paths)
+                                   paths,
+                                   exclude_inactive)
 
         return paths
 

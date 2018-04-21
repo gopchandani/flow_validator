@@ -13,6 +13,7 @@ class DijkstraSynthesis(object):
     def __init__(self, params):
 
         self.network_graph = None
+        self.network_configuration = None
         self.params = params
         self.synthesis_lib = None
 
@@ -622,4 +623,4 @@ class DijkstraSynthesis(object):
             for dst_port in dst_ports_to_synthesize:
                 self._synthesize_all_node_pairs(dst_port)
 
-        self.synthesis_lib.save_synthesized_paths(self.network_graph.network_configuration.conf_path)
+        self.synthesis_lib.save_synthesized_paths(self.network_configuration.conf_path)

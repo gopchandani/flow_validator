@@ -106,35 +106,44 @@ def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
 def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_inactive=False):
 
     for src_sw_port in src_port.sw.non_host_port_iter():
+
+        src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
+                                                                 src_sw_port.switch_port_graph_egress_node)
+
+        if exclude_inactive:
+            filter_spg_traffic_with_paths(src_port.sw,
+                                          src_spg_at,
+                                          src_port.switch_port_graph_ingress_node,
+                                          src_sw_port.switch_port_graph_egress_node)
+
+        src_spg_at_frac = specific_traffic.intersect(src_spg_at, keep_all=True)
+
+        modified_src_spg_at_frac = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
+
+        # Creating this extra Traffic object to avoid over-writing in_port in modified_src_spg_at_frac
+        modified_src_spg_at_frac_2 = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
+
         for dst_sw_port in dst_port.sw.non_host_port_iter():
             npg_at = pg.get_admitted_traffic(src_sw_port.network_port_graph_egress_node,
                                              dst_sw_port.network_port_graph_ingress_node)
-            src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
-                                                                     src_sw_port.switch_port_graph_egress_node)
 
             if exclude_inactive:
-                filter_spg_traffic_with_paths(src_port.sw,
-                                              src_spg_at,
-                                              src_port.switch_port_graph_ingress_node,
-                                              src_sw_port.switch_port_graph_egress_node)
+                pass
 
-            src_spg_at_frac = specific_traffic.intersect(src_spg_at, keep_all=True)
-
-            dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
-                                                                     dst_port.switch_port_graph_egress_node)
-            if exclude_inactive:
-                filter_spg_traffic_with_paths(dst_port.sw,
-                                              dst_spg_at,
-                                              dst_sw_port.switch_port_graph_ingress_node,
-                                              dst_port.switch_port_graph_egress_node)
-
-            modified_src_spg_at_frac = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
-
-            # Creating this extra Traffic object to avoid over-writing in_port in modified_src_spg_at_frac
-            modified_src_spg_at_frac_2 = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
+            # No need to do npg_at.exclude_inactive_traffic_elements() here because:
+            # 1. Can't do that with npg_at anyway, it needs to be verified down at the spg level
+            # 2. We do exactly that by passing that with get_paths on the NPG
 
             modified_src_spg_at_frac_npg_at_int = npg_at.intersect(modified_src_spg_at_frac_2, keep_all=True)
             if not modified_src_spg_at_frac_npg_at_int.is_empty():
+
+                dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
+                                                                         dst_port.switch_port_graph_egress_node)
+                if exclude_inactive:
+                    filter_spg_traffic_with_paths(dst_port.sw,
+                                                  dst_spg_at,
+                                                  dst_sw_port.switch_port_graph_ingress_node,
+                                                  dst_port.switch_port_graph_egress_node)
 
                 modified_src_spg_at_frac_npg_at_int.set_field("in_port", int(dst_sw_port.port_number))
                 dst_spg_at_frac = dst_spg_at.intersect(modified_src_spg_at_frac_npg_at_int, keep_all=True)
@@ -172,7 +181,7 @@ def get_active_path(pg, specific_traffic, src_port, dst_port):
     for path in paths:
         if path.is_active():
             active_path = path
-            #break
+            break
 
     return active_path
 

@@ -128,12 +128,14 @@ class NetworkConfiguration(object):
 
         if self.synthesis_name == "DijkstraSynthesis":
             self.synthesis.network_graph = self.ng
-            self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng)
+            self.synthesis.network_configuration = self
+            self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng, self)
             self.synthesis.synthesize_all_node_pairs()
 
         elif self.synthesis_name == "AboresceneSynthesis":
             self.synthesis.network_graph = self.ng
-            self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng)
+            self.synthesis.network_configuration = self
+            self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng, self)
             flow_match = Match(is_wildcard=True)
             flow_match["ethernet_type"] = 0x0800
             self.synthesis.synthesize_all_switches(flow_match, 2)
