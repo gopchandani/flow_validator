@@ -616,11 +616,11 @@ class TestNetworkPortGraph(unittest.TestCase):
                     if active_path_before_failures.passes_link(ld1) and not active_path_before_failures.passes_link(ld2):
                         self.assertEqual(failover_path, None)
 
-    def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
-            self.nc_ring_dijkstra_apply_true,
-            self.ng_ring_dijkstra_apply_true_report_active_false,
-            self.npg_ring_dijkstra_apply_true_report_active_false)
+    # def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
+    #     self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+    #         self.nc_ring_dijkstra_apply_true,
+    #         self.ng_ring_dijkstra_apply_true_report_active_false,
+    #         self.npg_ring_dijkstra_apply_true_report_active_false)
     #
     # def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
     #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
@@ -634,24 +634,24 @@ class TestNetworkPortGraph(unittest.TestCase):
     #         self.ng_ring_dijkstra_apply_true_report_active_false,
     #         self.npg_ring_dijkstra_apply_true_report_active_false)
     #
-    def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+    # def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
+    #     self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+    #         self.nc_ring_aborescene_apply_true,
+    #         self.ng_ring_aborescene_apply_true_report_active_false,
+    #         self.npg_ring_aborescene_apply_true_report_active_false)
+
+    def test_double_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
+        self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
             self.nc_ring_aborescene_apply_true,
             self.ng_ring_aborescene_apply_true_report_active_false,
             self.npg_ring_aborescene_apply_true_report_active_false)
 
-    # def test_double_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
-    #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
-    #         self.nc_ring_aborescene_apply_true,
-    #         self.ng_ring_aborescene_apply_true_report_active_false,
-    #         self.npg_ring_aborescene_apply_true_report_active_false)
-    #
     # def test_fail_two_link_sequence_failover_path_ring_aborescene_apply_true_report_active_false(self):
     #     self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
     #         self.nc_ring_aborescene_apply_true,
     #         self.ng_ring_aborescene_apply_true_report_active_false,
     #         self.npg_ring_aborescene_apply_true_report_active_false)
-    #
+
 
 if __name__ == '__main__':
     unittest.main()
