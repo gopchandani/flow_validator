@@ -176,14 +176,16 @@ def get_active_path(pg, specific_traffic, src_port, dst_port):
 
     paths = get_paths(pg, specific_traffic, src_port, dst_port, exclude_inactive=True)
 
-    # Get the path that is currently active
-    active_path = None
-    for path in paths:
-        if path.is_active():
-            active_path = path
-            break
-
-    return active_path
+    if len(paths) > 1:
+        raise Exception("Can't have more than one active paths; something is wrong.")
+    elif len(paths) == 0:
+        return None
+    else:
+        # Sanity check
+        if paths[0].is_active():
+            return paths[0]
+        else:
+            raise Exception("Got a single path, but it is not active!")
 
 
 def get_paths(pg, specific_traffic, src_port, dst_port, exclude_inactive=False):
