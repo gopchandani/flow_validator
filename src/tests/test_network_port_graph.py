@@ -36,35 +36,35 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_port_graph()
         cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_admitted_traffic()
 
-        cls.nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
-                                                                 "127.0.0.1",
-                                                                 6633,
-                                                                 "http://localhost:8080/",
-                                                                 "admin",
-                                                                 "admin",
-                                                                 "ring",
-                                                                 {"num_switches": 4,
-                                                                  "num_hosts_per_switch": 1},
-                                                                 conf_root="configurations/",
-                                                                 synthesis_name="AboresceneSynthesis",
-                                                                 synthesis_params={"apply_group_intents_immediately":
-                                                                                       True})
-
-        cls.ng_ring_aborescene_apply_true = cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1,
-                                                                                                  synthesis_setup_gap=1)
-
-        cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true,
-                                                              report_active_state=True)
-        cls.npg_ring_aborescene_apply_true.init_network_port_graph()
-        cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic()
-
-        cls.ng_ring_aborescene_apply_true_report_active_false = \
-            cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_ring_aborescene_apply_true_report_active_false = \
-            NetworkPortGraph(cls.ng_ring_aborescene_apply_true_report_active_false,
-                             report_active_state=False)
-        cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
-        cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic()
+        # cls.nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
+        #                                                          "127.0.0.1",
+        #                                                          6633,
+        #                                                          "http://localhost:8080/",
+        #                                                          "admin",
+        #                                                          "admin",
+        #                                                          "ring",
+        #                                                          {"num_switches": 4,
+        #                                                           "num_hosts_per_switch": 1},
+        #                                                          conf_root="configurations/",
+        #                                                          synthesis_name="AboresceneSynthesis",
+        #                                                          synthesis_params={"apply_group_intents_immediately":
+        #                                                                                True})
+        #
+        # cls.ng_ring_aborescene_apply_true = cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1,
+        #                                                                                           synthesis_setup_gap=1)
+        #
+        # cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true,
+        #                                                       report_active_state=True)
+        # cls.npg_ring_aborescene_apply_true.init_network_port_graph()
+        # cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic()
+        #
+        # cls.ng_ring_aborescene_apply_true_report_active_false = \
+        #     cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        # cls.npg_ring_aborescene_apply_true_report_active_false = \
+        #     NetworkPortGraph(cls.ng_ring_aborescene_apply_true_report_active_false,
+        #                      report_active_state=False)
+        # cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
+        # cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic()
 
         # cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
         #                                             "127.0.0.1",
@@ -510,7 +510,6 @@ class TestNetworkPortGraph(unittest.TestCase):
         for ld in ng.get_switch_link_data():
             for src_host, dst_host in ng.host_obj_pair_iter():
 
-                print "Path from src_host:", src_host.node_id, "-> dst_host:", dst_host.node_id, "when ld:", ld, "fails."
 
                 # If an link has been failed, first check both permutation of link switches, if neither is found,
                 # then refer to primary path by assuming that the given link did not participate in the failover of
@@ -526,6 +525,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                 specific_traffic = get_specific_traffic(ng, src_host.node_id, dst_host.node_id)
                 active_analyzed_path = get_active_path(npg, specific_traffic, src_host.switch_port, dst_host.switch_port)
 
+                print "From src_host:", src_host.node_id, "-> dst_host:", dst_host.node_id, "when ld:", ld, "fails."
                 print "active_analyzed_path:", active_analyzed_path
 
                 ld.set_link_ports_down()
@@ -533,42 +533,6 @@ class TestNetworkPortGraph(unittest.TestCase):
                 ld.set_link_ports_up()
 
                 self.assertEqual(True, failover_path.compare_using_nodes_ids(synthesized_path))
-
-    def compare_failover_paths_with_synthesis_report_active_false_double_failure(self, nc, ng, npg):
-
-        # First knock out one link for real
-        for src_h_obj, dst_h_obj in ng.host_obj_pair_iter():
-            for ld1 in ng.get_switch_link_data():
-                for ld2 in ng.get_switch_link_data():
-
-                    # Don't fail same link twice...
-                    if ld1 == ld2:
-                        continue
-
-                    specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
-
-                    active_path_before_one_failure = get_active_path(npg,
-                                                                     specific_traffic,
-                                                                     src_h_obj.switch_port,
-                                                                     dst_h_obj.switch_port)
-
-                    if active_path_before_one_failure.passes_link(ld1):
-
-                        npg.remove_node_graph_link(*ld1.forward_link)
-
-                        active_path_after_one_failure = get_active_path(npg,
-                                                                        specific_traffic,
-                                                                        src_h_obj.switch_port,
-                                                                        dst_h_obj.switch_port)
-
-                        if not active_path_before_one_failure.passes_link(ld2) and active_path_after_one_failure.passes_link(ld2):
-                            ld2.set_link_ports_down()
-                            failover_path_after_two_failures = get_failover_path(npg, active_path_after_one_failure, ld2)
-                            ld2.set_link_ports_up()
-                            self.assertEqual(failover_path_after_two_failures, None)
-
-                        # Restore the link for real
-                        npg.add_node_graph_link(*ld1.forward_link, updating=True)
 
     def compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(self, nc, ng, npg):
 
@@ -605,7 +569,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
                 for ld2 in ng.get_switch_link_data():
 
-                    # Don't fail same link twice...
+                    # Don't fail the same link twice...
                     if ld1 == ld2:
                         continue
 
@@ -615,37 +579,25 @@ class TestNetworkPortGraph(unittest.TestCase):
 
                     if active_path_before_failures.passes_link(ld1) and not active_path_before_failures.passes_link(ld2):
                         self.assertEqual(failover_path, None)
-
+    #
     # def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
     #     self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
     #         self.nc_ring_dijkstra_apply_true,
     #         self.ng_ring_dijkstra_apply_true_report_active_false,
     #         self.npg_ring_dijkstra_apply_true_report_active_false)
-    #
-    # def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-    #     self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
-    #         self.nc_ring_dijkstra_apply_true,
-    #         self.ng_ring_dijkstra_apply_true_report_active_false,
-    #         self.npg_ring_dijkstra_apply_true_report_active_false)
-    #
-    # def test_fail_two_link_sequence_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-    #     self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
-    #         self.nc_ring_dijkstra_apply_true,
-    #         self.ng_ring_dijkstra_apply_true_report_active_false,
-    #         self.npg_ring_dijkstra_apply_true_report_active_false)
-    #
+
+    def test_fail_two_link_sequence_failover_path_ring_dijkstra_apply_true_report_active_false(self):
+        self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
+            self.nc_ring_dijkstra_apply_true,
+            self.ng_ring_dijkstra_apply_true_report_active_false,
+            self.npg_ring_dijkstra_apply_true_report_active_false)
+
     # def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
     #     self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
     #         self.nc_ring_aborescene_apply_true,
     #         self.ng_ring_aborescene_apply_true_report_active_false,
     #         self.npg_ring_aborescene_apply_true_report_active_false)
-
-    def test_double_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
-            self.nc_ring_aborescene_apply_true,
-            self.ng_ring_aborescene_apply_true_report_active_false,
-            self.npg_ring_aborescene_apply_true_report_active_false)
-
+    #
     # def test_fail_two_link_sequence_failover_path_ring_aborescene_apply_true_report_active_false(self):
     #     self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
     #         self.nc_ring_aborescene_apply_true,

@@ -249,7 +249,7 @@ class PortGraph(object):
             at_dst_succ = self.get_admitted_traffic_via_succ(node, dst, succ)
 
             if exclude_inactive:
-                at_dst_succ.exclude_inactive_traffic_elements()
+                at_dst_succ = at_dst_succ.clone_with_active_traffic_elements()
 
             # Check to see if the successor would carry some of the traffic from here
             succ_int = at.intersect(at_dst_succ)

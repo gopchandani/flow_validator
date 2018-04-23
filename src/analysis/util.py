@@ -75,7 +75,7 @@ def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
 
 def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
 
-    new_spg_at_traffic_elements = []
+    new_spg_at_traffic = Traffic()
 
     for te in spg_at.traffic_elements:
 
@@ -98,9 +98,9 @@ def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
                     break
 
             if active_path:
-                new_spg_at_traffic_elements.append(te)
+                new_spg_at_traffic.add_traffic_elements([te])
 
-    spg_at.traffic_elements = new_spg_at_traffic_elements
+    return new_spg_at_traffic
 
 
 def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_inactive=False):
@@ -111,10 +111,10 @@ def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_in
                                                                  src_sw_port.switch_port_graph_egress_node)
 
         if exclude_inactive:
-            filter_spg_traffic_with_paths(src_port.sw,
-                                          src_spg_at,
-                                          src_port.switch_port_graph_ingress_node,
-                                          src_sw_port.switch_port_graph_egress_node)
+            src_spg_at = filter_spg_traffic_with_paths(src_port.sw,
+                                                       src_spg_at,
+                                                       src_port.switch_port_graph_ingress_node,
+                                                       src_sw_port.switch_port_graph_egress_node)
 
         src_spg_at_frac = specific_traffic.intersect(src_spg_at, keep_all=True)
 
@@ -140,10 +140,10 @@ def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_in
                 dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
                                                                          dst_port.switch_port_graph_egress_node)
                 if exclude_inactive:
-                    filter_spg_traffic_with_paths(dst_port.sw,
-                                                  dst_spg_at,
-                                                  dst_sw_port.switch_port_graph_ingress_node,
-                                                  dst_port.switch_port_graph_egress_node)
+                    dst_spg_at = filter_spg_traffic_with_paths(dst_port.sw,
+                                                               dst_spg_at,
+                                                               dst_sw_port.switch_port_graph_ingress_node,
+                                                               dst_port.switch_port_graph_egress_node)
 
                 modified_src_spg_at_frac_npg_at_int.set_field("in_port", int(dst_sw_port.port_number))
                 dst_spg_at_frac = dst_spg_at.intersect(modified_src_spg_at_frac_npg_at_int, keep_all=True)
