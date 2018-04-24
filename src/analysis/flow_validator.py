@@ -30,7 +30,7 @@ class FlowValidator(object):
 
     def __init__(self, network_graph):
         self.network_graph = network_graph
-        self.port_graph = NetworkPortGraph(network_graph, report_active_state=False)
+        self.port_graph = NetworkPortGraph(network_graph)
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()

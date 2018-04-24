@@ -18,7 +18,7 @@ class PortGraph(object):
     def get_egress_node_id(node_id, port_number):
         return node_id + ":egress" + str(port_number)
 
-    def __init__(self, network_graph, report_active_state):
+    def __init__(self, network_graph):
 
         self.network_graph = network_graph
         self.g = nx.DiGraph()
@@ -26,7 +26,6 @@ class PortGraph(object):
         # These are used to measure the points where changes are measured
         self.boundary_ingress_nodes = []
         self.boundary_egress_nodes = []
-        self.report_active_state = report_active_state
 
     def get_table_node_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)

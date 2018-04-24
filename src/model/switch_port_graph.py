@@ -7,9 +7,9 @@ from port_graph import PortGraph
 
 class SwitchPortGraph(PortGraph):
 
-    def __init__(self, network_graph, sw, report_active_state):
+    def __init__(self, network_graph, sw):
 
-        super(SwitchPortGraph, self).__init__(network_graph, report_active_state)
+        super(SwitchPortGraph, self).__init__(network_graph)
 
         self.sw = sw
 

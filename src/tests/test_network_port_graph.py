@@ -32,8 +32,7 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.ng_ring_dijkstra_apply_true_report_active_false = \
             cls.nc_ring_dijkstra_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         cls.npg_ring_dijkstra_apply_true_report_active_false = \
-            NetworkPortGraph(cls.ng_ring_dijkstra_apply_true_report_active_false,
-                             report_active_state=False)
+            NetworkPortGraph(cls.ng_ring_dijkstra_apply_true_report_active_false)
         cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_port_graph()
         cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_admitted_traffic()
 
@@ -54,16 +53,14 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.ng_ring_aborescene_apply_true = cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1,
                                                                                                   synthesis_setup_gap=1)
 
-        cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true,
-                                                              report_active_state=True)
+        cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true)
         cls.npg_ring_aborescene_apply_true.init_network_port_graph()
         cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic()
 
         cls.ng_ring_aborescene_apply_true_report_active_false = \
             cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
         cls.npg_ring_aborescene_apply_true_report_active_false = \
-            NetworkPortGraph(cls.ng_ring_aborescene_apply_true_report_active_false,
-                             report_active_state=False)
+            NetworkPortGraph(cls.ng_ring_aborescene_apply_true_report_active_false)
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
         cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic()
 
@@ -82,15 +79,13 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                     synthesis_params={})
 
         cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra,
-                                                 report_active_state=True)
+        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra)
         cls.npg_clos_dijkstra.init_network_port_graph()
         cls.npg_clos_dijkstra.init_network_admitted_traffic()
 
         cls.ng_clos_dijkstra_report_active_false = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
                                                                                             synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false,
-                                                                     report_active_state=False)
+        cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false)
         cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
         cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic()
 
@@ -108,8 +103,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                       synthesis_params={"apply_group_intents_immediately": True})
 
         cls.ng_linear_dijkstra = cls.nc_linear_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra,
-                                                   report_active_state=True)
+        cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra)
         cls.npg_linear_dijkstra.init_network_port_graph()
         cls.npg_linear_dijkstra.init_network_admitted_traffic()
 
@@ -130,8 +124,7 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.ng_linear_dijkstra_mac_acl = cls.nc_linear_dijkstra_mac_acl.setup_network_graph(mininet_setup_gap=1,
                                                                                             synthesis_setup_gap=1)
 
-        cls.npg_linear_dijkstra_mac_acl = NetworkPortGraph(cls.ng_linear_dijkstra_mac_acl,
-                                                           report_active_state=True)
+        cls.npg_linear_dijkstra_mac_acl = NetworkPortGraph(cls.ng_linear_dijkstra_mac_acl)
         cls.npg_linear_dijkstra_mac_acl.init_network_port_graph()
         cls.npg_linear_dijkstra_mac_acl.init_network_admitted_traffic()
 

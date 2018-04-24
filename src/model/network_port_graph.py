@@ -8,9 +8,9 @@ from traffic import Traffic
 
 class NetworkPortGraph(PortGraph):
 
-    def __init__(self, network_graph, report_active_state):
+    def __init__(self, network_graph):
 
-        super(NetworkPortGraph, self).__init__(network_graph, report_active_state)
+        super(NetworkPortGraph, self).__init__(network_graph)
 
     def get_edge_from_admitted_traffic(self, pred, succ, admitted_traffic, edge_sw=None, exclude_inactive=False):
 
@@ -123,7 +123,7 @@ class NetworkPortGraph(PortGraph):
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
 
-            sw.port_graph = SwitchPortGraph(sw.network_graph, sw, self.report_active_state)
+            sw.port_graph = SwitchPortGraph(sw.network_graph, sw)
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.init_switch_admitted_traffic()
 
