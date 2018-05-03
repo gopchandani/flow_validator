@@ -142,7 +142,6 @@ class PrecomputationIncrementalTimes(Experiment):
 
                 with Timer(verbose=True) as t:
                     violations = fv.validate_policy(policy_statements,
-                                                    optimization_type="With Preemption",
                                                     active_path_computation_times=self.data["active_path_computation_time"][nc.nc_topo_str][nhps],
                                                     path_lengths=self.data["path_length"][nc.nc_topo_str][nhps])
 

@@ -38,7 +38,7 @@ class TestFlowValidator(unittest.TestCase):
 
     def test_ng_microgrid(self):
         policy_statements = construct_security_policy_statements(self.nc_microgrid)
-        violations = self.fv.validate_policy(policy_statements, optimization_type="With Preemption")
+        violations = self.fv.validate_policy(policy_statements)
         self.assertEqual(len(violations), 0)
 
 

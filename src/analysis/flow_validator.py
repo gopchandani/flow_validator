@@ -235,43 +235,24 @@ class FlowValidator(object):
         self.violations.extend(v)
         return v
 
-    def validate_policy_without_preemption(self, lmbda):
+    def validate_policy(self, policy_statement_list, active_path_computation_times=None, path_lengths=None):
 
-        # Perform the validation that needs performing here...
-        self.validate_port_pair_constraints(lmbda)
+        # Avoid duplication of effort across policies
+        # p_map is a two-dimensional dictionary:
+        #   First key permutation of link failures, second key: (src_port, dst_port).
+        #   Value is a list of statements where the pair appears
+        self.p_map = defaultdict(defaultdict)
 
-        # If max_k links have already been failed, no need to fail any more links
-        if len(lmbda) < self.max_k:
+        for ps in policy_statement_list:
+            for lmbda in ps.lmbdas:
+                for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
+                    if (src_port, dst_port) not in self.p_map[lmbda]:
+                        self.p_map[lmbda][(src_port, dst_port)] = []
+                    self.p_map[lmbda][(src_port, dst_port)].append(ps)
 
-            # Rotate through the links
-            for next_link_to_fail in self.network_graph.L:
-                # Select the link by checking that it is not in the lmbda already
-                # Add the selected link to fail to the prefix
-                if next_link_to_fail in lmbda:
-                    continue
-
-                # After checking for preemption, if the permutation is not in p_map, then no need to test it
-                if tuple(lmbda + [next_link_to_fail]) not in self.p_map:
-                    print "Truncated recursion tree for:", tuple(lmbda + [next_link_to_fail])
-                    continue
-
-                # Fail the link
-                #print "Failing:", next_link_to_fail
-                self.port_graph.remove_node_graph_link(next_link_to_fail.forward_link[0],
-                                                       next_link_to_fail.forward_link[1])
-                lmbda.append(next_link_to_fail)
-
-                # Recurse
-                self.validate_policy_without_preemption(lmbda)
-
-                # Restore the link
-                #print "Restoring:", next_link_to_fail
-                self.port_graph.add_node_graph_link(next_link_to_fail.forward_link[0],
-                                                    next_link_to_fail.forward_link[1],
-                                                    updating=True)
-                lmbda.remove(next_link_to_fail)
-
-    def validate_policy_with_preemption(self, active_path_computation_times, path_lengths):
+        # Now the validation
+        self.max_k = len(max(self.p_map.keys(), key=lambda link_perm: len(link_perm)))
+        self.violations = []
 
         for lmbda in self.p_map:
             for src_port, dst_port in list(self.p_map[lmbda].keys()):
@@ -297,7 +278,7 @@ class FlowValidator(object):
 
                     if active_path:
                         failover_path = get_failover_path_after_failed_sequence(self.port_graph, active_path, lmbda)
-                        
+
                     for constraint in ps.constraints:
                         if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
                             if not failover_path:
@@ -343,32 +324,6 @@ class FlowValidator(object):
                                                     constraint,
                                                     "")
                                 self.violations.append(v)
-
-    def validate_policy(self, policy_statement_list, optimization_type,
-                        active_path_computation_times=None,
-                        path_lengths=None):
-
-        # Avoid duplication of effort across policies
-        # p_map is a two-dimensional dictionary:
-        #   First key permutation of link failures, second key: (src_port, dst_port).
-        #   Value is a list of statements where the pair appears
-        self.p_map = defaultdict(defaultdict)
-
-        for ps in policy_statement_list:
-            for lmbda in ps.lmbdas:
-                for src_port, dst_port in self.port_pair_iter(ps.src_zone, ps.dst_zone):
-                    if (src_port, dst_port) not in self.p_map[lmbda]:
-                        self.p_map[lmbda][(src_port, dst_port)] = []
-                    self.p_map[lmbda][(src_port, dst_port)].append(ps)
-
-        # Now the validation
-        self.max_k = len(max(self.p_map.keys(), key=lambda link_perm: len(link_perm)))
-        self.violations = []
-
-        if optimization_type == "With Preemption":
-            self.validate_policy_with_preemption(active_path_computation_times, path_lengths)
-        elif optimization_type == "Without Preemption":
-            self.validate_policy_without_preemption([])
 
         return self.violations
 
@@ -481,7 +436,7 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
             s = PolicyStatement(self.ng_obj, src_zone, dst_zone, t, c, l)
             policy.append(s)
 
-        violations = self.fv.validate_policy(policy, optimization_type="With Preemption")
+        violations = self.fv.validate_policy(policy)
 
         return self.get_violations_grpc(violations)
 
