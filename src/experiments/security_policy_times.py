@@ -20,6 +20,97 @@ from analysis.policy_statement import PolicyStatement, PolicyConstraint
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRAINT
 
 
+def construct_security_policy_statements(nc):
+    statements = []
+    enclave_zones_traffic_tuples = []
+    control_zone = []
+    non_control_zone = []
+    control_vlan_id = 255
+
+    all_switches = sorted(list(nc.ng.get_switches()), key=lambda x: int(x.node_id[1:]))
+    for sw in all_switches[0:len(all_switches) - 1]:
+
+        enclave_zone = []
+        for port_num in sw.host_ports:
+            enclave_zone.append(sw.ports[port_num])
+
+            if port_num == 1:
+                control_zone.append(sw.ports[port_num])
+            else:
+                non_control_zone.append(sw.ports[port_num])
+
+        enclave_specific_traffic = Traffic(init_wildcard=True)
+        enclave_specific_traffic.set_field("ethernet_type", 0x0800)
+        enclave_specific_traffic.set_field("vlan_id", int(sw.node_id[1:]) + 0x1000)
+        enclave_specific_traffic.set_field("has_vlan_tag", 1)
+
+        enclave_zones_traffic_tuples.append((enclave_zone, enclave_specific_traffic))
+
+    for src_enclave_zone, src_enclave_specific_traffic in enclave_zones_traffic_tuples:
+        for dst_enclave_zone, dst_enclave_specific_traffic in enclave_zones_traffic_tuples:
+            if src_enclave_zone == dst_enclave_zone:
+
+                enclave_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+
+                enclave_statement = PolicyStatement(nc.ng,
+                                                    src_enclave_zone,
+                                                    dst_enclave_zone,
+                                                    src_enclave_specific_traffic,
+                                                    enclave_constraints,
+                                                    lmbdas=[()])
+
+                statements.append(enclave_statement)
+            else:
+                enclave_constraints = [PolicyConstraint(ISOLATION_CONSTRAINT, None)]
+
+                enclave_statement = PolicyStatement(nc.ng,
+                                                    src_enclave_zone,
+                                                    dst_enclave_zone,
+                                                    src_enclave_specific_traffic,
+                                                    enclave_constraints,
+                                                    lmbdas=[()])
+
+                statements.append(enclave_statement)
+
+    control_switch = all_switches[len(all_switches) - 1]
+    control_zone.append(nc.ng.get_node_object("h" + control_switch.node_id[1:] + "1").switch_port)
+
+    control_enclave_specific_traffic = Traffic(init_wildcard=True)
+    control_enclave_specific_traffic.set_field("ethernet_type", 0x0800)
+    control_enclave_specific_traffic.set_field("vlan_id", control_vlan_id + 0x1000)
+    control_enclave_specific_traffic.set_field("has_vlan_tag", 1)
+
+    enclave_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
+    enclave_statement = PolicyStatement(nc.ng,
+                                        control_zone,
+                                        control_zone,
+                                        control_enclave_specific_traffic,
+                                        enclave_constraints,
+                                        [()])
+    statements.append(enclave_statement)
+
+    enclave_constraints = [PolicyConstraint(ISOLATION_CONSTRAINT, None)]
+    enclave_statement = PolicyStatement(nc.ng,
+                                        control_zone,
+                                        non_control_zone,
+                                        control_enclave_specific_traffic,
+                                        enclave_constraints,
+                                        [()])
+    statements.append(enclave_statement)
+
+    enclave_constraints = [PolicyConstraint(ISOLATION_CONSTRAINT, None)]
+    enclave_statement = PolicyStatement(nc.ng,
+                                        non_control_zone,
+                                        control_zone,
+                                        control_enclave_specific_traffic,
+                                        enclave_constraints,
+                                        [()])
+
+    statements.append(enclave_statement)
+
+    return statements
+
+
 class SecurityPolicyTimes(Experiment):
 
     def __init__(self,
@@ -36,96 +127,6 @@ class SecurityPolicyTimes(Experiment):
             "validation_time": defaultdict(defaultdict)
         }
 
-    def construct_policy_statements(self, nc):
-        statements = []
-        enclave_zones_traffic_tuples = []
-        control_zone = []
-        non_control_zone = []
-        control_vlan_id = 255
-
-        all_switches = sorted(list(nc.ng.get_switches()), key=lambda x: int(x.node_id[1:]))
-        for sw in all_switches[0:len(all_switches) - 1]:
-
-            enclave_zone = []
-            for port_num in sw.host_ports:
-                enclave_zone.append(sw.ports[port_num])
-
-                if port_num == 1:
-                    control_zone.append(sw.ports[port_num])
-                else:
-                    non_control_zone.append(sw.ports[port_num])
-
-            enclave_specific_traffic = Traffic(init_wildcard=True)
-            enclave_specific_traffic.set_field("ethernet_type", 0x0800)
-            enclave_specific_traffic.set_field("vlan_id", int(sw.node_id[1:]) + 0x1000)
-            enclave_specific_traffic.set_field("has_vlan_tag", 1)
-
-            enclave_zones_traffic_tuples.append((enclave_zone, enclave_specific_traffic))
-
-        for src_enclave_zone, src_enclave_specific_traffic in enclave_zones_traffic_tuples:
-            for dst_enclave_zone, dst_enclave_specific_traffic in enclave_zones_traffic_tuples:
-                if src_enclave_zone == dst_enclave_zone:
-
-                    enclave_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-
-                    enclave_statement = PolicyStatement(nc.ng,
-                                                        src_enclave_zone,
-                                                        dst_enclave_zone,
-                                                        src_enclave_specific_traffic,
-                                                        enclave_constraints,
-                                                        lmbdas=[()])
-
-                    statements.append(enclave_statement)
-                else:
-                    enclave_constraints = [PolicyConstraint(ISOLATION_CONSTRAINT, None)]
-
-                    enclave_statement = PolicyStatement(nc.ng,
-                                                        src_enclave_zone,
-                                                        dst_enclave_zone,
-                                                        src_enclave_specific_traffic,
-                                                        enclave_constraints,
-                                                        lmbdas=[()])
-
-                    statements.append(enclave_statement)
-
-        control_switch = all_switches[len(all_switches) - 1]
-        control_zone.append(nc.ng.get_node_object("h" + control_switch.node_id[1:] + "1").switch_port)
-
-        control_enclave_specific_traffic = Traffic(init_wildcard=True)
-        control_enclave_specific_traffic.set_field("ethernet_type", 0x0800)
-        control_enclave_specific_traffic.set_field("vlan_id", control_vlan_id + 0x1000)
-        control_enclave_specific_traffic.set_field("has_vlan_tag", 1)
-
-        enclave_constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
-        enclave_statement = PolicyStatement(nc.ng,
-                                            control_zone,
-                                            control_zone,
-                                            control_enclave_specific_traffic,
-                                            enclave_constraints,
-                                            [()])
-        statements.append(enclave_statement)
-
-        enclave_constraints = [PolicyConstraint(ISOLATION_CONSTRAINT, None)]
-        enclave_statement = PolicyStatement(nc.ng,
-                                            control_zone,
-                                            non_control_zone,
-                                            control_enclave_specific_traffic,
-                                            enclave_constraints,
-                                            [()])
-        statements.append(enclave_statement)
-
-        enclave_constraints = [PolicyConstraint(ISOLATION_CONSTRAINT, None)]
-        enclave_statement = PolicyStatement(nc.ng,
-                                            non_control_zone,
-                                            control_zone,
-                                            control_enclave_specific_traffic,
-                                            enclave_constraints,
-                                            [()])
-
-        statements.append(enclave_statement)
-
-        return statements
-
     def trigger(self):
 
         for nc in self.nc_list:
@@ -134,7 +135,7 @@ class SecurityPolicyTimes(Experiment):
                 fv = FlowValidator(nc.ng)
                 fv.init_network_port_graph()
 
-            policy_statements = self.construct_policy_statements(nc)
+            policy_statements = construct_security_policy_statements(nc)
             policy_len_str = "# Policy Statements:" + str(len(policy_statements))
 
             print "Total statements:", len(policy_statements)
