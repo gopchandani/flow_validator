@@ -60,9 +60,6 @@ class Action:
 
         if self.bucket:
 
-            print "bucket watch_port:", self.bucket.watch_port
-            print "bucket group_id:", self.bucket.group.group_id
-
             # If it is one of those buckets that comes with a watch port, check for liveness
             if self.bucket.watch_port:
                 if self.bucket.is_live():

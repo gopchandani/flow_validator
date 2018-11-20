@@ -75,7 +75,6 @@ def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
 
 def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
 
-    print "--"
     new_spg_at_traffic = Traffic()
 
     for te in spg_at.traffic_elements:
@@ -95,11 +94,8 @@ def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
             active_path = False
             for p in traffic_paths:
                 if p.get_max_active_rank() == 0:
-                    print "Active:", p
                     active_path = True
                     break
-                else:
-                    print "Inactive:", p
 
             if active_path:
                 new_spg_at_traffic.add_traffic_elements([te])

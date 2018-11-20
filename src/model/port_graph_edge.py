@@ -83,7 +83,6 @@ class SwitchPortGraphEdgeData:
 
     def get_active_rank(self):
         if self.edge_action:
-            print "  has edge_action"
             return self.edge_action.get_active_rank()
         else:
             return -1
