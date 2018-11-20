@@ -197,6 +197,7 @@ class FlowValidator(object):
                 ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
                 ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
                 ps.traffic.set_field("in_port", int(src_port.port_number))
+                ps.traffic.set_field("has_vlan_tag", 0)
 
                 for constraint in ps.constraints:
 
@@ -264,6 +265,7 @@ class FlowValidator(object):
                                          int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
                     ps.traffic.set_field("in_port",
                                          int(src_port.port_number))
+                    ps.traffic.set_field("has_vlan_tag", 0)
 
                     with Timer(verbose=True) as t:
                         active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)

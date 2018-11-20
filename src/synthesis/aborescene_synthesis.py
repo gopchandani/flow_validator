@@ -14,6 +14,7 @@ class AboresceneSynthesis(object):
     def __init__(self, params):
 
         self.network_graph = None
+        self.network_configuration = None
         self.synthesis_lib = None
         self.params = params
 
@@ -329,7 +330,7 @@ class AboresceneSynthesis(object):
                     total_path = primary_path_chunk + failover_path
                     self.record_host_host_primary_paths(src_sw_node, dst_sw_node, total_path, e)
 
-        self.synthesis_lib.save_synthesized_paths(self.network_graph.network_configuration.conf_path)
+        self.synthesis_lib.save_synthesized_paths(self.network_configuration.conf_path)
 
     def synthesize_all_switches(self, flow_match, k):
 
@@ -351,7 +352,7 @@ class AboresceneSynthesis(object):
                     k_eda = self.compute_k_edge_disjoint_aborescenes(k, dst_sw)
                     self.dst_k_eda[dst_sw.node_id] = [list(x.edges()) for x in k_eda]
 
-            with open(self.network_graph.network_configuration.conf_path + "/dst_k_eda.json", "w") as outfile:
+            with open(self.network_configuration.conf_path + "/dst_k_eda.json", "w") as outfile:
                 json.dump(self.dst_k_eda, outfile)
 
         # For each possible switch that can be a destination for traffic

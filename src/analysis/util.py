@@ -75,6 +75,7 @@ def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
 
 def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
 
+    print "--"
     new_spg_at_traffic = Traffic()
 
     for te in spg_at.traffic_elements:
@@ -94,8 +95,11 @@ def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
             active_path = False
             for p in traffic_paths:
                 if p.get_max_active_rank() == 0:
+                    print "Active:", p
                     active_path = True
                     break
+                else:
+                    print "Inactive:", p
 
             if active_path:
                 new_spg_at_traffic.add_traffic_elements([te])
@@ -106,6 +110,9 @@ def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
 def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_inactive=False):
 
     for src_sw_port in src_port.sw.non_host_port_iter():
+
+        if src_sw_port.port_id == 's3:3':
+            pass
 
         src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
                                                                  src_sw_port.switch_port_graph_egress_node)
@@ -126,6 +133,9 @@ def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_in
         for dst_sw_port in dst_port.sw.non_host_port_iter():
             npg_at = pg.get_admitted_traffic(src_sw_port.network_port_graph_egress_node,
                                              dst_sw_port.network_port_graph_ingress_node)
+
+            if src_sw_port.port_id == 's3:3' and dst_sw_port.port_id == 's1:3':
+                pass
 
             if exclude_inactive:
                 pass
