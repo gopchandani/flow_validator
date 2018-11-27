@@ -62,8 +62,8 @@ def main():
                                "num_hosts_per_switch": 1,
                                "per_switch_links": 2},
                               conf_root="configurations/",
-                              #synthesis_name="DijkstraSynthesis",
-                              synthesis_name="AboresceneSynthesis",
+                              synthesis_name="DijkstraSynthesis",
+                              #synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True})
 
     exp = Playground(nc)

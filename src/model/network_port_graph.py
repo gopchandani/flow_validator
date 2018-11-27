@@ -4,6 +4,7 @@ from port_graph import PortGraph
 from switch_port_graph import SwitchPortGraph
 from port_graph_edge import PortGraphEdge, NetworkPortGraphEdgeData
 from traffic import Traffic
+from experiments.timer import Timer
 
 import threading
 
@@ -126,9 +127,24 @@ class NetworkPortGraph(PortGraph):
 
     def init_network_port_graph(self):
 
-        # Iterate through switches and add the ports and relevant abstract analysis
-        for sw in self.network_graph.get_switches():
-            self.add_sw_transfer_function(sw)
+        threads = []
+
+        with Timer(verbose=True) as t:
+            # Iterate through switches and add the ports and relevant abstract analysis
+            for sw in self.network_graph.get_switches():
+                #self.add_sw_transfer_function(sw)
+
+                thread = threading.Thread(target=self.add_sw_transfer_function(sw))
+                thread.setDaemon(True)
+                threads.append(thread)
+
+            for thread in threads:
+                thread.start()
+
+            for thread in threads:
+                thread.join()
+
+        print "Switch transfer functions added, took:", t.secs, "seconds."
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
@@ -146,28 +162,45 @@ class NetworkPortGraph(PortGraph):
         for sw in self.network_graph.get_switches():
             sw.port_graph.de_init_switch_port_graph()
 
+    def init_network_admitted_traffic_for_sw(self, sw):
+        for non_host_port in sw.non_host_port_iter():
+
+            # Accumulate traffic that is admitted for each host
+            admitted_host_traffic = Traffic()
+            for host_port in sw.host_port_iter():
+                at = sw.port_graph.get_admitted_traffic(non_host_port.switch_port_graph_ingress_node,
+                                                        host_port.switch_port_graph_egress_node)
+                admitted_host_traffic.union(at)
+
+            end_to_end_modified_edges = []
+            self.propagate_admitted_traffic(non_host_port.network_port_graph_ingress_node,
+                                            admitted_host_traffic,
+                                            None,
+                                            non_host_port.network_port_graph_ingress_node,
+                                            end_to_end_modified_edges)
+
+            admitted_host_traffic.set_field("in_port", int(non_host_port.port_number))
+
     def init_network_admitted_traffic(self):
 
-        # Go to each switch and find the ports that connects to other switches
-        for sw in self.network_graph.get_switches():
-            for non_host_port in sw.non_host_port_iter():
+        threads = []
 
-                # Accumulate traffic that is admitted for each host
-                admitted_host_traffic = Traffic()
-                for host_port in sw.host_port_iter():
+        with Timer(verbose=True) as t:
 
-                    at = sw.port_graph.get_admitted_traffic(non_host_port.switch_port_graph_ingress_node,
-                                                            host_port.switch_port_graph_egress_node)
-                    admitted_host_traffic.union(at)
+            # Go to each switch and find the ports that connects to other switches
+            for sw in self.network_graph.get_switches():
+                #self.init_network_admitted_traffic_for_sw(sw)
+                thread = threading.Thread(target=self.init_network_admitted_traffic_for_sw(sw))
+                thread.setDaemon(True)
+                threads.append(thread)
 
-                end_to_end_modified_edges = []
-                self.propagate_admitted_traffic(non_host_port.network_port_graph_ingress_node,
-                                                admitted_host_traffic,
-                                                None,
-                                                non_host_port.network_port_graph_ingress_node,
-                                                end_to_end_modified_edges)
+            for thread in threads:
+                thread.start()
 
-                admitted_host_traffic.set_field("in_port", int(non_host_port.port_number))
+            for thread in threads:
+                thread.join()
+
+        print "Network admitted traffic initialized, took:", t.secs, "seconds."
 
     def add_node_graph_link(self, node1_id, node2_id, updating=False):
 
