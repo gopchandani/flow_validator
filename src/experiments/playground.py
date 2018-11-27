@@ -27,8 +27,11 @@ class Playground(Experiment):
         fv = FlowValidator(ng)
         fv.init_network_port_graph()
 
-        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h31']]#fv.network_graph.host_ids]
-        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]#fv.network_graph.host_ids]
+        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+
+        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h31']]#fv.network_graph.host_ids]
+        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]#fv.network_graph.host_ids]
 
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
@@ -40,7 +43,7 @@ class Playground(Experiment):
                             dst_zone,
                             specific_traffic,
                             constraints,
-                            lmbdas=[tuple(ng.get_switch_link_data(sw=ng.get_node_object("s4")))])
+                            lmbdas=[tuple(ng.get_switch_link_data(sw=ng.get_node_object("s3")))])
 
         violations = fv.validate_policy([s])
 
