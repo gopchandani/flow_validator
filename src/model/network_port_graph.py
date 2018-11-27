@@ -5,6 +5,8 @@ from switch_port_graph import SwitchPortGraph
 from port_graph_edge import PortGraphEdge, NetworkPortGraphEdgeData
 from traffic import Traffic
 
+import threading
+
 
 class NetworkPortGraph(PortGraph):
 
@@ -74,6 +76,10 @@ class NetworkPortGraph(PortGraph):
         :return: None
         '''
 
+        sw.port_graph = SwitchPortGraph(sw.network_graph, sw)
+        sw.port_graph.init_switch_port_graph()
+        sw.port_graph.init_switch_admitted_traffic()
+
         for port in sw.non_host_port_iter():
             self.add_node(port.network_port_graph_egress_node)
             self.add_node(port.network_port_graph_ingress_node)
@@ -122,11 +128,6 @@ class NetworkPortGraph(PortGraph):
 
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
-
-            sw.port_graph = SwitchPortGraph(sw.network_graph, sw)
-            sw.port_graph.init_switch_port_graph()
-            sw.port_graph.init_switch_admitted_traffic()
-
             self.add_sw_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
@@ -158,7 +159,6 @@ class NetworkPortGraph(PortGraph):
                     at = sw.port_graph.get_admitted_traffic(non_host_port.switch_port_graph_ingress_node,
                                                             host_port.switch_port_graph_egress_node)
                     admitted_host_traffic.union(at)
-
 
                 end_to_end_modified_edges = []
                 self.propagate_admitted_traffic(non_host_port.network_port_graph_ingress_node,
