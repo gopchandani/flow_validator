@@ -8,11 +8,11 @@ from traffic import Traffic
 
 class NetworkPortGraph(PortGraph):
 
-    def __init__(self, network_graph, report_active_state):
+    def __init__(self, network_graph):
 
-        super(NetworkPortGraph, self).__init__(network_graph, report_active_state)
+        super(NetworkPortGraph, self).__init__(network_graph)
 
-    def get_edge_from_admitted_traffic(self, pred, succ, admitted_traffic, edge_sw=None):
+    def get_edge_from_admitted_traffic(self, pred, succ, admitted_traffic, edge_sw=None, exclude_inactive=False):
 
         edge = PortGraphEdge(pred, succ)
 
@@ -23,20 +23,34 @@ class NetworkPortGraph(PortGraph):
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
             for te in admitted_traffic.traffic_elements:
+
                 t = Traffic()
                 t.add_traffic_elements([te])
-
                 traffic_paths = None
+
                 if edge_sw:
 
                     # Check to see the exact path of this traffic through the switch
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], [])
 
                     if len(traffic_paths) == 0:
-                        traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], [])
                         raise Exception("Found traffic but no paths to back it up.")
+                    else:
+                        # IF asked to exclude in-active...
+                        # As long as there a single active path and carries the te, then we are good,
+                        # otherwise, continue
+                        if exclude_inactive:
+                            active_path = False
+                            for p in traffic_paths:
+                                if p.get_max_active_rank() == 0:
+                                    active_path = True
+                                    break
+
+                            if not active_path:
+                                continue
 
                 edge_data = NetworkPortGraphEdgeData(t, te.switch_modifications, traffic_paths)
+
                 edge.add_edge_data(edge_data)
 
         return edge
@@ -109,7 +123,7 @@ class NetworkPortGraph(PortGraph):
         # Iterate through switches and add the ports and relevant abstract analysis
         for sw in self.network_graph.get_switches():
 
-            sw.port_graph = SwitchPortGraph(sw.network_graph, sw, self.report_active_state)
+            sw.port_graph = SwitchPortGraph(sw.network_graph, sw)
             sw.port_graph.init_switch_port_graph()
             sw.port_graph.init_switch_admitted_traffic()
 
@@ -140,9 +154,14 @@ class NetworkPortGraph(PortGraph):
                 # Accumulate traffic that is admitted for each host
                 admitted_host_traffic = Traffic()
                 for host_port in sw.host_port_iter():
+
+                    if non_host_port.port_id == 's1:3' and host_port.port_id == 's1:1':
+                        pass
+
                     at = sw.port_graph.get_admitted_traffic(non_host_port.switch_port_graph_ingress_node,
                                                             host_port.switch_port_graph_egress_node)
                     admitted_host_traffic.union(at)
+
 
                 end_to_end_modified_edges = []
                 self.propagate_admitted_traffic(non_host_port.network_port_graph_ingress_node,

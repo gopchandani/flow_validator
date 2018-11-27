@@ -5,7 +5,7 @@ from collections import defaultdict
 from model.traffic import Traffic
 from model.traffic_path import TrafficPath
 from model.network_port_graph import NetworkPortGraph
-from model.network_configuration import NetworkConfiguration
+from experiments.network_configuration import NetworkConfiguration
 from analysis.util import get_paths, get_active_path, get_failover_path, get_failover_path_after_failed_sequence
 from analysis.util import get_specific_traffic, get_admitted_traffic
 
@@ -29,12 +29,12 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                synthesis_params={"apply_group_intents_immediately":
                                                                                      True})
 
-        cls.ng_ring_dijkstra_apply_true_report_active_false = \
+        cls.ng_ring_dijkstra_apply_true = \
             cls.nc_ring_dijkstra_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_ring_dijkstra_apply_true_report_active_false = \
-            NetworkPortGraph(cls.ng_ring_dijkstra_apply_true_report_active_false, False)
-        cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_port_graph()
-        cls.npg_ring_dijkstra_apply_true_report_active_false.init_network_admitted_traffic()
+        cls.npg_ring_dijkstra_apply_true = \
+            NetworkPortGraph(cls.ng_ring_dijkstra_apply_true)
+        cls.npg_ring_dijkstra_apply_true.init_network_port_graph()
+        cls.npg_ring_dijkstra_apply_true.init_network_admitted_traffic()
 
         cls.nc_ring_aborescene_apply_true = NetworkConfiguration("ryu",
                                                                  "127.0.0.1",
@@ -53,18 +53,16 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.ng_ring_aborescene_apply_true = cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1,
                                                                                                   synthesis_setup_gap=1)
 
-        cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true,
-                                                              report_active_state=True)
+        cls.npg_ring_aborescene_apply_true = NetworkPortGraph(cls.ng_ring_aborescene_apply_true)
         cls.npg_ring_aborescene_apply_true.init_network_port_graph()
         cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic()
 
-        cls.ng_ring_aborescene_apply_true_report_active_false = \
+        cls.ng_ring_aborescene_apply_true = \
             cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_ring_aborescene_apply_true_report_active_false = \
-            NetworkPortGraph(cls.ng_ring_aborescene_apply_true_report_active_false,
-                             report_active_state=False)
-        cls.npg_ring_aborescene_apply_true_report_active_false.init_network_port_graph()
-        cls.npg_ring_aborescene_apply_true_report_active_false.init_network_admitted_traffic()
+        cls.npg_ring_aborescene_apply_true = \
+            NetworkPortGraph(cls.ng_ring_aborescene_apply_true)
+        cls.npg_ring_aborescene_apply_true.init_network_port_graph()
+        cls.npg_ring_aborescene_apply_true.init_network_admitted_traffic()
 
         cls.nc_clos_dijkstra = NetworkConfiguration("ryu",
                                                     "127.0.0.1",
@@ -81,15 +79,15 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                     synthesis_params={})
 
         cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra, True)
+        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra)
         cls.npg_clos_dijkstra.init_network_port_graph()
         cls.npg_clos_dijkstra.init_network_admitted_traffic()
 
-        cls.ng_clos_dijkstra_report_active_false = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
-                                                                                            synthesis_setup_gap=1)
-        cls.npg_clos_dijkstra_report_active_false = NetworkPortGraph(cls.ng_clos_dijkstra_report_active_false, False)
-        cls.npg_clos_dijkstra_report_active_false.init_network_port_graph()
-        cls.npg_clos_dijkstra_report_active_false.init_network_admitted_traffic()
+        cls.ng_clos_dijkstra = cls.nc_clos_dijkstra.setup_network_graph(mininet_setup_gap=1,
+                                                                        synthesis_setup_gap=1)
+        cls.npg_clos_dijkstra = NetworkPortGraph(cls.ng_clos_dijkstra)
+        cls.npg_clos_dijkstra.init_network_port_graph()
+        cls.npg_clos_dijkstra.init_network_admitted_traffic()
 
         cls.nc_linear_dijkstra = NetworkConfiguration("ryu",
                                                       "127.0.0.1",
@@ -105,7 +103,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                       synthesis_params={"apply_group_intents_immediately": True})
 
         cls.ng_linear_dijkstra = cls.nc_linear_dijkstra.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
-        cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra, True)
+        cls.npg_linear_dijkstra = NetworkPortGraph(cls.ng_linear_dijkstra)
         cls.npg_linear_dijkstra.init_network_port_graph()
         cls.npg_linear_dijkstra.init_network_admitted_traffic()
 
@@ -126,8 +124,7 @@ class TestNetworkPortGraph(unittest.TestCase):
         cls.ng_linear_dijkstra_mac_acl = cls.nc_linear_dijkstra_mac_acl.setup_network_graph(mininet_setup_gap=1,
                                                                                             synthesis_setup_gap=1)
 
-        cls.npg_linear_dijkstra_mac_acl = NetworkPortGraph(cls.ng_linear_dijkstra_mac_acl,
-                                                           True)
+        cls.npg_linear_dijkstra_mac_acl = NetworkPortGraph(cls.ng_linear_dijkstra_mac_acl)
         cls.npg_linear_dijkstra_mac_acl.init_network_port_graph()
         cls.npg_linear_dijkstra_mac_acl.init_network_admitted_traffic()
 
@@ -470,7 +467,6 @@ class TestNetworkPortGraph(unittest.TestCase):
         self.check_two_link_failure_admitted_traffic_absence(self.npg_ring_aborescene_apply_true,
                                                              src_port, dst_port, links_to_fail)
 
-
         # This case fails because both switches flip around and the at looks like a loop from s2:2 to s1:2
         # Probably cannot be helped if one insists on using report active set to true
 
@@ -495,7 +491,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                  self.ng_clos_dijkstra.graph.edges())
         self.assertEqual(paths_match, True)
 
-    def compare_failover_paths_with_synthesis_report_active_false_single_failure(self, nc, ng, npg):
+    def compare_failover_paths_with_synthesis_single_failure(self, nc, ng, npg):
 
         if not nc.load_config and nc.save_config:
             synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
@@ -530,43 +526,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
                 self.assertEqual(True, failover_path.compare_using_nodes_ids(synthesized_path))
 
-    def compare_failover_paths_with_synthesis_report_active_false_double_failure(self, nc, ng, npg):
-
-        # First knock out one link for real
-        for src_h_obj, dst_h_obj in ng.host_obj_pair_iter():
-            for ld1 in ng.get_switch_link_data():
-                for ld2 in ng.get_switch_link_data():
-
-                    # Don't fail same link twice...
-                    if ld1 == ld2:
-                        continue
-
-                    specific_traffic = get_specific_traffic(ng, src_h_obj.node_id, dst_h_obj.node_id)
-
-                    active_path_before_one_failure = get_active_path(npg,
-                                                                     specific_traffic,
-                                                                     src_h_obj.switch_port,
-                                                                     dst_h_obj.switch_port)
-
-                    if active_path_before_one_failure.passes_link(ld1):
-
-                        npg.remove_node_graph_link(*ld1.forward_link)
-
-                        active_path_after_one_failure = get_active_path(npg,
-                                                                        specific_traffic,
-                                                                        src_h_obj.switch_port,
-                                                                        dst_h_obj.switch_port)
-
-                        if not active_path_before_one_failure.passes_link(ld2) and active_path_after_one_failure.passes_link(ld2):
-                            ld2.set_link_ports_down()
-                            failover_path_after_two_failures = get_failover_path(npg, active_path_after_one_failure, ld2)
-                            ld2.set_link_ports_up()
-                            self.assertEqual(failover_path_after_two_failures, None)
-
-                        # Restore the link for real
-                        npg.add_node_graph_link(*ld1.forward_link, updating=True)
-
-    def compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(self, nc, ng, npg):
+    def compare_paths_with_synthesis_fail_two_link_sequence(self, nc, ng, npg):
 
         if not nc.load_config and nc.save_config:
             synthesized_primary_paths = nc.synthesis.synthesis_lib.synthesized_primary_paths
@@ -601,7 +561,7 @@ class TestNetworkPortGraph(unittest.TestCase):
 
                 for ld2 in ng.get_switch_link_data():
 
-                    # Don't fail same link twice...
+                    # Don't fail the same link twice...
                     if ld1 == ld2:
                         continue
 
@@ -612,41 +572,29 @@ class TestNetworkPortGraph(unittest.TestCase):
                     if active_path_before_failures.passes_link(ld1) and not active_path_before_failures.passes_link(ld2):
                         self.assertEqual(failover_path, None)
 
-    def test_single_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+    def test_single_link_failure_failover_path_ring_dijkstra_apply_true(self):
+        self.compare_failover_paths_with_synthesis_single_failure(
             self.nc_ring_dijkstra_apply_true,
-            self.ng_ring_dijkstra_apply_true_report_active_false,
-            self.npg_ring_dijkstra_apply_true_report_active_false)
+            self.ng_ring_dijkstra_apply_true,
+            self.npg_ring_dijkstra_apply_true)
 
-    def test_double_link_failure_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
+    def test_fail_two_link_sequence_failover_path_ring_dijkstra_apply_true(self):
+        self.compare_paths_with_synthesis_fail_two_link_sequence(
             self.nc_ring_dijkstra_apply_true,
-            self.ng_ring_dijkstra_apply_true_report_active_false,
-            self.npg_ring_dijkstra_apply_true_report_active_false)
+            self.ng_ring_dijkstra_apply_true,
+            self.npg_ring_dijkstra_apply_true)
 
-    def test_fail_two_link_sequence_failover_path_ring_dijkstra_apply_true_report_active_false(self):
-        self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
-            self.nc_ring_dijkstra_apply_true,
-            self.ng_ring_dijkstra_apply_true_report_active_false,
-            self.npg_ring_dijkstra_apply_true_report_active_false)
-
-    def test_single_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_single_failure(
+    def test_single_link_failure_failover_path_ring_aborescene_apply_true(self):
+        self.compare_failover_paths_with_synthesis_single_failure(
             self.nc_ring_aborescene_apply_true,
-            self.ng_ring_aborescene_apply_true_report_active_false,
-            self.npg_ring_aborescene_apply_true_report_active_false)
+            self.ng_ring_aborescene_apply_true,
+            self.npg_ring_aborescene_apply_true)
 
-    def test_double_link_failure_failover_path_ring_aborescene_apply_true_report_active_false(self):
-        self.compare_failover_paths_with_synthesis_report_active_false_double_failure(
+    def test_fail_two_link_sequence_failover_path_ring_aborescene_apply_true(self):
+        self.compare_paths_with_synthesis_fail_two_link_sequence(
             self.nc_ring_aborescene_apply_true,
-            self.ng_ring_aborescene_apply_true_report_active_false,
-            self.npg_ring_aborescene_apply_true_report_active_false)
-
-    def test_fail_two_link_sequence_failover_path_ring_aborescene_apply_true_report_active_false(self):
-        self.compare_paths_with_synthesis_report_active_false_fail_two_link_sequence(
-            self.nc_ring_aborescene_apply_true,
-            self.ng_ring_aborescene_apply_true_report_active_false,
-            self.npg_ring_aborescene_apply_true_report_active_false)
+            self.ng_ring_aborescene_apply_true,
+            self.npg_ring_aborescene_apply_true)
 
 
 if __name__ == '__main__':

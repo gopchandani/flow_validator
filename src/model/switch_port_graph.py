@@ -7,9 +7,9 @@ from port_graph import PortGraph
 
 class SwitchPortGraph(PortGraph):
 
-    def __init__(self, network_graph, sw, report_active_state):
+    def __init__(self, network_graph, sw):
 
-        super(SwitchPortGraph, self).__init__(network_graph, report_active_state)
+        super(SwitchPortGraph, self).__init__(network_graph)
 
         self.sw = sw
 
@@ -125,14 +125,25 @@ class SwitchPortGraph(PortGraph):
 
         print "Computing Transfer Function for switch:", self.sw.node_id
 
-        # Inject wildcard traffic at each ingress port of the switch
-        for port_num in self.sw.ports:
+        # Inject wildcard traffic at each ingress port of the switch's non-host ports
+        for port in self.sw.non_host_port_iter():
 
-            egress_node = self.get_egress_node(self.sw.node_id, port_num)
-
+            egress_node = self.get_egress_node(self.sw.node_id, port.port_number)
             dst_traffic_at_succ = Traffic(init_wildcard=True)
             end_to_end_modified_edges = []
-            self.propagate_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node, end_to_end_modified_edges)
+            self.propagate_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node,
+                                            end_to_end_modified_edges)
+
+        # Inject wildcard traffic at each ingress port of the switch
+        for port in self.sw.host_port_iter():
+
+            egress_node = self.get_egress_node(self.sw.node_id, port.port_number)
+
+            dst_traffic_at_succ = Traffic(init_wildcard=True)
+            dst_traffic_at_succ.set_field("ethernet_destination", int(port.attached_host.mac_addr.replace(":", ""), 16))
+            end_to_end_modified_edges = []
+            self.propagate_admitted_traffic(egress_node, dst_traffic_at_succ, None, egress_node,
+                                            end_to_end_modified_edges)
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 

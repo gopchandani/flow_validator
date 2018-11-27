@@ -14,9 +14,10 @@ from collections import defaultdict
 
 class SynthesisLib(object):
 
-    def __init__(self, controller_host, controller_port, network_graph):
+    def __init__(self, controller_host, controller_port, network_graph, network_configuration):
 
         self.network_graph = network_graph
+        self.network_configuration = network_configuration
 
         self.controller_host = controller_host
         self.controller_port = controller_port
@@ -25,7 +26,7 @@ class SynthesisLib(object):
         self.flow_id_cntr = 1
         self.queue_id_cntr = 1
 
-        self.h = self.network_graph.network_configuration.h
+        self.h = self.network_configuration.h
         self.synthesized_primary_paths = defaultdict(defaultdict)
         self.synthesized_failover_paths = defaultdict(defaultdict)
 
@@ -296,7 +297,7 @@ class SynthesisLib(object):
         flow = self.create_base_flow(sw, table_id, priority)
 
         if self.network_graph.controller == "ryu":
-            flow["match"] = flow_match.generate_match_json(self.network_graph.controller, flow["match"],
+            flow["match"] = flow_match.generate_match_raw(self.network_graph.controller, flow["match"],
                                                            has_vlan_tag_check=True)
 
             action_list = [{"type": "SET_FIELD", "field": "vlan_vid", "value": vlan_id + 0x1000},
@@ -317,12 +318,12 @@ class SynthesisLib(object):
         flow = self.create_base_flow(sw, table_id, priority)
 
         if self.network_graph.controller == "ryu":
-            flow["match"] = flow_match.generate_match_json(self.network_graph.controller, flow["match"])
+            flow["match"] = flow_match.generate_match_raw(self.network_graph.controller, flow["match"])
             action_list = [{"type": "GROUP", "group_id": group_id}]
             self.populate_flow_action_instruction(flow, action_list, apply_immediately)
 
         elif self.network_graph.controller == "onos":
-            flow["selector"]["criteria"] = flow_match.generate_match_json(self.network_graph.controller,
+            flow["selector"]["criteria"] = flow_match.generate_match_raw(self.network_graph.controller,
                                                                           flow["selector"]["criteria"])
             action_list = [{"type": "GROUP", "groupId": group_id}]
             self.populate_flow_action_instruction(flow, action_list, apply_immediately)
@@ -495,7 +496,7 @@ class SynthesisLib(object):
         output_action = None
 
         if self.network_graph.controller == "ryu":
-            flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"])
+            flow["match"] = mac_intent.flow_match.generate_match_raw(self.network_graph.controller, flow["match"])
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
             action_list = [output_action]
@@ -504,7 +505,7 @@ class SynthesisLib(object):
             self.push_flow(sw, flow)
 
         elif self.network_graph.controller == "onos":
-            flow["selector"]["criteria"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller,
+            flow["selector"]["criteria"] = mac_intent.flow_match.generate_match_raw(self.network_graph.controller,
                                                                                      flow["selector"]["criteria"])
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
             action_list = [output_action]
@@ -521,13 +522,13 @@ class SynthesisLib(object):
         output_action = None
 
         if self.network_graph.controller == "ryu":
-            flow["match"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller, flow["match"],
+            flow["match"] = mac_intent.flow_match.generate_match_raw(self.network_graph.controller, flow["match"],
                                                                       has_vlan_tag_check=True)
             pop_vlan_action = {"type": "POP_VLAN"}
             output_action = {"type": "OUTPUT", "port": mac_intent.out_port}
 
         elif self.network_graph.controller == "onos":
-            flow["selector"]["criteria"] = mac_intent.flow_match.generate_match_json(self.network_graph.controller,
+            flow["selector"]["criteria"] = mac_intent.flow_match.generate_match_raw(self.network_graph.controller,
                                                                                      flow["selector"]["criteria"],
                                                                                      has_vlan_tag_check=True)
             pop_vlan_action = {"type": "L2MODIFICATION", "subtype": "VLAN_POP"}
@@ -569,14 +570,14 @@ class SynthesisLib(object):
         flow = self.create_base_flow(sw, src_table, 1)
 
         if self.network_graph.controller == "ryu":
-            flow["match"] = flow_match.generate_match_json(self.network_graph.controller,
+            flow["match"] = flow_match.generate_match_raw(self.network_graph.controller,
                                                            flow["match"],
                                                            has_vlan_tag_check=True)
 
             flow["instructions"] = [{"type": "GOTO_TABLE",  "table_id": str(dst_table)}]
 
         elif self.network_graph.controller == "onos":
-            flow["selector"]["criteria"] = flow_match.generate_match_json(self.network_graph.controller,
+            flow["selector"]["criteria"] = flow_match.generate_match_raw(self.network_graph.controller,
                                                                           flow["selector"]["criteria"],
                                                                           has_vlan_tag_check=True)
 
@@ -595,7 +596,7 @@ class SynthesisLib(object):
         if self.network_graph.controller == "ryu":
 
             # Compile match
-            flow["match"] = flow_match.generate_match_json(self.network_graph.controller, flow["match"])
+            flow["match"] = flow_match.generate_match_raw(self.network_graph.controller, flow["match"])
 
             action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100}]
 
@@ -617,7 +618,7 @@ class SynthesisLib(object):
             if self.network_graph.controller == "ryu":
 
                 # Compile match
-                flow["match"] = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+                flow["match"] = push_vlan_intent.flow_match.generate_match_raw(self.network_graph.controller,
                                                                                 flow["match"])
 
                 action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
@@ -639,7 +640,7 @@ class SynthesisLib(object):
         # Compile instructions
         if self.network_graph.controller == "ryu":
 
-            flow["match"] = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+            flow["match"] = push_vlan_intent.flow_match.generate_match_raw(self.network_graph.controller,
                                                                             flow["match"])
 
             action_list = [{"type": "PUSH_VLAN", "ethertype": 0x8100},
@@ -650,7 +651,7 @@ class SynthesisLib(object):
             self.populate_flow_action_instruction(flow, action_list, push_vlan_intent.apply_immediately)
 
         elif self.network_graph.controller == "onos":
-            flow["selector"]["criteria"] = push_vlan_intent.flow_match.generate_match_json(self.network_graph.controller,
+            flow["selector"]["criteria"] = push_vlan_intent.flow_match.generate_match_raw(self.network_graph.controller,
                                                                             flow["selector"]["criteria"])
 
             action_list = [{"type": "L2MODIFICATION", "subtype": "VLAN_PUSH"},
@@ -706,7 +707,7 @@ class SynthesisLib(object):
                 flow_match["ethernet_destination"] = int(mac_int)
                 flow_match["in_port"] = int(h_obj.switch_port.port_number)
 
-                flow["selector"]["criteria"] = flow_match.generate_match_json(self.network_graph.controller,
+                flow["selector"]["criteria"] = flow_match.generate_match_raw(self.network_graph.controller,
                                                                               flow["selector"]["criteria"])
 
 
@@ -737,7 +738,7 @@ class SynthesisLib(object):
                 flow_match["in_port"] = int(h_obj.switch_port.port_number)
                 flow_match["vlan_id"] = self.network_graph.graph.node[sw]["sw"].synthesis_tag
 
-                flow["selector"]["criteria"] = flow_match.generate_match_json(self.network_graph.controller,
+                flow["selector"]["criteria"] = flow_match.generate_match_raw(self.network_graph.controller,
                                                                               flow["selector"]["criteria"])
 
             # Make and push the flow

@@ -14,5 +14,9 @@ class Host:
         self.sw = sw
         self.switch_port = switch_port
 
+        if switch_port:
+            self.generate_ingress_egress_node_ids()
+
+    def generate_ingress_egress_node_ids(self):
         self.port_graph_ingress_node_id = self.sw.node_id + ":ingress" + str(self.switch_port.port_number)
         self.port_graph_egress_node_id = self.sw.node_id + ":egress" + str(self.switch_port.port_number)

@@ -1,7 +1,7 @@
 import sys
 
 from experiment import Experiment
-from model.network_configuration import NetworkConfiguration
+from experiments.network_configuration import NetworkConfiguration
 from model.traffic import Traffic
 from analysis.flow_validator import FlowValidator
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
@@ -30,20 +30,24 @@ class Playground(Experiment):
         src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
 
+        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h31']]#fv.network_graph.host_ids]
+        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]#fv.network_graph.host_ids]
+
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
 
         constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
-        s = PolicyStatement(self.nc.ng, src_zone, dst_zone, specific_traffic, constraints,
-                            lmbdas=[tuple(ng.get_switch_link_data(sw=ng.get_node_object("s4")))])
+        s = PolicyStatement(self.nc.ng,
+                            src_zone,
+                            dst_zone,
+                            specific_traffic,
+                            constraints,
+                            lmbdas=[tuple(ng.get_switch_link_data(sw=ng.get_node_object("s3")))])
 
-        violations = fv.validate_policy([s], optimization_type="With Preemption")
+        violations = fv.validate_policy([s])
 
-        for v in violations:
-            print v
-
-        print "Done..."
+        print "Total violations:", len(violations)
 
 
 def main():
@@ -58,6 +62,7 @@ def main():
                                "num_hosts_per_switch": 1,
                                "per_switch_links": 2},
                               conf_root="configurations/",
+                              #synthesis_name="DijkstraSynthesis",
                               synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True})
 

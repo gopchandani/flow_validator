@@ -73,25 +73,83 @@ def get_two_stage_admitted_traffic_iter(pg, src_port, dst_port):
                     yield src_sw_port, dst_sw_port, i2.get_orig_traffic(use_embedded_switch_modifications=True)
 
 
-def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic):
+def filter_spg_traffic_with_paths(sw, spg_at, src_node, dst_node):
+
+    new_spg_at_traffic = Traffic()
+
+    for te in spg_at.traffic_elements:
+
+        t = Traffic()
+        t.add_traffic_elements([te])
+
+        # Check to see the exact path of this traffic through the switch
+        traffic_paths = sw.port_graph.get_paths(src_node, dst_node, t, [src_node], [], [])
+
+        if len(traffic_paths) == 0:
+            raise Exception("Found traffic but no paths to back it up.")
+        else:
+            # IF asked to exclude in-active...
+            # As long as there a single active path and carries the te, then we are good,
+            # otherwise, continue
+            active_path = False
+            for p in traffic_paths:
+                if p.get_max_active_rank() == 0:
+                    active_path = True
+                    break
+
+            if active_path:
+                new_spg_at_traffic.add_traffic_elements([te])
+
+    return new_spg_at_traffic
+
+
+def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_inactive=False):
 
     for src_sw_port in src_port.sw.non_host_port_iter():
+
+        if src_sw_port.port_id == 's3:3':
+            pass
+
+        src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
+                                                                 src_sw_port.switch_port_graph_egress_node)
+
+        if exclude_inactive:
+            src_spg_at = filter_spg_traffic_with_paths(src_port.sw,
+                                                       src_spg_at,
+                                                       src_port.switch_port_graph_ingress_node,
+                                                       src_sw_port.switch_port_graph_egress_node)
+
+        src_spg_at_frac = specific_traffic.intersect(src_spg_at, keep_all=True)
+
+        modified_src_spg_at_frac = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
+
+        # Creating this extra Traffic object to avoid over-writing in_port in modified_src_spg_at_frac
+        modified_src_spg_at_frac_2 = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
+
         for dst_sw_port in dst_port.sw.non_host_port_iter():
             npg_at = pg.get_admitted_traffic(src_sw_port.network_port_graph_egress_node,
                                              dst_sw_port.network_port_graph_ingress_node)
-            src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
-                                                                     src_sw_port.switch_port_graph_egress_node)
-            src_spg_at_frac = specific_traffic.intersect(src_spg_at, keep_all=True)
-            dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
-                                                                     dst_port.switch_port_graph_egress_node)
 
-            modified_src_spg_at_frac = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
+            if src_sw_port.port_id == 's3:3' and dst_sw_port.port_id == 's1:3':
+                pass
 
-            # Creating this extra Traffic object to avoid over-writing in_port in modified_src_spg_at_frac
-            modified_src_spg_at_frac_2 = src_spg_at_frac.get_modified_traffic(use_embedded_switch_modifications=True)
+            if exclude_inactive:
+                pass
+
+            # No need to do npg_at.exclude_inactive_traffic_elements() here because:
+            # 1. Can't do that with npg_at anyway, it needs to be verified down at the spg level
+            # 2. We do exactly that by passing that with get_paths on the NPG
 
             modified_src_spg_at_frac_npg_at_int = npg_at.intersect(modified_src_spg_at_frac_2, keep_all=True)
             if not modified_src_spg_at_frac_npg_at_int.is_empty():
+
+                dst_spg_at = dst_port.sw.port_graph.get_admitted_traffic(dst_sw_port.switch_port_graph_ingress_node,
+                                                                         dst_port.switch_port_graph_egress_node)
+                if exclude_inactive:
+                    dst_spg_at = filter_spg_traffic_with_paths(dst_port.sw,
+                                                               dst_spg_at,
+                                                               dst_sw_port.switch_port_graph_ingress_node,
+                                                               dst_port.switch_port_graph_egress_node)
 
                 modified_src_spg_at_frac_npg_at_int.set_field("in_port", int(dst_sw_port.port_number))
                 dst_spg_at_frac = dst_spg_at.intersect(modified_src_spg_at_frac_npg_at_int, keep_all=True)
@@ -122,25 +180,25 @@ def get_admitted_traffic(pg, src_port, dst_port):
 
 def get_active_path(pg, specific_traffic, src_port, dst_port):
 
-    paths = get_paths(pg, specific_traffic, src_port, dst_port)
+    paths = get_paths(pg, specific_traffic, src_port, dst_port, exclude_inactive=True)
 
-    # Get the path that is currently active
-    active_path = None
-    for path in paths:
-        min_active_rank = path.get_min_active_rank()
-        max_active_rank = path.get_max_active_rank()
-        if min_active_rank == 0 and max_active_rank == 0:
-            active_path = path
-            break
+    if len(paths) > 1:
+        raise Exception("Can't have more than one active paths; something is wrong.")
+    elif len(paths) == 0:
+        return None
+    else:
+        # Sanity check
+        if paths[0].is_active():
+            return paths[0]
+        else:
+            raise Exception("Got a single path, but it is not active!")
 
-    return active_path
 
-
-def get_paths(pg, specific_traffic, src_port, dst_port):
+def get_paths(pg, specific_traffic, src_port, dst_port, exclude_inactive=False):
 
     traffic_paths = []
 
-    # If the ports belong to the same switch, path always has two nodes
+    # If the ports belong to the same switch, path always has only two nodes
     if src_port.sw.node_id == dst_port.sw.node_id:
 
         at = get_admitted_traffic(pg, src_port, dst_port)
@@ -168,7 +226,7 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
     else:
 
         for src_sw_port, dst_sw_port, src_spg_at_frac, modified_src_spg_at_frac, dst_spg_at_frac \
-                in get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic):
+                in get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_inactive=exclude_inactive):
 
             # Include these paths only if they carry parts of specific_traffic
             if not src_spg_at_frac.is_empty():
@@ -178,7 +236,8 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                                          modified_src_spg_at_frac,
                                          [src_sw_port.network_port_graph_egress_node],
                                          [],
-                                         [])
+                                         [],
+                                         exclude_inactive)
 
                 if npg_paths:
                     for path in npg_paths:
@@ -189,7 +248,8 @@ def get_paths(pg, specific_traffic, src_port, dst_port):
                         port_graph_edge = pg.get_edge_from_admitted_traffic(src_port.switch_port_graph_ingress_node,
                                                                             src_sw_port.switch_port_graph_egress_node,
                                                                             src_spg_at_frac,
-                                                                            src_sw_port.sw)
+                                                                            src_sw_port.sw,
+                                                                            exclude_inactive=exclude_inactive)
 
                         path.path_edges.insert(0, ((src_port.network_port_graph_ingress_node,
                                                     src_sw_port.network_port_graph_egress_node),
@@ -281,6 +341,7 @@ def get_failover_path(pg, path, failed_link):
 
         if max_active_rank == 0:
 
+            # Grab the successor of the backup successor and fix up the in_port in the traffic
             backup_succ_succ = list(pg.successors_iter(backup_succ))[0]
 
             port_graph_edge = pg.get_edge_from_admitted_traffic(backup_succ,

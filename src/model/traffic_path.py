@@ -1,5 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
+from traffic import Traffic
+
 
 class TrafficPath(object):
 
@@ -72,6 +74,35 @@ class TrafficPath(object):
                     min_active_rank = current_edge_data_active_rank
 
         return min_active_rank
+
+    def get_max_min_active_rank(self):
+        max_min_active_rank = -1
+
+        for edge, enabling_edge_data_list, traffic_at_pred in self.path_edges:
+
+            min_active_rank = 10000
+
+            for enabling_edge_data in enabling_edge_data_list:
+                current_edge_data_active_rank = enabling_edge_data.get_min_active_rank()
+                if current_edge_data_active_rank < min_active_rank:
+                    min_active_rank = current_edge_data_active_rank
+
+            if min_active_rank > max_min_active_rank:
+                max_min_active_rank = min_active_rank
+
+        return max_min_active_rank
+
+    def is_active(self):
+
+        is_active = True
+
+        min_active_rank = self.get_min_active_rank()
+        max_active_rank = self.get_max_active_rank()
+
+        if min_active_rank == 0 and max_active_rank == 0:
+            is_active = True
+
+        return is_active
 
     def get_path_links(self):
         path_links = []

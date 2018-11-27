@@ -11,7 +11,7 @@ from collections import defaultdict
 from timer import Timer
 from analysis.monte_carlo_analysis import MonteCarloAnalysis
 from experiment import Experiment
-from model.network_configuration import NetworkConfiguration
+from experiments.network_configuration import NetworkConfiguration
 
 
 class MonteCarloSamplingCompare(Experiment):
@@ -124,7 +124,7 @@ class MonteCarloSamplingCompare(Experiment):
 
             ng = nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
-            self.mca = MonteCarloAnalysis(ng, report_active_state=False)
+            self.mca = MonteCarloAnalysis(ng)
             self.mca.init_network_port_graph()
 
             # self.mca.compute_e_nf_exhaustive()

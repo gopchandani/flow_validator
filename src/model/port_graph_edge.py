@@ -56,6 +56,21 @@ class NetworkPortGraphEdgeData:
 
         return max_active_rank
 
+    def get_min_active_rank(self):
+
+        # If it is an edge that does not depend on switch_port_graph_paths, then say zero
+        if self.switch_port_graph_paths == None:
+            return 0
+
+        # Do a max over paths for getting active_rank
+        min_active_rank = 100000
+        for tp in self.switch_port_graph_paths:
+            path_max_active_rank = tp.get_max_active_rank()
+            if path_max_active_rank < min_active_rank:
+                min_active_rank = path_max_active_rank
+
+        return min_active_rank
+
 
 class SwitchPortGraphEdgeData:
 

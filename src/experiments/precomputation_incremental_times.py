@@ -10,7 +10,7 @@ from collections import defaultdict
 from timer import Timer
 from analysis.flow_validator import FlowValidator
 from experiment import Experiment
-from model.network_configuration import NetworkConfiguration
+from experiments.network_configuration import NetworkConfiguration
 from model.traffic import Traffic
 
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
@@ -142,7 +142,6 @@ class PrecomputationIncrementalTimes(Experiment):
 
                 with Timer(verbose=True) as t:
                     violations = fv.validate_policy(policy_statements,
-                                                    optimization_type="With Preemption",
                                                     active_path_computation_times=self.data["active_path_computation_time"][nc.nc_topo_str][nhps],
                                                     path_lengths=self.data["path_length"][nc.nc_topo_str][nhps])
 

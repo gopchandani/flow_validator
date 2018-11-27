@@ -34,9 +34,9 @@ class Action:
                             supported.
     '''
 
-    def __init__(self, sw, action_json):
+    def __init__(self, sw, action_raw):
 
-        self.action_json = action_json
+        self.action_raw = action_raw
         self.sw = sw
         self.action_type = None
         self.bucket = None
@@ -47,15 +47,19 @@ class Action:
         self.field_modified_to = None
 
         if self.sw.network_graph.controller == "onos":
-            self.parse_onos_action_json()
-
+            self.parse_onos_action_raw()
         elif self.sw.network_graph.controller == "ryu":
-            self.parse_ryu_action_json()
+            self.parse_ryu_action_raw()
+        elif self.sw.network_graph.controller == "grpc":
+            self.parse_grpc_action_raw()            
+        else:
+            raise NotImplemented
 
     def get_active_rank(self):
         active_rank = -1
 
         if self.bucket:
+
             # If it is one of those buckets that comes with a watch port, check for liveness
             if self.bucket.watch_port:
                 if self.bucket.is_live():
@@ -74,66 +78,92 @@ class Action:
 
         return active_rank
 
-    def parse_onos_action_json(self):
+    def parse_onos_action_raw(self):
 
-        if self.action_json["type"] == "OUTPUT":
+        if self.action_raw["type"] == "OUTPUT":
             self.action_type = "output"
-            if self.action_json["port"] == "CONTROLLER":
+            if self.action_raw["port"] == "CONTROLLER":
                 self.out_port = self.sw.network_graph.OFPP_CONTROLLER
             else:
-                self.out_port = int(self.action_json["port"])
+                self.out_port = int(self.action_raw["port"])
 
-        if self.action_json["type"] == "SET_FIELD":
+        if self.action_raw["type"] == "SET_FIELD":
             raise NotImplementedError
             self.action_type = "set_field"
 
-            self.modified_field = ryu_field_names_mapping[self.action_json["field"]]
+            self.modified_field = ryu_field_names_mapping[self.action_raw["field"]]
 
             #TODO: Works fine for VLAN_ID mods, other fields may require special parsing here
-            if self.action_json["field"] == "vlan_vid":
-                self.field_modified_to = self.action_json["value"]
+            if self.action_raw["field"] == "vlan_vid":
+                self.field_modified_to = self.action_raw["value"]
                 self.field_modified_to = int(self.field_modified_to)
             else:
                 raise NotImplementedError
 
-        if self.action_json["type"] == "GROUP":
+        if self.action_raw["type"] == "GROUP":
             self.action_type = "group"
-            self.group_id = self.sw.network_graph.parse_onos_group_id(self.action_json["groupId"])
+            self.group_id = self.sw.network_graph.parse_onos_group_id(self.action_raw["groupId"])
 
-        if self.action_json["type"] == "PUSH_VLAN":
+        if self.action_raw["type"] == "PUSH_VLAN":
             raise NotImplementedError
             self.action_type = "push_vlan"
 
-        if self.action_json["type"] == "POP_VLAN":
+        if self.action_raw["type"] == "POP_VLAN":
             raise NotImplementedError
             self.action_type = "pop_vlan"
 
-    def parse_ryu_action_json(self):
+    def parse_ryu_action_raw(self):
 
-        if self.action_json["type"] == "OUTPUT":
+        if self.action_raw["type"] == "OUTPUT":
             self.action_type = "output"
-            self.out_port = self.action_json["port"]
+            self.out_port = self.action_raw["port"]
 
-        if self.action_json["type"] == "SET_FIELD":
+        if self.action_raw["type"] == "SET_FIELD":
             self.action_type = "set_field"
 
-            self.modified_field = ryu_field_names_mapping[self.action_json["field"]]
+            self.modified_field = ryu_field_names_mapping[self.action_raw["field"]]
 
             #TODO: Works fine for VLAN_ID mods, other fields may require special parsing here
-            if self.action_json["field"] == "vlan_vid":
-                self.field_modified_to = self.action_json["value"]
+            if self.action_raw["field"] == "vlan_vid":
+                self.field_modified_to = self.action_raw["value"]
                 self.field_modified_to = int(self.field_modified_to)
             else:
                 raise NotImplemented
 
-        if self.action_json["type"] == "GROUP":
+        if self.action_raw["type"] == "GROUP":
             self.action_type = "group"
-            self.group_id = self.action_json["group_id"]
+            self.group_id = self.action_raw["group_id"]
 
-        if self.action_json["type"] == "PUSH_VLAN":
+        if self.action_raw["type"] == "PUSH_VLAN":
             self.action_type = "push_vlan"
 
-        if self.action_json["type"] == "POP_VLAN":
+        if self.action_raw["type"] == "POP_VLAN":
+            self.action_type = "pop_vlan"
+
+    def parse_grpc_action_raw(self):
+
+        if self.action_raw.type == "OUTPUT":
+            self.action_type = "output"
+            self.out_port = self.action_raw.output_port_num
+
+        if self.action_raw.type == "SET_FIELD":
+            self.action_type = "set_field"
+
+            self.modified_field = ryu_field_names_mapping[self.action_raw.modified_field]
+
+            if self.action_raw.modified_field == "vlan_vid":
+                self.field_modified_to = int(self.action_raw.modified_value)
+            else:
+                raise NotImplemented
+
+        if self.action_raw.type == "GROUP":
+            self.action_type = "group"
+            self.group_id = self.action_raw.group_id
+
+        if self.action_raw.type == "PUSH_VLAN":
+            self.action_type = "push_vlan"
+
+        if self.action_raw.type == "POP_VLAN":
             self.action_type = "pop_vlan"
 
     def is_failover_action(self):

@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from timer import Timer
 from experiment import Experiment
-from model.network_configuration import NetworkConfiguration
+from experiments.network_configuration import NetworkConfiguration
 from model.traffic import Traffic
 from analysis.flow_validator import FlowValidator
 
@@ -97,7 +97,7 @@ class SubstationMixedPolicyValidationTimes(Experiment):
                 for i in range(self.num_iterations):
 
                     with Timer(verbose=True) as t:
-                        violations = fv.validate_policy(policy_statements, optimization_type="With Preemption")
+                        violations = fv.validate_policy(policy_statements)
                     self.data["validation_time"]["k: " + str(k) + ", |L|: " + sL][str(total_host_pairs)].append(t.secs)
 
                     print "Total violations:", len(violations)

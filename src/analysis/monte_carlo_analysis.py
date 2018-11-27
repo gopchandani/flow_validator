@@ -17,8 +17,8 @@ from util import get_failover_path
 
 class MonteCarloAnalysis(FlowValidator):
 
-    def __init__(self, network_graph, report_active_state):
-        super(MonteCarloAnalysis, self).__init__(network_graph, report_active_state)
+    def __init__(self, network_graph):
+        super(MonteCarloAnalysis, self).__init__(network_graph)
 
         self.links_broken = []
         self.all_links = list(self.network_graph.get_switch_link_data())

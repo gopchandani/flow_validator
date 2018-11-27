@@ -18,7 +18,7 @@ class PortGraph(object):
     def get_egress_node_id(node_id, port_number):
         return node_id + ":egress" + str(port_number)
 
-    def __init__(self, network_graph, report_active_state):
+    def __init__(self, network_graph):
 
         self.network_graph = network_graph
         self.g = nx.DiGraph()
@@ -26,7 +26,6 @@ class PortGraph(object):
         # These are used to measure the points where changes are measured
         self.boundary_ingress_nodes = []
         self.boundary_egress_nodes = []
-        self.report_active_state = report_active_state
 
     def get_table_node_id(self, switch_id, table_number):
         return switch_id + ":table" + str(table_number)
@@ -122,6 +121,9 @@ class PortGraph(object):
         return dst_sw_at_and_nodes
 
     def propagate_admitted_traffic(self, curr, dst_traffic_at_succ, succ, dst, end_to_end_modified_edges):
+
+        if curr.node_id == "s4:egress3" and dst.node_id == "s1:ingress3":
+            pass
 
         prev_dst_traffic_at_succ = self.get_admitted_traffic_via_succ(curr, dst, succ)
         self.set_admitted_traffic_via_succ(curr, dst, succ, dst_traffic_at_succ)
@@ -235,7 +237,7 @@ class PortGraph(object):
 
         return has_loop
 
-    def get_enabling_edge_data(self, node, succ, dst, at):
+    def get_enabling_edge_data(self, node, succ, dst, at, exclude_inactive=False):
 
         enabling_edge_data = []
 
@@ -247,6 +249,9 @@ class PortGraph(object):
                 at.set_field("in_port", int(node.parent_obj.port_number))
 
             at_dst_succ = self.get_admitted_traffic_via_succ(node, dst, succ)
+
+            if exclude_inactive:
+                at_dst_succ = at_dst_succ.clone_with_active_traffic_elements()
 
             # Check to see if the successor would carry some of the traffic from here
             succ_int = at.intersect(at_dst_succ)
@@ -267,11 +272,14 @@ class PortGraph(object):
 
         return traffic_at_succ
 
-    def get_paths(self, node, dst, node_at, path_prefix, path_edges, paths):
+    def get_paths(self, node, dst, node_at, path_prefix, path_edges, paths, exclude_inactive=False):
 
         for succ in self.get_admitted_traffic_succs(node, dst):
 
-            enabling_edge_data = self.get_enabling_edge_data(node, succ, dst, node_at)
+            if node.node_id == 's4:ingress2' and succ.node_id == 's4:egress3':
+                pass
+
+            enabling_edge_data = self.get_enabling_edge_data(node, succ, dst, node_at, exclude_inactive)
             if not enabling_edge_data:
                 continue
 
@@ -290,7 +298,8 @@ class PortGraph(object):
                                    succ_at,
                                    path_prefix + [succ],
                                    path_edges + [((node, succ),  enabling_edge_data, node_at)],
-                                   paths)
+                                   paths,
+                                   exclude_inactive)
 
         return paths
 
