@@ -107,9 +107,6 @@ def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_in
 
     for src_sw_port in src_port.sw.non_host_port_iter():
 
-        if src_sw_port.port_id == 's3:3':
-            pass
-
         src_spg_at = src_port.sw.port_graph.get_admitted_traffic(src_port.switch_port_graph_ingress_node,
                                                                  src_sw_port.switch_port_graph_egress_node)
 
@@ -129,12 +126,6 @@ def get_two_stage_path_iter(pg, src_port, dst_port, specific_traffic, exclude_in
         for dst_sw_port in dst_port.sw.non_host_port_iter():
             npg_at = pg.get_admitted_traffic(src_sw_port.network_port_graph_egress_node,
                                              dst_sw_port.network_port_graph_ingress_node)
-
-            if src_sw_port.port_id == 's3:3' and dst_sw_port.port_id == 's1:3':
-                pass
-
-            if exclude_inactive:
-                pass
 
             # No need to do npg_at.exclude_inactive_traffic_elements() here because:
             # 1. Can't do that with npg_at anyway, it needs to be verified down at the spg level

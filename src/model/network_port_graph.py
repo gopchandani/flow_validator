@@ -155,9 +155,6 @@ class NetworkPortGraph(PortGraph):
                 admitted_host_traffic = Traffic()
                 for host_port in sw.host_port_iter():
 
-                    if non_host_port.port_id == 's1:3' and host_port.port_id == 's1:1':
-                        pass
-
                     at = sw.port_graph.get_admitted_traffic(non_host_port.switch_port_graph_ingress_node,
                                                             host_port.switch_port_graph_egress_node)
                     admitted_host_traffic.union(at)
