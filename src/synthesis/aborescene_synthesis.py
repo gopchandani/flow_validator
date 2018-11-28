@@ -71,7 +71,7 @@ class AboresceneSynthesis(object):
 
         return spt
 
-    def compute_k_edge_disjoint_aborescenes(self, k, dst_sw):
+    def compute_k_edge_disjoint_aborescenes(self, dst_sw):
 
         k_eda = []
 
@@ -88,10 +88,10 @@ class AboresceneSynthesis(object):
         for succ in dst_sw_succs:
             mdg.remove_edge(dst_sw.node_id, succ)
 
-        for i in range(k):
+        for i in range(self.params["k"]):
 
             # Assume there are always k edges as the successor of the dst_sw, kill all but one
-            for j in range(k):
+            for j in range(self.params["k"]):
                 if i == j:
                     mdg.add_edge(dst_sw.node_id, dst_sw_succs[j])
                 else:
@@ -131,11 +131,11 @@ class AboresceneSynthesis(object):
                 else:
                     self.sw_intent_lists[src_sw][dst_sw] = [intent]
 
-    def install_failover_group_vlan_tag_flow(self, src_sw, dst_sw, k):
+    def install_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
         modified_tags = []
-        for i in range(k):
+        for i in range(self.params["k"]):
             modified_tags.append(int(dst_sw.synthesis_tag) | (i + 1 << self.num_bits_for_switches))
 
         sw_intent_list = deepcopy(self.sw_intent_lists[src_sw][dst_sw])
@@ -187,7 +187,7 @@ class AboresceneSynthesis(object):
                         flow_match,
                         self.apply_group_intents_immediately)
 
-    def install_all_group_vlan_tag_flow(self, src_sw, dst_sw, k):
+    def install_all_group_vlan_tag_flow(self, src_sw, dst_sw):
 
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
         modified_tag = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
@@ -212,7 +212,7 @@ class AboresceneSynthesis(object):
                 flow_match,
                 self.apply_group_intents_immediately)
 
-    def push_sw_intent_lists(self, flow_match, k):
+    def push_sw_intent_lists(self, flow_match):
 
         for src_sw in self.sw_intent_lists:
             print "-- Pushing at Switch:", src_sw.node_id
@@ -220,8 +220,8 @@ class AboresceneSynthesis(object):
 
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
-                self.install_failover_group_vlan_tag_flow(src_sw, dst_sw, k)
-                self.install_all_group_vlan_tag_flow(src_sw, dst_sw, k)
+                self.install_failover_group_vlan_tag_flow(src_sw, dst_sw)
+                self.install_all_group_vlan_tag_flow(src_sw, dst_sw)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
         for h_obj in dst_sw.attached_hosts:
@@ -287,7 +287,7 @@ class AboresceneSynthesis(object):
                 else:
                     self.synthesis_lib.record_failover_path(src_host, dst_host, failed_edge, switch_port_tuple_list)
 
-    def record_paths(self, k, dst_sw, k_eda):
+    def record_paths(self, dst_sw, k_eda):
 
         # First the primary paths
         primary_tree = k_eda[0]
@@ -332,7 +332,7 @@ class AboresceneSynthesis(object):
 
         self.synthesis_lib.save_synthesized_paths(self.network_configuration.conf_path)
 
-    def synthesize_all_switches(self, flow_match, k):
+    def synthesize_all_switches(self, flow_match):
 
         if "dst_k_eda_path" in self.params:
             with open(self.params["dst_k_eda_path"], "r") as infile:
@@ -349,7 +349,7 @@ class AboresceneSynthesis(object):
             # For each possible switch that can be a destination for traffic
             for dst_sw in self.network_graph.get_switches():
                 if dst_sw.attached_hosts:
-                    k_eda = self.compute_k_edge_disjoint_aborescenes(k, dst_sw)
+                    k_eda = self.compute_k_edge_disjoint_aborescenes(dst_sw)
                     self.dst_k_eda[dst_sw.node_id] = [list(x.edges()) for x in k_eda]
 
             with open(self.network_configuration.conf_path + "/dst_k_eda.json", "w") as outfile:
@@ -376,9 +376,9 @@ class AboresceneSynthesis(object):
                 for edges in self.dst_k_eda[dst_sw.node_id]:
                     k_eda.append(nx.MultiDiGraph(edges))
 
-                self.record_paths(k, dst_sw, k_eda)
+                self.record_paths(dst_sw, k_eda)
 
-                for i in range(k):
+                for i in range(self.params["k"]):
                     self.compute_sw_intent_lists(dst_sw, flow_match, k_eda[i], i+1)
 
-        self.push_sw_intent_lists(flow_match, k)
+        self.push_sw_intent_lists(flow_match)
