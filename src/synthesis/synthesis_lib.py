@@ -91,10 +91,10 @@ class SynthesisLib(object):
 
     def save_synthesized_paths(self, conf_path):
         with open(conf_path + "synthesized_primary_paths.json", "w") as outfile:
-            json.dump(self.synthesized_primary_paths, outfile)
+            json.dump(self.synthesized_primary_paths, outfile, indent=4)
 
         with open(conf_path + "synthesized_failover_paths.json", "w") as outfile:
-            json.dump(self.synthesized_failover_paths, outfile)
+            json.dump(self.synthesized_failover_paths, outfile, indent=4)
 
     def push_queue(self, sw, port, min_rate, max_rate):
 

@@ -26,8 +26,7 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                 "num_hosts_per_switch": 1},
                                                                conf_root="configurations/",
                                                                synthesis_name="DijkstraSynthesis",
-                                                               synthesis_params={"apply_group_intents_immediately":
-                                                                                     True})
+                                                               synthesis_params={"apply_group_intents_immediately": True})
 
         cls.ng_ring_dijkstra_apply_true = \
             cls.nc_ring_dijkstra_apply_true.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
@@ -47,8 +46,8 @@ class TestNetworkPortGraph(unittest.TestCase):
                                                                   "num_hosts_per_switch": 1},
                                                                  conf_root="configurations/",
                                                                  synthesis_name="AboresceneSynthesis",
-                                                                 synthesis_params={"apply_group_intents_immediately":
-                                                                                       True})
+                                                                 synthesis_params={"apply_group_intents_immediately": True,
+                                                                                   "k": 2})
 
         cls.ng_ring_aborescene_apply_true = cls.nc_ring_aborescene_apply_true.setup_network_graph(mininet_setup_gap=1,
                                                                                                   synthesis_setup_gap=1)

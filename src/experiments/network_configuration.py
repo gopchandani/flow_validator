@@ -145,9 +145,39 @@ class NetworkConfiguration(object):
 
         if self.mininet_obj:
             self.mininet_obj.pingAll()
-            self.mininet_obj.ping([self.mininet_obj.get('h11'),
-                                   self.mininet_obj.get('h21')],
-                                  '1')
+
+
+
+            # self.mininet_obj.ping([self.mininet_obj.get('h41'),
+            #                        self.mininet_obj.get('h11')],
+            #                       '1')
+            #
+            # self.mininet_obj.ping([self.mininet_obj.get('h21'),
+            #                        self.mininet_obj.get('h11')],
+            #                       '1')
+            #
+            # edge = ('s2', 's3')
+            # self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
+            # self.wait_until_link_status(edge[0], edge[1], 'down')
+            # time.sleep(5)
+            # edge = ('s1', 's3')
+            # self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
+            # self.wait_until_link_status(edge[0], edge[1], 'down')
+            # time.sleep(5)
+            # edge = ('s3', 's4')
+            # self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
+            # self.wait_until_link_status(edge[0], edge[1], 'down')
+            # time.sleep(5)
+            #
+            # self.mininet_obj.ping([self.mininet_obj.get('h41'),
+            #                        self.mininet_obj.get('h11')],
+            #                       '1')
+            #
+            # self.mininet_obj.ping([self.mininet_obj.get('h21'),
+            #                        self.mininet_obj.get('h11')],
+            #                       '1')
+            #
+
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
 

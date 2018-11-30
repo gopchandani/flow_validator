@@ -53,11 +53,35 @@ class AboresceneSynthesis(object):
             params_str += "_" + str(k) + "_" + str(v)
         return self.__class__.__name__ + params_str
 
+    # Gets a switch-only multi-di-graph for the present topology
+    def get_mdg(self):
+
+        mdg = nx.MultiDiGraph()
+
+        for n1 in self.network_graph.graph:
+
+            # Don't add any edges for host links
+            if self.network_graph.get_node_type(n1) == "host":
+                continue
+
+            neigs = []
+            for n2 in self.network_graph.graph.neighbors(n1):
+                # Don't add any edges for host links
+                if self.network_graph.get_node_type(n2) == "host":
+                    continue
+
+                neigs.append(n2)
+
+            for i, n2 in enumerate(neigs):
+                mdg.add_edge(n1, n2, weight=10000)
+
+        return mdg
+
     def compute_shortest_path_tree(self, dst_sw):
 
         spt = nx.DiGraph()
 
-        mdg = self.network_graph.get_mdg()
+        mdg = self.get_mdg()
 
         paths = nx.shortest_path(mdg, source=dst_sw.node_id)
 
@@ -75,7 +99,7 @@ class AboresceneSynthesis(object):
 
         k_eda = []
 
-        mdg = self.network_graph.get_mdg()
+        mdg = self.get_mdg()
 
         dst_sw_preds = sorted(list(mdg.predecessors(dst_sw.node_id)))
         dst_sw_succs = sorted(list(mdg.successors(dst_sw.node_id)))
@@ -93,7 +117,7 @@ class AboresceneSynthesis(object):
             # Assume there are always k edges as the successor of the dst_sw, kill all but one
             for j in range(self.params["k"]):
                 if i == j:
-                    mdg.add_edge(dst_sw.node_id, dst_sw_succs[j])
+                    mdg.add_edge(dst_sw.node_id, dst_sw_succs[j], weight=1)
                 else:
                     if mdg.has_edge(dst_sw.node_id, dst_sw_succs[j]):
                         mdg.remove_edge(dst_sw.node_id, dst_sw_succs[j])
@@ -107,9 +131,15 @@ class AboresceneSynthesis(object):
                 print "Could not find k msa."
                 break
 
-            # Remove its arcs from mdg
+            # Remove its arcs from mdg to ensure that these arcs are not part of any future msa
             for arc in msa.edges():
                 mdg.remove_edge(arc[0], arc[1])
+
+                if arc[0] != dst_sw.node_id and arc[1] != dst_sw.node_id:
+                    if mdg.has_edge(arc[1], arc[0]):
+                        prev_weight = mdg[arc[1]][arc[0]][0]['weight']
+                        mdg.remove_edge(arc[1], arc[0])
+                        mdg.add_edge(arc[1], arc[0], weight=prev_weight+100)
 
         return k_eda
 
@@ -122,6 +152,7 @@ class AboresceneSynthesis(object):
 
                 intent = Intent("primary", flow_match, "all", out_port)
                 intent.tree_id = tree_id
+                intent.tree = tree
 
                 if src_sw in self.sw_intent_lists:
                     if dst_sw in self.sw_intent_lists[src_sw]:
@@ -130,6 +161,9 @@ class AboresceneSynthesis(object):
                         self.sw_intent_lists[src_sw][dst_sw] = [intent]
                 else:
                     self.sw_intent_lists[src_sw][dst_sw] = [intent]
+
+    def compute_sw_intent_lists_2(self, dst_sw, flow_match, k_eda):
+        pass
 
     def install_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
@@ -353,7 +387,7 @@ class AboresceneSynthesis(object):
                     self.dst_k_eda[dst_sw.node_id] = [list(x.edges()) for x in k_eda]
 
             with open(self.network_configuration.conf_path + "/dst_k_eda.json", "w") as outfile:
-                json.dump(self.dst_k_eda, outfile)
+                json.dump(self.dst_k_eda, outfile, indent=4)
 
         # For each possible switch that can be a destination for traffic
         for dst_sw in self.network_graph.get_switches():
@@ -375,6 +409,8 @@ class AboresceneSynthesis(object):
                 k_eda = []
                 for edges in self.dst_k_eda[dst_sw.node_id]:
                     k_eda.append(nx.MultiDiGraph(edges))
+
+                self.compute_sw_intent_lists_2(dst_sw, flow_match, k_eda)
 
                 self.record_paths(dst_sw, k_eda)
 

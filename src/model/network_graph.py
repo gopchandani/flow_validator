@@ -95,20 +95,6 @@ class NetworkGraph(object):
 
         self.L = []
 
-    # Gets a switch-only multi-di-graph for the present topology
-    def get_mdg(self):
-
-        mdg = nx.MultiDiGraph(self.graph)
-
-        for n in self.graph:
-            node_type = self.get_node_type(n)
-
-            # Remove all host nodes
-            if node_type == "host":
-                mdg.remove_node(n)
-
-        return mdg
-
     def onos_sw_device_id_to_node_id_mapping(self, onos_node_id):
         node_id = "s" + str(int(onos_node_id.split(":")[1], 16))
         return node_id

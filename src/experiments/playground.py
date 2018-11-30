@@ -38,12 +38,14 @@ class Playground(Experiment):
 
         constraints = [PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)]
 
+        l = tuple(ng.get_switch_link_data(sw=ng.get_node_object("s3")))
+
         s = PolicyStatement(self.nc.ng,
                             src_zone,
                             dst_zone,
                             specific_traffic,
                             constraints,
-                            lmbdas=[tuple(ng.get_switch_link_data(sw=ng.get_node_object("s3")))])
+                            lmbdas=[l])
 
         violations = fv.validate_policy([s])
 
@@ -60,10 +62,10 @@ def main():
                               "cliquetopo",
                               {"num_switches": 4,
                                "num_hosts_per_switch": 1,
-                               "per_switch_links": 2},
+                               "per_switch_links": 3},
                               conf_root="configurations/",
-                              #synthesis_name="DijkstraSynthesis",
-                              #synthesis_params={"apply_group_intents_immediately": True})
+                              # synthesis_name="DijkstraSynthesis",
+                              # synthesis_params={"apply_group_intents_immediately": True})
                               synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True,
                                                 "k": 2})
