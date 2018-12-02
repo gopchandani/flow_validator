@@ -260,7 +260,12 @@ class AboresceneSynthesis(object):
 
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
+
+                # Install flow rules for 1st ... k - 1 aborescene
                 self.install_failover_group_vlan_tag_flow(src_sw, dst_sw)
+
+                # Install the flow rules for the kth aborescene...
+
                 self.install_all_group_vlan_tag_flow(src_sw, dst_sw)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
