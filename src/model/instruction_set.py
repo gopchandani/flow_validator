@@ -208,6 +208,10 @@ class InstructionSet:
             output_action.instruction_type = "applied"
             egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
 
+            # TODO: Perhaps due to quirks of software implementation self.flow.applied_traffic should not include
+            # the out_port as in_port. Basically if you are going to bolt out of the same port where you came in
+            # You HAVE to use IN_PORT as outport...
+
             applied_port_graph_edges.append((egress_node,
                                              (self.flow.applied_traffic,
                                               output_action,
@@ -233,6 +237,10 @@ class InstructionSet:
 
             output_action.instruction_type = "written"
             egress_node = self.sw.port_graph.get_egress_node(self.sw.node_id, out_port)
+
+            # TODO: Perhaps due to quirks of software implementation self.flow.applied_traffic should not include
+            # the out_port as in_port. Basically if you are going to bolt out of the same port where you came in
+            # You HAVE to use IN_PORT as outport...
 
             written_port_graph_edges.append((egress_node,
                                              (self.flow.applied_traffic,

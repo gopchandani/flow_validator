@@ -114,7 +114,7 @@ class AboresceneSynthesis(object):
 
         for i in range(self.params["k"]):
 
-            # Assume there are always k edges as the successor of the dst_sw, kill all but one
+            # Assume there are always k edges as the successor of the dst_sw
             for j in range(self.params["k"]):
                 if i == j:
                     mdg.add_edge(dst_sw.node_id, dst_sw_succs[j], weight=1)
@@ -162,9 +162,6 @@ class AboresceneSynthesis(object):
                 else:
                     self.sw_intent_lists[src_sw][dst_sw] = [intent]
 
-    def compute_sw_intent_lists_2(self, dst_sw, flow_match, k_eda):
-        pass
-
     def install_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
@@ -182,51 +179,57 @@ class AboresceneSynthesis(object):
 
         # Push a group/vlan_id setting flow rule
         flow_match = deepcopy(sw_intent_list[0].flow_match)
-        flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (1 << self.num_bits_for_switches)
 
-        flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                src_sw.node_id,
-                self.aborescene_forwarding_rules,
-                group_id,
-                1,
-                flow_match,
-                self.apply_group_intents_immediately)
+        for i in range(self.params["k"]-1):
+            flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (i + 1 << self.num_bits_for_switches)
+
+            flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                    src_sw.node_id,
+                    self.aborescene_forwarding_rules,
+                    group_id,
+                    1,
+                    flow_match,
+                    self.apply_group_intents_immediately)
 
         # Need to install some more rules to handle the IN_PORT as out_port case.
         for adjacent_sw_id, link_data in self.network_graph.get_adjacent_switch_link_data(src_sw.node_id):
 
             sw_intent_list = deepcopy(self.sw_intent_lists[src_sw][dst_sw])
 
-            # If the intent is such that it is sending the packet back out to the adjacent switch...
-            if sw_intent_list[1].out_port == link_data.link_ports_dict[src_sw.node_id]:
+            for i in range(1, len(sw_intent_list)):
 
-                # Push a fail-over group with each bucket containing a modify VLAN tag action,
-                # Each one of these buckets represent actions to be applied to send the packet in one tree
+                # If the intent is such that it is sending the packet back out to the adjacent switch...
+                if sw_intent_list[i].out_port == link_data.link_ports_dict[src_sw.node_id]:
 
-                sw_intent_list[1].in_port = link_data.link_ports_dict[src_sw.node_id]
-                group_id = self.synthesis_lib.push_fast_failover_group_set_vlan_action(src_sw.node_id,
-                                                                                       sw_intent_list,
-                                                                                       modified_tags)
+                    # Push a fail-over group with each bucket containing a modify VLAN tag action,
+                    # Each one of these buckets represent actions to be applied to send the packet in one tree
 
-                # Push a group/vlan_id setting flow rule
-                flow_match = deepcopy(sw_intent_list[0].flow_match)
-                flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (1 << self.num_bits_for_switches)
-                flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
+                    # Set the in_port here, this gets read by synthesis_lib!
+                    sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
+                    group_id = self.synthesis_lib.push_fast_failover_group_set_vlan_action(src_sw.node_id,
+                                                                                           sw_intent_list,
+                                                                                           modified_tags)
 
-                flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                        src_sw.node_id,
-                        self.aborescene_forwarding_rules,
-                        group_id,
-                        2,
-                        flow_match,
-                        self.apply_group_intents_immediately)
+                    # Push a group/vlan_id setting flow rule
+                    flow_match = deepcopy(sw_intent_list[0].flow_match)
+                    flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
+
+                    for i in range(self.params["k"]-1):
+                        flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (i + 1 << self.num_bits_for_switches)
+
+                        flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
+                            src_sw.node_id,
+                            self.aborescene_forwarding_rules,
+                            group_id,
+                            2,
+                            flow_match,
+                            self.apply_group_intents_immediately)
 
     def install_all_group_vlan_tag_flow(self, src_sw, dst_sw):
 
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
-        modified_tag = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
-
-        sw_intent_list = [self.sw_intent_lists[src_sw][dst_sw][1]]
+        modified_tag = int(dst_sw.synthesis_tag) | ((self.params["k"]) << self.num_bits_for_switches)
+        sw_intent_list = [self.sw_intent_lists[src_sw][dst_sw][self.params["k"]-1]]
 
         # Push a failover group with each bucket containing a modify VLAN tag action,
         # Each one of these buckets represent actions to be applied to send the packet in one tree
@@ -236,7 +239,7 @@ class AboresceneSynthesis(object):
 
         # Push a group/vlan_id setting flow rule
         flow_match = deepcopy(sw_intent_list[0].flow_match)
-        flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (2 << self.num_bits_for_switches)
+        flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | ((self.params["k"]) << self.num_bits_for_switches)
 
         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
                 src_sw.node_id,
@@ -251,6 +254,9 @@ class AboresceneSynthesis(object):
         for src_sw in self.sw_intent_lists:
             print "-- Pushing at Switch:", src_sw.node_id
             for dst_sw in self.sw_intent_lists[src_sw]:
+
+                if src_sw.node_id == "s2" and dst_sw.node_id == "s3":
+                    pass
 
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
@@ -409,8 +415,6 @@ class AboresceneSynthesis(object):
                 k_eda = []
                 for edges in self.dst_k_eda[dst_sw.node_id]:
                     k_eda.append(nx.MultiDiGraph(edges))
-
-                self.compute_sw_intent_lists_2(dst_sw, flow_match, k_eda)
 
                 self.record_paths(dst_sw, k_eda)
 

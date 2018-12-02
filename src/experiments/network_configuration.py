@@ -14,6 +14,7 @@ from functools import partial
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.node import OVSSwitch
+from mininet.cli import CLI
 from experiments.controller_man import ControllerMan
 from model.network_graph import NetworkGraph
 from model.match import Match
@@ -144,40 +145,36 @@ class NetworkConfiguration(object):
             time.sleep(synthesis_setup_gap)
 
         if self.mininet_obj:
-            self.mininet_obj.pingAll()
-
-
+            #self.mininet_obj.pingAll()
 
             # self.mininet_obj.ping([self.mininet_obj.get('h41'),
             #                        self.mininet_obj.get('h11')],
             #                       '1')
-            #
-            # self.mininet_obj.ping([self.mininet_obj.get('h21'),
-            #                        self.mininet_obj.get('h11')],
-            #                       '1')
-            #
-            # edge = ('s2', 's3')
-            # self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
-            # self.wait_until_link_status(edge[0], edge[1], 'down')
-            # time.sleep(5)
-            # edge = ('s1', 's3')
-            # self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
-            # self.wait_until_link_status(edge[0], edge[1], 'down')
-            # time.sleep(5)
-            # edge = ('s3', 's4')
-            # self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
-            # self.wait_until_link_status(edge[0], edge[1], 'down')
-            # time.sleep(5)
-            #
-            # self.mininet_obj.ping([self.mininet_obj.get('h41'),
-            #                        self.mininet_obj.get('h11')],
-            #                       '1')
-            #
-            # self.mininet_obj.ping([self.mininet_obj.get('h21'),
-            #                        self.mininet_obj.get('h11')],
-            #                       '1')
-            #
 
+            # self.mininet_obj.ping([self.mininet_obj.get('h21'),
+            #                        self.mininet_obj.get('h11')],
+            #                       '1')
+
+
+            edge = ('s2', 's3')
+            self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
+            self.wait_until_link_status(edge[0], edge[1], 'down')
+            time.sleep(5)
+            edge = ('s1', 's3')
+            self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
+            self.wait_until_link_status(edge[0], edge[1], 'down')
+            time.sleep(5)
+
+            self.mininet_obj.ping([self.mininet_obj.get('h31'),
+                                   self.mininet_obj.get('h11')],
+                                  '1')
+
+            CLI(self.mininet_obj)
+
+
+            # self.mininet_obj.ping([self.mininet_obj.get('h21'),
+            #                        self.mininet_obj.get('h11')],
+            #                       '1')
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
 
