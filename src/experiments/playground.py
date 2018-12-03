@@ -45,9 +45,9 @@ class Playground(Experiment):
 
         lmbdas = list(itertools.permutations(ng.L, 2))
 
-        lmbdas = [(ng.get_link_data('s3', 's2'),
-                   ng.get_link_data('s3', 's4')
-                   )]
+        # lmbdas = [(ng.get_link_data('s3', 's2'),
+        #            ng.get_link_data('s3', 's4')
+        #            )]
 
         print lmbdas
 
