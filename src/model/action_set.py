@@ -252,7 +252,7 @@ class ActionSet:
 
         return modified_fields_dict
 
-    def get_action_set_output_action_edges(self):
+    def get_action_set_output_action_edges(self, in_port_specified_in_match):
 
         port_graph_edges = []
 
@@ -269,20 +269,26 @@ class ActionSet:
                 # If the output port is specified to be same as input port
                 if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):
 
-                    # Consider all possible ports
-                    for in_port in self.sw.ports:
+                    # If the in_port in the match was not a wildcard, you add only the edge to that port
+                    if in_port_specified_in_match != sys.maxsize:
+                        sw_port = self.sw.ports[in_port_specified_in_match]
+                        if sw_port.state == "up" and sw_port not in output_action.bucket.prior_failed_ports():
+                            port_graph_edges.append((str(in_port_specified_in_match), output_action))
+                    else:
+                        # Consider all possible ports
+                        for in_port in self.sw.ports:
 
-                        # if they are currently up
-                        if self.sw.ports[in_port].state != "up":
-                            continue
+                            # if they are currently up
+                            if self.sw.ports[in_port].state != "up":
+                                continue
 
-                        # If they are not the watch port of actions that may have come before
-                        # this action in a failover rule, because that port has failed already, no need to
-                        # add an edge going there
-                        if in_port in output_action.bucket.prior_failed_ports():
-                            continue
+                            # If they are not the watch port of actions that may have come before
+                            # this action in a failover rule, because that port has failed already, no need to
+                            # add an edge going there
+                            if in_port in output_action.bucket.prior_failed_ports():
+                                continue
 
-                        port_graph_edges.append((str(in_port), output_action))
+                            port_graph_edges.append((str(in_port), output_action))
 
                 else:
                     # Add an edge, only if the output_port is currently up
@@ -293,12 +299,18 @@ class ActionSet:
                 # If the output port is specified to be same as input port
                 if int(self.sw.network_graph.OFPP_IN) == int(output_action.out_port):
 
-                    # Consider all possible ports
-                    for in_port in self.sw.ports:
-                        # if they are currently up
-                        if self.sw.ports[in_port].state != "up":
-                            continue
-                        port_graph_edges.append((str(in_port), output_action))
+                    # If the in_port in the match was not a wildcard, you add only the edge to that port
+                    if in_port_specified_in_match != sys.maxsize:
+                        sw_port = self.sw.ports[in_port_specified_in_match]
+                        if sw_port.state == "up":
+                            port_graph_edges.append((str(sw_port), output_action))
+                    else:
+                        # Consider all possible ports
+                        for in_port in self.sw.ports:
+                            # if they are currently up
+                            if self.sw.ports[in_port].state != "up":
+                                continue
+                            port_graph_edges.append((str(in_port), output_action))
 
                 else:
                     # Add an edge, only if the output_port is currently up

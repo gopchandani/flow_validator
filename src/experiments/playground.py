@@ -26,12 +26,12 @@ class Playground(Experiment):
 
         fv = FlowValidator(ng)
         fv.init_network_port_graph()
+        #
+        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
+        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
 
-        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-
-        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
-        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h31']]
+        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
+        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
 
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
@@ -44,6 +44,11 @@ class Playground(Experiment):
         #
 
         lmbdas = list(itertools.permutations(ng.L, 2))
+
+        lmbdas = [(ng.get_link_data('s3', 's2'),
+                   ng.get_link_data('s3', 's4')
+                   )]
+
         print lmbdas
 
         s = PolicyStatement(self.nc.ng,

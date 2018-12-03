@@ -194,7 +194,7 @@ class InstructionSet:
 
         applied_port_graph_edges = []
 
-        output_actions = self.applied_action_set.get_action_set_output_action_edges()
+        output_actions = self.applied_action_set.get_action_set_output_action_edges(self.flow.match.match_field_values["in_port"])
 
         for out_port, output_action in output_actions:
 
@@ -224,7 +224,7 @@ class InstructionSet:
 
         written_port_graph_edges = []
 
-        output_actions = self.written_action_set.get_action_set_output_action_edges()
+        output_actions = self.written_action_set.get_action_set_output_action_edges(self.flow.match.match_field_values["in_port"])
 
         for out_port, output_action in output_actions:
 
