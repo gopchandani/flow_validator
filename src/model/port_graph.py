@@ -276,9 +276,6 @@ class PortGraph(object):
 
         for succ in self.get_admitted_traffic_succs(node, dst):
 
-            if node.node_id == "s2:ingress4" and succ.node_id == "s2:egress2":
-                pass
-
             enabling_edge_data = self.get_enabling_edge_data(node, succ, dst, node_at, exclude_inactive)
             if not enabling_edge_data:
                 continue

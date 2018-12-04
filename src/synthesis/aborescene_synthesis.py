@@ -240,9 +240,6 @@ class AboresceneSynthesis(object):
             print "-- Pushing at Switch:", src_sw.node_id
             for dst_sw in self.sw_intent_lists[src_sw]:
 
-                if src_sw.node_id == "s2" and dst_sw.node_id == "s3":
-                    pass
-
                 # Install the rules to put the vlan tags on for hosts that are at this destination switch
                 self.push_src_sw_vlan_push_intents(src_sw, dst_sw, flow_match)
 
