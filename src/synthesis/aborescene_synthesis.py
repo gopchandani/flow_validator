@@ -19,6 +19,7 @@ class AboresceneSynthesis(object):
         self.params = params
 
         self.dst_k_eda = None
+        self.k_eda = dict()
 
         # VLAN tag constitutes 12 bits.
         # We use 2 left most bits for representing the tree_id
@@ -192,26 +193,46 @@ class AboresceneSynthesis(object):
 
             self.install_group_flow_pair(src_sw, flow_match, sw_intent_list[i:], modified_tags[i:], 1)
 
+    def bolt_back_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
+        # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
+        modified_tags = []
+        for i in range(self.params["k"]):
+            modified_tags.append(int(dst_sw.synthesis_tag) | (i + 1 << self.num_bits_for_switches))
+
+        if src_sw.node_id == "s3" and dst_sw.node_id == "s2":
+            pass
+
+        # The bolt-back failover!
         # Need to install some more rules to handle the IN_PORT as out_port case at a higher priority
         for adjacent_sw_id, link_data in self.network_graph.get_adjacent_switch_link_data(src_sw.node_id):
 
-            sw_intent_list = deepcopy(self.sw_intent_lists[src_sw][dst_sw])
-
-            for j in range(1, len(sw_intent_list)):
+            for i in range(len(self.sw_intent_lists[src_sw][dst_sw])):
+                sw_intent_list = deepcopy(self.sw_intent_lists[src_sw][dst_sw])
 
                 # If the intent is such that it is sending the packet back out to the adjacent switch...
-                if sw_intent_list[j].out_port == link_data.link_ports_dict[src_sw.node_id]:
+                if sw_intent_list[i].out_port == link_data.link_ports_dict[src_sw.node_id]:
 
                     # Set the in_port here, this gets read by synthesis_lib!
-                    sw_intent_list[j].in_port = link_data.link_ports_dict[src_sw.node_id]
+                    sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
 
-                    for i in range(self.params["k"]-1):
+                    flow_match = deepcopy(sw_intent_list[0].flow_match)
+                    flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
 
-                        flow_match = deepcopy(sw_intent_list[0].flow_match)
-                        flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
-                        flow_match["vlan_id"] = int(dst_sw.synthesis_tag) | (i + 1 << self.num_bits_for_switches)
+                    # Find "the" index/tree whereby a packet can come from this port...
+                    # Which is to say, find the tree with the arc adj_sw -> src_sw
+                    # And then use that tree's vlan-id match criteria.
+                    for j, eda in enumerate(self.k_eda[dst_sw.node_id]):
+                        if eda.has_edge(src_sw.node_id, adjacent_sw_id):
+                            flow_match["vlan_id"] = modified_tags[j]
+                            break
 
-                        self.install_group_flow_pair(src_sw, flow_match,  sw_intent_list[i:], modified_tags[i:], 2)
+                    bolt_back_sw_intent_list = sw_intent_list[i+1:] + [sw_intent_list[i]]
+                    bolt_back_modified_tags = modified_tags[i+1:] + [modified_tags[i]]
+
+                    self.install_group_flow_pair(src_sw, flow_match,
+                                                 bolt_back_sw_intent_list,
+                                                 bolt_back_modified_tags,
+                                                 2)
 
     def install_all_group_vlan_tag_flow(self, src_sw, dst_sw):
 
@@ -246,8 +267,10 @@ class AboresceneSynthesis(object):
                 # Install flow rules for 1st ... k - 1 aborescene
                 self.install_failover_group_vlan_tag_flow(src_sw, dst_sw)
 
-                # Install the flow rules for the kth aborescene...
+                # Install the flow rules for the bolt-back case on 1st -- k -1 aborescene
+                self.bolt_back_failover_group_vlan_tag_flow(src_sw, dst_sw)
 
+                # Install the flow rules for the kth aborescene...
                 self.install_all_group_vlan_tag_flow(src_sw, dst_sw)
 
     def push_src_sw_vlan_push_intents(self, src_sw, dst_sw, flow_match):
@@ -402,6 +425,8 @@ class AboresceneSynthesis(object):
                 k_eda = []
                 for edges in self.dst_k_eda[dst_sw.node_id]:
                     k_eda.append(nx.MultiDiGraph(edges))
+
+                self.k_eda[dst_sw.node_id] = k_eda
 
                 self.record_paths(dst_sw, k_eda)
 

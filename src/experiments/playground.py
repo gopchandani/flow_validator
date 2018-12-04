@@ -29,9 +29,7 @@ class Playground(Experiment):
 
         src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-
-        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
-        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
+        lmbdas = list(itertools.permutations(ng.L, 2))
 
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
@@ -41,15 +39,18 @@ class Playground(Experiment):
         # l = tuple(ng.get_switch_link_data(sw=ng.get_node_object("s3")))
         # l = l[:-1]
         # print l
-        #
 
-        lmbdas = list(itertools.permutations(ng.L, 2))
-
+        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
+        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
         # lmbdas = [(ng.get_link_data('s3', 's1'),
         #            ng.get_link_data('s3', 's4')
         #            )]
 
-        print lmbdas
+        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
+        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h21']]
+        lmbdas = [(ng.get_link_data('s3', 's2'),
+                   ng.get_link_data('s3', 's4')
+                   )]
 
         s = PolicyStatement(self.nc.ng,
                             src_zone,
