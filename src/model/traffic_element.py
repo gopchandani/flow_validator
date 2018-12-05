@@ -109,6 +109,13 @@ class TrafficElement:
 
     def get_field_intersection(self, field1, field2):
 
+        # If either one of the fields is empty (i.e. no intervals), then there is no intersection to be had...
+        if not self.is_traffic_field_wildcard(field1) and field1.is_empty():
+            return None
+
+        if not self.is_traffic_field_wildcard(field2) and field2.is_empty():
+            return None
+
         # If either one of fields is a wildcard, other is the answer
         if self.is_traffic_field_wildcard(field1):
             return field2
@@ -258,10 +265,16 @@ class TrafficElement:
         return intersection
 
     def store_switch_modifications(self, modifications):
+        remove_has_vlan_tag_modification = False
 
         # When storing modifications, store the first one applied in the switch, with the match from the last
         # matching rule
         for modified_field in modifications:
+
+            # If the modification is to push a vlan tag, then in order for it to be recorded
+            #
+            # if modified_field == "has_vlan_tag":
+            #     pass
 
             # If the modification on this field has not been seen before, simply store it.
             if modified_field not in self.switch_modifications:
@@ -282,6 +295,14 @@ class TrafficElement:
 
                 if intersection:
                     self.switch_modifications[modified_field] = (this_modification_match, prev_modification_value_tree)
+                # else:
+                #     # Don't need to count adding of a vlan_id tag if the vlan tag already existed...
+                #     if modified_field == "vlan_id":
+                #         remove_has_vlan_tag_modification = True
+
+        # # if the flag above was set true, then remove has_vlan_tag from the modifications
+        # if remove_has_vlan_tag_modification and "has_vlan_tag" in self.modifications :
+        #     del self.switch_modifications["has_vlan_tag"]
 
     def get_orig_traffic_element(self, modifications):
 

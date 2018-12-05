@@ -145,7 +145,7 @@ class NetworkConfiguration(object):
             time.sleep(synthesis_setup_gap)
 
         if self.mininet_obj:
-            #self.mininet_obj.pingAll()
+            # self.mininet_obj.pingAll()
 
             # self.mininet_obj.ping([self.mininet_obj.get('h41'),
             #                        self.mininet_obj.get('h11')],

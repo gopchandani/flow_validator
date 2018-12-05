@@ -147,6 +147,9 @@ class SwitchPortGraph(PortGraph):
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 
+        if edge.pred.node_id == 's1:table2' and edge.succ.node_id == 's1:table3':
+            pass
+
         pred_admitted_traffic = Traffic()
 
         for ed in edge.edge_data_list:
@@ -159,7 +162,7 @@ class SwitchPortGraph(PortGraph):
                 else:
                     traffic_to_propagate.set_written_modifications_apply(True)
 
-            # Always roll-back applied modifications if th edge has any...
+            # Always roll-back applied modifications if the edge has any...
             if ed.applied_modifications:
                 ttp = traffic_to_propagate.get_orig_traffic(ed.applied_modifications)
             else:
