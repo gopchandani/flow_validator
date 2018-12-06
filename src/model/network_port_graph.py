@@ -38,7 +38,8 @@ class NetworkPortGraph(PortGraph):
                     traffic_paths = edge_sw.port_graph.get_paths(pred, succ, t, [pred], [], [])
 
                     if len(traffic_paths) == 0:
-                        raise Exception("Found traffic but no paths to back it up.")
+                        print "Found traffic but no paths to back it up."
+                        #raise Exception("Found traffic but no paths to back it up.")
                     else:
                         # IF asked to exclude in-active...
                         # As long as there a single active path and carries the te, then we are good,

@@ -107,6 +107,15 @@ class TrafficElement:
             else:
                 self.traffic_fields[field_name].chop(value, value + 1)
 
+    def get_field_num_values(self, field):
+        if self.is_traffic_field_wildcard(field):
+            return sys.maxsize
+        else:
+            total_len = 0
+            for iv in field:
+                total_len += (iv.end - iv.begin)
+            return total_len
+
     def get_field_intersection(self, field1, field2):
 
         # If either one of the fields is empty (i.e. no intervals), then there is no intersection to be had...
@@ -181,6 +190,11 @@ class TrafficElement:
                 for interval in self.traffic_fields[field_name]:
                     te.traffic_fields[field_name].chop(interval.begin, interval.end)
 
+                # If this complement traffic has a non-wildcard vlan_id, then has_vlan_tag has to be 1
+                if not self.is_traffic_field_wildcard(te.traffic_fields["vlan_id"]):
+                    te.traffic_fields["has_vlan_tag"] = IntervalTree()
+                    te.traffic_fields["has_vlan_tag"].add(Interval(1, 2))
+
                 complement_traffic_elements.append(te)
 
         return complement_traffic_elements
@@ -251,6 +265,13 @@ class TrafficElement:
 
     def get_orig_field(self, orig_traffic_element, field_name, modifications):
 
+        # Check if there is more than one values in the field that is being modified... If so,
+        # obviously it was not modified by this.
+        field_num_values = self.get_field_num_values(self.traffic_fields[field_name])
+        if field_num_values > 1 and field_num_values < sys.maxsize:
+            orig_traffic_element.traffic_fields[field_name] = self.traffic_fields[field_name]
+            return None
+
         # Check to see if the tree on this field has an intersection with value tree of what it is being modified to
         intersection = self.get_field_intersection(modifications[field_name][1], self.traffic_fields[field_name])
 
@@ -265,16 +286,10 @@ class TrafficElement:
         return intersection
 
     def store_switch_modifications(self, modifications):
-        remove_has_vlan_tag_modification = False
 
         # When storing modifications, store the first one applied in the switch, with the match from the last
         # matching rule
         for modified_field in modifications:
-
-            # If the modification is to push a vlan tag, then in order for it to be recorded
-            #
-            # if modified_field == "has_vlan_tag":
-            #     pass
 
             # If the modification on this field has not been seen before, simply store it.
             if modified_field not in self.switch_modifications:
@@ -295,14 +310,6 @@ class TrafficElement:
 
                 if intersection:
                     self.switch_modifications[modified_field] = (this_modification_match, prev_modification_value_tree)
-                # else:
-                #     # Don't need to count adding of a vlan_id tag if the vlan tag already existed...
-                #     if modified_field == "vlan_id":
-                #         remove_has_vlan_tag_modification = True
-
-        # # if the flag above was set true, then remove has_vlan_tag from the modifications
-        # if remove_has_vlan_tag_modification and "has_vlan_tag" in self.modifications :
-        #     del self.switch_modifications["has_vlan_tag"]
 
     def get_orig_traffic_element(self, modifications):
 
@@ -328,15 +335,23 @@ class TrafficElement:
                     continue
 
                 elif field_name == "vlan_id" and "has_vlan_tag" in modifications:
-                    is_modified = self.get_orig_field(orig_traffic_element, field_name, modifications)
 
+                    # Assuming that these occur in pairs, always
+                    is_modified = self.get_orig_field(orig_traffic_element, field_name, modifications)
                     if is_modified:
+
                         is_modified = self.get_orig_field(orig_traffic_element, "has_vlan_tag", modifications)
+                        if not is_modified:
+                            del modifications_used["has_vlan_tag"]
+
                     else:
                         # If ever reversing effects of push_vlan and not matching on it, while there is a modification
                         # on the has_vlan_tag as well then nullify this te. One way is to set has_vlan_tag to empty
-                        empty_field = IntervalTree()
-                        orig_traffic_element.traffic_fields["has_vlan_tag"] = empty_field
+                        orig_traffic_element.traffic_fields["has_vlan_tag"] = IntervalTree()
+
+                        # Also ensure that both of these modifications are not propagated..
+                        del modifications_used["has_vlan_tag"]
+                        del modifications_used["vlan_id"]
 
                 elif field_name == "vlan_id" and "has_vlan_tag" not in modifications:
 

@@ -131,8 +131,8 @@ class Traffic:
 
     def intersect(self, in_traffic, keep_all=False):
         traffic_intersection = Traffic()
-        for e_in in in_traffic.traffic_elements:
-            for e_self in self.traffic_elements:
+        for i, e_in in enumerate(in_traffic.traffic_elements):
+            for j, e_self in enumerate(self.traffic_elements):
                 ei = e_self.intersect(e_in)
                 if ei:
 

@@ -150,6 +150,9 @@ class SwitchPortGraph(PortGraph):
         if edge.pred.node_id == 's1:table2' and edge.succ.node_id == 's1:table3':
             pass
 
+        if edge.pred.node_id == 's1:table3' and edge.succ.node_id == 's1:egress3':
+            pass
+
         pred_admitted_traffic = Traffic()
 
         for ed in edge.edge_data_list:
