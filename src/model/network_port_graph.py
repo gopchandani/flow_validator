@@ -23,7 +23,7 @@ class NetworkPortGraph(PortGraph):
         else:
             # Each traffic element has its own edge_data, because of how it might have
             # traveled through the switch and what modifications it may have accumulated
-            for te in admitted_traffic.traffic_elements:
+            for i, te in enumerate(admitted_traffic.traffic_elements):
 
                 t = Traffic()
                 t.add_traffic_elements([te])

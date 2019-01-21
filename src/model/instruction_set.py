@@ -1,7 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
-from copy import deepcopy
-
+from traffic import Traffic
 from action_set import ActionSet
 from action_set import Action
 
@@ -212,6 +211,11 @@ class InstructionSet:
             # the out_port as in_port. Basically if you are going to bolt out of the same port where you came in
             # You HAVE to use IN_PORT as outport...
 
+            if "vlan_id" in applied_modifications or "vlan_id" in written_modifications:
+                specific_traffic = Traffic(init_wildcard=True)
+                specific_traffic.set_field(key="has_vlan_tag", value=1)
+                self.flow.applied_traffic = self.flow.applied_traffic.intersect(specific_traffic)
+
             applied_port_graph_edges.append((egress_node,
                                              (self.flow.applied_traffic,
                                               output_action,
@@ -241,6 +245,11 @@ class InstructionSet:
             # TODO: Perhaps due to quirks of software implementation self.flow.applied_traffic should not include
             # the out_port as in_port. Basically if you are going to bolt out of the same port where you came in
             # You HAVE to use IN_PORT as outport...
+
+            if "vlan_id" in applied_modifications or "vlan_id" in written_modifications:
+                specific_traffic = Traffic(init_wildcard=True)
+                specific_traffic.set_field(key="has_vlan_tag", value=1)
+                self.flow.applied_traffic = self.flow.applied_traffic.intersect(specific_traffic)
 
             written_port_graph_edges.append((egress_node,
                                              (self.flow.applied_traffic,

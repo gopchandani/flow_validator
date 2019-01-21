@@ -136,6 +136,22 @@ class PortGraph(object):
                 edge = self.get_edge(pred, curr)
 
                 pred_admitted_traffic = self.compute_edge_admitted_traffic(traffic_after_changes, edge)
+
+                if pred.node_id == 's1:table3' and dst.node_id == 's1:egress3':
+                    pass
+
+                if pred.node_id == 's1:table2' and dst.node_id == 's1:egress3':
+                    pass
+
+                if pred.node_id == 's1:table1' and dst.node_id == 's1:egress3':
+                    pass
+
+                if pred.node_id == 's1:table0' and dst.node_id == 's1:egress3':
+                    pass
+
+                if pred.node_id == 's1:ingress2' and dst.node_id == 's1:egress3':
+                    pass
+
                 self.propagate_admitted_traffic(pred, pred_admitted_traffic, curr, dst, end_to_end_modified_edges)
 
     def update_admitted_traffic(self, modified_edges, end_to_end_modified_edges):
