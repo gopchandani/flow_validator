@@ -1,5 +1,6 @@
 __author__ = 'Rakesh Kumar'
 
+from intervaltree_modified import Interval
 from traffic import Traffic
 from action_set import ActionSet
 from action_set import Action
@@ -212,9 +213,17 @@ class InstructionSet:
             # You HAVE to use IN_PORT as outport...
 
             if "vlan_id" in applied_modifications or "vlan_id" in written_modifications:
-                specific_traffic = Traffic(init_wildcard=True)
-                specific_traffic.set_field(key="has_vlan_tag", value=1)
-                self.flow.applied_traffic = self.flow.applied_traffic.intersect(specific_traffic)
+                new_applied_traffic = Traffic(init_wildcard=False)
+                filtered_te_list = []
+                for te in self.flow.applied_traffic.traffic_elements:
+                    if te.is_traffic_field_wildcard(te.traffic_fields["has_vlan_tag"]):
+                        filtered_te_list.append(te)
+                    else:
+                        if Interval(1, 2) in te.traffic_fields["has_vlan_tag"]:
+                            filtered_te_list.append(te)
+
+                new_applied_traffic.add_traffic_elements(filtered_te_list)
+                self.flow.applied_traffic = new_applied_traffic
 
             applied_port_graph_edges.append((egress_node,
                                              (self.flow.applied_traffic,
@@ -247,9 +256,17 @@ class InstructionSet:
             # You HAVE to use IN_PORT as outport...
 
             if "vlan_id" in applied_modifications or "vlan_id" in written_modifications:
-                specific_traffic = Traffic(init_wildcard=True)
-                specific_traffic.set_field(key="has_vlan_tag", value=1)
-                self.flow.applied_traffic = self.flow.applied_traffic.intersect(specific_traffic)
+                new_applied_traffic = Traffic(init_wildcard=False)
+                filtered_te_list = []
+                for te in self.flow.applied_traffic.traffic_elements:
+                    if te.is_traffic_field_wildcard(te.traffic_fields["has_vlan_tag"]):
+                        filtered_te_list.append(te)
+                    else:
+                        if Interval(1, 2) in te.traffic_fields["has_vlan_tag"]:
+                            filtered_te_list.append(te)
+
+                new_applied_traffic.add_traffic_elements(filtered_te_list)
+                self.flow.applied_traffic = new_applied_traffic
 
             written_port_graph_edges.append((egress_node,
                                              (self.flow.applied_traffic,

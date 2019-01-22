@@ -46,9 +46,9 @@ class Playground(Experiment):
         #            ng.get_link_data('s3', 's4')
         #            )]
 
-        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
-        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h21']]
-        lmbdas = [(ng.get_link_data('s1', 's2'),)]
+        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
+        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h21']]
+        # lmbdas = [(ng.get_link_data('s1', 's2'),)]
 
         s = PolicyStatement(self.nc.ng,
                             src_zone,
