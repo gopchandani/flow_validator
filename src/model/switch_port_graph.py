@@ -147,9 +147,6 @@ class SwitchPortGraph(PortGraph):
 
     def compute_edge_admitted_traffic(self, traffic_to_propagate, edge):
 
-        if edge.pred.node_id == 's1:table2' and edge.succ.node_id == 's1:table3':
-            pass
-
         pred_admitted_traffic = Traffic()
 
         for ed in edge.edge_data_list:

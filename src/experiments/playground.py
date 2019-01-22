@@ -29,7 +29,7 @@ class Playground(Experiment):
 
         src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-        lmbdas = list(itertools.permutations(ng.L, 2))
+        lmbdas = list(itertools.permutations(ng.L, 1))
 
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
@@ -46,11 +46,9 @@ class Playground(Experiment):
         #            ng.get_link_data('s3', 's4')
         #            )]
 
-        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
+        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h21']]
-        lmbdas = [(ng.get_link_data('s3', 's2'),
-                   ng.get_link_data('s3', 's4')
-                   )]
+        lmbdas = [(ng.get_link_data('s1', 's2'),)]
 
         s = PolicyStatement(self.nc.ng,
                             src_zone,
@@ -76,11 +74,11 @@ def main():
                                "num_hosts_per_switch": 1,
                                "per_switch_links": 3},
                               conf_root="configurations/",
-                              # synthesis_name="DijkstraSynthesis",
-                              # synthesis_params={"apply_group_intents_immediately": True})
-                              synthesis_name="AboresceneSynthesis",
-                              synthesis_params={"apply_group_intents_immediately": True,
-                                                "k": 3})
+                              synthesis_name="DijkstraSynthesis",
+                              synthesis_params={"apply_group_intents_immediately": True})
+                              # synthesis_name="AboresceneSynthesis",
+                              # synthesis_params={"apply_group_intents_immediately": True,
+                              #                   "k": 3})
 
     exp = Playground(nc)
     exp.trigger()
