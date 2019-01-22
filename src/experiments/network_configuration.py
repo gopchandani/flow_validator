@@ -159,13 +159,17 @@ class NetworkConfiguration(object):
             #                        self.mininet_obj.get('h11')],
             #                       '1')
 
-            edge = ('s1', 's2')
+            self.mininet_obj.ping([self.mininet_obj.get('h11'),
+                                   self.mininet_obj.get('h31')],
+                                  '1')
+
+            edge = ('s1', 's4')
             self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
             self.wait_until_link_status(edge[0], edge[1], 'down')
             time.sleep(3)
 
             self.mininet_obj.ping([self.mininet_obj.get('h11'),
-                                   self.mininet_obj.get('h21')],
+                                   self.mininet_obj.get('h31')],
                                   '1')
 
             # edge = ('s1', 's2')
