@@ -46,9 +46,9 @@ class Playground(Experiment):
         #            ng.get_link_data('s3', 's4')
         #            )]
 
-        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h31']]
-        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
-        lmbdas = [(ng.get_link_data('s1', 's4'),)]
+        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h21']]
+        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h31']]
+        lmbdas = [(ng.get_link_data('s1', 's3'),)]
 
         s = PolicyStatement(self.nc.ng,
                             src_zone,
@@ -78,7 +78,7 @@ def main():
                               # synthesis_params={"apply_group_intents_immediately": True})
                               synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True,
-                                                "k": 3})
+                                                "k": 2})
 
     exp = Playground(nc)
     exp.trigger()

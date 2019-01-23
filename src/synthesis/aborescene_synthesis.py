@@ -199,9 +199,6 @@ class AboresceneSynthesis(object):
         for i in range(self.params["k"]):
             modified_tags.append(int(dst_sw.synthesis_tag) | (i + 1 << self.num_bits_for_switches))
 
-        if src_sw.node_id == "s3" and dst_sw.node_id == "s2":
-            pass
-
         # The bolt-back failover!
         # Need to install some more rules to handle the IN_PORT as out_port case at a higher priority
         for adjacent_sw_id, link_data in self.network_graph.get_adjacent_switch_link_data(src_sw.node_id):
@@ -221,10 +218,17 @@ class AboresceneSynthesis(object):
                     # Find "the" index/tree whereby a packet can come from this port...
                     # Which is to say, find the tree with the arc adj_sw -> src_sw
                     # And then use that tree's vlan-id match criteria.
-                    for j, eda in enumerate(self.k_eda[dst_sw.node_id]):
+
+                    found_tree = False
+                    for j in xrange(i+1, len(self.k_eda[dst_sw.node_id])):
+                        eda = self.k_eda[dst_sw.node_id][j]
                         if eda.has_edge(src_sw.node_id, adjacent_sw_id):
                             flow_match["vlan_id"] = modified_tags[j]
+                            found_tree = True
                             break
+
+                    if not found_tree:
+                        continue
 
                     bolt_back_sw_intent_list = sw_intent_list[i+1:] + [sw_intent_list[i]]
                     bolt_back_modified_tags = modified_tags[i+1:] + [modified_tags[i]]

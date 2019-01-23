@@ -147,58 +147,17 @@ class NetworkConfiguration(object):
         if self.mininet_obj:
             # self.mininet_obj.pingAll()
 
-            # self.mininet_obj.ping([self.mininet_obj.get('h41'),
-            #                        self.mininet_obj.get('h11')],
-            #                       '1')
-
-            # self.mininet_obj.ping([self.mininet_obj.get('h21'),
-            #                        self.mininet_obj.get('h11')],
-            #                       '1')
-
-            # self.mininet_obj.ping([self.mininet_obj.get('h41'),
-            #                        self.mininet_obj.get('h11')],
-            #                       '1')
-
-            self.mininet_obj.ping([self.mininet_obj.get('h11'),
-                                   self.mininet_obj.get('h31')],
-                                  '1')
-
-            edge = ('s1', 's4')
-            self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
-            self.wait_until_link_status(edge[0], edge[1], 'down')
-            time.sleep(3)
-
-            self.mininet_obj.ping([self.mininet_obj.get('h11'),
-                                   self.mininet_obj.get('h31')],
-                                  '1')
-
-            # edge = ('s1', 's2')
-            # self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
-            # self.wait_until_link_status(edge[0], edge[1], 'down')
-            # time.sleep(5)
-            # edge = ('s3', 's4')
-            # self.mininet_obj.configLinkStatus(edge[0], edge[1], 'down')
-            # self.wait_until_link_status(edge[0], edge[1], 'down')
-            # time.sleep(5)
-            #
-            # self.mininet_obj.ping([self.mininet_obj.get('h41'),
-            #                        self.mininet_obj.get('h21')],
-            #                       '1')
 
             #CLI(self.mininet_obj)
 
-
-            # self.mininet_obj.ping([self.mininet_obj.get('h21'),
-            #                        self.mininet_obj.get('h11')],
-            #                       '1')
-
-            # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
+            #is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 
-            # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h31'), self.mininet_obj.get('h41'))],
-            #                                                            [('s1', 's2')])
-            # print "is_bi_connected:", is_bi_connected
+            is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h21'),
+                                                                      self.mininet_obj.get('h31'))],
+                                                                    [('s1', 's3')])
+            print "is_bi_connected:", is_bi_connected
 
     def get_ryu_switches(self):
 
@@ -653,6 +612,9 @@ class NetworkConfiguration(object):
             # Only try and break switch-switch edges
             if edge[0].startswith("h") or edge[1].startswith("h"):
                 continue
+
+            print "Failed Edge:", edge
+            print
 
             is_pingable_before_failure = self.are_all_hosts_pingable()
 
