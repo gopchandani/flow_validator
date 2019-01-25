@@ -194,13 +194,12 @@ class AboresceneSynthesis(object):
             self.install_group_flow_pair(src_sw, flow_match, sw_intent_list[i:], modified_tags[i:], 1)
 
     def bolt_back_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
+
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
         modified_tags = []
         for i in range(self.params["k"]):
             modified_tags.append(int(dst_sw.synthesis_tag) | (i + 1 << self.num_bits_for_switches))
 
-        # The bolt-back failover!
-        # Need to install some more rules to handle the IN_PORT as out_port case at a higher priority
         for adjacent_sw_id, link_data in self.network_graph.get_adjacent_switch_link_data(src_sw.node_id):
 
             for i in range(len(self.sw_intent_lists[src_sw][dst_sw])):
@@ -209,34 +208,27 @@ class AboresceneSynthesis(object):
                 # If the intent is such that it is sending the packet back out to the adjacent switch...
                 if sw_intent_list[i].out_port == link_data.link_ports_dict[src_sw.node_id]:
 
-                    # Set the in_port here, this gets read by synthesis_lib!
-                    sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
-
-                    flow_match = deepcopy(sw_intent_list[0].flow_match)
-                    flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
-
-                    # Find "the" index/tree whereby a packet can come from this port...
-                    # Which is to say, find the tree with the arc adj_sw -> src_sw
-                    # And then use that tree's vlan-id match criteria.
-
-                    found_tree = False
-                    for j in xrange(i+1, len(self.k_eda[dst_sw.node_id])):
+                    # Find the original intent from the adj_sw-> src_sw
+                    # This is equivalent to finding the tree with that arc on a lower eda
+                    # The vlan-id in the match comes from that lower eda
+                    for j in xrange(0, i):
                         eda = self.k_eda[dst_sw.node_id][j]
                         if eda.has_edge(src_sw.node_id, adjacent_sw_id):
+
+                            # Set the in_port here, this gets read by synthesis_lib!
+                            sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
+
+                            flow_match = deepcopy(sw_intent_list[i].flow_match)
+                            flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
                             flow_match["vlan_id"] = modified_tags[j]
-                            found_tree = True
+
+                            self.install_group_flow_pair(src_sw, flow_match,
+                                                         sw_intent_list,
+                                                         modified_tags,
+                                                         2)
+
+                            # This is assuming that each intent only has a single bolt-back counterpart
                             break
-
-                    if not found_tree:
-                        continue
-
-                    bolt_back_sw_intent_list = sw_intent_list[i+1:] + [sw_intent_list[i]]
-                    bolt_back_modified_tags = modified_tags[i+1:] + [modified_tags[i]]
-
-                    self.install_group_flow_pair(src_sw, flow_match,
-                                                 bolt_back_sw_intent_list,
-                                                 bolt_back_modified_tags,
-                                                 2)
 
     def install_all_group_vlan_tag_flow(self, src_sw, dst_sw):
 
