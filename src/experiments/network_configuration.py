@@ -147,16 +147,15 @@ class NetworkConfiguration(object):
         if self.mininet_obj:
             # self.mininet_obj.pingAll()
 
-
             #CLI(self.mininet_obj)
 
             is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 
-            # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'),
-            #                                                           self.mininet_obj.get('h41'))],
-            #                                                         [('s1', 's4')])
+            is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h21'),
+                                                                      self.mininet_obj.get('h31'))],
+                                                                    [('s1', 's3')])
             print "is_bi_connected:", is_bi_connected
 
     def get_ryu_switches(self):
@@ -563,7 +562,7 @@ class NetworkConfiguration(object):
 
     def is_bi_connected_manual_ping_test(self, experiment_host_pairs_to_check, edges_to_try=None):
 
-        is_bi_connected= True
+        is_bi_connected = True
 
         if not edges_to_try:
             edges_to_try = self.topo.g.edges()

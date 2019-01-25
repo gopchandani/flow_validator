@@ -195,7 +195,7 @@ class AboresceneSynthesis(object):
 
     def bolt_back_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
-        if src_sw.node_id == 's2' and dst_sw.node_id == 's4':
+        if src_sw.node_id == 's1' and dst_sw.node_id == 's3':
             pass
 
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
@@ -213,7 +213,6 @@ class AboresceneSynthesis(object):
 
                     # Find the original intent from the adj_sw-> src_sw
                     # This is equivalent to finding the tree with that arc on a lower eda
-                    # The vlan-id in the match comes from that lower eda
                     for j in xrange(0, i):
                         eda = self.k_eda[dst_sw.node_id][j]
                         if eda.has_edge(src_sw.node_id, adjacent_sw_id):
@@ -223,7 +222,9 @@ class AboresceneSynthesis(object):
 
                             flow_match = deepcopy(sw_intent_list[i].flow_match)
                             flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
-                            flow_match["vlan_id"] = modified_tags[i]
+
+                            # The match is on the base VLAN because this flow just has an IN_PORT replacement
+                            flow_match["vlan_id"] = modified_tags[0]
 
                             self.install_group_flow_pair(src_sw, flow_match,
                                                          sw_intent_list,
