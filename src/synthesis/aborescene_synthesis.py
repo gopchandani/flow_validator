@@ -195,6 +195,9 @@ class AboresceneSynthesis(object):
 
     def bolt_back_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
+        if src_sw.node_id == 's2' and dst_sw.node_id == 's4':
+            pass
+
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
         modified_tags = []
         for i in range(self.params["k"]):
@@ -220,7 +223,7 @@ class AboresceneSynthesis(object):
 
                             flow_match = deepcopy(sw_intent_list[i].flow_match)
                             flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
-                            flow_match["vlan_id"] = modified_tags[j]
+                            flow_match["vlan_id"] = modified_tags[i]
 
                             self.install_group_flow_pair(src_sw, flow_match,
                                                          sw_intent_list,
