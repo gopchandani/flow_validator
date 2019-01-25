@@ -149,14 +149,46 @@ class NetworkConfiguration(object):
 
             #CLI(self.mininet_obj)
 
-            is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts()
+            # is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 
-            is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h21'),
-                                                                      self.mininet_obj.get('h31'))],
-                                                                    [('s1', 's3')])
-            print "is_bi_connected:", is_bi_connected
+            # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h21'),
+            #                                                           self.mininet_obj.get('h31'))],
+            #                                                         [('s1', 's3')])
+
+            # print "is_bi_connected:", is_bi_connected
+
+            src_host = self.mininet_obj.get('h41')
+            dst_host = self.mininet_obj.get('h21')
+            edges = [('s3', 's4'), ('s2', 's3')]
+
+            is_pingable = self.is_host_pair_pingable(src_host, dst_host)
+
+            self.mininet_obj.configLinkStatus(edges[0][0], edges[0][1], 'down')
+            self.wait_until_link_status(edges[0][0], edges[0][1], 'down')
+            time.sleep(5)
+
+            is_pingable = self.is_host_pair_pingable(src_host, dst_host)
+
+            self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'down')
+            self.wait_until_link_status(edges[1][0], edges[1][1], 'down')
+            time.sleep(5)
+
+            is_pingable = self.is_host_pair_pingable(src_host, dst_host)
+
+            self.mininet_obj.configLinkStatus(edges[0][0], edges[0][1], 'up')
+            self.wait_until_link_status(edges[0][0], edges[0][1], 'up')
+            time.sleep(5)
+
+            is_pingable = self.is_host_pair_pingable(src_host, dst_host)
+
+            self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'up')
+            self.wait_until_link_status(edges[1][0], edges[1][1], 'up')
+            time.sleep(5)
+
+            is_pingable = self.is_host_pair_pingable(src_host, dst_host)
+
 
     def get_ryu_switches(self):
 
@@ -599,7 +631,7 @@ class NetworkConfiguration(object):
 
         return is_bi_connected
 
-    def is_bi_connected_manual_ping_test_all_hosts(self,  edges_to_try=None):
+    def is_bi_connected_manual_ping_test_all_hosts_single_link(self,  edges_to_try=None):
 
         is_bi_connected = True
 

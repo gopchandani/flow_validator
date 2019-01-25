@@ -195,9 +195,6 @@ class AboresceneSynthesis(object):
 
     def bolt_back_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
-        if src_sw.node_id == 's1' and dst_sw.node_id == 's3':
-            pass
-
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
         modified_tags = []
         for i in range(self.params["k"]):
