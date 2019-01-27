@@ -150,9 +150,9 @@ class NetworkConfiguration(object):
 
             #CLI(self.mininet_obj)
 
-            is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
+            #is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
 
-            self.is_pingable_all_two_link_failures()
+            #self.is_pingable_all_two_link_failures()
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 
@@ -162,22 +162,19 @@ class NetworkConfiguration(object):
 
             # print "is_bi_connected:", is_bi_connected
 
-            # (('s1', 's3', 1), ('s2', 's3', 1))
-            # All but s1 s2 are disconnected
-
-            # self.is_host_pair_pingable_after_two_failures(self.mininet_obj.get('h21'),
-            #                                               self.mininet_obj.get('h41'),
-            #                                               (('s3', 's4', 1), ('s1', 's3', 1)))
+            self.is_host_pair_pingable_after_two_failures(self.mininet_obj.get('h11'),
+                                                          self.mininet_obj.get('h41'),
+                                                          (('s3', 's4', 1), ('s1', 's3', 1)))
 
     def is_host_pair_pingable_after_two_failures(self, src_host, dst_host, edges):
 
-        #self.is_host_pair_pingable(src_host, dst_host)
+        self.is_host_pair_pingable(src_host, dst_host)
 
         self.mininet_obj.configLinkStatus(edges[0][0], edges[0][1], 'down')
         self.wait_until_link_status(edges[0][0], edges[0][1], 'down')
         time.sleep(5)
 
-        #self.is_host_pair_pingable(src_host, dst_host)
+        self.is_host_pair_pingable(src_host, dst_host)
 
         self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'down')
         self.wait_until_link_status(edges[1][0], edges[1][1], 'down')
