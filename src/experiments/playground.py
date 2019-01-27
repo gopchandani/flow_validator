@@ -29,7 +29,7 @@ class Playground(Experiment):
 
         src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-        lmbdas = list(itertools.permutations(ng.L, 2))
+        lmbdas = list(itertools.permutations(ng.L, 1))
 
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
