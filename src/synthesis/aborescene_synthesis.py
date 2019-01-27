@@ -195,7 +195,7 @@ class AboresceneSynthesis(object):
 
     def bolt_back_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
-        if src_sw.node_id == 's1' and dst_sw.node_id == 's3':
+        if src_sw.node_id == 's1' and dst_sw.node_id == 's2':
             pass
 
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
@@ -217,17 +217,7 @@ class AboresceneSynthesis(object):
 
                         if eda.has_edge(src_sw.node_id, adjacent_sw_id):
 
-                            if i > j:
-                                # Plain IN_PORT replacement on the base VLAN bolt-back due to openvswitch implementation
-                                # of the spec. Not doing these replacements does not even cause validation problems.
-                                # This is for the cases when returning may not be the last option
-                                # this intent is at a higher tree than than the reverse tree
-
-                                # match here is same as the rules install_failover_group_vlan_tag_flow
-                                match_vlan_id = modified_tags[0]
-                                intent_list = sw_intent_list
-                                tags = modified_tags
-                            else:
+                            if (i == self.params["k"] - 2) and (j == self.params["k"] - 1):
                                 # The last resort bolt-back, meaning all links but the one where this packet came in
                                 # have failed
                                 # In this case, you match on where the packet would presumably be, which is on
@@ -237,6 +227,17 @@ class AboresceneSynthesis(object):
                                 # You give it actions so that
                                 intent_list = sw_intent_list[i+1:] + sw_intent_list[:i] + [sw_intent_list[i]]
                                 tags = modified_tags[i+1:] + modified_tags[:i] + [modified_tags[i]]
+
+                            else:
+                                # Plain IN_PORT replacement on the base VLAN bolt-back due to openvswitch implementation
+                                # of the spec. Not doing these replacements does not even cause validation problems.
+                                # This is for the cases when returning may not be the last option
+                                # this intent is at a higher tree than than the reverse tree
+
+                                # match here is same as the rules install_failover_group_vlan_tag_flow
+                                match_vlan_id = modified_tags[0]
+                                intent_list = sw_intent_list
+                                tags = modified_tags
 
                             # Set the in_port here, this gets read by synthesis_lib!
                             sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
