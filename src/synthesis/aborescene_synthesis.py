@@ -195,9 +195,6 @@ class AboresceneSynthesis(object):
 
     def bolt_back_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
-        if src_sw.node_id == 's1' and dst_sw.node_id == 's2':
-            pass
-
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
         modified_tags = []
         for i in range(self.params["k"]):
@@ -228,6 +225,17 @@ class AboresceneSynthesis(object):
                                 intent_list = sw_intent_list[i+1:] + sw_intent_list[:i] + [sw_intent_list[i]]
                                 tags = modified_tags[i+1:] + modified_tags[:i] + [modified_tags[i]]
 
+                                # Set the in_port here, this gets read by synthesis_lib!
+                                sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
+                                flow_match = deepcopy(sw_intent_list[i].flow_match)
+                                flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
+                                flow_match["vlan_id"] = match_vlan_id
+
+                                self.install_group_flow_pair(src_sw, flow_match,
+                                                             intent_list,
+                                                             tags,
+                                                             2)
+
                             else:
                                 # Plain IN_PORT replacement on the base VLAN bolt-back due to openvswitch implementation
                                 # of the spec. Not doing these replacements does not even cause validation problems.
@@ -235,20 +243,21 @@ class AboresceneSynthesis(object):
                                 # this intent is at a higher tree than than the reverse tree
 
                                 # match here is same as the rules install_failover_group_vlan_tag_flow
-                                match_vlan_id = modified_tags[0]
-                                intent_list = sw_intent_list
-                                tags = modified_tags
+                                for ii in range(self.params["k"] - 1):
+                                    match_vlan_id = int(dst_sw.synthesis_tag) | (ii + 1 << self.num_bits_for_switches)
+                                    intent_list = sw_intent_list[ii:]
+                                    tags = modified_tags[ii:]
 
-                            # Set the in_port here, this gets read by synthesis_lib!
-                            sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
-                            flow_match = deepcopy(sw_intent_list[i].flow_match)
-                            flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
-                            flow_match["vlan_id"] = match_vlan_id
+                                    # Set the in_port here, this gets read by synthesis_lib!
+                                    sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
+                                    flow_match = deepcopy(sw_intent_list[i].flow_match)
+                                    flow_match["in_port"] = link_data.link_ports_dict[src_sw.node_id]
+                                    flow_match["vlan_id"] = match_vlan_id
 
-                            self.install_group_flow_pair(src_sw, flow_match,
-                                                         intent_list,
-                                                         tags,
-                                                         2)
+                                    self.install_group_flow_pair(src_sw, flow_match,
+                                                                 intent_list,
+                                                                 tags,
+                                                                 2)
 
                             # This is assuming that each intent only has a single bolt-back counterpart
                             break
