@@ -150,9 +150,9 @@ class NetworkConfiguration(object):
 
             #CLI(self.mininet_obj)
 
-            #is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
+            is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
 
-            #self.is_pingable_all_two_link_failures()
+            # self.is_pingable_all_two_link_failures()
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 
@@ -162,9 +162,10 @@ class NetworkConfiguration(object):
 
             # print "is_bi_connected:", is_bi_connected
 
-            self.is_host_pair_pingable_after_two_failures(self.mininet_obj.get('h11'),
-                                                          self.mininet_obj.get('h41'),
-                                                          (('s3', 's4', 1), ('s1', 's3', 1)))
+            # h1 is disconnected from everyone
+            self.is_host_pair_pingable_after_two_failures(self.mininet_obj.get('h41'),
+                                                          self.mininet_obj.get('h11'),
+                                                          (('s1', 's3', 1), ('s1', 's2', 1)))
 
     def is_host_pair_pingable_after_two_failures(self, src_host, dst_host, edges):
 

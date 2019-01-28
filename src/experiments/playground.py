@@ -78,7 +78,7 @@ def main():
                               # synthesis_params={"apply_group_intents_immediately": True})
                               synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True,
-                                                "k": 3})
+                                                "k": 2})
 
     exp = Playground(nc)
     exp.trigger()

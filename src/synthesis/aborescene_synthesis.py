@@ -195,6 +195,9 @@ class AboresceneSynthesis(object):
 
     def bolt_back_failover_group_vlan_tag_flow(self, src_sw, dst_sw):
 
+        if src_sw.node_id == 's4' and dst_sw.node_id == 's1':
+            pass
+
         # Tags: as they are applied to packets leaving on a given tree in the failover buckets.
         modified_tags = []
         for i in range(self.params["k"]):
@@ -214,16 +217,17 @@ class AboresceneSynthesis(object):
 
                         if eda.has_edge(src_sw.node_id, adjacent_sw_id):
 
-                            if (i == self.params["k"] - 2) and (j == self.params["k"] - 1):
+                            if j > i:
                                 # The last resort bolt-back, meaning all links but the one where this packet came in
                                 # have failed
                                 # In this case, you match on where the packet would presumably be, which is on
-                                # the reverse tree and you return
                                 match_vlan_id = modified_tags[j]
 
-                                # You give it actions so that
-                                intent_list = sw_intent_list[i+1:] + sw_intent_list[:i] + [sw_intent_list[i]]
-                                tags = modified_tags[i+1:] + modified_tags[:i] + [modified_tags[i]]
+                                # You try sending the packet out out the j'th tree if possible,
+                                # And add the other trees as options.
+
+                                intent_list = sw_intent_list[j:] + sw_intent_list[:j]
+                                tags = modified_tags[j:] + modified_tags[:j]
 
                                 # Set the in_port here, this gets read by synthesis_lib!
                                 sw_intent_list[i].in_port = link_data.link_ports_dict[src_sw.node_id]
