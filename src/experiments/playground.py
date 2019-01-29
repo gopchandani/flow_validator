@@ -70,15 +70,15 @@ def main():
                               "admin",
                               "admin",
                               "cliquetopo",
-                              {"num_switches": 5,
+                              {"num_switches": 4,
                                "num_hosts_per_switch": 1,
-                               "per_switch_links": 4},
+                               "per_switch_links": 3},
                               conf_root="configurations/",
                               # synthesis_name="DijkstraSynthesis",
                               # synthesis_params={"apply_group_intents_immediately": True})
                               synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True,
-                                                "k": 3})
+                                                "k": 2})
 
     exp = Playground(nc)
     exp.trigger()

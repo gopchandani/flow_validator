@@ -18,6 +18,9 @@ class AboresceneSynthesis(object):
         self.synthesis_lib = None
         self.params = params
 
+        # Semantic shift
+        self.params["k"] = self.params["k"] + 1
+
         self.dst_k_eda = None
         self.k_eda = dict()
 

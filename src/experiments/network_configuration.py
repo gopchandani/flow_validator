@@ -146,7 +146,7 @@ class NetworkConfiguration(object):
             time.sleep(synthesis_setup_gap)
 
         if self.mininet_obj:
-            # self.mininet_obj.pingAll()
+            self.mininet_obj.pingAll()
 
             #CLI(self.mininet_obj)
 
@@ -225,46 +225,6 @@ class NetworkConfiguration(object):
 
             self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'up')
             self.wait_until_link_status(edges[1][0], edges[1][1], 'up')
-            time.sleep(5)
-
-    def is_pingable_all_three_link_failures(self):
-
-        lmbdas = list(itertools.combinations_with_replacement(self.topo.g.edges(), 3))
-
-        for edges in lmbdas:
-
-            if edges[0][0].startswith("h") or edges[0][1].startswith("h"):
-                continue
-
-            if edges[1][0].startswith("h") or edges[1][1].startswith("h"):
-                continue
-
-            print edges
-
-            self.mininet_obj.configLinkStatus(edges[0][0], edges[0][1], 'down')
-            self.wait_until_link_status(edges[0][0], edges[0][1], 'down')
-            time.sleep(5)
-
-            self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'down')
-            self.wait_until_link_status(edges[1][0], edges[1][1], 'down')
-            time.sleep(5)
-
-            self.mininet_obj.configLinkStatus(edges[2][0], edges[2][1], 'down')
-            self.wait_until_link_status(edges[2][0], edges[2][1], 'down')
-            time.sleep(5)
-
-            self.are_all_hosts_pingable()
-
-            self.mininet_obj.configLinkStatus(edges[0][0], edges[0][1], 'up')
-            self.wait_until_link_status(edges[0][0], edges[0][1], 'up')
-            time.sleep(5)
-
-            self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'up')
-            self.wait_until_link_status(edges[1][0], edges[1][1], 'up')
-            time.sleep(5)
-
-            self.mininet_obj.configLinkStatus(edges[2][0], edges[2][1], 'up')
-            self.wait_until_link_status(edges[2][0], edges[2][1], 'up')
             time.sleep(5)
 
     def get_ryu_switches(self):
