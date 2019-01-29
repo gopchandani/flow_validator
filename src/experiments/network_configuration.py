@@ -150,9 +150,9 @@ class NetworkConfiguration(object):
 
             #CLI(self.mininet_obj)
 
-            #is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
+            is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
 
-            self.is_pingable_all_two_link_failures()
+            # self.is_pingable_all_two_link_failures()
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 

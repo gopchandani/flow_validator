@@ -221,6 +221,8 @@ class Playground2(Experiment):
 
     def prepare_rpc_network_graph(self):
 
+        ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+
         rpc_switches = self.prepare_rpc_switches()
         rpc_hosts = self.prepare_rpc_hosts()
         rpc_links = self.prepare_rpc_links()
@@ -323,11 +325,12 @@ def main():
                               "cliquetopo",
                               {"num_switches": 4,
                                "num_hosts_per_switch": 1,
-                               "per_switch_links": 2},
+                               "per_switch_links": 3},
                               conf_root="configurations/",
                               #synthesis_name="DijkstraSynthesis",
                               synthesis_name="AboresceneSynthesis",
-                              synthesis_params={"apply_group_intents_immediately": True})
+                              synthesis_params={"apply_group_intents_immediately": True,
+                                                "k": 1})
 
     exp = Playground2(nc)
     exp.trigger()
