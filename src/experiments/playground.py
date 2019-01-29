@@ -29,7 +29,7 @@ class Playground(Experiment):
 
         src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
-        lmbdas = list(itertools.permutations(ng.L, 1))
+        lmbdas = list(itertools.permutations(ng.L, 2))
 
         specific_traffic = Traffic(init_wildcard=True)
         specific_traffic.set_field("ethernet_type", 0x0800)
@@ -70,15 +70,15 @@ def main():
                               "admin",
                               "admin",
                               "cliquetopo",
-                              {"num_switches": 4,
+                              {"num_switches": 5,
                                "num_hosts_per_switch": 1,
-                               "per_switch_links": 3},
+                               "per_switch_links": 4},
                               conf_root="configurations/",
                               # synthesis_name="DijkstraSynthesis",
                               # synthesis_params={"apply_group_intents_immediately": True})
                               synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True,
-                                                "k": 2})
+                                                "k": 3})
 
     exp = Playground(nc)
     exp.trigger()

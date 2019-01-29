@@ -150,9 +150,9 @@ class NetworkConfiguration(object):
 
             #CLI(self.mininet_obj)
 
-            is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
+            #is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
 
-            # self.is_pingable_all_two_link_failures()
+            self.is_pingable_all_two_link_failures()
 
             # is_bi_connected = self.is_bi_connected_manual_ping_test([(self.mininet_obj.get('h11'), self.mininet_obj.get('h31'))])
 
@@ -163,9 +163,9 @@ class NetworkConfiguration(object):
             # print "is_bi_connected:", is_bi_connected
 
             # h1 is disconnected from everyone
-            self.is_host_pair_pingable_after_two_failures(self.mininet_obj.get('h41'),
-                                                          self.mininet_obj.get('h11'),
-                                                          (('s1', 's3', 1), ('s1', 's2', 1)))
+            # self.is_host_pair_pingable_after_two_failures(self.mininet_obj.get('h41'),
+            #                                               self.mininet_obj.get('h11'),
+            #                                               (('s1', 's3', 1), ('s1', 's2', 1)))
 
     def is_host_pair_pingable_after_two_failures(self, src_host, dst_host, edges):
 
@@ -197,7 +197,7 @@ class NetworkConfiguration(object):
 
     def is_pingable_all_two_link_failures(self):
 
-        lmbdas = list(itertools.permutations(self.topo.g.edges(), 2))
+        lmbdas = list(itertools.combinations_with_replacement(self.topo.g.edges(), 2))
 
         for edges in lmbdas:
 
@@ -225,6 +225,46 @@ class NetworkConfiguration(object):
 
             self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'up')
             self.wait_until_link_status(edges[1][0], edges[1][1], 'up')
+            time.sleep(5)
+
+    def is_pingable_all_three_link_failures(self):
+
+        lmbdas = list(itertools.combinations_with_replacement(self.topo.g.edges(), 3))
+
+        for edges in lmbdas:
+
+            if edges[0][0].startswith("h") or edges[0][1].startswith("h"):
+                continue
+
+            if edges[1][0].startswith("h") or edges[1][1].startswith("h"):
+                continue
+
+            print edges
+
+            self.mininet_obj.configLinkStatus(edges[0][0], edges[0][1], 'down')
+            self.wait_until_link_status(edges[0][0], edges[0][1], 'down')
+            time.sleep(5)
+
+            self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'down')
+            self.wait_until_link_status(edges[1][0], edges[1][1], 'down')
+            time.sleep(5)
+
+            self.mininet_obj.configLinkStatus(edges[2][0], edges[2][1], 'down')
+            self.wait_until_link_status(edges[2][0], edges[2][1], 'down')
+            time.sleep(5)
+
+            self.are_all_hosts_pingable()
+
+            self.mininet_obj.configLinkStatus(edges[0][0], edges[0][1], 'up')
+            self.wait_until_link_status(edges[0][0], edges[0][1], 'up')
+            time.sleep(5)
+
+            self.mininet_obj.configLinkStatus(edges[1][0], edges[1][1], 'up')
+            self.wait_until_link_status(edges[1][0], edges[1][1], 'up')
+            time.sleep(5)
+
+            self.mininet_obj.configLinkStatus(edges[2][0], edges[2][1], 'up')
+            self.wait_until_link_status(edges[2][0], edges[2][1], 'up')
             time.sleep(5)
 
     def get_ryu_switches(self):
