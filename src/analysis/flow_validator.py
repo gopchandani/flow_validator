@@ -39,39 +39,6 @@ class FlowValidator(object):
     def de_init_network_port_graph(self):
         self.port_graph.de_init_network_port_graph()
 
-    def initialize_per_link_traffic_paths(self, verbose=False):
-
-        for ld in self.network_graph.get_switch_link_data():
-            ld.traffic_paths = []
-
-        for src_h_id in self.network_graph.host_ids:
-            for dst_h_id in self.network_graph.host_ids:
-
-                if src_h_id == dst_h_id:
-                    continue
-
-                src_host_obj = self.network_graph.get_node_object(src_h_id)
-                dst_host_obj = self.network_graph.get_node_object(dst_h_id)
-
-                specific_traffic = get_specific_traffic(self.network_graph, src_h_id, dst_h_id)
-
-                path = get_active_path(self.port_graph,
-                                       specific_traffic,
-                                       src_host_obj.switch_port,
-                                       dst_host_obj.switch_port)
-
-                if path:
-
-                    if verbose:
-                        print "src_h_id:", src_h_id, "dst_h_id:", dst_h_id, "path:", path
-
-                    path_links = path.get_path_links()
-                    for ld in path_links:
-
-                        # Avoid adding the same path twice for cases when a link is repeated
-                        if path not in ld.traffic_paths:
-                            ld.traffic_paths.append(path)
-
     def port_pair_iter(self, src_zone, dst_zone):
 
         for src_port in src_zone:
@@ -181,9 +148,6 @@ class FlowValidator(object):
         return satisfies, counter_example
 
     def validate_port_pair_constraints(self, lmbda):
-
-        # Capture any changes to where the paths flow now
-        self.initialize_per_link_traffic_paths()
 
         print "Performing validation, lmbda:", lmbda
 
