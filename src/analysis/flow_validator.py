@@ -379,32 +379,37 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
         return flow_validator_pb2.PolicyViolations(violations=violations_grpc)
 
     def Initialize(self, request, context):
-        self.ng_obj = self.get_network_graph_object(request)
 
-        self.fv = FlowValidator(self.ng_obj)
-        self.fv.init_network_port_graph()
+        with Timer(verbose=True) as tt:
 
-        init_successful = 1
+            self.ng_obj = self.get_network_graph_object(request)
+            self.fv = FlowValidator(self.ng_obj)
+            self.fv.init_network_port_graph()
 
-        return flow_validator_pb2.Status(init_successful=init_successful)
+        return flow_validator_pb2.InitializeInfo(successful=True,
+                                                 time_taken=tt.secs)
 
     def ValidatePolicy(self, request, context):
 
-        policy = []
-        for policy_statement in request.policy_statements:
+        with Timer(verbose=True) as tt:
 
-            src_zone = self.get_zone(policy_statement.src_zone)
-            dst_zone = self.get_zone(policy_statement.dst_zone)
-            t = self.get_traffic(policy_statement.traffic_match)
-            c = self.get_constraints(policy_statement.constraints)
-            l = self.get_lmbdas(policy_statement.lmbdas)
+            policy = []
+            for policy_statement in request.policy_statements:
 
-            s = PolicyStatement(self.ng_obj, src_zone, dst_zone, t, c, l)
-            policy.append(s)
+                src_zone = self.get_zone(policy_statement.src_zone)
+                dst_zone = self.get_zone(policy_statement.dst_zone)
+                t = self.get_traffic(policy_statement.traffic_match)
+                c = self.get_constraints(policy_statement.constraints)
+                l = self.get_lmbdas(policy_statement.lmbdas)
 
-        violations = self.fv.validate_policy(policy)
+                s = PolicyStatement(self.ng_obj, src_zone, dst_zone, t, c, l)
+                policy.append(s)
 
-        return self.get_violations_grpc(violations)
+            violations = self.fv.validate_policy(policy)
+
+        return flow_validator_pb2.ValidatePolicyInfo(successful=True,
+                                                     time_taken=tt.secs,
+                                                     violations=violations)
 
 
 def serve():

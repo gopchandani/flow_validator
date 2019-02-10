@@ -126,12 +126,9 @@ class NetworkPortGraph(PortGraph):
 
     def init_network_port_graph(self):
 
-        with Timer(verbose=True) as t:
-            # Iterate through switches and add the ports and relevant abstract analysis
-            for sw in self.network_graph.get_switches():
-                self.add_sw_transfer_function(sw)
-
-        print "Switch transfer functions added, took:", t.secs, "seconds."
+        # Iterate through switches and add the ports and relevant abstract analysis
+        for sw in self.network_graph.get_switches():
+            self.add_sw_transfer_function(sw)
 
         # Add edges between ports on node edges, where nodes are only switches.
         for node_edge in self.network_graph.graph.edges():
@@ -170,13 +167,9 @@ class NetworkPortGraph(PortGraph):
 
     def init_network_admitted_traffic(self):
 
-        with Timer(verbose=True) as t:
-
-            # Go to each switch and find the ports that connects to other switches
-            for sw in self.network_graph.get_switches():
-                self.init_network_admitted_traffic_for_sw(sw)
-
-        print "Network admitted traffic initialized, took:", t.secs, "seconds."
+        # Go to each switch and find the ports that connects to other switches
+        for sw in self.network_graph.get_switches():
+            self.init_network_admitted_traffic_for_sw(sw)
 
     def add_node_graph_link(self, node1_id, node2_id, updating=False):
 

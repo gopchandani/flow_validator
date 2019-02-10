@@ -2,9 +2,12 @@ __author__ = 'Rakesh Kumar'
 
 import time
 
+
 class Timer(object):
     def __init__(self, verbose=False):
         self.verbose = verbose
+        self.secs = None
+        self.msecs = None
 
     def __enter__(self):
         self.start = time.time()

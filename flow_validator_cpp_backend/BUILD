@@ -1,4 +1,7 @@
 
+load("@build_stack_rules_proto//cpp:cpp_grpc_library.bzl", "cpp_grpc_library")
+#load("@build_stack_rules_proto//cpp:cpp_grpc_compile.bzl", "cpp_grpc_compile")
+
 proto_library(
     name = "flow_validator_proto",
     srcs = ["proto/flow_validator.proto"],
@@ -6,8 +9,7 @@ proto_library(
     
 )
 
-
-cc_proto_library(
+cpp_grpc_library(
     name = "flow_validator_proto_cpp",
     deps = [":flow_validator_proto"],
     visibility = ["//visibility:public"],
@@ -16,11 +18,8 @@ cc_proto_library(
 
 cc_binary (
     name="flow_validator_cpp_backend",
-    # hdrs=[
-    #     ""
-    # ],
     srcs=[
-        "src/main.cc"
+        "src/main.cc",
     ],
     deps = ["@boost//:algorithm",
         "@boost//:lexical_cast",

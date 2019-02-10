@@ -1,17 +1,24 @@
 syntax = "proto3";
 
-package FlowValidator;
+package flow_validator;
 
 service FlowValidator {
 
-  rpc Initialize(NetworkGraph) returns (Status) {}
+  rpc Initialize(NetworkGraph) returns (InitializeInfo) {}
 
-  rpc ValidatePolicy(Policy) returns (PolicyViolations) {}
+  rpc ValidatePolicy(Policy) returns (ValidatePolicyInfo) {}
 
 }
 
-message Status {
-  int32 init_successful = 1;
+message InitializeInfo {
+    bool successful = 1;
+    float time_taken = 2; 
+}
+
+message ValidatePolicyInfo {
+    bool successful = 1;
+    float time_taken = 2;
+    repeated PolicyViolation violations = 3;
 }
 
 message Port {
@@ -134,8 +141,4 @@ message PolicyViolation {
   PolicyPort dst_port = 3;
   string constraint_type = 4;
   string counter_example = 5;
-}
-
-message PolicyViolations {
-    repeated PolicyViolation violations = 1;
 }

@@ -234,13 +234,12 @@ class Playground2(Experiment):
 
     def flow_validator_initialize(self, stub):
         rpc_ng = self.prepare_rpc_network_graph()
-        status = stub.Initialize(rpc_ng)
+        init_info = stub.Initialize(rpc_ng)
 
-        if status.init_successful == 1:
-            print "Server said Init was successful"
-
-        if status.init_successful == 2:
-            print "Server said Init was not successful"
+        if init_info.successful:
+            print "Server said initialization was successful, time taken:", init_info.time_taken
+        else:
+            print "Server said initialization was not successful"
 
     def prepare_policy_statement_all_host_pair_connectivity(self):
 
@@ -295,11 +294,16 @@ class Playground2(Experiment):
 
         rpc_p = flow_validator_pb2.Policy(policy_statements=rpc_policy_statements)
 
-        rpc_policy_violations = stub.ValidatePolicy(rpc_p)
+        validate_info = stub.ValidatePolicy(rpc_p)
 
-        print "Total violations:", len(rpc_policy_violations.violations)
+        if validate_info.successful:
+            print "Server said validation was successful, time taken:", validate_info.time_taken
+        else:
+            print "Server said validation was not successful"
 
-        print rpc_policy_violations.violations
+        print "Total violations:", len(validate_info.violations)
+
+        print validate_info.violations
 
     def trigger(self):
 
