@@ -21,7 +21,8 @@ cc_binary (
     srcs=[
         "src/main.cc",
     ],
-    deps = ["@boost//:algorithm",
+    deps = ["@boost//:algorithm", 
+        "@boost//:graph",
         "@boost//:lexical_cast",
         "@boost//:program_options",
         "@boost//:exception",

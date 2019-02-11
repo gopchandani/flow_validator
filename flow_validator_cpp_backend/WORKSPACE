@@ -17,7 +17,7 @@ http_archive(
 
 git_repository(
     name = "com_github_nelhage_rules_boost",
-    commit = "6d6fd834281cb8f8e758dd9ad76df86304bf1869",
+    commit = "6b785d8da76063919daec6feb94ad30ab93b624f",
     remote = "https://github.com/nelhage/rules_boost",
 )
 
