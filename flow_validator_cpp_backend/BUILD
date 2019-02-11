@@ -16,65 +16,31 @@ cpp_grpc_library(
     
 )
 
+cc_library(
+    name="flow_validator_lib",
+    hdrs=[
+        "src/flow_validator/flow_validator.h"],
+    srcs=[
+        "src/flow_validator/flow_validator.cc"],
+
+    deps = ["@boost//:algorithm",
+            "@boost//:lexical_cast",
+            "@boost//:program_options",
+            "@boost//:exception",
+            ":flow_validator_proto_cpp"],
+    
+    copts = ["-fpermissive -Wno-reorder"],
+    visibility = ["//visibility:public"],
+    alwayslink = True,
+)
 cc_binary (
     name="flow_validator_cpp_backend",
     srcs=[
         "src/main.cc",
     ],
-    deps = ["@boost//:algorithm", 
-        "@boost//:graph",
-        "@boost//:lexical_cast",
-        "@boost//:program_options",
-        "@boost//:exception",
-        ":flow_validator_proto_cpp"],
+    deps = [":flow_validator_lib"]
 )
 
-
-
-# cc_library(
-#     name="pc_emulator_lib",
-#     hdrs=[
-#         "src/pc_emulator/include/executor.h",
-#         "src/pc_emulator/include/pc_clock.h",
-#         "src/pc_emulator/include/pc_configuration.h",
-#         "src/pc_emulator/include/pc_datatype_registry.h",
-#         "src/pc_emulator/include/pc_datatype.h",
-#         "src/pc_emulator/include/pc_logger.h",
-#         "src/pc_emulator/include/pc_mem_unit.h",
-#         "src/pc_emulator/include/pc_pou_code_container.h",
-#         "src/pc_emulator/include/pc_resource_registry.h",
-#         "src/pc_emulator/include/pc_resource.h",
-#         "src/pc_emulator/include/pc_variable.h",
-#         "src/pc_emulator/include/resource_manager.h",
-#         "src/pc_emulator/include/task.h",
-#         "src/pc_emulator/include/utils.h",
-#         "src/pc_emulator/include/elementary_datatypes.h"],
-#     srcs=[
-#         "src/pc_emulator/core/executor.cc",
-#         "src/pc_emulator/core/pc_clock.cc",
-#         "src/pc_emulator/core/pc_configuration.cc",
-#         "src/pc_emulator/core/pc_datatype_registry.cc",
-#         "src/pc_emulator/core/pc_datatype.cc",
-#         "src/pc_emulator/core/pc_logger.cc",
-#         "src/pc_emulator/core/pc_mem_unit.cc",
-#         "src/pc_emulator/core/pc_pou_code_container.cc",
-#         "src/pc_emulator/core/pc_resource_registry.cc",
-#         "src/pc_emulator/core/pc_resource.cc",
-#         "src/pc_emulator/core/pc_variable.cc",
-#         "src/pc_emulator/core/resource_manager.cc",
-#         "src/pc_emulator/core/task.cc",
-#         "src/pc_emulator/core/utils.cc"],
-
-#     deps = ["@boost//:algorithm",
-#             "@boost//:lexical_cast",
-#             "@boost//:program_options",
-#             "@boost//:exception",
-#             ":pc_configuration_cc_proto"],
-    
-#     copts = ["-fpermissive -Wno-reorder -DDIR=\"$$PWD/\""],
-#     visibility = ["//visibility:public"],
-#     alwayslink = True,
-# )
 
 # cc_test(
 #     name = "datatype_test",
