@@ -19,9 +19,13 @@ cpp_grpc_library(
 cc_library(
     name="flow_validator_lib",
     hdrs=[
-        "src/flow_validator/flow_validator.h"],
+        "src/flow_validator/flow_validator.h",
+        "src/flow_validator/switch_graph.h"
+        ],
     srcs=[
-        "src/flow_validator/flow_validator.cc"],
+        "src/flow_validator/flow_validator.cc",
+        "src/flow_validator/switch_graph.cc"
+        ],
 
     deps = ["@boost//:algorithm",
             "@boost//:lexical_cast",

@@ -3,12 +3,12 @@
 
 #include "proto/flow_validator.grpc.pb.h"
 
-using flow_validator::FlowValidator;
-using flow_validator::NetworkGraph;
-using flow_validator::Policy;
-using flow_validator::PolicyViolation;
-using flow_validator::InitializeInfo;
-using flow_validator::ValidatePolicyInfo;
+#include <iostream>
+#include <fstream>
+#include <string>
+
+using namespace flow_validator;
+using namespace std;
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -16,18 +16,15 @@ using grpc::Status;
 class FlowValidatorImpl final : public FlowValidator::Service {
  public:
     explicit FlowValidatorImpl(){
-        mem = new int[100];
     }
 
     ~FlowValidatorImpl() {
-        delete mem;
     }
 
     Status Initialize(ServerContext* , const NetworkGraph* , InitializeInfo* ) override;
     Status ValidatePolicy(ServerContext* , const Policy* , ValidatePolicyInfo* ) override;
 
  private:
-    int * mem;
 };
 
 
