@@ -1,11 +1,11 @@
 #include "flow_validator.h"
-# include "switch_graph.h"
+#include "switch_graph.h"
 
 
 Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph* ng, InitializeInfo* info) {
     cout << "Received Initialize request" << endl;
 
-    SwitchGraph sg;
+    SwitchGraph sg(ng);
     sg.print_graph();
 
     info->set_successful(true);
@@ -47,7 +47,6 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
     }
     info->set_successful(true);
     info->set_time_taken(0.1);
-
 
     return Status::OK;
 }
