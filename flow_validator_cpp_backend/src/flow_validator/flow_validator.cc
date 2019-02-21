@@ -7,6 +7,7 @@ Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph*
 
     SwitchGraph sg(ng);
     sg.print_graph();
+    sg.find_topological_path();
 
     info->set_successful(true);
     info->set_time_taken(0.1);
