@@ -326,10 +326,10 @@ def main():
                               "http://localhost:8080/",
                               "admin",
                               "admin",
-                              "cliquetopo",
+                              "ring",
                               {"num_switches": 4,
-                               "num_hosts_per_switch": 1,
-                               "per_switch_links": 3},
+                               "num_hosts_per_switch": 1},
+                               #"per_switch_links": 3}z
                               conf_root="configurations/",
                               #synthesis_name="DijkstraSynthesis",
                               synthesis_name="AboresceneSynthesis",
