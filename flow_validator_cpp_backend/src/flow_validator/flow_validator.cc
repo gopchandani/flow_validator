@@ -1,11 +1,11 @@
 #include "flow_validator.h"
-#include "switch_graph.h"
+#include "analysis_graph.h"
 
 
 Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph* ng, InitializeInfo* info) {
     cout << "Received Initialize request" << endl;
 
-    SwitchGraph sg(ng);
+    AnalysisGraph sg(ng);
     sg.print_graph();
 
     sg.find_topological_paths("h11", "h21");
