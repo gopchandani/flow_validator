@@ -41,6 +41,7 @@ class AnalysisGraph final {
      AnalysisGraph(const NetworkGraph* ng);
      ~AnalysisGraph();
      void print_graph();
+     void init_graph_per_switch(Switch);
      void find_paths_helper(Vertex, Vertex, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
      void find_paths(string, string);
 

@@ -1,46 +1,58 @@
 #include "analysis_graph.h"
 
+void AnalysisGraph::init_graph_per_switch(Switch sw) {
+
+    // Add a node for each port in the graph
+    for (int i=0; i < sw.ports_size(); i++) {    
+        string node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
+        Vertex v = add_vertex(g); 
+        AnalysisGraphNode *agn = new AnalysisGraphNode(node_id, v);
+        vertex_to_node_map[v] = agn;
+        node_id_vertex_map[node_id] = v;
+    }
+
+    // Add a node for each table in the graph
+    for (int i=0; i < sw.flow_tables_size(); i++) {
+        string node_id = sw.switch_id() + ":table" + to_string(i);
+        Vertex v = add_vertex(g); 
+        AnalysisGraphNode *agn = new AnalysisGraphNode(node_id, v);
+        vertex_to_node_map[v] = agn;
+        node_id_vertex_map[node_id] = v;
+    }
+
+}
 
 AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
-    /*
-    for (int i=0; i < ng->switches_size(); i++) {       
-        Vertex v = add_vertex(g);
-        node_id[v] = ng->switches(i).node_id();
+
+    for (int i=0; i < ng->switches_size(); i++) {
+        init_graph_per_switch(ng->switches(i));
     }
-    */
 
     for (int i=0; i < ng->links_size(); i++) {
-        // Check if the nodes already exist, if so, grab their descriptor
-        Vertex v1, v2;
-        
-        if (node_id_vertex_map.count(ng->links(i).src_node()) == 1) {
-            v1 = node_id_vertex_map[ng->links(i).src_node()];
 
-        } else {
-            v1 = add_vertex(g); 
+        Vertex s, t;
+        string src_node_id, dst_node_id;
+        src_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
+        dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
 
-            AnalysisGraphNode *agn = new AnalysisGraphNode(ng->links(i).src_node(), v1);
-            vertex_to_node_map[v1] = agn;
+        s = node_id_vertex_map[src_node_id];
+        t = node_id_vertex_map[dst_node_id];
 
-            node_id_vertex_map[ng->links(i).src_node()] = v1;
-        }
+        auto existing_edge = edge(s, t, g);
 
-        if (node_id_vertex_map.count(ng->links(i).dst_node()) == 1) {
-            v2 = node_id_vertex_map[ng->links(i).dst_node()];
-        } else {
-            v2 = add_vertex(g);
-
-            AnalysisGraphNode *agn = new AnalysisGraphNode(ng->links(i).dst_node(), v2);
-            vertex_to_node_map[v2] = agn;
-
-            node_id_vertex_map[ng->links(i).dst_node()] = v2;
-        }
-    
-        auto existing_edge = edge(v1, v2, g);
         if (!existing_edge.second) {
-            add_edge(v1, v2, g);
-            cout << "Added link:" << ng->links(i).src_node() << "<->" << ng->links(i).dst_node() << endl;
+            add_edge(s, t, g);
+            cout << "Added link:" << src_node_id << "->" << dst_node_id << endl;
         }
+
+        t = node_id_vertex_map[src_node_id];
+        s = node_id_vertex_map[dst_node_id];
+
+        existing_edge = edge(s, t, g);
+        if (!existing_edge.second) {
+            add_edge(s, t, g);
+            cout << "Added link: " << dst_node_id << "->" << src_node_id << endl;
+        }        
     }
 }
 
@@ -48,9 +60,6 @@ AnalysisGraph::~AnalysisGraph() {
 }
 
 void AnalysisGraph::print_graph() {
-    // represent graph in DOT format and send to cout
-    write_graphviz(cout, g);
-
     std::pair<vertex_iter, vertex_iter> vp;
     for (vp = vertices(g); vp.first != vp.second; ++vp.first) {
         cout << vertex_to_node_map[*vp.first]->node_id << endl;
@@ -60,7 +69,7 @@ void AnalysisGraph::print_graph() {
     std::pair<edge_iter, edge_iter> ep;
     edge_iter ei, ei_end;
     for (tie(ei, ei_end) = edges(g); ei != ei_end; ++ei) {
-        cout << vertex_to_node_map[source(*ei, g)]->node_id << " <-> "  << vertex_to_node_map[target(*ei, g)]->node_id << endl;
+        cout << vertex_to_node_map[source(*ei, g)]->node_id << " -> "  << vertex_to_node_map[target(*ei, g)]->node_id << endl;
     }
 }
 
@@ -90,7 +99,6 @@ void AnalysisGraph::find_paths(string src, string dst) {
 
     vector<vector<Vertex> > pv;
     vector<Vertex> p;
-
     vector<vector<Vertex> >::iterator pv_iter;
     vector<Vertex>::iterator p_iter;
 
@@ -108,7 +116,6 @@ void AnalysisGraph::find_paths(string src, string dst) {
 
         }
         cout << endl;
-
     }
 
 }

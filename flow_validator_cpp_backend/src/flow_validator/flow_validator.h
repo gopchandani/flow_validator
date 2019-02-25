@@ -2,6 +2,7 @@
 #define __FLOW_VALIDATOR_BACKEND_FLOW_VALIDATOR_H__
 
 #include "proto/flow_validator.grpc.pb.h"
+#include "analysis_graph.h"
 
 #include <iostream>
 #include <fstream>
@@ -15,16 +16,18 @@ using grpc::Status;
 
 class FlowValidatorImpl final : public FlowValidator::Service {
  public:
-    explicit FlowValidatorImpl(){
-    }
+      explicit FlowValidatorImpl(){
+      }
 
-    ~FlowValidatorImpl() {
-    }
+      ~FlowValidatorImpl() {
+      }
 
-    Status Initialize(ServerContext* , const NetworkGraph* , InitializeInfo* ) override;
-    Status ValidatePolicy(ServerContext* , const Policy* , ValidatePolicyInfo* ) override;
+      Status Initialize(ServerContext* , const NetworkGraph* , InitializeInfo* ) override;
+      Status ValidatePolicy(ServerContext* , const Policy* , ValidatePolicyInfo* ) override;
 
  private:
+      AnalysisGraph *ag;
+
 };
 
 
