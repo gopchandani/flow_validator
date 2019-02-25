@@ -4,6 +4,11 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
     // Add a node for each port in the graph
     for (int i=0; i < sw.ports_size(); i++) {    
+
+        if (sw.ports(i).port_num() == 4294967294) {
+            continue;
+        }
+
         string node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
         Vertex v = add_vertex(g); 
         AnalysisGraphNode *agn = new AnalysisGraphNode(node_id, v);
@@ -39,7 +44,6 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         t = node_id_vertex_map[dst_node_id];
 
         auto existing_edge = edge(s, t, g);
-
         if (!existing_edge.second) {
             add_edge(s, t, g);
             cout << "Added link:" << src_node_id << "->" << dst_node_id << endl;
