@@ -5,7 +5,7 @@ Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph*
     cout << "Received Initialize request" << endl;
 
     ag = new AnalysisGraph(ng);
-    ag->print_graph();
+    //ag->print_graph();
    
     info->set_successful(true);
     info->set_time_taken(0.1);
