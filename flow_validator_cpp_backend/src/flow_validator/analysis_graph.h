@@ -22,8 +22,6 @@ typedef graph_traits<analysis_graph>::edge_iterator edge_iter;
 typedef graph_traits<analysis_graph>::adjacency_iterator AdjacencyIterator;
 typedef iterator_property_map<vector<default_color_type>::iterator, property_map<analysis_graph, vertex_index_t>::type > PathFinderColorMap;
 
-typedef std::set<string> ids;
-
 class AnalysisGraphNode final {
     public:
         string node_id;

@@ -313,8 +313,9 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
         return zone
 
-    def get_traffic(self, traffic_match_grpc):
-        tm = Match(match_raw=traffic_match_grpc, controller="grpc", flow=self)
+    def get_traffic(self, traffic_match_grpc, using_policy_match=False):
+        tm = Match(match_raw=traffic_match_grpc, controller="grpc", flow=self,
+                   using_policy_match=using_policy_match)
         te = TrafficElement(init_match=tm)
         t = Traffic()
         t.add_traffic_elements([te])
@@ -398,7 +399,7 @@ class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
 
                 src_zone = self.get_zone(policy_statement.src_zone)
                 dst_zone = self.get_zone(policy_statement.dst_zone)
-                t = self.get_traffic(policy_statement.traffic_match)
+                t = self.get_traffic(policy_statement.policy_match, using_policy_match=True)
                 c = self.get_constraints(policy_statement.constraints)
                 l = self.get_lmbdas(policy_statement.lmbdas)
 

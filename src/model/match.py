@@ -149,7 +149,7 @@ class Match(DictMixin):
     def keys(self):
         return self.match_field_values.keys()
 
-    def __init__(self, match_raw=None, controller=None, flow=None, is_wildcard=True):
+    def __init__(self, match_raw=None, controller=None, flow=None, is_wildcard=True, using_policy_match=False):
 
         self.flow = flow
         self.match_field_values = {}
@@ -159,7 +159,7 @@ class Match(DictMixin):
         elif match_raw and controller == "ryu":
             self.add_element_from_ryu_match_raw(match_raw)
         elif match_raw and controller == "grpc":
-            self.add_element_from_grpc_match_raw(match_raw)
+            self.add_element_from_grpc_match_raw(match_raw, using_policy_match=using_policy_match)
         elif match_raw:
             raise NotImplemented
         elif is_wildcard:
@@ -167,7 +167,10 @@ class Match(DictMixin):
                 self.match_field_values[field_name] = sys.maxsize
 
     def is_match_field_wildcard(self, field_name):
-        return self.match_field_values[field_name] == sys.maxsize
+        if field_name in self.match_field_values:
+            return self.match_field_values[field_name] == sys.maxsize
+        else:
+            return True
 
     def add_element_from_onos_match_raw(self, match_raw):
 
@@ -320,14 +323,21 @@ class Match(DictMixin):
 
                 continue
 
-    def add_element_from_grpc_match_raw(self, match_raw):
+    def add_element_from_grpc_match_raw(self, match_raw, using_policy_match=False):
 
         for field_name in field_names:
 
             ryu_field_name = ryu_field_names_mapping_reverse[field_name]
 
             if ryu_field_name in match_raw.fields:
-                self[field_name] = match_raw.fields[ryu_field_name].value
+                if not using_policy_match:
+                    if ryu_field_name == "nw_src" or ryu_field_name == "nw_dst":
+                        self[field_name] = IPNetwork(match_raw.fields[ryu_field_name].value_start,
+                                                     match_raw.fields[ryu_field_name].value_end)
+                    else:
+                        self[field_name] = match_raw.fields[ryu_field_name].value_start
+                else:
+                    using_policy_match = match_raw.fields[ryu_field_name]
             else:
                 self[field_name] = sys.maxsize
 
@@ -335,7 +345,7 @@ class Match(DictMixin):
         if self["vlan_id"] != sys.maxsize:
 
             # If the value is 0x1000, that means the match is that ANY tag exists...
-            if match_raw.fields["vlan_vid"].value == 0x1000:
+            if match_raw.fields["vlan_vid"].value_start == 0x1000:
                 self["has_vlan_tag"] = 1
                 self["vlan_id"] = sys.maxsize
             else:

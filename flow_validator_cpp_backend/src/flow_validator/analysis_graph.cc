@@ -115,14 +115,13 @@ void AnalysisGraph::find_paths(string src, string dst) {
 
     map<Vertex, default_color_type> vcm;
 
+    vertex_to_node_map[node_id_vertex_map[src]]->interval_map_example();
+
     find_paths_helper(node_id_vertex_map[src], node_id_vertex_map[dst], pv, p, vcm);
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
         for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
-            
             cout << vertex_to_node_map[*p_iter]->node_id << " " ;
-            //vertex_to_node_map[*p_iter]->interval_map_example();
-
         }
         cout << endl;
     }

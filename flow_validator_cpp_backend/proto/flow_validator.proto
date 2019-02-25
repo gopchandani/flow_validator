@@ -46,12 +46,17 @@ message Group {
     repeated Bucket buckets = 3;
 }
 
-message FieldVal {
-    int64 value = 1;
+message FlowRuleMatchFieldVal {
+    int64 value_start = 1;
+    int64 value_end = 2;
 }
 
-message Match {
-    map<string, FieldVal> fields = 1;
+message PolicyMatch {
+    map<string, int64> fields = 1;
+}
+
+message FlowRuleMatch {
+    map<string, FlowRuleMatchFieldVal> fields = 1;
 }
 
 message Instruction {
@@ -62,7 +67,7 @@ message Instruction {
 
 message FlowRule {
     int32 priority = 1;
-    Match match = 2;
+    FlowRuleMatch match = 2;
     repeated Instruction instructions = 3;
 }
 
@@ -126,7 +131,7 @@ message Lmbda {
 message PolicyStatement {
   Zone src_zone = 1;
   Zone dst_zone = 2;
-  Match traffic_match = 3;
+  PolicyMatch policy_match = 3;
   repeated Constraint constraints = 4;
   repeated Lmbda lmbdas = 5;
 }

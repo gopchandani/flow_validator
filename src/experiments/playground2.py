@@ -105,7 +105,10 @@ class Playground2(Experiment):
             else:
                 field_val = 0x1000 + int(field_value)
 
-        return flow_validator_pb2.FieldVal(value=field_val)
+        if not isinstance(field_val, IPNetwork):
+            return flow_validator_pb2.FlowRuleMatchFieldVal(value_start=field_val, value_end=field_val)
+        else:
+            return flow_validator_pb2.FlowRuleMatchFieldVal(value_start=field_val.first, value_end=field_val.last)
 
     def prepare_rpc_match(self, match):
 
@@ -113,7 +116,7 @@ class Playground2(Experiment):
         for field_name, field_value in match.items():
             match_fields[field_name] = self.prepare_rpc_field_value(field_name, field_value)
 
-        rpc_match = flow_validator_pb2.Match(fields=match_fields)
+        rpc_match = flow_validator_pb2.FlowRuleMatch(fields=match_fields)
 
         return rpc_match
 
@@ -275,8 +278,8 @@ class Playground2(Experiment):
         rpc_dst_zone = flow_validator_pb2.Zone(ports=[flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1)])
 
         match_fields = dict()
-        match_fields["eth_type"] = flow_validator_pb2.FieldVal(value=0x0800)
-        rpc_traffic_match = flow_validator_pb2.Match(fields=match_fields)
+        match_fields["eth_type"] = 0x0800
+        rpc_traffic_match = flow_validator_pb2.PolicyMatch(fields=match_fields)
 
         rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
 
@@ -284,7 +287,7 @@ class Playground2(Experiment):
 
         rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
                                                                   dst_zone=rpc_dst_zone,
-                                                                  traffic_match=rpc_traffic_match,
+                                                                  policy_match=rpc_traffic_match,
                                                                   constraints=rpc_constraints,
                                                                   lmbdas=rpc_lmbdas)
 
