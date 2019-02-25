@@ -1,6 +1,8 @@
-#ifndef __FLOW_VALIDATOR_BACKEND_SWITCH_GRAPH_H__
-#define __FLOW_VALIDATOR_BACKEND_SWITCH_GRAPH_H__
+#ifndef __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
+#define __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
 
+
+#include "boost/icl/interval_map.hpp"
 #include "boost/graph/depth_first_search.hpp"
 #include "boost/graph/undirected_dfs.hpp"
 #include "boost/graph/adjacency_list.hpp"
@@ -11,15 +13,27 @@ using namespace boost;
 using namespace std;
 using namespace flow_validator;
 
-typedef property<vertex_name_t, std::string> VertexNameProperty;
-typedef adjacency_list< vecS, vecS, undirectedS, VertexNameProperty> analysis_graph;
+typedef adjacency_list< vecS, vecS, directedS> analysis_graph;
 typedef graph_traits<analysis_graph>::vertex_descriptor Vertex;
 typedef graph_traits<analysis_graph>::edge_descriptor Edge;
 typedef graph_traits<analysis_graph>::vertex_iterator vertex_iter;
 typedef graph_traits<analysis_graph>::edge_iterator edge_iter;
-typedef iterator_property_map<vector<default_color_type>::iterator, property_map<analysis_graph, vertex_index_t>::type > PathFinderColorMap;
 typedef graph_traits<analysis_graph>::adjacency_iterator AdjacencyIterator;
-typedef typename graph_traits<analysis_graph>::vertices_size_type vertices_size_type;
+typedef iterator_property_map<vector<default_color_type>::iterator, property_map<analysis_graph, vertex_index_t>::type > PathFinderColorMap;
+
+typedef std::set<string> ids;
+
+class AnalysisGraphNode final {
+    public:
+        string node_id;
+        Vertex v;
+
+        AnalysisGraphNode(string, Vertex);
+        void interval_map_example();
+
+    private:
+
+};
 
 
 class AnalysisGraph final {
@@ -31,8 +45,12 @@ class AnalysisGraph final {
      void find_paths(string, string);
 
  private:
-      analysis_graph g;
-      std::unordered_map<string, Vertex> node_id_vertex_map;
-      property_map<analysis_graph, vertex_name_t>::type node_id = get(vertex_name, g);
+     analysis_graph g;
+
+     std::unordered_map<string, Vertex> node_id_vertex_map;
+     std::unordered_map<Vertex, AnalysisGraphNode*> vertex_to_node_map;
+
 };
+
+
 #endif

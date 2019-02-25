@@ -18,16 +18,22 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
         } else {
             v1 = add_vertex(g); 
+
+            AnalysisGraphNode *agn = new AnalysisGraphNode(ng->links(i).src_node(), v1);
+            vertex_to_node_map[v1] = agn;
+
             node_id_vertex_map[ng->links(i).src_node()] = v1;
-            node_id[v1] = ng->links(i).src_node();
         }
 
         if (node_id_vertex_map.count(ng->links(i).dst_node()) == 1) {
             v2 = node_id_vertex_map[ng->links(i).dst_node()];
         } else {
             v2 = add_vertex(g);
+
+            AnalysisGraphNode *agn = new AnalysisGraphNode(ng->links(i).dst_node(), v2);
+            vertex_to_node_map[v2] = agn;
+
             node_id_vertex_map[ng->links(i).dst_node()] = v2;
-            node_id[v2] = ng->links(i).dst_node();
         }
     
         auto existing_edge = edge(v1, v2, g);
@@ -47,14 +53,14 @@ void AnalysisGraph::print_graph() {
 
     std::pair<vertex_iter, vertex_iter> vp;
     for (vp = vertices(g); vp.first != vp.second; ++vp.first) {
-        cout << node_id[*vp.first] << endl;
+        cout << vertex_to_node_map[*vp.first]->node_id << endl;
     }
 
     // Iterate through the edges and print them out
     std::pair<edge_iter, edge_iter> ep;
     edge_iter ei, ei_end;
     for (tie(ei, ei_end) = edges(g); ei != ei_end; ++ei) {
-        std::cout << node_id[source(*ei, g)] << " <-> "  << node_id[target(*ei, g)] << endl;
+        cout << vertex_to_node_map[source(*ei, g)]->node_id << " <-> "  << vertex_to_node_map[target(*ei, g)]->node_id << endl;
     }
 }
 
@@ -96,7 +102,10 @@ void AnalysisGraph::find_paths(string src, string dst) {
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
         for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
-            cout << node_id[*p_iter] << " ";
+            
+            cout << vertex_to_node_map[*p_iter]->node_id << " " ;
+            //vertex_to_node_map[*p_iter]->interval_map_example();
+
         }
         cout << endl;
 

@@ -24,6 +24,7 @@ cc_library(
         ],
     srcs=[
         "src/flow_validator/flow_validator.cc",
+        "src/flow_validator/analysis_graph_node.cc",
         "src/flow_validator/analysis_graph.cc"
         ],
 
