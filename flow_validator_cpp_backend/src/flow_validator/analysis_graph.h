@@ -1,6 +1,7 @@
 #ifndef __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
 #define __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
 
+#define CONTROLLER_PORT 4294967294
 
 #include "boost/icl/interval_map.hpp"
 #include "boost/graph/depth_first_search.hpp"

@@ -5,7 +5,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
     // Add a node for each port in the graph
     for (int i=0; i < sw.ports_size(); i++) {    
 
-        if (sw.ports(i).port_num() == 4294967294) {
+        if (sw.ports(i).port_num() == CONTROLLER_PORT) {
             continue;
         }
 
@@ -33,7 +33,12 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         init_graph_per_switch(ng->switches(i));
     }
 
+    // Add edges corresponding to the switch-switch links
     for (int i=0; i < ng->links_size(); i++) {
+
+        if (!(ng->links(i).src_node()[0] == 's' && ng->links(i).dst_node()[0] == 's')) {
+            continue;
+        }
 
         Vertex s, t;
         string src_node_id, dst_node_id;
