@@ -3,7 +3,9 @@
 void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_table) {
 
     for (int i=0; i<flow_table.flow_rules_size(); i++) {
-        Rule *r = new Rule(flow_table.flow_rules(i).priority());
+        RuleMatch *rm = new RuleMatch(flow_table.flow_rules(i).match());
+
+        Rule *r = new Rule(flow_table.flow_rules(i).priority(), rm);
         agn->rules.push(r);
     }
 }
@@ -115,7 +117,7 @@ void AnalysisGraph::find_paths_helper(Vertex v, Vertex t, vector<vector<Vertex> 
     vcm[v] = white_color;
 }
 
-void AnalysisGraph::find_paths(string src, string dst) {
+void AnalysisGraph::find_paths(string src, string dst, ) {
 
     vector<vector<Vertex> > pv;
     vector<Vertex> p;
