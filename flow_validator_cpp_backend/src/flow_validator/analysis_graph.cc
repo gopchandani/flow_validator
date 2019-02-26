@@ -1,5 +1,13 @@
 #include "analysis_graph.h"
 
+void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_table) {
+
+    for (int i=0; i<flow_table.flow_rules_size(); i++) {
+        Rule *r = new Rule(flow_table.flow_rules(i).priority());
+        agn->rules.push(r);
+    }
+}
+
 void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
     // Add a node for each port in the graph
@@ -11,7 +19,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
         string node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
         Vertex v = add_vertex(g); 
-        AnalysisGraphNode *agn = new AnalysisGraphNode(node_id, v);
+        AnalysisGraphNode *agn = new AnalysisGraphNode(node_id);
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
     }
@@ -20,7 +28,10 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
     for (int i=0; i < sw.flow_tables_size(); i++) {
         string node_id = sw.switch_id() + ":table" + to_string(i);
         Vertex v = add_vertex(g); 
-        AnalysisGraphNode *agn = new AnalysisGraphNode(node_id, v);
+        AnalysisGraphNode *agn = new AnalysisGraphNode(node_id);
+
+        init_flow_table_node(agn, sw.flow_tables(i));
+
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
     }
@@ -115,7 +126,7 @@ void AnalysisGraph::find_paths(string src, string dst) {
 
     map<Vertex, default_color_type> vcm;
 
-    vertex_to_node_map[node_id_vertex_map[src]]->interval_map_example();
+    //vertex_to_node_map[node_id_vertex_map[src]]->interval_map_example();
 
     find_paths_helper(node_id_vertex_map[src], node_id_vertex_map[dst], pv, p, vcm);
 

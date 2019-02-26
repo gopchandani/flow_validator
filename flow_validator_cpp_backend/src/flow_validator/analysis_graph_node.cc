@@ -1,8 +1,8 @@
 #include "analysis_graph.h"
 
-AnalysisGraphNode::AnalysisGraphNode(string n_id, Vertex u) {
+
+AnalysisGraphNode::AnalysisGraphNode(string n_id) {
     node_id = n_id;
-    v = u;
 }
 
 void AnalysisGraphNode::interval_map_example() {
