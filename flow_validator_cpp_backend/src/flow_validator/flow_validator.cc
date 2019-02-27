@@ -36,7 +36,13 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
                 string src_port = this_ps.src_zone().ports(j).switch_id() + ":" + to_string(this_ps.src_zone().ports(j).port_num());
                 string dst_port = this_ps.dst_zone().ports(j).switch_id() + ":" + to_string(this_ps.dst_zone().ports(j).port_num());
 
-                ag->find_paths(src_port, dst_port);
+                std::unordered_map<string, int> policy_match;
+                for (auto & p : this_ps.policy_match())
+                {
+                    policy_match[p.first] = p.second;
+                }
+
+                ag->find_paths(src_port, dst_port, policy_match);
 
                 /*
                 for (int l = 0; l <this_ps.lmbdas_size(); l++) {

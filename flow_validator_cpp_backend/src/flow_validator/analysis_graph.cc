@@ -3,9 +3,14 @@
 void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_table) {
 
     for (int i=0; i<flow_table.flow_rules_size(); i++) {
-        RuleMatch *rm = new RuleMatch(flow_table.flow_rules(i).match());
 
-        Rule *r = new Rule(flow_table.flow_rules(i).priority(), rm);
+        Rule *r = new Rule(flow_table.flow_rules(i).priority());
+
+        for (auto & p : flow_table.flow_rules(i).flow_rule_match())
+        {
+            r->flow_rule_match[p.first] = make_tuple(p.second.value_start(),  p.second.value_end());
+        }
+
         agn->rules.push(r);
     }
 }
@@ -117,7 +122,7 @@ void AnalysisGraph::find_paths_helper(Vertex v, Vertex t, vector<vector<Vertex> 
     vcm[v] = white_color;
 }
 
-void AnalysisGraph::find_paths(string src, string dst, ) {
+void AnalysisGraph::find_paths(string src, string dst, std::unordered_map<string, int> & pm) {
 
     vector<vector<Vertex> > pv;
     vector<Vertex> p;
@@ -125,6 +130,11 @@ void AnalysisGraph::find_paths(string src, string dst, ) {
     vector<Vertex>::iterator p_iter;
 
     cout << src << "->" << dst << endl;
+
+    for (auto & field : pm)
+    {
+        cout << field.first << " " << field.second << endl;
+    }
 
     map<Vertex, default_color_type> vcm;
 

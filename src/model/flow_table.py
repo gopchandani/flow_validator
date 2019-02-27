@@ -39,7 +39,7 @@ class Flow:
             self.instruction_set = InstructionSet(self.sw, self, self.flow_raw["instructions"])
         elif self.sw.network_graph.controller == "grpc":
             self.priority = self.flow_raw.priority
-            self.match = Match(match_raw=self.flow_raw.match, controller="grpc", flow=self)
+            self.match = Match(match_raw=self.flow_raw.flow_rule_match, controller="grpc", flow=self)
             self.instruction_set = InstructionSet(self.sw, self, self.flow_raw.instructions)
         else:
             raise NotImplemented

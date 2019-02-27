@@ -33,14 +33,12 @@ class AnalysisGraph final {
      void init_flow_table_node(AnalysisGraphNode *, FlowTable);
      void init_graph_per_switch(Switch);
      void find_paths_helper(Vertex, Vertex, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
-     void find_paths(string, string);
+     void find_paths(string, string, std::unordered_map<string, int> &);
 
  private:
      analysis_graph g;
-
      std::unordered_map<string, Vertex> node_id_vertex_map;
      std::unordered_map<Vertex, AnalysisGraphNode*> vertex_to_node_map;
-
 };
 
 

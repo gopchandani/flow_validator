@@ -21,22 +21,16 @@ public:
     // 3. Go back to whatever port it came from
     // 3. Modify the map that the search is carrying around immediately before going to the next node
     // 4. Accumulate modifications to the map for being applied at the last node before exiting the switch
-
-class RuleMatch {
-public:
-    std::unordered_map<string, std::tuple<int, int> > fields;
-
-    RuleMatch(const FlowRuleMatch & frm);
 };
+
 
 class Rule {
 public:
     int priority;
-    RuleMatch *match;
+    std::unordered_map<string, std::tuple<int, int> > flow_rule_match;
 
-    Rule(int p, RuleMatch * m) {
+    Rule(int p) {
         priority = p;
-        match = m;
     }
 };
 

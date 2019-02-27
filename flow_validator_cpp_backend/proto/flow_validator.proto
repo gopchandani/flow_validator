@@ -51,14 +51,6 @@ message FlowRuleMatchFieldVal {
     int64 value_end = 2;
 }
 
-message PolicyMatch {
-    map<string, int64> fields = 1;
-}
-
-message FlowRuleMatch {
-    map<string, FlowRuleMatchFieldVal> fields = 1;
-}
-
 message Instruction {
     string type = 1;
     repeated Action actions = 2;
@@ -67,7 +59,7 @@ message Instruction {
 
 message FlowRule {
     int32 priority = 1;
-    FlowRuleMatch match = 2;
+    map<string, FlowRuleMatchFieldVal> flow_rule_match = 2;
     repeated Instruction instructions = 3;
 }
 
@@ -131,7 +123,7 @@ message Lmbda {
 message PolicyStatement {
   Zone src_zone = 1;
   Zone dst_zone = 2;
-  PolicyMatch policy_match = 3;
+  map<string, int64> policy_match = 3;
   repeated Constraint constraints = 4;
   repeated Lmbda lmbdas = 5;
 }

@@ -329,15 +329,15 @@ class Match(DictMixin):
 
             ryu_field_name = ryu_field_names_mapping_reverse[field_name]
 
-            if ryu_field_name in match_raw.fields:
+            if ryu_field_name in match_raw:
                 if not using_policy_match:
                     if ryu_field_name == "nw_src" or ryu_field_name == "nw_dst":
-                        self[field_name] = IPNetwork(match_raw.fields[ryu_field_name].value_start,
-                                                     match_raw.fields[ryu_field_name].value_end)
+                        self[field_name] = IPNetwork(match_raw[ryu_field_name].value_start,
+                                                     match_raw[ryu_field_name].value_end)
                     else:
-                        self[field_name] = match_raw.fields[ryu_field_name].value_start
+                        self[field_name] = match_raw[ryu_field_name].value_start
                 else:
-                    using_policy_match = match_raw.fields[ryu_field_name]
+                    using_policy_match = match_raw[ryu_field_name]
             else:
                 self[field_name] = sys.maxsize
 
@@ -345,7 +345,7 @@ class Match(DictMixin):
         if self["vlan_id"] != sys.maxsize:
 
             # If the value is 0x1000, that means the match is that ANY tag exists...
-            if match_raw.fields["vlan_vid"].value_start == 0x1000:
+            if match_raw["vlan_vid"].value_start == 0x1000:
                 self["has_vlan_tag"] = 1
                 self["vlan_id"] = sys.maxsize
             else:

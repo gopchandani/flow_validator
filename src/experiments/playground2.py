@@ -116,9 +116,7 @@ class Playground2(Experiment):
         for field_name, field_value in match.items():
             match_fields[field_name] = self.prepare_rpc_field_value(field_name, field_value)
 
-        rpc_match = flow_validator_pb2.FlowRuleMatch(fields=match_fields)
-
-        return rpc_match
+        return match_fields
 
     def prepare_rpc_instructions(self, instructions):
         rpc_instructions = []
@@ -171,7 +169,7 @@ class Playground2(Experiment):
                 for flow_rule in flow_table:
                     rpc_flow_rule = flow_validator_pb2.FlowRule(
                         priority=int(flow_rule["priority"]),
-                        match=self.prepare_rpc_match(flow_rule["match"]),
+                        flow_rule_match=self.prepare_rpc_match(flow_rule["match"]),
                         instructions=self.prepare_rpc_instructions(flow_rule["instructions"]))
 
                     rpc_flow_rules.append(rpc_flow_rule)
@@ -277,9 +275,8 @@ class Playground2(Experiment):
         rpc_src_zone = flow_validator_pb2.Zone(ports=[flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)])
         rpc_dst_zone = flow_validator_pb2.Zone(ports=[flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1)])
 
-        match_fields = dict()
-        match_fields["eth_type"] = 0x0800
-        rpc_traffic_match = flow_validator_pb2.PolicyMatch(fields=match_fields)
+        policy_match = dict()
+        policy_match["eth_type"] = 0x0800
 
         rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
 
@@ -287,7 +284,7 @@ class Playground2(Experiment):
 
         rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
                                                                   dst_zone=rpc_dst_zone,
-                                                                  policy_match=rpc_traffic_match,
+                                                                  policy_match=policy_match,
                                                                   constraints=rpc_constraints,
                                                                   lmbdas=rpc_lmbdas)
 
