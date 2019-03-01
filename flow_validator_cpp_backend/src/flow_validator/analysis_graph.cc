@@ -4,14 +4,20 @@ void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_
 
     for (int i=0; i<flow_table.flow_rules_size(); i++) {
 
+        // Initialize a Rule
         Rule *r = new Rule(flow_table.flow_rules(i).priority());
 
-        for (auto & p : flow_table.flow_rules(i).flow_rule_match())
-        {
+        // Populate the flow rule match
+        for (auto & p : flow_table.flow_rules(i).flow_rule_match()) {
             r->flow_rule_match[p.first] = make_tuple(p.second.value_start(),  p.second.value_end());
         }
-
         agn->rules.push(r);
+
+        // Populate the rule effects
+        for (int i = 0; i < flow_table.flow_rules(i).instructions_size(); i++) {
+            RuleEffect rule_effect (flow_table.flow_rules(i).instructions(i));
+            r->rule_effects.push_back(rule_effect);
+        }
     }
 }
 

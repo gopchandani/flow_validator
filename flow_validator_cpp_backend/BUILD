@@ -19,6 +19,7 @@ cpp_grpc_library(
 cc_library(
     name="flow_validator_lib",
     hdrs=[
+        "src/flow_validator/of_constants.h",
         "src/flow_validator/flow_validator.h",
         "src/flow_validator/rule.h",
         "src/flow_validator/analysis_graph_node.h",

@@ -28,7 +28,7 @@ class Playground2(Experiment):
 
             if action["type"] == "SET_FIELD" and "field" in action and "value" in action:
                 rpc_action.modified_field = action["field"]
-                rpc_action.modified_value = str(action["value"])
+                rpc_action.modified_value = int(action["value"])
 
             if action["type"] == "GROUP" and "group_id" in action:
                 rpc_action.group_id = int(action["group_id"])

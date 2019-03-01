@@ -2,7 +2,7 @@
 #define __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
 
 #define CONTROLLER_PORT 4294967294
-
+#define OUT_TO_IN_PORT 4294967293
 
 #include "boost/icl/interval_map.hpp"
 #include "boost/graph/depth_first_search.hpp"
@@ -12,6 +12,7 @@
 #include "proto/flow_validator.grpc.pb.h"
 
 #include "analysis_graph_node.h"
+#include "of_constants.h"
 
 using namespace boost;
 using namespace std;
