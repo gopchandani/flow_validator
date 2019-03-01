@@ -21,12 +21,14 @@ cc_library(
     hdrs=[
         "src/flow_validator/of_constants.h",
         "src/flow_validator/flow_validator.h",
+        "src/flow_validator/rule_effect.h",
         "src/flow_validator/rule.h",
         "src/flow_validator/analysis_graph_node.h",
         "src/flow_validator/analysis_graph.h"
         ],
     srcs=[
         "src/flow_validator/flow_validator.cc",
+        "src/flow_validator/rule_effect.cc",
         "src/flow_validator/rule.cc",
         "src/flow_validator/analysis_graph_node.cc",
         "src/flow_validator/analysis_graph.cc"
