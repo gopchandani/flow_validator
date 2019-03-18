@@ -2,7 +2,6 @@
 #define __FLOW_VALIDATOR_BACKEND_RULE_EFFECT_H__
 
 #include "of_constants.h"
-//#include "analysis_graph.h"
 #include "proto/flow_validator.grpc.pb.h"
 #include <unordered_map>
 #include <tuple>
@@ -11,6 +10,7 @@ using namespace std;
 using namespace flow_validator;
 
 class AnalysisGraph;
+class AnalysisGraphNode;
 
 class RuleEffect {
 public:
@@ -27,12 +27,14 @@ public:
     // ---- Picking of the next node
     // Goto the node representing the next table
     // Goto an output port (as the only option or as failover)
-    //AnalysisGraphNode *next_node;
+    AnalysisGraphNode *next_node;
 
     // Go back to whatever port it came from
     bool bolt_back;
 
-    RuleEffect(Instruction, AnalysisGraph *, string); 
+    RuleEffect(); 
+    RuleEffect(AnalysisGraph *, Instruction,  string); 
+
 };
 
 #endif

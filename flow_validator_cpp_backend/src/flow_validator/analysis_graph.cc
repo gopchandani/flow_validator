@@ -4,6 +4,7 @@
 #include "rule_effect.h"
 #include "analysis_graph_node.h"
 
+
 void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_table, string switch_id) {
 
     for (int i=0; i<flow_table.flow_rules_size(); i++) {
@@ -15,13 +16,14 @@ void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_
         for (auto & p : flow_table.flow_rules(i).flow_rule_match()) {
             r->flow_rule_match[p.first] = make_tuple(p.second.value_start(),  p.second.value_end());
         }
-        agn->rules.push(r);
 
         // Populate the rule effects
         for (int i = 0; i < flow_table.flow_rules(i).instructions_size(); i++) {
-            RuleEffect rule_effect (flow_table.flow_rules(i).instructions(i), this, switch_id);
+            RuleEffect rule_effect (this, flow_table.flow_rules(i).instructions(i), switch_id);
             r->rule_effects.push_back(rule_effect);
         }
+
+        agn->rules.push(r);
     }
 }
 
@@ -37,8 +39,13 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
         string node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
         Vertex v = add_vertex(g); 
         AnalysisGraphNode *agn = new AnalysisGraphNode(node_id);
+
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
+    }
+
+    for (int i=0; i < sw.group_table_size(); i++) {
+        cout << "Group Id: " << sw.group_table(i).id() << " Group Type: " << sw.group_table(i).type() << endl;
     }
 
     // Add a node for each table in the graph
@@ -89,8 +96,21 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         if (!existing_edge.second) {
             add_edge(s, t, g);
             cout << "Added link: " << dst_node_id << "->" << src_node_id << endl;
-        }        
+        }
+
+        AnalysisGraphNode *src_node = vertex_to_node_map[s];
+        AnalysisGraphNode *dst_node = vertex_to_node_map[t];
+
+        // Initialize a rule 
+        Rule *r = new Rule(1);
+
+        // Populate the rule effects
+        RuleEffect *re = new RuleEffect();
+        re->next_node = dst_node;
+        r->rule_effects.push_back(*re);
+        src_node->rules.push(r);
     }
+
 }
 
 AnalysisGraph::~AnalysisGraph() {
@@ -147,6 +167,7 @@ void AnalysisGraph::find_paths(string src, string dst, std::unordered_map<string
     }
 
     map<Vertex, default_color_type> vcm;
+
 
     find_paths_helper(node_id_vertex_map[src], node_id_vertex_map[dst], pv, p, vcm);
 
