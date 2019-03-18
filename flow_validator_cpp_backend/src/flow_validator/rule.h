@@ -10,6 +10,7 @@
 using namespace std;
 using namespace flow_validator;
 
+class RuleEffect;
 
 class Rule {
 public:
@@ -22,13 +23,5 @@ public:
     }
 };
 
-class LessThanByPriority
-{
-public:
-    bool operator()(const Rule* lhs, const Rule* rhs) const
-    {
-        return lhs->priority < rhs->priority;
-    }
-};
 
 #endif

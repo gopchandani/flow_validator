@@ -1,6 +1,10 @@
 #include "analysis_graph.h"
 
-void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_table) {
+#include "rule.h"
+#include "rule_effect.h"
+#include "analysis_graph_node.h"
+
+void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_table, string switch_id) {
 
     for (int i=0; i<flow_table.flow_rules_size(); i++) {
 
@@ -15,7 +19,7 @@ void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_
 
         // Populate the rule effects
         for (int i = 0; i < flow_table.flow_rules(i).instructions_size(); i++) {
-            RuleEffect rule_effect (flow_table.flow_rules(i).instructions(i));
+            RuleEffect rule_effect (flow_table.flow_rules(i).instructions(i), this, switch_id);
             r->rule_effects.push_back(rule_effect);
         }
     }
@@ -43,7 +47,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
         Vertex v = add_vertex(g); 
         AnalysisGraphNode *agn = new AnalysisGraphNode(node_id);
 
-        init_flow_table_node(agn, sw.flow_tables(i));
+        init_flow_table_node(agn, sw.flow_tables(i), sw.switch_id());
 
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
@@ -143,8 +147,6 @@ void AnalysisGraph::find_paths(string src, string dst, std::unordered_map<string
     }
 
     map<Vertex, default_color_type> vcm;
-
-    //vertex_to_node_map[node_id_vertex_map[src]]->interval_map_example();
 
     find_paths_helper(node_id_vertex_map[src], node_id_vertex_map[dst], pv, p, vcm);
 
