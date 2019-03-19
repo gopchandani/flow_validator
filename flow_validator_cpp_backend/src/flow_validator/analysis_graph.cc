@@ -23,7 +23,7 @@ void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_
             r->rule_effects.push_back(rule_effect);
         }
 
-        agn->rules.push(r);
+        agn->rules.push_back(r);
     }
 }
 
@@ -42,6 +42,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
+
     }
 
     for (int i=0; i < sw.group_table_size(); i++) {
@@ -58,6 +59,19 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
+    }
+
+    // Add Rules to each port's node to get all packets to table 0
+    for (int i=0; i < sw.ports_size(); i++) {    
+
+        if (sw.ports(i).port_num() == CONTROLLER_PORT) {
+            continue;
+        }
+
+        string src_node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
+        string dst_node_id = sw.switch_id() + ":table0";
+        
+        add_wildcard_rule(vertex_to_node_map[node_id_vertex_map[src_node_id]], vertex_to_node_map[node_id_vertex_map[dst_node_id]]);
     }
 
 }
@@ -101,16 +115,22 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         AnalysisGraphNode *src_node = vertex_to_node_map[s];
         AnalysisGraphNode *dst_node = vertex_to_node_map[t];
 
-        // Initialize a rule 
-        Rule *r = new Rule(1);
-
-        // Populate the rule effects
-        RuleEffect *re = new RuleEffect();
-        re->next_node = dst_node;
-        r->rule_effects.push_back(*re);
-        src_node->rules.push(r);
+        add_wildcard_rule(src_node, dst_node);
     }
 
+}
+
+void AnalysisGraph::add_wildcard_rule(AnalysisGraphNode *src_node, AnalysisGraphNode *dst_node) {
+    // Initialize a rule 
+    Rule *r = new Rule(1);
+
+    // Populate the rule effects
+    RuleEffect *re = new RuleEffect();
+    re->next_node = dst_node;
+    r->rule_effects.push_back(*re);
+    src_node->rules.push_back(r);
+
+    cout << src_node->node_id << " " << src_node->rules.size() << endl;
 }
 
 AnalysisGraph::~AnalysisGraph() {
@@ -130,8 +150,11 @@ void AnalysisGraph::print_graph() {
     }
 }
 
-void AnalysisGraph::find_paths_helper(Vertex v, Vertex t, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) 
+void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) 
 {
+    AnalysisGraphNode *agn = vertex_to_node_map[v];
+    cout << "node_id:" << agn->node_id << endl;
+
     p.push_back(v);
     vcm[v] = black_color;
 
@@ -140,12 +163,30 @@ void AnalysisGraph::find_paths_helper(Vertex v, Vertex t, vector<vector<Vertex> 
 
     } else
     {
+        cout << "Rules Size:" << agn->rules.size() << endl;
+
+        // Get all the rules from this node
+        for (uint i=0; i < agn->rules.size(); i++) {
+            cout << "Rule Match:" << endl;
+
+            flow_rule_match_t::iterator it;
+
+            for (it = agn->rules[i]->flow_rule_match.begin(); it != agn->rules[i]->flow_rule_match.end(); it++)
+            {
+                cout << it->first << " " << get<0>(it->second) << get<1>(it->second) << endl;
+            }
+
+        }
+        
+ /*
         AdjacencyIterator ai, a_end;         
         for (tie(ai, a_end) = adjacent_vertices(v, g); ai != a_end; ++ai) {
             if (vcm[*ai] == white_color) {
-                find_paths_helper(*ai, t, pv, p, vcm);
+                find_packet_paths(*ai, t, pv, p, vcm);
             } 
         }
+*/
+
     }
 
     p.pop_back();
@@ -159,8 +200,6 @@ void AnalysisGraph::find_paths(string src, string dst, std::unordered_map<string
     vector<vector<Vertex> >::iterator pv_iter;
     vector<Vertex>::iterator p_iter;
 
-    cout << src << "->" << dst << endl;
-
     for (auto & field : pm)
     {
         cout << field.first << " " << field.second << endl;
@@ -168,8 +207,9 @@ void AnalysisGraph::find_paths(string src, string dst, std::unordered_map<string
 
     map<Vertex, default_color_type> vcm;
 
-
-    find_paths_helper(node_id_vertex_map[src], node_id_vertex_map[dst], pv, p, vcm);
+    cout << "Path: " << src << "->" << dst << endl;
+    find_packet_paths(node_id_vertex_map[src], node_id_vertex_map[dst], pv, p, vcm);
+    
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
         for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {

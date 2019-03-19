@@ -18,7 +18,9 @@ public:
 class AnalysisGraphNode final {
 public:
     string node_id;
-    std::priority_queue<Rule*, std::vector<Rule*>, LessThanByPriority> rules;
+    //std::priority_queue<Rule*, std::vector<Rule*>, LessThanByPriority> rules;
+
+    vector<Rule*> rules;
 
     AnalysisGraphNode(string);
 

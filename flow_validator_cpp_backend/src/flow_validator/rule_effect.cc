@@ -26,6 +26,7 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
                 cout << "Group Id: " << i.actions(k).group_id() << endl;
             } else
             if (i.actions(k).type() == "PUSH_VLAN") {
+
                 
             } else
             if (i.actions(k).type() == "SET_FIELD") {
@@ -44,6 +45,11 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
     }
     else 
     if (i.type() == "GOTO_TABLE") {
+        cout << "go_to_table_num:" << i.go_to_table_num() << endl;
+        
+        string node_id = switch_id + ":table" + to_string(i.go_to_table_num());
+        next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[node_id]];
+
     }
     
 }
