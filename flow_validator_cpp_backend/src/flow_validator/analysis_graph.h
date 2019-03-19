@@ -9,6 +9,7 @@
 #include "proto/flow_validator.grpc.pb.h"
 
 #include "of_constants.h"
+#include "rule.h"
 
 using namespace boost;
 using namespace std;
@@ -32,7 +33,7 @@ class AnalysisGraph final {
      void add_wildcard_rule(AnalysisGraphNode *, AnalysisGraphNode *);
      void init_flow_table_node(AnalysisGraphNode *, FlowTable, string);
      void init_graph_per_switch(Switch);
-     void find_packet_paths(Vertex, Vertex, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
+     void find_packet_paths(Vertex, Vertex, flow_rule_match_t*, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
      void find_paths(string, string, std::unordered_map<string, int> &);
 
      analysis_graph g;

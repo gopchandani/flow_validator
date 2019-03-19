@@ -23,6 +23,9 @@ public:
     Rule(int p) {
         priority = p;
     }
+
+    flow_rule_match_t* get_resulting_flow_rule_match(flow_rule_match_t*);
+
 };
 
 
