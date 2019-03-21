@@ -30,6 +30,8 @@ class AnalysisGraph final {
      AnalysisGraph(const NetworkGraph* ng);
      ~AnalysisGraph();
      void print_graph();
+     uint64_t convert_mac_str_to_uint64(string);
+
      void add_wildcard_rule(AnalysisGraphNode *, AnalysisGraphNode *);
      void init_flow_table_node(AnalysisGraphNode *, FlowTable, string);
      void init_graph_per_switch(Switch);
@@ -38,6 +40,8 @@ class AnalysisGraph final {
      void find_paths(string, string, policy_match_t &);
 
      analysis_graph g;
+
+     std::unordered_map<string, Host> hosts;
      std::unordered_map<string, Vertex> node_id_vertex_map;
      std::unordered_map<Vertex, AnalysisGraphNode*> vertex_to_node_map;
 

@@ -10,8 +10,8 @@
 using namespace std;
 using namespace flow_validator;
 
-typedef std::unordered_map<string, std::tuple<int, int> > flow_rule_match_t;
-typedef std::unordered_map<string, int> policy_match_t;
+typedef std::unordered_map<string, std::tuple<uint64_t, uint64_t> > flow_rule_match_t;
+typedef std::unordered_map<string, uint64_t> policy_match_t;
 
 class RuleEffect;
 

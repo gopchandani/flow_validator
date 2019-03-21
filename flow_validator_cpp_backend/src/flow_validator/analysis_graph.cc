@@ -82,10 +82,35 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         init_graph_per_switch(ng->switches(i));
     }
 
+    for (int i=0; i < ng->hosts_size(); i++) {
+        cout << "Host: " << ng->hosts(i).host_name() << " " << ng->hosts(i).host_ip() << " " << ng->hosts(i).host_mac() << endl;
+        hosts[ng->hosts(i).host_name()] = ng->hosts(i);
+    }
+
     // Add edges corresponding to the switch-switch links
     for (int i=0; i < ng->links_size(); i++) {
 
         if (!(ng->links(i).src_node()[0] == 's' && ng->links(i).dst_node()[0] == 's')) {
+            
+            string switch_port_node_id;
+            AnalysisGraphNode *switch_port_node;
+            Host *host_node;
+
+            if (ng->links(i).src_node()[0] != 's') {
+                host_node = &hosts[ng->links(i).src_node()];
+                switch_port_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
+            }
+
+            if (ng->links(i).dst_node()[0] != 's') {
+                host_node = &hosts[ng->links(i).dst_node()];
+                switch_port_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
+            }
+
+            cout << "switch_port_node_id:" << switch_port_node_id << endl;
+            cout << "Host: " << host_node->host_name() << " " << host_node->host_ip() << " " << host_node->host_mac() << endl;
+
+            switch_port_node = vertex_to_node_map[node_id_vertex_map[switch_port_node_id]];
+            switch_port_node->connected_host = host_node;
             continue;
         }
 
@@ -194,13 +219,26 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
     vcm[v] = white_color;
 }
 
-void AnalysisGraph::populate_policy_match(AnalysisGraphNode *src_node, AnalysisGraphNode *dst_node, policy_match_t & pm) {
+uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
+  // Remove colons
+  mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
 
-    //pm["ethernet_source"] = ;
-    //pm["ethernet_destination"] = ;
+  // Convert to uint64_t
+  return strtoul(mac.c_str(), NULL, 16);
+}
+
+void AnalysisGraph::populate_policy_match(AnalysisGraphNode *src_node, AnalysisGraphNode *dst_node, policy_match_t & pm) {
 
     pm["in_port"] = src_node->port_num;
     pm["has_vlan_tag"] = 0;
+
+    if (src_node->connected_host) {
+        pm["ethernet_source"] = convert_mac_str_to_uint64(src_node->connected_host->host_mac());
+    }
+
+    if (dst_node->connected_host) {
+        pm["ethernet_destination"] = convert_mac_str_to_uint64(dst_node->connected_host->host_mac());
+    }
 }
 
 void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {

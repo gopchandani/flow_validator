@@ -5,13 +5,13 @@
 #include "rule.h"
 
 using namespace std;
-
+using namespace flow_validator;
 
 class AnalysisGraphNode final {
 public:
     string node_id;
     uint64_t port_num;
-    
+    Host *connected_host;
 
     vector<Rule*> rules;
 
