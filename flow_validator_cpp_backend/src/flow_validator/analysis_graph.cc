@@ -150,7 +150,7 @@ void AnalysisGraph::print_graph() {
     }
 }
 
-void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, flow_rule_match_t* match_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) 
+void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
     cout << "node_id:" << agn->node_id << endl;
@@ -163,13 +163,23 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, flow_rule_match_t* mat
 
     } else
     {
-        cout << "Rules Size:" << agn->rules.size() << endl;
-
-        // Get all the rules from this node
+        // Go through each rule at this node 
         for (uint i=0; i < agn->rules.size(); i++) {
-            flow_rule_match_t* match_out = agn->rules[i]->get_resulting_flow_rule_match(match_in);
-        }
-        
+
+            // if the rule allows the packets to proceed, follow its effects
+            policy_match_t* pm_out = agn->rules[i]->get_resulting_flow_rule_match(pm_in);
+            if (pm_out) {
+
+                for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
+                {
+                    cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
+                    find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
+                }
+
+                // Only match a single rule in a given node
+                break;
+            }
+        }     
  /*
         AdjacencyIterator ai, a_end;         
         for (tie(ai, a_end) = adjacent_vertices(v, g); ai != a_end; ++ai) {
@@ -178,14 +188,13 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, flow_rule_match_t* mat
             } 
         }
 */
-
     }
 
     p.pop_back();
     vcm[v] = white_color;
 }
 
-void AnalysisGraph::find_paths(string src, string dst, std::unordered_map<string, int> & pm) {
+void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     vector<vector<Vertex> > pv;
     vector<Vertex> p;
@@ -200,9 +209,8 @@ void AnalysisGraph::find_paths(string src, string dst, std::unordered_map<string
     map<Vertex, default_color_type> vcm;
 
     cout << "Path: " << src << "->" << dst << endl;
-    flow_rule_match_t *match_in = new flow_rule_match_t;
 
-    find_packet_paths(node_id_vertex_map[src], node_id_vertex_map[dst], match_in, pv, p, vcm);
+    find_packet_paths(node_id_vertex_map[src], node_id_vertex_map[dst], &pm, pv, p, vcm);
     
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {

@@ -33,8 +33,8 @@ class AnalysisGraph final {
      void add_wildcard_rule(AnalysisGraphNode *, AnalysisGraphNode *);
      void init_flow_table_node(AnalysisGraphNode *, FlowTable, string);
      void init_graph_per_switch(Switch);
-     void find_packet_paths(Vertex, Vertex, flow_rule_match_t*, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
-     void find_paths(string, string, std::unordered_map<string, int> &);
+     void find_packet_paths(Vertex, Vertex, policy_match_t *, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
+     void find_paths(string, string, policy_match_t &);
 
      analysis_graph g;
      std::unordered_map<string, Vertex> node_id_vertex_map;
