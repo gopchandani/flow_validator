@@ -34,6 +34,7 @@ class AnalysisGraph final {
      void init_flow_table_node(AnalysisGraphNode *, FlowTable, string);
      void init_graph_per_switch(Switch);
      void find_packet_paths(Vertex, Vertex, policy_match_t *, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
+     void populate_policy_match(AnalysisGraphNode *, AnalysisGraphNode *, policy_match_t &);
      void find_paths(string, string, policy_match_t &);
 
      analysis_graph g;

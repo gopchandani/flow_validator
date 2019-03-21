@@ -38,7 +38,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
         string node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
         Vertex v = add_vertex(g); 
-        AnalysisGraphNode *agn = new AnalysisGraphNode(node_id);
+        AnalysisGraphNode *agn = new AnalysisGraphNode(node_id, sw.ports(i).port_num());
 
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
@@ -194,7 +194,24 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
     vcm[v] = white_color;
 }
 
+void AnalysisGraph::populate_policy_match(AnalysisGraphNode *src_node, AnalysisGraphNode *dst_node, policy_match_t & pm) {
+
+    //pm["ethernet_source"] = ;
+    //pm["ethernet_destination"] = ;
+
+    pm["in_port"] = src_node->port_num;
+    pm["has_vlan_tag"] = 0;
+}
+
 void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
+
+    Vertex s, t;
+    s = node_id_vertex_map[src];
+    t = node_id_vertex_map[dst];
+    AnalysisGraphNode *src_node = vertex_to_node_map[s];
+    AnalysisGraphNode *dst_node = vertex_to_node_map[t];
+
+    populate_policy_match(src_node, dst_node, pm);
 
     vector<vector<Vertex> > pv;
     vector<Vertex> p;
@@ -210,8 +227,7 @@ void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     cout << "Path: " << src << "->" << dst << endl;
 
-    find_packet_paths(node_id_vertex_map[src], node_id_vertex_map[dst], &pm, pv, p, vcm);
-    
+    //find_packet_paths(s, t, &pm, pv, p, vcm);
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
         for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
