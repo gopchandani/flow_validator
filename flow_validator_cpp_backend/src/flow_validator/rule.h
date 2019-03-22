@@ -25,7 +25,7 @@ public:
         priority = p;
     }
 
-    policy_match_t* get_resulting_flow_rule_match(policy_match_t*);
+    policy_match_t* get_resulting_policy_match(policy_match_t*);
 
 };
 

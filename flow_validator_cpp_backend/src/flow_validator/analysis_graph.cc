@@ -24,12 +24,15 @@ void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_
 
         // Populate the rule effects
         for (int i = 0; i < flow_table.flow_rules(i).instructions_size(); i++) {
-            RuleEffect rule_effect (this, flow_table.flow_rules(i).instructions(i), switch_id);
+            RuleEffect rule_effect(this, flow_table.flow_rules(i).instructions(i), switch_id);
             r->rule_effects.push_back(rule_effect);
         }
 
+        cout << "# rule match fields: " << r->flow_rule_match.size() << " # rule effects: " << r->rule_effects.size() <<endl;
         agn->rules.push_back(r);
     }
+
+    cout << "Flow Table Node: " << agn->node_id << " Total Flow Rules: " << agn->rules.size() << endl;
 }
 
 void AnalysisGraph::init_graph_per_switch(Switch sw) {
@@ -59,11 +62,14 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
         string node_id = sw.switch_id() + ":table" + to_string(i);
         Vertex v = add_vertex(g); 
         AnalysisGraphNode *agn = new AnalysisGraphNode(node_id);
-
-        init_flow_table_node(agn, sw.flow_tables(i), sw.switch_id());
-
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
+    }
+
+    for (int i=0; i < sw.flow_tables_size(); i++) {
+        string node_id = sw.switch_id() + ":table" + to_string(i);
+        AnalysisGraphNode *agn = vertex_to_node_map[node_id_vertex_map[node_id]];
+        init_flow_table_node(agn, sw.flow_tables(i), sw.switch_id());
     }
 
     // Add Rules to each port's node to get all packets to table 0
@@ -199,10 +205,8 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
             cout << "Trying rule:" << i << endl;
 
             // if the rule allows the packets to proceed, follow its effects
-            policy_match_t* pm_out = agn->rules[i]->get_resulting_flow_rule_match(pm_in);
+            policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                cout << "here2" << endl;
-
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
                     cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
@@ -213,7 +217,6 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
                 break;
             } else
             {
-                cout << "here3" << endl;
             }
         }    
  /*

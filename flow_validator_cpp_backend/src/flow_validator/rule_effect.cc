@@ -1,5 +1,6 @@
 #include "rule_effect.h"
 #include "analysis_graph.h"
+#include "analysis_graph_node.h"
 
 RuleEffect::RuleEffect() {
 }
@@ -44,11 +45,11 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
     if (i.type() == "WRITE_ACTIONS") {
     }
     else 
-    if (i.type() == "GOTO_TABLE") {
-        cout << "go_to_table_num:" << i.go_to_table_num() << endl;
-        
+    if (i.type() == "GOTO_TABLE") {        
         string node_id = switch_id + ":table" + to_string(i.go_to_table_num());
         next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[node_id]];
+
+        cout << "go_to_table_num: " << i.go_to_table_num() << " node_id:" << node_id << " next_node:" << next_node->node_id << endl;
 
     }
     
