@@ -15,6 +15,11 @@ void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_
         // Populate the flow rule match
         for (auto & p : flow_table.flow_rules(i).flow_rule_match()) {
             r->flow_rule_match[p.first] = make_tuple(p.second.value_start(),  p.second.value_end());
+
+            // For matching on VLAN-ID, having vlan tag is a must.
+            if (p.first == "vlan_vid") {
+                r->flow_rule_match["has_vlan_tag"] = make_tuple(1, 2);
+            }
         }
 
         // Populate the rule effects
@@ -155,6 +160,7 @@ void AnalysisGraph::add_wildcard_rule(AnalysisGraphNode *src_node, AnalysisGraph
     r->rule_effects.push_back(*re);
     src_node->rules.push_back(r);
 
+    cout << "wildcard:" << src_node->node_id << "->" << dst_node->node_id << endl;
     cout << src_node->node_id << " " << src_node->rules.size() << endl;
 }
 
@@ -190,10 +196,12 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
     {
         // Go through each rule at this node 
         for (uint i=0; i < agn->rules.size(); i++) {
+            cout << "Trying rule:" << i << endl;
 
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_flow_rule_match(pm_in);
             if (pm_out) {
+                cout << "here2" << endl;
 
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
@@ -203,8 +211,11 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
 
                 // Only match a single rule in a given node
                 break;
+            } else
+            {
+                cout << "here3" << endl;
             }
-        }     
+        }    
  /*
         AdjacencyIterator ai, a_end;         
         for (tie(ai, a_end) = adjacent_vertices(v, g); ai != a_end; ++ai) {
@@ -265,7 +276,7 @@ void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     cout << "Path: " << src << "->" << dst << endl;
 
-    //find_packet_paths(s, t, &pm, pv, p, vcm);
+    find_packet_paths(s, t, &pm, pv, p, vcm);
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
         for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
