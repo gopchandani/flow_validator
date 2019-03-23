@@ -32,6 +32,12 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
 
         cout << "# rule match fields: " << r->flow_rule_match.size() << " # rule effects: " << r->rule_effects.size() <<endl;
         agn->rules.push_back(r);
+
+        sort( agn->rules.begin( ), agn->rules.end( ), [ ]( const Rule* lhs, const Rule* rhs )
+        {
+            return lhs->priority > rhs->priority;
+        });
+        
     }
 
     cout << "Flow Table Node: " << agn->node_id << " Total Flow Rules: " << agn->rules.size() << endl;
@@ -193,7 +199,7 @@ void AnalysisGraph::print_graph() {
 void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
-    cout << "node_id:" << agn->node_id << endl;
+    cout << "-- node_id:" << agn->node_id << endl;
 
     p.push_back(v);
     vcm[v] = black_color;
@@ -205,19 +211,21 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
     {
         // Go through each rule at this node 
         for (uint i=0; i < agn->rules.size(); i++) {
-            cout << "Trying rule:" << i << endl;
+            cout << "Trying rule:" << i << " priority:" <<  agn->rules[i]->priority <<endl;
 
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
+                cout << "Matched a rule" << endl;
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
                     if (agn->rules[i]->rule_effects[j].next_node) {
-                        cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
+                        cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id;
+                        cout << " bolt_back: " << agn->rules[i]->rule_effects[j].bolt_back << endl;
                         find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
                     }
                 }
-
+                
                 // Only match a single rule in a given node
                 break;
             } else
