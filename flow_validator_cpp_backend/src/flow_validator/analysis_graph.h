@@ -33,7 +33,7 @@ class AnalysisGraph final {
      uint64_t convert_mac_str_to_uint64(string);
 
      void add_wildcard_rule(AnalysisGraphNode *, AnalysisGraphNode *);
-     void init_flow_table_node(AnalysisGraphNode *, FlowTable, string);
+     void init_flow_table_rules(AnalysisGraphNode *, FlowTable, string);
      void init_graph_per_switch(Switch);
      void find_packet_paths(Vertex, Vertex, policy_match_t *, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
      void populate_policy_match(AnalysisGraphNode *, AnalysisGraphNode *, policy_match_t &);

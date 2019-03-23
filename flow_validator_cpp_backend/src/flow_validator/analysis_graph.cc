@@ -5,7 +5,9 @@
 #include "analysis_graph_node.h"
 
 
-void AnalysisGraph::init_flow_table_node(AnalysisGraphNode *agn, FlowTable flow_table, string switch_id) {
+void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow_table, string switch_id) {
+
+    cout << "init_flow_table_rules for node: " << agn->node_id << endl;
 
     for (int i=0; i<flow_table.flow_rules_size(); i++) {
 
@@ -59,7 +61,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
     // Add a node for each table in the graph
     for (int i=0; i < sw.flow_tables_size(); i++) {
-        string node_id = sw.switch_id() + ":table" + to_string(i);
+        string node_id = sw.switch_id() + ":table" + to_string(sw.flow_tables(i).table_num());
         Vertex v = add_vertex(g); 
         AnalysisGraphNode *agn = new AnalysisGraphNode(node_id);
         vertex_to_node_map[v] = agn;
@@ -67,9 +69,10 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
     }
 
     for (int i=0; i < sw.flow_tables_size(); i++) {
-        string node_id = sw.switch_id() + ":table" + to_string(i);
+        string node_id = sw.switch_id() + ":table" + to_string(sw.flow_tables(i).table_num());
         AnalysisGraphNode *agn = vertex_to_node_map[node_id_vertex_map[node_id]];
-        init_flow_table_node(agn, sw.flow_tables(i), sw.switch_id());
+        cout << "Going to call:" << agn->node_id << " " << node_id << endl;
+        init_flow_table_rules(agn, sw.flow_tables(i), sw.switch_id());
     }
 
     // Add Rules to each port's node to get all packets to table 0
@@ -209,8 +212,10 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
             if (pm_out) {
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
-                    cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
-                    find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
+                    if (agn->rules[i]->rule_effects[j].next_node) {
+                        cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
+                        find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
+                    }
                 }
 
                 // Only match a single rule in a given node

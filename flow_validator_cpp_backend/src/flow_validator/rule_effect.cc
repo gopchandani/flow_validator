@@ -6,7 +6,8 @@ RuleEffect::RuleEffect() {
 }
 
 RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
-
+    next_node = NULL;
+    
     if (i.type() == "APPLY_ACTIONS") {
         for (int k=0; k<i.actions_size(); k++)
         {
