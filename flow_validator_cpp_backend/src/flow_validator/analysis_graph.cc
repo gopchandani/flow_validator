@@ -16,7 +16,8 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
 
         // Populate the flow rule match
         for (auto & p : flow_table.flow_rules(i).flow_rule_match()) {
-            r->flow_rule_match[p.first] = make_tuple(p.second.value_start(),  p.second.value_end());
+            cout << p.first << " " << p.second.value_start() << " " << p.second.value_end() + 1 <<endl;
+            r->flow_rule_match[p.first] = make_tuple(p.second.value_start(),  p.second.value_end() + 1);
 
             // For matching on VLAN-ID, having vlan tag is a must.
             if (p.first == "vlan_vid") {
@@ -25,8 +26,8 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
         }
 
         // Populate the rule effects
-        for (int i = 0; i < flow_table.flow_rules(i).instructions_size(); i++) {
-            RuleEffect rule_effect(this, flow_table.flow_rules(i).instructions(i), switch_id);
+        for (int j = 0; j < flow_table.flow_rules(i).instructions_size(); j++) {
+            RuleEffect rule_effect(this, flow_table.flow_rules(i).instructions(j), switch_id);
             r->rule_effects.push_back(rule_effect);
         }
 
@@ -215,7 +216,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                cout << "Matched a rule" << endl;
+                cout << "Matched the rule" << endl;
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
                     if (agn->rules[i]->rule_effects[j].next_node) {
@@ -230,6 +231,8 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
                 break;
             } else
             {
+                cout << "Didin't match the rule" << endl;
+
             }
         }    
  /*
@@ -260,11 +263,11 @@ void AnalysisGraph::populate_policy_match(AnalysisGraphNode *src_node, AnalysisG
     pm["has_vlan_tag"] = 0;
 
     if (src_node->connected_host) {
-        pm["ethernet_source"] = convert_mac_str_to_uint64(src_node->connected_host->host_mac());
+        pm["eth_src"] = convert_mac_str_to_uint64(src_node->connected_host->host_mac());
     }
 
     if (dst_node->connected_host) {
-        pm["ethernet_destination"] = convert_mac_str_to_uint64(dst_node->connected_host->host_mac());
+        pm["eth_dst"] = convert_mac_str_to_uint64(dst_node->connected_host->host_mac());
     }
 }
 

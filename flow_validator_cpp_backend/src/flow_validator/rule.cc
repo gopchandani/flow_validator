@@ -15,9 +15,9 @@ policy_match_t* Rule::get_resulting_policy_match(policy_match_t* match_in) {
             // Do a range test, if any of the range tests fail, return NULL
             cout << it->first << " " << get<0>(it->second) << " " << get<1>(it->second) << " " << (*match_in)[it->first] << endl;
 
-            if (!((*match_in)[it->first] >= get<0>(it->second) && (*match_in)[it->first] < get<1>(it->second))) {
+            if ( (*match_in)[it->first] < get<0>(it->second) || (*match_in)[it->first] >= get<1>(it->second)) {
                 return NULL;
-            } 
+            }
         }
     }
     return match_out;
