@@ -217,11 +217,23 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
                 cout << "Matched the rule" << endl;
+                
+                //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
+                    policy_match_t::iterator it;
+                    for (it = agn->rules[i]->rule_effects[j].packet_modifications.begin(); 
+                        it != agn->rules[i]->rule_effects[j].packet_modifications.end(); 
+                        it++)
+                    {
+                        cout << "Applying modification on the field: " << it->first << " to become: " << it->second << endl;
+                        (*pm_out)[it->first] = it->second;
+                    }
+
                     if (agn->rules[i]->rule_effects[j].next_node) {
                         cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
                         find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
+
                     } else if(agn->rules[i]->rule_effects[j].bolt_back == true) {
                         cout << " bolt_back: " << agn->rules[i]->rule_effects[j].bolt_back << endl;
                     }
@@ -231,8 +243,6 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
                 break;
             } else
             {
-                cout << "Didin't match the rule" << endl;
-
             }
         }    
  /*

@@ -1,6 +1,7 @@
 #ifndef __FLOW_VALIDATOR_BACKEND_RULE_EFFECT_H__
 #define __FLOW_VALIDATOR_BACKEND_RULE_EFFECT_H__
 
+#include "common_types.h"
 #include "of_constants.h"
 #include "proto/flow_validator.grpc.pb.h"
 #include <unordered_map>
@@ -17,7 +18,7 @@ public:
     // Things that happen once a rule matches:
 
     // -- Make direct modifications to the packet itself
-    std::unordered_map<string, int> packet_modifications;
+    policy_match_t packet_modifications;
 
     // ---- Management of the action set
     // TODO

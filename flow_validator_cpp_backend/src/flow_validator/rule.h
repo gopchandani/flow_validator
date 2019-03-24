@@ -4,14 +4,10 @@
 #include "of_constants.h"
 #include "proto/flow_validator.grpc.pb.h"
 #include "rule_effect.h"
-#include <unordered_map>
-#include <tuple>
+#include "common_types.h"
 
 using namespace std;
 using namespace flow_validator;
-
-typedef std::unordered_map<string, std::tuple<uint64_t, uint64_t> > flow_rule_match_t;
-typedef std::unordered_map<string, uint64_t> policy_match_t;
 
 class RuleEffect;
 

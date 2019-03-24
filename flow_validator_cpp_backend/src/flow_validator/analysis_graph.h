@@ -5,6 +5,7 @@
 #include "boost/graph/graphviz.hpp"
 #include "proto/flow_validator.grpc.pb.h"
 
+#include "common_types.h"
 #include "of_constants.h"
 #include "rule.h"
 

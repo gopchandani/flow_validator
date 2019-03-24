@@ -20,6 +20,7 @@ cc_library(
     name="flow_validator_lib",
     hdrs=[
         "src/flow_validator/of_constants.h",
+        "src/flow_validator/common_types.h",
         "src/flow_validator/flow_validator.h",
         "src/flow_validator/rule_effect.h",
         "src/flow_validator/rule.h",

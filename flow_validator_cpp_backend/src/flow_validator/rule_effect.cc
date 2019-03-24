@@ -35,8 +35,7 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
                 cout << "Group Id: " << i.actions(k).group_id() << endl;
             } else
             if (i.actions(k).type() == "PUSH_VLAN") {
-
-                
+                packet_modifications["has_vlan_tag"] = 1;
             } else
             if (i.actions(k).type() == "SET_FIELD") {
                 cout << "Set Field: " << i.actions(k).modified_field() << endl;
@@ -44,7 +43,7 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
                 packet_modifications[i.actions(k).modified_field()] =  i.actions(k).modified_value();
             } else
             if (i.actions(k).type() == "POP_VLAN") {
-
+                packet_modifications["has_vlan_tag"] = 0;
             } 
         }
     }
