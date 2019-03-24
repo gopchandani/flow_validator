@@ -77,7 +77,6 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
     for (int i=0; i < sw.flow_tables_size(); i++) {
         string node_id = sw.switch_id() + ":table" + to_string(sw.flow_tables(i).table_num());
         AnalysisGraphNode *agn = vertex_to_node_map[node_id_vertex_map[node_id]];
-        cout << "Going to call:" << agn->node_id << " " << node_id << endl;
         init_flow_table_rules(agn, sw.flow_tables(i), sw.switch_id());
     }
 
@@ -220,9 +219,10 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
                     if (agn->rules[i]->rule_effects[j].next_node) {
-                        cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id;
-                        cout << " bolt_back: " << agn->rules[i]->rule_effects[j].bolt_back << endl;
+                        cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
                         find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
+                    } else if(agn->rules[i]->rule_effects[j].bolt_back == true) {
+                        cout << " bolt_back: " << agn->rules[i]->rule_effects[j].bolt_back << endl;
                     }
                 }
                 

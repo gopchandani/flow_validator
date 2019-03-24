@@ -7,7 +7,9 @@ RuleEffect::RuleEffect() {
 
 RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
     next_node = NULL;
-    
+    bolt_back = false;
+
+
     if (i.type() == "APPLY_ACTIONS") {
         for (int k=0; k<i.actions_size(); k++)
         {
@@ -18,7 +20,11 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
                 if (i.actions(k).output_port_num() == OUT_TO_IN_PORT) {
                     cout << "InPort" << endl;
                     bolt_back = true;
-                } else {
+                } else if (i.actions(k).output_port_num() == CONTROLLER_PORT) {
+                    cout << "Controller" << endl;
+                }
+                else 
+                {
                     string node_id =  switch_id + ":" + to_string(i.actions(k).output_port_num());
                     next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[node_id]];
                 }

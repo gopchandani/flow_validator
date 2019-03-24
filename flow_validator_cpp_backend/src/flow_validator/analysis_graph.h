@@ -1,9 +1,6 @@
 #ifndef __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
 #define __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
 
-#define CONTROLLER_PORT 4294967294
-#define OUT_TO_IN_PORT 4294967293
-
 #include "boost/graph/adjacency_list.hpp"
 #include "boost/graph/graphviz.hpp"
 #include "proto/flow_validator.grpc.pb.h"
