@@ -7,6 +7,7 @@ RuleEffect::RuleEffect() {
 
 RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
     next_node = NULL;
+    group_effect = NULL;
     bolt_back = false;
 
 
@@ -30,7 +31,10 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
                 }
             } else 
             if (i.actions(k).type() == "GROUP") {
-                cout << "Group Id: " << i.actions(k).group_id() << endl;
+                string group_key = switch_id + ":" + to_string(i.actions(k).group_id());
+                cout << "Group Key: " << group_key << endl;
+                group_effect = ag->group_effects[group_key];
+
             } else
             if (i.actions(k).type() == "PUSH_VLAN") {
                 packet_modifications["has_vlan_tag"] = 1;

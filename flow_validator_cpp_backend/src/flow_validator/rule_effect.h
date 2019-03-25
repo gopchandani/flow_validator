@@ -12,6 +12,7 @@ using namespace flow_validator;
 
 class AnalysisGraph;
 class AnalysisGraphNode;
+class GroupEffect;
 
 class RuleEffect {
 public:
@@ -25,9 +26,11 @@ public:
     // Add things to action set
     // Remove all things in the action set
 
+    // ---- Apply the effects of going to a group
+    GroupEffect *group_effect;
+
     // ---- Picking of the next node
-    // Goto the node representing the next table
-    // Goto an output port (as the only option or as failover)
+    // Go to the node representing the next table or output port
     AnalysisGraphNode *next_node;
 
     // Go back to whatever port it came from
