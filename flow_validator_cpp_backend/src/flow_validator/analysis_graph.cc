@@ -1,9 +1,8 @@
 #include "analysis_graph.h"
-
 #include "rule.h"
 #include "rule_effect.h"
 #include "analysis_graph_node.h"
-
+#include "group_effect.h"
 
 void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow_table, string switch_id) {
 
@@ -63,7 +62,8 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
     }
 
     for (int i=0; i < sw.group_table_size(); i++) {
-        cout << "Group Id: " << sw.group_table(i).id() << " Group Type: " << sw.group_table(i).type() << endl;
+        auto *g = new GroupEffect(sw, sw.group_table(i));
+        group_effects[g->group_key] = g;
     }
 
     // Add a node for each table in the graph

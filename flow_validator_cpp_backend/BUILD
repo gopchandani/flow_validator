@@ -23,6 +23,7 @@ cc_library(
         "src/flow_validator/common_types.h",
         "src/flow_validator/flow_validator.h",
         "src/flow_validator/rule_effect.h",
+        "src/flow_validator/group_effect.h",
         "src/flow_validator/rule.h",
         "src/flow_validator/analysis_graph_node.h",
         "src/flow_validator/analysis_graph.h"
@@ -30,6 +31,7 @@ cc_library(
     srcs=[
         "src/flow_validator/flow_validator.cc",
         "src/flow_validator/rule_effect.cc",
+        "src/flow_validator/group_effect.cc",
         "src/flow_validator/rule.cc",
         "src/flow_validator/analysis_graph_node.cc",
         "src/flow_validator/analysis_graph.cc"

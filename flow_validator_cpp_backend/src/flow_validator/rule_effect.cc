@@ -15,7 +15,6 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
         {
             cout << i.actions(k).type() << endl;
             if (i.actions(k).type() == "OUTPUT") {
-                
                 if (i.actions(k).output_port_num() == OUT_TO_IN_PORT) {
                     cout << "InPort" << endl;
                     bolt_back = true;
@@ -29,7 +28,6 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
                     string node_id =  switch_id + ":" + to_string(i.actions(k).output_port_num());
                     next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[node_id]];
                 }
-
             } else 
             if (i.actions(k).type() == "GROUP") {
                 cout << "Group Id: " << i.actions(k).group_id() << endl;

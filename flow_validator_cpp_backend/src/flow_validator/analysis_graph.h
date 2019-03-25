@@ -22,6 +22,7 @@ typedef graph_traits<analysis_graph>::adjacency_iterator AdjacencyIterator;
 typedef iterator_property_map<vector<default_color_type>::iterator, property_map<analysis_graph, vertex_index_t>::type > PathFinderColorMap;
 
 class AnalysisGraphNode;
+class GroupEffect;
 
 class AnalysisGraph final {
  public:
@@ -40,8 +41,12 @@ class AnalysisGraph final {
      analysis_graph g;
 
      std::unordered_map<string, Host> hosts;
+     std::unordered_map<string, GroupEffect*> group_effects;
+     
      std::unordered_map<string, Vertex> node_id_vertex_map;
      std::unordered_map<Vertex, AnalysisGraphNode*> vertex_to_node_map;
+
+     
 
  private:
 
