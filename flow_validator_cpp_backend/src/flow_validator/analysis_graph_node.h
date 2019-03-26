@@ -12,6 +12,7 @@ public:
     string node_id;
     uint64_t port_num;
     Host *connected_host;
+    bool is_live;
 
     vector<Rule*> rules;
 

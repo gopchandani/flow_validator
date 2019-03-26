@@ -62,7 +62,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
     }
 
     for (int i=0; i < sw.group_table_size(); i++) {
-        auto *g = new GroupEffect(sw, sw.group_table(i));
+        auto *g = new GroupEffect(sw, sw.group_table(i), this);
         group_effects[g->group_key] = g;
     }
 
@@ -216,11 +216,13 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                cout << "Matched the rule" << endl;
+                cout << "Matched the rule with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
                 
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
+                    //policy_match_t* pm_out = agn->rules[i]->rule_effects[j].get_modified_policy_match(pm_out);
+
                     policy_match_t::iterator it;
                     for (it = agn->rules[i]->rule_effects[j].packet_modifications.begin(); 
                         it != agn->rules[i]->rule_effects[j].packet_modifications.end(); 
@@ -230,12 +232,49 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
                         (*pm_out)[it->first] = it->second;
                     }
 
-                    if (agn->rules[i]->rule_effects[j].next_node) {
+                    cout << (agn->rules[i]->rule_effects[j].next_node != NULL) << endl;
+                    cout << (agn->rules[i]->rule_effects[j].bolt_back == true) << endl;
+                    cout << (agn->rules[i]->rule_effects[j].group_effect != NULL) << endl;
+
+                    if (agn->rules[i]->rule_effects[j].next_node != NULL) {
                         cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
                         find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
-
-                    } else if(agn->rules[i]->rule_effects[j].bolt_back == true) {
+                    } 
+                    else
+                    if(agn->rules[i]->rule_effects[j].bolt_back == true) 
+                    {
                         cout << " bolt_back: " << agn->rules[i]->rule_effects[j].bolt_back << endl;
+                    }  
+                    else
+                    if(agn->rules[i]->rule_effects[j].group_effect != NULL) 
+                    {
+                        cout << "group_effect: " << agn->rules[i]->rule_effects[j].group_effect << endl;
+                        cout << "group_effect key: " << agn->rules[i]->rule_effects[j].group_effect->group_key << endl;
+
+                        auto active_rule_effects = agn->rules[i]->rule_effects[j].group_effect->get_active_rule_effects();
+                        cout << "active_rule_effects: " << active_rule_effects.size() << endl;
+                        
+                        for (uint k=0; k < active_rule_effects.size(); j++)
+                        {
+                            policy_match_t::iterator it;
+                            for (it = active_rule_effects[k].packet_modifications.begin(); 
+                                it != active_rule_effects[k].packet_modifications.end(); 
+                                it++)
+                            {
+                                cout << "Applying modification on the field: " << it->first << " to become: " << it->second << endl;
+                                (*pm_out)[it->first] = it->second;
+                            }
+
+                            if (active_rule_effects[k].next_node != NULL) {
+                                cout << "next_node: " << active_rule_effects[k].next_node->node_id << endl;
+                                find_packet_paths(node_id_vertex_map[active_rule_effects[k].next_node->node_id], t, pm_out, pv, p, vcm);
+                            } 
+                            else
+                            if(active_rule_effects[k].bolt_back == true) 
+                            {
+                                cout << "bolt_back: " << active_rule_effects[k].bolt_back << endl;
+                            }
+                        }
                     }
                 }
                 

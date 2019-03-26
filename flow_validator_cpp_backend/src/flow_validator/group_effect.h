@@ -2,6 +2,7 @@
 #define __FLOW_VALIDATOR_BACKEND_GROUP_EFFECT_H__
 
 #include "proto/flow_validator.grpc.pb.h"
+#include "analysis_graph.h"
 
 using namespace flow_validator;
 using namespace std;
@@ -12,7 +13,13 @@ public:
     string group_type;
     string group_key;
 
-    GroupEffect(Switch, Group);
+    vector<RuleEffect> rule_effects;
+    vector<AnalysisGraphNode*> watch_port_nodes;
+
+    AnalysisGraph* ag;
+
+    GroupEffect(Switch, Group, AnalysisGraph*);
+    vector<RuleEffect> get_active_rule_effects();
 };
 
 #endif

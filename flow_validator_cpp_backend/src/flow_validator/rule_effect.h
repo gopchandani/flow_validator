@@ -36,8 +36,10 @@ public:
     // Go back to whatever port it came from
     bool bolt_back;
 
-    RuleEffect(); 
-    RuleEffect(AnalysisGraph *, Instruction,  string); 
+    RuleEffect();
+    RuleEffect(AnalysisGraph *, Bucket, string); 
+    RuleEffect(AnalysisGraph *, Instruction, string); 
+    policy_match_t* get_modified_policy_match(policy_match_t*);
 
 };
 
