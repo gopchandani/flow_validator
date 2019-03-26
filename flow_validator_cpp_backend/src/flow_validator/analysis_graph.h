@@ -43,6 +43,7 @@ class AnalysisGraph final {
 
      std::unordered_map<string, Host> hosts;
      std::unordered_map<string, GroupEffect*> group_effects;
+     std::unordered_map<string, AnalysisGraphNode*> adjacent_port_node_map;
      
      std::unordered_map<string, Vertex> node_id_vertex_map;
      std::unordered_map<Vertex, AnalysisGraphNode*> vertex_to_node_map;

@@ -161,6 +161,7 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         AnalysisGraphNode *dst_node = vertex_to_node_map[t];
 
         add_wildcard_rule(src_node, dst_node);
+        adjacent_port_node_map[src_node_id] = dst_node;
     }
 
 }
