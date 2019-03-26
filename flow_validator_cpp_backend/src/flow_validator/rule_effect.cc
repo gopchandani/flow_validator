@@ -103,17 +103,15 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
     
 }
 
-policy_match_t* RuleEffect::get_modified_policy_match(policy_match_t* match_in) {
+void RuleEffect::get_modified_policy_match(policy_match_t* match_in) {
 
-    policy_match_t *pm_out = match_in;
-
+    cout << "get_modified_policy_match" << endl;
 
     policy_match_t::iterator it;
     for (it = packet_modifications.begin(); it != packet_modifications.end(); it++)
     {
         cout << "Applying modification on the field: " << it->first << " to become: " << it->second << endl;
-        (*pm_out)[it->first] = it->second;
+        (*match_in)[it->first] = it->second;
     }
 
-    return pm_out;
 }

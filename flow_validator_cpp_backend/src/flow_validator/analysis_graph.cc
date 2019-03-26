@@ -196,6 +196,20 @@ void AnalysisGraph::print_graph() {
     }
 }
 
+void AnalysisGraph::apply_rule_effect(Vertex t, policy_match_t* pm, RuleEffect re, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) {
+    re.get_modified_policy_match(pm);
+
+    if (re.next_node != NULL) {
+        cout << "next_node: " << re.next_node->node_id << endl;
+        find_packet_paths(node_id_vertex_map[re.next_node->node_id], t, pm, pv, p, vcm);
+    } 
+    else
+    if(re.bolt_back == true) 
+    {
+        cout << "bolt_back: " << re.bolt_back << endl;
+    }
+}
+
 void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
@@ -221,30 +235,21 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
-                    //policy_match_t* pm_out = agn->rules[i]->rule_effects[j].get_modified_policy_match(pm_out);
+                    //if (agn->rules[i]->rule_effects[j].group_effect == NULL) {
 
-                    policy_match_t::iterator it;
-                    for (it = agn->rules[i]->rule_effects[j].packet_modifications.begin(); 
-                        it != agn->rules[i]->rule_effects[j].packet_modifications.end(); 
-                        it++)
-                    {
-                        cout << "Applying modification on the field: " << it->first << " to become: " << it->second << endl;
-                        (*pm_out)[it->first] = it->second;
-                    }
+                        agn->rules[i]->rule_effects[j].get_modified_policy_match(pm_out);
 
-                    cout << (agn->rules[i]->rule_effects[j].next_node != NULL) << endl;
-                    cout << (agn->rules[i]->rule_effects[j].bolt_back == true) << endl;
-                    cout << (agn->rules[i]->rule_effects[j].group_effect != NULL) << endl;
+                        if (agn->rules[i]->rule_effects[j].next_node != NULL) {
+                            cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
+                            find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
+                        } 
+                        else
+                        if(agn->rules[i]->rule_effects[j].bolt_back == true) 
+                        {
+                            cout << " bolt_back: " << agn->rules[i]->rule_effects[j].bolt_back << endl;
+                        } 
 
-                    if (agn->rules[i]->rule_effects[j].next_node != NULL) {
-                        cout << "next_node: " << agn->rules[i]->rule_effects[j].next_node->node_id << endl;
-                        find_packet_paths(node_id_vertex_map[agn->rules[i]->rule_effects[j].next_node->node_id], t, pm_out, pv, p, vcm);
-                    } 
-                    else
-                    if(agn->rules[i]->rule_effects[j].bolt_back == true) 
-                    {
-                        cout << " bolt_back: " << agn->rules[i]->rule_effects[j].bolt_back << endl;
-                    }  
+                    //}
                     else
                     if(agn->rules[i]->rule_effects[j].group_effect != NULL) 
                     {
@@ -256,24 +261,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
                         
                         for (uint k=0; k < active_rule_effects.size(); j++)
                         {
-                            policy_match_t::iterator it;
-                            for (it = active_rule_effects[k].packet_modifications.begin(); 
-                                it != active_rule_effects[k].packet_modifications.end(); 
-                                it++)
-                            {
-                                cout << "Applying modification on the field: " << it->first << " to become: " << it->second << endl;
-                                (*pm_out)[it->first] = it->second;
-                            }
-
-                            if (active_rule_effects[k].next_node != NULL) {
-                                cout << "next_node: " << active_rule_effects[k].next_node->node_id << endl;
-                                find_packet_paths(node_id_vertex_map[active_rule_effects[k].next_node->node_id], t, pm_out, pv, p, vcm);
-                            } 
-                            else
-                            if(active_rule_effects[k].bolt_back == true) 
-                            {
-                                cout << "bolt_back: " << active_rule_effects[k].bolt_back << endl;
-                            }
+                            apply_rule_effect(t, pm_out, active_rule_effects[k], pv, p, vcm);
                         }
                     }
                 }

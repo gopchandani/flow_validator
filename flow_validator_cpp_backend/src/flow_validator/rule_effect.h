@@ -39,7 +39,7 @@ public:
     RuleEffect();
     RuleEffect(AnalysisGraph *, Bucket, string); 
     RuleEffect(AnalysisGraph *, Instruction, string); 
-    policy_match_t* get_modified_policy_match(policy_match_t*);
+    void get_modified_policy_match(policy_match_t*);
 
 };
 
