@@ -239,12 +239,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
 
                     if(agn->rules[i]->rule_effects[j].group_effect != NULL) 
                     {
-                        cout << "group_effect: " << agn->rules[i]->rule_effects[j].group_effect << endl;
-                        cout << "group_effect key: " << agn->rules[i]->rule_effects[j].group_effect->group_key << endl;
-
                         auto active_rule_effects = agn->rules[i]->rule_effects[j].group_effect->get_active_rule_effects();
-                        cout << "active_rule_effects: " << active_rule_effects.size() << endl;
-                        
                         for (uint k=0; k < active_rule_effects.size(); j++)
                         {
                             apply_rule_effect(t, pm_out, active_rule_effects[k], pv, p, vcm);
