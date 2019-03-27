@@ -48,7 +48,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
     // Add a node for each port in the graph
     for (int i=0; i < sw.ports_size(); i++) {    
 
-        if (sw.ports(i).port_num() == CONTROLLER_PORT) {
+        if (sw.ports(i).port_num() == LOCAL_PORT) {
             continue;
         }
 
@@ -96,7 +96,30 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
 }
 
+void AnalysisGraph::init_adjacent_port_id_map(const NetworkGraph* ng) {
+
+    for (int i=0; i < ng->links_size(); i++) {
+
+        if (!(ng->links(i).src_node()[0] == 's' && ng->links(i).dst_node()[0] == 's')) {
+            continue;
+        }
+        
+        string src_node_id, dst_node_id;
+
+        src_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
+        dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
+
+        cout << "adjacent_port_id_map -- " << src_node_id <<  " " << dst_node_id << endl;
+
+        adjacent_port_id_map[src_node_id] = dst_node_id;
+        adjacent_port_id_map[dst_node_id] = src_node_id;
+
+    }
+}
+
 AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
+
+    init_adjacent_port_id_map(ng);
 
     for (int i=0; i < ng->switches_size(); i++) {
         init_graph_per_switch(ng->switches(i));
@@ -136,12 +159,16 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
         Vertex s, t;
         string src_node_id, dst_node_id;
+        AnalysisGraphNode *src_node, *dst_node;
+
         src_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
         dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
 
         s = node_id_vertex_map[src_node_id];
         t = node_id_vertex_map[dst_node_id];
-
+        src_node = vertex_to_node_map[s];
+        dst_node = vertex_to_node_map[t];
+        add_wildcard_rule(src_node, dst_node);
         auto existing_edge = edge(s, t, g);
         if (!existing_edge.second) {
             add_edge(s, t, g);
@@ -150,18 +177,14 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
         t = node_id_vertex_map[src_node_id];
         s = node_id_vertex_map[dst_node_id];
-
         existing_edge = edge(s, t, g);
         if (!existing_edge.second) {
             add_edge(s, t, g);
             cout << "Added link: " << dst_node_id << "->" << src_node_id << endl;
         }
-
-        AnalysisGraphNode *src_node = vertex_to_node_map[s];
-        AnalysisGraphNode *dst_node = vertex_to_node_map[t];
-
+        src_node = vertex_to_node_map[s];
+        dst_node = vertex_to_node_map[t];
         add_wildcard_rule(src_node, dst_node);
-        adjacent_port_node_map[src_node_id] = dst_node;
     }
 
 }
@@ -314,7 +337,7 @@ void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     cout << "Path: " << src << "->" << dst << endl;
 
-    find_packet_paths(s, t, &pm, pv, p, vcm);
+    //find_packet_paths(s, t, &pm, pv, p, vcm);
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
         for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {

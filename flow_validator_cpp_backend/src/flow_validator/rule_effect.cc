@@ -18,8 +18,27 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Bucket in_bucket, string switch_id) {
             }
             else 
             {
-                string node_id =  switch_id + ":" + to_string(in_bucket.actions(k).output_port_num());
-                next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[node_id]];
+                // Setup the next node, for host ports, this becomes the output port, for others, it is the port at the next switch
+                string output_port_node_id =  switch_id + ":" + to_string(in_bucket.actions(k).output_port_num());             
+                string adjacent_port_node_id = ag->adjacent_port_id_map[output_port_node_id];
+
+                AnalysisGraphNode *adjacent_port_node = ag->vertex_to_node_map[ag->node_id_vertex_map[adjacent_port_node_id]];
+                
+                cout << "output_port_node_id: " << output_port_node_id << endl; 
+                cout << "adjacent_port_node_id " << adjacent_port_node_id << endl;
+                cout << "adjacent_port_node " << adjacent_port_node->node_id << endl;
+
+                cout << (adjacent_port_node == NULL) << endl;
+
+                if (adjacent_port_node == NULL)
+                {
+                    next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[output_port_node_id]];
+                } else
+                {
+                    cout << output_port_node_id << " adjacent_port_node:" << adjacent_port_node->node_id << endl;
+                    next_node = adjacent_port_node;
+                    packet_modifications["in_port"] = adjacent_port_node->port_num;
+                }
             }
         } 
         else
@@ -56,10 +75,18 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
                 }
                 else 
                 {
+                    // Setup the next node, for host ports, this becomes the output port, for others, it is the port at the next switch
                     string output_port_node_id =  switch_id + ":" + to_string(i.actions(k).output_port_num());                    
-                    AnalysisGraphNode *adjacent_port_node = ag->adjacent_port_node_map[output_port_node_id];
-                    next_node = adjacent_port_node;
-                    packet_modifications["in_port"] = adjacent_port_node->port_num;
+                    AnalysisGraphNode *adjacent_port_node = ag->vertex_to_node_map[ag->node_id_vertex_map[ag->adjacent_port_id_map[output_port_node_id]]];
+                    
+                    if (adjacent_port_node == NULL)
+                    {
+                        next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[output_port_node_id]];
+                    } else
+                    {
+                        next_node = adjacent_port_node;
+                        packet_modifications["in_port"] = adjacent_port_node->port_num;
+                    }
                 }
             } 
             else 
@@ -103,8 +130,6 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
 }
 
 void RuleEffect::get_modified_policy_match(policy_match_t* match_in) {
-
-    cout << "get_modified_policy_match" << endl;
 
     policy_match_t::iterator it;
     for (it = packet_modifications.begin(); it != packet_modifications.end(); it++)

@@ -31,6 +31,7 @@ class AnalysisGraph final {
      void print_graph();
      uint64_t convert_mac_str_to_uint64(string);
 
+     void init_adjacent_port_id_map(const NetworkGraph* ng);
      void add_wildcard_rule(AnalysisGraphNode *, AnalysisGraphNode *);
      void init_flow_table_rules(AnalysisGraphNode *, FlowTable, string);
      void init_graph_per_switch(Switch);
@@ -43,7 +44,7 @@ class AnalysisGraph final {
 
      std::unordered_map<string, Host> hosts;
      std::unordered_map<string, GroupEffect*> group_effects;
-     std::unordered_map<string, AnalysisGraphNode*> adjacent_port_node_map;
+     std::unordered_map<string, string> adjacent_port_id_map;
      
      std::unordered_map<string, Vertex> node_id_vertex_map;
      std::unordered_map<Vertex, AnalysisGraphNode*> vertex_to_node_map;

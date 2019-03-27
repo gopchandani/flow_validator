@@ -3,5 +3,6 @@
 
 #define CONTROLLER_PORT 0xFFFFFFFD
 #define OUT_TO_IN_PORT 0xFFFFFFF8
+#define LOCAL_PORT 0xFFFFFFFE
 
 #endif
