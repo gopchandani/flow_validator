@@ -149,7 +149,6 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
     }
 
     for (int i=0; i < ng->hosts_size(); i++) {
-        cout << "Host: " << ng->hosts(i).host_name() << " " << ng->hosts(i).host_ip() << " " << ng->hosts(i).host_mac() << endl;
         hosts[ng->hosts(i).host_name()] = ng->hosts(i);
     }
 
@@ -159,21 +158,26 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         if (!(ng->links(i).src_node()[0] == 's' && ng->links(i).dst_node()[0] == 's')) {
             
             string switch_port_node_id;
-            AnalysisGraphNode *switch_port_node;
-            Host *host_node;
+            AnalysisGraphNode *switch_port_node, *host_node;;
 
             if (ng->links(i).src_node()[0] != 's') {
-                host_node = &hosts[ng->links(i).src_node()];
+                host_node = new AnalysisGraphNode(hosts[ng->links(i).src_node()].host_name(), 
+                hosts[ng->links(i).src_node()].host_ip(), 
+                hosts[ng->links(i).src_node()].host_mac());
+                
                 switch_port_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
             }
 
             if (ng->links(i).dst_node()[0] != 's') {
-                host_node = &hosts[ng->links(i).dst_node()];
+                host_node = new AnalysisGraphNode(hosts[ng->links(i).dst_node()].host_name(), 
+                hosts[ng->links(i).dst_node()].host_ip(), 
+                hosts[ng->links(i).dst_node()].host_mac());
+
                 switch_port_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
             }
 
             cout << "switch_port_node_id:" << switch_port_node_id << endl;
-            cout << "Host: " << host_node->host_name() << " " << host_node->host_ip() << " " << host_node->host_mac() << endl;
+            cout << "Host: " << host_node->node_id << " " << host_node->host_ip << " " << host_node->host_mac << endl;
 
             switch_port_node = vertex_to_node_map[node_id_vertex_map[switch_port_node_id]];
             switch_port_node->connected_host = host_node;
@@ -329,11 +333,11 @@ void AnalysisGraph::populate_policy_match(AnalysisGraphNode *src_node, AnalysisG
     pm["has_vlan_tag"] = 0;
 
     if (src_node->connected_host) {
-        pm["eth_src"] = convert_mac_str_to_uint64(src_node->connected_host->host_mac());
+        pm["eth_src"] = convert_mac_str_to_uint64(src_node->connected_host->host_mac);
     }
 
     if (dst_node->connected_host) {
-        pm["eth_dst"] = convert_mac_str_to_uint64(dst_node->connected_host->host_mac());
+        pm["eth_dst"] = convert_mac_str_to_uint64(dst_node->connected_host->host_mac);
     }
 }
 

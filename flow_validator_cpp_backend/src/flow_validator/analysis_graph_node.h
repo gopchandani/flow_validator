@@ -10,15 +10,21 @@ using namespace flow_validator;
 class AnalysisGraphNode final {
 public:
     string node_id;
-    uint64_t port_num;
-    Host *connected_host;
-    bool is_live;
-
     vector<Rule*> rules;
 
+    // Constructor and fields  for ports
+    uint64_t port_num;
+    AnalysisGraphNode *connected_host;
+    bool is_live;
     AnalysisGraphNode(string, uint64_t);
+
+    // Constructor and fields  for tables
     AnalysisGraphNode(string);
 
+    // Constructor and fields for hosts
+    string host_ip;
+    string host_mac;
+    AnalysisGraphNode(string, string, string);
 private:
 
 };
