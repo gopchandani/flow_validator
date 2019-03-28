@@ -61,8 +61,7 @@ void AnalysisGraph::init_group_table_per_switch(Switch sw) {
 
 }
 
-void AnalysisGraph::init_graph_per_switch(Switch sw) {
-    cout << "-- Switch: " << sw.switch_id() << endl;
+void AnalysisGraph::init_graph_nodes_per_switch(Switch sw) {
 
     // Add a node for each port in the graph
     for (int i=0; i < sw.ports_size(); i++) {    
@@ -71,17 +70,13 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
             continue;
         }
 
-        cout << "Switch Id: " << sw.switch_id() << " Port: " << sw.ports(i).port_num() << endl;
-
         string node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
         Vertex v = add_vertex(g); 
         AnalysisGraphNode *agn = new AnalysisGraphNode(node_id, sw.ports(i).port_num());
-
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
 
     }
-
 
     // Add a node for each table in the graph
     for (int i=0; i < sw.flow_tables_size(); i++) {
@@ -91,9 +86,9 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
         vertex_to_node_map[v] = agn;
         node_id_vertex_map[node_id] = v;
     }
+}
 
-
-
+void AnalysisGraph::init_wildcard_rules_per_switch(Switch sw) {
     // Add Rules to each port's node to get all packets to table 0
     for (int i=0; i < sw.ports_size(); i++) {    
 
@@ -106,7 +101,6 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
         
         add_wildcard_rule(vertex_to_node_map[node_id_vertex_map[src_node_id]], vertex_to_node_map[node_id_vertex_map[dst_node_id]]);
     }
-
 }
 
 void AnalysisGraph::init_adjacent_port_id_map(const NetworkGraph* ng) {
@@ -135,7 +129,11 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
     init_adjacent_port_id_map(ng);
 
     for (int i=0; i < ng->switches_size(); i++) {
-        init_graph_per_switch(ng->switches(i));
+        init_graph_nodes_per_switch(ng->switches(i));
+    }
+
+    for (int i=0; i < ng->switches_size(); i++) {
+        init_wildcard_rules_per_switch(ng->switches(i));
     }
 
     for (auto it=node_id_vertex_map.begin(); it != node_id_vertex_map.end(); it++) {

@@ -34,7 +34,8 @@ class AnalysisGraph final {
      void init_adjacent_port_id_map(const NetworkGraph* ng);
      void add_wildcard_rule(AnalysisGraphNode *, AnalysisGraphNode *);
      void init_flow_table_rules(AnalysisGraphNode *, FlowTable, string);
-     void init_graph_per_switch(Switch);
+     void init_wildcard_rules_per_switch(Switch);
+     void init_graph_nodes_per_switch(Switch);
      void init_group_table_per_switch(Switch);
      void init_flow_tables_per_switch(Switch);
      void apply_rule_effect(Vertex, policy_match_t*, RuleEffect, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
