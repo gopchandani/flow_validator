@@ -23,10 +23,11 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Bucket in_bucket, string switch_id) {
                 string adjacent_port_node_id = ag->adjacent_port_id_map[output_port_node_id];
 
                 AnalysisGraphNode *adjacent_port_node = ag->vertex_to_node_map[ag->node_id_vertex_map[adjacent_port_node_id]];
-                
+
+                cout << "adjacent_port_node_id: " << adjacent_port_node_id << endl;
+                cout << "adjacent vertex: " << ag->node_id_vertex_map[adjacent_port_node_id] << endl;
+                cout << "adjacent_port_node:" << adjacent_port_node->node_id << endl;
                 cout << "output_port_node_id: " << output_port_node_id << endl; 
-                cout << "adjacent_port_node_id " << adjacent_port_node_id << endl;
-                cout << "adjacent_port_node " << adjacent_port_node->node_id << endl;
 
                 cout << (adjacent_port_node == NULL) << endl;
 

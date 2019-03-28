@@ -21,7 +21,6 @@ GroupEffect::GroupEffect(Switch sw, Group in_group, AnalysisGraph* ag) {
 vector<RuleEffect> GroupEffect::get_active_rule_effects() {
     vector<RuleEffect> active_rule_effects;
 
-
     // If the group is a fast-failover then the first active watch port's effect is the only one returned
     if (group_type == "FF") {
         for (uint32_t i=0; i < rule_effects.size(); i++) {

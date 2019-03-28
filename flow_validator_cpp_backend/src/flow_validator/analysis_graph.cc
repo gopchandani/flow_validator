@@ -43,7 +43,26 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
     cout << "Flow Table Node: " << agn->node_id << " Total Flow Rules: " << agn->rules.size() << endl;
 }
 
+void AnalysisGraph::init_flow_tables_per_switch(Switch sw) {
+
+    for (int i=0; i < sw.flow_tables_size(); i++) {
+        string node_id = sw.switch_id() + ":table" + to_string(sw.flow_tables(i).table_num());
+        AnalysisGraphNode *agn = vertex_to_node_map[node_id_vertex_map[node_id]];
+        init_flow_table_rules(agn, sw.flow_tables(i), sw.switch_id());
+    }
+}
+
+void AnalysisGraph::init_group_table_per_switch(Switch sw) {
+
+    for (int i=0; i < sw.group_table_size(); i++) {
+        auto *g = new GroupEffect(sw, sw.group_table(i), this);
+        group_effects[g->group_key] = g;
+    }
+
+}
+
 void AnalysisGraph::init_graph_per_switch(Switch sw) {
+    cout << "-- Switch: " << sw.switch_id() << endl;
 
     // Add a node for each port in the graph
     for (int i=0; i < sw.ports_size(); i++) {    
@@ -51,6 +70,8 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
         if (sw.ports(i).port_num() == LOCAL_PORT) {
             continue;
         }
+
+        cout << "Switch Id: " << sw.switch_id() << " Port: " << sw.ports(i).port_num() << endl;
 
         string node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
         Vertex v = add_vertex(g); 
@@ -61,10 +82,6 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
 
     }
 
-    for (int i=0; i < sw.group_table_size(); i++) {
-        auto *g = new GroupEffect(sw, sw.group_table(i), this);
-        group_effects[g->group_key] = g;
-    }
 
     // Add a node for each table in the graph
     for (int i=0; i < sw.flow_tables_size(); i++) {
@@ -75,11 +92,7 @@ void AnalysisGraph::init_graph_per_switch(Switch sw) {
         node_id_vertex_map[node_id] = v;
     }
 
-    for (int i=0; i < sw.flow_tables_size(); i++) {
-        string node_id = sw.switch_id() + ":table" + to_string(sw.flow_tables(i).table_num());
-        AnalysisGraphNode *agn = vertex_to_node_map[node_id_vertex_map[node_id]];
-        init_flow_table_rules(agn, sw.flow_tables(i), sw.switch_id());
-    }
+
 
     // Add Rules to each port's node to get all packets to table 0
     for (int i=0; i < sw.ports_size(); i++) {    
@@ -123,6 +136,18 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
     for (int i=0; i < ng->switches_size(); i++) {
         init_graph_per_switch(ng->switches(i));
+    }
+
+    for (auto it=node_id_vertex_map.begin(); it != node_id_vertex_map.end(); it++) {
+        cout << "node_id_vertex_map -- " << it->first << " " << it->second << endl;
+    }
+
+    for (int i=0; i < ng->switches_size(); i++) {
+        init_group_table_per_switch(ng->switches(i));
+    }
+
+    for (int i=0; i < ng->switches_size(); i++) {
+        init_flow_tables_per_switch(ng->switches(i));
     }
 
     for (int i=0; i < ng->hosts_size(); i++) {
@@ -263,6 +288,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
 
                     if(agn->rules[i]->rule_effects[j].group_effect != NULL) 
                     {
+                        cout << "Group Effect " << endl;
                         auto active_rule_effects = agn->rules[i]->rule_effects[j].group_effect->get_active_rule_effects();
                         for (uint k=0; k < active_rule_effects.size(); j++)
                         {
@@ -337,7 +363,7 @@ void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     cout << "Path: " << src << "->" << dst << endl;
 
-    //find_packet_paths(s, t, &pm, pv, p, vcm);
+    find_packet_paths(s, t, &pm, pv, p, vcm);
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
         for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
