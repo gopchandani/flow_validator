@@ -304,7 +304,6 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
     {
         // Go through each rule at this node 
         for (uint i=0; i < agn->rules.size(); i++) {
-            cout << agn->node_id << " Trying rule:" << i << " priority:" <<  agn->rules[i]->priority <<endl;
 
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
@@ -355,6 +354,42 @@ uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
   return strtoul(mac.c_str(), NULL, 16);
 }
 
+void AnalysisGraph::disable_link(Link l) {
+
+    string src_port_node_id = l.src_node() + ":" + to_string(l.src_port_num());
+    string dst_port_node_id = l.dst_node() + ":" + to_string(l.dst_port_num());
+
+    Vertex s, t;
+    s = node_id_vertex_map[src_port_node_id];
+    t = node_id_vertex_map[dst_port_node_id];
+
+    AnalysisGraphNode *src_node = vertex_to_node_map[s];
+    AnalysisGraphNode *dst_node = vertex_to_node_map[t];
+
+    src_node->is_live = false;
+    dst_node->is_live = false;
+
+    cout << "Disabled the Link between the port nodes " << src_port_node_id << " and " << dst_port_node_id << endl;
+
+}
+
+void AnalysisGraph::enable_link(Link l) {
+    string src_port_node_id = l.src_node() + ":" + to_string(l.src_port_num());
+    string dst_port_node_id = l.dst_node() + ":" + to_string(l.dst_port_num());
+
+    Vertex s, t;
+    s = node_id_vertex_map[src_port_node_id];
+    t = node_id_vertex_map[dst_port_node_id];
+
+    AnalysisGraphNode *src_node = vertex_to_node_map[s];
+    AnalysisGraphNode *dst_node = vertex_to_node_map[t];
+
+    src_node->is_live = true;
+    dst_node->is_live = true;
+
+    cout << "Enabled the Link between the port nodes " << src_port_node_id << " and " << dst_port_node_id << endl;
+}
+
 void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     Vertex s, t;
@@ -363,7 +398,6 @@ void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     AnalysisGraphNode *src_node = vertex_to_node_map[s];
     AnalysisGraphNode *dst_node = vertex_to_node_map[t];
-
 
     // populate policy match
     pm["in_port"] = src_node->port_num;
@@ -384,19 +418,9 @@ void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
     vector<vector<Vertex> > pv;
     vector<Vertex> p;
 
-    for (auto & field : pm)
-    {
-        cout << field.first << " " << field.second << endl;
-    }
-
     map<Vertex, default_color_type> vcm;
 
     cout << "Path: " << src << "->" << dst << endl;
-
-    cout << "src node: " << src_node->node_id << " dst node: " << dst_node->node_id << endl;
-    cout << "src vertex: " << node_id_vertex_map[src_node->node_id] << " dst vertex: " << node_id_vertex_map[dst_node->node_id] << endl;
-
     find_packet_paths(s, t, &pm, pv, p, vcm);
-
     print_paths(pv);
 }
