@@ -5,9 +5,7 @@ policy_match_t* Rule::get_resulting_policy_match(policy_match_t* match_in) {
     policy_match_t *match_out = match_in;
     flow_rule_match_t::iterator it;
     for (it = flow_rule_match.begin(); it != flow_rule_match.end(); it++)
-    {
-        cout << "Matching field:" << it->first << endl;
-                
+    {                
         // If the field is present in match_in, check if the range constraint applied by this
         // rule's match allows it
         if (!((*match_in).find(it->first) == (*match_in).end()))

@@ -6,6 +6,7 @@ from experiment import Experiment
 from experiments.network_configuration import NetworkConfiguration
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
 from netaddr import IPNetwork
+from collections import defaultdict
 
 __author__ = 'Rakesh Kumar'
 
@@ -18,6 +19,7 @@ class Playground2(Experiment):
 
         super(Playground2, self).__init__("playground", 1)
         self.nc = nc
+        self.rpc_links = self.init_rpc_links()
 
     def prepare_rpc_actions(self, actions):
         rpc_actions = []
@@ -201,10 +203,22 @@ class Playground2(Experiment):
 
         return rpc_hosts
 
-    def prepare_rpc_links(self):
-        links = self.nc.get_links()
+    def prepare_rpc_link(self, src_node, dst_node):
 
-        rpc_links = []
+        src_node_port = 0
+        dst_node_port = 0
+
+        rpc_link = flow_validator_pb2.Link(src_node=src_node,
+                                           src_port_num=int(src_node_port),
+                                           dst_node=dst_node,
+                                           dst_port_num=int(dst_node_port))
+
+        return rpc_link
+
+    def init_rpc_links(self):
+        links = self.nc.get_all_links()
+
+        rpc_links = defaultdict(dict)
 
         for src_node in links:
             for src_node_port in links[src_node]:
@@ -216,9 +230,19 @@ class Playground2(Experiment):
                                                    src_port_num=int(src_node_port),
                                                    dst_node=dst_node,
                                                    dst_port_num=int(dst_node_port))
-                rpc_links.append(rpc_link)
+
+                rpc_links[src_node][dst_node] = rpc_link
 
         return rpc_links
+
+    def prepare_rpc_links(self):
+        rpc_links_list = []
+
+        for src_node in self.rpc_links:
+            for dst_node in self.rpc_links[src_node]:
+                rpc_links_list.append(self.rpc_links[src_node][dst_node])
+
+        return rpc_links_list
 
     def prepare_rpc_network_graph(self):
 
@@ -258,9 +282,7 @@ class Playground2(Experiment):
 
         rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
 
-        rpc_lmbdas = [flow_validator_pb2.Lmbda(links=
-                                               [flow_validator_pb2.PolicyLink(src_node="s4", dst_node="s1"),
-                                                flow_validator_pb2.PolicyLink(src_node="s4", dst_node="s3")])]
+        rpc_lmbdas = [flow_validator_pb2.Lmbda(links=[self.rpc_links["s4"]["s1"], self.rpc_links["s4"]["s3"]])]
 
         rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
                                                                   dst_zone=rpc_dst_zone,
@@ -280,7 +302,7 @@ class Playground2(Experiment):
 
         rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
 
-        rpc_lmbdas = [flow_validator_pb2.Lmbda(links=[flow_validator_pb2.PolicyLink(src_node="s2", dst_node="s1")])]
+        rpc_lmbdas = [flow_validator_pb2.Lmbda(links=[self.rpc_links["s2"]["s1"]])]
 
         rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
                                                                   dst_zone=rpc_dst_zone,

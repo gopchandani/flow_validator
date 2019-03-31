@@ -424,7 +424,7 @@ class NetworkConfiguration(object):
 
         return onos_links
 
-    def get_links(self):
+    def get_all_links(self):
         if self.controller == "ryu":
             return self.get_mininet_links()
         elif self.controller == "onos":
@@ -461,7 +461,7 @@ class NetworkConfiguration(object):
             # These things are needed by network graph...
             switches = self.get_switches()
             hosts = self.get_host_nodes()
-            links = self.get_links()
+            links = self.get_all_links()
 
             self.ng = NetworkGraph(self.controller)
             self.ng.parse_network_graph(switches, (hosts, links), links)
@@ -479,7 +479,7 @@ class NetworkConfiguration(object):
             # These things are needed by the network graph...
             switches = self.get_switches()
             hosts = self.get_host_nodes()
-            links = self.get_links()
+            links = self.get_all_links()
 
             self.ng = NetworkGraph(self.controller)
             self.ng.parse_network_graph(switches, (hosts, links), links)

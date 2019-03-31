@@ -101,11 +101,6 @@ message PolicyPort {
     uint64 port_num = 2;
 }
 
-message PolicyLink {
-    string src_node = 1;
-    string dst_node = 2;
-}
-
 message Zone {
     repeated PolicyPort ports = 1;
 }
@@ -113,11 +108,11 @@ message Zone {
 message Constraint {
     string type = 1;
     int32 path_length = 2;
-    repeated PolicyLink avoid_links = 3;
+    repeated Link avoid_links = 3;
 }
 
 message Lmbda {
-    repeated PolicyLink links = 1;
+    repeated Link links = 1;
 }
 
 message PolicyStatement {
