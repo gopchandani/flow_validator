@@ -61,6 +61,20 @@ void AnalysisGraph::init_group_table_per_switch(Switch sw) {
 
 }
 
+void AnalysisGraph::init_graph_node_per_host(Host h) {
+    string node_id = h.host_name();
+    AnalysisGraphNode *host_node = new AnalysisGraphNode(node_id, h.host_ip(), h.host_mac());
+    Vertex v = add_vertex(g);
+    vertex_to_node_map[v] = host_node;
+    node_id_vertex_map[node_id] = v;
+
+    cout << (vertex_to_node_map[node_id_vertex_map[node_id]])->node_id << endl;
+    cout << node_id_vertex_map[node_id] << endl;
+
+    cout << "Host: " << host_node->node_id << " " << host_node->host_ip << " " << host_node->host_mac << endl;
+
+}
+
 void AnalysisGraph::init_graph_nodes_per_switch(Switch sw) {
 
     // Add a node for each port in the graph
@@ -107,26 +121,39 @@ void AnalysisGraph::init_adjacent_port_id_map(const NetworkGraph* ng) {
 
     for (int i=0; i < ng->links_size(); i++) {
 
-        if (!(ng->links(i).src_node()[0] == 's' && ng->links(i).dst_node()[0] == 's')) {
-            continue;
-        }
-        
         string src_node_id, dst_node_id;
 
-        src_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
-        dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
+        if (!(ng->links(i).src_node()[0] == 's' && ng->links(i).dst_node()[0] == 's')) {
+            if (ng->links(i).src_node()[0] != 's') {
+                src_node_id = ng->links(i).src_node();
+                dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
+            }
+
+            if (ng->links(i).dst_node()[0] != 's') {
+                src_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
+                dst_node_id = ng->links(i).dst_node();
+            }
+        }
+        else
+        {
+            src_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
+            dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
+        }
 
         cout << "adjacent_port_id_map -- " << src_node_id <<  " " << dst_node_id << endl;
 
         adjacent_port_id_map[src_node_id] = dst_node_id;
         adjacent_port_id_map[dst_node_id] = src_node_id;
-
     }
 }
 
 AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
     init_adjacent_port_id_map(ng);
+
+    for (int i=0; i < ng->hosts_size(); i++) {
+        init_graph_node_per_host(ng->hosts(i));
+    }
 
     for (int i=0; i < ng->switches_size(); i++) {
         init_graph_nodes_per_switch(ng->switches(i));
@@ -148,11 +175,7 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         init_flow_tables_per_switch(ng->switches(i));
     }
 
-    for (int i=0; i < ng->hosts_size(); i++) {
-        hosts[ng->hosts(i).host_name()] = ng->hosts(i);
-    }
-
-    // Add edges corresponding to the switch-switch links
+    // Add edges corresponding to the links
     for (int i=0; i < ng->links_size(); i++) {
 
         if (!(ng->links(i).src_node()[0] == 's' && ng->links(i).dst_node()[0] == 's')) {
@@ -161,23 +184,16 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
             AnalysisGraphNode *switch_port_node, *host_node;;
 
             if (ng->links(i).src_node()[0] != 's') {
-                host_node = new AnalysisGraphNode(hosts[ng->links(i).src_node()].host_name(), 
-                hosts[ng->links(i).src_node()].host_ip(), 
-                hosts[ng->links(i).src_node()].host_mac());
-                
+                host_node = vertex_to_node_map[node_id_vertex_map[ng->links(i).src_node()]];
                 switch_port_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
             }
 
             if (ng->links(i).dst_node()[0] != 's') {
-                host_node = new AnalysisGraphNode(hosts[ng->links(i).dst_node()].host_name(), 
-                hosts[ng->links(i).dst_node()].host_ip(), 
-                hosts[ng->links(i).dst_node()].host_mac());
-
+                host_node = vertex_to_node_map[node_id_vertex_map[ng->links(i).dst_node()]];
                 switch_port_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
             }
 
-            cout << "switch_port_node_id:" << switch_port_node_id << endl;
-            cout << "Host: " << host_node->node_id << " " << host_node->host_ip << " " << host_node->host_mac << endl;
+            cout << "switch_port_node_id: " << switch_port_node_id << " connected_host: " <<  host_node->node_id << endl;
 
             switch_port_node = vertex_to_node_map[node_id_vertex_map[switch_port_node_id]];
             switch_port_node->connected_host = host_node;
@@ -264,7 +280,7 @@ void AnalysisGraph::apply_rule_effect(Vertex t, policy_match_t* pm, RuleEffect r
 void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
-    cout << "-- node_id:" << agn->node_id << endl;
+    cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
 
     p.push_back(v);
     vcm[v] = black_color;
@@ -272,29 +288,43 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
     if (v == t) {
         pv.push_back(p);
 
-    } else
+        vector<vector<Vertex> >::iterator pv_iter;
+        vector<Vertex>::iterator p_iter;
+
+        for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
+            for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
+                cout << vertex_to_node_map[*p_iter]->node_id << " " ;
+            }
+            cout << endl;
+        }
+    } 
+    else
     {
         // Go through each rule at this node 
         for (uint i=0; i < agn->rules.size(); i++) {
-            cout << "Trying rule:" << i << " priority:" <<  agn->rules[i]->priority <<endl;
+            cout << agn->node_id << " Trying rule:" << i << " priority:" <<  agn->rules[i]->priority <<endl;
 
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                cout << "Matched the rule with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
+                cout << agn->node_id << " Matched the rule with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
                 
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
+                    cout << agn->node_id << " before apply_rule_effect 1"  << endl;
                     apply_rule_effect(t, pm_out, agn->rules[i]->rule_effects[j], pv, p, vcm);
+                    cout << agn->node_id << " after apply_rule_effect 1"  << endl;
 
                     if(agn->rules[i]->rule_effects[j].group_effect != NULL) 
                     {
-                        cout << "Group Effect " << endl;
                         auto active_rule_effects = agn->rules[i]->rule_effects[j].group_effect->get_active_rule_effects();
-                        for (uint k=0; k < active_rule_effects.size(); j++)
+                        cout << agn->node_id << " Group Effect " << active_rule_effects.size() << endl;
+                        for (uint k=0; k < active_rule_effects.size(); k++)
                         {
+                            cout << agn->node_id << " before apply_rule_effect 2 " << k << endl;
                             apply_rule_effect(t, pm_out, active_rule_effects[k], pv, p, vcm);
+                            cout << agn->node_id << " after apply_rule_effect 2 " << k << endl;
                         }
                     }
                 }
@@ -327,34 +357,34 @@ uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
   return strtoul(mac.c_str(), NULL, 16);
 }
 
-void AnalysisGraph::populate_policy_match(AnalysisGraphNode *src_node, AnalysisGraphNode *dst_node, policy_match_t & pm) {
-
-    pm["in_port"] = src_node->port_num;
-    pm["has_vlan_tag"] = 0;
-
-    if (src_node->connected_host) {
-        pm["eth_src"] = convert_mac_str_to_uint64(src_node->connected_host->host_mac);
-    }
-
-    if (dst_node->connected_host) {
-        pm["eth_dst"] = convert_mac_str_to_uint64(dst_node->connected_host->host_mac);
-    }
-}
-
 void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     Vertex s, t;
     s = node_id_vertex_map[src];
     t = node_id_vertex_map[dst];
+
     AnalysisGraphNode *src_node = vertex_to_node_map[s];
     AnalysisGraphNode *dst_node = vertex_to_node_map[t];
 
-    populate_policy_match(src_node, dst_node, pm);
+
+    // populate policy match
+    pm["in_port"] = src_node->port_num;
+    pm["has_vlan_tag"] = 0;
+
+    if (src_node->connected_host) {
+        pm["eth_src"] = convert_mac_str_to_uint64(src_node->connected_host->host_mac);
+        //src_node = src_node->connected_host;
+        //s = node_id_vertex_map[src_node->node_id];
+    }
+
+    if (dst_node->connected_host) {
+        pm["eth_dst"] = convert_mac_str_to_uint64(dst_node->connected_host->host_mac);
+        dst_node = dst_node->connected_host;
+        t = node_id_vertex_map[dst_node->node_id];
+    }
 
     vector<vector<Vertex> > pv;
     vector<Vertex> p;
-    vector<vector<Vertex> >::iterator pv_iter;
-    vector<Vertex>::iterator p_iter;
 
     for (auto & field : pm)
     {
@@ -365,7 +395,13 @@ void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
 
     cout << "Path: " << src << "->" << dst << endl;
 
+    cout << "src node: " << src_node->node_id << " dst node: " << dst_node->node_id << endl;
+    cout << "src vertex: " << node_id_vertex_map[src_node->node_id] << " dst vertex: " << node_id_vertex_map[dst_node->node_id] << endl;
+
     find_packet_paths(s, t, &pm, pv, p, vcm);
+
+    vector<vector<Vertex> >::iterator pv_iter;
+    vector<Vertex>::iterator p_iter;
 
     for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
         for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {

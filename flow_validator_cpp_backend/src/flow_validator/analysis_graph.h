@@ -34,18 +34,17 @@ class AnalysisGraph final {
      void init_adjacent_port_id_map(const NetworkGraph* ng);
      void add_wildcard_rule(AnalysisGraphNode *, AnalysisGraphNode *);
      void init_flow_table_rules(AnalysisGraphNode *, FlowTable, string);
+     void init_graph_node_per_host(Host);
      void init_wildcard_rules_per_switch(Switch);
      void init_graph_nodes_per_switch(Switch);
      void init_group_table_per_switch(Switch);
      void init_flow_tables_per_switch(Switch);
      void apply_rule_effect(Vertex, policy_match_t*, RuleEffect, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
      void find_packet_paths(Vertex, Vertex, policy_match_t *, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
-     void populate_policy_match(AnalysisGraphNode *, AnalysisGraphNode *, policy_match_t &);
      void find_paths(string, string, policy_match_t &);
 
      analysis_graph g;
 
-     std::unordered_map<string, Host> hosts;
      std::unordered_map<string, GroupEffect*> group_effects;
      std::unordered_map<string, string> adjacent_port_id_map;
      
