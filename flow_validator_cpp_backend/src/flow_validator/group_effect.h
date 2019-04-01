@@ -13,13 +13,13 @@ public:
     string group_type;
     string group_key;
 
-    vector<RuleEffect> rule_effects;
+    vector<RuleEffect*> rule_effects;
     vector<AnalysisGraphNode*> watch_port_nodes;
 
     AnalysisGraph* ag;
 
     GroupEffect(Switch, Group, AnalysisGraph*);
-    vector<RuleEffect> get_active_rule_effects();
+    vector<RuleEffect*> get_active_rule_effects();
 };
 
 #endif

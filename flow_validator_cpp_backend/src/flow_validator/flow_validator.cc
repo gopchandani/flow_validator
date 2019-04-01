@@ -45,11 +45,11 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
                 for (int l = 0; l <this_ps.lmbdas_size(); l++) {
                     auto this_lmbda = this_ps.lmbdas(l);
                     for (int k=0; k<this_lmbda.links_size(); k++) {
-                        ag->find_paths(src_port, dst_port, policy_match);
+                        //ag->find_paths(src_port, dst_port, policy_match);
                         ag->disable_link(this_lmbda.links(k));
                         ag->find_paths(src_port, dst_port, policy_match);
-                        ag->enable_link(this_lmbda.links(k));
-                        ag->find_paths(src_port, dst_port, policy_match);
+                        //ag->enable_link(this_lmbda.links(k));
+                        //ag->find_paths(src_port, dst_port, policy_match);
                     }
                 }          
             }

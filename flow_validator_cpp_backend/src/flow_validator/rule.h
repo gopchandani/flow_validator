@@ -15,7 +15,7 @@ class Rule {
 public:
     int priority;
     flow_rule_match_t flow_rule_match;
-    vector<RuleEffect> rule_effects;
+    vector<RuleEffect*> rule_effects;
 
     Rule(int p) {
         priority = p;

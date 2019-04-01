@@ -26,7 +26,7 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
 
         // Populate the rule effects
         for (int j = 0; j < flow_table.flow_rules(i).instructions_size(); j++) {
-            RuleEffect rule_effect(this, flow_table.flow_rules(i).instructions(j), switch_id);
+            RuleEffect *rule_effect = new RuleEffect(this, flow_table.flow_rules(i).instructions(j), switch_id);
             r->rule_effects.push_back(rule_effect);
         }
 
@@ -239,7 +239,7 @@ void AnalysisGraph::add_wildcard_rule(AnalysisGraphNode *src_node, AnalysisGraph
     // Populate the rule effects
     RuleEffect *re = new RuleEffect();
     re->next_node = dst_node;
-    r->rule_effects.push_back(*re);
+    r->rule_effects.push_back(re);
     src_node->rules.push_back(r);
 
     cout << "wildcard:" << src_node->node_id << "->" << dst_node->node_id << endl;
@@ -263,17 +263,17 @@ void AnalysisGraph::print_graph() {
     }
 }
 
-void AnalysisGraph::apply_rule_effect(Vertex t, policy_match_t* pm, RuleEffect re, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) {
-    re.get_modified_policy_match(pm);
+void AnalysisGraph::apply_rule_effect(Vertex t, policy_match_t* pm, RuleEffect *re, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) {
+    re->get_modified_policy_match(pm);
 
-    if (re.next_node != NULL) {
-        cout << "next_node: " << re.next_node->node_id << endl;
-        find_packet_paths(node_id_vertex_map[re.next_node->node_id], t, pm, pv, p, vcm);
+    if (re->next_node != NULL) {
+        cout << "next_node: " << re->next_node->node_id << endl;
+        find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, pm, pv, p, vcm);
     } 
     else
-    if(re.bolt_back == true) 
+    if(re->bolt_back == true) 
     {
-        cout << "bolt_back: " << re.bolt_back << endl;
+        cout << "bolt_back: " << re->bolt_back << endl;
     }
 }
 
@@ -308,17 +308,18 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, policy_match_t* pm_in,
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                cout << agn->node_id << " Matched the rule with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
+                cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
                 
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
                     apply_rule_effect(t, pm_out, agn->rules[i]->rule_effects[j], pv, p, vcm);
 
-                    if(agn->rules[i]->rule_effects[j].group_effect != NULL) 
+                    if(agn->rules[i]->rule_effects[j]->group_effect != NULL) 
                     {
-                        auto active_rule_effects = agn->rules[i]->rule_effects[j].group_effect->get_active_rule_effects();
-                        cout << agn->node_id << " Group Effect " << active_rule_effects.size() << endl;
+                        auto active_rule_effects = agn->rules[i]->rule_effects[j]->group_effect->get_active_rule_effects();
+                        cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
+                        cout << "Total active rule effects: " << active_rule_effects.size() << endl;
                         for (uint k=0; k < active_rule_effects.size(); k++)
                         {
                             apply_rule_effect(t, pm_out, active_rule_effects[k], pv, p, vcm);
