@@ -6,4 +6,7 @@
 #define LOCAL_PORT 0xFFFFFFFE
 #define ANY_PORT 0xFFFFFFFF
 
+
+#define HAS_VLAN_TAG_MATCH 0x1000
+
 #endif

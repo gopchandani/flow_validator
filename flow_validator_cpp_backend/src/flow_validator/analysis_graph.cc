@@ -21,6 +21,12 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
             // For matching on VLAN-ID, having vlan tag is a must.
             if (p.first == "vlan_vid") {
                 r->flow_rule_match["has_vlan_tag"] = make_tuple(1, 2);
+
+                // If the VLAN-VID is a certain number, it indicates matching on just the existence of a tag and 
+                // The vlan-vid being a wildcard. So removing the key...
+                if (p.second.value_start() == HAS_VLAN_TAG_MATCH) {
+                    r->flow_rule_match.erase(p.first);
+                }
             }
         }
 
