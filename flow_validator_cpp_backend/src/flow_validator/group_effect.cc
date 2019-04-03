@@ -16,9 +16,9 @@ GroupEffect::GroupEffect(Switch sw, Group in_group, AnalysisGraph* ag) {
 
         RuleEffect *re = new RuleEffect(ag, in_group.buckets(i), sw.switch_id());
 
-        cout << "Watch Port: " << watch_port_node->node_id << endl;
-        cout << "Rule Effect: " << (re->next_node == NULL) << endl;
-        cout << "Rule Effect Bolt Back:" << re->bolt_back << endl;
+        //cout << "Watch Port: " << watch_port_node->node_id << endl;
+        //cout << "Rule Effect: " << (re->next_node == NULL) << endl;
+        //cout << "Rule Effect Bolt Back:" << re->bolt_back << endl;
         //cout << "Rule Effect Next Node: " << re->next_node->node_id << endl;
 
         rule_effects.push_back(re);
@@ -32,7 +32,7 @@ vector<RuleEffect*> GroupEffect::get_active_rule_effects() {
 
     // If the group is a fast-failover then the first active watch port's effect is the only one returned
     if (group_type == "FF") {
-        cout << "FF" << endl;
+        //cout << "FF" << endl;
         for (uint32_t i=0; i < rule_effects.size(); i++) {
             if (watch_port_nodes[i]->is_live == true) {
                 active_rule_effects.push_back(rule_effects[i]);
@@ -41,7 +41,7 @@ vector<RuleEffect*> GroupEffect::get_active_rule_effects() {
         }
     } else 
     if (group_type == "ALL") {
-        cout << "ALL" << endl;
+        //cout << "ALL" << endl;
         for (uint32_t i=0; i < rule_effects.size(); i++) {
             if (watch_port_nodes[i]->is_live == true) {
                 active_rule_effects.push_back(rule_effects[i]);

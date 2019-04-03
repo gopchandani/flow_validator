@@ -276,9 +276,8 @@ class Playground2(Experiment):
         rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
         rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
 
-        match_fields = dict()
-        match_fields["eth_type"] = flow_validator_pb2.FieldVal(value=0x0800)
-        rpc_traffic_match = flow_validator_pb2.Match(fields=match_fields)
+        policy_match = dict()
+        policy_match["eth_type"] = 0x0800
 
         rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
 
@@ -286,7 +285,7 @@ class Playground2(Experiment):
 
         rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
                                                                   dst_zone=rpc_dst_zone,
-                                                                  traffic_match=rpc_traffic_match,
+                                                                  policy_match=policy_match,
                                                                   constraints=rpc_constraints,
                                                                   lmbdas=rpc_lmbdas)
 
@@ -334,9 +333,9 @@ class Playground2(Experiment):
 
         self.flow_validator_initialize(stub)
 
-        #rpc_policy_statement = self.prepare_policy_statement_all_host_pair_connectivity()
+        rpc_policy_statement = self.prepare_policy_statement_all_host_pair_connectivity()
 
-        rpc_policy_statement = self.prepare_policy_statement_test_case()
+        #rpc_policy_statement = self.prepare_policy_statement_test_case()
 
         self.flow_validator_validate_policy(stub, [rpc_policy_statement])
 

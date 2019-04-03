@@ -275,13 +275,13 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
     re->get_modified_policy_match(pm);
 
     if (re->next_node != NULL) {
-        cout << "next_node: " << re->next_node->node_id << endl;
+        //cout << "next_node: " << re->next_node->node_id << endl;
         find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, agn, pm, pv, p, vcm);
     } 
     else
     if(re->bolt_back == true) 
     {
-        cout << "bolt_back: " << re->bolt_back << endl;
+        //cout << "bolt_back: " << re->bolt_back << endl;
         find_packet_paths(node_id_vertex_map[prev_node->node_id], t, agn, pm, pv, p, vcm);
     }
 }
@@ -301,7 +301,7 @@ void AnalysisGraph::print_paths(vector<vector<Vertex> > & pv) {
 void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, map<Vertex, default_color_type> & vcm) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
-    cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
+    //cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
 
     p.push_back(v);
     vcm[v] = black_color;
@@ -317,7 +317,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
+                //cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
                 
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
@@ -327,8 +327,8 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
                     if(agn->rules[i]->rule_effects[j]->group_effect != NULL) 
                     {
                         auto active_rule_effects = agn->rules[i]->rule_effects[j]->group_effect->get_active_rule_effects();
-                        cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
-                        cout << "Total active rule effects: " << active_rule_effects.size() << endl;
+                        //cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
+                        //cout << "Total active rule effects: " << active_rule_effects.size() << endl;
                         for (uint k=0; k < active_rule_effects.size(); k++)
                         {
                             apply_rule_effect(v, t, prev_node, pm_out, active_rule_effects[k], pv, p, vcm);
