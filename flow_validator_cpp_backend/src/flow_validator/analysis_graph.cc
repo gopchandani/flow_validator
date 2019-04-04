@@ -386,7 +386,7 @@ void AnalysisGraph::enable_links(Lmbda l) {
     cout << endl;
 }
 
-void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {
+void AnalysisGraph::find_paths(string src, string dst, policy_match_t pm) {
 
     Vertex s, t;
     s = node_id_vertex_map[src];

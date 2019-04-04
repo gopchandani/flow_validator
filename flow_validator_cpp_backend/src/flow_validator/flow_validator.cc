@@ -1,48 +1,19 @@
 #include "flow_validator.h"
 #include "thread_pool.h"
 
-void hello(string s) {
-    cout << s << endl;
-    this_thread::sleep_for(chrono::seconds(5));
-}
-
-void thread_pool_example() {
-    ThreadPool pool(4);
-    vector< future<int> > results;
-
-    for(int i = 0; i < 8; ++i) {
-        int j = i + 1;
-        results.emplace_back(
-            pool.enqueue([i, j] {
-                hello("hello world! " + to_string(i));
-                return j;
-            })  
-        );
-    }
-
-    for(auto && result: results)
-        std::cout << result.get() << ' ';
-
-    std::cout << std::endl;
-}
-
-
 Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph* ng, InitializeInfo* info) {
-
-    //thread_pool_example();
-
     cout << "Received Initialize request" << endl;
-
     ag = new AnalysisGraph(ng);
-   
     info->set_successful(true);
     info->set_time_taken(0.1);
-
     return Status::OK;
 }
 
 Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p, ValidatePolicyInfo* info) {
     cout << "Received ValidatePolicy request" << endl;
+
+    ThreadPool pool(4);
+    vector< future<int> > results;
 
     map <Lmbda, map<PolicyPort, PolicyPort>> p_map;
 
@@ -64,15 +35,27 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
 
                 for (int l = 0; l <this_ps.lmbdas_size(); l++) {
                     auto this_lmbda = this_ps.lmbdas(l);
-                    ag->find_paths(src_port, dst_port, policy_match);
-                    ag->disable_links(this_lmbda);
-                    ag->find_paths(src_port, dst_port, policy_match);
-                    ag->enable_links(this_lmbda);
-                    ag->find_paths(src_port, dst_port, policy_match);
+
+                    results.emplace_back(
+                        pool.enqueue([this, src_port, dst_port, policy_match, this_lmbda] {
+                            ag->find_paths(src_port, dst_port, policy_match);
+                            ag->disable_links(this_lmbda);
+                            ag->find_paths(src_port, dst_port, policy_match);
+                            ag->enable_links(this_lmbda);
+                            ag->find_paths(src_port, dst_port, policy_match);
+                            return 0;
+                        })  
+                    );
                 }          
             }
         }
     }
+
+    for(auto && result: results) {
+        cout << result.get() << ' ';
+    }
+    cout << endl;
+
     info->set_successful(true);
     info->set_time_taken(0.1);
 
