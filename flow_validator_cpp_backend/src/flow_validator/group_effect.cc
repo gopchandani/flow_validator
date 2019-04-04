@@ -7,7 +7,7 @@ GroupEffect::GroupEffect(Switch sw, Group in_group, AnalysisGraph* ag) {
     group_type = in_group.type();
     group_key = sw.switch_id() + ":" + to_string(group_id);
 
-    cout << "Group Id: " << in_group.id() << " Group Type: " << in_group.type() << " Group Key: " << group_key << " Buckets Size: " << in_group.buckets_size() << endl;
+    //cout << "Group Id: " << in_group.id() << " Group Type: " << in_group.type() << " Group Key: " << group_key << " Buckets Size: " << in_group.buckets_size() << endl;
     
     for (int i=0; i < in_group.buckets_size(); i++) {
         string watch_port_node_id = sw.switch_id() + ":" + to_string(in_group.buckets(i).watch_port_num());

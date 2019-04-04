@@ -6,8 +6,6 @@
 
 void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow_table, string switch_id) {
 
-    cout << "init_flow_table_rules for node: " << agn->node_id << endl;
-
     for (int i=0; i<flow_table.flow_rules_size(); i++) {
 
         // Initialize a Rule
@@ -15,7 +13,6 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
 
         // Populate the flow rule match
         for (auto & p : flow_table.flow_rules(i).flow_rule_match()) {
-            cout << p.first << " " << p.second.value_start() << " " << p.second.value_end() + 1 <<endl;
             r->flow_rule_match[p.first] = make_tuple(p.second.value_start(),  p.second.value_end() + 1);
 
             // For matching on VLAN-ID, having vlan tag is a must.
@@ -36,7 +33,6 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
             r->rule_effects.push_back(rule_effect);
         }
 
-        cout << "# rule match fields: " << r->flow_rule_match.size() << " # rule effects: " << r->rule_effects.size() <<endl;
         agn->rules.push_back(r);
 
         sort( agn->rules.begin( ), agn->rules.end( ), [ ]( const Rule* lhs, const Rule* rhs )
@@ -46,7 +42,7 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
         
     }
 
-    cout << "Flow Table Node: " << agn->node_id << " Total Flow Rules: " << agn->rules.size() << endl;
+    //cout << "Flow Table Node: " << agn->node_id << " Total Flow Rules: " << agn->rules.size() << endl;
 }
 
 void AnalysisGraph::init_flow_tables_per_switch(Switch sw) {
@@ -73,12 +69,6 @@ void AnalysisGraph::init_graph_node_per_host(Host h) {
     Vertex v = add_vertex(g);
     vertex_to_node_map[v] = host_node;
     node_id_vertex_map[node_id] = v;
-
-    cout << (vertex_to_node_map[node_id_vertex_map[node_id]])->node_id << endl;
-    cout << node_id_vertex_map[node_id] << endl;
-
-    cout << "Host: " << host_node->node_id << " " << host_node->host_ip << " " << host_node->host_mac << endl;
-
 }
 
 void AnalysisGraph::init_graph_nodes_per_switch(Switch sw) {
@@ -146,12 +136,12 @@ void AnalysisGraph::init_adjacent_port_id_map(const NetworkGraph* ng) {
             dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
         }
 
-        cout << "adjacent_port_id_map -- " << src_node_id <<  " " << dst_node_id << endl;
-
         adjacent_port_id_map[src_node_id] = dst_node_id;
         adjacent_port_id_map[dst_node_id] = src_node_id;
     }
 }
+
+
 
 AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
@@ -167,10 +157,6 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
     for (int i=0; i < ng->switches_size(); i++) {
         init_wildcard_rules_per_switch(ng->switches(i));
-    }
-
-    for (auto it=node_id_vertex_map.begin(); it != node_id_vertex_map.end(); it++) {
-        cout << "node_id_vertex_map -- " << it->first << " " << it->second << endl;
     }
 
     for (int i=0; i < ng->switches_size(); i++) {
@@ -199,8 +185,6 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
                 switch_port_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
             }
 
-            cout << "switch_port_node_id: " << switch_port_node_id << " connected_host: " <<  host_node->node_id << endl;
-
             switch_port_node = vertex_to_node_map[node_id_vertex_map[switch_port_node_id]];
             switch_port_node->connected_host = host_node;
             continue;
@@ -221,7 +205,6 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         auto existing_edge = edge(s, t, g);
         if (!existing_edge.second) {
             add_edge(s, t, g);
-            cout << "Added link:" << src_node_id << "->" << dst_node_id << endl;
         }
 
         t = node_id_vertex_map[src_node_id];
@@ -229,7 +212,6 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         existing_edge = edge(s, t, g);
         if (!existing_edge.second) {
             add_edge(s, t, g);
-            cout << "Added link: " << dst_node_id << "->" << src_node_id << endl;
         }
         src_node = vertex_to_node_map[s];
         dst_node = vertex_to_node_map[t];
@@ -247,9 +229,6 @@ void AnalysisGraph::add_wildcard_rule(AnalysisGraphNode *src_node, AnalysisGraph
     re->next_node = dst_node;
     r->rule_effects.push_back(re);
     src_node->rules.push_back(r);
-
-    cout << "wildcard:" << src_node->node_id << "->" << dst_node->node_id << endl;
-    cout << src_node->node_id << " " << src_node->rules.size() << endl;
 }
 
 AnalysisGraph::~AnalysisGraph() {
@@ -364,40 +343,47 @@ uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
   return strtoul(mac.c_str(), NULL, 16);
 }
 
-void AnalysisGraph::disable_link(Link l) {
+void AnalysisGraph::disable_links(Lmbda l) {
 
-    string src_port_node_id = l.src_node() + ":" + to_string(l.src_port_num());
-    string dst_port_node_id = l.dst_node() + ":" + to_string(l.dst_port_num());
+    cout << "Disabled: ";
+    for (int i=0; i < l.links_size(); i++) {
+        string src_port_node_id = l.links(i).src_node() + ":" + to_string(l.links(i).src_port_num());
+        string dst_port_node_id = l.links(i).dst_node() + ":" + to_string(l.links(i).dst_port_num());
 
-    Vertex s, t;
-    s = node_id_vertex_map[src_port_node_id];
-    t = node_id_vertex_map[dst_port_node_id];
+        Vertex s, t;
+        s = node_id_vertex_map[src_port_node_id];
+        t = node_id_vertex_map[dst_port_node_id];
 
-    AnalysisGraphNode *src_node = vertex_to_node_map[s];
-    AnalysisGraphNode *dst_node = vertex_to_node_map[t];
+        AnalysisGraphNode *src_node = vertex_to_node_map[s];
+        AnalysisGraphNode *dst_node = vertex_to_node_map[t];
 
-    src_node->is_live = false;
-    dst_node->is_live = false;
+        src_node->is_live = false;
+        dst_node->is_live = false;
 
-    cout << "Disabled the Link between the port nodes " << src_port_node_id << " and " << dst_port_node_id << endl;
-
+        cout << "(" << src_port_node_id << ", " << dst_port_node_id << ") ";
+    }
+    cout << endl;
 }
 
-void AnalysisGraph::enable_link(Link l) {
-    string src_port_node_id = l.src_node() + ":" + to_string(l.src_port_num());
-    string dst_port_node_id = l.dst_node() + ":" + to_string(l.dst_port_num());
+void AnalysisGraph::enable_links(Lmbda l) {
+    cout << "Enabled: ";
+    for (int i=0; i < l.links_size(); i++) {
+        string src_port_node_id = l.links(i).src_node() + ":" + to_string(l.links(i).src_port_num());
+        string dst_port_node_id = l.links(i).dst_node() + ":" + to_string(l.links(i).dst_port_num());
 
-    Vertex s, t;
-    s = node_id_vertex_map[src_port_node_id];
-    t = node_id_vertex_map[dst_port_node_id];
+        Vertex s, t;
+        s = node_id_vertex_map[src_port_node_id];
+        t = node_id_vertex_map[dst_port_node_id];
 
-    AnalysisGraphNode *src_node = vertex_to_node_map[s];
-    AnalysisGraphNode *dst_node = vertex_to_node_map[t];
+        AnalysisGraphNode *src_node = vertex_to_node_map[s];
+        AnalysisGraphNode *dst_node = vertex_to_node_map[t];
 
-    src_node->is_live = true;
-    dst_node->is_live = true;
+        src_node->is_live = true;
+        dst_node->is_live = true;
 
-    cout << "Enabled the Link between the port nodes " << src_port_node_id << " and " << dst_port_node_id << endl;
+        cout << "(" << src_port_node_id << ", " << dst_port_node_id << ") ";
+    }
+    cout << endl;
 }
 
 void AnalysisGraph::find_paths(string src, string dst, policy_match_t & pm) {

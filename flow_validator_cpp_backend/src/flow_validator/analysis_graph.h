@@ -42,8 +42,8 @@ class AnalysisGraph final {
      void init_group_table_per_switch(Switch);
      void init_flow_tables_per_switch(Switch);
 
-     void disable_link(Link);
-     void enable_link(Link);
+     void disable_links(Lmbda);
+     void enable_links(Lmbda);
 
      void apply_rule_effect(Vertex, Vertex, AnalysisGraphNode *, policy_match_t*, RuleEffect*, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
      void find_packet_paths(Vertex, Vertex, AnalysisGraphNode *, policy_match_t *, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
