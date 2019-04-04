@@ -386,7 +386,7 @@ void AnalysisGraph::enable_links(Lmbda l) {
     cout << endl;
 }
 
-void AnalysisGraph::find_paths(string src, string dst, policy_match_t pm) {
+vector< vector<Vertex> > AnalysisGraph::find_paths(string src, string dst, policy_match_t pm) {
 
     Vertex s, t;
     s = node_id_vertex_map[src];
@@ -411,12 +411,12 @@ void AnalysisGraph::find_paths(string src, string dst, policy_match_t pm) {
         t = node_id_vertex_map[dst_node->node_id];
     }
 
-    vector<vector<Vertex> > pv;
+    vector< vector<Vertex> > pv;
     vector<Vertex> p;
 
     map<Vertex, default_color_type> vcm;
 
     cout << "Path: " << src << "->" << dst << endl;
     find_packet_paths(s, t, src_node, &pm, pv, p, vcm);
-    print_paths(pv);
+    return pv;
 }

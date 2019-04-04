@@ -38,11 +38,19 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
 
                     results.emplace_back(
                         pool.enqueue([this, src_port, dst_port, policy_match, this_lmbda] {
-                            ag->find_paths(src_port, dst_port, policy_match);
+                            auto pv = ag->find_paths(src_port, dst_port, policy_match);
+                            ag->print_paths(pv);
+
                             ag->disable_links(this_lmbda);
-                            ag->find_paths(src_port, dst_port, policy_match);
+
+                            pv = ag->find_paths(src_port, dst_port, policy_match);
+                            ag->print_paths(pv);
+
                             ag->enable_links(this_lmbda);
-                            ag->find_paths(src_port, dst_port, policy_match);
+
+                            pv = ag->find_paths(src_port, dst_port, policy_match);
+                            ag->print_paths(pv);
+
                             return 0;
                         })  
                     );
