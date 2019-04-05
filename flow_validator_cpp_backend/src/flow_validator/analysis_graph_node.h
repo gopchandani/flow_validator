@@ -15,7 +15,6 @@ public:
     // Constructor and fields  for ports
     uint64_t port_num;
     AnalysisGraphNode *connected_host;
-    bool is_live;
     AnalysisGraphNode(string, uint64_t);
 
     // Constructor and fields  for tables

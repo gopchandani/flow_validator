@@ -334,49 +334,6 @@ uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
   return strtoul(mac.c_str(), NULL, 16);
 }
 
-void AnalysisGraph::disable_links(Lmbda l) {
-
-    cout << "Disabled: ";
-    for (int i=0; i < l.links_size(); i++) {
-        string src_port_node_id = l.links(i).src_node() + ":" + to_string(l.links(i).src_port_num());
-        string dst_port_node_id = l.links(i).dst_node() + ":" + to_string(l.links(i).dst_port_num());
-
-        Vertex s, t;
-        s = node_id_vertex_map[src_port_node_id];
-        t = node_id_vertex_map[dst_port_node_id];
-
-        AnalysisGraphNode *src_node = vertex_to_node_map[s];
-        AnalysisGraphNode *dst_node = vertex_to_node_map[t];
-
-        src_node->is_live = false;
-        dst_node->is_live = false;
-
-        cout << "(" << src_port_node_id << ", " << dst_port_node_id << ") ";
-    }
-    cout << endl;
-}
-
-void AnalysisGraph::enable_links(Lmbda l) {
-    cout << "Enabled: ";
-    for (int i=0; i < l.links_size(); i++) {
-        string src_port_node_id = l.links(i).src_node() + ":" + to_string(l.links(i).src_port_num());
-        string dst_port_node_id = l.links(i).dst_node() + ":" + to_string(l.links(i).dst_port_num());
-
-        Vertex s, t;
-        s = node_id_vertex_map[src_port_node_id];
-        t = node_id_vertex_map[dst_port_node_id];
-
-        AnalysisGraphNode *src_node = vertex_to_node_map[s];
-        AnalysisGraphNode *dst_node = vertex_to_node_map[t];
-
-        src_node->is_live = true;
-        dst_node->is_live = true;
-
-        cout << "(" << src_port_node_id << ", " << dst_port_node_id << ") ";
-    }
-    cout << endl;
-}
-
 vector< vector<Vertex> > AnalysisGraph::find_paths(string src, string dst, policy_match_t pm, Lmbda l) {
 
     Vertex s, t;

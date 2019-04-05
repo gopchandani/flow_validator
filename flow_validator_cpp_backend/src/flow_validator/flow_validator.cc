@@ -39,7 +39,7 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
                     //auto pv = ag->find_paths(src_port, dst_port, policy_match);
                     //ag->print_paths(pv);
 
-                    ag->disable_links(this_lmbda);
+                    //ag->disable_links(this_lmbda);
                     auto pv = ag->find_paths(src_port, dst_port, policy_match, this_lmbda);
                     ag->print_paths(pv);
 
