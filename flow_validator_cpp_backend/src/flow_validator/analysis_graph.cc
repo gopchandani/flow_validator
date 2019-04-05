@@ -280,13 +280,12 @@ void AnalysisGraph::print_paths(vector<vector<Vertex> > & pv) {
 void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
-    cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
+    //cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
 
     p.push_back(v);
 
     if (v == t) {
         pv.push_back(p);
-        cout << "destination" << endl;
     } 
     else
     {
@@ -296,26 +295,22 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
+                //cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
                 
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
                     apply_rule_effect(v, t, prev_node, pm_out, agn->rules[i]->rule_effects[j], pv, p);
-                    cout << agn->node_id << " here1" << endl;
 
                     if(agn->rules[i]->rule_effects[j]->group_effect != NULL) 
                     {
-                        cout << agn->node_id << " here2" << endl;
-
+                        //cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
                         auto active_rule_effects = agn->rules[i]->rule_effects[j]->group_effect->get_active_rule_effects();
-                        cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
-                        cout << "Total active rule effects: " << active_rule_effects.size() << endl;
+                        //cout << "Total active rule effects: " << active_rule_effects.size() << endl;
 
                         for (uint k=0; k < active_rule_effects.size(); k++)
                         {
                             apply_rule_effect(v, t, prev_node, pm_out, active_rule_effects[k], pv, p);
-                            cout << agn->node_id << " here3" << endl;
                         }
                     }
                 }
@@ -412,6 +407,5 @@ vector< vector<Vertex> > AnalysisGraph::find_paths(string src, string dst, polic
 
     cout << "Path: " << src << "->" << dst << endl;
     find_packet_paths(s, t, src_node, &pm, pv, p);
-    cout << "done" << endl;
     return pv;
 }

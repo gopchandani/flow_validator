@@ -3,7 +3,9 @@
 #include "analysis_graph_node.h"
 
 RuleEffect::RuleEffect() {
-
+    next_node = NULL;
+    group_effect = NULL;
+    bolt_back = false;
 }
 
 RuleEffect::RuleEffect(AnalysisGraph *ag, Bucket in_bucket, string switch_id) {
@@ -60,10 +62,10 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Bucket in_bucket, string switch_id) {
 }
 
 RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
+
     next_node = NULL;
     group_effect = NULL;
     bolt_back = false;
-
 
     if (i.type() == "APPLY_ACTIONS") {
         for (int k=0; k<i.actions_size(); k++)
