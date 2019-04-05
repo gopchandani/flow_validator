@@ -12,10 +12,8 @@ Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph*
 Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p, ValidatePolicyInfo* info) {
     cout << "Received ValidatePolicy request" << endl;
 
-/*
     ThreadPool pool(4);
     vector< future<int> > results;
-*/
 
     for (int i = 0; i < p->policy_statements_size(); i++) {
         auto this_ps = p->policy_statements(i);
@@ -36,48 +34,25 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
                 for (int l = 0; l <this_ps.lmbdas_size(); l++) {
                     auto this_lmbda = this_ps.lmbdas(l);
 
-                    //auto pv = ag->find_paths(src_port, dst_port, policy_match);
-                    //ag->print_paths(pv);
-
-                    //ag->disable_links(this_lmbda);
-                    auto pv = ag->find_paths(src_port, dst_port, policy_match, this_lmbda);
-                    ag->print_paths(pv);
-
-                    //ag->enable_links(this_lmbda);
-                    //pv = ag->find_paths(src_port, dst_port, policy_match);
-                    //ag->print_paths(pv);
-
-                    /*
                     results.emplace_back(
                         pool.enqueue([this, src_port, dst_port, policy_match, this_lmbda] {
-                            auto pv = ag->find_paths(src_port, dst_port, policy_match);
-                            ag->print_paths(pv);
-
-                            ag->disable_links(this_lmbda);
-
-                            pv = ag->find_paths(src_port, dst_port, policy_match);
-                            ag->print_paths(pv);
-
-                            ag->enable_links(this_lmbda);
-
-                            pv = ag->find_paths(src_port, dst_port, policy_match);
-                            ag->print_paths(pv);
+                        auto pv = ag->find_paths(src_port, dst_port, policy_match, this_lmbda);
+                        ag->print_paths(pv);
 
                             return 0;
                         })  
                     );
-                    */
                 }          
             }
         }
     }
 
-/*
+
     for(auto && result: results) {
         cout << result.get() << ' ';
     }
     cout << endl;
-*/
+
 
     info->set_successful(true);
     info->set_time_taken(0.1);
