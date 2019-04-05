@@ -27,6 +27,19 @@ GroupEffect::GroupEffect(Switch sw, Group in_group, AnalysisGraph* ag) {
     
 }
 
+bool is_node_inactive(string node_id, Lmbda l) {
+
+    for (int i=0; i < l.links_size(); i++) {
+        string src_port_node_id = l.links(i).src_node() + ":" + to_string(l.links(i).src_port_num());
+        string dst_port_node_id = l.links(i).dst_node() + ":" + to_string(l.links(i).dst_port_num());
+
+        if (src_port_node_id == node_id || dst_port_node_id == node_id) {
+            return true;
+        }
+    }
+    return false;
+}
+
 vector<RuleEffect*> GroupEffect::get_active_rule_effects(Lmbda l) {
     vector<RuleEffect*> active_rule_effects;
 
@@ -34,7 +47,7 @@ vector<RuleEffect*> GroupEffect::get_active_rule_effects(Lmbda l) {
     if (group_type == "FF") {
         //cout << "FF" << endl;
         for (uint32_t i=0; i < rule_effects.size(); i++) {
-            if (watch_port_nodes[i]->is_live == true) {
+            if (!is_node_inactive(watch_port_nodes[i]->node_id, l)) {
                 active_rule_effects.push_back(rule_effects[i]);
                 break;
             }
@@ -43,7 +56,7 @@ vector<RuleEffect*> GroupEffect::get_active_rule_effects(Lmbda l) {
     if (group_type == "ALL") {
         //cout << "ALL" << endl;
         for (uint32_t i=0; i < rule_effects.size(); i++) {
-            if (watch_port_nodes[i]->is_live == true) {
+            if (!is_node_inactive(watch_port_nodes[i]->node_id, l)) {
                 active_rule_effects.push_back(rule_effects[i]);
             }
         }
