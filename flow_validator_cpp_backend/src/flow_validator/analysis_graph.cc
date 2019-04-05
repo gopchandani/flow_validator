@@ -248,20 +248,20 @@ void AnalysisGraph::print_graph() {
     }
 }
 
-void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm, RuleEffect *re, vector<vector<Vertex> > & pv, vector<Vertex> & p) {
+void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm, RuleEffect *re, vector<vector<Vertex> > & pv, vector<Vertex> & p, Lmbda l) {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
 
     re->get_modified_policy_match(pm);
 
     if (re->next_node != NULL) {
         //cout << "next_node: " << re->next_node->node_id << endl;
-        find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, agn, pm, pv, p);
+        find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, agn, pm, pv, p, l);
     } 
     else
     if(re->bolt_back == true) 
     {
         //cout << "bolt_back: " << re->bolt_back << endl;
-        find_packet_paths(node_id_vertex_map[prev_node->node_id], t, agn, pm, pv, p);
+        find_packet_paths(node_id_vertex_map[prev_node->node_id], t, agn, pm, pv, p, l);
     }
 }
 
@@ -277,7 +277,7 @@ void AnalysisGraph::print_paths(vector<vector<Vertex> > & pv) {
     }
 }
 
-void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p) 
+void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, Lmbda l) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
     //cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
@@ -300,17 +300,17 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
-                    apply_rule_effect(v, t, prev_node, pm_out, agn->rules[i]->rule_effects[j], pv, p);
+                    apply_rule_effect(v, t, prev_node, pm_out, agn->rules[i]->rule_effects[j], pv, p, l);
 
                     if(agn->rules[i]->rule_effects[j]->group_effect != NULL) 
                     {
                         //cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
-                        auto active_rule_effects = agn->rules[i]->rule_effects[j]->group_effect->get_active_rule_effects();
+                        auto active_rule_effects = agn->rules[i]->rule_effects[j]->group_effect->get_active_rule_effects(l);
                         //cout << "Total active rule effects: " << active_rule_effects.size() << endl;
 
                         for (uint k=0; k < active_rule_effects.size(); k++)
                         {
-                            apply_rule_effect(v, t, prev_node, pm_out, active_rule_effects[k], pv, p);
+                            apply_rule_effect(v, t, prev_node, pm_out, active_rule_effects[k], pv, p, l);
                         }
                     }
                 }
@@ -377,7 +377,7 @@ void AnalysisGraph::enable_links(Lmbda l) {
     cout << endl;
 }
 
-vector< vector<Vertex> > AnalysisGraph::find_paths(string src, string dst, policy_match_t pm) {
+vector< vector<Vertex> > AnalysisGraph::find_paths(string src, string dst, policy_match_t pm, Lmbda l) {
 
     Vertex s, t;
     s = node_id_vertex_map[src];
@@ -406,6 +406,6 @@ vector< vector<Vertex> > AnalysisGraph::find_paths(string src, string dst, polic
     vector<Vertex> p;
 
     cout << "Path: " << src << "->" << dst << endl;
-    find_packet_paths(s, t, src_node, &pm, pv, p);
+    find_packet_paths(s, t, src_node, &pm, pv, p, l);
     return pv;
 }

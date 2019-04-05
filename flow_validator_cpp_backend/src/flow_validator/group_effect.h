@@ -19,7 +19,7 @@ public:
     AnalysisGraph* ag;
 
     GroupEffect(Switch, Group, AnalysisGraph*);
-    vector<RuleEffect*> get_active_rule_effects();
+    vector<RuleEffect*> get_active_rule_effects(Lmbda);
 };
 
 #endif
