@@ -45,8 +45,8 @@ class AnalysisGraph final {
      void disable_links(Lmbda);
      void enable_links(Lmbda);
 
-     void apply_rule_effect(Vertex, Vertex, AnalysisGraphNode *, policy_match_t*, RuleEffect*, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
-     void find_packet_paths(Vertex, Vertex, AnalysisGraphNode *, policy_match_t *, vector<vector<Vertex> > &, vector<Vertex> &, map<Vertex, default_color_type> &);
+     void apply_rule_effect(Vertex, Vertex, AnalysisGraphNode *, policy_match_t*, RuleEffect*, vector<vector<Vertex> > &, vector<Vertex> &);
+     void find_packet_paths(Vertex, Vertex, AnalysisGraphNode *, policy_match_t *, vector<vector<Vertex> > &, vector<Vertex> &);
      vector< vector<Vertex> > find_paths(string, string, policy_match_t);
 
      analysis_graph g;

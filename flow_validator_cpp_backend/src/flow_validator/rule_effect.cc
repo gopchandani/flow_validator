@@ -7,6 +7,10 @@ RuleEffect::RuleEffect() {
 }
 
 RuleEffect::RuleEffect(AnalysisGraph *ag, Bucket in_bucket, string switch_id) {
+    next_node = NULL;
+    group_effect = NULL;
+    bolt_back = false;
+
     for (int k=0; k < in_bucket.actions_size(); k++) {
 
         if (in_bucket.actions(k).type() == "OUTPUT") {

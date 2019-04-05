@@ -333,9 +333,9 @@ class Playground2(Experiment):
 
         self.flow_validator_initialize(stub)
 
-        rpc_policy_statement = self.prepare_policy_statement_all_host_pair_connectivity()
+        #rpc_policy_statement = self.prepare_policy_statement_all_host_pair_connectivity()
 
-        #rpc_policy_statement = self.prepare_policy_statement_test_case()
+        rpc_policy_statement = self.prepare_policy_statement_test_case()
 
         self.flow_validator_validate_policy(stub, [rpc_policy_statement])
 
