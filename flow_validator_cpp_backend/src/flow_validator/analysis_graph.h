@@ -29,7 +29,7 @@ class AnalysisGraph final {
      AnalysisGraph(const NetworkGraph* ng);
      ~AnalysisGraph();
      void print_graph();
-     void print_paths(vector<vector<Vertex> > & );
+     void print_paths(string, string, vector<vector<Vertex> > & );
 
      uint64_t convert_mac_str_to_uint64(string);
 

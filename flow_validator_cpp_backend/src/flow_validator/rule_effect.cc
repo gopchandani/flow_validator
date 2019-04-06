@@ -144,7 +144,7 @@ void RuleEffect::get_modified_policy_match(policy_match_t* match_in) {
     policy_match_t::iterator it;
     for (it = packet_modifications.begin(); it != packet_modifications.end(); it++)
     {
-        //cout << "Applying modification on the field: " << it->first << " to become: " << it->second << endl;
+        cout << "Applying modification on the field: " << it->first << " to become: " << it->second << endl;
         (*match_in)[it->first] = it->second;
     }
 }
