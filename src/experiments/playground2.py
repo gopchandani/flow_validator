@@ -268,18 +268,18 @@ class Playground2(Experiment):
 
     def prepare_policy_statement_all_host_pair_connectivity(self):
 
-        rpc_all_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1),
-                              flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1),
-                              flow_validator_pb2.PolicyPort(switch_id="s3", port_num=1),
-                              flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
-        
-        rpc_src_zone = rpc_all_host_ports
-        rpc_dst_zone = rpc_all_host_ports
-        # rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)]
-        # rpc_all_dst_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+        rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1),
+                                  flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1),
+                                  flow_validator_pb2.PolicyPort(switch_id="s3", port_num=1),
+                                  flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
 
-        rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
-        rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
+        rpc_all_dst_host_ports = rpc_all_src_host_ports
+
+        rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+        rpc_all_dst_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1)]
+
+        rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_src_host_ports)
+        rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_dst_host_ports)
 
         policy_match = dict()
         policy_match["eth_type"] = 0x0800
@@ -352,15 +352,15 @@ def main():
                               "http://localhost:8080/",
                               "admin",
                               "admin",
-                              "ring",
+                              "cliquetopo",
                               {"num_switches": 4,
-                               "num_hosts_per_switch": 1},
-                               #"per_switch_links": 3}z
+                               "num_hosts_per_switch": 1,
+                               "per_switch_links": 3},
                               conf_root="configurations/",
                               #synthesis_name="DijkstraSynthesis",
                               synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True,
-                                                "k": 1})
+                                                "k": 2})
 
     exp = Playground2(nc)
     exp.trigger()
