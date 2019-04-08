@@ -272,12 +272,14 @@ class Playground2(Experiment):
                               flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1),
                               flow_validator_pb2.PolicyPort(switch_id="s3", port_num=1),
                               flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+        
+        rpc_src_zone = rpc_all_host_ports
+        rpc_dst_zone = rpc_all_host_ports
+        # rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)]
+        # rpc_all_dst_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
 
-        rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)]
-        rpc_all_dst_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
-
-        rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_src_host_ports)
-        rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_dst_host_ports)
+        rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
+        rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_host_ports)
 
         policy_match = dict()
         policy_match["eth_type"] = 0x0800
