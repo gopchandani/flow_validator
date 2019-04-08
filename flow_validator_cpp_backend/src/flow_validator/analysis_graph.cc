@@ -283,7 +283,7 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
     else
     if(re->bolt_back == true) 
     {
-        cout << "bolt_back: " << re->bolt_back << endl;
+        //cout << "bolt_back: " << re->bolt_back << endl;
         string adjacent_port_node_id = adjacent_port_id_map[prev_node->node_id];
         if (agn->port_num == -1) {
             find_packet_paths(node_id_vertex_map[adjacent_port_node_id], t, prev_node, pm, pv, p, l);
@@ -315,7 +315,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
+                //cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
                 
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)

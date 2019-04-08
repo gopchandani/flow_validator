@@ -45,8 +45,9 @@ vector<RuleEffect*> GroupEffect::get_active_rule_effects(Lmbda l) {
 
     // If the group is a fast-failover then the first active watch port's effect is the only one returned
     if (group_type == "FF") {
-        //cout << "FF" << endl;
+        //cout << "Group Id:" << group_id << "Group Type: FF" << endl;
         for (uint32_t i=0; i < rule_effects.size(); i++) {
+            //cout << i << " " << watch_port_nodes[i]->node_id << endl;
             if (!is_node_inactive(watch_port_nodes[i]->node_id, l)) {
                 active_rule_effects.push_back(rule_effects[i]);
                 break;
@@ -54,7 +55,7 @@ vector<RuleEffect*> GroupEffect::get_active_rule_effects(Lmbda l) {
         }
     } else 
     if (group_type == "ALL") {
-        //cout << "ALL" << endl;
+        //cout << "Group Id:" << group_id << "Group Type: ALL" << endl;
         for (uint32_t i=0; i < rule_effects.size(); i++) {
             if (!is_node_inactive(watch_port_nodes[i]->node_id, l)) {
                 active_rule_effects.push_back(rule_effects[i]);
