@@ -296,13 +296,33 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
 }
 
 
+bool AnalysisGraph::path_has_loop(Vertex v, vector<Vertex> & p)
+{
+    uint cnt = 0;
+    for (auto n = p.begin(); n != p.end(); n++) {
+        if (*n == v) {
+            cnt ++;
+            if (cnt ++ > 3) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, Lmbda l) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
-    cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
+    //cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
 
-    p.push_back(v);
+    if (!path_has_loop(v, p)) {
+        p.push_back(v);
+    } 
+    else 
+    {
+        return;
+    }
+    
 
     if (v == t) {
         pv.push_back(p);
