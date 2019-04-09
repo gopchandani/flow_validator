@@ -248,30 +248,26 @@ void AnalysisGraph::print_graph() {
     }
 }
 
-void AnalysisGraph::print_paths(string src_node, string dst_node, vector<vector<Vertex> > & pv) {
+void AnalysisGraph::print_paths(string src_node, string dst_node, vector<vector<string> > & pv) {
 
     cout << "Path: " << src_node << "->" << dst_node << " ";
 
-    vector<vector<Vertex> >::iterator pv_iter;
-    vector<Vertex>::iterator p_iter;
-
-    for (pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
-        for (p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
-            cout << vertex_to_node_map[*p_iter]->node_id << " " ;
+    for (auto pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
+        for (auto p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
+            cout << *p_iter << " " ;
         }
         cout << endl;
     }
 }
 
-void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm, RuleEffect *re, vector<vector<Vertex> > & pv, vector<Vertex> & p, Lmbda l) {
+void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm, RuleEffect *re, vector<vector<string> > & pv, vector<string> & p, Lmbda l) {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
 
     re->get_modified_policy_match(pm);
 
     if (re->next_node != NULL) {
-        //cout << "next_node: " << re->next_node->node_id << endl;
-
-        // This node can only be a previous node if it belongs to a port.
+        cout << "next_node: " << re->next_node->node_id << endl;
+        // This node (agn) can only be a previous node if it belongs to a port.
         if (agn->port_num == -1) {
             find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, prev_node, pm, pv, p, l);
         }
@@ -283,7 +279,8 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
     else
     if(re->bolt_back == true) 
     {
-        //cout << "bolt_back: " << re->bolt_back << endl;
+        cout << "bolt_back: " << re->bolt_back << endl;
+        // This node (agn) can only be a previous node if it belongs to a port.
         string adjacent_port_node_id = adjacent_port_id_map[prev_node->node_id];
         if (agn->port_num == -1) {
             find_packet_paths(node_id_vertex_map[adjacent_port_node_id], t, prev_node, pm, pv, p, l);
@@ -296,11 +293,11 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
 }
 
 
-bool AnalysisGraph::path_has_loop(Vertex v, vector<Vertex> & p)
+bool AnalysisGraph::path_has_loop(string node_id, vector<string> & p)
 {
     uint cnt = 0;
     for (auto n = p.begin(); n != p.end(); n++) {
-        if (*n == v) {
+        if (*n == node_id) {
             cnt ++;
             if (cnt ++ > 3) {
                 return true;
@@ -310,19 +307,21 @@ bool AnalysisGraph::path_has_loop(Vertex v, vector<Vertex> & p)
     return false;
 }
 
-void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<Vertex> > & pv, vector<Vertex> & p, Lmbda l) 
+void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<string> > & pv, vector<string> & p, Lmbda l) 
 {
     AnalysisGraphNode *agn = vertex_to_node_map[v];
-    //cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
+    cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
 
-    if (!path_has_loop(v, p)) {
-        p.push_back(v);
+    if (!path_has_loop(agn->node_id, p)) {
+        // if (agn->port_num != -1) {
+            
+        // } 
+        p.push_back(agn->node_id);
     } 
     else 
     {
         return;
     }
-    
 
     if (v == t) {
         pv.push_back(p);
@@ -335,24 +334,26 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
             // if the rule allows the packets to proceed, follow its effects
             policy_match_t* pm_out = agn->rules[i]->get_resulting_policy_match(pm_in);
             if (pm_out) {
-                //cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
+                cout << agn->node_id << " Matched the rule at index: " << i << " with " << agn->rules[i]->rule_effects.size() << " effect(s)."<< endl;
                 
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
                     apply_rule_effect(v, t, prev_node, pm_out, agn->rules[i]->rule_effects[j], pv, p, l);
-
+                    cout << agn->node_id << " here1" << endl;
                     if(agn->rules[i]->rule_effects[j]->group_effect != NULL) 
                     {
-                        //cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
+                        cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
                         auto active_rule_effects = agn->rules[i]->rule_effects[j]->group_effect->get_active_rule_effects(l);
-                        //cout << "Total active rule effects: " << active_rule_effects.size() << endl;
+                        cout << "Total active rule effects: " << active_rule_effects.size() << endl;
 
                         for (uint k=0; k < active_rule_effects.size(); k++)
                         {
                             apply_rule_effect(v, t, prev_node, pm_out, active_rule_effects[k], pv, p, l);
+                            cout << agn->node_id << " here2" << endl;
                         }
                     }
+                    cout << agn->node_id << " here4" << endl;
                 }
                 // Only match a single rule in a given node
                 break;
@@ -361,7 +362,10 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
             }
         }    
     }
+    cout << agn->node_id << " here5" << endl;
+    cout << p.size() << endl;
     p.pop_back();
+    cout << agn->node_id << " here3" << endl;
 }
 
 uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
@@ -372,7 +376,7 @@ uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
   return strtoul(mac.c_str(), NULL, 16);
 }
 
-vector< vector<Vertex> > AnalysisGraph::find_paths(string src, string dst, policy_match_t pm, Lmbda l) {
+ vector< vector<string> > AnalysisGraph::find_paths(string src, string dst, policy_match_t pm, Lmbda l) {
 
     Vertex s, t;
     s = node_id_vertex_map[src];
@@ -397,8 +401,8 @@ vector< vector<Vertex> > AnalysisGraph::find_paths(string src, string dst, polic
         t = node_id_vertex_map[dst_node->node_id];
     }
 
-    vector< vector<Vertex> > pv;
-    vector<Vertex> p;
+    vector< vector<string> > pv;
+    vector<string> p;
 
     find_packet_paths(s, t, src_node, &pm, pv, p, l);
     return pv;
