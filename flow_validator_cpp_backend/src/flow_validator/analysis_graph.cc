@@ -313,10 +313,10 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
     //cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
 
     if (!path_has_loop(agn->node_id, p)) {
-        // if (agn->port_num != -1) {
-            
-        // } 
+        if (agn->port_num != -1) {
+        } 
         p.push_back(agn->node_id);
+        
     } 
     else 
     {
