@@ -268,8 +268,21 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
     if (re->next_node != NULL) {
         //cout << "next_node: " << re->next_node->node_id << endl;
         // This node (agn) can only be a previous node if it belongs to a port.
+
+        
         if (agn->port_num == -1) {
-            find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, prev_node, pm, pv, p, l);
+            // Find the next node, for host ports, this becomes the output port, for others, it is the port at the next switch
+            if (adjacent_port_id_map.find(re->next_node->node_id) != adjacent_port_id_map.end()) {
+                string adjacent_port_node_id = adjacent_port_id_map[re->next_node->node_id];
+                Vertex adjacent_port_vertex = node_id_vertex_map[adjacent_port_node_id];
+                AnalysisGraphNode *adjacent_port_node = vertex_to_node_map[adjacent_port_vertex];
+            
+                (*pm)["in_port"] = adjacent_port_node->port_num;
+                find_packet_paths(adjacent_port_vertex, t, prev_node, pm, pv, p, l);
+            } else 
+            {
+                find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, prev_node, pm, pv, p, l);
+            }
         }
         else 
         {

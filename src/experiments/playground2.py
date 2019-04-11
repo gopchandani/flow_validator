@@ -275,8 +275,8 @@ class Playground2(Experiment):
 
         rpc_all_dst_host_ports = rpc_all_src_host_ports
 
-        rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
-        rpc_all_dst_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1)]
+        # rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+        # rpc_all_dst_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1)]
 
         rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_src_host_ports)
         rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_dst_host_ports)
