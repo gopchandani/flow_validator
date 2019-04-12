@@ -277,6 +277,8 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
                 Vertex adjacent_port_vertex = node_id_vertex_map[adjacent_port_node_id];
                 AnalysisGraphNode *adjacent_port_node = vertex_to_node_map[adjacent_port_vertex];
             
+                p.push_back(re->next_node->node_id);
+
                 (*pm)["in_port"] = adjacent_port_node->port_num;
                 find_packet_paths(adjacent_port_vertex, t, prev_node, pm, pv, p, l);
             } else 
