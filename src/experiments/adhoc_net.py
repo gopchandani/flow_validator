@@ -5,8 +5,6 @@ from rpc import flow_validator_pb2_grpc
 from experiment import Experiment
 from experiments.network_configuration import NetworkConfiguration
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
-from netaddr import IPNetwork
-from collections import defaultdict
 
 __author__ = 'Rakesh Kumar'
 
@@ -96,6 +94,7 @@ class AdHocNet(Experiment):
         print validate_info.violations
 
     def trigger(self):
+        ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
         channel = grpc.insecure_channel('localhost:50051')
         stub = flow_validator_pb2_grpc.FlowValidatorStub(channel)
@@ -116,15 +115,20 @@ def main():
                               "http://localhost:8080/",
                               "admin",
                               "admin",
-                              "cliquetopo",
+                              "adhoc",
                               {"num_switches": 4,
+                               "seed": 42,
                                "num_hosts_per_switch": 1,
-                               "per_switch_links": 3},
+                               "min_x": -100,
+                               "max_x":  100,
+                               "min_y": -100,
+                               "max_y":  100
+                               },
                               conf_root="configurations/",
-                              #synthesis_name="DijkstraSynthesis",
-                              synthesis_name="AboresceneSynthesis",
+                              synthesis_name="DijkstraSynthesis",
+                              #synthesis_name="AboresceneSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True,
-                                                "k": 2})
+                                                "k": 1})
 
     exp = AdHocNet(nc)
     exp.trigger()
@@ -132,3 +136,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
