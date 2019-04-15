@@ -29,7 +29,7 @@ class AnalysisGraph final {
      AnalysisGraph(const NetworkGraph* ng);
      ~AnalysisGraph();
      void print_graph();
-     void print_paths(string, string, vector<vector<string> > & );
+     void print_paths(string, string, vector<string> & );
      bool path_has_loop(string, vector<string> &);
 
      uint64_t convert_mac_str_to_uint64(string);
@@ -45,7 +45,7 @@ class AnalysisGraph final {
 
      void apply_rule_effect(Vertex, Vertex, AnalysisGraphNode*, policy_match_t*, RuleEffect*, vector<vector<string> > &, vector<string> &, Lmbda);
      void find_packet_paths(Vertex, Vertex, AnalysisGraphNode*, policy_match_t*, vector<vector<string> > &, vector<string> &, Lmbda);
-     vector< vector<string> > find_paths(string, string, policy_match_t, Lmbda);
+     vector<string> find_path(string, string, policy_match_t, Lmbda);
 
      analysis_graph g;
 

@@ -248,16 +248,13 @@ void AnalysisGraph::print_graph() {
     }
 }
 
-void AnalysisGraph::print_paths(string src_node, string dst_node, vector<vector<string> > & pv) {
+void AnalysisGraph::print_paths(string src_node, string dst_node, vector<string> & p) {
 
     cout << "Path: " << src_node << "->" << dst_node << " ";
-
-    for (auto pv_iter = pv.begin(); pv_iter !=  pv.end(); pv_iter++) {
-        for (auto p_iter = pv_iter->begin(); p_iter != pv_iter->end(); p_iter++) {
-            cout << *p_iter << " " ;
-        }
-        cout << endl;
+    for (auto p_iter = p.begin(); p_iter != p.end(); p_iter++) {
+        cout << *p_iter << " " ;
     }
+    cout << endl;
 }
 
 void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm, RuleEffect *re, vector<vector<string> > & pv, vector<string> & p, Lmbda l) {
@@ -329,8 +326,8 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
 
     if (!path_has_loop(agn->node_id, p)) {
         if (agn->port_num != -1) {
+            p.push_back(agn->node_id);
         } 
-        p.push_back(agn->node_id);
         
     } 
     else 
@@ -374,7 +371,9 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
             }
         }    
     }
-    p.pop_back();
+    if (agn->port_num != -1) {
+        p.pop_back();
+    } 
 }
 
 uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
@@ -385,7 +384,7 @@ uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
   return strtoul(mac.c_str(), NULL, 16);
 }
 
- vector< vector<string> > AnalysisGraph::find_paths(string src, string dst, policy_match_t pm, Lmbda l) {
+vector<string> AnalysisGraph::find_path(string src, string dst, policy_match_t pm, Lmbda l) {
 
     Vertex s, t;
     s = node_id_vertex_map[src];
@@ -414,5 +413,5 @@ uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
     vector<string> p;
 
     find_packet_paths(s, t, src_node, &pm, pv, p, l);
-    return pv;
+    return pv[0];
 }

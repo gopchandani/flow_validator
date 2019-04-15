@@ -36,8 +36,8 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
 
                     results.emplace_back(
                         pool.enqueue([this, src_port, dst_port, policy_match, this_lmbda] {
-                            auto pv = ag->find_paths(src_port, dst_port, policy_match, this_lmbda);
-                            ag->print_paths(src_port, dst_port, pv);
+                            auto p = ag->find_path(src_port, dst_port, policy_match, this_lmbda);
+                            ag->print_paths(src_port, dst_port, p);
                             return 0;
                         })  
                     );
@@ -45,8 +45,6 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
             }
         }
     }
-
-
 /*
     for(auto && result: results) {
         cout << result.get() << ' ';
