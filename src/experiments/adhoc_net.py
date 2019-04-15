@@ -5,18 +5,19 @@ from rpc import flow_validator_pb2_grpc
 from experiment import Experiment
 from experiments.network_configuration import NetworkConfiguration
 from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
-
+from netaddr import IPNetwork
+from collections import defaultdict
 
 __author__ = 'Rakesh Kumar'
 
 sys.path.append("./")
 
 
-class Playground2(Experiment):
+class AdHocNet(Experiment):
 
     def __init__(self, nc):
 
-        super(Playground2, self).__init__("playground", 1)
+        super(AdHocNet, self).__init__("playground", 1)
         self.nc = nc
         self.rpc_links = self.init_rpc_links()
 
@@ -125,7 +126,7 @@ def main():
                               synthesis_params={"apply_group_intents_immediately": True,
                                                 "k": 2})
 
-    exp = Playground2(nc)
+    exp = AdHocNet(nc)
     exp.trigger()
 
 
