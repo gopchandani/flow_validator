@@ -62,6 +62,8 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     cout << "Received GetTimeToDisconnect request" << endl;
 
     cout << "Link Failure Rate: " << mcp->link_failure_rate() << endl;
+    cout << "Num Iterations: " << mcp->num_iterations() << endl;
+
     for (int i = 0; i < mcp->src_ports_size() ; i++) {
 
         string src_port = mcp->src_ports(i).switch_id() + ":" + to_string(mcp->src_ports(i).port_num());

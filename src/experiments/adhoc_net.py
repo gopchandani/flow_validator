@@ -93,9 +93,10 @@ class AdHocNet(Experiment):
 
         print validate_info.violations
 
-    def flow_validator_get_time_to_failure(self, stub, link_failure_rate, src_ports, dst_ports):
+    def flow_validator_get_time_to_failure(self, stub, num_iterations, link_failure_rate, src_ports, dst_ports):
 
-        mcp = flow_validator_pb2.MonteCarloParams(link_failure_rate=link_failure_rate,
+        mcp = flow_validator_pb2.MonteCarloParams(num_iterations=num_iterations,
+                                                  link_failure_rate=link_failure_rate,
                                                   src_ports=src_ports,
                                                   dst_ports=dst_ports)
 
@@ -122,7 +123,7 @@ class AdHocNet(Experiment):
         src_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)]
         dst_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
 
-        self.flow_validator_get_time_to_failure(stub, 1.0, src_ports, dst_ports)
+        self.flow_validator_get_time_to_failure(stub, 10, 1.0, src_ports, dst_ports)
 
 
 def main():
