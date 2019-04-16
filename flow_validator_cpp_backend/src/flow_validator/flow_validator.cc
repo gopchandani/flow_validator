@@ -57,3 +57,21 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
 
     return Status::OK;
 }
+
+Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const MonteCarloParams* mcp, TimeToDisconnectInfo* ttf) {
+    cout << "Received GetTimeToDisconnect request" << endl;
+
+    cout << "Link Failure Rate: " << mcp->link_failure_rate() << endl;
+    for (int i = 0; i < mcp->src_ports_size() ; i++) {
+
+        string src_port = mcp->src_ports(i).switch_id() + ":" + to_string(mcp->src_ports(i).port_num());
+        string dst_port = mcp->dst_ports(i).switch_id() + ":" + to_string(mcp->dst_ports(i).port_num());
+        cout << "Src Port: " << src_port << " Dst Port: " << dst_port << endl;
+    }
+
+    ttf->set_mean(1.0);
+    ttf->set_sd(0.05);
+    ttf->set_time_taken(0.1);
+
+    return Status::OK;
+}

@@ -22,8 +22,9 @@ class FlowValidatorImpl final : public FlowValidator::Service {
       ~FlowValidatorImpl() {
       }
 
-      Status Initialize(ServerContext* , const NetworkGraph* , InitializeInfo* ) override;
-      Status ValidatePolicy(ServerContext* , const Policy* , ValidatePolicyInfo* ) override;
+      Status Initialize(ServerContext*, const NetworkGraph*, InitializeInfo* ) override;
+      Status ValidatePolicy(ServerContext*, const Policy*, ValidatePolicyInfo* ) override;
+      Status GetTimeToDisconnect(ServerContext*, const MonteCarloParams*, TimeToDisconnectInfo* ) override;
 
  private:
       AnalysisGraph *ag;

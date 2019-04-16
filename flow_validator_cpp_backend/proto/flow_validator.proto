@@ -8,6 +8,20 @@ service FlowValidator {
 
   rpc ValidatePolicy(Policy) returns (ValidatePolicyInfo) {}
 
+  rpc GetTimeToDisconnect(MonteCarloParams) returns (TimeToDisconnectInfo) {}
+
+}
+
+message MonteCarloParams {
+    float link_failure_rate = 1;
+    repeated PolicyPort src_ports = 2;
+    repeated PolicyPort dst_ports = 3;
+}
+
+message TimeToDisconnectInfo {
+    float mean = 1;
+    float sd = 2;
+    float time_taken = 3;
 }
 
 message InitializeInfo {

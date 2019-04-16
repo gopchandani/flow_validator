@@ -93,6 +93,18 @@ class AdHocNet(Experiment):
 
         print validate_info.violations
 
+    def flow_validator_get_time_to_failure(self, stub, link_failure_rate, src_ports, dst_ports):
+
+        mcp = flow_validator_pb2.MonteCarloParams(link_failure_rate=link_failure_rate,
+                                                  src_ports=src_ports,
+                                                  dst_ports=dst_ports)
+
+        ttf = stub.GetTimeToDisconnect(mcp)
+
+        print "Mean TTF: ", ttf.mean
+        print "SD TTF:", ttf.sd
+        print "Time taken:", ttf.time_taken
+
     def trigger(self):
         #ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
@@ -105,7 +117,12 @@ class AdHocNet(Experiment):
 
         #rpc_policy_statement = self.prepare_policy_statement_test_case()
 
-        self.flow_validator_validate_policy(stub, [rpc_policy_statement])
+        #self.flow_validator_validate_policy(stub, [rpc_policy_statement])
+
+        src_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)]
+        dst_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+
+        self.flow_validator_get_time_to_failure(stub, 1.0, src_ports, dst_ports)
 
 
 def main():

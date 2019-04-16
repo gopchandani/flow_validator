@@ -24,6 +24,11 @@ class FlowValidatorStub(object):
         request_serializer=flow__validator__pb2.Policy.SerializeToString,
         response_deserializer=flow__validator__pb2.ValidatePolicyInfo.FromString,
         )
+    self.GetTimeToDisconnect = channel.unary_unary(
+        '/flow_validator.FlowValidator/GetTimeToDisconnect',
+        request_serializer=flow__validator__pb2.MonteCarloParams.SerializeToString,
+        response_deserializer=flow__validator__pb2.TimeToDisconnectInfo.FromString,
+        )
 
 
 class FlowValidatorServicer(object):
@@ -44,6 +49,13 @@ class FlowValidatorServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def GetTimeToDisconnect(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_FlowValidatorServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -56,6 +68,11 @@ def add_FlowValidatorServicer_to_server(servicer, server):
           servicer.ValidatePolicy,
           request_deserializer=flow__validator__pb2.Policy.FromString,
           response_serializer=flow__validator__pb2.ValidatePolicyInfo.SerializeToString,
+      ),
+      'GetTimeToDisconnect': grpc.unary_unary_rpc_method_handler(
+          servicer.GetTimeToDisconnect,
+          request_deserializer=flow__validator__pb2.MonteCarloParams.FromString,
+          response_serializer=flow__validator__pb2.TimeToDisconnectInfo.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
