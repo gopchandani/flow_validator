@@ -94,7 +94,7 @@ class AdHocNet(Experiment):
         print validate_info.violations
 
     def trigger(self):
-        ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        #ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
         channel = grpc.insecure_channel('localhost:50051')
         stub = flow_validator_pb2_grpc.FlowValidatorStub(channel)
