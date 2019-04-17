@@ -118,7 +118,7 @@ class AdHocNet(Experiment):
 
         #rpc_policy_statement = self.prepare_policy_statement_test_case()
 
-        #self.flow_validator_validate_policy(stub, [rpc_policy_statement])
+        self.flow_validator_validate_policy(stub, [rpc_policy_statement])
 
         src_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)]
         dst_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]

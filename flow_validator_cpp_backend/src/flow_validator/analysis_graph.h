@@ -46,6 +46,7 @@ class AnalysisGraph final {
      void apply_rule_effect(Vertex, Vertex, AnalysisGraphNode*, policy_match_t*, RuleEffect*, vector<vector<string> > &, vector<string> &, Lmbda);
      void find_packet_paths(Vertex, Vertex, AnalysisGraphNode*, policy_match_t*, vector<vector<string> > &, vector<string> &, Lmbda);
      vector<string> find_path(string, string, policy_match_t, Lmbda);
+     double find_time_to_disconnect(const MonteCarloParams*);
 
      analysis_graph g;
 

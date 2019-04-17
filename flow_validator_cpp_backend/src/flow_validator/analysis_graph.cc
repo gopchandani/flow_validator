@@ -415,3 +415,17 @@ vector<string> AnalysisGraph::find_path(string src, string dst, policy_match_t p
     find_packet_paths(s, t, src_node, &pm, pv, p, l);
     return pv[0];
 }
+
+double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp) {
+    for (int i = 0; i < mcp->src_ports_size() ; i++) {
+
+        string src_port = mcp->src_ports(i).switch_id() + ":" + to_string(mcp->src_ports(i).port_num());
+        string dst_port = mcp->dst_ports(i).switch_id() + ":" + to_string(mcp->dst_ports(i).port_num());
+        cout << "Src Port: " << src_port << " Dst Port: " << dst_port << endl;
+
+
+    }
+
+    return 1.0;
+
+}
