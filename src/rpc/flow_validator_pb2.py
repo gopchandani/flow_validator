@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='flow_validator.proto',
   package='flow_validator',
   syntax='proto3',
-  serialized_pb=_b('\n\x14\x66low_validator.proto\x12\x0e\x66low_validator\"\xa3\x01\n\x10MonteCarloParams\x12\x16\n\x0enum_iterations\x18\x01 \x01(\x04\x12\x19\n\x11link_failure_rate\x18\x02 \x01(\x02\x12-\n\tsrc_ports\x18\x03 \x03(\x0b\x32\x1a.flow_validator.PolicyPort\x12-\n\tdst_ports\x18\x04 \x03(\x0b\x32\x1a.flow_validator.PolicyPort\"D\n\x14TimeToDisconnectInfo\x12\x0c\n\x04mean\x18\x01 \x01(\x02\x12\n\n\x02sd\x18\x02 \x01(\x02\x12\x12\n\ntime_taken\x18\x03 \x01(\x02\"8\n\x0eInitializeInfo\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\x12\n\ntime_taken\x18\x02 \x01(\x02\"q\n\x12ValidatePolicyInfo\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\x12\n\ntime_taken\x18\x02 \x01(\x02\x12\x33\n\nviolations\x18\x03 \x03(\x0b\x32\x1f.flow_validator.PolicyViolation\")\n\x04Port\x12\x10\n\x08port_num\x18\x01 \x01(\x04\x12\x0f\n\x07hw_addr\x18\x02 \x01(\t\"q\n\x06\x41\x63tion\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x16\n\x0emodified_field\x18\x02 \x01(\t\x12\x16\n\x0emodified_value\x18\x03 \x01(\x04\x12\x17\n\x0foutput_port_num\x18\x04 \x01(\x04\x12\x10\n\x08group_id\x18\x05 \x01(\x05\"Y\n\x06\x42ucket\x12\x16\n\x0ewatch_port_num\x18\x01 \x01(\x04\x12\x0e\n\x06weight\x18\x02 \x01(\x05\x12\'\n\x07\x61\x63tions\x18\x03 \x03(\x0b\x32\x16.flow_validator.Action\"J\n\x05Group\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x05\x12\'\n\x07\x62uckets\x18\x03 \x03(\x0b\x32\x16.flow_validator.Bucket\"?\n\x15\x46lowRuleMatchFieldVal\x12\x13\n\x0bvalue_start\x18\x01 \x01(\x04\x12\x11\n\tvalue_end\x18\x02 \x01(\x04\"]\n\x0bInstruction\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\'\n\x07\x61\x63tions\x18\x02 \x03(\x0b\x32\x16.flow_validator.Action\x12\x17\n\x0fgo_to_table_num\x18\x03 \x01(\x05\"\xf2\x01\n\x08\x46lowRule\x12\x10\n\x08priority\x18\x01 \x01(\x05\x12\x44\n\x0f\x66low_rule_match\x18\x02 \x03(\x0b\x32+.flow_validator.FlowRule.FlowRuleMatchEntry\x12\x31\n\x0cinstructions\x18\x03 \x03(\x0b\x32\x1b.flow_validator.Instruction\x1a[\n\x12\x46lowRuleMatchEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32%.flow_validator.FlowRuleMatchFieldVal:\x02\x38\x01\"L\n\tFlowTable\x12\x11\n\ttable_num\x18\x01 \x01(\x05\x12,\n\nflow_rules\x18\x02 \x03(\x0b\x32\x18.flow_validator.FlowRule\"\x9c\x01\n\x06Switch\x12\x11\n\tswitch_id\x18\x01 \x01(\t\x12#\n\x05ports\x18\x02 \x03(\x0b\x32\x14.flow_validator.Port\x12.\n\x0b\x66low_tables\x18\x03 \x03(\x0b\x32\x19.flow_validator.FlowTable\x12*\n\x0bgroup_table\x18\x04 \x03(\x0b\x32\x15.flow_validator.Group\"T\n\x04Host\x12\x11\n\thost_name\x18\x01 \x01(\t\x12\x10\n\x08host_MAC\x18\x02 \x01(\t\x12\x0f\n\x07host_IP\x18\x03 \x01(\t\x12\x16\n\x0ehost_switch_id\x18\x04 \x01(\t\"V\n\x04Link\x12\x10\n\x08src_node\x18\x01 \x01(\t\x12\x14\n\x0csrc_port_num\x18\x02 \x01(\x04\x12\x10\n\x08\x64st_node\x18\x03 \x01(\t\x12\x14\n\x0c\x64st_port_num\x18\x04 \x01(\x04\"\x96\x01\n\x0cNetworkGraph\x12\x12\n\ncontroller\x18\x01 \x01(\t\x12(\n\x08switches\x18\x02 \x03(\x0b\x32\x16.flow_validator.Switch\x12#\n\x05hosts\x18\x03 \x03(\x0b\x32\x14.flow_validator.Host\x12#\n\x05links\x18\x04 \x03(\x0b\x32\x14.flow_validator.Link\"1\n\nPolicyPort\x12\x11\n\tswitch_id\x18\x01 \x01(\t\x12\x10\n\x08port_num\x18\x02 \x01(\x04\"1\n\x04Zone\x12)\n\x05ports\x18\x01 \x03(\x0b\x32\x1a.flow_validator.PolicyPort\"Z\n\nConstraint\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x13\n\x0bpath_length\x18\x02 \x01(\x05\x12)\n\x0b\x61void_links\x18\x03 \x03(\x0b\x32\x14.flow_validator.Link\",\n\x05Lmbda\x12#\n\x05links\x18\x01 \x03(\x0b\x32\x14.flow_validator.Link\"\xb5\x02\n\x0fPolicyStatement\x12&\n\x08src_zone\x18\x01 \x01(\x0b\x32\x14.flow_validator.Zone\x12&\n\x08\x64st_zone\x18\x02 \x01(\x0b\x32\x14.flow_validator.Zone\x12\x46\n\x0cpolicy_match\x18\x03 \x03(\x0b\x32\x30.flow_validator.PolicyStatement.PolicyMatchEntry\x12/\n\x0b\x63onstraints\x18\x04 \x03(\x0b\x32\x1a.flow_validator.Constraint\x12%\n\x06lmbdas\x18\x05 \x03(\x0b\x32\x15.flow_validator.Lmbda\x1a\x32\n\x10PolicyMatchEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"D\n\x06Policy\x12:\n\x11policy_statements\x18\x01 \x03(\x0b\x32\x1f.flow_validator.PolicyStatement\"\xc5\x01\n\x0fPolicyViolation\x12$\n\x05lmbda\x18\x01 \x01(\x0b\x32\x15.flow_validator.Lmbda\x12,\n\x08src_port\x18\x02 \x01(\x0b\x32\x1a.flow_validator.PolicyPort\x12,\n\x08\x64st_port\x18\x03 \x01(\x0b\x32\x1a.flow_validator.PolicyPort\x12\x17\n\x0f\x63onstraint_type\x18\x04 \x01(\t\x12\x17\n\x0f\x63ounter_example\x18\x05 \x01(\t2\x8e\x02\n\rFlowValidator\x12L\n\nInitialize\x12\x1c.flow_validator.NetworkGraph\x1a\x1e.flow_validator.InitializeInfo\"\x00\x12N\n\x0eValidatePolicy\x12\x16.flow_validator.Policy\x1a\".flow_validator.ValidatePolicyInfo\"\x00\x12_\n\x13GetTimeToDisconnect\x12 .flow_validator.MonteCarloParams\x1a$.flow_validator.TimeToDisconnectInfo\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x14\x66low_validator.proto\x12\x0e\x66low_validator\"j\n\x10MonteCarloParams\x12\x16\n\x0enum_iterations\x18\x01 \x01(\x04\x12\x19\n\x11link_failure_rate\x18\x02 \x01(\x02\x12#\n\x05\x66lows\x18\x03 \x03(\x0b\x32\x14.flow_validator.Flow\"D\n\x14TimeToDisconnectInfo\x12\x0c\n\x04mean\x18\x01 \x01(\x02\x12\n\n\x02sd\x18\x02 \x01(\x02\x12\x12\n\ntime_taken\x18\x03 \x01(\x02\"8\n\x0eInitializeInfo\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\x12\n\ntime_taken\x18\x02 \x01(\x02\"q\n\x12ValidatePolicyInfo\x12\x12\n\nsuccessful\x18\x01 \x01(\x08\x12\x12\n\ntime_taken\x18\x02 \x01(\x02\x12\x33\n\nviolations\x18\x03 \x03(\x0b\x32\x1f.flow_validator.PolicyViolation\")\n\x04Port\x12\x10\n\x08port_num\x18\x01 \x01(\x04\x12\x0f\n\x07hw_addr\x18\x02 \x01(\t\"q\n\x06\x41\x63tion\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x16\n\x0emodified_field\x18\x02 \x01(\t\x12\x16\n\x0emodified_value\x18\x03 \x01(\x04\x12\x17\n\x0foutput_port_num\x18\x04 \x01(\x04\x12\x10\n\x08group_id\x18\x05 \x01(\x05\"Y\n\x06\x42ucket\x12\x16\n\x0ewatch_port_num\x18\x01 \x01(\x04\x12\x0e\n\x06weight\x18\x02 \x01(\x05\x12\'\n\x07\x61\x63tions\x18\x03 \x03(\x0b\x32\x16.flow_validator.Action\"J\n\x05Group\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x05\x12\'\n\x07\x62uckets\x18\x03 \x03(\x0b\x32\x16.flow_validator.Bucket\"?\n\x15\x46lowRuleMatchFieldVal\x12\x13\n\x0bvalue_start\x18\x01 \x01(\x04\x12\x11\n\tvalue_end\x18\x02 \x01(\x04\"]\n\x0bInstruction\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\'\n\x07\x61\x63tions\x18\x02 \x03(\x0b\x32\x16.flow_validator.Action\x12\x17\n\x0fgo_to_table_num\x18\x03 \x01(\x05\"\xf2\x01\n\x08\x46lowRule\x12\x10\n\x08priority\x18\x01 \x01(\x05\x12\x44\n\x0f\x66low_rule_match\x18\x02 \x03(\x0b\x32+.flow_validator.FlowRule.FlowRuleMatchEntry\x12\x31\n\x0cinstructions\x18\x03 \x03(\x0b\x32\x1b.flow_validator.Instruction\x1a[\n\x12\x46lowRuleMatchEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32%.flow_validator.FlowRuleMatchFieldVal:\x02\x38\x01\"L\n\tFlowTable\x12\x11\n\ttable_num\x18\x01 \x01(\x05\x12,\n\nflow_rules\x18\x02 \x03(\x0b\x32\x18.flow_validator.FlowRule\"\x9c\x01\n\x06Switch\x12\x11\n\tswitch_id\x18\x01 \x01(\t\x12#\n\x05ports\x18\x02 \x03(\x0b\x32\x14.flow_validator.Port\x12.\n\x0b\x66low_tables\x18\x03 \x03(\x0b\x32\x19.flow_validator.FlowTable\x12*\n\x0bgroup_table\x18\x04 \x03(\x0b\x32\x15.flow_validator.Group\"T\n\x04Host\x12\x11\n\thost_name\x18\x01 \x01(\t\x12\x10\n\x08host_MAC\x18\x02 \x01(\t\x12\x0f\n\x07host_IP\x18\x03 \x01(\t\x12\x16\n\x0ehost_switch_id\x18\x04 \x01(\t\"V\n\x04Link\x12\x10\n\x08src_node\x18\x01 \x01(\t\x12\x14\n\x0csrc_port_num\x18\x02 \x01(\x04\x12\x10\n\x08\x64st_node\x18\x03 \x01(\t\x12\x14\n\x0c\x64st_port_num\x18\x04 \x01(\x04\"\x96\x01\n\x0cNetworkGraph\x12\x12\n\ncontroller\x18\x01 \x01(\t\x12(\n\x08switches\x18\x02 \x03(\x0b\x32\x16.flow_validator.Switch\x12#\n\x05hosts\x18\x03 \x03(\x0b\x32\x14.flow_validator.Host\x12#\n\x05links\x18\x04 \x03(\x0b\x32\x14.flow_validator.Link\"1\n\nPolicyPort\x12\x11\n\tswitch_id\x18\x01 \x01(\t\x12\x10\n\x08port_num\x18\x02 \x01(\x04\"1\n\x04Zone\x12)\n\x05ports\x18\x01 \x03(\x0b\x32\x1a.flow_validator.PolicyPort\"Z\n\nConstraint\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x13\n\x0bpath_length\x18\x02 \x01(\x05\x12)\n\x0b\x61void_links\x18\x03 \x03(\x0b\x32\x14.flow_validator.Link\",\n\x05Lmbda\x12#\n\x05links\x18\x01 \x03(\x0b\x32\x14.flow_validator.Link\"\xb5\x02\n\x0fPolicyStatement\x12&\n\x08src_zone\x18\x01 \x01(\x0b\x32\x14.flow_validator.Zone\x12&\n\x08\x64st_zone\x18\x02 \x01(\x0b\x32\x14.flow_validator.Zone\x12\x46\n\x0cpolicy_match\x18\x03 \x03(\x0b\x32\x30.flow_validator.PolicyStatement.PolicyMatchEntry\x12/\n\x0b\x63onstraints\x18\x04 \x03(\x0b\x32\x1a.flow_validator.Constraint\x12%\n\x06lmbdas\x18\x05 \x03(\x0b\x32\x15.flow_validator.Lmbda\x1a\x32\n\x10PolicyMatchEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"D\n\x06Policy\x12:\n\x11policy_statements\x18\x01 \x03(\x0b\x32\x1f.flow_validator.PolicyStatement\"\xc5\x01\n\x0fPolicyViolation\x12$\n\x05lmbda\x18\x01 \x01(\x0b\x32\x15.flow_validator.Lmbda\x12,\n\x08src_port\x18\x02 \x01(\x0b\x32\x1a.flow_validator.PolicyPort\x12,\n\x08\x64st_port\x18\x03 \x01(\x0b\x32\x1a.flow_validator.PolicyPort\x12\x17\n\x0f\x63onstraint_type\x18\x04 \x01(\t\x12\x17\n\x0f\x63ounter_example\x18\x05 \x01(\t\"\xd3\x01\n\x04\x46low\x12,\n\x08src_port\x18\x01 \x01(\x0b\x32\x1a.flow_validator.PolicyPort\x12,\n\x08\x64st_port\x18\x02 \x01(\x0b\x32\x1a.flow_validator.PolicyPort\x12;\n\x0cpolicy_match\x18\x03 \x03(\x0b\x32%.flow_validator.Flow.PolicyMatchEntry\x1a\x32\n\x10PolicyMatchEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\x32\x8e\x02\n\rFlowValidator\x12L\n\nInitialize\x12\x1c.flow_validator.NetworkGraph\x1a\x1e.flow_validator.InitializeInfo\"\x00\x12N\n\x0eValidatePolicy\x12\x16.flow_validator.Policy\x1a\".flow_validator.ValidatePolicyInfo\"\x00\x12_\n\x13GetTimeToDisconnect\x12 .flow_validator.MonteCarloParams\x1a$.flow_validator.TimeToDisconnectInfo\"\x00\x62\x06proto3')
 )
 
 
@@ -47,15 +47,8 @@ _MONTECARLOPARAMS = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='src_ports', full_name='flow_validator.MonteCarloParams.src_ports', index=2,
+      name='flows', full_name='flow_validator.MonteCarloParams.flows', index=2,
       number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='dst_ports', full_name='flow_validator.MonteCarloParams.dst_ports', index=3,
-      number=4, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -72,8 +65,8 @@ _MONTECARLOPARAMS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=41,
-  serialized_end=204,
+  serialized_start=40,
+  serialized_end=146,
 )
 
 
@@ -117,8 +110,8 @@ _TIMETODISCONNECTINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=206,
-  serialized_end=274,
+  serialized_start=148,
+  serialized_end=216,
 )
 
 
@@ -155,8 +148,8 @@ _INITIALIZEINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=276,
-  serialized_end=332,
+  serialized_start=218,
+  serialized_end=274,
 )
 
 
@@ -200,8 +193,8 @@ _VALIDATEPOLICYINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=334,
-  serialized_end=447,
+  serialized_start=276,
+  serialized_end=389,
 )
 
 
@@ -238,8 +231,8 @@ _PORT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=449,
-  serialized_end=490,
+  serialized_start=391,
+  serialized_end=432,
 )
 
 
@@ -297,8 +290,8 @@ _ACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=492,
-  serialized_end=605,
+  serialized_start=434,
+  serialized_end=547,
 )
 
 
@@ -342,8 +335,8 @@ _BUCKET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=607,
-  serialized_end=696,
+  serialized_start=549,
+  serialized_end=638,
 )
 
 
@@ -387,8 +380,8 @@ _GROUP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=698,
-  serialized_end=772,
+  serialized_start=640,
+  serialized_end=714,
 )
 
 
@@ -425,8 +418,8 @@ _FLOWRULEMATCHFIELDVAL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=774,
-  serialized_end=837,
+  serialized_start=716,
+  serialized_end=779,
 )
 
 
@@ -470,8 +463,8 @@ _INSTRUCTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=839,
-  serialized_end=932,
+  serialized_start=781,
+  serialized_end=874,
 )
 
 
@@ -508,8 +501,8 @@ _FLOWRULE_FLOWRULEMATCHENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1086,
-  serialized_end=1177,
+  serialized_start=1028,
+  serialized_end=1119,
 )
 
 _FLOWRULE = _descriptor.Descriptor(
@@ -552,8 +545,8 @@ _FLOWRULE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=935,
-  serialized_end=1177,
+  serialized_start=877,
+  serialized_end=1119,
 )
 
 
@@ -590,8 +583,8 @@ _FLOWTABLE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1179,
-  serialized_end=1255,
+  serialized_start=1121,
+  serialized_end=1197,
 )
 
 
@@ -642,8 +635,8 @@ _SWITCH = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1258,
-  serialized_end=1414,
+  serialized_start=1200,
+  serialized_end=1356,
 )
 
 
@@ -694,8 +687,8 @@ _HOST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1416,
-  serialized_end=1500,
+  serialized_start=1358,
+  serialized_end=1442,
 )
 
 
@@ -746,8 +739,8 @@ _LINK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1502,
-  serialized_end=1588,
+  serialized_start=1444,
+  serialized_end=1530,
 )
 
 
@@ -798,8 +791,8 @@ _NETWORKGRAPH = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1591,
-  serialized_end=1741,
+  serialized_start=1533,
+  serialized_end=1683,
 )
 
 
@@ -836,8 +829,8 @@ _POLICYPORT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1743,
-  serialized_end=1792,
+  serialized_start=1685,
+  serialized_end=1734,
 )
 
 
@@ -867,8 +860,8 @@ _ZONE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1794,
-  serialized_end=1843,
+  serialized_start=1736,
+  serialized_end=1785,
 )
 
 
@@ -912,8 +905,8 @@ _CONSTRAINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1845,
-  serialized_end=1935,
+  serialized_start=1787,
+  serialized_end=1877,
 )
 
 
@@ -943,8 +936,8 @@ _LMBDA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1937,
-  serialized_end=1981,
+  serialized_start=1879,
+  serialized_end=1923,
 )
 
 
@@ -981,8 +974,8 @@ _POLICYSTATEMENT_POLICYMATCHENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2243,
-  serialized_end=2293,
+  serialized_start=2185,
+  serialized_end=2235,
 )
 
 _POLICYSTATEMENT = _descriptor.Descriptor(
@@ -1039,8 +1032,8 @@ _POLICYSTATEMENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1984,
-  serialized_end=2293,
+  serialized_start=1926,
+  serialized_end=2235,
 )
 
 
@@ -1070,8 +1063,8 @@ _POLICY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2295,
-  serialized_end=2363,
+  serialized_start=2237,
+  serialized_end=2305,
 )
 
 
@@ -1129,12 +1122,93 @@ _POLICYVIOLATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2366,
-  serialized_end=2563,
+  serialized_start=2308,
+  serialized_end=2505,
 )
 
-_MONTECARLOPARAMS.fields_by_name['src_ports'].message_type = _POLICYPORT
-_MONTECARLOPARAMS.fields_by_name['dst_ports'].message_type = _POLICYPORT
+
+_FLOW_POLICYMATCHENTRY = _descriptor.Descriptor(
+  name='PolicyMatchEntry',
+  full_name='flow_validator.Flow.PolicyMatchEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='flow_validator.Flow.PolicyMatchEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='flow_validator.Flow.PolicyMatchEntry.value', index=1,
+      number=2, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001')),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2185,
+  serialized_end=2235,
+)
+
+_FLOW = _descriptor.Descriptor(
+  name='Flow',
+  full_name='flow_validator.Flow',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='src_port', full_name='flow_validator.Flow.src_port', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='dst_port', full_name='flow_validator.Flow.dst_port', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='policy_match', full_name='flow_validator.Flow.policy_match', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_FLOW_POLICYMATCHENTRY, ],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2508,
+  serialized_end=2719,
+)
+
+_MONTECARLOPARAMS.fields_by_name['flows'].message_type = _FLOW
 _VALIDATEPOLICYINFO.fields_by_name['violations'].message_type = _POLICYVIOLATION
 _BUCKET.fields_by_name['actions'].message_type = _ACTION
 _GROUP.fields_by_name['buckets'].message_type = _BUCKET
@@ -1163,6 +1237,10 @@ _POLICY.fields_by_name['policy_statements'].message_type = _POLICYSTATEMENT
 _POLICYVIOLATION.fields_by_name['lmbda'].message_type = _LMBDA
 _POLICYVIOLATION.fields_by_name['src_port'].message_type = _POLICYPORT
 _POLICYVIOLATION.fields_by_name['dst_port'].message_type = _POLICYPORT
+_FLOW_POLICYMATCHENTRY.containing_type = _FLOW
+_FLOW.fields_by_name['src_port'].message_type = _POLICYPORT
+_FLOW.fields_by_name['dst_port'].message_type = _POLICYPORT
+_FLOW.fields_by_name['policy_match'].message_type = _FLOW_POLICYMATCHENTRY
 DESCRIPTOR.message_types_by_name['MonteCarloParams'] = _MONTECARLOPARAMS
 DESCRIPTOR.message_types_by_name['TimeToDisconnectInfo'] = _TIMETODISCONNECTINFO
 DESCRIPTOR.message_types_by_name['InitializeInfo'] = _INITIALIZEINFO
@@ -1186,6 +1264,7 @@ DESCRIPTOR.message_types_by_name['Lmbda'] = _LMBDA
 DESCRIPTOR.message_types_by_name['PolicyStatement'] = _POLICYSTATEMENT
 DESCRIPTOR.message_types_by_name['Policy'] = _POLICY
 DESCRIPTOR.message_types_by_name['PolicyViolation'] = _POLICYVIOLATION
+DESCRIPTOR.message_types_by_name['Flow'] = _FLOW
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 MonteCarloParams = _reflection.GeneratedProtocolMessageType('MonteCarloParams', (_message.Message,), dict(
@@ -1365,11 +1444,28 @@ PolicyViolation = _reflection.GeneratedProtocolMessageType('PolicyViolation', (_
   ))
 _sym_db.RegisterMessage(PolicyViolation)
 
+Flow = _reflection.GeneratedProtocolMessageType('Flow', (_message.Message,), dict(
+
+  PolicyMatchEntry = _reflection.GeneratedProtocolMessageType('PolicyMatchEntry', (_message.Message,), dict(
+    DESCRIPTOR = _FLOW_POLICYMATCHENTRY,
+    __module__ = 'flow_validator_pb2'
+    # @@protoc_insertion_point(class_scope:flow_validator.Flow.PolicyMatchEntry)
+    ))
+  ,
+  DESCRIPTOR = _FLOW,
+  __module__ = 'flow_validator_pb2'
+  # @@protoc_insertion_point(class_scope:flow_validator.Flow)
+  ))
+_sym_db.RegisterMessage(Flow)
+_sym_db.RegisterMessage(Flow.PolicyMatchEntry)
+
 
 _FLOWRULE_FLOWRULEMATCHENTRY.has_options = True
 _FLOWRULE_FLOWRULEMATCHENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _POLICYSTATEMENT_POLICYMATCHENTRY.has_options = True
 _POLICYSTATEMENT_POLICYMATCHENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
+_FLOW_POLICYMATCHENTRY.has_options = True
+_FLOW_POLICYMATCHENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 
 _FLOWVALIDATOR = _descriptor.ServiceDescriptor(
   name='FlowValidator',
@@ -1377,8 +1473,8 @@ _FLOWVALIDATOR = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=2566,
-  serialized_end=2836,
+  serialized_start=2722,
+  serialized_end=2992,
   methods=[
   _descriptor.MethodDescriptor(
     name='Initialize',

@@ -1,3 +1,5 @@
+#include <random>
+
 #include "analysis_graph.h"
 #include "rule.h"
 #include "rule_effect.h"
@@ -189,6 +191,8 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
             switch_port_node->connected_host = host_node;
             continue;
         }
+
+        all_switch_links.push_back(ng->links(i));
 
         Vertex s, t;
         string src_node_id, dst_node_id;
@@ -417,15 +421,59 @@ vector<string> AnalysisGraph::find_path(string src, string dst, policy_match_t p
 }
 
 double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp) {
-    for (int i = 0; i < mcp->src_ports_size() ; i++) {
 
-        string src_port = mcp->src_ports(i).switch_id() + ":" + to_string(mcp->src_ports(i).port_num());
-        string dst_port = mcp->dst_ports(i).switch_id() + ":" + to_string(mcp->dst_ports(i).port_num());
-        cout << "Src Port: " << src_port << " Dst Port: " << dst_port << endl;
+    double time_to_disconnect = 0.0;
 
-
+    // Initialize active links
+    vector <Link> active_links;
+    for (int i=0; i < all_switch_links.size(); i++) {
+        //cout << all_switch_links[i].src_node() << " " << all_switch_links[i].dst_node() << endl;
+        active_links.push_back(all_switch_links[i]);
     }
 
-    return 1.0;
+    // Setup a uniformly random distribution 
+    mt19937 gen(42);
 
+    while(active_links.size() > 0) {
+        // Pick a link from the links that are active.
+        uniform_int_distribution<> unif_dis(0, active_links.size()-1);
+        exponential_distribution<double>  exp_dis(active_links.size() * mcp->link_failure_rate());
+
+        auto time_to_fail_link =  exp_dis(gen);
+        time_to_disconnect += time_to_fail_link;
+        cout << "time_to_disconnect: " << time_to_disconnect << endl;
+
+        auto link_to_fail_i = unif_dis(gen);
+        cout << "Link to fail:" << link_to_fail_i << endl;
+        active_links.erase(active_links.begin() + link_to_fail_i);
+    }
+
+/*    
+    for (int i = 0; i < mcp->flows_size() ; i++) {
+        string src_port = mcp->flows(i).src_port().switch_id() + ":" + to_string(mcp->flows(i).src_port().port_num());
+        string dst_port = mcp->flows(i).dst_port().switch_id() + ":" + to_string(mcp->flows(i).dst_port().port_num());
+        cout << "Src Port: " << src_port << " Dst Port: " << dst_port << endl;
+
+        
+        policy_match_t policy_match;
+        for (auto & p : mcp->flows(i).policy_match())
+        {
+            policy_match[p.first] = p.second;
+        }
+
+
+        // Accumulate time at the rate of all alive links
+
+
+        Lmbda this_lmbda;
+        auto l = this_lmbda.add_links();
+        l->set_src_node("s1");
+        l->set_dst_node("s4");
+        l->set_src_port_num(1);
+        l->set_dst_port_num(1);
+
+        //find_path(src_port, dst_port, policy_match, this_lmbda);      
+    }
+*/
+    return time_to_disconnect;
 }

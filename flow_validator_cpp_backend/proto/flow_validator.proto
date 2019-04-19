@@ -15,8 +15,7 @@ service FlowValidator {
 message MonteCarloParams {
     uint64 num_iterations = 1;
     float link_failure_rate = 2;
-    repeated PolicyPort src_ports = 3;
-    repeated PolicyPort dst_ports = 4;
+    repeated Flow flows = 3;
 }
 
 message TimeToDisconnectInfo {
@@ -148,4 +147,10 @@ message PolicyViolation {
   PolicyPort dst_port = 3;
   string constraint_type = 4;
   string counter_example = 5;
+}
+
+message Flow {
+    PolicyPort src_port = 1;
+    PolicyPort dst_port = 2;
+    map<string, uint64> policy_match = 3;
 }

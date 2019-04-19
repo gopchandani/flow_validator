@@ -49,6 +49,7 @@ class AnalysisGraph final {
      double find_time_to_disconnect(const MonteCarloParams*);
 
      analysis_graph g;
+     vector<Link> all_switch_links;
 
      std::unordered_map<string, GroupEffect*> group_effects;
      std::unordered_map<string, string> adjacent_port_id_map;

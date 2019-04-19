@@ -79,7 +79,6 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     for(auto && time: ttd) {
         ttd2.push_back(time.get());
     }
-    cout << endl;
 
     double sum = std::accumulate(ttd2.begin(), ttd2.end(), 0.0);
     double mean = sum / ttd2.size();

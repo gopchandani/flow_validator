@@ -93,12 +93,11 @@ class AdHocNet(Experiment):
 
         print validate_info.violations
 
-    def flow_validator_get_time_to_failure(self, stub, num_iterations, link_failure_rate, src_ports, dst_ports):
+    def flow_validator_get_time_to_failure(self, stub, num_iterations, link_failure_rate, flows):
 
         mcp = flow_validator_pb2.MonteCarloParams(num_iterations=num_iterations,
                                                   link_failure_rate=link_failure_rate,
-                                                  src_ports=src_ports,
-                                                  dst_ports=dst_ports)
+                                                  flows=flows)
 
         ttf = stub.GetTimeToDisconnect(mcp)
 
@@ -118,12 +117,16 @@ class AdHocNet(Experiment):
 
         #rpc_policy_statement = self.prepare_policy_statement_test_case()
 
-        self.flow_validator_validate_policy(stub, [rpc_policy_statement])
+        # self.flow_validator_validate_policy(stub, [rpc_policy_statement])
 
-        src_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1)]
-        dst_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+        policy_match = dict()
+        policy_match["eth_type"] = 0x0800
 
-        self.flow_validator_get_time_to_failure(stub, 10, 1.0, src_ports, dst_ports)
+        flows = [flow_validator_pb2.Flow(src_port=flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1),
+                                         dst_port=flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1),
+                                         policy_match=policy_match)]
+
+        self.flow_validator_get_time_to_failure(stub, 10, 1.0, flows)
 
 
 def main():
