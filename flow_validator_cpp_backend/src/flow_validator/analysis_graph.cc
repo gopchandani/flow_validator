@@ -252,7 +252,7 @@ void AnalysisGraph::print_graph() {
     }
 }
 
-void AnalysisGraph::print_paths(string src_node, string dst_node, vector<string> & p) {
+void AnalysisGraph::print_path(string src_node, string dst_node, vector<string> & p) {
 
     cout << "Path: " << src_node << "->" << dst_node << " ";
     for (auto p_iter = p.begin(); p_iter != p.end(); p_iter++) {
@@ -282,9 +282,11 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
 
                 (*pm)["in_port"] = adjacent_port_node->port_num;
                 find_packet_paths(adjacent_port_vertex, t, prev_node, pm, pv, p, l);
+
             } else 
             {
                 find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, prev_node, pm, pv, p, l);
+
             }
         }
         else 
@@ -332,7 +334,6 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
         if (agn->port_num != -1) {
             p.push_back(agn->node_id);
         } 
-        
     } 
     else 
     {
@@ -363,7 +364,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
                         //cout << "Total active rule effects: " << active_rule_effects.size() << endl;
 
                         for (uint k=0; k < active_rule_effects.size(); k++)
-                        {
+                        {   
                             apply_rule_effect(v, t, prev_node, pm_out, active_rule_effects[k], pv, p, l);
                         }
                     }
@@ -417,63 +418,74 @@ vector<string> AnalysisGraph::find_path(string src, string dst, policy_match_t p
     vector<string> p;
 
     find_packet_paths(s, t, src_node, &pm, pv, p, l);
-    return pv[0];
+    if (pv.size() > 0) {
+        return pv[0];
+    }
+    else {
+        vector<string> empty_path;
+        return empty_path;
+    }
 }
 
-double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp) {
+double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, default_random_engine *gen) {
 
     double time_to_disconnect = 0.0;
 
     // Initialize active links
     vector <Link> active_links;
     for (int i=0; i < all_switch_links.size(); i++) {
-        //cout << all_switch_links[i].src_node() << " " << all_switch_links[i].dst_node() << endl;
         active_links.push_back(all_switch_links[i]);
     }
 
-    // Setup a uniformly random distribution 
-    mt19937 gen(42);
+    // Initialize lmbda
+    Lmbda lmbda;
 
     while(active_links.size() > 0) {
-        // Pick a link from the links that are active.
         uniform_int_distribution<> unif_dis(0, active_links.size()-1);
         exponential_distribution<double>  exp_dis(active_links.size() * mcp->link_failure_rate());
 
-        auto time_to_fail_link =  exp_dis(gen);
+        // Pick and accumulate the time from now when this chosen link might fail
+        auto time_to_fail_link =  exp_dis(*gen);
         time_to_disconnect += time_to_fail_link;
-        cout << "time_to_disconnect: " << time_to_disconnect << endl;
+        //cout << "time_to_disconnect: " << time_to_disconnect << endl;
 
-        auto link_to_fail_i = unif_dis(gen);
-        cout << "Link to fail:" << link_to_fail_i << endl;
+        // Pick a link from the links that are active.
+        auto link_to_fail_i = unif_dis(*gen);
+        auto link_to_fail = active_links[link_to_fail_i];
+        //cout << "Link to fail: " << link_to_fail.src_node() << " -- " << link_to_fail.dst_node() << endl;
+
         active_links.erase(active_links.begin() + link_to_fail_i);
-    }
 
-/*    
-    for (int i = 0; i < mcp->flows_size() ; i++) {
-        string src_port = mcp->flows(i).src_port().switch_id() + ":" + to_string(mcp->flows(i).src_port().port_num());
-        string dst_port = mcp->flows(i).dst_port().switch_id() + ":" + to_string(mcp->flows(i).dst_port().port_num());
-        cout << "Src Port: " << src_port << " Dst Port: " << dst_port << endl;
+        // Include the link to the lmbda
+        auto l = lmbda.add_links();
 
-        
-        policy_match_t policy_match;
-        for (auto & p : mcp->flows(i).policy_match())
-        {
-            policy_match[p.first] = p.second;
+        //cout << "this_lmbda size: " << lmbda.links_size() << endl;
+
+        l->set_src_node(link_to_fail.src_node());
+        l->set_dst_node(link_to_fail.dst_node());
+        l->set_src_port_num(link_to_fail.src_port_num());
+        l->set_dst_port_num(link_to_fail.dst_port_num());
+
+        // Check if any of the flows have failed with this lmbda
+        for (int i = 0; i < mcp->flows_size() ; i++) {
+
+            string src_port = mcp->flows(i).src_port().switch_id() + ":" + to_string(mcp->flows(i).src_port().port_num());
+            string dst_port = mcp->flows(i).dst_port().switch_id() + ":" + to_string(mcp->flows(i).dst_port().port_num());
+            //cout << "Src Port: " << src_port << " Dst Port: " << dst_port << endl;
+            policy_match_t policy_match;
+            for (auto & p : mcp->flows(i).policy_match())
+            {
+                policy_match[p.first] = p.second;
+            }
+            auto p = find_path(src_port, dst_port, policy_match, lmbda); 
+            //print_path(src_port, dst_port, p);
+
+            // If there is no path, then bolt.
+            if (p.size() == 0) {
+                return time_to_disconnect;
+            }
         }
-
-
-        // Accumulate time at the rate of all alive links
-
-
-        Lmbda this_lmbda;
-        auto l = this_lmbda.add_links();
-        l->set_src_node("s1");
-        l->set_dst_node("s4");
-        l->set_src_port_num(1);
-        l->set_dst_port_num(1);
-
-        //find_path(src_port, dst_port, policy_match, this_lmbda);      
     }
-*/
+
     return time_to_disconnect;
 }

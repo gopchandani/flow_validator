@@ -35,7 +35,7 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
                     results.emplace_back(
                         thread_pool->enqueue([this, src_port, dst_port, policy_match, this_lmbda] {
                             auto p = ag->find_path(src_port, dst_port, policy_match, this_lmbda);
-                            ag->print_paths(src_port, dst_port, p);
+                            ag->print_path(src_port, dst_port, p);
                             return 0;
                         })  
                     );
@@ -62,13 +62,15 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     cout << "Link Failure Rate: " << mcp->link_failure_rate() << endl;
     cout << "Num Iterations: " << mcp->num_iterations() << endl;
 
+    default_random_engine* g = new default_random_engine(42);
+    g->seed(42);
+
     // Run iterations in parallel
-    
     vector< future<double> > ttd;
     for (int i = 0; i < mcp->num_iterations() ; i++) {
         ttd.emplace_back(
-                        thread_pool->enqueue([this, mcp] {
-                            return ag->find_time_to_disconnect(mcp);
+                        thread_pool->enqueue([this, mcp, g] {
+                            return ag->find_time_to_disconnect(mcp, g);
                         })  
                     );
     }
@@ -77,8 +79,11 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     // Compute mean and stdev
     vector <double> ttd2;
     for(auto && time: ttd) {
-        ttd2.push_back(time.get());
+        auto t = time.get();
+        ttd2.push_back(t);
+        cout << t << " ";
     }
+    cout << endl;
 
     double sum = std::accumulate(ttd2.begin(), ttd2.end(), 0.0);
     double mean = sum / ttd2.size();
