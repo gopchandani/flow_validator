@@ -97,7 +97,8 @@ class AdHocNet(Experiment):
 
         mcp = flow_validator_pb2.MonteCarloParams(num_iterations=num_iterations,
                                                   link_failure_rate=link_failure_rate,
-                                                  flows=flows)
+                                                  flows=flows,
+                                                  seed=42)
 
         ttf = stub.GetTimeToDisconnect(mcp)
 
@@ -126,7 +127,7 @@ class AdHocNet(Experiment):
                                          dst_port=flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1),
                                          policy_match=policy_match)]
 
-        self.flow_validator_get_time_to_failure(stub, 2, 1.0, flows)
+        self.flow_validator_get_time_to_failure(stub, 1000, 1.0, flows)
 
 
 def main():

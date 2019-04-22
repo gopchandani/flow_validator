@@ -16,6 +16,7 @@ message MonteCarloParams {
     uint64 num_iterations = 1;
     float link_failure_rate = 2;
     repeated Flow flows = 3;
+    uint64 seed = 4;
 }
 
 message TimeToDisconnectInfo {

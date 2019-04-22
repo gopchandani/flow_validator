@@ -58,19 +58,20 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
 
 Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const MonteCarloParams* mcp, TimeToDisconnectInfo* ttdi) {
     cout << "Received GetTimeToDisconnect request" << endl;
-
     cout << "Link Failure Rate: " << mcp->link_failure_rate() << endl;
     cout << "Num Iterations: " << mcp->num_iterations() << endl;
 
-    default_random_engine* g = new default_random_engine(42);
-    g->seed(42);
+    default_random_engine g;
+    g.seed(mcp->seed());
+    uniform_int_distribution<int> unif_dis(0,  10000);
+    auto random_seed = unif_dis(g);
 
     // Run iterations in parallel
     vector< future<double> > ttd;
     for (int i = 0; i < mcp->num_iterations() ; i++) {
         ttd.emplace_back(
-                        thread_pool->enqueue([this, mcp, g] {
-                            return ag->find_time_to_disconnect(mcp, g);
+                        thread_pool->enqueue([this, mcp, g, random_seed, i] {
+                            return ag->find_time_to_disconnect(mcp, random_seed + i);
                         })  
                     );
     }
@@ -81,9 +82,9 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     for(auto && time: ttd) {
         auto t = time.get();
         ttd2.push_back(t);
-        cout << t << " ";
+        //cout << t << " ";
     }
-    cout << endl;
+    //cout << endl;
 
     double sum = std::accumulate(ttd2.begin(), ttd2.end(), 0.0);
     double mean = sum / ttd2.size();
@@ -95,6 +96,7 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     ttdi->set_mean(mean);
     ttdi->set_sd(stdev);
     ttdi->set_time_taken(0.1);
+
 
     return Status::OK;
 }

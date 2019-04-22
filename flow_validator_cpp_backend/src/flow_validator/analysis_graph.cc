@@ -427,7 +427,7 @@ vector<string> AnalysisGraph::find_path(string src, string dst, policy_match_t p
     }
 }
 
-double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, default_random_engine *gen) {
+double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, int seed) {
 
     double time_to_disconnect = 0.0;
 
@@ -436,6 +436,9 @@ double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, defau
     for (int i=0; i < all_switch_links.size(); i++) {
         active_links.push_back(all_switch_links[i]);
     }
+
+    default_random_engine* gen = new default_random_engine(seed);
+    gen->seed(seed);
 
     // Initialize lmbda
     Lmbda lmbda;
