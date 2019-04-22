@@ -30,6 +30,7 @@ from experiments.topologies.ring_line_topo import RingLineTopo
 from experiments.topologies.clique_topo import CliqueTopo
 from experiments.topologies.ameren_topo import AmerenTopo
 from experiments.topologies.adhoc_topo import AdHocTopo
+from experiments.topologies.wsc_topo import WSCTopo
 
 from synthesis.dijkstra_synthesis import DijkstraSynthesis
 from synthesis.aborescene_synthesis import AboresceneSynthesis
@@ -99,7 +100,10 @@ class NetworkConfiguration(object):
         if self.topo_name == "ring":
             self.topo = RingTopo(self.topo_params)
             self.nc_topo_str = "Ring topology with " + str(self.topo.total_switches) + " switches"
-        if self.topo_name == "adhoc":
+        elif self.topo_name == "wsc":
+            self.topo = WSCTopo(self.topo_params)
+            self.nc_topo_str = "WSC topology with " + str(self.topo.total_switches) + " switches"
+        elif self.topo_name == "adhoc":
             self.topo = AdHocTopo(self.topo_params)
             self.nc_topo_str = "AdHoc topology with " + str(self.topo.total_switches) + " switches"
         elif self.topo_name == "clostopo":

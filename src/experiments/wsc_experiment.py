@@ -1,4 +1,5 @@
 import sys
+import json
 import grpc
 from rpc import flow_validator_pb2
 from rpc import flow_validator_pb2_grpc
@@ -58,21 +59,22 @@ class AdHocNet(Experiment):
 
 
 def main():
+
+    with open('dump.json') as json_file:
+        data = json.load(json_file)
+        num_switches = data["switches"]
+        edges = data["edges"]
+
     nc = NetworkConfiguration("ryu",
                               "127.0.0.1",
                               6633,
                               "http://localhost:8080/",
                               "admin",
                               "admin",
-                              "adhoc",
-                              {"num_switches": 4,
-                               "seed": 42,
-                               "num_hosts_per_switch": 1,
-                               "min_x": -100,
-                               "max_x":  100,
-                               "min_y": -100,
-                               "max_y":  100
-                               },
+                              "wsc",
+                              {"num_switches": num_switches,
+                               "edges": edges,
+                               "num_hosts_per_switch": 1},
                               conf_root="configurations/",
                               synthesis_name="DijkstraSynthesis",
                               synthesis_params={"apply_group_intents_immediately": True,
