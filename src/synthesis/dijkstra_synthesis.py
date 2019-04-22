@@ -576,37 +576,32 @@ class DijkstraSynthesis(object):
                                                       src_h_obj,
                                                       dst_h_obj)
 
-    def _synthesize_all_node_pairs(self, dst_port=None):
+    def synthesize_node_pairs(self, src_hosts, dst_hosts, dst_port=None):
 
-        print "Synthesizing backup paths between all possible host pairs..."
+        print "Synthesizing backup paths between host pairs..."
 
-        for src in self.network_graph.host_ids:
-            for dst in self.network_graph.host_ids:
+        for i in xrange(len(src_hosts)):
 
-                # Ignore paths with same src/dst
-                if src == dst:
-                    continue
+            src_h_obj = self.network_graph.get_node_object(src_hosts[i])
+            dst_h_obj = self.network_graph.get_node_object(dst_hosts[i])
 
-                src_h_obj = self.network_graph.get_node_object(src)
-                dst_h_obj = self.network_graph.get_node_object(dst)
+            # Ignore installation of paths between switches on the same switch
+            if src_h_obj.sw.node_id == dst_h_obj.sw.node_id:
+                continue
 
-                # Ignore installation of paths between switches on the same switch
-                if src_h_obj.sw.node_id == dst_h_obj.sw.node_id:
-                    continue
+            print "-----------------------------------------------------------------------------------------------"
+            print 'Synthesizing primary and backup paths from', src_hosts[i], 'to', dst_hosts[i]
+            print "-----------------------------------------------------------------------------------------------"
 
-                print "-----------------------------------------------------------------------------------------------"
-                print 'Synthesizing primary and backup paths from', src, 'to', dst
-                print "-----------------------------------------------------------------------------------------------"
+            flow_match = Match(is_wildcard=True)
+            flow_match["ethernet_type"] = 0x0800
 
-                flow_match = Match(is_wildcard=True)
-                flow_match["ethernet_type"] = 0x0800
+            if dst_port:
+                flow_match["ip_protocol"] = 6
+                flow_match["tcp_destination_port"] = dst_port
 
-                if dst_port:
-                    flow_match["ip_protocol"] = 6
-                    flow_match["tcp_destination_port"] = dst_port
-
-                self.synthesize_flow(src_h_obj, dst_h_obj, flow_match)
-                print "-----------------------------------------------------------------------------------------------"
+            self.synthesize_flow(src_h_obj, dst_h_obj, flow_match)
+            print "-----------------------------------------------------------------------------------------------"
 
         self._identify_reverse_and_balking_intents()
         self.push_switch_changes()
@@ -617,10 +612,22 @@ class DijkstraSynthesis(object):
 
     def synthesize_all_node_pairs(self, dst_ports_to_synthesize=None):
 
+        src_hosts, dst_hosts = [], []
+
+        for src in self.network_graph.host_ids:
+            for dst in dst_hosts:
+
+                # Ignore paths with same src/dst
+                if src == dst:
+                    continue
+
+                src_hosts.append(src)
+                dst_hosts.append(dst)
+
         if not dst_ports_to_synthesize:
-            self._synthesize_all_node_pairs()
+            self.synthesize_node_pairs(src_hosts, dst_hosts)
         else:
             for dst_port in dst_ports_to_synthesize:
-                self._synthesize_all_node_pairs(dst_port)
+                self.synthesize_node_pairs(src_hosts, dst_hosts, dst_port)
 
         self.synthesis_lib.save_synthesized_paths(self.network_configuration.conf_path)

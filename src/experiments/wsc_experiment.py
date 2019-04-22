@@ -12,16 +12,17 @@ __author__ = 'Rakesh Kumar'
 sys.path.append("./")
 
 
-class AdHocNet(Experiment):
+class WSC(Experiment):
 
-    def __init__(self, nc):
+    def __init__(self, nc, flow_specs):
 
-        super(AdHocNet, self).__init__("playground", 1)
+        super(WSC, self).__init__("playground", 1)
         self.nc = nc
         self.rpc_links = self.init_rpc_links()
+        self.flow_specs = flow_specs
 
     def flow_validator_initialize(self, stub):
-        rpc_ng = self.prepare_rpc_network_graph()
+        rpc_ng = self.prepare_rpc_network_graph(self.flow_specs)
         init_info = stub.Initialize(rpc_ng)
 
         if init_info.successful:
@@ -60,10 +61,19 @@ class AdHocNet(Experiment):
 
 def main():
 
+    flow_specs = {"src_hosts": [], "dst_hosts": []}
+
     with open('dump.json') as json_file:
         data = json.load(json_file)
         num_switches = data["switches"]
         edges = data["edges"]
+
+        for f in data["flows"]:
+            src_host = "h" + str(f[0]+1) + str(1)
+            dst_host = "h" + str(f[1]+1) + str(1)
+
+            flow_specs["src_hosts"].append(src_host)
+            flow_specs["dst_hosts"].append(dst_host)
 
     nc = NetworkConfiguration("ryu",
                               "127.0.0.1",
@@ -80,7 +90,7 @@ def main():
                               synthesis_params={"apply_group_intents_immediately": True,
                                                 "k": 1})
 
-    exp = AdHocNet(nc)
+    exp = WSC(nc, flow_specs)
     exp.trigger()
 
 

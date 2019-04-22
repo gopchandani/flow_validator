@@ -457,9 +457,9 @@ class Experiment(object):
 
         return rpc_links_list
 
-    def prepare_rpc_network_graph(self):
+    def prepare_rpc_network_graph(self, flow_specs=None):
 
-        ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
+        ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1, flow_specs=flow_specs)
 
         rpc_switches = self.prepare_rpc_switches()
         rpc_hosts = self.prepare_rpc_hosts()

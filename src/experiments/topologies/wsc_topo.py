@@ -26,3 +26,10 @@ class WSCTopo(Topo):
         # Add links between the switches
         for e in self.params["edges"]:
             self.addLink("s" + str(e[0]+1), "s" + str(e[1]+1))
+
+    def __str__(self):
+        params_str = ''
+        for k, v in self.params.items():
+            if k != "edges":
+                params_str += "_" + str(k) + "_" + str(v)
+        return self.__class__.__name__ + params_str

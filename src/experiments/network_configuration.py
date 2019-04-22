@@ -134,13 +134,16 @@ class NetworkConfiguration(object):
         else:
             self.synthesis = None
 
-    def trigger_synthesis(self, synthesis_setup_gap):
+    def trigger_synthesis(self, synthesis_setup_gap, flow_specs):
 
         if self.synthesis_name == "DijkstraSynthesis":
             self.synthesis.network_graph = self.ng
             self.synthesis.network_configuration = self
             self.synthesis.synthesis_lib = SynthesisLib("localhost", "8181", self.ng, self)
-            self.synthesis.synthesize_all_node_pairs()
+            if flow_specs:
+                self.synthesis.synthesize_node_pairs(flow_specs["src_hosts"], flow_specs["dst_hosts"])
+            else:
+                self.synthesis.synthesize_all_node_pairs()
 
         elif self.synthesis_name == "AboresceneSynthesis":
             self.synthesis.network_graph = self.ng
@@ -154,9 +157,9 @@ class NetworkConfiguration(object):
             time.sleep(synthesis_setup_gap)
 
         if self.mininet_obj:
-            self.mininet_obj.pingAll()
+            #self.mininet_obj.pingAll()
 
-            #CLI(self.mininet_obj)
+            CLI(self.mininet_obj)
 
             #is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
 
@@ -449,15 +452,17 @@ class NetworkConfiguration(object):
         else:
             raise NotImplementedError
 
-    def setup_network_graph(self, mininet_setup_gap=None, synthesis_setup_gap=None):
+    def setup_network_graph(self, mininet_setup_gap=None, synthesis_setup_gap=None, flow_specs=None):
 
         if not self.load_config and self.save_config:
 
             if self.controller == "ryu":
                 self.cm = ControllerMan(controller=self.controller)
                 self.cm.start_controller()
+                time.sleep(5)
 
                 self.start_mininet()
+
                 if mininet_setup_gap:
                     time.sleep(mininet_setup_gap)
 
@@ -477,7 +482,7 @@ class NetworkConfiguration(object):
             if self.synthesis_name:
 
                 # Now the synthesis...
-                self.trigger_synthesis(synthesis_setup_gap)
+                self.trigger_synthesis(synthesis_setup_gap, flow_specs)
 
                 # Refresh just the switches in the network graph, post synthesis
                 switches = self.get_switches()
