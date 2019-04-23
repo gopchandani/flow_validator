@@ -496,20 +496,45 @@ double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, int s
 int AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
 
     auto rep = nafi->add_reps();
+    Lmbda lmbda;
 
     for (int j=0; j < nafp->reps(i).link_failure_sequence_size(); j++) {
         cout << i << " " << j << " ";
         cout << nafp->reps(i).link_failure_sequence(i).src_node() << " ";
         cout << nafp->reps(i).link_failure_sequence(i).dst_node() << endl;
-        
+
+        // Add link to the lmbda
+        auto l = lmbda.add_links();
+        l->set_src_node(nafp->reps(i).link_failure_sequence(i).src_node());
+        l->set_dst_node(nafp->reps(i).link_failure_sequence(i).dst_node());
+        l->set_src_port_num(nafp->reps(i).link_failure_sequence(i).src_port_num());
+        l->set_dst_port_num(nafp->reps(i).link_failure_sequence(i).dst_port_num());
+
+        // Count how many flows are active now
+        int num_active_flows = 0;
+        for (int i = 0; i < flows.size() ; i++) {
+
+            string src_port = flows[i].src_port().switch_id() + ":" + to_string(flows[i].src_port().port_num());
+            string dst_port = flows[i].dst_port().switch_id() + ":" + to_string(flows[i].dst_port().port_num());
+            policy_match_t policy_match;
+            for (auto & p : flows[i].policy_match())
+            {
+                policy_match[p.first] = p.second;
+            }
+            auto p = find_path(src_port, dst_port, policy_match, lmbda); 
+            if (p.size() > 0) {
+                num_active_flows += 1;
+            }
+        }
+
+        // Add to the output
         auto link = rep->add_link_failure_sequence();
         link->set_src_node(nafp->reps(i).link_failure_sequence(i).src_node());
         link->set_src_port_num(nafp->reps(i).link_failure_sequence(i).src_port_num());
         link->set_dst_node(nafp->reps(i).link_failure_sequence(i).dst_node());
         link->set_dst_port_num(nafp->reps(i).link_failure_sequence(i).dst_port_num());
-
-        rep->add_num_active_flows(j);
-        //rep->set_num_active_flows(j, j);
+        
+        rep->add_num_active_flows(num_active_flows);
     }
 
     return 0;
