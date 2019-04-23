@@ -109,34 +109,21 @@ Status FlowValidatorImpl::GetNumActiveFlowsAtFailureTimes(ServerContext* context
     }
 
     // Run reps in parallel
-    
-    vector< future<vector<double> > > num_active_flows;
-
+    /*
+    vector<future<int>> retvals;
     for (int i = 0; i < nafp->reps_size() ; i++) {
-        num_active_flows.emplace_back(
-                        thread_pool->enqueue([this, flows, nafp, i] {
-                            cout << i << " -- " << endl;
-                            cout << flows.size() << endl;
-                            cout << nafp->reps_size() << endl;
-                            return ag->get_num_active_flows(flows, nafp->reps(i));
+        retvals.emplace_back(
+                        thread_pool->enqueue([this, i, flows, nafp, nafi] {
+                            return ag->get_num_active_flows(i, flows, nafp, nafi);
                         })  
                     );
     }
-    
-   /*
-    vector< vector<double> > num_active_flows;
-    for (int i = 0; i < nafp->reps_size() ; i++) {
-        num_active_flows.push_back(ag->get_num_active_flows(flows, nafp->reps(i)));
-    }
     */
-
-/*
-    for (int i =0; i < nafp->reps_size(); i++) {
-        auto rep = nafi->add_reps();
-        rep->set_num_active_flows(num_active_flows(i));
-        auto lfs = rep->add_link_failure_sequence();
+    
+    for (int i = 0; i < nafp->reps_size() ; i++) {
+        ag->get_num_active_flows(i, flows, nafp, nafi);
     }
-*/
+
     nafi->set_time_taken(0.1);
     return Status::OK;
 }

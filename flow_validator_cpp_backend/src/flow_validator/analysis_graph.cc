@@ -493,15 +493,24 @@ double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, int s
     return time_to_disconnect;
 }
 
-vector<double> AnalysisGraph::get_num_active_flows(vector<Flow> flows, NumActiveFlowsRep nafr) {
-    vector<double> num_active_flows;
+int AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
 
-    cout << "here1" << endl;
+    auto rep = nafi->add_reps();
 
-    for (int i=0; i<nafr.link_failure_sequence_size(); i++) {
-        num_active_flows.push_back(i);
+    for (int j=0; j < nafp->reps(i).link_failure_sequence_size(); j++) {
+        cout << i << " " << j << " ";
+        cout << nafp->reps(i).link_failure_sequence(i).src_node() << " ";
+        cout << nafp->reps(i).link_failure_sequence(i).dst_node() << endl;
+        
+        auto link = rep->add_link_failure_sequence();
+        link->set_src_node(nafp->reps(i).link_failure_sequence(i).src_node());
+        link->set_src_port_num(nafp->reps(i).link_failure_sequence(i).src_port_num());
+        link->set_dst_node(nafp->reps(i).link_failure_sequence(i).dst_node());
+        link->set_dst_port_num(nafp->reps(i).link_failure_sequence(i).dst_port_num());
+
+        rep->add_num_active_flows(j);
+        //rep->set_num_active_flows(j, j);
     }
-    cout << "here2" << endl;
 
-    return num_active_flows;
+    return 0;
 }

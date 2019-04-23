@@ -47,7 +47,7 @@ class AnalysisGraph final {
      void find_packet_paths(Vertex, Vertex, AnalysisGraphNode*, policy_match_t*, vector<vector<string> > &, vector<string> &, Lmbda);
      vector<string> find_path(string, string, policy_match_t, Lmbda);
      double find_time_to_disconnect(const MonteCarloParams*, int);
-     vector<double> get_num_active_flows(vector<Flow>, NumActiveFlowsRep);
+     int get_num_active_flows(int, vector<Flow>, const NumActiveFlowsParams*, NumActiveFlowsInfo*);
 
      analysis_graph g;
      vector<Link> all_switch_links;
