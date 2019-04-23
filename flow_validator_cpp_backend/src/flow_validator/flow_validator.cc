@@ -97,6 +97,46 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     ttdi->set_sd(stdev);
     ttdi->set_time_taken(0.1);
 
+    return Status::OK;
+}
 
+Status FlowValidatorImpl::GetNumActiveFlowsAtFailureTimes(ServerContext* context, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
+    cout << "Received GetNumActiveFlowsAtFailureTimes request" << endl;
+    
+    vector <Flow> flows;
+    for (int i=0; i<nafp->flows_size(); i++) {
+        flows.push_back(nafp->flows(i));
+    }
+
+    // Run reps in parallel
+    
+    vector< future<vector<double> > > num_active_flows;
+
+    for (int i = 0; i < nafp->reps_size() ; i++) {
+        num_active_flows.emplace_back(
+                        thread_pool->enqueue([this, flows, nafp, i] {
+                            cout << i << " -- " << endl;
+                            cout << flows.size() << endl;
+                            cout << nafp->reps_size() << endl;
+                            return ag->get_num_active_flows(flows, nafp->reps(i));
+                        })  
+                    );
+    }
+    
+   /*
+    vector< vector<double> > num_active_flows;
+    for (int i = 0; i < nafp->reps_size() ; i++) {
+        num_active_flows.push_back(ag->get_num_active_flows(flows, nafp->reps(i)));
+    }
+    */
+
+/*
+    for (int i =0; i < nafp->reps_size(); i++) {
+        auto rep = nafi->add_reps();
+        rep->set_num_active_flows(num_active_flows(i));
+        auto lfs = rep->add_link_failure_sequence();
+    }
+*/
+    nafi->set_time_taken(0.1);
     return Status::OK;
 }

@@ -492,3 +492,16 @@ double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, int s
 
     return time_to_disconnect;
 }
+
+vector<double> AnalysisGraph::get_num_active_flows(vector<Flow> flows, NumActiveFlowsRep nafr) {
+    vector<double> num_active_flows;
+
+    cout << "here1" << endl;
+
+    for (int i=0; i<nafr.link_failure_sequence_size(); i++) {
+        num_active_flows.push_back(i);
+    }
+    cout << "here2" << endl;
+
+    return num_active_flows;
+}

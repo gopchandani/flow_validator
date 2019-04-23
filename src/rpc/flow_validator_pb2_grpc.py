@@ -29,6 +29,11 @@ class FlowValidatorStub(object):
         request_serializer=flow__validator__pb2.MonteCarloParams.SerializeToString,
         response_deserializer=flow__validator__pb2.TimeToDisconnectInfo.FromString,
         )
+    self.GetNumActiveFlowsAtFailureTimes = channel.unary_unary(
+        '/flow_validator.FlowValidator/GetNumActiveFlowsAtFailureTimes',
+        request_serializer=flow__validator__pb2.NumActiveFlowsParams.SerializeToString,
+        response_deserializer=flow__validator__pb2.NumActiveFlowsInfo.FromString,
+        )
 
 
 class FlowValidatorServicer(object):
@@ -56,6 +61,13 @@ class FlowValidatorServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def GetNumActiveFlowsAtFailureTimes(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_FlowValidatorServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -73,6 +85,11 @@ def add_FlowValidatorServicer_to_server(servicer, server):
           servicer.GetTimeToDisconnect,
           request_deserializer=flow__validator__pb2.MonteCarloParams.FromString,
           response_serializer=flow__validator__pb2.TimeToDisconnectInfo.SerializeToString,
+      ),
+      'GetNumActiveFlowsAtFailureTimes': grpc.unary_unary_rpc_method_handler(
+          servicer.GetNumActiveFlowsAtFailureTimes,
+          request_deserializer=flow__validator__pb2.NumActiveFlowsParams.FromString,
+          response_serializer=flow__validator__pb2.NumActiveFlowsInfo.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

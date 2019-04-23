@@ -10,6 +10,23 @@ service FlowValidator {
 
   rpc GetTimeToDisconnect(MonteCarloParams) returns (TimeToDisconnectInfo) {}
 
+  rpc GetNumActiveFlowsAtFailureTimes(NumActiveFlowsParams) returns (NumActiveFlowsInfo) {}
+
+}
+
+message NumActiveFlowsRep {
+    repeated Link link_failure_sequence = 1;
+    repeated uint64 num_active_flows = 2;
+}
+
+message NumActiveFlowsInfo {
+    repeated NumActiveFlowsRep reps = 1;
+    float time_taken = 2;
+}
+
+message NumActiveFlowsParams {
+    repeated Flow flows = 1;
+    repeated NumActiveFlowsRep reps = 2;
 }
 
 message MonteCarloParams {

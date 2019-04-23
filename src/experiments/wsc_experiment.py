@@ -82,12 +82,22 @@ class WSC(Experiment):
 
         flows = self.get_rpc_flows(src_ports, dst_ports)
 
+        reps = []
         for rep in self.reps:
-            print rep['replication']
-            print rep['failures']
+            link_failure_sequence = []
+            for f in rep['failures']:
+                link_failure_sequence.append(self.rpc_links["s" + str(f[1]+1)]["s" + str(f[2]+1)])
 
+            reps.append(flow_validator_pb2.NumActiveFlowsRep(link_failure_sequence=link_failure_sequence,
+                                                             num_active_flows=[]))
 
+        nafp = flow_validator_pb2.NumActiveFlowsParams(flows=flows, reps=reps)
 
+        nafi = self.stub.GetNumActiveFlowsAtFailureTimes(nafp)
+
+        for rep in nafi.reps:
+            print rep.link_failure_sequence
+            print rep.num_active_flows
 
     def trigger(self):
         self.channel = grpc.insecure_channel('localhost:50051')
