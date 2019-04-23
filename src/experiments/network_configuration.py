@@ -157,9 +157,11 @@ class NetworkConfiguration(object):
             time.sleep(synthesis_setup_gap)
 
         if self.mininet_obj:
+            pass
+
             #self.mininet_obj.pingAll()
 
-            CLI(self.mininet_obj)
+            #CLI(self.mininet_obj)
 
             #is_bi_connected = self.is_bi_connected_manual_ping_test_all_hosts_single_link()
 

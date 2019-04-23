@@ -360,7 +360,13 @@ class Experiment(object):
 
             rpc_ports = []
             for port in switch["ports"]:
-                rpc_port = flow_validator_pb2.Port(port_num=port["port_no"], hw_addr=port["hw_addr"])
+
+                try:
+                    port_no = int(port["port_no"])
+                except:
+                    continue
+
+                rpc_port = flow_validator_pb2.Port(port_num=port_no, hw_addr=port["hw_addr"])
                 rpc_ports.append(rpc_port)
 
             rpc_groups = []

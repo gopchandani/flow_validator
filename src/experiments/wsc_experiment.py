@@ -20,43 +20,76 @@ class WSC(Experiment):
         self.nc = nc
         self.rpc_links = self.init_rpc_links()
         self.flow_specs = flow_specs
+        self.channel = None
+        self.stub = None
 
-    def flow_validator_initialize(self, stub):
+    def flow_validator_initialize(self):
         rpc_ng = self.prepare_rpc_network_graph(self.flow_specs)
-        init_info = stub.Initialize(rpc_ng)
+        init_info = self.stub.Initialize(rpc_ng)
 
         if init_info.successful:
             print "Server said initialization was successful, time taken:", init_info.time_taken
         else:
             print "Server said initialization was not successful"
 
-    def flow_validator_get_time_to_failure(self, stub, num_iterations, link_failure_rate, flows):
+    def get_rpc_flows(self, src_ports, dst_ports):
+
+        policy_match = dict()
+        policy_match["eth_type"] = 0x0800
+
+        flows = []
+
+        for i in xrange(len(src_ports)):
+            flows.append(flow_validator_pb2.Flow(
+                src_port=flow_validator_pb2.PolicyPort(switch_id=src_ports[i][0], port_num=src_ports[i][1]),
+                dst_port=flow_validator_pb2.PolicyPort(switch_id=dst_ports[i][0], port_num=dst_ports[i][1]),
+                policy_match=policy_match))
+
+        return flows
+
+    def flow_validator_get_time_to_failure(self):
+
+        num_iterations = 1000
+        link_failure_rate = 1.0
+        src_ports = [('s1', 1)]
+        dst_ports = [('s4', 1)]
+
+        flows = self.get_rpc_flows(src_ports, dst_ports)
 
         mcp = flow_validator_pb2.MonteCarloParams(num_iterations=num_iterations,
                                                   link_failure_rate=link_failure_rate,
                                                   flows=flows,
                                                   seed=42)
 
-        ttf = stub.GetTimeToDisconnect(mcp)
+        ttf = self.stub.GetTimeToDisconnect(mcp)
 
         print "Mean TTF: ", ttf.mean
         print "SD TTF:", ttf.sd
         print "Time taken:", ttf.time_taken
 
+    def flow_validator_get_num_active_flows_at_failure_times(self):
+
+        src_ports, dst_ports = [], []
+
+        for i in xrange(len(self.flow_specs["src_hosts"])):
+            src_h_obj = self.nc.ng.get_node_object(self.flow_specs["src_hosts"][i])
+            dst_h_obj = self.nc.ng.get_node_object(self.flow_specs["dst_hosts"][i])
+
+            src_ports.append((src_h_obj.sw.node_id, src_h_obj.switch_port.port_number))
+            dst_ports.append((dst_h_obj.sw.node_id, dst_h_obj.switch_port.port_number))
+
+        flows = self.get_rpc_flows(src_ports, dst_ports)
+
+
     def trigger(self):
-        channel = grpc.insecure_channel('localhost:50051')
-        stub = flow_validator_pb2_grpc.FlowValidatorStub(channel)
+        self.channel = grpc.insecure_channel('localhost:50051')
+        self.stub = flow_validator_pb2_grpc.FlowValidatorStub(self.channel)
 
-        self.flow_validator_initialize(stub)
+        self.flow_validator_initialize()
 
-        policy_match = dict()
-        policy_match["eth_type"] = 0x0800
+        # self.flow_validator_get_time_to_failure()
 
-        flows = [flow_validator_pb2.Flow(src_port=flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1),
-                                         dst_port=flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1),
-                                         policy_match=policy_match)]
-
-        self.flow_validator_get_time_to_failure(stub, 1000, 1.0, flows)
+        self.flow_validator_get_num_active_flows_at_failure_times()
 
 
 def main():
