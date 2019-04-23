@@ -14,11 +14,12 @@ sys.path.append("./")
 
 class WSC(Experiment):
 
-    def __init__(self, nc, flow_specs, reps):
+    def __init__(self, nc, input, flow_specs, reps):
 
         super(WSC, self).__init__("playground", 1)
         self.nc = nc
         self.rpc_links = self.init_rpc_links()
+        self.input = input
         self.flow_specs = flow_specs
         self.reps = reps
 
@@ -95,9 +96,13 @@ class WSC(Experiment):
 
         nafi = self.stub.GetNumActiveFlowsAtFailureTimes(nafp)
 
-        for rep in nafi.reps:
-            print rep.link_failure_sequence
-            print rep.num_active_flows
+        for i in xrange(len(nafi.reps)):
+            self.input["reps"][i]["num_active_flows"] = list(nafi.reps[i].num_active_flows)
+
+        print self.input["reps"]
+
+        with open('output.json', "w") as json_file:
+            json.dump(self.input, json_file)
 
     def trigger(self):
         self.channel = grpc.insecure_channel('localhost:50051')
@@ -142,7 +147,7 @@ def main():
                               synthesis_params={"apply_group_intents_immediately": True,
                                                 "k": 1})
 
-    exp = WSC(nc, flow_specs, reps)
+    exp = WSC(nc, data, flow_specs, reps)
     exp.trigger()
 
 
