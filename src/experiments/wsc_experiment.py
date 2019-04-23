@@ -14,12 +14,14 @@ sys.path.append("./")
 
 class WSC(Experiment):
 
-    def __init__(self, nc, flow_specs):
+    def __init__(self, nc, flow_specs, reps):
 
         super(WSC, self).__init__("playground", 1)
         self.nc = nc
         self.rpc_links = self.init_rpc_links()
         self.flow_specs = flow_specs
+        self.reps = reps
+
         self.channel = None
         self.stub = None
 
@@ -80,6 +82,12 @@ class WSC(Experiment):
 
         flows = self.get_rpc_flows(src_ports, dst_ports)
 
+        for rep in self.reps:
+            print rep['replication']
+            print rep['failures']
+
+
+
 
     def trigger(self):
         self.channel = grpc.insecure_channel('localhost:50051')
@@ -100,6 +108,7 @@ def main():
         data = json.load(json_file)
         num_switches = data["switches"]
         edges = data["edges"]
+        reps = data['reps']
 
         for f in data["flows"]:
             src_host = "h" + str(f[0]+1) + str(1)
@@ -123,7 +132,7 @@ def main():
                               synthesis_params={"apply_group_intents_immediately": True,
                                                 "k": 1})
 
-    exp = WSC(nc, flow_specs)
+    exp = WSC(nc, flow_specs, reps)
     exp.trigger()
 
 
