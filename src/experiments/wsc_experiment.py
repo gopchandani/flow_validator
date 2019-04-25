@@ -81,6 +81,9 @@ class WSC(Experiment):
             src_ports.append((src_h_obj.sw.node_id, src_h_obj.switch_port.port_number))
             dst_ports.append((dst_h_obj.sw.node_id, dst_h_obj.switch_port.port_number))
 
+            # self.nc.is_host_pair_pingable(self.nc.mininet_obj.get(src_h_obj.node_id),
+            #                               self.nc.mininet_obj.get(dst_h_obj.node_id))
+
         flows = self.get_rpc_flows(src_ports, dst_ports)
 
         reps = []
@@ -99,10 +102,8 @@ class WSC(Experiment):
         for i in xrange(len(nafi.reps)):
             self.input["reps"][i]["num_active_flows"] = list(nafi.reps[i].num_active_flows)
 
-        print self.input["reps"]
-
         with open('output.json', "w") as json_file:
-            json.dump(self.input, json_file)
+            json.dump(self.input, json_file, indent=4)
 
     def trigger(self):
         self.channel = grpc.insecure_channel('localhost:50051')
@@ -119,11 +120,14 @@ def main():
 
     flow_specs = {"src_hosts": [], "dst_hosts": []}
 
-    with open('dump.json') as json_file:
+    with open('failovers2.json') as json_file:
         data = json.load(json_file)
         num_switches = data["switches"]
         edges = data["edges"]
         reps = data['reps']
+
+        for rep in reps:
+            print rep['replication'], len(rep["failures"])
 
         for f in data["flows"]:
             src_host = "h" + str(f[0]+1) + str(1)

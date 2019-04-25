@@ -12,6 +12,7 @@ void AnalysisGraph::init_flow_table_rules(AnalysisGraphNode *agn, FlowTable flow
 
         // Initialize a Rule
         Rule *r = new Rule(flow_table.flow_rules(i).priority());
+        total_flow_table_rules += 1;
 
         // Populate the flow rule match
         for (auto & p : flow_table.flow_rules(i).flow_rule_match()) {
@@ -138,6 +139,9 @@ void AnalysisGraph::init_adjacent_port_id_map(const NetworkGraph* ng) {
             dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
         }
 
+        //cout << src_node_id << ":" << dst_node_id << endl;
+        //cout << dst_node_id << ":" << src_node_id << endl;
+
         adjacent_port_id_map[src_node_id] = dst_node_id;
         adjacent_port_id_map[dst_node_id] = src_node_id;
     }
@@ -146,6 +150,8 @@ void AnalysisGraph::init_adjacent_port_id_map(const NetworkGraph* ng) {
 
 
 AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
+
+    total_flow_table_rules = 0;
 
     init_adjacent_port_id_map(ng);
 
@@ -272,6 +278,7 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
 
         
         if (agn->port_num == -1) {
+            
             // Find the next node, for host ports, this becomes the output port, for others, it is the port at the next switch
             if (adjacent_port_id_map.find(re->next_node->node_id) != adjacent_port_id_map.end()) {
                 string adjacent_port_node_id = adjacent_port_id_map[re->next_node->node_id];
@@ -286,7 +293,6 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
             } else 
             {
                 find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, prev_node, pm, pv, p, l);
-
             }
         }
         else 
@@ -495,8 +501,8 @@ double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, int s
 
 int AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
 
-    auto rep = nafi->add_reps();
     Lmbda lmbda;
+    auto rep = nafi->add_reps();
 
     for (int j=0; j < nafp->reps(i).link_failure_sequence_size(); j++) {
         // Add link to the lmbda

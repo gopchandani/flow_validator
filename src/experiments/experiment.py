@@ -445,6 +445,9 @@ class Experiment(object):
                 dst_node = dst_list[0]
                 dst_node_port = dst_list[1]
 
+                if src_node == "s6" and dst_node == "s12":
+                    pass
+
                 rpc_link = flow_validator_pb2.Link(src_node=src_node,
                                                    src_port_num=int(src_node_port),
                                                    dst_node=dst_node,

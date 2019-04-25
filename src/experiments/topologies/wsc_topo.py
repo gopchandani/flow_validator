@@ -1,7 +1,7 @@
 __author__ = 'Rakesh Kumar'
 
 from mininet.topo import Topo
-
+from collections import defaultdict
 
 class WSCTopo(Topo):
 
@@ -10,8 +10,29 @@ class WSCTopo(Topo):
         self.params = params
         self.total_switches = self.params["num_switches"]
         self.switch_names = []
+        self.links_added = defaultdict(defaultdict)
 
         self.build_topo()
+
+    def is_already_added(self, n1, n2):
+
+        if n1 == "s6" and n2 == "s12":
+            pass
+
+        if n1 == "s12" and n2 == "s6":
+            pass
+
+        try:
+            self.links_added[n1][n2]
+        except KeyError:
+            return False
+
+        try:
+            self.links_added[n2][n1]
+        except KeyError:
+            return False
+
+        return True
 
     def build_topo(self):
         #  Add switches and hosts under them
@@ -25,7 +46,13 @@ class WSCTopo(Topo):
 
         # Add links between the switches
         for e in self.params["edges"]:
-            self.addLink("s" + str(e[0]+1), "s" + str(e[1]+1))
+            n1 = "s" + str(e[0]+1)
+            n2 = "s" + str(e[1]+1)
+
+            if not self.is_already_added(n1, n2):
+                self.addLink(n1, n2)
+                self.links_added[n1][n2] = 1
+                self.links_added[n2][n1] = 1
 
     def __str__(self):
         params_str = ''

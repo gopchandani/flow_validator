@@ -49,6 +49,9 @@ class AnalysisGraph final {
      double find_time_to_disconnect(const MonteCarloParams*, int);
      int get_num_active_flows(int, vector<Flow>, const NumActiveFlowsParams*, NumActiveFlowsInfo*);
 
+    
+     int total_flow_table_rules;
+
      analysis_graph g;
      vector<Link> all_switch_links;
 
