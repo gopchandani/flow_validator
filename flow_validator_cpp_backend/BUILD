@@ -38,12 +38,13 @@ cc_library(
         "src/flow_validator/analysis_graph.cc"
         ],
 
-    deps = ["@boost//:algorithm",
-            "@boost//:lexical_cast",
-            "@boost//:program_options",
-            "@boost//:exception",
-            ":flow_validator_proto_cpp"],
-    
+    # deps = ["@boost//:algorithm",
+    #         "@boost//:lexical_cast",
+    #         "@boost//:program_options",
+    #         "@boost//:exception",
+    #         ":flow_validator_proto_cpp"],
+
+    deps = [":flow_validator_proto_cpp"],
     copts = ["-fpermissive -Wno-reorder"],
     visibility = ["//visibility:public"],
     alwayslink = True,

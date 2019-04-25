@@ -189,7 +189,6 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
         all_switch_links.push_back(ng->links(i));
 
-        Vertex s, t;
         string src_node_id, dst_node_id;
         AnalysisGraphNode *src_node, *dst_node;
 
@@ -198,7 +197,6 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
         src_node = node_id_to_node_map[src_node_id];
         dst_node = node_id_to_node_map[dst_node_id];
-
 
         add_wildcard_rule(src_node, dst_node);
         add_wildcard_rule(dst_node, src_node);
@@ -228,17 +226,33 @@ void AnalysisGraph::print_path(string src_node, string dst_node, vector<string> 
     cout << endl;
 }
 
+bool AnalysisGraph::is_node_inactive(string node_id, Lmbda l) {
+
+    for (int i=0; i < l.links_size(); i++) {
+        string src_port_node_id = l.links(i).src_node() + ":" + to_string(l.links(i).src_port_num());
+        string dst_port_node_id = l.links(i).dst_node() + ":" + to_string(l.links(i).dst_port_num());
+
+        if (src_port_node_id == node_id || dst_port_node_id == node_id) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void AnalysisGraph::apply_rule_effect(AnalysisGraphNode *agn, AnalysisGraphNode *dst_node, AnalysisGraphNode *prev_node, policy_match_t* pm, RuleEffect *re, vector<vector<string> > & pv, vector<string> & p, Lmbda l) {
 
     re->get_modified_policy_match(pm);
 
     if (re->next_node != NULL) {
+
+        // If the rule effect has a next_node and that node is inactive right now, then bolt, the link has failed
+        if (is_node_inactive(re->next_node->node_id, l)) {
+            return;
+        }
+
         //cout << "next_node: " << re->next_node->node_id << endl;
         // This node (agn) can only be a previous node if it belongs to a port.
-
-        
         if (agn->port_num == -1) {
-            
             // Find the next node, for host ports, this becomes the output port, for others, it is the port at the next switch
             if (adjacent_port_id_map.find(re->next_node->node_id) != adjacent_port_id_map.end()) {
                 string adjacent_port_node_id = adjacent_port_id_map[re->next_node->node_id];
