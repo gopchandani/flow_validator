@@ -11,7 +11,7 @@ GroupEffect::GroupEffect(Switch sw, Group in_group, AnalysisGraph* ag) {
     
     for (int i=0; i < in_group.buckets_size(); i++) {
         string watch_port_node_id = sw.switch_id() + ":" + to_string(in_group.buckets(i).watch_port_num());
-        AnalysisGraphNode *watch_port_node = ag->vertex_to_node_map[ag->node_id_vertex_map[watch_port_node_id]];
+        AnalysisGraphNode *watch_port_node = ag->node_id_to_node_map[watch_port_node_id];
         watch_port_nodes.push_back(watch_port_node);
 
         RuleEffect *re = new RuleEffect(ag, in_group.buckets(i), sw.switch_id());

@@ -25,7 +25,7 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Bucket in_bucket, string switch_id) {
             else 
             {
                 string output_port_node_id =  switch_id + ":" + to_string(in_bucket.actions(k).output_port_num());             
-                next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[output_port_node_id]];  
+                next_node = ag->node_id_to_node_map[output_port_node_id];  
             }
         } 
         else
@@ -63,7 +63,7 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
                 else 
                 {
                     string output_port_node_id =  switch_id + ":" + to_string(i.actions(k).output_port_num());  
-                    next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[output_port_node_id]];  
+                    next_node = ag->node_id_to_node_map[output_port_node_id];  
                 }
             } 
             else 
@@ -98,7 +98,7 @@ RuleEffect::RuleEffect(AnalysisGraph *ag, Instruction i, string switch_id) {
     else 
     if (i.type() == "GOTO_TABLE") {        
         string node_id = switch_id + ":table" + to_string(i.go_to_table_num());
-        next_node = ag->vertex_to_node_map[ag->node_id_vertex_map[node_id]];
+        next_node = ag->node_id_to_node_map[node_id];
         //cout << "go_to_table_num: " << i.go_to_table_num() << " node_id:" << node_id << " next_node:" << next_node->node_id << endl;
     }
     

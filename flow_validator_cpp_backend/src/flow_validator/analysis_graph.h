@@ -28,7 +28,6 @@ class AnalysisGraph final {
  public:
      AnalysisGraph(const NetworkGraph* ng);
      ~AnalysisGraph();
-     void print_graph();
      void print_path(string, string, vector<string> & );
      bool path_has_loop(string, vector<string> &);
 
@@ -43,23 +42,19 @@ class AnalysisGraph final {
      void init_group_table_per_switch(Switch);
      void init_flow_tables_per_switch(Switch);
 
-     void apply_rule_effect(Vertex, Vertex, AnalysisGraphNode*, policy_match_t*, RuleEffect*, vector<vector<string> > &, vector<string> &, Lmbda);
-     void find_packet_paths(Vertex, Vertex, AnalysisGraphNode*, policy_match_t*, vector<vector<string> > &, vector<string> &, Lmbda);
+     void apply_rule_effect(AnalysisGraphNode*, AnalysisGraphNode*, AnalysisGraphNode*, policy_match_t*, RuleEffect*, vector<vector<string> > &, vector<string> &, Lmbda);
+     void find_packet_paths(AnalysisGraphNode*, AnalysisGraphNode*, AnalysisGraphNode*, policy_match_t*, vector<vector<string> > &, vector<string> &, Lmbda);
      vector<string> find_path(string, string, policy_match_t, Lmbda);
      double find_time_to_disconnect(const MonteCarloParams*, int);
      NumActiveFlowsRep get_num_active_flows(int, vector<Flow>, const NumActiveFlowsParams*);
 
     
      int total_flow_table_rules;
-
-     analysis_graph g;
      vector<Link> all_switch_links;
 
      std::unordered_map<string, GroupEffect*> group_effects;
      std::unordered_map<string, string> adjacent_port_id_map;
-     
-     std::unordered_map<string, Vertex> node_id_vertex_map;
-     std::unordered_map<Vertex, AnalysisGraphNode*> vertex_to_node_map;
+     std::unordered_map<string, AnalysisGraphNode*> node_id_to_node_map;
 
      
 

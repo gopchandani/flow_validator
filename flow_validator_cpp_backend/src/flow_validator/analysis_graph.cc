@@ -52,7 +52,7 @@ void AnalysisGraph::init_flow_tables_per_switch(Switch sw) {
 
     for (int i=0; i < sw.flow_tables_size(); i++) {
         string node_id = sw.switch_id() + ":table" + to_string(sw.flow_tables(i).table_num());
-        AnalysisGraphNode *agn = vertex_to_node_map[node_id_vertex_map[node_id]];
+        AnalysisGraphNode *agn = node_id_to_node_map[node_id];
         init_flow_table_rules(agn, sw.flow_tables(i), sw.switch_id());
     }
 }
@@ -63,15 +63,12 @@ void AnalysisGraph::init_group_table_per_switch(Switch sw) {
         auto *g = new GroupEffect(sw, sw.group_table(i), this);
         group_effects[g->group_key] = g;
     }
-
 }
 
 void AnalysisGraph::init_graph_node_per_host(Host h) {
     string node_id = h.host_name();
     AnalysisGraphNode *host_node = new AnalysisGraphNode(node_id, h.host_ip(), h.host_mac());
-    Vertex v = add_vertex(g);
-    vertex_to_node_map[v] = host_node;
-    node_id_vertex_map[node_id] = v;
+    node_id_to_node_map[node_id] = host_node;
 }
 
 void AnalysisGraph::init_graph_nodes_per_switch(Switch sw) {
@@ -84,20 +81,15 @@ void AnalysisGraph::init_graph_nodes_per_switch(Switch sw) {
         }
 
         string node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
-        Vertex v = add_vertex(g); 
         AnalysisGraphNode *agn = new AnalysisGraphNode(node_id, sw.ports(i).port_num());
-        vertex_to_node_map[v] = agn;
-        node_id_vertex_map[node_id] = v;
-
+        node_id_to_node_map[node_id] = agn;
     }
 
     // Add a node for each table in the graph
     for (int i=0; i < sw.flow_tables_size(); i++) {
         string node_id = sw.switch_id() + ":table" + to_string(sw.flow_tables(i).table_num());
-        Vertex v = add_vertex(g); 
         AnalysisGraphNode *agn = new AnalysisGraphNode(node_id);
-        vertex_to_node_map[v] = agn;
-        node_id_vertex_map[node_id] = v;
+        node_id_to_node_map[node_id] = agn;
     }
 }
 
@@ -105,14 +97,14 @@ void AnalysisGraph::init_wildcard_rules_per_switch(Switch sw) {
     // Add Rules to each port's node to get all packets to table 0
     for (int i=0; i < sw.ports_size(); i++) {    
 
-        if (sw.ports(i).port_num() == CONTROLLER_PORT) {
+        if (sw.ports(i).port_num() == LOCAL_PORT || sw.ports(i).port_num() == CONTROLLER_PORT || sw.ports(i).port_num() == OUT_TO_IN_PORT) {
             continue;
         }
 
         string src_node_id = sw.switch_id() + ":" + to_string(sw.ports(i).port_num());
         string dst_node_id = sw.switch_id() + ":table0";
-        
-        add_wildcard_rule(vertex_to_node_map[node_id_vertex_map[src_node_id]], vertex_to_node_map[node_id_vertex_map[dst_node_id]]);
+
+        add_wildcard_rule(node_id_to_node_map[src_node_id], node_id_to_node_map[dst_node_id]);
     }
 }
 
@@ -151,6 +143,7 @@ void AnalysisGraph::init_adjacent_port_id_map(const NetworkGraph* ng) {
 
 AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
 
+
     total_flow_table_rules = 0;
 
     init_adjacent_port_id_map(ng);
@@ -162,19 +155,15 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
     for (int i=0; i < ng->switches_size(); i++) {
         init_graph_nodes_per_switch(ng->switches(i));
     }
-
     for (int i=0; i < ng->switches_size(); i++) {
         init_wildcard_rules_per_switch(ng->switches(i));
     }
-
     for (int i=0; i < ng->switches_size(); i++) {
         init_group_table_per_switch(ng->switches(i));
     }
-
     for (int i=0; i < ng->switches_size(); i++) {
         init_flow_tables_per_switch(ng->switches(i));
     }
-
     // Add edges corresponding to the links
     for (int i=0; i < ng->links_size(); i++) {
 
@@ -184,16 +173,16 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
             AnalysisGraphNode *switch_port_node, *host_node;;
 
             if (ng->links(i).src_node()[0] != 's') {
-                host_node = vertex_to_node_map[node_id_vertex_map[ng->links(i).src_node()]];
+                host_node = node_id_to_node_map[ng->links(i).src_node()];
                 switch_port_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
             }
 
             if (ng->links(i).dst_node()[0] != 's') {
-                host_node = vertex_to_node_map[node_id_vertex_map[ng->links(i).dst_node()]];
+                host_node = node_id_to_node_map[ng->links(i).dst_node()];
                 switch_port_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
             }
 
-            switch_port_node = vertex_to_node_map[node_id_vertex_map[switch_port_node_id]];
+            switch_port_node = node_id_to_node_map[switch_port_node_id];
             switch_port_node->connected_host = host_node;
             continue;
         }
@@ -207,27 +196,13 @@ AnalysisGraph::AnalysisGraph(const NetworkGraph* ng){
         src_node_id = ng->links(i).src_node() + ":" + to_string(ng->links(i).src_port_num());
         dst_node_id = ng->links(i).dst_node() + ":" + to_string(ng->links(i).dst_port_num());
 
-        s = node_id_vertex_map[src_node_id];
-        t = node_id_vertex_map[dst_node_id];
-        src_node = vertex_to_node_map[s];
-        dst_node = vertex_to_node_map[t];
-        add_wildcard_rule(src_node, dst_node);
-        auto existing_edge = edge(s, t, g);
-        if (!existing_edge.second) {
-            add_edge(s, t, g);
-        }
+        src_node = node_id_to_node_map[src_node_id];
+        dst_node = node_id_to_node_map[dst_node_id];
 
-        t = node_id_vertex_map[src_node_id];
-        s = node_id_vertex_map[dst_node_id];
-        existing_edge = edge(s, t, g);
-        if (!existing_edge.second) {
-            add_edge(s, t, g);
-        }
-        src_node = vertex_to_node_map[s];
-        dst_node = vertex_to_node_map[t];
+
         add_wildcard_rule(src_node, dst_node);
+        add_wildcard_rule(dst_node, src_node);
     }
-
 }
 
 void AnalysisGraph::add_wildcard_rule(AnalysisGraphNode *src_node, AnalysisGraphNode *dst_node) {
@@ -244,20 +219,6 @@ void AnalysisGraph::add_wildcard_rule(AnalysisGraphNode *src_node, AnalysisGraph
 AnalysisGraph::~AnalysisGraph() {
 }
 
-void AnalysisGraph::print_graph() {
-    std::pair<vertex_iter, vertex_iter> vp;
-    for (vp = vertices(g); vp.first != vp.second; ++vp.first) {
-        cout << vertex_to_node_map[*vp.first]->node_id << endl;
-    }
-
-    // Iterate through the edges and print them out
-    std::pair<edge_iter, edge_iter> ep;
-    edge_iter ei, ei_end;
-    for (tie(ei, ei_end) = edges(g); ei != ei_end; ++ei) {
-        cout << vertex_to_node_map[source(*ei, g)]->node_id << " -> "  << vertex_to_node_map[target(*ei, g)]->node_id << endl;
-    }
-}
-
 void AnalysisGraph::print_path(string src_node, string dst_node, vector<string> & p) {
 
     cout << "Path: " << src_node << "->" << dst_node << " ";
@@ -267,8 +228,7 @@ void AnalysisGraph::print_path(string src_node, string dst_node, vector<string> 
     cout << endl;
 }
 
-void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm, RuleEffect *re, vector<vector<string> > & pv, vector<string> & p, Lmbda l) {
-    AnalysisGraphNode *agn = vertex_to_node_map[v];
+void AnalysisGraph::apply_rule_effect(AnalysisGraphNode *agn, AnalysisGraphNode *dst_node, AnalysisGraphNode *prev_node, policy_match_t* pm, RuleEffect *re, vector<vector<string> > & pv, vector<string> & p, Lmbda l) {
 
     re->get_modified_policy_match(pm);
 
@@ -282,22 +242,20 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
             // Find the next node, for host ports, this becomes the output port, for others, it is the port at the next switch
             if (adjacent_port_id_map.find(re->next_node->node_id) != adjacent_port_id_map.end()) {
                 string adjacent_port_node_id = adjacent_port_id_map[re->next_node->node_id];
-                Vertex adjacent_port_vertex = node_id_vertex_map[adjacent_port_node_id];
-                AnalysisGraphNode *adjacent_port_node = vertex_to_node_map[adjacent_port_vertex];
+                AnalysisGraphNode *adjacent_port_node = node_id_to_node_map[adjacent_port_node_id];
             
                 p.push_back(re->next_node->node_id);
-
                 (*pm)["in_port"] = adjacent_port_node->port_num;
-                find_packet_paths(adjacent_port_vertex, t, prev_node, pm, pv, p, l);
+                find_packet_paths(adjacent_port_node, dst_node, prev_node, pm, pv, p, l);
 
             } else 
             {
-                find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, prev_node, pm, pv, p, l);
+                find_packet_paths(node_id_to_node_map[re->next_node->node_id], dst_node, prev_node, pm, pv, p, l);
             }
         }
         else 
         {
-            find_packet_paths(node_id_vertex_map[re->next_node->node_id], t, agn, pm, pv, p, l);
+            find_packet_paths(node_id_to_node_map[re->next_node->node_id], dst_node, agn, pm, pv, p, l);
         }
     } 
     else
@@ -307,11 +265,11 @@ void AnalysisGraph::apply_rule_effect(Vertex v, Vertex t, AnalysisGraphNode *pre
         // This node (agn) can only be a previous node if it belongs to a port.
         string adjacent_port_node_id = adjacent_port_id_map[prev_node->node_id];
         if (agn->port_num == -1) {
-            find_packet_paths(node_id_vertex_map[adjacent_port_node_id], t, prev_node, pm, pv, p, l);
+            find_packet_paths(node_id_to_node_map[adjacent_port_node_id], dst_node, prev_node, pm, pv, p, l);
         } 
         else 
         {
-            find_packet_paths(node_id_vertex_map[adjacent_port_node_id], t, agn, pm, pv, p, l);
+            find_packet_paths(node_id_to_node_map[adjacent_port_node_id], dst_node, agn, pm, pv, p, l);
         } 
     }
 }
@@ -331,11 +289,9 @@ bool AnalysisGraph::path_has_loop(string node_id, vector<string> & p)
     return false;
 }
 
-void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<string> > & pv, vector<string> & p, Lmbda l) 
+void AnalysisGraph::find_packet_paths(AnalysisGraphNode *agn, AnalysisGraphNode *dst_node, AnalysisGraphNode *prev_node, policy_match_t* pm_in, vector<vector<string> > & pv, vector<string> & p, Lmbda l) 
 {
-    AnalysisGraphNode *agn = vertex_to_node_map[v];
-    //cout << "-- node_id:" << agn->node_id << " v: " << v << " t: " << t << endl;
-
+    //cout << "-- node_id:" << agn->node_id << endl;
     if (!path_has_loop(agn->node_id, p)) {
         if (agn->port_num != -1) {
             p.push_back(agn->node_id);
@@ -346,7 +302,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
         return;
     }
 
-    if (v == t) {
+    if (agn->node_id == dst_node->node_id) {
         pv.push_back(p);
     } 
     else
@@ -362,7 +318,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
                 //Apply the modifications and go to other places per the effects
                 for (uint j=0; j < agn->rules[i]->rule_effects.size(); j++)
                 {
-                    apply_rule_effect(v, t, prev_node, pm_out, agn->rules[i]->rule_effects[j], pv, p, l);
+                    apply_rule_effect(agn, dst_node, prev_node, pm_out, agn->rules[i]->rule_effects[j], pv, p, l);
                     if(agn->rules[i]->rule_effects[j]->group_effect != NULL) 
                     {
                         //cout << agn->node_id << " Group Effect from group_id: " << agn->rules[i]->rule_effects[j]->group_effect->group_id << endl;
@@ -371,7 +327,7 @@ void AnalysisGraph::find_packet_paths(Vertex v, Vertex t, AnalysisGraphNode *pre
 
                         for (uint k=0; k < active_rule_effects.size(); k++)
                         {   
-                            apply_rule_effect(v, t, prev_node, pm_out, active_rule_effects[k], pv, p, l);
+                            apply_rule_effect(agn, dst_node, prev_node, pm_out, active_rule_effects[k], pv, p, l);
                         }
                     }
                 }
@@ -395,14 +351,10 @@ uint64_t AnalysisGraph::convert_mac_str_to_uint64(string mac) {
   return strtoul(mac.c_str(), NULL, 16);
 }
 
-vector<string> AnalysisGraph::find_path(string src, string dst, policy_match_t pm, Lmbda l) {
+vector<string> AnalysisGraph::find_path(string src_node_id, string dst_node_id, policy_match_t pm, Lmbda l) {
 
-    Vertex s, t;
-    s = node_id_vertex_map[src];
-    t = node_id_vertex_map[dst];
-
-    AnalysisGraphNode *src_node = vertex_to_node_map[s];
-    AnalysisGraphNode *dst_node = vertex_to_node_map[t];
+    AnalysisGraphNode *src_node = node_id_to_node_map[src_node_id];
+    AnalysisGraphNode *dst_node = node_id_to_node_map[dst_node_id];
 
     // populate policy match
     pm["in_port"] = src_node->port_num;
@@ -417,13 +369,12 @@ vector<string> AnalysisGraph::find_path(string src, string dst, policy_match_t p
     if (dst_node->connected_host) {
         pm["eth_dst"] = convert_mac_str_to_uint64(dst_node->connected_host->host_mac);
         dst_node = dst_node->connected_host;
-        t = node_id_vertex_map[dst_node->node_id];
     }
 
     vector< vector<string> > pv;
     vector<string> p;
 
-    find_packet_paths(s, t, src_node, &pm, pv, p, l);
+    find_packet_paths(src_node, dst_node, src_node, &pm, pv, p, l);
     if (pv.size() > 0) {
         return pv[0];
     }
