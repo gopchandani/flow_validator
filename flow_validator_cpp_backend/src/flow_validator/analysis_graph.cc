@@ -499,11 +499,11 @@ double AnalysisGraph::find_time_to_disconnect(const MonteCarloParams* mcp, int s
     return time_to_disconnect;
 }
 
-int AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
+NumActiveFlowsRep AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows, const NumActiveFlowsParams* nafp) {
 
+    NumActiveFlowsRep rep;
     Lmbda lmbda;
-    auto rep = nafi->add_reps();
-
+    
     for (int j=0; j < nafp->reps(i).link_failure_sequence_size(); j++) {
         // Add link to the lmbda
         auto l = lmbda.add_links();
@@ -514,6 +514,7 @@ int AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows, const NumActi
 
         // Count how many flows are active now
         int num_active_flows = 0;
+        
         for (int k = 0; k < flows.size() ; k++) {
 
             string src_port = flows[k].src_port().switch_id() + ":" + to_string(flows[k].src_port().port_num());
@@ -528,21 +529,21 @@ int AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows, const NumActi
                 num_active_flows += 1;
             }
         }
-
+        
         // Add to the output
-        auto link = rep->add_link_failure_sequence();
+        auto link = rep.add_link_failure_sequence();
         link->set_src_node(nafp->reps(i).link_failure_sequence(j).src_node());
         link->set_src_port_num(nafp->reps(i).link_failure_sequence(j).src_port_num());
         link->set_dst_node(nafp->reps(i).link_failure_sequence(j).dst_node());
         link->set_dst_port_num(nafp->reps(i).link_failure_sequence(j).dst_port_num());
-        
-        rep->add_num_active_flows(num_active_flows);
-
+        rep.add_num_active_flows(num_active_flows);
+        /*
         cout << "rep: " << i << " link: " << j << " ";
         cout << "src: " << nafp->reps(i).link_failure_sequence(j).src_node() << " ";
         cout << "dst: " << nafp->reps(i).link_failure_sequence(j).dst_node() << " ";
         cout << "Total Flows: " << flows.size() << " Active Flows: "  << num_active_flows << endl;
+        */   
     }
 
-    return 0;
+    return rep;
 }

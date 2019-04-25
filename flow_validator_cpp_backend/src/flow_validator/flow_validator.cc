@@ -109,19 +109,28 @@ Status FlowValidatorImpl::GetNumActiveFlowsAtFailureTimes(ServerContext* context
     }
 
     // Run reps in parallel
-    /*
-    vector<future<int>> retvals;
+    vector<future<NumActiveFlowsRep>> reps;
     for (int i = 0; i < nafp->reps_size() ; i++) {
-        retvals.emplace_back(
-                        thread_pool->enqueue([this, i, flows, nafp, nafi] {
-                            return ag->get_num_active_flows(i, flows, nafp, nafi);
+        reps.emplace_back(
+                        thread_pool->enqueue([this, i, flows, nafp, nafi] {                            
+                            return ag->get_num_active_flows(i, flows, nafp);
                         })  
                     );
     }
-    */
     
-    for (int i = 0; i < nafp->reps_size() ; i++) {
-        ag->get_num_active_flows(i, flows, nafp, nafi);
+    for(auto && rep: reps) {
+        auto crep = rep.get();
+        auto rrep = nafi->add_reps();
+
+        for (int i = 0; i < crep.link_failure_sequence_size(); i++) {
+            rrep->add_num_active_flows(crep.num_active_flows(i));
+
+            auto link = rrep->add_link_failure_sequence();
+            link->set_src_node(crep.link_failure_sequence(i).src_node());
+            link->set_src_port_num(crep.link_failure_sequence(i).src_port_num());
+            link->set_dst_node(crep.link_failure_sequence(i).dst_node());
+            link->set_dst_port_num(crep.link_failure_sequence(i).dst_port_num());
+        }
     }
 
     nafi->set_time_taken(0.1);
