@@ -32,22 +32,22 @@ message MonteCarloParams {
 }
 
 message NumActiveFlowsInfo {
-    float time_taken = 1;
+    uint64 time_taken = 1;
     repeated NumActiveFlowsRep reps = 2;
 }
 
 message TimeToDisconnectInfo {
-    float time_taken = 1;
+    uint64 time_taken = 1;
     float mean = 2;
     float sd = 3;
 }
 
 message InitializeInfo {
-    float time_taken = 1; 
+    uint64 time_taken = 1; 
 }
 
 message ValidatePolicyInfo {
-    float time_taken = 1;
+    uint64 time_taken = 1;
     repeated PolicyViolation violations = 2;
 }
 

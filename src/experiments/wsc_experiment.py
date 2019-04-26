@@ -32,7 +32,7 @@ class WSC(Experiment):
 
         try:
             init_info = self.stub.Initialize(rpc_ng)
-            print "Initialize was successful, time taken:", init_info.time_taken
+            print "Initialize was successful, time taken:", init_info.time_taken/1000000000, "seconds."
         except grpc.RpcError as e:
             print "Call to Initialize failed:", e.details(), e.code().name, e.code().value
 
@@ -81,7 +81,7 @@ class WSC(Experiment):
         try:
             nafi = self.stub.GetNumActiveFlowsAtFailureTimes(nafp)
 
-            print "GetNumActiveFlowsAtFailureTimes was successful, time taken:", nafi.time_taken
+            print "GetNumActiveFlowsAtFailureTimes was successful, time taken:", nafi.time_taken/1000000000, "seconds."
 
             for i in xrange(len(nafi.reps)):
                 self.experiment_data["reps"][i]["num_active_flows"] = list(nafi.reps[i].num_active_flows)

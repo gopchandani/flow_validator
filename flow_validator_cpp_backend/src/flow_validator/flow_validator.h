@@ -19,7 +19,8 @@ using grpc::Status;
 class FlowValidatorImpl final : public FlowValidator::Service {
  public:
       explicit FlowValidatorImpl(){
-           thread_pool = new ThreadPool(4);
+          thread_pool = new ThreadPool(std::thread::hardware_concurrency());
+          ag = NULL;
       }
 
       ~FlowValidatorImpl() {

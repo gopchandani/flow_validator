@@ -1,14 +1,26 @@
 #include "flow_validator.h"
+#include <chrono>
 
 Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph* ng, InitializeInfo* info) {
     cout << "Received Initialize request" << endl;
+    auto start = chrono::steady_clock::now();
+
+    // Check if an instance was previously initialized, if so, free it
+    if (ag != NULL) {
+        free(ag);
+    } 
+    
+    // Get a new instance
     ag = new AnalysisGraph(ng);
-    info->set_time_taken(0.1);
+
+    auto end = chrono::steady_clock::now();
+    info->set_time_taken(chrono::duration_cast<chrono::nanoseconds>(end - start).count());
     return Status::OK;
 }
 
 Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p, ValidatePolicyInfo* info) {
     cout << "Received ValidatePolicy request" << endl;
+    auto start = chrono::steady_clock::now();
 
     vector< future<int> > results;
 
@@ -48,7 +60,8 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
     }
     cout << endl;
 */
-    info->set_time_taken(0.1);
+    auto end = chrono::steady_clock::now();
+    info->set_time_taken(chrono::duration_cast<chrono::nanoseconds>(end - start).count());
     return Status::OK;
 }
 
@@ -56,6 +69,8 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     cout << "Received GetTimeToDisconnect request" << endl;
     cout << "Link Failure Rate: " << mcp->link_failure_rate() << endl;
     cout << "Num Iterations: " << mcp->num_iterations() << endl;
+
+    auto start = chrono::steady_clock::now();
 
     default_random_engine g;
     g.seed(mcp->seed());
@@ -91,15 +106,16 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
 
     ttdi->set_mean(mean);
     ttdi->set_sd(stdev);
-    ttdi->set_time_taken(0.1);
 
-    ttdi->set_time_taken(0.1);
+    auto end = chrono::steady_clock::now();
+    ttdi->set_time_taken(chrono::duration_cast<chrono::nanoseconds>(end - start).count());
     return Status::OK;
 }
 
 Status FlowValidatorImpl::GetNumActiveFlowsAtFailureTimes(ServerContext* context, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
     cout << "Received GetNumActiveFlowsAtFailureTimes request" << endl;
-    
+    auto start = chrono::steady_clock::now();
+
     vector <Flow> flows;
     for (int i=0; i<nafp->flows_size(); i++) {
         flows.push_back(nafp->flows(i));
@@ -130,6 +146,7 @@ Status FlowValidatorImpl::GetNumActiveFlowsAtFailureTimes(ServerContext* context
         }
     }
 
-    nafi->set_time_taken(0.1);
+    auto end = chrono::steady_clock::now();
+    nafi->set_time_taken(chrono::duration_cast<chrono::nanoseconds>(end - start).count());
     return Status::OK;
 }
