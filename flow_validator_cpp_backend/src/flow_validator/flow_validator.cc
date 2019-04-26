@@ -3,7 +3,6 @@
 Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph* ng, InitializeInfo* info) {
     cout << "Received Initialize request" << endl;
     ag = new AnalysisGraph(ng);
-    info->set_successful(true);
     info->set_time_taken(0.1);
     return Status::OK;
 }
@@ -49,10 +48,7 @@ Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p
     }
     cout << endl;
 */
-
-    info->set_successful(true);
     info->set_time_taken(0.1);
-
     return Status::OK;
 }
 
@@ -97,6 +93,7 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     ttdi->set_sd(stdev);
     ttdi->set_time_taken(0.1);
 
+    ttdi->set_time_taken(0.1);
     return Status::OK;
 }
 

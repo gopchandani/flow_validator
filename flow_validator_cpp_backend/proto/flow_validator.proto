@@ -19,11 +19,6 @@ message NumActiveFlowsRep {
     repeated uint64 num_active_flows = 2;
 }
 
-message NumActiveFlowsInfo {
-    repeated NumActiveFlowsRep reps = 1;
-    float time_taken = 2;
-}
-
 message NumActiveFlowsParams {
     repeated Flow flows = 1;
     repeated NumActiveFlowsRep reps = 2;
@@ -36,21 +31,24 @@ message MonteCarloParams {
     uint64 seed = 4;
 }
 
+message NumActiveFlowsInfo {
+    float time_taken = 1;
+    repeated NumActiveFlowsRep reps = 2;
+}
+
 message TimeToDisconnectInfo {
-    float mean = 1;
-    float sd = 2;
-    float time_taken = 3;
+    float time_taken = 1;
+    float mean = 2;
+    float sd = 3;
 }
 
 message InitializeInfo {
-    bool successful = 1;
-    float time_taken = 2; 
+    float time_taken = 1; 
 }
 
 message ValidatePolicyInfo {
-    bool successful = 1;
-    float time_taken = 2;
-    repeated PolicyViolation violations = 3;
+    float time_taken = 1;
+    repeated PolicyViolation violations = 2;
 }
 
 message Port {

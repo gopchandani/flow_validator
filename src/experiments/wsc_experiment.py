@@ -1,5 +1,6 @@
 import sys
 import json
+import argparse
 import grpc
 from rpc import flow_validator_pb2
 from rpc import flow_validator_pb2_grpc
@@ -14,12 +15,12 @@ sys.path.append("./")
 
 class WSC(Experiment):
 
-    def __init__(self, nc, input, flow_specs, reps):
+    def __init__(self, nc, experiment_data, flow_specs, reps):
 
         super(WSC, self).__init__("playground", 1)
         self.nc = nc
         self.rpc_links = self.init_rpc_links()
-        self.input = input
+        self.experiment_data = experiment_data
         self.flow_specs = flow_specs
         self.reps = reps
 
@@ -28,12 +29,12 @@ class WSC(Experiment):
 
     def flow_validator_initialize(self):
         rpc_ng = self.prepare_rpc_network_graph(self.flow_specs)
-        init_info = self.stub.Initialize(rpc_ng)
 
-        if init_info.successful:
-            print "Server said initialization was successful, time taken:", init_info.time_taken
-        else:
-            print "Server said initialization was not successful"
+        try:
+            init_info = self.stub.Initialize(rpc_ng)
+            print "Initialize was successful, time taken:", init_info.time_taken
+        except grpc.RpcError as e:
+            print "Call to Initialize failed:", e.details(), e.code().name, e.code().value
 
     def get_rpc_flows(self, src_ports, dst_ports):
 
@@ -49,26 +50,6 @@ class WSC(Experiment):
                 policy_match=policy_match))
 
         return flows
-
-    def flow_validator_get_time_to_failure(self):
-
-        num_iterations = 1000
-        link_failure_rate = 1.0
-        src_ports = [('s1', 1)]
-        dst_ports = [('s4', 1)]
-
-        flows = self.get_rpc_flows(src_ports, dst_ports)
-
-        mcp = flow_validator_pb2.MonteCarloParams(num_iterations=num_iterations,
-                                                  link_failure_rate=link_failure_rate,
-                                                  flows=flows,
-                                                  seed=42)
-
-        ttf = self.stub.GetTimeToDisconnect(mcp)
-
-        print "Mean TTF: ", ttf.mean
-        print "SD TTF:", ttf.sd
-        print "Time taken:", ttf.time_taken
 
     def flow_validator_get_num_active_flows_at_failure_times(self):
 
@@ -97,13 +78,16 @@ class WSC(Experiment):
 
         nafp = flow_validator_pb2.NumActiveFlowsParams(flows=flows, reps=reps)
 
-        nafi = self.stub.GetNumActiveFlowsAtFailureTimes(nafp)
+        try:
+            nafi = self.stub.GetNumActiveFlowsAtFailureTimes(nafp)
 
-        for i in xrange(len(nafi.reps)):
-            self.input["reps"][i]["num_active_flows"] = list(nafi.reps[i].num_active_flows)
+            print "GetNumActiveFlowsAtFailureTimes was successful, time taken:", nafi.time_taken
 
-        with open('output.json', "w") as json_file:
-            json.dump(self.input, json_file, indent=4)
+            for i in xrange(len(nafi.reps)):
+                self.experiment_data["reps"][i]["num_active_flows"] = list(nafi.reps[i].num_active_flows)
+
+        except grpc.RpcError as e:
+            print "Call to GetNumActiveFlowsAtFailureTimes failed:", e.details(), e.code().name, e.code().value
 
     def trigger(self):
         self.channel = grpc.insecure_channel('localhost:50051')
@@ -117,17 +101,18 @@ class WSC(Experiment):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_file", help="Input file")
+    parser.add_argument("--output_file", help="Output file")
+    args = parser.parse_args()
 
     flow_specs = {"src_hosts": [], "dst_hosts": []}
 
-    with open('failovers2.json') as json_file:
+    with open(args.input_file) as json_file:
         data = json.load(json_file)
         num_switches = data["switches"]
         edges = data["edges"]
         reps = data['reps']
-
-        for rep in reps:
-            print rep['replication'], len(rep["failures"])
 
         for f in data["flows"]:
             src_host = "h" + str(f[0]+1) + str(1)
@@ -153,6 +138,9 @@ def main():
 
     exp = WSC(nc, data, flow_specs, reps)
     exp.trigger()
+
+    with open(args.output_file, "w") as json_file:
+        json.dump(exp.experiment_data, json_file, indent=4)
 
 
 if __name__ == "__main__":

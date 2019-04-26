@@ -91,10 +91,12 @@ class NetworkConfiguration(object):
         return self.controller + "_" + str(self.synthesis) + "_" + str(self.topo)
 
     def __del__(self):
-        if self.cm:
-            self.cm.stop_controller()
 
-        self.cleanup_mininet()
+        if not self.load_config and self.save_config:
+            if self.cm:
+                self.cm.stop_controller()
+
+            self.cleanup_mininet()
 
     def init_topo(self):
         if self.topo_name == "ring":
@@ -499,8 +501,6 @@ class NetworkConfiguration(object):
             self.ng = NetworkGraph(self.controller)
             self.ng.parse_network_graph(switches, (hosts, links), links)
 
-        print "total_flow_rules:", self.ng.total_flow_rules
-
         return self.ng
 
     def start_mininet(self):
@@ -721,7 +721,7 @@ class NetworkConfiguration(object):
         return is_bi_connected
 
     def parse_iperf_output(self, iperf_output_string):
-        data_lines =  iperf_output_string.split('\r\n')
+        data_lines = iperf_output_string.split('\r\n')
         interesting_line_index = None
         for i in xrange(len(data_lines)):
             if data_lines[i].endswith('Server Report:'):
