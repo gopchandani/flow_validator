@@ -28,6 +28,60 @@ __author__ = 'Rakesh Kumar'
 
 class FlowValidator(object):
 
+    def flow_validator_initialize(self, stub):
+        rpc_ng = self.prepare_rpc_network_graph()
+        init_info = stub.Initialize(rpc_ng)
+
+        if init_info.successful:
+            print "Server said initialization was successful, time taken:", init_info.time_taken
+        else:
+            print "Server said initialization was not successful"
+
+    def prepare_policy_statement_all_host_pair_connectivity(self):
+
+        rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1),
+                                  flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1),
+                                  flow_validator_pb2.PolicyPort(switch_id="s3", port_num=1),
+                                  flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+
+        rpc_all_dst_host_ports = rpc_all_src_host_ports
+
+        # rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
+        # rpc_all_dst_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1)]
+
+        rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_src_host_ports)
+        rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_dst_host_ports)
+
+        policy_match = dict()
+        policy_match["eth_type"] = 0x0800
+
+        rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
+
+        rpc_lmbdas = [flow_validator_pb2.Lmbda(links=[self.rpc_links["s4"]["s1"], self.rpc_links["s4"]["s3"]])]
+
+        rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
+                                                                  dst_zone=rpc_dst_zone,
+                                                                  policy_match=policy_match,
+                                                                  constraints=rpc_constraints,
+                                                                  lmbdas=rpc_lmbdas)
+
+        return rpc_policy_statement
+
+    def flow_validator_validate_policy(self, stub, rpc_policy_statements):
+
+        rpc_p = flow_validator_pb2.Policy(policy_statements=rpc_policy_statements)
+
+        validate_info = stub.ValidatePolicy(rpc_p)
+
+        if validate_info.successful:
+            print "Server said validation was successful, time taken:", validate_info.time_taken
+        else:
+            print "Server said validation was not successful"
+
+        print "Total violations:", len(validate_info.violations)
+
+        print validate_info.violations
+
     def __init__(self, network_graph):
         self.network_graph = network_graph
         self.port_graph = NetworkPortGraph(network_graph)
@@ -292,139 +346,3 @@ class FlowValidator(object):
                                 self.violations.append(v)
 
         return self.violations
-
-
-class FlowValidatorServicer(flow_validator_pb2_grpc.FlowValidatorServicer):
-
-    def __init__(self):
-        self.fv = None
-        self.ng_obj = None
-
-    def get_network_graph_object(self, request):
-        ng_obj = NetworkGraph(request.controller)
-        ng_obj.parse_network_graph(request.switches, (request.hosts, request.links), request.links)
-        return ng_obj
-
-    def get_zone(self, zone_grpc):
-        zone = []
-        for port_grpc in zone_grpc.ports:
-            host_sw_obj = self.ng_obj.get_node_object(port_grpc.switch_id)
-            zone.append(host_sw_obj.ports[port_grpc.port_num])
-
-        return zone
-
-    def get_traffic(self, traffic_match_grpc, using_policy_match=False):
-        tm = Match(match_raw=traffic_match_grpc, controller="grpc", flow=self,
-                   using_policy_match=using_policy_match)
-        te = TrafficElement(init_match=tm)
-        t = Traffic()
-        t.add_traffic_elements([te])
-        return t
-
-    def get_constraints(self, constraints_grpc):
-
-        c = []
-        for constraint_grpc in constraints_grpc:
-
-            if constraint_grpc.type == CONNECTIVITY_CONSTRAINT:
-                pc = PolicyConstraint(CONNECTIVITY_CONSTRAINT, None)
-            elif constraint_grpc.type == ISOLATION_CONSTRAINT:
-                pc = PolicyConstraint(ISOLATION_CONSTRAINT, None)
-            elif constraint_grpc.type == PATH_LENGTH_CONSTRAINT:
-                pc = PolicyConstraint(PATH_LENGTH_CONSTRAINT, constraint_grpc.path_length)
-            elif constraint_grpc.type == LINK_AVOIDANCE_CONSTRAINT:
-                pc = PolicyConstraint(LINK_AVOIDANCE_CONSTRAINT, constraint_grpc.avoid_links)
-
-            c.append(pc)
-
-        return c
-
-    def get_lmbdas(self, lmbdas_grpc):
-        lmbdas = []
-
-        for lmbda_grpc in lmbdas_grpc:
-            lmbda = []
-            for link_grpc in lmbda_grpc.links:
-                lmbda.append(self.ng_obj.get_link_data(link_grpc.src_node, link_grpc.dst_node))
-
-            lmbdas.append(tuple(lmbda))
-
-        return lmbdas
-
-    def get_violations_grpc(self, violations):
-
-        # Generate and return policy PolicyViolations
-        violations_grpc = []
-        for v in violations:
-
-            grpc_lmbda_links = []
-            for ld in v.lmbda:
-                grpc_lmbda_links.append(flow_validator_pb2.PolicyLink(src_node=ld.node1_id, dst_node=ld.node2_id))
-
-            grpc_lmbda = flow_validator_pb2.Lmbda(links=grpc_lmbda_links)
-            grpc_src_port = flow_validator_pb2.PolicyPort(switch_id=v.src_port.sw.node_id,
-                                                          port_num=v.src_port.port_number)
-
-            grpc_dst_port = flow_validator_pb2.PolicyPort(switch_id=v.dst_port.sw.node_id,
-                                                          port_num=v.dst_port.port_number)
-
-            grpc_constraint_type = v.constraint.constraint_type
-            grpc_counter_example = str(v.counter_example)
-
-            violations_grpc.append(flow_validator_pb2.PolicyViolation(lmbda=grpc_lmbda,
-                                                                      src_port=grpc_src_port,
-                                                                      dst_port=grpc_dst_port,
-                                                                      constraint_type=grpc_constraint_type,
-                                                                      counter_example=grpc_counter_example))
-
-        return flow_validator_pb2.PolicyViolations(violations=violations_grpc)
-
-    def Initialize(self, request, context):
-
-        with Timer(verbose=True) as tt:
-
-            self.ng_obj = self.get_network_graph_object(request)
-            self.fv = FlowValidator(self.ng_obj)
-            self.fv.init_network_port_graph()
-
-        return flow_validator_pb2.InitializeInfo(successful=True,
-                                                 time_taken=tt.secs)
-
-    def ValidatePolicy(self, request, context):
-
-        with Timer(verbose=True) as tt:
-
-            policy = []
-            for policy_statement in request.policy_statements:
-
-                src_zone = self.get_zone(policy_statement.src_zone)
-                dst_zone = self.get_zone(policy_statement.dst_zone)
-                t = self.get_traffic(policy_statement.policy_match, using_policy_match=True)
-                c = self.get_constraints(policy_statement.constraints)
-                l = self.get_lmbdas(policy_statement.lmbdas)
-
-                s = PolicyStatement(self.ng_obj, src_zone, dst_zone, t, c, l)
-                policy.append(s)
-
-            violations = self.fv.validate_policy(policy)
-
-        return flow_validator_pb2.ValidatePolicyInfo(successful=True,
-                                                     time_taken=tt.secs,
-                                                     violations=violations)
-
-
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    flow_validator_pb2_grpc.add_FlowValidatorServicer_to_server(
-        FlowValidatorServicer(), server)
-    server.add_insecure_port('[::]:50051')
-    server.start()
-    try:
-        while True:
-            time.sleep(_ONE_DAY_IN_SECONDS)
-    except KeyboardInterrupt:
-        server.stop(0)
-
-
-if __name__ == '__main__':
-    serve()
