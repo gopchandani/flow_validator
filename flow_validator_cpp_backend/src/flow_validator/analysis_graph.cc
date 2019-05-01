@@ -387,7 +387,6 @@ vector<string> AnalysisGraph::find_path(string src_node_id, string dst_node_id, 
 
     vector< vector<string> > pv;
     vector<string> p;
-
     find_packet_paths(src_node, dst_node, src_node, &pm, pv, p, l);
     if (pv.size() > 0) {
         return pv[0];

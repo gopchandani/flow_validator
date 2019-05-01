@@ -89,15 +89,36 @@ class WSC(Experiment):
         except grpc.RpcError as e:
             print "Call to GetNumActiveFlowsAtFailureTimes failed:", e.details(), e.code().name, e.code().value
 
+    def flow_validator_get_active_flow_path(self):
+
+        policy_match = dict()
+        policy_match["eth_type"] = 0x0800
+
+        flow = flow_validator_pb2.Flow(src_port=flow_validator_pb2.PolicyPort(switch_id="s3", port_num=1),
+                                       dst_port=flow_validator_pb2.PolicyPort(switch_id="s25", port_num=1),
+                                       policy_match=policy_match)
+
+        lmbda = flow_validator_pb2.Lmbda(links=[self.rpc_links["s2"]["s1"]])
+
+        nafp = flow_validator_pb2.ActivePathParams(flow=flow, lmbda=lmbda)
+
+        try:
+            api = self.stub.GetActiveFlowPath(nafp)
+            print "Initialize was successful, time taken:", api.time_taken/1000000000, "seconds."
+        except grpc.RpcError as e:
+            print "Call to Initialize failed:", e.details(), e.code().name, e.code().value
+
     def trigger(self):
         self.channel = grpc.insecure_channel('localhost:50051')
         self.stub = flow_validator_pb2_grpc.FlowValidatorStub(self.channel)
 
         self.flow_validator_initialize()
 
+        self.flow_validator_get_active_flow_path()
+
         # self.flow_validator_get_time_to_failure()
 
-        self.flow_validator_get_num_active_flows_at_failure_times()
+        # self.flow_validator_get_num_active_flows_at_failure_times()
 
 
 def main():

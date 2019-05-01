@@ -18,6 +18,34 @@ Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph*
     return Status::OK;
 }
 
+Status FlowValidatorImpl::GetActiveFlowPath(ServerContext* context, const ActivePathParams* app, ActivePathInfo* info) {
+    cout << "Received GetActiveFlowPath request" << endl;
+    auto start = chrono::steady_clock::now();
+
+    string src_port = app->flow().src_port().switch_id() + ":" + to_string(app->flow().src_port().port_num());
+    string dst_port = app->flow().dst_port().switch_id() + ":" + to_string(app->flow().dst_port().port_num());
+
+    policy_match_t policy_match;
+    for (auto & p : app->flow().policy_match())
+    {
+        policy_match[p.first] = p.second;
+    }
+    auto p = ag->find_path(src_port, dst_port, policy_match, app->lmbda());
+
+    for (auto p_iter = p.begin(); p_iter != p.end(); p_iter++) {
+        auto i = p_iter->find(":");
+        auto l = p_iter->size();
+
+        auto port = info->add_ports();
+        port->set_switch_id(p_iter->substr(0, i));
+        port->set_port_num(stoi(p_iter->substr(i+1, l-i)));
+    }
+
+    auto end = chrono::steady_clock::now();
+    info->set_time_taken(chrono::duration_cast<chrono::nanoseconds>(end - start).count());
+    return Status::OK;
+}
+
 Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p, ValidatePolicyInfo* info) {
     cout << "Received ValidatePolicy request" << endl;
     auto start = chrono::steady_clock::now();

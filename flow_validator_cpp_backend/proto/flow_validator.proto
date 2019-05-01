@@ -6,6 +6,8 @@ service FlowValidator {
 
   rpc Initialize(NetworkGraph) returns (InitializeInfo) {}
 
+  rpc GetActiveFlowPath(ActivePathParams) returns (ActivePathInfo) {}
+
   rpc ValidatePolicy(Policy) returns (ValidatePolicyInfo) {}
 
   rpc GetTimeToDisconnect(MonteCarloParams) returns (TimeToDisconnectInfo) {}
@@ -44,6 +46,16 @@ message TimeToDisconnectInfo {
 
 message InitializeInfo {
     uint64 time_taken = 1; 
+}
+
+message ActivePathParams {
+    Flow flow = 1;
+    Lmbda lmbda = 2;
+}
+
+message ActivePathInfo {
+    uint64 time_taken = 1; 
+    repeated PolicyPort ports = 2;
 }
 
 message ValidatePolicyInfo {

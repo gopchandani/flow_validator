@@ -19,6 +19,11 @@ class FlowValidatorStub(object):
         request_serializer=flow__validator__pb2.NetworkGraph.SerializeToString,
         response_deserializer=flow__validator__pb2.InitializeInfo.FromString,
         )
+    self.GetActiveFlowPath = channel.unary_unary(
+        '/flow_validator.FlowValidator/GetActiveFlowPath',
+        request_serializer=flow__validator__pb2.ActivePathParams.SerializeToString,
+        response_deserializer=flow__validator__pb2.ActivePathInfo.FromString,
+        )
     self.ValidatePolicy = channel.unary_unary(
         '/flow_validator.FlowValidator/ValidatePolicy',
         request_serializer=flow__validator__pb2.Policy.SerializeToString,
@@ -41,6 +46,13 @@ class FlowValidatorServicer(object):
   pass
 
   def Initialize(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetActiveFlowPath(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -75,6 +87,11 @@ def add_FlowValidatorServicer_to_server(servicer, server):
           servicer.Initialize,
           request_deserializer=flow__validator__pb2.NetworkGraph.FromString,
           response_serializer=flow__validator__pb2.InitializeInfo.SerializeToString,
+      ),
+      'GetActiveFlowPath': grpc.unary_unary_rpc_method_handler(
+          servicer.GetActiveFlowPath,
+          request_deserializer=flow__validator__pb2.ActivePathParams.FromString,
+          response_serializer=flow__validator__pb2.ActivePathInfo.SerializeToString,
       ),
       'ValidatePolicy': grpc.unary_unary_rpc_method_handler(
           servicer.ValidatePolicy,
