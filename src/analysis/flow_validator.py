@@ -4,6 +4,7 @@ import grpc
 
 sys.path.append("./")
 
+from sdnsim_client import SDNSimClient
 from collections import defaultdict
 from experiments.timer import Timer
 from model.network_port_graph import NetworkPortGraph
@@ -16,10 +17,6 @@ from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, ISOLATION_CONSTRA
 from analysis.policy_statement import PATH_LENGTH_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 from analysis.policy_statement import PolicyViolation, PolicyStatement, PolicyConstraint
 
-from model.network_graph import NetworkGraph
-from concurrent import futures
-from rpc import flow_validator_pb2
-from rpc import flow_validator_pb2_grpc
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
@@ -28,63 +25,15 @@ __author__ = 'Rakesh Kumar'
 
 class FlowValidator(object):
 
-    def flow_validator_initialize(self, stub):
-        rpc_ng = self.prepare_rpc_network_graph()
-        init_info = stub.Initialize(rpc_ng)
+    def __init__(self, network_graph, use_sdnsim=False):
 
-        if init_info.successful:
-            print "Server said initialization was successful, time taken:", init_info.time_taken
-        else:
-            print "Server said initialization was not successful"
-
-    def prepare_policy_statement_all_host_pair_connectivity(self):
-
-        rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s1", port_num=1),
-                                  flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1),
-                                  flow_validator_pb2.PolicyPort(switch_id="s3", port_num=1),
-                                  flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
-
-        rpc_all_dst_host_ports = rpc_all_src_host_ports
-
-        # rpc_all_src_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s4", port_num=1)]
-        # rpc_all_dst_host_ports = [flow_validator_pb2.PolicyPort(switch_id="s2", port_num=1)]
-
-        rpc_src_zone = flow_validator_pb2.Zone(ports=rpc_all_src_host_ports)
-        rpc_dst_zone = flow_validator_pb2.Zone(ports=rpc_all_dst_host_ports)
-
-        policy_match = dict()
-        policy_match["eth_type"] = 0x0800
-
-        rpc_constraints = [flow_validator_pb2.Constraint(type=CONNECTIVITY_CONSTRAINT)]
-
-        rpc_lmbdas = [flow_validator_pb2.Lmbda(links=[self.rpc_links["s4"]["s1"], self.rpc_links["s4"]["s3"]])]
-
-        rpc_policy_statement = flow_validator_pb2.PolicyStatement(src_zone=rpc_src_zone,
-                                                                  dst_zone=rpc_dst_zone,
-                                                                  policy_match=policy_match,
-                                                                  constraints=rpc_constraints,
-                                                                  lmbdas=rpc_lmbdas)
-
-        return rpc_policy_statement
-
-    def flow_validator_validate_policy(self, stub, rpc_policy_statements):
-
-        rpc_p = flow_validator_pb2.Policy(policy_statements=rpc_policy_statements)
-
-        validate_info = stub.ValidatePolicy(rpc_p)
-
-        if validate_info.successful:
-            print "Server said validation was successful, time taken:", validate_info.time_taken
-        else:
-            print "Server said validation was not successful"
-
-        print "Total violations:", len(validate_info.violations)
-
-        print validate_info.violations
-
-    def __init__(self, network_graph):
         self.network_graph = network_graph
-        self.port_graph = NetworkPortGraph(network_graph)
+        self.use_sdnsim = use_sdnsim
+
+        if self.use_sdnsim:
+            pass
+        else:
+            self.port_graph = NetworkPortGraph(network_graph)
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
@@ -92,6 +41,28 @@ class FlowValidator(object):
 
     def de_init_network_port_graph(self):
         self.port_graph.de_init_network_port_graph()
+
+    def get_active_path(self, traffic, src_port, dst_port):
+
+        traffic_path = None
+
+        if self.use_sdnsim:
+            pass
+        else:
+            traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
+
+        return traffic_path
+
+    def get_failover_path_after_failed_sequence(self, active_path, lmbda):
+
+        failover_path = None
+
+        if self.use_sdnsim:
+            pass
+        else:
+            failover_path = get_failover_path_after_failed_sequence(self.port_graph, active_path, lmbda)
+
+        return failover_path
 
     def port_pair_iter(self, src_zone, dst_zone):
 
@@ -135,7 +106,7 @@ class FlowValidator(object):
 
         if not at.is_empty():
             if at.is_subset_traffic(traffic):
-                traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
+                traffic_path = self.get_active_path(traffic, src_port, dst_port)
 
                 if traffic_path:
                     satisfies = True
@@ -163,7 +134,7 @@ class FlowValidator(object):
 
         if not at.is_empty():
             if at.is_subset_traffic(traffic):
-                traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
+                traffic_path = self.get_active_path(traffic, src_port, dst_port)
 
                 if traffic_path:
                     satisfies = False
@@ -176,7 +147,7 @@ class FlowValidator(object):
         satisfies = True
         counter_example = None
 
-        traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
+        traffic_path = self.get_active_path(traffic, src_port, dst_port)
 
         if traffic_path:
             if len(traffic_path) > l:
@@ -189,7 +160,7 @@ class FlowValidator(object):
         satisfies = True
         counter_example = None
 
-        active_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
+        active_path = self.get_active_path(traffic, src_port, dst_port)
 
         # There needs to be a path to violate a link...
         if active_path:
@@ -286,7 +257,7 @@ class FlowValidator(object):
                     ps.traffic.set_field("has_vlan_tag", 0)
 
                     with Timer(verbose=True) as t:
-                        active_path = get_active_path(self.port_graph, ps.traffic, src_port, dst_port)
+                        active_path = self.get_active_path(ps.traffic, src_port, dst_port)
 
                     if active_path_computation_times != None:
                         active_path_computation_times.append(t.secs)
@@ -297,7 +268,7 @@ class FlowValidator(object):
                     failover_path = None
 
                     if active_path:
-                        failover_path = get_failover_path_after_failed_sequence(self.port_graph, active_path, lmbda)
+                        failover_path = self.get_failover_path_after_failed_sequence(active_path, lmbda)
 
                     for constraint in ps.constraints:
                         if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:

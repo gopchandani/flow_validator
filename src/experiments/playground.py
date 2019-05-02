@@ -40,11 +40,11 @@ class Playground(Experiment):
         # l = l[:-1]
         # print l
 
-        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
-        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
-        # lmbdas = [(ng.get_link_data('s3', 's1'),
-        #            ng.get_link_data('s3', 's4')
-        #            )]
+        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
+        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
+        lmbdas = [(ng.get_link_data('s3', 's1'),
+                   ng.get_link_data('s3', 's4')
+                   )]
 
         # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
         # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
