@@ -3,7 +3,6 @@ import json
 import argparse
 import grpc
 from rpc import flow_validator_pb2
-from rpc import flow_validator_pb2_grpc
 from experiment import Experiment
 from experiments.network_configuration import NetworkConfiguration
 from analysis.sdnsim_client import SDNSimClient
@@ -27,9 +26,6 @@ class WSC(Experiment):
         self.experiment_data = experiment_data
         self.flow_specs = flow_specs
         self.reps = reps
-
-        self.channel = None
-        self.stub = None
 
     def get_rpc_flows(self, src_ports, dst_ports):
 
@@ -74,7 +70,7 @@ class WSC(Experiment):
         nafp = flow_validator_pb2.NumActiveFlowsParams(flows=flows, reps=reps)
 
         try:
-            nafi = self.stub.GetNumActiveFlowsAtFailureTimes(nafp)
+            nafi = self.sdnsim_client.stub.GetNumActiveFlowsAtFailureTimes(nafp)
 
             print "GetNumActiveFlowsAtFailureTimes was successful, time taken:", nafi.time_taken/1000000000, "seconds."
 
@@ -84,45 +80,13 @@ class WSC(Experiment):
         except grpc.RpcError as e:
             print "Call to GetNumActiveFlowsAtFailureTimes failed:", e.details(), e.code().name, e.code().value
 
-    def flow_validator_get_active_flow_path(self):
-
-        policy_match = dict()
-        policy_match["eth_type"] = 0x0800
-
-        flow = flow_validator_pb2.Flow(src_port=flow_validator_pb2.PolicyPort(switch_id="s3", port_num=1),
-                                       dst_port=flow_validator_pb2.PolicyPort(switch_id="s25", port_num=1),
-                                       policy_match=policy_match)
-
-        lmbda = flow_validator_pb2.Lmbda(links=[self.sdnsim_client.rpc_links["s2"]["s1"]])
-
-        nafp = flow_validator_pb2.ActivePathParams(flow=flow, lmbda=lmbda)
-
-        try:
-            api = self.stub.GetActiveFlowPath(nafp)
-            print "Initialize was successful, time taken:", api.time_taken/1000000000, "seconds."
-        except grpc.RpcError as e:
-            print "Call to Initialize failed:", e.details(), e.code().name, e.code().value
-
-    def flow_validator_initialize(self,):
-        rpc_ng = self.sdnsim_client.prepare_rpc_network_graph()
-
-        try:
-            init_info = self.stub.Initialize(rpc_ng)
-            print "Initialize was successful, time taken:", init_info.time_taken/1000000000, "seconds."
-        except grpc.RpcError as e:
-            print "Call to Initialize failed:", e.details(), e.code().name, e.code().value
-
     def trigger(self):
-        self.channel = grpc.insecure_channel('localhost:50051')
-        self.stub = flow_validator_pb2_grpc.FlowValidatorStub(self.channel)
 
-        self.flow_validator_initialize()
-
-        # self.flow_validator_get_active_flow_path()
+        self.sdnsim_client.initialize_sdnsim()
 
         # self.flow_validator_get_time_to_failure()
 
-        self.flow_validator_get_num_active_flows_at_failure_times()
+        # self.flow_validator_get_num_active_flows_at_failure_times()
 
 
 def main():

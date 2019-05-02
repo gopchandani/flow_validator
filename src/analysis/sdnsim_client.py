@@ -1,6 +1,8 @@
+import grpc
+
 from collections import defaultdict
 from rpc import flow_validator_pb2
-
+from rpc import flow_validator_pb2_grpc
 from netaddr import IPNetwork
 
 
@@ -8,6 +10,9 @@ class SDNSimClient(object):
 
     def __init__(self, nc):
         super(SDNSimClient, self).__init__()
+
+        self.channel = grpc.insecure_channel('localhost:50051')
+        self.stub = flow_validator_pb2_grpc.FlowValidatorStub(self.channel)
 
         self.nc = nc
         self.rpc_links = defaultdict(dict)
@@ -245,3 +250,40 @@ class SDNSimClient(object):
                                                  switches=rpc_switches, hosts=rpc_hosts, links=rpc_links)
 
         return rpc_ng
+
+    def initialize_sdnsim(self):
+        rpc_ng = self.prepare_rpc_network_graph()
+
+        try:
+            init_info = self.stub.Initialize(rpc_ng)
+            print "Initialize was successful, time taken:", init_info.time_taken/1000000000, "seconds."
+        except grpc.RpcError as e:
+            print "Call to Initialize failed:", e.details(), e.code().name, e.code().value
+
+    def get_active_flow_path(self, src_sw_id, src_sw_port_num, dst_sw_id, dst_sw_port_num, policy_match, lmbda):
+
+        path = None
+
+        flow = flow_validator_pb2.Flow(src_port=flow_validator_pb2.PolicyPort(switch_id=src_sw_id,
+                                                                              port_num=src_sw_port_num),
+                                       dst_port=flow_validator_pb2.PolicyPort(switch_id=dst_sw_id,
+                                                                              port_num=dst_sw_port_num),
+                                       policy_match=policy_match)
+
+        rpc_links = []
+        for link in lmbda:
+            rpc_links.append(self.rpc_links[link[0]][link[1]])
+
+        nafp = flow_validator_pb2.ActivePathParams(flow=flow,
+                                                   lmbda=flow_validator_pb2.Lmbda(links=rpc_links))
+        try:
+            api = self.stub.GetActiveFlowPath(nafp)
+            path = []
+            for port in api.ports:
+                path.append(port.switch_id + ":" + str(port.port_num))
+
+            print "GetActiveFlowPath was successful, time taken:", api.time_taken/1000000000, "seconds."
+        except grpc.RpcError as e:
+            print "Call to GetActiveFlowPath failed:", e.details(), e.code().name, e.code().value
+
+        return path

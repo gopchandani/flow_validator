@@ -25,15 +25,20 @@ __author__ = 'Rakesh Kumar'
 
 class FlowValidator(object):
 
-    def __init__(self, network_graph, use_sdnsim=False):
+    def __init__(self, network_graph, use_sdnsim=False, nc=None):
 
         self.network_graph = network_graph
         self.use_sdnsim = use_sdnsim
 
+        self.sdnsim_client = None
+        self.port_graph = None
+
         if self.use_sdnsim:
-            pass
+            self.sdnsim_client = SDNSimClient(nc)
+            self.sdnsim_client.initialize_sdnsim()
         else:
             self.port_graph = NetworkPortGraph(network_graph)
+            self.init_network_port_graph()
 
     def init_network_port_graph(self):
         self.port_graph.init_network_port_graph()
@@ -47,22 +52,38 @@ class FlowValidator(object):
         traffic_path = None
 
         if self.use_sdnsim:
-            pass
+            policy_match = dict()
+            policy_match["eth_type"] = 0x0800
+
+            traffic_path = self.sdnsim_client.get_active_flow_path(src_port.sw.node_id, src_port.port_number,
+                                                                   dst_port.sw.node_id, dst_port.port_number,
+                                                                   policy_match,
+                                                                   [])
         else:
             traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
 
         return traffic_path
 
-    def get_failover_path_after_failed_sequence(self, active_path, lmbda):
+    def get_failover_path_after_failed_sequence(self, traffic, src_port, dst_port, active_path, lmbda):
 
-        failover_path = None
+        traffic_path = None
 
         if self.use_sdnsim:
-            pass
-        else:
-            failover_path = get_failover_path_after_failed_sequence(self.port_graph, active_path, lmbda)
+            policy_match = dict()
+            policy_match["eth_type"] = 0x0800
 
-        return failover_path
+            lmbda_list = []
+            for l in lmbda:
+                lmbda_list.append(l.forward_link)
+
+            traffic_path = self.sdnsim_client.get_active_flow_path(src_port.sw.node_id, src_port.port_number,
+                                                                   dst_port.sw.node_id, dst_port.port_number,
+                                                                   policy_match,
+                                                                   lmbda_list)
+        else:
+            traffic_path = get_failover_path_after_failed_sequence(self.port_graph, active_path, lmbda)
+
+        return traffic_path
 
     def port_pair_iter(self, src_zone, dst_zone):
 
@@ -268,7 +289,11 @@ class FlowValidator(object):
                     failover_path = None
 
                     if active_path:
-                        failover_path = self.get_failover_path_after_failed_sequence(active_path, lmbda)
+                        failover_path = self.get_failover_path_after_failed_sequence(ps.traffic,
+                                                                                     src_port,
+                                                                                     dst_port,
+                                                                                     active_path,
+                                                                                     lmbda)
 
                     for constraint in ps.constraints:
                         if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:

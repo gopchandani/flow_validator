@@ -24,8 +24,8 @@ class Playground(Experiment):
 
         ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
-        fv = FlowValidator(ng)
-        fv.init_network_port_graph()
+        #fv = FlowValidator(ng)
+        fv = FlowValidator(ng, use_sdnsim=True, nc=self.nc)
 
         src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
