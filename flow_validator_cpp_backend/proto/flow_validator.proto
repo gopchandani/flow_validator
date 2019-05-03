@@ -8,8 +8,6 @@ service FlowValidator {
 
   rpc GetActiveFlowPath(ActivePathParams) returns (ActivePathInfo) {}
 
-  rpc ValidatePolicy(Policy) returns (ValidatePolicyInfo) {}
-
   rpc GetTimeToDisconnect(MonteCarloParams) returns (TimeToDisconnectInfo) {}
 
   rpc GetNumActiveFlowsAtFailureTimes(NumActiveFlowsParams) returns (NumActiveFlowsInfo) {}
@@ -56,11 +54,6 @@ message ActivePathParams {
 message ActivePathInfo {
     uint64 time_taken = 1; 
     repeated PolicyPort ports = 2;
-}
-
-message ValidatePolicyInfo {
-    uint64 time_taken = 1;
-    repeated PolicyViolation violations = 2;
 }
 
 message Port {
@@ -143,38 +136,8 @@ message PolicyPort {
     uint64 port_num = 2;
 }
 
-message Zone {
-    repeated PolicyPort ports = 1;
-}
-
-message Constraint {
-    string type = 1;
-    int32 path_length = 2;
-    repeated Link avoid_links = 3;
-}
-
 message Lmbda {
     repeated Link links = 1;
-}
-
-message PolicyStatement {
-  Zone src_zone = 1;
-  Zone dst_zone = 2;
-  map<string, uint64> policy_match = 3;
-  repeated Constraint constraints = 4;
-  repeated Lmbda lmbdas = 5;
-}
-
-message Policy {
-    repeated PolicyStatement policy_statements = 1;
-}
-
-message PolicyViolation {
-  Lmbda lmbda = 1;
-  PolicyPort src_port = 2;
-  PolicyPort dst_port = 3;
-  string constraint_type = 4;
-  string counter_example = 5;
 }
 
 message Flow {

@@ -28,7 +28,6 @@ class FlowValidatorImpl final : public FlowValidator::Service {
 
       Status Initialize(ServerContext*, const NetworkGraph*, InitializeInfo* ) override;
       Status GetActiveFlowPath(ServerContext*, const ActivePathParams*, ActivePathInfo*) override;
-      Status ValidatePolicy(ServerContext*, const Policy*, ValidatePolicyInfo* ) override;
       Status GetTimeToDisconnect(ServerContext*, const MonteCarloParams*, TimeToDisconnectInfo* ) override;
       Status GetNumActiveFlowsAtFailureTimes(ServerContext*, const NumActiveFlowsParams*, NumActiveFlowsInfo*) override;
 

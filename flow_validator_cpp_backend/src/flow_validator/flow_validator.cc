@@ -46,53 +46,6 @@ Status FlowValidatorImpl::GetActiveFlowPath(ServerContext* context, const Active
     return Status::OK;
 }
 
-Status FlowValidatorImpl::ValidatePolicy(ServerContext* context, const Policy* p, ValidatePolicyInfo* info) {
-    cout << "Received ValidatePolicy request" << endl;
-    auto start = chrono::steady_clock::now();
-
-    vector< future<int> > results;
-
-    for (int i = 0; i < p->policy_statements_size(); i++) {
-        auto this_ps = p->policy_statements(i);
-
-        for (int j = 0; j <this_ps.src_zone().ports_size(); j++) {
-            string src_port = this_ps.src_zone().ports(j).switch_id() + ":" + to_string(this_ps.src_zone().ports(j).port_num());
-            for (int k = 0; k <this_ps.dst_zone().ports_size(); k++) {
-                string dst_port = this_ps.dst_zone().ports(k).switch_id() + ":" + to_string(this_ps.dst_zone().ports(k).port_num());
-                if (src_port == dst_port) {
-                    continue;
-                }
-                policy_match_t policy_match;
-                for (auto & p : this_ps.policy_match())
-                {
-                    policy_match[p.first] = p.second;
-                }
-
-                for (int l = 0; l <this_ps.lmbdas_size(); l++) {
-                    auto this_lmbda = this_ps.lmbdas(l);
-
-                    results.emplace_back(
-                        thread_pool->enqueue([this, src_port, dst_port, policy_match, this_lmbda] {
-                            auto p = ag->find_path(src_port, dst_port, policy_match, this_lmbda);
-                            ag->print_path(src_port, dst_port, p);
-                            return 0;
-                        })  
-                    );
-                }          
-            }
-        }
-    }
-/*
-    for(auto && result: results) {
-        cout << result.get() << ' ';
-    }
-    cout << endl;
-*/
-    auto end = chrono::steady_clock::now();
-    info->set_time_taken(chrono::duration_cast<chrono::nanoseconds>(end - start).count());
-    return Status::OK;
-}
-
 Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const MonteCarloParams* mcp, TimeToDisconnectInfo* ttdi) {
     cout << "Received GetTimeToDisconnect request" << endl;
     cout << "Link Failure Rate: " << mcp->link_failure_rate() << endl;
