@@ -52,14 +52,15 @@ class FlowValidator(object):
         traffic_path = None
 
         if self.use_sdnsim:
-            policy_match = dict()
-            policy_match["eth_type"] = 0x0800
-
             traffic_path = self.sdnsim_client.get_active_flow_path(src_port.sw.node_id, src_port.port_number,
                                                                    dst_port.sw.node_id, dst_port.port_number,
-                                                                   policy_match,
+                                                                   traffic,
                                                                    [])
         else:
+            traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
+            traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
+            traffic.set_field("in_port", int(src_port.port_number))
+            traffic.set_field("has_vlan_tag", 0)
             traffic_path = get_active_path(self.port_graph, traffic, src_port, dst_port)
 
         return traffic_path
@@ -69,8 +70,6 @@ class FlowValidator(object):
         traffic_path = None
 
         if self.use_sdnsim:
-            policy_match = dict()
-            policy_match["eth_type"] = 0x0800
 
             lmbda_list = []
             for l in lmbda:
@@ -78,7 +77,7 @@ class FlowValidator(object):
 
             traffic_path = self.sdnsim_client.get_active_flow_path(src_port.sw.node_id, src_port.port_number,
                                                                    dst_port.sw.node_id, dst_port.port_number,
-                                                                   policy_match,
+                                                                   traffic,
                                                                    lmbda_list)
         else:
             traffic_path = get_failover_path_after_failed_sequence(self.port_graph, active_path, lmbda)
@@ -268,14 +267,6 @@ class FlowValidator(object):
         for lmbda in self.p_map:
             for src_port, dst_port in list(self.p_map[lmbda].keys()):
                 for ps in self.p_map[lmbda][(src_port, dst_port)]:
-
-                    ps.traffic.set_field("ethernet_source",
-                                         int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-                    ps.traffic.set_field("ethernet_destination",
-                                         int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-                    ps.traffic.set_field("in_port",
-                                         int(src_port.port_number))
-                    ps.traffic.set_field("has_vlan_tag", 0)
 
                     with Timer(verbose=True) as t:
                         active_path = self.get_active_path(ps.traffic, src_port, dst_port)
