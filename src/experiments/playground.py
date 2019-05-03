@@ -5,7 +5,7 @@ from experiments.network_configuration import NetworkConfiguration
 from model.traffic import Traffic
 from analysis.flow_validator import FlowValidator
 from analysis.policy_statement import PolicyStatement, PolicyConstraint
-from analysis.policy_statement import CONNECTIVITY_CONSTRAINT
+from analysis.policy_statement import CONNECTIVITY_CONSTRAINT, LINK_AVOIDANCE_CONSTRAINT
 
 __author__ = 'Rakesh Kumar'
 
@@ -24,13 +24,13 @@ class Playground(Experiment):
 
         ng = self.nc.setup_network_graph(mininet_setup_gap=1, synthesis_setup_gap=1)
 
-        # fv = FlowValidator(ng)
-        # specific_traffic = Traffic(init_wildcard=True)
-        # specific_traffic.set_field("ethernet_type", 0x0800)
+        fv = FlowValidator(ng)
+        specific_traffic = Traffic(init_wildcard=True)
+        specific_traffic.set_field("ethernet_type", 0x0800)
 
-        fv = FlowValidator(ng, use_sdnsim=True, nc=self.nc)
-        specific_traffic = dict()
-        specific_traffic["eth_type"] = 0x0800
+        # fv = FlowValidator(ng, use_sdnsim=True, nc=self.nc)
+        # specific_traffic = dict()
+        # specific_traffic["eth_type"] = 0x0800
 
         src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]
         dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in fv.network_graph.host_ids]

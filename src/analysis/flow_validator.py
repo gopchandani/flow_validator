@@ -65,6 +65,25 @@ class FlowValidator(object):
 
         return traffic_path
 
+    def passes_link(self, failover_path, ld):
+        passes_link = False
+
+        if self.use_sdnsim:
+            for i in xrange(len(failover_path)-1):
+                p1 = failover_path[i].split(":")[0]
+                p2 = failover_path[i+1].split(":")[0]
+
+                if ((p1 == ld.forward_link[0] and p2 == ld.forward_link[1])
+                        or (p1 == ld.forward_link[1] and p2 == ld.forward_link[0])):
+                    passes_link = True
+                    break
+
+        else:
+            if failover_path.passes_link(ld):
+                passes_link = True
+
+        return passes_link
+
     def get_failover_path_after_failed_sequence(self, traffic, src_port, dst_port, active_path, lmbda):
 
         traffic_path = None
@@ -118,132 +137,6 @@ class FlowValidator(object):
                 raise Exception("Unknown as_ingress_egress")
 
         return result
-
-    def validate_connectvity_constraint(self, src_port, dst_port, traffic):
-
-        at = get_admitted_traffic(self.port_graph, src_port, dst_port)
-        counter_example = None
-
-        if not at.is_empty():
-            if at.is_subset_traffic(traffic):
-                traffic_path = self.get_active_path(traffic, src_port, dst_port)
-
-                if traffic_path:
-                    satisfies = True
-                else:
-                    #TODO: This needs fixing (and a test)
-                    satisfies = False
-                    counter_example = Traffic()
-            else:
-                #print "src_port:", src_port, "dst_port:", dst_port, "at does not pass traffic check."
-                satisfies = False
-                counter_example = at
-
-        else:
-            #print "src_port:", src_port, "dst_port:", dst_port, "at is empty."
-            satisfies = False
-            counter_example = at
-
-        return satisfies, counter_example
-
-    def validate_isolation_constraint(self, src_port, dst_port, traffic):
-
-        at = get_admitted_traffic(self.port_graph, src_port, dst_port)
-        counter_example = None
-        satisfies = True
-
-        if not at.is_empty():
-            if at.is_subset_traffic(traffic):
-                traffic_path = self.get_active_path(traffic, src_port, dst_port)
-
-                if traffic_path:
-                    satisfies = False
-                    counter_example = at
-
-        return satisfies, counter_example
-
-    def validate_path_length_constraint(self, src_port, dst_port, traffic, l):
-
-        satisfies = True
-        counter_example = None
-
-        traffic_path = self.get_active_path(traffic, src_port, dst_port)
-
-        if traffic_path:
-            if len(traffic_path) > l:
-                satisfies = False
-                counter_example = traffic_path
-
-        return satisfies, counter_example
-
-    def validate_link_avoidance(self, src_port, dst_port, traffic, el):
-        satisfies = True
-        counter_example = None
-
-        active_path = self.get_active_path(traffic, src_port, dst_port)
-
-        # There needs to be a path to violate a link...
-        if active_path:
-            for ld in el:
-                if active_path.passes_link(ld):
-                    satisfies = False
-                    counter_example = active_path
-                    break
-
-        return satisfies, counter_example
-
-    def validate_port_pair_constraints(self, lmbda):
-
-        print "Performing validation, lmbda:", lmbda
-
-        v = []
-
-        for src_port, dst_port in self.p_map[tuple(lmbda)]:
-
-            for ps in self.p_map[tuple(lmbda)][(src_port, dst_port)]:
-
-                # Setup the appropriate filter
-                ps.traffic.set_field("ethernet_source", int(src_port.attached_host.mac_addr.replace(":", ""), 16))
-                ps.traffic.set_field("ethernet_destination", int(dst_port.attached_host.mac_addr.replace(":", ""), 16))
-                ps.traffic.set_field("in_port", int(src_port.port_number))
-                ps.traffic.set_field("has_vlan_tag", 0)
-
-                for constraint in ps.constraints:
-
-                    if constraint.constraint_type == CONNECTIVITY_CONSTRAINT:
-                        satisfies, counter_example = self.validate_connectvity_constraint(src_port,
-                                                                                          dst_port,
-                                                                                          ps.traffic)
-                        if not satisfies:
-                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
-
-                    if constraint.constraint_type == ISOLATION_CONSTRAINT:
-                        satisfies, counter_example = self.validate_isolation_constraint(src_port,
-                                                                                        dst_port,
-                                                                                        ps.traffic)
-
-                        if not satisfies:
-                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
-
-                    if constraint.constraint_type == PATH_LENGTH_CONSTRAINT:
-                        satisfies, counter_example = self.validate_path_length_constraint(src_port,
-                                                                                          dst_port,
-                                                                                          ps.traffic,
-                                                                                          constraint.constraint_params)
-                        if not satisfies:
-                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
-
-                    if constraint.constraint_type == LINK_AVOIDANCE_CONSTRAINT:
-                        satisfies, counter_example = self.validate_link_avoidance(src_port,
-                                                                                  dst_port,
-                                                                                  ps.traffic,
-                                                                                  constraint.constraint_params)
-
-                        if not satisfies:
-                            v.append(PolicyViolation(tuple(lmbda), src_port, dst_port,  constraint, counter_example))
-
-        self.violations.extend(v)
-        return v
 
     def validate_policy(self, policy_statement_list, active_path_computation_times=None, path_lengths=None):
 
@@ -301,7 +194,7 @@ class FlowValidator(object):
                                 passes_links = False
 
                                 for ld in constraint.constraint_params:
-                                    if failover_path.passes_link(ld):
+                                    if self.passes_link(failover_path, ld):
                                         passes_links = True
                                         break
 
