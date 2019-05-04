@@ -1,13 +1,13 @@
-#ifndef __FLOW_VALIDATOR_BACKEND_RULE_H__
-#define __FLOW_VALIDATOR_BACKEND_RULE_H__
+#ifndef __SDNSIM_RULE_H__
+#define __SDNSIM_RULE_H__
 
 #include "of_constants.h"
-#include "proto/flow_validator.grpc.pb.h"
+#include "proto/sdnsim.grpc.pb.h"
 #include "rule_effect.h"
 #include "common_types.h"
 
 using namespace std;
-using namespace flow_validator;
+using namespace sdnsim;
 
 class RuleEffect;
 

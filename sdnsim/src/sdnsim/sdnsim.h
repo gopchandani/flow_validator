@@ -1,7 +1,7 @@
-#ifndef __FLOW_VALIDATOR_BACKEND_FLOW_VALIDATOR_H__
-#define __FLOW_VALIDATOR_BACKEND_FLOW_VALIDATOR_H__
+#ifndef __SDNSIM_SDNSIM_H__
+#define __SDNSIM_SDNSIM_H__
 
-#include "proto/flow_validator.grpc.pb.h"
+#include "proto/sdnsim.grpc.pb.h"
 #include "analysis_graph.h"
 #include "thread_pool.h"
 
@@ -10,20 +10,20 @@
 #include <string>
 #include <numeric>
 
-using namespace flow_validator;
+using namespace sdnsim;
 using namespace std;
 
 using grpc::ServerContext;
 using grpc::Status;
 
-class FlowValidatorImpl final : public FlowValidator::Service {
+class SDNSimImpl final : public SDNSim::Service {
  public:
-      explicit FlowValidatorImpl(){
+      explicit SDNSimImpl(){
           thread_pool = new ThreadPool(std::thread::hardware_concurrency());
           ag = NULL;
       }
 
-      ~FlowValidatorImpl() {
+      ~SDNSimImpl() {
       }
 
       Status Initialize(ServerContext*, const NetworkGraph*, InitializeInfo* ) override;
@@ -34,7 +34,6 @@ class FlowValidatorImpl final : public FlowValidator::Service {
  private:
       ThreadPool *thread_pool;
       AnalysisGraph *ag;
-
 };
 
 

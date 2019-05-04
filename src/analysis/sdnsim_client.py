@@ -1,8 +1,8 @@
 import grpc
 
 from collections import defaultdict
-from rpc import flow_validator_pb2
-from rpc import flow_validator_pb2_grpc
+from rpc import sdnsim_pb2
+from rpc import sdnsim_pb2_grpc
 from netaddr import IPNetwork
 
 
@@ -12,7 +12,7 @@ class SDNSimClient(object):
         super(SDNSimClient, self).__init__()
 
         self.channel = grpc.insecure_channel('localhost:50051')
-        self.stub = flow_validator_pb2_grpc.FlowValidatorStub(self.channel)
+        self.stub = sdnsim_pb2_grpc.SDNSimStub(self.channel)
 
         self.nc = nc
         self.rpc_links = defaultdict(dict)
@@ -24,10 +24,10 @@ class SDNSimClient(object):
                 dst_node = dst_list[0]
                 dst_node_port = dst_list[1]
 
-                rpc_link = flow_validator_pb2.Link(src_node=src_node,
-                                                   src_port_num=int(src_node_port),
-                                                   dst_node=dst_node,
-                                                   dst_port_num=int(dst_node_port))
+                rpc_link = sdnsim_pb2.Link(src_node=src_node,
+                                           src_port_num=int(src_node_port),
+                                           dst_node=dst_node,
+                                           dst_port_num=int(dst_node_port))
 
                 self.rpc_links[src_node][dst_node] = rpc_link
 
@@ -36,7 +36,7 @@ class SDNSimClient(object):
 
         for action in actions:
 
-            rpc_action = flow_validator_pb2.Action(type=action["type"])
+            rpc_action = sdnsim_pb2.Action(type=action["type"])
 
             if action["type"] == "SET_FIELD" and "field" in action and "value" in action:
                 rpc_action.modified_field = action["field"]
@@ -118,9 +118,9 @@ class SDNSimClient(object):
                 field_val = 0x1000 + int(field_value)
 
         if not isinstance(field_val, IPNetwork):
-            return flow_validator_pb2.FlowRuleMatchFieldVal(value_start=field_val, value_end=field_val)
+            return sdnsim_pb2.FlowRuleMatchFieldVal(value_start=field_val, value_end=field_val)
         else:
-            return flow_validator_pb2.FlowRuleMatchFieldVal(value_start=field_val.first, value_end=field_val.last)
+            return sdnsim_pb2.FlowRuleMatchFieldVal(value_start=field_val.first, value_end=field_val.last)
 
     def prepare_rpc_match(self, match):
 
@@ -136,11 +136,11 @@ class SDNSimClient(object):
         for instruction in instructions:
 
             if instruction["type"] == "GOTO_TABLE":
-                rpc_instruction = flow_validator_pb2.Instruction(
+                rpc_instruction = sdnsim_pb2.Instruction(
                     type=instruction["type"],
                     go_to_table_num=instruction["table_id"])
             else:
-                rpc_instruction = flow_validator_pb2.Instruction(
+                rpc_instruction = sdnsim_pb2.Instruction(
                     type=instruction["type"],
                     actions=self.prepare_rpc_actions(instruction["actions"]))
 
@@ -163,7 +163,7 @@ class SDNSimClient(object):
                 except:
                     continue
 
-                rpc_port = flow_validator_pb2.Port(port_num=port_no, hw_addr=port["hw_addr"])
+                rpc_port = sdnsim_pb2.Port(port_num=port_no, hw_addr=port["hw_addr"])
                 rpc_ports.append(rpc_port)
 
             rpc_groups = []
@@ -172,12 +172,12 @@ class SDNSimClient(object):
                 rpc_buckets = []
                 for bucket in group["buckets"]:
                     rpc_actions = self.prepare_rpc_actions(bucket["actions"])
-                    rpc_bucket = flow_validator_pb2.Bucket(watch_port_num=bucket["watch_port"],
-                                                           weight=bucket["weight"],
-                                                           actions=rpc_actions)
+                    rpc_bucket = sdnsim_pb2.Bucket(watch_port_num=bucket["watch_port"],
+                                                   weight=bucket["weight"],
+                                                   actions=rpc_actions)
                     rpc_buckets.append(rpc_bucket)
 
-                rpc_group = flow_validator_pb2.Group(id=group["group_id"], type=group["type"], buckets=rpc_buckets)
+                rpc_group = sdnsim_pb2.Group(id=group["group_id"], type=group["type"], buckets=rpc_buckets)
                 rpc_groups.append(rpc_group)
 
             rpc_flow_tables = []
@@ -185,20 +185,20 @@ class SDNSimClient(object):
 
                 rpc_flow_rules = []
                 for flow_rule in flow_table:
-                    rpc_flow_rule = flow_validator_pb2.FlowRule(
+                    rpc_flow_rule = sdnsim_pb2.FlowRule(
                         priority=int(flow_rule["priority"]),
                         flow_rule_match=self.prepare_rpc_match(flow_rule["match"]),
                         instructions=self.prepare_rpc_instructions(flow_rule["instructions"]))
 
                     rpc_flow_rules.append(rpc_flow_rule)
 
-                rpc_flow_table = flow_validator_pb2.FlowTable(table_num=int(table_num), flow_rules=rpc_flow_rules)
+                rpc_flow_table = sdnsim_pb2.FlowTable(table_num=int(table_num), flow_rules=rpc_flow_rules)
                 rpc_flow_tables.append(rpc_flow_table)
 
-            rpc_switch = flow_validator_pb2.Switch(flow_tables = rpc_flow_tables,
-                                                   group_table=rpc_groups,
-                                                   ports=rpc_ports,
-                                                   switch_id='s' + str(sw_id))
+            rpc_switch = sdnsim_pb2.Switch(flow_tables = rpc_flow_tables,
+                                           group_table=rpc_groups,
+                                           ports=rpc_ports,
+                                           switch_id='s' + str(sw_id))
 
             rpc_switches.append(rpc_switch)
 
@@ -211,10 +211,10 @@ class SDNSimClient(object):
 
         for host_switch in hosts.values():
             for host in host_switch:
-                rpc_host = flow_validator_pb2.Host(host_IP=host["host_IP"],
-                                                   host_MAC=host["host_MAC"],
-                                                   host_name=host["host_name"],
-                                                   host_switch_id=host["host_switch_id"])
+                rpc_host = sdnsim_pb2.Host(host_IP=host["host_IP"],
+                                           host_MAC=host["host_MAC"],
+                                           host_name=host["host_name"],
+                                           host_switch_id=host["host_switch_id"])
                 rpc_hosts.append(rpc_host)
 
         return rpc_hosts
@@ -224,10 +224,10 @@ class SDNSimClient(object):
         src_node_port = 0
         dst_node_port = 0
 
-        rpc_link = flow_validator_pb2.Link(src_node=src_node,
-                                           src_port_num=int(src_node_port),
-                                           dst_node=dst_node,
-                                           dst_port_num=int(dst_node_port))
+        rpc_link = sdnsim_pb2.Link(src_node=src_node,
+                                   src_port_num=int(src_node_port),
+                                   dst_node=dst_node,
+                                   dst_port_num=int(dst_node_port))
 
         return rpc_link
 
@@ -246,8 +246,8 @@ class SDNSimClient(object):
         rpc_hosts = self.prepare_rpc_hosts()
         rpc_links = self.prepare_rpc_links()
 
-        rpc_ng = flow_validator_pb2.NetworkGraph(controller="grpc",
-                                                 switches=rpc_switches, hosts=rpc_hosts, links=rpc_links)
+        rpc_ng = sdnsim_pb2.NetworkGraph(controller="grpc",
+                                         switches=rpc_switches, hosts=rpc_hosts, links=rpc_links)
 
         return rpc_ng
 
@@ -264,18 +264,18 @@ class SDNSimClient(object):
 
         path = None
 
-        flow = flow_validator_pb2.Flow(src_port=flow_validator_pb2.PolicyPort(switch_id=src_sw_id,
-                                                                              port_num=src_sw_port_num),
-                                       dst_port=flow_validator_pb2.PolicyPort(switch_id=dst_sw_id,
-                                                                              port_num=dst_sw_port_num),
-                                       policy_match=policy_match)
+        flow = sdnsim_pb2.Flow(src_port=sdnsim_pb2.PolicyPort(switch_id=src_sw_id,
+                                                              port_num=src_sw_port_num),
+                               dst_port=sdnsim_pb2.PolicyPort(switch_id=dst_sw_id,
+                                                              port_num=dst_sw_port_num),
+                               policy_match=policy_match)
 
         rpc_links = []
         for link in lmbda:
             rpc_links.append(self.rpc_links[link[0]][link[1]])
 
-        nafp = flow_validator_pb2.ActivePathParams(flow=flow,
-                                                   lmbda=flow_validator_pb2.Lmbda(links=rpc_links))
+        nafp = sdnsim_pb2.ActivePathParams(flow=flow,
+                                           lmbda=sdnsim_pb2.Lmbda(links=rpc_links))
         try:
             api = self.stub.GetActiveFlowPath(nafp)
             path = []

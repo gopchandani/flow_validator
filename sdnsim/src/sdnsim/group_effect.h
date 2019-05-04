@@ -1,10 +1,10 @@
-#ifndef __FLOW_VALIDATOR_BACKEND_GROUP_EFFECT_H__
-#define __FLOW_VALIDATOR_BACKEND_GROUP_EFFECT_H__
+#ifndef __SDNSIM_GROUP_EFFECT_H__
+#define __SDNSIM_GROUP_EFFECT_H__
 
-#include "proto/flow_validator.grpc.pb.h"
+#include "proto/sdnsim.grpc.pb.h"
 #include "analysis_graph.h"
 
-using namespace flow_validator;
+using namespace sdnsim;
 using namespace std;
 
 class GroupEffect {

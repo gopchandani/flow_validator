@@ -1,7 +1,7 @@
-#include "flow_validator.h"
+#include "sdnsim.h"
 #include <chrono>
 
-Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph* ng, InitializeInfo* info) {
+Status SDNSimImpl::Initialize(ServerContext* context, const NetworkGraph* ng, InitializeInfo* info) {
     cout << "Received Initialize request" << endl;
     auto start = chrono::steady_clock::now();
 
@@ -18,7 +18,7 @@ Status FlowValidatorImpl::Initialize(ServerContext* context, const NetworkGraph*
     return Status::OK;
 }
 
-Status FlowValidatorImpl::GetActiveFlowPath(ServerContext* context, const ActivePathParams* app, ActivePathInfo* info) {
+Status SDNSimImpl::GetActiveFlowPath(ServerContext* context, const ActivePathParams* app, ActivePathInfo* info) {
     cout << "Received GetActiveFlowPath request" << endl;
     auto start = chrono::steady_clock::now();
 
@@ -46,7 +46,7 @@ Status FlowValidatorImpl::GetActiveFlowPath(ServerContext* context, const Active
     return Status::OK;
 }
 
-Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const MonteCarloParams* mcp, TimeToDisconnectInfo* ttdi) {
+Status SDNSimImpl::GetTimeToDisconnect(ServerContext* context, const MonteCarloParams* mcp, TimeToDisconnectInfo* ttdi) {
     cout << "Received GetTimeToDisconnect request" << endl;
     cout << "Link Failure Rate: " << mcp->link_failure_rate() << endl;
     cout << "Num Iterations: " << mcp->num_iterations() << endl;
@@ -93,7 +93,7 @@ Status FlowValidatorImpl::GetTimeToDisconnect(ServerContext* context, const Mont
     return Status::OK;
 }
 
-Status FlowValidatorImpl::GetNumActiveFlowsAtFailureTimes(ServerContext* context, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
+Status SDNSimImpl::GetNumActiveFlowsAtFailureTimes(ServerContext* context, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
     cout << "Received GetNumActiveFlowsAtFailureTimes request" << endl;
     auto start = chrono::steady_clock::now();
 

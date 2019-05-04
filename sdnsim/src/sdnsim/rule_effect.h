@@ -1,14 +1,14 @@
-#ifndef __FLOW_VALIDATOR_BACKEND_RULE_EFFECT_H__
-#define __FLOW_VALIDATOR_BACKEND_RULE_EFFECT_H__
+#ifndef __SDNSIM_RULE_EFFECT_H__
+#define __SDNSIM_RULE_EFFECT_H__
 
 #include "common_types.h"
 #include "of_constants.h"
-#include "proto/flow_validator.grpc.pb.h"
+#include "proto/sdnsim.grpc.pb.h"
 #include <unordered_map>
 #include <tuple>
 
 using namespace std;
-using namespace flow_validator;
+using namespace sdnsim;
 
 class AnalysisGraph;
 class AnalysisGraphNode;

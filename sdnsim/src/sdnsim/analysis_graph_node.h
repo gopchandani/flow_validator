@@ -1,11 +1,11 @@
-#ifndef __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_NODE_H__
-#define __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_NODE_H__
+#ifndef __SDNSIM_ANALYSIS_GRAPH_NODE_H__
+#define __SDNSIM_ANALYSIS_GRAPH_NODE_H__
 
 #include <queue>
 #include "rule.h"
 
 using namespace std;
-using namespace flow_validator;
+using namespace sdnsim;
 
 class AnalysisGraphNode final {
 public:

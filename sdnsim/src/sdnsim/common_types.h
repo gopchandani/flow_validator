@@ -1,5 +1,5 @@
-#ifndef __FLOW_VALIDATOR_BACKEND_COMMON_TYPES_H__
-#define __FLOW_VALIDATOR_BACKEND_COMMON_TYPES_H__
+#ifndef __SDNSIM_COMMON_TYPES_H__
+#define __SDNSIM_COMMON_TYPES_H__
 
 #include <unordered_map>
 #include <tuple>

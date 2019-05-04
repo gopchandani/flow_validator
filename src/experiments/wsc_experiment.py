@@ -86,7 +86,7 @@ class WSC(Experiment):
 
         # self.flow_validator_get_time_to_failure()
 
-        self.flow_validator_get_num_active_flows_at_failure_times()
+        # self.flow_validator_get_num_active_flows_at_failure_times()
 
 
 def main():

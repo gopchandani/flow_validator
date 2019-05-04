@@ -1,14 +1,14 @@
-#ifndef __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
-#define __FLOW_VALIDATOR_BACKEND_ANALYSIS_GRAPH_H__
+#ifndef __SDNSIM_ANALYSIS_GRAPH_H__
+#define __SDNSIM_ANALYSIS_GRAPH_H__
 
-#include "proto/flow_validator.grpc.pb.h"
+#include "proto/sdnsim.grpc.pb.h"
 
 #include "common_types.h"
 #include "of_constants.h"
 #include "rule.h"
 
 using namespace std;
-using namespace flow_validator;
+using namespace sdnsim;
 
 class AnalysisGraphNode;
 class GroupEffect;
