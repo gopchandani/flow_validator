@@ -10,7 +10,7 @@ service SDNSim {
 
   rpc GetTimeToDisconnect(MonteCarloParams) returns (TimeToDisconnectInfo) {}
 
-  rpc GetNumActiveFlowsAtFailureTimes(NumActiveFlowsParams) returns (NumActiveFlowsInfo) {}
+  rpc GetNumActiveFlowsWhenLinksFail(NumActiveFlowsParams) returns (NumActiveFlowsInfo) {}
 
 }
 

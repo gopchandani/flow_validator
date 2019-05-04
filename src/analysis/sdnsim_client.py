@@ -251,6 +251,18 @@ class SDNSimClient(object):
 
         return rpc_ng
 
+    def prepare_rpc_flows(self, src_ports, dst_ports, policy_matches):
+
+        flows = []
+
+        for i in xrange(len(src_ports)):
+            flows.append(sdnsim_pb2.Flow(
+                src_port=sdnsim_pb2.PolicyPort(switch_id=src_ports[i][0], port_num=src_ports[i][1]),
+                dst_port=sdnsim_pb2.PolicyPort(switch_id=dst_ports[i][0], port_num=dst_ports[i][1]),
+                policy_match=policy_matches[i]))
+
+        return flows
+
     def initialize_sdnsim(self):
         rpc_ng = self.prepare_rpc_network_graph()
 
@@ -287,3 +299,27 @@ class SDNSimClient(object):
             print "Call to GetActiveFlowPath failed:", e.details(), e.code().name, e.code().value
 
         return path
+
+    def get_num_active_flows_when_links_fail(self, reps, src_ports, dst_ports, policy_matches):
+
+        flows = self.prepare_rpc_flows(src_ports, dst_ports, policy_matches)
+
+        rpc_reps = []
+        for rep in reps:
+            link_failure_sequence = []
+
+            for f in rep['failures']:
+                link_failure_sequence.append(self.rpc_links["s" + str(f[1]+1)]["s" + str(f[2]+1)])
+
+            rpc_reps.append(sdnsim_pb2.NumActiveFlowsRep(link_failure_sequence=link_failure_sequence,
+                                                         num_active_flows=[]))
+
+        nafp = sdnsim_pb2.NumActiveFlowsParams(flows=flows, reps=rpc_reps)
+
+        try:
+            nafi = self.stub.GetNumActiveFlowsWhenLinksFail(nafp)
+            print "GetNumActiveFlowsWhenLinksFail was successful, time taken:", nafi.time_taken/1000000000, "seconds."
+            return nafi.reps
+
+        except grpc.RpcError as e:
+            print "Call to GetNumActiveFlowsWhenLinksFail failed:", e.details(), e.code().name, e.code().value

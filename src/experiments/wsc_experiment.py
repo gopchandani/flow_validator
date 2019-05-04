@@ -1,8 +1,6 @@
 import sys
 import json
 import argparse
-import grpc
-from rpc import flow_validator_pb2
 from experiment import Experiment
 from experiments.network_configuration import NetworkConfiguration
 from analysis.sdnsim_client import SDNSimClient
@@ -27,24 +25,11 @@ class WSC(Experiment):
         self.flow_specs = flow_specs
         self.reps = reps
 
-    def get_rpc_flows(self, src_ports, dst_ports):
+    def trigger(self):
 
-        policy_match = dict()
-        policy_match["eth_type"] = 0x0800
+        self.sdnsim_client.initialize_sdnsim()
 
-        flows = []
-
-        for i in xrange(len(src_ports)):
-            flows.append(flow_validator_pb2.Flow(
-                src_port=flow_validator_pb2.PolicyPort(switch_id=src_ports[i][0], port_num=src_ports[i][1]),
-                dst_port=flow_validator_pb2.PolicyPort(switch_id=dst_ports[i][0], port_num=dst_ports[i][1]),
-                policy_match=policy_match))
-
-        return flows
-
-    def flow_validator_get_num_active_flows_at_failure_times(self):
-
-        src_ports, dst_ports = [], []
+        src_ports, dst_ports, policy_matches = [], [], []
 
         for i in xrange(len(self.flow_specs["src_hosts"])):
             src_h_obj = self.nc.ng.get_node_object(self.flow_specs["src_hosts"][i])
@@ -53,40 +38,18 @@ class WSC(Experiment):
             src_ports.append((src_h_obj.sw.node_id, src_h_obj.switch_port.port_number))
             dst_ports.append((dst_h_obj.sw.node_id, dst_h_obj.switch_port.port_number))
 
+            policy_matches.append({"eth_type": 0x0800})
+
             # self.nc.is_host_pair_pingable(self.nc.mininet_obj.get(src_h_obj.node_id),
             #                               self.nc.mininet_obj.get(dst_h_obj.node_id))
 
-        flows = self.get_rpc_flows(src_ports, dst_ports)
+        out_reps = self.sdnsim_client.get_num_active_flows_when_links_fail(self.reps,
+                                                                           src_ports, dst_ports, policy_matches)
 
-        reps = []
-        for rep in self.reps:
-            link_failure_sequence = []
-            for f in rep['failures']:
-                link_failure_sequence.append(self.sdnsim_client.rpc_links["s" + str(f[1]+1)]["s" + str(f[2]+1)])
+        print len(out_reps)
 
-            reps.append(flow_validator_pb2.NumActiveFlowsRep(link_failure_sequence=link_failure_sequence,
-                                                             num_active_flows=[]))
-
-        nafp = flow_validator_pb2.NumActiveFlowsParams(flows=flows, reps=reps)
-
-        try:
-            nafi = self.sdnsim_client.stub.GetNumActiveFlowsAtFailureTimes(nafp)
-
-            print "GetNumActiveFlowsAtFailureTimes was successful, time taken:", nafi.time_taken/1000000000, "seconds."
-
-            for i in xrange(len(nafi.reps)):
-                self.experiment_data["reps"][i]["num_active_flows"] = list(nafi.reps[i].num_active_flows)
-
-        except grpc.RpcError as e:
-            print "Call to GetNumActiveFlowsAtFailureTimes failed:", e.details(), e.code().name, e.code().value
-
-    def trigger(self):
-
-        self.sdnsim_client.initialize_sdnsim()
-
-        # self.flow_validator_get_time_to_failure()
-
-        # self.flow_validator_get_num_active_flows_at_failure_times()
+        for i in xrange(len(out_reps)):
+            self.experiment_data["reps"][i]["num_active_flows"] = list(out_reps[i].num_active_flows)
 
 
 def main():

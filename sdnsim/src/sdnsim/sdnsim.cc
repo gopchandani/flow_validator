@@ -93,8 +93,8 @@ Status SDNSimImpl::GetTimeToDisconnect(ServerContext* context, const MonteCarloP
     return Status::OK;
 }
 
-Status SDNSimImpl::GetNumActiveFlowsAtFailureTimes(ServerContext* context, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
-    cout << "Received GetNumActiveFlowsAtFailureTimes request" << endl;
+Status SDNSimImpl::GetNumActiveFlowsWhenLinksFail(ServerContext* context, const NumActiveFlowsParams* nafp, NumActiveFlowsInfo* nafi) {
+    cout << "Received GetNumActiveFlowsWhenLinksFail request" << endl;
     auto start = chrono::steady_clock::now();
 
     vector <Flow> flows;

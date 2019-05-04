@@ -29,7 +29,7 @@ class SDNSimImpl final : public SDNSim::Service {
       Status Initialize(ServerContext*, const NetworkGraph*, InitializeInfo* ) override;
       Status GetActiveFlowPath(ServerContext*, const ActivePathParams*, ActivePathInfo*) override;
       Status GetTimeToDisconnect(ServerContext*, const MonteCarloParams*, TimeToDisconnectInfo* ) override;
-      Status GetNumActiveFlowsAtFailureTimes(ServerContext*, const NumActiveFlowsParams*, NumActiveFlowsInfo*) override;
+      Status GetNumActiveFlowsWhenLinksFail(ServerContext*, const NumActiveFlowsParams*, NumActiveFlowsInfo*) override;
 
  private:
       ThreadPool *thread_pool;
