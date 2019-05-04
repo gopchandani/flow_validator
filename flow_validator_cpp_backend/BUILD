@@ -3,58 +3,58 @@ load("@build_stack_rules_proto//cpp:cpp_grpc_library.bzl", "cpp_grpc_library")
 #load("@build_stack_rules_proto//cpp:cpp_grpc_compile.bzl", "cpp_grpc_compile")
 
 proto_library(
-    name = "flow_validator_proto",
-    srcs = ["proto/flow_validator.proto"],
+    name = "sdnsim_proto",
+    srcs = ["proto/sdnsim.proto"],
     deps = [],
     
 )
 
 cpp_grpc_library(
-    name = "flow_validator_proto_cpp",
-    deps = [":flow_validator_proto"],
+    name = "sdnsim_proto_cpp",
+    deps = [":sdnsim_proto"],
     visibility = ["//visibility:public"],
     
 )
 
 cc_library(
-    name="flow_validator_lib",
+    name="sdnsim_lib",
     hdrs=[
-        "src/flow_validator/thread_pool.h",
-        "src/flow_validator/of_constants.h",
-        "src/flow_validator/common_types.h",
-        "src/flow_validator/flow_validator.h",
-        "src/flow_validator/rule_effect.h",
-        "src/flow_validator/group_effect.h",
-        "src/flow_validator/rule.h",
-        "src/flow_validator/analysis_graph_node.h",
-        "src/flow_validator/analysis_graph.h"
+        "src/sdnsim/thread_pool.h",
+        "src/sdnsim/of_constants.h",
+        "src/sdnsim/common_types.h",
+        "src/sdnsim/sdnsim.h",
+        "src/sdnsim/rule_effect.h",
+        "src/sdnsim/group_effect.h",
+        "src/sdnsim/rule.h",
+        "src/sdnsim/analysis_graph_node.h",
+        "src/sdnsim/analysis_graph.h"
         ],
     srcs=[
-        "src/flow_validator/flow_validator.cc",
-        "src/flow_validator/rule_effect.cc",
-        "src/flow_validator/group_effect.cc",
-        "src/flow_validator/rule.cc",
-        "src/flow_validator/analysis_graph_node.cc",
-        "src/flow_validator/analysis_graph.cc"
+        "src/sdnsim/sdnsim.cc",
+        "src/sdnsim/rule_effect.cc",
+        "src/sdnsim/group_effect.cc",
+        "src/sdnsim/rule.cc",
+        "src/sdnsim/analysis_graph_node.cc",
+        "src/sdnsim/analysis_graph.cc"
         ],
 
     # deps = ["@boost//:algorithm",
     #         "@boost//:lexical_cast",
     #         "@boost//:program_options",
     #         "@boost//:exception",
-    #         ":flow_validator_proto_cpp"],
+    #         ":sdnsim_proto_cpp"],
 
-    deps = [":flow_validator_proto_cpp"],
+    deps = [":sdnsim_proto_cpp"],
     copts = ["-fpermissive -Wno-reorder"],
     visibility = ["//visibility:public"],
     alwayslink = True,
 )
 cc_binary (
-    name="flow_validator_cpp_backend",
+    name="sdnsim",
     srcs=[
         "src/main.cc",
     ],
-    deps = [":flow_validator_lib"]
+    deps = [":sdnsim_lib"]
 )
 
 
