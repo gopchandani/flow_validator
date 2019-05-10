@@ -244,12 +244,12 @@ class DijkstraSynthesis(object):
         push_vlan_tag_intent.required_vlan_id = required_tag
 
         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                sw,
-                self.vlan_tag_push_rules_table_id,
-                group_id,
-                1,
-                push_vlan_match,
-                True)
+            sw,
+            self.vlan_tag_push_rules_table_id,
+            group_id,
+            1,
+            push_vlan_match,
+            True)
 
         # Take care of vlan tag push intents for this destination
         self.synthesis_lib.push_vlan_push_intents_2(src_h_obj.sw.node_id,
@@ -290,9 +290,13 @@ class DijkstraSynthesis(object):
                 self.primary_path_edges.append((p[i], p[i+1]))
 
         #  Compute all forwarding intents as a result of primary path
-        primary_first_intent = self._compute_path_ip_intents(src_host, dst_host, p,
-                                                               "primary", flow_match, in_port,
-                                                               dst_sw_obj.synthesis_tag)
+        primary_first_intent = self._compute_path_ip_intents(src_host,
+                                                             dst_host,
+                                                             p,
+                                                             "primary",
+                                                             flow_match,
+                                                             in_port,
+                                                             dst_sw_obj.synthesis_tag)
 
         #  Along the shortest path, break a link one-by-one
         #  and accumulate desired action buckets in the resulting path
@@ -322,11 +326,15 @@ class DijkstraSynthesis(object):
                 print "Backup Path from src:", p[i], "to destination:", dst_host.sw.node_id, "is:", bp
 
                 if i == 0:
-                    failover_first_intent = self._compute_path_ip_intents(src_host, dst_host, bp, "failover",
-                                                                            flow_match, in_port,
-                                                                            dst_sw_obj.synthesis_tag,
-                                                                            edge_broken=(p[i], p[i+1]),
-                                                                            switch_port_tuple_prefix_list=switch_port_tuple_prefix_list)
+                    failover_first_intent = self._compute_path_ip_intents(src_host,
+                                                                          dst_host,
+                                                                          bp,
+                                                                          "failover",
+                                                                          flow_match,
+                                                                          in_port,
+                                                                          dst_sw_obj.synthesis_tag,
+                                                                          edge_broken=(p[i], p[i+1]),
+                                                                          switch_port_tuple_prefix_list=switch_port_tuple_prefix_list)
                 else:
                     self._compute_path_ip_intents(src_host, dst_host, bp, "failover", flow_match, in_port,
                                                   dst_sw_obj.synthesis_tag, edge_broken=(p[i], p[i+1]),
@@ -401,12 +409,12 @@ class DijkstraSynthesis(object):
                                 pi.flow_match["in_port"] = int(pi.in_port)
 
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                                    sw,
-                                    self.primary_failover_forwarding_table_id,
-                                    group_id,
-                                    1,
-                                    pi.flow_match,
-                                    pi.apply_immediately)
+                                sw,
+                                self.primary_failover_forwarding_table_id,
+                                group_id,
+                                1,
+                                pi.flow_match,
+                                pi.apply_immediately)
 
                 if primary_intents and failover_intents:
 
@@ -420,7 +428,7 @@ class DijkstraSynthesis(object):
                         for primary_intent in primary_intents:
 
                             if (primary_intent.in_port == failover_intent.in_port and
-                                        primary_intent.out_port != failover_intent.out_port):
+                                    primary_intent.out_port != failover_intent.out_port):
 
                                 # Consolidate for failover only when the source host in both intents match
                                 if failover_intent.src_host.sw.node_id == primary_intent.src_host.sw.node_id:
@@ -445,12 +453,12 @@ class DijkstraSynthesis(object):
                         primary_intent.flow_match["vlan_id"] = int(dst)
 
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                                sw,
-                                self.primary_failover_forwarding_table_id,
-                                group_id,
-                                1,
-                                primary_intent.flow_match,
-                                primary_intent.apply_immediately)
+                            sw,
+                            self.primary_failover_forwarding_table_id,
+                            group_id,
+                            1,
+                            primary_intent.flow_match,
+                            primary_intent.apply_immediately)
 
                     for separate_intent in handled_separately_failover_intents:
                         group_id = self.synthesis_lib.push_select_all_group(sw, [separate_intent])
@@ -462,12 +470,12 @@ class DijkstraSynthesis(object):
                         separate_intent.flow_match["ethernet_source"] = int(source_mac_int)
 
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                                sw,
-                                self.reverse_rules_table_id,
-                                group_id,
-                                1,
-                                separate_intent.flow_match,
-                                separate_intent.apply_immediately)
+                            sw,
+                            self.reverse_rules_table_id,
+                            group_id,
+                            1,
+                            separate_intent.flow_match,
+                            separate_intent.apply_immediately)
 
                     # TODO: This leaves out the case when there is a primary intent for which failover
                     # intent cannot be found and might need to be handled separately
@@ -486,12 +494,12 @@ class DijkstraSynthesis(object):
                         group_id = self.synthesis_lib.push_select_all_group(sw, [failover_intent])
                         failover_intent.flow_match["in_port"] = int(failover_intent.in_port)
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                                sw,
-                                self.primary_failover_forwarding_table_id,
-                                group_id,
-                                1,
-                                failover_intent.flow_match,
-                                failover_intent.apply_immediately)
+                            sw,
+                            self.primary_failover_forwarding_table_id,
+                            group_id,
+                            1,
+                            failover_intent.flow_match,
+                            failover_intent.apply_immediately)
 
                 if primary_intents and balking_intents:
 
@@ -511,12 +519,12 @@ class DijkstraSynthesis(object):
                             corresponding_primary_intent.flow_match["vlan_id"] = int(dst)
                             corresponding_primary_intent.flow_match["in_port"] = int(corresponding_primary_intent.in_port)
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                                    sw,
-                                    self.balking_forwarding_table_id,
-                                    group_id,
-                                    1,
-                                    corresponding_primary_intent.flow_match,
-                                    corresponding_primary_intent.apply_immediately)
+                                sw,
+                                self.balking_forwarding_table_id,
+                                group_id,
+                                1,
+                                corresponding_primary_intent.flow_match,
+                                corresponding_primary_intent.apply_immediately)
 
                         else:
                             group_id = self.synthesis_lib.push_select_all_group(sw, [balking_intent])
@@ -525,12 +533,12 @@ class DijkstraSynthesis(object):
                             balking_intent.flow_match["in_port"] = int(balking_intent.in_port)
 
                             flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                                    sw,
-                                    self.balking_forwarding_table_id,
-                                    group_id,
-                                    1,
-                                    balking_intent.flow_match,
-                                    balking_intent.apply_immediately)
+                                sw,
+                                self.balking_forwarding_table_id,
+                                group_id,
+                                1,
+                                balking_intent.flow_match,
+                                balking_intent.apply_immediately)
 
                 if reverse_intents:
 
@@ -544,12 +552,12 @@ class DijkstraSynthesis(object):
                         reverse_intent.flow_match["ethernet_source"] = int(source_mac_int)
 
                         flow = self.synthesis_lib.push_match_per_in_port_destination_instruct_group_flow(
-                                sw,
-                                self.reverse_rules_table_id,
-                                group_id,
-                                1,
-                                reverse_intent.flow_match,
-                                reverse_intent.apply_immediately)
+                            sw,
+                            self.reverse_rules_table_id,
+                            group_id,
+                            1,
+                            reverse_intent.flow_match,
+                            reverse_intent.apply_immediately)
 
     def push_mac_acls(self):
 
@@ -610,6 +618,8 @@ class DijkstraSynthesis(object):
             if self.params["mac_acl"]:
                 self.push_mac_acls()
 
+        self.synthesis_lib.save_synthesized_paths(self.network_configuration.conf_path)
+
     def synthesize_all_node_pairs(self, dst_ports_to_synthesize=None):
 
         src_hosts, dst_hosts = [], []
@@ -629,5 +639,3 @@ class DijkstraSynthesis(object):
         else:
             for dst_port in dst_ports_to_synthesize:
                 self.synthesize_node_pairs(src_hosts, dst_hosts, dst_port)
-
-        self.synthesis_lib.save_synthesized_paths(self.network_configuration.conf_path)

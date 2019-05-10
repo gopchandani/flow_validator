@@ -67,8 +67,8 @@ class SynthesisLib(object):
         port_path = []
 
         for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
-            port_path.append(sw_name + ":ingress" + str(ingress_port_number))
-            port_path.append(sw_name + ":egress" + str(egress_port_number))
+            port_path.append(sw_name + ":" + str(ingress_port_number))
+            port_path.append(sw_name + ":" + str(egress_port_number))
 
         self.synthesized_primary_paths[src_host.node_id][dst_host.node_id] = port_path
 
@@ -84,8 +84,8 @@ class SynthesisLib(object):
                 self.synthesized_failover_paths[src_host.node_id][dst_host.node_id] = defaultdict(defaultdict)
 
         for sw_name, ingress_port_number, egress_port_number in switch_port_tuple_list:
-            port_path.append(sw_name + ":ingress" + str(ingress_port_number))
-            port_path.append(sw_name + ":egress" + str(egress_port_number))
+            port_path.append(sw_name + ":" + str(ingress_port_number))
+            port_path.append(sw_name + ":" + str(egress_port_number))
 
         self.synthesized_failover_paths[src_host.node_id][dst_host.node_id][e[0]][e[1]] = port_path
 

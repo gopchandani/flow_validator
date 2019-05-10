@@ -3,6 +3,7 @@ __author__ = 'Rakesh Kumar'
 from mininet.topo import Topo
 from collections import defaultdict
 
+
 class WSCTopo(Topo):
 
     def __init__(self, params):
@@ -15,12 +16,6 @@ class WSCTopo(Topo):
         self.build_topo()
 
     def is_already_added(self, n1, n2):
-
-        if n1 == "s6" and n2 == "s12":
-            pass
-
-        if n1 == "s12" and n2 == "s6":
-            pass
 
         try:
             self.links_added[n1][n2]
