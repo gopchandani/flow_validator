@@ -5,7 +5,7 @@
 * Install mininet version 2.2 by following instructions here: http://mininet.org/download/
 * Get RYU version 4.3 from their repo at: http://osrg.github.io/ryu/
 * Install Ubuntu Python package dependencies:
-** sudo apt install python-pip python-scipy python-numpy python-matplotlib
+``` sudo apt install python-pip python-scipy python-numpy python-matplotlib ```
 * Install pip packages
 ** sudo pip install sortedcontainers networkx netaddr httplib2
 * Setup PYTHONPATH to src folder by adding following to ~/.bashrc: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/ 
