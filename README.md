@@ -4,7 +4,7 @@
 * If you want to install it on a VM, make sure you have at least 4 GB RAM and 2 CPU cores assigned to the VM. You can get VirtualBox here: https://www.virtualbox.org/wiki/Downloads)
 * Make sure you have openvswitch 2.3.0 or higher. The version can be checked using:\
 ```ovs-ofctl --version```
-* Install mininet version 2.2 by following instructions here: http://mininet.org/download/
+* Install mininet version 2.2 from the source by following instructions here: http://mininet.org/download/
 * Get RYU version 4.3 from their repo at: http://osrg.github.io/ryu/
 * Install Ubuntu Python package dependencies:\
 ``` sudo apt install python-pip python-scipy python-numpy python-matplotlib ```
