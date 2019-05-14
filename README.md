@@ -1,6 +1,7 @@
 ### How do I setup? ###
 
-* This project been tested with Ubuntu 16.04 LTS (ISO available here: http://releases.ubuntu.com/16.04/).
+* This project been tested with Ubuntu 16.04 LTS (ISO available here: http://releases.ubuntu.com/16.04/). 
+* If you want to install it on a VM, make sure you have at least 4 GB RAM and 2 CPU cores assigned to the VM. You can get VirtualBox here: https://www.virtualbox.org/wiki/Downloads)
 * Install openvswitch 2.3.0 or higher.
 * Install mininet version 2.2 by following instructions here: http://mininet.org/download/
 * Get RYU version 4.3 from their repo at: http://osrg.github.io/ryu/
