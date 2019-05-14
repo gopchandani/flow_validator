@@ -4,13 +4,13 @@
 * Install openvswitch 2.3.0 or higher.
 * Install mininet version 2.2 by following instructions here: http://mininet.org/download/
 * Get RYU version 4.3 from their repo at: http://osrg.github.io/ryu/
-* Install Ubuntu Python package dependencies:
+* Install Ubuntu Python package dependencies:\
 ``` sudo apt install python-pip python-scipy python-numpy python-matplotlib ```
-* Install pip packages
+* Install pip packages:\
 ``` sudo pip install sortedcontainers networkx netaddr httplib2 ```
-* Setup PYTHONPATH to src folder by adding following line to your ~/.bashrc: 
+* Setup PYTHONPATH to src folder by adding following line to your ~/.bashrc: \
 ```export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/```
-* Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo: Defaults env_keep += "PYTHONPATH"
+* Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo and adding the following line:\ ```Defaults env_keep += "PYTHONPATH"```
 * Install bazel version 0.22, here: https://docs.bazel.build/versions/master/install.html
 
 ### How do I get going with an example? ###
