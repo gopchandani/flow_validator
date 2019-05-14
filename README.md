@@ -20,7 +20,7 @@
 ```Defaults env_keep += "PYTHONPATH"```
 * Install bazel version 0.22, here: https://docs.bazel.build/versions/master/install.html
 * Generate the proto files for the python code\
-```pushd flow_validator/src/rpc/```\
+```pushd ~/flow_validator/src/rpc/```\
 ```sudo python -m grpc_tools.protoc -I../../sdnsim/proto --python_out=. --grpc_python_out=. ../../sdnsim/proto/sdnsim.proto```
 
 ### How do I get going with an example? ###
