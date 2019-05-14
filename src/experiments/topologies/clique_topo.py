@@ -59,7 +59,6 @@ class CliqueTopo(Topo):
 
                 try:
                     l = self.g[self.switch_names[i]][self.switch_names[(i + j) % self.num_switches]]
-                    print l
                 except KeyError:
 
                     self.addLink(self.switch_names[i], self.switch_names[(i + j) % self.num_switches],

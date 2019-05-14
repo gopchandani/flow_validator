@@ -46,7 +46,7 @@ class Playground(Experiment):
         # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
         lmbdas = [(ng.get_link_data('s3', 's1'),
                    ng.get_link_data('s3', 's4'),
-                   #ng.get_link_data('s3', 's2')
+                   ng.get_link_data('s3', 's2')
                    )]
 
         s = PolicyStatement(self.nc.ng,
