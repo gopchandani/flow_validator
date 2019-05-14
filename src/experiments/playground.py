@@ -58,6 +58,9 @@ class Playground(Experiment):
 
         violations = fv.validate_policy([s])
 
+        for v in violations:
+            print v.src_port, v.dst_port, v.constraint
+
         print "Total violations:", len(violations)
 
 
