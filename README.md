@@ -1,6 +1,6 @@
 ### How do I setup? ###
 
-* This project been tested to run fine on Ubuntu 14.04 and 16.04 LTS. 
+* This project been tested with Ubuntu 16.04 LTS. 
 * Install openvswitch 2.3.0 or higher.
 * Install mininet version 2.2 by following instructions here: http://mininet.org/download/
 * Get RYU version 4.3 from their repo at: http://osrg.github.io/ryu/
