@@ -47,12 +47,42 @@ class WSC(Experiment):
         out_reps = self.sdnsim_client.get_num_active_flows_when_links_fail(self.reps,
                                                                            src_ports, dst_ports, policy_matches)
 
-        self.test_active_flows_when_links_fail(out_reps)
+        #self.test_active_flows_when_links_fail(self.reps)
 
         for i in xrange(len(out_reps)):
             self.experiment_data["reps"][i]["num_active_flows"] = list(out_reps[i].num_active_flows)
 
-    def test_active_flows_when_links_fail(self, out_reps):
+    def same_paths(self, p1, p2):
+
+        # If one exists and other doesn't, not same
+        if (p1 and not p2) or (not p1 and p2):
+            return False
+
+        # If both do not exist, same path
+        if not p1 and not p2:
+            return True
+
+        # The existing paths have to have same length, if not, not same
+        if len(p1) != len(p2):
+            return False
+
+        # Each node need to match, if not, not same
+        for i, n in enumerate(p1):
+            if p1[i] != p2[i]:
+                return False
+
+        return True
+
+    def get_active_synthesized_flow_when_links_fail(self, s_host, t_host, lmbda):
+
+        def path_has_link(path, link):
+            for i in xrange(len(path) - 1):
+                n1 = path[i].split(":")[0]
+                n2 = path[i+1].split(":")[0]
+                if (link[0] == n1 and link[1] == n2) or (link[0] == n2 and link[1] == n1):
+                    return True
+
+            return False
 
         if not self.nc.load_config and self.nc.save_config:
             synthesized_primary_paths = self.nc.synthesis.synthesis_lib.synthesized_primary_paths
@@ -64,59 +94,68 @@ class WSC(Experiment):
             with open(self.nc.conf_path + "synthesized_failover_paths.json", "r") as in_file:
                 synthesized_failover_paths = json.loads(in_file.read())
 
-        def path_has_link(path, link):
-            for i in xrange(len(path) - 1):
-                n1 = path[i].split(":")[0]
-                n2 = path[i+1].split(":")[0]
-                if (link[0] == n1 and link[1] == n2) or (link[0] == n2 and link[1] == n1):
-                    return True
+        primary_path = synthesized_primary_paths[s_host][t_host]
+        failover_paths = synthesized_failover_paths[s_host][t_host]
 
-            return False
+        # Check if the failed_links have at least one link in the primary path
+        for failed_link_1 in lmbda:
 
-        def test_active_synthesized_flow_when_links_fail(s_host, t_host, failed_links):
+            if path_has_link(primary_path, failed_link_1):
 
-            primary_path = synthesized_primary_paths[s_host][t_host]
-            failover_paths = synthesized_failover_paths[s_host][t_host]
+                # If so, it would kick up a failover path
+                try:
+                    failover_path = failover_paths[failed_link_1[0]][failed_link_1[1]]
+                except KeyError:
+                    failover_path = failover_paths[failed_link_1[1]][failed_link_1[0]]
 
-            # Check if the failed_links have at least one link in the primary path
-            for failed_link_1 in failed_links:
+                # In the failover path, if there is a link that is in the failed_links
+                for failed_link_2 in lmbda:
+                    if path_has_link(failover_path, failed_link_2):
+                        return None
 
-                if path_has_link(primary_path, failed_link_1):
+                return failover_path
 
-                    # If so, it would kick up a failover path
-                    try:
-                        failover_path = failover_paths[failed_link_1[0]][failed_link_1[1]]
-                    except KeyError:
-                        failover_path = failover_paths[failed_link_1[1]][failed_link_1[0]]
+        return primary_path
 
-                    # In the failover path, if there is a link that is in the failed_links
-                    for failed_link_2 in failed_links:
-                        if path_has_link(failover_path, failed_link_2):
-                            return False
-
-            return True
+    def test_active_flows_when_links_fail(self, out_reps):
 
         for i in xrange(len(out_reps)):
             print self.experiment_data["reps"][i]
 
-            failed_links = []
+            lmbda = []
 
             # Pretend fail every link in the sequence
             for j, failed_link in enumerate(self.experiment_data["reps"][i]['failures']):
-                failed_links.append(('s' + str(failed_link[1] + 1), 's' + str(failed_link[2] + 1)))
+                lmbda.append(('s' + str(failed_link[1] + 1), 's' + str(failed_link[2] + 1)))
 
                 num_active_synthesized_flows = 0
+                num_active_analyzed_flows = 0
 
                 # Check how many flows of the given set of flows still have Dijkstra paths
                 for flow in self.experiment_data["flows"]:
                     s_host = "h" + str(flow[0] + 1) + "1"
                     t_host = "h" + str(flow[1] + 1) + "1"
 
-                    if test_active_synthesized_flow_when_links_fail(s_host, t_host, failed_links):
+                    active_analyzed_path = self.sdnsim_client.get_active_flow_path("s" + str(flow[0] + 1), 1,
+                                                                                   "s" + str(flow[1] + 1), 1,
+                                                                                   {"eth_type": 0x0800}, lmbda)
+
+                    if active_analyzed_path:
+                        num_active_analyzed_flows += 1
+
+                    active_synthesized_path = self.get_active_synthesized_flow_when_links_fail(s_host,
+                                                                                               t_host,
+                                                                                               lmbda)
+                    if active_synthesized_path:
                         num_active_synthesized_flows += 1
 
-                if num_active_synthesized_flows != out_reps[i].num_active_flows[j]:
-                    print num_active_synthesized_flows, out_reps[i].num_active_flows[j]
+                    # if not self.same_paths(active_synthesized_path, active_analyzed_path):
+                    #     print s_host, t_host, lmbda
+
+                if num_active_synthesized_flows > num_active_analyzed_flows:
+                    print "Total:", len(self.experiment_data["flows"]), \
+                        "Synthesized:", num_active_synthesized_flows, \
+                        "Analyzed:", num_active_analyzed_flows
 
 
 def main():

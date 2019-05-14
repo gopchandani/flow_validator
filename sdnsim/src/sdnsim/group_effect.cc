@@ -30,9 +30,10 @@ GroupEffect::GroupEffect(Switch sw, Group in_group, AnalysisGraph* ag) {
 vector<RuleEffect*> GroupEffect::get_active_rule_effects(Lmbda l) {
     vector<RuleEffect*> active_rule_effects;
 
+    //cout << "Group Id:" << group_id << " Group Type: " << group_type << endl;
+
     // If the group is a fast-failover then the first active watch port's effect is the only one returned
     if (group_type == "FF") {
-        //cout << "Group Id:" << group_id << "Group Type: FF" << endl;
         for (uint32_t i=0; i < rule_effects.size(); i++) {
             //cout << i << " " << watch_port_nodes[i]->node_id << endl;
             if (!ag->is_node_inactive(watch_port_nodes[i]->node_id, l)) {
@@ -42,7 +43,6 @@ vector<RuleEffect*> GroupEffect::get_active_rule_effects(Lmbda l) {
         }
     } else 
     if (group_type == "ALL") {
-        //cout << "Group Id:" << group_id << "Group Type: ALL" << endl;
         for (uint32_t i=0; i < rule_effects.size(); i++) {
             active_rule_effects.push_back(rule_effects[i]);
         }

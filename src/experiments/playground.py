@@ -41,16 +41,13 @@ class Playground(Experiment):
         # l = tuple(ng.get_switch_link_data(sw=ng.get_node_object("s3")))
         # l = l[:-1]
         # print l
-
-        src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
-        dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
+        #
+        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
+        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
         lmbdas = [(ng.get_link_data('s3', 's1'),
-                   ng.get_link_data('s3', 's4')
+                   ng.get_link_data('s3', 's4'),
+                   #ng.get_link_data('s3', 's2')
                    )]
-
-        # src_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h11']]
-        # dst_zone = [fv.network_graph.get_node_object(h_id).switch_port for h_id in ['h41']]
-        # lmbdas = [(ng.get_link_data('s1', 's4'),)]
 
         s = PolicyStatement(self.nc.ng,
                             src_zone,

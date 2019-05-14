@@ -294,7 +294,7 @@ class SDNSimClient(object):
             for port in api.ports:
                 path.append(port.switch_id + ":" + str(port.port_num))
 
-            print "GetActiveFlowPath was successful, time taken:", api.time_taken/1000000000, "seconds."
+            #print "GetActiveFlowPath was successful, time taken:", api.time_taken/1000000000, "seconds."
         except grpc.RpcError as e:
             print "Call to GetActiveFlowPath failed:", e.details(), e.code().name, e.code().value
 

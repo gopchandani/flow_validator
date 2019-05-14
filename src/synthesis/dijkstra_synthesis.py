@@ -234,7 +234,7 @@ class DijkstraSynthesis(object):
         elif primary_first_intent:
             group_id = self.synthesis_lib.push_select_all_group(sw, [primary_first_intent])
 
-        push_vlan_match= deepcopy(flow_match)
+        push_vlan_match = deepcopy(flow_match)
         mac_int = int(dst_h_obj.mac_addr.replace(":", ""), 16)
         push_vlan_match["ethernet_destination"] = int(mac_int)
         push_vlan_match["in_port"] = int(src_h_obj.switch_port.port_number)
@@ -258,6 +258,9 @@ class DijkstraSynthesis(object):
                                                     group_id, True)
 
     def synthesize_flow(self, src_host, dst_host, flow_match):
+
+        if src_host.node_id == 'h91' and dst_host.node_id == 'h451':
+            pass
 
         # Handy info
         in_port = src_host.switch_port.port_number
@@ -336,10 +339,16 @@ class DijkstraSynthesis(object):
                                                                           edge_broken=(p[i], p[i+1]),
                                                                           switch_port_tuple_prefix_list=switch_port_tuple_prefix_list)
                 else:
-                    self._compute_path_ip_intents(src_host, dst_host, bp, "failover", flow_match, in_port,
-                                                  dst_sw_obj.synthesis_tag, edge_broken=(p[i], p[i+1]),
+                    failover_first_intent = None
+                    self._compute_path_ip_intents(src_host,
+                                                  dst_host,
+                                                  bp,
+                                                  "failover",
+                                                  flow_match,
+                                                  in_port,
+                                                  dst_sw_obj.synthesis_tag,
+                                                  edge_broken=(p[i], p[i+1]),
                                                   switch_port_tuple_prefix_list=switch_port_tuple_prefix_list)
-
 
             except nx.exception.NetworkXNoPath:
                 print "No backup path between:", p[i], "to:", dst_host.sw.node_id
