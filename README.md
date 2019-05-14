@@ -13,7 +13,7 @@
 * Setup PYTHONPATH to src folder by adding following line to your ~/.bashrc: \
 ```export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/```
 * Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo and adding the following line:\
-```visudo```\
+```sudo visudo```\
 ```Defaults env_keep += "PYTHONPATH"```
 * Install bazel version 0.22, here: https://docs.bazel.build/versions/master/install.html
 
