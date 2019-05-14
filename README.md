@@ -5,13 +5,8 @@
 * Install mininet version 2.2 by following instructions here: http://mininet.org/download/
 * Get RYU version 4.3 from their repo at: http://osrg.github.io/ryu/
 * If you don't have pip installed, then install the python package manager. (Ubuntu package: python-pip)
-* sudo pip install sortedcontainers
-* sudo pip install networkx
-* sudo pip install netaddr
-* sudo pip install httplib2
-* sudo apt-get install python-scipy
-* sudo apt-get install python-numpy
-* sudo apt-get install python-matplotlib
+* sudo pip install sortedcontainers networkx netaddr httplib2
+* sudo apt install python-scipy python-numpy python-matplotlib
 * Setup PYTHONPATH to src folder by adding following to ~/.bashrc: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/ 
 * Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo: Defaults env_keep += "PYTHONPATH"
 * Install bazel version 0.22, here: https://docs.bazel.build/versions/master/install.html
