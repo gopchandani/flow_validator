@@ -7,7 +7,7 @@
 * Install Ubuntu Python package dependencies:
 ``` sudo apt install python-pip python-scipy python-numpy python-matplotlib ```
 * Install pip packages
-** sudo pip install sortedcontainers networkx netaddr httplib2
+``` sudo pip install sortedcontainers networkx netaddr httplib2 ```
 * Setup PYTHONPATH to src folder by adding following to ~/.bashrc: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/ 
 * Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo: Defaults env_keep += "PYTHONPATH"
 * Install bazel version 0.22, here: https://docs.bazel.build/versions/master/install.html
