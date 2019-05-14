@@ -1,6 +1,6 @@
 ### How do I setup? ###
 
-* This project been tested with Ubuntu 16.04 LTS. 
+* This project been tested with Ubuntu 16.04 LTS (ISO available here: http://releases.ubuntu.com/16.04/).
 * Install openvswitch 2.3.0 or higher.
 * Install mininet version 2.2 by following instructions here: http://mininet.org/download/
 * Get RYU version 4.3 from their repo at: http://osrg.github.io/ryu/
@@ -10,7 +10,8 @@
 ``` sudo pip install sortedcontainers networkx netaddr httplib2 ```
 * Setup PYTHONPATH to src folder by adding following line to your ~/.bashrc: \
 ```export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/```
-* Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo and adding the following line: \ 
+* Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo and adding the following line:\
+```visudo```
 ```Defaults env_keep += "PYTHONPATH"```
 * Install bazel version 0.22, here: https://docs.bazel.build/versions/master/install.html
 
