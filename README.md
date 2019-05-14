@@ -14,6 +14,7 @@
 * sudo apt-get install python-matplotlib
 * Setup PYTHONPATH to src folder by adding following to ~/.bashrc: export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/ 
 * Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo: Defaults env_keep += "PYTHONPATH"
+* Install bazel version 0.22, here: https://docs.bazel.build/versions/master/install.html
 
 ### How do I get going with an example? ###
 * Take a look at the simple example of validation in the file: flow_validator/src/experiments/playground.py
