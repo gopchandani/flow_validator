@@ -8,10 +8,10 @@ The set of tools in this repository serve a common purpose: the analysis of Soft
 ### How do I setup? ###
 
 * This project been tested with Ubuntu 16.04 LTS (ISO available here: http://releases.ubuntu.com/16.04/). 
-* Clone this repo in your home folder:\
+* If you want to install it on a VM, make sure you have at least 4 GB RAM and 2 CPU cores assigned to the VM. You can get VirtualBox here: https://www.virtualbox.org/wiki/Downloads)
+* After the Ubuntu installation, clone this repo in your home folder:\
 ```pushd ~/```\
 ```git clone https://github.com/gopchandani/flow_validator.git```
-* If you want to install it on a VM, make sure you have at least 4 GB RAM and 2 CPU cores assigned to the VM. You can get VirtualBox here: https://www.virtualbox.org/wiki/Downloads)
 * Make sure you have openvswitch 2.3.0 or higher. The version can be checked using:\
 ```ovs-ofctl --version```
 * Install mininet version 2.2 from the source by following instructions here: http://mininet.org/download/
