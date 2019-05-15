@@ -30,7 +30,11 @@ The set of tools in this repository serve a common purpose: the analysis of Soft
 ```pushd ~/flow_validator/src/rpc/```\
 ```sudo python -m grpc_tools.protoc -I../../sdnsim/proto --python_out=. --grpc_python_out=. ../../sdnsim/proto/sdnsim.proto```
 
-### How do I get going with an example? ###
-* Take a look at the simple example of validation in the file: flow_validator/src/experiments/playground.py
-* To run cd into flow_validator/src/experiments and run: sudo python playground.py
+### How do I try some examples? ###
+* First the C++ backend (i.e. SDNSim) needs to be started. In order to do so, follow these steps:\
+```cd ~/flow_validator/sdnsim```\
+```bazel run :sdnsim```\
+* There is a playground example which can serve as an entry point to try out the various  various tools To run this example do:\
+```cd into flow_validator/src```\
+```run: sudo python examples/playground.py\
 
