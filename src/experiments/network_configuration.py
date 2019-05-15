@@ -293,7 +293,7 @@ class NetworkConfiguration(object):
                 ryu_switches[dpid] = this_ryu_switch
 
             with open(self.conf_path + "ryu_switches.json", "w") as outfile:
-                json.dump(ryu_switches, outfile)
+                json.dump(ryu_switches, outfile, indent=4)
         else:
             with open(self.conf_path + "ryu_switches.json", "r") as in_file:
                 ryu_switches = json.loads(in_file.read())
@@ -347,7 +347,7 @@ class NetworkConfiguration(object):
                         print "Error pulling switch ports from RYU."
 
             with open(self.conf_path + "onos_switches.json", "w") as outfile:
-                json.dump(onos_switches, outfile)
+                json.dump(onos_switches, outfile, indent=4)
 
         else:
             with open(self.conf_path + "onos_switches.json", "r") as in_file:
@@ -372,7 +372,7 @@ class NetworkConfiguration(object):
                     mininet_host_nodes[sw].append(mininet_host_dict)
 
             with open(self.conf_path + "mininet_host_nodes.json", "w") as outfile:
-                json.dump(mininet_host_nodes, outfile)
+                json.dump(mininet_host_nodes, outfile, indent=4)
 
         else:
             with open(self.conf_path + "mininet_host_nodes.json", "r") as in_file:
@@ -391,7 +391,7 @@ class NetworkConfiguration(object):
             onos_hosts = json.loads(content)["hosts"]
 
             with open(self.conf_path + "onos_hosts.json", "w") as outfile:
-                json.dump(onos_hosts, outfile)
+                json.dump(onos_hosts, outfile, indent=4)
 
         else:
             with open(self.conf_path + "onos_hosts.json", "r") as in_file:
@@ -413,7 +413,7 @@ class NetworkConfiguration(object):
             mininet_port_links = self.topo.ports
 
             with open(self.conf_path + "mininet_port_links.json", "w") as outfile:
-                json.dump(mininet_port_links, outfile)
+                json.dump(mininet_port_links, outfile, indent=4)
         else:
             with open(self.conf_path + "mininet_port_links.json", "r") as in_file:
                 mininet_port_links = json.loads(in_file.read())
@@ -431,7 +431,7 @@ class NetworkConfiguration(object):
             onos_links = json.loads(content)["links"]
 
             with open(self.conf_path + "onos_links.json", "w") as outfile:
-                json.dump(onos_links, outfile)
+                json.dump(onos_links, outfile, indent=4)
 
         else:
             with open(self.conf_path + "onos_links.json", "r") as in_file:
