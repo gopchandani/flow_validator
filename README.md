@@ -34,7 +34,7 @@ The set of tools in this repository serve a common purpose: the analysis of Soft
 * First the C++ backend (i.e. SDNSim) needs to be started. In order to do so, follow these steps:\
 ```cd ~/flow_validator/sdnsim```\
 ```bazel run :sdnsim```
-* There is a playground example which can serve as an entry point to try out the various  various tools To run this example do:\
-```cd into flow_validator/src```
-```run: sudo python examples/playground.py\
+* Try the Python frontend Playground module. In order to run it, follow these steps:\
+```cd flow_validator/src```\
+```sudo python examples/playground.py
 
