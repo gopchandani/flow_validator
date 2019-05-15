@@ -36,5 +36,5 @@ The set of tools in this repository serve a common purpose: the analysis of Soft
 ```bazel run :sdnsim```
 * Try the Python frontend Playground module. In order to run it, follow these steps:\
 ```cd flow_validator/src```\
-```sudo python examples/playground.py
+```sudo python examples/playground.py```
 
