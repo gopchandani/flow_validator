@@ -1,3 +1,10 @@
+### What does this tool do? ###
+The set of tools in this repository serve a common purpose: the analysis of Software Defined Networks with a particular focus on those using the fast-failover mechanism that is part of the recent OpenFlow standards. There are two parts of this repository:
+
+* The python frontend is used to synthesize various network configuration and specify the type and details of analysis that is to be performed.
+* The C++ backend (SDNSim) simulates the network and allows rapid, parallel analysis.
+
+
 ### How do I setup? ###
 
 * This project been tested with Ubuntu 16.04 LTS (ISO available here: http://releases.ubuntu.com/16.04/). 
