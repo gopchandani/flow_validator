@@ -36,7 +36,9 @@ The set of tools in this repository serve a common purpose: the analysis of Soft
 ```bazel run :sdnsim```
 * Try the Python frontend Playground module. In order to run it, follow these steps:\
 ```cd ~/flow_validator/src```\
+```sudo mn -c; sudo killall ryu-manager```\
 ```sudo python experiments/playground.py```
 * Try a more complex network with a random topology:\
 ```cd ~/flow_validator/src```\
+```sudo mn -c; sudo killall ryu-manager```\
 ```sudo python experiments/wsc_experiment.py --input_file experiments/failovers_64_switch.json --output_file experiments/output.json```
