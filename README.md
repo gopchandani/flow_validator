@@ -19,7 +19,7 @@ The set of tools in this repository serve a common purpose: the analysis of Soft
 * Install Ubuntu Python package dependencies:\
 ``` sudo apt install python-pip python-scipy python-numpy python-matplotlib ```
 * Install pip packages:\
-``` sudo pip install sortedcontainers networkx netaddr httplib2 ```
+``` sudo pip install grpcio-tools sortedcontainers networkx netaddr httplib2 ```
 * Setup PYTHONPATH to src folder by adding following line to your ~/.bashrc: \
 ```export PYTHONPATH=${PYTHONPATH}:/home/flow/flow_validator/src/```
 * Allow PYTHONPATH to be retained by sudo by modifying sudoers configuration using visudo and adding the following line:\
