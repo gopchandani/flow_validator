@@ -3,7 +3,7 @@
         {
             "host_switch_id": "s54", 
             "host_name": "h541", 
-            "host_MAC": "36:62:21:01:c4:f2", 
+            "host_MAC": "96:ad:06:86:67:12", 
             "host_IP": "10.0.0.54"
         }
     ], 
@@ -11,7 +11,7 @@
         {
             "host_switch_id": "s43", 
             "host_name": "h431", 
-            "host_MAC": "66:3b:f5:95:27:ce", 
+            "host_MAC": "9e:73:f2:9e:77:df", 
             "host_IP": "10.0.0.43"
         }
     ], 
@@ -19,7 +19,7 @@
         {
             "host_switch_id": "s46", 
             "host_name": "h461", 
-            "host_MAC": "d2:32:c5:3c:99:9b", 
+            "host_MAC": "7a:32:0b:a6:e5:22", 
             "host_IP": "10.0.0.46"
         }
     ], 
@@ -27,7 +27,7 @@
         {
             "host_switch_id": "s61", 
             "host_name": "h611", 
-            "host_MAC": "ee:60:27:ba:97:f5", 
+            "host_MAC": "f2:95:66:a3:d3:9f", 
             "host_IP": "10.0.0.61"
         }
     ], 
@@ -35,7 +35,7 @@
         {
             "host_switch_id": "s44", 
             "host_name": "h441", 
-            "host_MAC": "26:8a:a2:17:a2:54", 
+            "host_MAC": "5a:3f:6b:a3:3f:32", 
             "host_IP": "10.0.0.44"
         }
     ], 
@@ -43,7 +43,7 @@
         {
             "host_switch_id": "s9", 
             "host_name": "h91", 
-            "host_MAC": "d6:e3:04:6a:61:8c", 
+            "host_MAC": "72:c8:2c:12:ce:9c", 
             "host_IP": "10.0.0.9"
         }
     ], 
@@ -51,7 +51,7 @@
         {
             "host_switch_id": "s8", 
             "host_name": "h81", 
-            "host_MAC": "de:e6:c7:e9:85:f6", 
+            "host_MAC": "4e:ef:fc:eb:00:cb", 
             "host_IP": "10.0.0.8"
         }
     ], 
@@ -59,7 +59,7 @@
         {
             "host_switch_id": "s62", 
             "host_name": "h621", 
-            "host_MAC": "3a:d7:a7:2a:39:88", 
+            "host_MAC": "be:81:54:3c:dc:9e", 
             "host_IP": "10.0.0.62"
         }
     ], 
@@ -67,7 +67,7 @@
         {
             "host_switch_id": "s45", 
             "host_name": "h451", 
-            "host_MAC": "5a:f7:dc:d1:cc:ee", 
+            "host_MAC": "2a:10:44:88:1e:67", 
             "host_IP": "10.0.0.45"
         }
     ], 
@@ -75,7 +75,7 @@
         {
             "host_switch_id": "s3", 
             "host_name": "h31", 
-            "host_MAC": "96:60:05:5a:9e:6e", 
+            "host_MAC": "0a:41:05:20:e0:c9", 
             "host_IP": "10.0.0.3"
         }
     ], 
@@ -83,7 +83,7 @@
         {
             "host_switch_id": "s2", 
             "host_name": "h21", 
-            "host_MAC": "ae:6a:c6:74:ca:ce", 
+            "host_MAC": "02:5c:df:3a:41:d6", 
             "host_IP": "10.0.0.2"
         }
     ], 
@@ -91,7 +91,7 @@
         {
             "host_switch_id": "s1", 
             "host_name": "h11", 
-            "host_MAC": "0a:29:4b:e5:06:df", 
+            "host_MAC": "6a:60:da:50:5e:17", 
             "host_IP": "10.0.0.1"
         }
     ], 
@@ -99,7 +99,7 @@
         {
             "host_switch_id": "s7", 
             "host_name": "h71", 
-            "host_MAC": "ea:85:80:8d:e5:ae", 
+            "host_MAC": "8a:09:71:c6:ca:5e", 
             "host_IP": "10.0.0.7"
         }
     ], 
@@ -107,7 +107,7 @@
         {
             "host_switch_id": "s6", 
             "host_name": "h61", 
-            "host_MAC": "32:89:30:8f:94:25", 
+            "host_MAC": "62:2d:6e:91:4d:f9", 
             "host_IP": "10.0.0.6"
         }
     ], 
@@ -115,7 +115,7 @@
         {
             "host_switch_id": "s5", 
             "host_name": "h51", 
-            "host_MAC": "8a:af:e2:a7:6d:af", 
+            "host_MAC": "26:d7:4a:1f:90:a1", 
             "host_IP": "10.0.0.5"
         }
     ], 
@@ -123,7 +123,7 @@
         {
             "host_switch_id": "s4", 
             "host_name": "h41", 
-            "host_MAC": "0a:9c:fb:1a:48:5a", 
+            "host_MAC": "be:63:a4:26:72:4c", 
             "host_IP": "10.0.0.4"
         }
     ], 
@@ -131,7 +131,7 @@
         {
             "host_switch_id": "s57", 
             "host_name": "h571", 
-            "host_MAC": "9e:cc:8f:28:4e:4a", 
+            "host_MAC": "fe:49:00:53:58:28", 
             "host_IP": "10.0.0.57"
         }
     ], 
@@ -139,7 +139,7 @@
         {
             "host_switch_id": "s35", 
             "host_name": "h351", 
-            "host_MAC": "0a:df:91:d0:80:ab", 
+            "host_MAC": "86:67:fe:65:a3:49", 
             "host_IP": "10.0.0.35"
         }
     ], 
@@ -147,7 +147,7 @@
         {
             "host_switch_id": "s55", 
             "host_name": "h551", 
-            "host_MAC": "7e:0b:91:5d:30:82", 
+            "host_MAC": "5e:8e:69:68:44:55", 
             "host_IP": "10.0.0.55"
         }
     ], 
@@ -155,7 +155,7 @@
         {
             "host_switch_id": "s47", 
             "host_name": "h471", 
-            "host_MAC": "a2:89:3e:b1:cd:74", 
+            "host_MAC": "e6:9e:0d:0c:ea:23", 
             "host_IP": "10.0.0.47"
         }
     ], 
@@ -163,7 +163,7 @@
         {
             "host_switch_id": "s53", 
             "host_name": "h531", 
-            "host_MAC": "4a:10:8b:19:c7:13", 
+            "host_MAC": "52:5c:b6:65:c8:8d", 
             "host_IP": "10.0.0.53"
         }
     ], 
@@ -171,7 +171,7 @@
         {
             "host_switch_id": "s52", 
             "host_name": "h521", 
-            "host_MAC": "5a:12:f1:5a:ac:25", 
+            "host_MAC": "d2:c4:5e:da:96:7b", 
             "host_IP": "10.0.0.52"
         }
     ], 
@@ -179,7 +179,7 @@
         {
             "host_switch_id": "s51", 
             "host_name": "h511", 
-            "host_MAC": "a6:db:1a:01:3b:d8", 
+            "host_MAC": "16:4e:5b:f8:20:36", 
             "host_IP": "10.0.0.51"
         }
     ], 
@@ -187,7 +187,7 @@
         {
             "host_switch_id": "s34", 
             "host_name": "h341", 
-            "host_MAC": "9a:38:14:71:43:01", 
+            "host_MAC": "82:be:15:02:ef:d2", 
             "host_IP": "10.0.0.34"
         }
     ], 
@@ -195,7 +195,7 @@
         {
             "host_switch_id": "s40", 
             "host_name": "h401", 
-            "host_MAC": "3e:66:cb:a3:4c:6c", 
+            "host_MAC": "16:54:a0:5a:b4:aa", 
             "host_IP": "10.0.0.40"
         }
     ], 
@@ -203,7 +203,7 @@
         {
             "host_switch_id": "s37", 
             "host_name": "h371", 
-            "host_MAC": "d2:a1:67:58:b3:ea", 
+            "host_MAC": "6e:05:48:bc:7b:c2", 
             "host_IP": "10.0.0.37"
         }
     ], 
@@ -211,7 +211,7 @@
         {
             "host_switch_id": "s59", 
             "host_name": "h591", 
-            "host_MAC": "22:87:e5:95:86:ac", 
+            "host_MAC": "5a:aa:3f:d8:64:ae", 
             "host_IP": "10.0.0.59"
         }
     ], 
@@ -219,7 +219,7 @@
         {
             "host_switch_id": "s31", 
             "host_name": "h311", 
-            "host_MAC": "3e:d7:f3:3a:e6:56", 
+            "host_MAC": "1e:32:66:d9:04:d4", 
             "host_IP": "10.0.0.31"
         }
     ], 
@@ -227,7 +227,7 @@
         {
             "host_switch_id": "s19", 
             "host_name": "h191", 
-            "host_MAC": "c2:ec:42:0b:ca:9a", 
+            "host_MAC": "a2:de:49:ff:87:9b", 
             "host_IP": "10.0.0.19"
         }
     ], 
@@ -235,7 +235,7 @@
         {
             "host_switch_id": "s18", 
             "host_name": "h181", 
-            "host_MAC": "be:5a:26:c3:36:a0", 
+            "host_MAC": "7e:d5:79:30:0c:25", 
             "host_IP": "10.0.0.18"
         }
     ], 
@@ -243,7 +243,7 @@
         {
             "host_switch_id": "s39", 
             "host_name": "h391", 
-            "host_MAC": "fe:28:a1:37:c9:6d", 
+            "host_MAC": "ce:35:e1:85:e4:3c", 
             "host_IP": "10.0.0.39"
         }
     ], 
@@ -251,7 +251,7 @@
         {
             "host_switch_id": "s38", 
             "host_name": "h381", 
-            "host_MAC": "66:89:31:9c:c8:1b", 
+            "host_MAC": "22:07:d6:db:c3:f8", 
             "host_IP": "10.0.0.38"
         }
     ], 
@@ -259,7 +259,7 @@
         {
             "host_switch_id": "s13", 
             "host_name": "h131", 
-            "host_MAC": "5a:9b:84:ea:23:a5", 
+            "host_MAC": "e2:dc:b6:62:59:22", 
             "host_IP": "10.0.0.13"
         }
     ], 
@@ -267,7 +267,7 @@
         {
             "host_switch_id": "s12", 
             "host_name": "h121", 
-            "host_MAC": "2e:68:c0:f2:10:c0", 
+            "host_MAC": "0a:87:64:a2:fd:e3", 
             "host_IP": "10.0.0.12"
         }
     ], 
@@ -275,7 +275,7 @@
         {
             "host_switch_id": "s11", 
             "host_name": "h111", 
-            "host_MAC": "76:6e:49:d9:45:15", 
+            "host_MAC": "de:ce:ab:6a:47:ca", 
             "host_IP": "10.0.0.11"
         }
     ], 
@@ -283,7 +283,7 @@
         {
             "host_switch_id": "s10", 
             "host_name": "h101", 
-            "host_MAC": "4a:c2:ed:6a:81:77", 
+            "host_MAC": "66:13:ac:4d:e0:ec", 
             "host_IP": "10.0.0.10"
         }
     ], 
@@ -291,7 +291,7 @@
         {
             "host_switch_id": "s17", 
             "host_name": "h171", 
-            "host_MAC": "ee:55:83:35:e4:9d", 
+            "host_MAC": "12:dd:62:47:50:dc", 
             "host_IP": "10.0.0.17"
         }
     ], 
@@ -299,7 +299,7 @@
         {
             "host_switch_id": "s16", 
             "host_name": "h161", 
-            "host_MAC": "3a:b0:92:4b:eb:18", 
+            "host_MAC": "6a:e4:76:9d:8e:8a", 
             "host_IP": "10.0.0.16"
         }
     ], 
@@ -307,7 +307,7 @@
         {
             "host_switch_id": "s15", 
             "host_name": "h151", 
-            "host_MAC": "26:c7:1a:94:65:e7", 
+            "host_MAC": "fa:d8:c0:84:b5:09", 
             "host_IP": "10.0.0.15"
         }
     ], 
@@ -315,7 +315,7 @@
         {
             "host_switch_id": "s14", 
             "host_name": "h141", 
-            "host_MAC": "c2:12:cc:35:5d:21", 
+            "host_MAC": "1e:8d:f3:bf:7c:78", 
             "host_IP": "10.0.0.14"
         }
     ], 
@@ -323,7 +323,7 @@
         {
             "host_switch_id": "s56", 
             "host_name": "h561", 
-            "host_MAC": "da:ee:e6:08:7f:5f", 
+            "host_MAC": "aa:2a:4b:a8:fe:08", 
             "host_IP": "10.0.0.56"
         }
     ], 
@@ -331,7 +331,7 @@
         {
             "host_switch_id": "s41", 
             "host_name": "h411", 
-            "host_MAC": "ba:9a:fe:e5:c2:01", 
+            "host_MAC": "06:3b:bd:32:44:cb", 
             "host_IP": "10.0.0.41"
         }
     ], 
@@ -339,7 +339,7 @@
         {
             "host_switch_id": "s33", 
             "host_name": "h331", 
-            "host_MAC": "0e:32:fe:39:46:e1", 
+            "host_MAC": "aa:de:2a:b9:12:e5", 
             "host_IP": "10.0.0.33"
         }
     ], 
@@ -347,7 +347,7 @@
         {
             "host_switch_id": "s32", 
             "host_name": "h321", 
-            "host_MAC": "ca:40:97:da:ac:94", 
+            "host_MAC": "4e:65:92:9a:e8:23", 
             "host_IP": "10.0.0.32"
         }
     ], 
@@ -355,7 +355,7 @@
         {
             "host_switch_id": "s64", 
             "host_name": "h641", 
-            "host_MAC": "36:08:ae:0f:89:ab", 
+            "host_MAC": "52:c8:5b:9e:a7:c4", 
             "host_IP": "10.0.0.64"
         }
     ], 
@@ -363,7 +363,7 @@
         {
             "host_switch_id": "s30", 
             "host_name": "h301", 
-            "host_MAC": "f2:25:c4:7f:bb:1e", 
+            "host_MAC": "8e:31:df:46:36:cd", 
             "host_IP": "10.0.0.30"
         }
     ], 
@@ -371,7 +371,7 @@
         {
             "host_switch_id": "s58", 
             "host_name": "h581", 
-            "host_MAC": "0a:ea:03:93:f2:81", 
+            "host_MAC": "6a:ec:26:56:97:85", 
             "host_IP": "10.0.0.58"
         }
     ], 
@@ -379,7 +379,7 @@
         {
             "host_switch_id": "s42", 
             "host_name": "h421", 
-            "host_MAC": "b6:1f:f0:f2:02:70", 
+            "host_MAC": "92:c3:c8:39:86:50", 
             "host_IP": "10.0.0.42"
         }
     ], 
@@ -387,7 +387,7 @@
         {
             "host_switch_id": "s63", 
             "host_name": "h631", 
-            "host_MAC": "26:2d:c3:da:d6:f6", 
+            "host_MAC": "86:5d:70:5c:9e:59", 
             "host_IP": "10.0.0.63"
         }
     ], 
@@ -395,7 +395,7 @@
         {
             "host_switch_id": "s22", 
             "host_name": "h221", 
-            "host_MAC": "b2:6b:d7:d8:62:10", 
+            "host_MAC": "1a:f7:a8:00:3f:73", 
             "host_IP": "10.0.0.22"
         }
     ], 
@@ -403,7 +403,7 @@
         {
             "host_switch_id": "s23", 
             "host_name": "h231", 
-            "host_MAC": "6a:1a:3f:67:43:31", 
+            "host_MAC": "e6:7f:ad:90:27:22", 
             "host_IP": "10.0.0.23"
         }
     ], 
@@ -411,7 +411,7 @@
         {
             "host_switch_id": "s20", 
             "host_name": "h201", 
-            "host_MAC": "fe:07:2f:02:25:82", 
+            "host_MAC": "5e:25:75:10:cc:8f", 
             "host_IP": "10.0.0.20"
         }
     ], 
@@ -419,7 +419,7 @@
         {
             "host_switch_id": "s21", 
             "host_name": "h211", 
-            "host_MAC": "42:cb:56:10:c6:0b", 
+            "host_MAC": "22:39:f7:df:7a:27", 
             "host_IP": "10.0.0.21"
         }
     ], 
@@ -427,7 +427,7 @@
         {
             "host_switch_id": "s26", 
             "host_name": "h261", 
-            "host_MAC": "32:58:2d:8f:bc:02", 
+            "host_MAC": "52:ac:8a:ec:ce:b3", 
             "host_IP": "10.0.0.26"
         }
     ], 
@@ -435,7 +435,7 @@
         {
             "host_switch_id": "s27", 
             "host_name": "h271", 
-            "host_MAC": "3a:ea:37:81:46:3e", 
+            "host_MAC": "de:3b:16:0a:e8:a2", 
             "host_IP": "10.0.0.27"
         }
     ], 
@@ -443,7 +443,7 @@
         {
             "host_switch_id": "s24", 
             "host_name": "h241", 
-            "host_MAC": "be:b8:59:c8:9a:13", 
+            "host_MAC": "b2:57:4f:08:9e:89", 
             "host_IP": "10.0.0.24"
         }
     ], 
@@ -451,7 +451,7 @@
         {
             "host_switch_id": "s25", 
             "host_name": "h251", 
-            "host_MAC": "32:9c:5b:5d:d3:88", 
+            "host_MAC": "1a:3c:c6:c6:c4:e4", 
             "host_IP": "10.0.0.25"
         }
     ], 
@@ -459,7 +459,7 @@
         {
             "host_switch_id": "s50", 
             "host_name": "h501", 
-            "host_MAC": "be:d3:7f:ed:5f:42", 
+            "host_MAC": "0a:7f:91:20:ca:5a", 
             "host_IP": "10.0.0.50"
         }
     ], 
@@ -467,7 +467,7 @@
         {
             "host_switch_id": "s28", 
             "host_name": "h281", 
-            "host_MAC": "2e:49:df:30:63:47", 
+            "host_MAC": "8e:d2:cb:39:12:05", 
             "host_IP": "10.0.0.28"
         }
     ], 
@@ -475,7 +475,7 @@
         {
             "host_switch_id": "s29", 
             "host_name": "h291", 
-            "host_MAC": "ae:40:2c:23:4d:11", 
+            "host_MAC": "9e:e2:e1:ce:b9:51", 
             "host_IP": "10.0.0.29"
         }
     ], 
@@ -483,7 +483,7 @@
         {
             "host_switch_id": "s48", 
             "host_name": "h481", 
-            "host_MAC": "22:8f:bc:50:bc:f5", 
+            "host_MAC": "8a:a9:bf:3f:3f:10", 
             "host_IP": "10.0.0.48"
         }
     ], 
@@ -491,7 +491,7 @@
         {
             "host_switch_id": "s49", 
             "host_name": "h491", 
-            "host_MAC": "4e:07:c1:16:c7:1b", 
+            "host_MAC": "ee:a6:57:5e:c5:3a", 
             "host_IP": "10.0.0.49"
         }
     ], 
@@ -499,7 +499,7 @@
         {
             "host_switch_id": "s60", 
             "host_name": "h601", 
-            "host_MAC": "ee:89:fb:59:04:ef", 
+            "host_MAC": "ea:0c:0d:16:0b:9e", 
             "host_IP": "10.0.0.60"
         }
     ], 
@@ -507,7 +507,7 @@
         {
             "host_switch_id": "s36", 
             "host_name": "h361", 
-            "host_MAC": "82:3e:e1:92:23:1d", 
+            "host_MAC": "82:87:ad:b3:f5:ab", 
             "host_IP": "10.0.0.36"
         }
     ]

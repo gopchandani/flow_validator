@@ -389,6 +389,9 @@ class DijkstraSynthesis(object):
 
             for dst in intents:
 
+                if sw == 's33' and dst == 45:
+                    pass
+
                 dst_intents = intents[dst]
 
                 # Take care of mac intents for this destination

@@ -32,18 +32,18 @@ message MonteCarloParams {
 }
 
 message NumActiveFlowsInfo {
-    uint64 time_taken = 1;
+    float time_taken = 1;
     repeated NumActiveFlowsRep reps = 2;
 }
 
 message TimeToDisconnectInfo {
-    uint64 time_taken = 1;
+    float time_taken = 1;
     float mean = 2;
     float sd = 3;
 }
 
 message InitializeInfo {
-    uint64 time_taken = 1; 
+    float time_taken = 1; 
 }
 
 message ActivePathParams {
@@ -52,7 +52,7 @@ message ActivePathParams {
 }
 
 message ActivePathInfo {
-    uint64 time_taken = 1; 
+    float time_taken = 1; 
     repeated PolicyPort ports = 2;
 }
 
