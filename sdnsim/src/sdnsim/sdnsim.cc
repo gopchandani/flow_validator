@@ -118,13 +118,17 @@ Status SDNSimImpl::GetNumActiveFlowsWhenLinksFail(ServerContext* context, const 
 
         for (int i = 0; i < crep.link_failure_sequence_size(); i++) {
             rrep->add_num_active_flows(crep.num_active_flows(i));
-
             auto link = rrep->add_link_failure_sequence();
             link->set_src_node(crep.link_failure_sequence(i).src_node());
             link->set_src_port_num(crep.link_failure_sequence(i).src_port_num());
             link->set_dst_node(crep.link_failure_sequence(i).dst_node());
             link->set_dst_port_num(crep.link_failure_sequence(i).dst_port_num());
         }
+
+        for (int i = 0; i < crep.time_taken_per_active_flow_computation_size(); i++) {
+            rrep->add_time_taken_per_active_flow_computation(crep.time_taken_per_active_flow_computation(i));
+        }
+
     }
 
     auto end = chrono::steady_clock::now();

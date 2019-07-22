@@ -488,12 +488,17 @@ NumActiveFlowsRep AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows,
             {
                 policy_match[p.first] = p.second;
             }
+
+            auto start = chrono::steady_clock::now();
             auto p = find_path(src_port, dst_port, policy_match, lmbda); 
+            auto end = chrono::steady_clock::now();
+            rep.add_time_taken_per_active_flow_computation(chrono::duration_cast<chrono::nanoseconds>(end - start).count());
+
             if (p.size() > 0) {
                 num_active_flows += 1;
             }
         }
-        
+
         // Add to the output
         auto link = rep.add_link_failure_sequence();
         link->set_src_node(nafp->reps(i).link_failure_sequence(j).src_node());
@@ -501,6 +506,7 @@ NumActiveFlowsRep AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows,
         link->set_dst_node(nafp->reps(i).link_failure_sequence(j).dst_node());
         link->set_dst_port_num(nafp->reps(i).link_failure_sequence(j).dst_port_num());
         rep.add_num_active_flows(num_active_flows);
+
         /*
         cout << "rep: " << i << " link: " << j << " ";
         cout << "src: " << nafp->reps(i).link_failure_sequence(j).src_node() << " ";

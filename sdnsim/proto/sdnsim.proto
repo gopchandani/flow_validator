@@ -17,6 +17,7 @@ service SDNSim {
 message NumActiveFlowsRep {
     repeated Link link_failure_sequence = 1;
     repeated uint64 num_active_flows = 2;
+    repeated float time_taken_per_active_flow_computation = 3;
 }
 
 message NumActiveFlowsParams {
