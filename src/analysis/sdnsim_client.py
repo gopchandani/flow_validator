@@ -269,6 +269,8 @@ class SDNSimClient(object):
         try:
             init_info = self.stub.Initialize(rpc_ng)
             print "Initialize was successful, time taken:", init_info.time_taken/1000000000, "seconds."
+            return init_info.time_taken
+
         except grpc.RpcError as e:
             print "Call to Initialize failed:", e.details(), e.code().name, e.code().value
 
@@ -319,7 +321,7 @@ class SDNSimClient(object):
         try:
             nafi = self.stub.GetNumActiveFlowsWhenLinksFail(nafp)
             print "GetNumActiveFlowsWhenLinksFail was successful, time taken:", nafi.time_taken/1000000000, "seconds."
-            return nafi.reps
+            return nafi
 
         except grpc.RpcError as e:
             print "Call to GetNumActiveFlowsWhenLinksFail failed:", e.details(), e.code().name, e.code().value

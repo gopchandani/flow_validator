@@ -28,7 +28,7 @@ class WSC(Experiment):
 
     def trigger(self):
 
-        self.sdnsim_client.initialize_sdnsim()
+        init_time = self.sdnsim_client.initialize_sdnsim()
 
         src_ports, dst_ports, policy_matches = [], [], []
 
@@ -44,18 +44,15 @@ class WSC(Experiment):
             # self.nc.is_host_pair_pingable(self.nc.mininet_obj.get(src_h_obj.node_id),
             #                               self.nc.mininet_obj.get(dst_h_obj.node_id))
 
-        out_reps = self.sdnsim_client.get_num_active_flows_when_links_fail(self.reps,
-                                                                           src_ports, dst_ports, policy_matches)
+        nafi = self.sdnsim_client.get_num_active_flows_when_links_fail(self.reps, src_ports, dst_ports, policy_matches)
 
-        for i in xrange(len(out_reps)):
+        active_flow_times = []
+
+        for i in xrange(len(nafi.reps)):
             print self.experiment_data["reps"][i]
-            print list(out_reps[i].num_active_flows), len(out_reps[i].num_active_flows)
-            print list(out_reps[i].time_taken_per_active_flow_computation), len(out_reps[i].time_taken_per_active_flow_computation)
+            active_flow_times.extend(nafi.reps[i].time_taken_per_active_flow_computation)
 
-        #self.test_active_flows_when_links_fail(self.reps)
-
-        for i in xrange(len(out_reps)):
-            self.experiment_data["reps"][i]["num_active_flows"] = list(out_reps[i].num_active_flows)
+        print init_time, active_flow_times, nafi.time_taken
 
     def same_paths(self, p1, p2):
 
