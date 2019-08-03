@@ -496,6 +496,7 @@ NumActiveFlowsRep AnalysisGraph::get_num_active_flows(int i, vector<Flow> flows,
 
             if (p.size() > 0) {
                 num_active_flows += 1;
+                rep.add_path_lengths(p.size());
             }
         }
 

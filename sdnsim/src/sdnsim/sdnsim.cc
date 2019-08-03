@@ -129,6 +129,9 @@ Status SDNSimImpl::GetNumActiveFlowsWhenLinksFail(ServerContext* context, const 
             rrep->add_time_taken_per_active_flow_computation(crep.time_taken_per_active_flow_computation(i));
         }
 
+        for (int i = 0; i < crep.path_lengths_size(); i++) {
+            rrep->add_path_lengths(crep.path_lengths(i));
+        }
     }
 
     auto end = chrono::steady_clock::now();
