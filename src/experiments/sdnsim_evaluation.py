@@ -276,7 +276,7 @@ def plot():
     data_dict = {
         "Initialization": {"mean": [], "sem": []},
         "Active Flow Computation": {"mean": [], "sem": []},
-        "Sample Computation": {"mean": [], "sem": []},
+        "100 Sample Computation": {"mean": [], "sem": []},
         "Active Path Length": {"mean": [], "sem": []},
     }
 
@@ -291,8 +291,8 @@ def plot():
             data_dict["Active Flow Computation"]["mean"].append(np.mean(times_dict["active_flow_times"])/1000000000)
             data_dict["Active Flow Computation"]["sem"].append(ss.sem(times_dict["active_flow_times"])/1000000000)
 
-            data_dict["Sample Computation"]["mean"].append(np.mean(times_dict["total_times"])/1000000000)
-            data_dict["Sample Computation"]["sem"].append(ss.sem(times_dict["total_times"])/1000000000)
+            data_dict["100 Sample Computation"]["mean"].append(np.mean(times_dict["total_times"])/1000000000)
+            data_dict["100 Sample Computation"]["sem"].append(ss.sem(times_dict["total_times"])/1000000000)
 
             data_dict["Active Path Length"]["mean"].append(np.median(times_dict["path_lengths"]))
             data_dict["Active Path Length"]["sem"].append(ss.sem(times_dict["path_lengths"]))
@@ -306,7 +306,7 @@ def plot():
                            figsize=(5.0, 4.0))
 
     ax.set_xlabel("Number of Switches", fontsize=10, labelpad=-0)
-    ax.set_ylabel("Time(seconds)", fontsize=10, labelpad=0)
+    ax.set_ylabel("Time (seconds)", fontsize=10, labelpad=0)
     ax.set_title("", fontsize=10)
 
     markers = ['*', '.', 'v', '+', 'd', 'o', '^', 'H', ',', 's', '*']
@@ -314,7 +314,7 @@ def plot():
 
     for line_data_key in ["Initialization",
                           "Active Flow Computation",
-                          "Sample Computation"]:
+                          "100 Sample Computation"]:
 
         means = data_dict[line_data_key]["mean"]
         sems = data_dict[line_data_key]["sem"]
@@ -357,71 +357,71 @@ def plot():
               loc="upper right",
               ncol=1)
 
-    plt.savefig("sdnsim_evaluation_1" + ".png", dpi=1000)
+    plt.savefig("sdnsim_evaluation" + ".png", dpi=1000)
     plt.show()
 
     ####
-    y_min_factor = 1
-    y_max_factor = 1.1
-
-    f, (ax) = plt.subplots(1, 1,
-                           sharex=True,
-                           sharey=False,
-                           figsize=(5.0, 4.0))
-
-    ax.set_xlabel("Number of Switches", fontsize=10, labelpad=-0)
-    ax.set_ylabel("Time(seconds)", fontsize=10, labelpad=0)
-    ax.set_title("", fontsize=10)
-
-    markers = ['*', '.', 'v', '+', 'd', 'o', '^', 'H', ',', 's', '*']
-    marker_i = 0
-
-    for line_data_key in ["Active Path Length"]:
-
-        means = data_dict[line_data_key]["mean"]
-        sems = data_dict[line_data_key]["sem"]
-
-        ax.errorbar(x=num_switches_list,
-                    y=means,
-                    yerr=sems,
-                    color="black",
-                    marker=markers[marker_i],
-                    markersize=7.0,
-                    label=line_data_key,
-                    ls='none')
-
-        marker_i += 1
-
-    ax.tick_params(axis='x', labelsize=10)
-    ax.tick_params(axis='y', labelsize=10)
-
-    low_xlim, high_xlim = ax.get_xlim()
-    ax.set_xlim(xmax=(high_xlim) * x_max_factor)
-    ax.set_xlim(xmin=(low_xlim) * x_min_factor)
-
-    low_ylim, high_ylim = ax.get_ylim()
-    ax.set_ylim(ymin=low_ylim * y_min_factor)
-    ax.set_ylim(ymax=high_ylim * y_max_factor)
-
-    ax.set_yscale("linear")
-    low_ylim, high_ylim = ax.get_ylim()
-    ax.set_ylim(ymin=low_ylim*y_min_factor)
-    ax.set_ylim(ymax=high_ylim*y_max_factor)
-
-    xa = ax.get_xaxis()
-    xa.set_major_locator(MaxNLocator(integer=True))
-
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles,
-              labels,
-              shadow=True,
-              fontsize=10,
-              frameon=True,
-              loc="upper right",
-              ncol=1)
-
-    plt.savefig("sdnsim_evaluation_2" + ".png", dpi=1000)
-    plt.show()
+    # y_min_factor = 1
+    # y_max_factor = 1.1
+    #
+    # f, (ax) = plt.subplots(1, 1,
+    #                        sharex=True,
+    #                        sharey=False,
+    #                        figsize=(5.0, 4.0))
+    #
+    # ax.set_xlabel("Number of Switches", fontsize=10, labelpad=-0)
+    # ax.set_ylabel("Time(seconds)", fontsize=10, labelpad=0)
+    # ax.set_title("", fontsize=10)
+    #
+    # markers = ['*', '.', 'v', '+', 'd', 'o', '^', 'H', ',', 's', '*']
+    # marker_i = 0
+    #
+    # for line_data_key in ["Active Path Length"]:
+    #
+    #     means = data_dict[line_data_key]["mean"]
+    #     sems = data_dict[line_data_key]["sem"]
+    #
+    #     ax.errorbar(x=num_switches_list,
+    #                 y=means,
+    #                 yerr=sems,
+    #                 color="black",
+    #                 marker=markers[marker_i],
+    #                 markersize=7.0,
+    #                 label=line_data_key,
+    #                 ls='none')
+    #
+    #     marker_i += 1
+    #
+    # ax.tick_params(axis='x', labelsize=10)
+    # ax.tick_params(axis='y', labelsize=10)
+    #
+    # low_xlim, high_xlim = ax.get_xlim()
+    # ax.set_xlim(xmax=(high_xlim) * x_max_factor)
+    # ax.set_xlim(xmin=(low_xlim) * x_min_factor)
+    #
+    # low_ylim, high_ylim = ax.get_ylim()
+    # ax.set_ylim(ymin=low_ylim * y_min_factor)
+    # ax.set_ylim(ymax=high_ylim * y_max_factor)
+    #
+    # ax.set_yscale("linear")
+    # low_ylim, high_ylim = ax.get_ylim()
+    # ax.set_ylim(ymin=low_ylim*y_min_factor)
+    # ax.set_ylim(ymax=high_ylim*y_max_factor)
+    #
+    # xa = ax.get_xaxis()
+    # xa.set_major_locator(MaxNLocator(integer=True))
+    #
+    # handles, labels = ax.get_legend_handles_labels()
+    # ax.legend(handles,
+    #           labels,
+    #           shadow=True,
+    #           fontsize=10,
+    #           frameon=True,
+    #           loc="upper right",
+    #           ncol=1)
+    #
+    # plt.savefig("sdnsim_evaluation_2" + ".png", dpi=1000)
+    # plt.show()
 
 
 if __name__ == "__main__":
